@@ -6,10 +6,10 @@ edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[lib]
+# [lib]
 # You should include "rlib" (the default crate type) otherwise your crate can't be used as a Rust library
 # which, among other things, breaks unit testing
-crate-type = ["rlib", "cdylib"]
+# crate-type = ["rlib", "cdylib"]
 
 [dependencies]
 yew = "0.17.4"
