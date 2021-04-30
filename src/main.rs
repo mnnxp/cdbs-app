@@ -84,10 +84,16 @@ impl Component for Model {
                           </a>
                         </div>
                         <a class=vec!("social-network") href="mailto:info@cadbase.ru" title="Email">
-                            <i class="fas fa-lg fa-envelope"></i>
+                            <i class=vec!("fas", "fa-lg", "fa-envelope")></i>
+                        </a>
+                        <a class=vec!("social-network") href="#" title="YouTube">
+                            <i class=vec!("fas", "fa-lg", "fa-youtube")></i>
                         </a>
                         <a class=vec!("social-network") href="#" title="Twitter">
-                            <i class="fas fa-lg fa-envelope"></i>
+                            <i class=vec!("fas", "fa-lg", "fa-twitter")></i>
+                        </a>
+                        <a class=vec!("social-network") href="#" title="WhatsApp">
+                            <i class=vec!("fas", "fa-lg", "fa-whatsapp")></i>
                         </a>
                     </div>
                     // center footer
