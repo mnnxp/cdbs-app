@@ -41,14 +41,14 @@ impl Component for ListErrors {
                                     <>
                                     {for error_info.errors.iter().map(|(key, value)| {
                                         html! {
-                                            <li>
+                                            <div class=vec!("notification", "is-danger")>
                                             { key }
                                             {for value.iter().map(|e| {
                                                 html! {
                                                     <>{" "} {e}</>
                                                 }
                                             })}
-                                            </li>
+                                            </div>
                                         }
                                     })}
                                     </>
@@ -56,7 +56,9 @@ impl Component for ListErrors {
                             }
                             _ => {
                                 html! {
-                                    <li>{error}</li>
+                                    <div class=vec!("notification", "is-danger")>
+                                        {error}
+                                    </div>
                                 }
                             }
 
