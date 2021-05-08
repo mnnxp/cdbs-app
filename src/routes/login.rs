@@ -9,14 +9,14 @@ use crate::components::list_errors::ListErrors;
 use crate::error::Error;
 use crate::routes::AppRoute;
 use crate::services::{set_token, Auth};
-use crate::types::{LoginInfo, LoginInfoWrapper, UserInfo, UserInfoWrapper};
+use crate::types::{LoginInfo, LoginInfoWrapper, SlimUser, SlimUserWrapper};
 
 /// Login page
 pub struct Login {
     auth: Auth,
     error: Option<Error>,
     request: LoginInfo,
-    response: Callback<Result<UserInfoWrapper, Error>>,
+    response: Callback<Result<SlimUserWrapper, Error>>,
     task: Option<FetchTask>,
     props: Props,
     router_agent: Box<dyn Bridge<RouteAgent>>,
@@ -26,14 +26,14 @@ pub struct Login {
 #[derive(PartialEq, Properties, Clone)]
 pub struct Props {
     /// Callback when user is logged in successfully
-    pub callback: Callback<UserInfo>,
+    pub callback: Callback<SlimUser>,
 }
 
 pub enum Msg {
     Request,
-    Response(Result<UserInfoWrapper, Error>),
+    Response(Result<SlimUserWrapper, Error>),
     Ignore,
-    UpdateEmail(String),
+    UpdateUsername(String),
     UpdatePassword(String),
 }
 
@@ -64,7 +64,7 @@ impl Component for Login {
             }
             Msg::Response(Ok(user_info)) => {
                 // Set global token after logged in
-                set_token(Some(user_info.user.token.clone()));
+                // set_token(Some(user_info.user.token.clone()));
                 self.props.callback.emit(user_info.user);
                 self.error = None;
                 self.task = None;
@@ -75,8 +75,8 @@ impl Component for Login {
                 self.error = Some(err);
                 self.task = None;
             }
-            Msg::UpdateEmail(email) => {
-                self.request.email = email;
+            Msg::UpdateUsername(username) => {
+                self.request.username = username;
             }
             Msg::UpdatePassword(password) => {
                 self.request.password = password;
@@ -96,57 +96,98 @@ impl Component for Login {
             ev.prevent_default(); /* Prevent event propagation */
             Msg::Request
         });
-        let oninput_email = self
+        let oninput_username = self
             .link
-            .callback(|ev: InputData| Msg::UpdateEmail(ev.value));
+            .callback(|ev: InputData| Msg::UpdateUsername(ev.value));
         let oninput_password = self
             .link
             .callback(|ev: InputData| Msg::UpdatePassword(ev.value));
 
         html! {
             <div class="auth-page">
-                <div class="container page">
-                    <div class="row">
-                        <div class="col-md-6 offset-md-3 col-xs-12">
-                            <h1 class="text-xs-center">{ "Sign In" }</h1>
-                            <p class="text-xs-center">
-                                <RouterAnchor<AppRoute> route=AppRoute::Register>
-                                    { "Need an account?" }
-                                </RouterAnchor<AppRoute>>
+                // <div class="container page">
+                    // <div class="row">
+                <h1 class="title">{ "Sign In" }</h1>
+                <h2 class="subtitle">
+                    <RouterAnchor<AppRoute> route=AppRoute::Register>
+                        { "Need an account?" }
+                    </RouterAnchor<AppRoute>>
+                </h2>
+                <ListErrors error=&self.error />
+                <form onsubmit=onsubmit>
+                    <fieldset class="box">
+                        <fieldset class="field">
+                            <label class="label">{"Username"}</label>
+                            <div class="control has-icons-left has-icons-right">
+                                <input
+                                    class="input"
+                                    type="text"
+                                    placeholder="Username"
+                                    value=&self.request.username
+                                    oninput=oninput_username
+                                    />
+                                <span class="icon is-small is-left">
+                                    <i class="fas fa-user"></i>
+                                </span>
+                                <span class="icon is-small is-right">
+                                <i class="fas fa-check"></i>
+                                </span>
+                            </div>
+                            // <p class="help is-success">{"This username is available"}</p>
+                        </fieldset>
+                        <fieldset class="field">
+                            <p class="control has-icons-left">
+                                <label class="label">{"Password"}</label>
+                                <input
+                                    class="input"
+                                    type="password"
+                                    placeholder="Password"
+                                    value=&self.request.password
+                                    oninput=oninput_password
+                                    />
+                                <span class="icon is-small is-left">
+                                  <i class="fas fa-lock"></i>
+                                </span>
                             </p>
-                            <ListErrors error=&self.error />
-                            <form onsubmit=onsubmit>
-                                <fieldset>
-                                    <fieldset class="form-group">
-                                        <input
-                                            class="form-control form-control-lg"
-                                            type="email"
-                                            placeholder="Email"
-                                            value=&self.request.email
-                                            oninput=oninput_email
-                                            />
-                                    </fieldset>
-                                    <fieldset class="form-group">
-                                        <input
-                                            class="form-control form-control-lg"
-                                            type="password"
-                                            placeholder="Password"
-                                            value=&self.request.password
-                                            oninput=oninput_password
-                                            />
-                                    </fieldset>
-                                    <button
-                                        class="btn btn-lg btn-primary pull-xs-right"
-                                        type="submit"
-                                        disabled=false>
-                                        { "Sign in" }
-                                    </button>
-                                </fieldset>
-                            </form>
-                        </div>
-                    </div>
-                </div>
+                        </fieldset>
+                        <button
+                            class="button"
+                            type="submit"
+                            disabled=false>
+                            { "Sign in" }
+                        </button>
+                    </fieldset>
+                </form>
             </div>
+                // </div>
+            // </div>
         }
     }
 }
+
+// <div class="field">
+//   <p class="control has-icons-left has-icons-right">
+//     <input class="input" type="email" placeholder="Email">
+//     <span class="icon is-small is-left">
+//       <i class="fas fa-envelope"></i>
+//     </span>
+//     <span class="icon is-small is-right">
+//       <i class="fas fa-check"></i>
+//     </span>
+//   </p>
+// </div>
+// <div class="field">
+//   <p class="control has-icons-left">
+//     <input class="input" type="password" placeholder="Password">
+//     <span class="icon is-small is-left">
+//       <i class="fas fa-lock"></i>
+//     </span>
+//   </p>
+// </div>
+// <div class="field">
+//   <p class="control">
+//     <button class="button is-success">
+//       Login
+//     </button>
+//   </p>
+// </div>
