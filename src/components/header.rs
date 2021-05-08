@@ -2,7 +2,7 @@ use yew::{html, Component, ComponentLink, Html, Properties, ShouldRender};
 use yew_router::prelude::*;
 
 use crate::routes::AppRoute;
-use crate::types::UserInfo;
+use crate::types::SlimUser;
 
 pub struct Header {
     props: Props,
@@ -10,7 +10,7 @@ pub struct Header {
 
 #[derive(Properties, Clone)]
 pub struct Props {
-    pub current_user: Option<UserInfo>,
+    pub current_user: Option<SlimUser>,
 }
 
 pub enum Msg {}
@@ -93,7 +93,7 @@ impl Header {
         }
     }
 
-    fn logged_in_view(&self, user_info: &UserInfo) -> Html {
+    fn logged_in_view(&self, user_info: &SlimUser) -> Html {
         html! {
             <div class="buttons">
                  <RouterAnchor<AppRoute> route=AppRoute::Settings classes="button">

@@ -12,7 +12,7 @@ use yew::{html, Callback, Component, ComponentLink, Html, Properties, ShouldRend
 
 use crate::error::Error;
 use crate::services::Articles;
-use crate::types::{ArticleInfo, ArticleInfoWrapper, UserInfo};
+use crate::types::{ArticleInfo, ArticleInfoWrapper, SlimUser};
 
 use article_meta::ArticleMeta;
 use comment_list::CommentList;
@@ -29,7 +29,7 @@ pub struct Article {
 #[derive(Properties, Clone)]
 pub struct Props {
     pub slug: String,
-    pub current_user: Option<UserInfo>,
+    pub current_user: Option<SlimUser>,
 }
 
 pub enum Msg {
@@ -118,7 +118,7 @@ impl Component for Article {
                         <div class="article-actions">
                         </div>
                         <div class="row">
-                            <CommentList slug=&self.props.slug current_user=&self.props.current_user />
+                            // <CommentList slug=&self.props.slug current_user=&self.props.current_user />
                         </div>
                     </div>
                 </div>

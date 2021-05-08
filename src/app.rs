@@ -18,14 +18,14 @@ use crate::routes::{
     AppRoute,
 };
 use crate::services::{is_authenticated, Auth};
-use crate::types::{UserInfo, UserInfoWrapper};
+use crate::types::{SlimUser, SlimUserWrapper};
 
 /// The root app component
 pub struct App {
     auth: Auth,
     current_route: Option<AppRoute>,
-    current_user: Option<UserInfo>,
-    current_user_response: Callback<Result<UserInfoWrapper, Error>>,
+    current_user: Option<SlimUser>,
+    current_user_response: Callback<Result<SlimUserWrapper, Error>>,
     current_user_task: Option<FetchTask>,
     #[allow(unused)]
     router_agent: Box<dyn Bridge<RouteAgent>>,
@@ -33,9 +33,9 @@ pub struct App {
 }
 
 pub enum Msg {
-    CurrentUserResponse(Result<UserInfoWrapper, Error>),
+    CurrentUserResponse(Result<SlimUserWrapper, Error>),
     Route(Route),
-    Authenticated(UserInfo),
+    Authenticated(SlimUser),
     Logout,
 }
 
@@ -69,8 +69,8 @@ impl Component for App {
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
-            Msg::CurrentUserResponse(Ok(user_info)) => {
-                self.current_user = Some(user_info.user);
+            Msg::CurrentUserResponse(Ok(slim_user)) => {
+                self.current_user = Some(slim_user.user);
                 self.current_user_task = None;
             }
             Msg::CurrentUserResponse(Err(_)) => {
@@ -80,8 +80,8 @@ impl Component for App {
                 fix_fragment_routes(&mut route);
                 self.current_route = AppRoute::switch(route)
             }
-            Msg::Authenticated(user_info) => {
-                self.current_user = Some(user_info);
+            Msg::Authenticated(slim_user) => {
+                self.current_user = Some(slim_user);
             }
             Msg::Logout => {
                 self.current_user = None;

@@ -104,23 +104,23 @@ impl Component for CommentInput {
                             oninput=oninput >
                         </textarea>
                     </div>
-                    <div class="card-footer">
-                        {if let Some(image) = &self.props.current_user.image {
-                            html! {
-                                <img
-                                    src={ image }
-                                    class="comment-author-img"
-                                    alt={ &self.props.current_user.username} />
-                            }
-                        } else {
-                            html! { }
-                        }}
-                        <button
-                            class="btn btn-sm btn-primary"
-                            type="submit">
-                            { "Post Comment" }
-                        </button>
-                    </div>
+                    // <div class="card-footer">
+                    //     {if let Some(image) = &self.props.current_user.image {
+                    //         html! {
+                    //             <img
+                    //                 src={ image }
+                    //                 class="comment-author-img"
+                    //                 alt={ &self.props.current_user.username} />
+                    //         }
+                    //     } else {
+                    //         html! { }
+                    //     }}
+                    //     <button
+                    //         class="btn btn-sm btn-primary"
+                    //         type="submit">
+                    //         { "Post Comment" }
+                    //     </button>
+                    // </div>
                 </form>
             </>
         }

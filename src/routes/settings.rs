@@ -9,7 +9,7 @@ use crate::components::list_errors::ListErrors;
 use crate::error::Error;
 use crate::routes::AppRoute;
 use crate::services::{is_authenticated, set_token, Auth};
-use crate::types::{UserInfoWrapper, UserUpdateInfo, UserUpdateInfoWrapper};
+use crate::types::{UserInfoWrapper, SlimUserWrapper, UserUpdateInfo, UserUpdateInfoWrapper};
 
 /// Update settings of the author or logout
 pub struct Settings {
@@ -36,11 +36,11 @@ pub enum Msg {
     Loaded(Result<UserInfoWrapper, Error>),
     Ignore,
     Logout,
-    UpdateEmail(String),
+    // UpdateEmail(String),
     UpdateUsername(String),
     UpdatePassword(String),
-    UpdateImage(String),
-    UpdateBio(String),
+    // UpdateImage(String),
+    // UpdateBio(String),
 }
 
 impl Component for Settings {
@@ -64,7 +64,7 @@ impl Component for Settings {
 
     fn rendered(&mut self, first_render: bool) {
         if first_render && is_authenticated() {
-            self.task = Some(self.auth.current(self.loaded.clone()));
+            self.task = Some(self.auth.user_info(self.loaded.clone()));
         }
     }
 
@@ -74,9 +74,9 @@ impl Component for Settings {
                 let mut request = UserUpdateInfoWrapper {
                     user: self.request.clone(),
                 };
-                if !self.password.is_empty() {
-                    request.user.password = Some(self.password.clone());
-                }
+                // if !self.password.is_empty() {
+                //     request.user.password = Some(self.password.clone());
+                // }
                 self.task = Some(self.auth.save(request, self.response.clone()));
             }
             Msg::Response(Ok(_)) => {
@@ -92,11 +92,31 @@ impl Component for Settings {
                 self.error = None;
                 self.task = None;
                 self.request = UserUpdateInfo {
-                    email: user_info.user.email,
+                    // email: user_info.user.email,
+                    // username: user_info.user.username,
+                    // password: None,
+                    // image: user_info.user.image.unwrap_or_default(),
+                    // bio: user_info.user.bio.unwrap_or_default(),
+                    firstname: user_info.user.firstname,
+                    lastname: user_info.user.lastname,
+                    secondname: user_info.user.secondname,
                     username: user_info.user.username,
+                    email: user_info.user.email,
                     password: None,
-                    image: user_info.user.image.unwrap_or_default(),
-                    bio: user_info.user.bio.unwrap_or_default(),
+                    id_type_user: user_info.user.id_type_user,
+                    is_supplier: user_info.user.is_supplier,
+                    orgname: user_info.user.orgname,
+                    shortname: user_info.user.shortname,
+                    inn: user_info.user.inn,
+                    phone: user_info.user.phone,
+                    id_name_cad: user_info.user.id_name_cad,
+                    comment: user_info.user.comment,
+                    address: user_info.user.address,
+                    time_zone: user_info.user.time_zone,
+                    position: user_info.user.position,
+                    site_url: user_info.user.site_url,
+                    uuid_file_info_icon: user_info.user.uuid_file_info_icon,
+                    id_region: user_info.user.id_region,
                 };
             }
             Msg::Loaded(Err(err)) => {
@@ -112,15 +132,15 @@ impl Component for Settings {
                 // Redirect to home page
                 self.router_agent.send(ChangeRoute(AppRoute::Home.into()));
             }
-            Msg::UpdateBio(bio) => {
-                self.request.bio = bio;
-            }
-            Msg::UpdateEmail(email) => {
-                self.request.email = email;
-            }
-            Msg::UpdateImage(image) => {
-                self.request.image = image;
-            }
+            // Msg::UpdateBio(bio) => {
+            //     self.request.bio = bio;
+            // }
+            // Msg::UpdateEmail(email) => {
+            //     self.request.email = email;
+            // }
+            // Msg::UpdateImage(image) => {
+            //     self.request.image = image;
+            // }
             Msg::UpdatePassword(password) => {
                 self.password = password;
             }
@@ -141,20 +161,20 @@ impl Component for Settings {
             ev.prevent_default();
             Msg::Request
         });
-        let oninput_image = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateImage(ev.value));
+        // let oninput_image = self
+        //     .link
+        //     .callback(|ev: InputData| Msg::UpdateImage(ev.value));
         let oninput_username = self
             .link
             .callback(|ev: InputData| Msg::UpdateUsername(ev.value));
-        let oninput_bio = self.link.callback(|ev: InputData| Msg::UpdateBio(ev.value));
-        let oninput_email = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateEmail(ev.value));
+        // let oninput_bio = self.link.callback(|ev: InputData| Msg::UpdateBio(ev.value));
+        // let oninput_email = self
+        //     .link
+        //     .callback(|ev: InputData| Msg::UpdateEmail(ev.value));
         let oninput_password = self
             .link
             .callback(|ev: InputData| Msg::UpdatePassword(ev.value));
-        let onclick = self.link.callback(|_| Msg::Logout);
+        // let onclick = self.link.callback(|_| Msg::Logout);
 
         html! {
             <div class="settings-page">
@@ -165,61 +185,61 @@ impl Component for Settings {
                             <ListErrors error=&self.error/>
                             <form onsubmit=onsubmit>
                                 <fieldset>
-                                    <fieldset class="form-group">
-                                        <input
-                                            class="form-control"
-                                            type="text"
-                                            placeholder="URL of profile picture"
-                                            value={&self.request.image}
-                                            oninput=oninput_image />
-                                    </fieldset>
-                                    <fieldset class="form-group">
-                                        <input
-                                            class="form-control form-control-lg"
-                                            type="text"
-                                            placeholder="Username"
-                                            value={&self.request.username}
-                                            oninput=oninput_username />
-                                    </fieldset>
-                                    <fieldset class="form-group">
-                                        <textarea
-                                            class="form-control form-control-lg"
-                                            rows="8"
-                                            placeholder="Short bio about you"
-                                            value={&self.request.bio }
-                                            oninput=oninput_bio >
-                                        </textarea>
-                                    </fieldset>
-                                    <fieldset class="form-group">
-                                        <input
-                                            class="form-control form-control-lg"
-                                            type="email"
-                                            placeholder="Email"
-                                            value={&self.request.email}
-                                            oninput=oninput_email />
-                                    </fieldset>
-                                    <fieldset class="form-group">
-                                        <input
-                                            class="form-control form-control-lg"
-                                            type="password"
-                                            placeholder="New Password"
-                                            value={&self.password}
-                                            oninput=oninput_password />
-                                    </fieldset>
-                                    <button
-                                        class="btn btn-lg btn-primary pull-xs-right"
-                                        type="submit"
-                                        disabled=false>
-                                        { "Update Settings" }
-                                    </button>
+                                    // <fieldset class="form-group">
+                                    //     <input
+                                    //         class="form-control"
+                                    //         type="text"
+                                    //         placeholder="URL of profile picture"
+                                    //         value={&self.request.image}
+                                    //         oninput=oninput_image />
+                                    // </fieldset>
+                                    // <fieldset class="form-group">
+                                    //     <input
+                                    //         class="form-control form-control-lg"
+                                    //         type="text"
+                                    //         placeholder="Username"
+                                    //         value={&self.request.username}
+                                    //         oninput=oninput_username />
+                                    // </fieldset>
+                                    // <fieldset class="form-group">
+                                    //     <textarea
+                                    //         class="form-control form-control-lg"
+                                    //         rows="8"
+                                    //         placeholder="Short bio about you"
+                                    //         value={&self.request.bio }
+                                    //         oninput=oninput_bio >
+                                    //     </textarea>
+                                    // </fieldset>
+                                    // <fieldset class="form-group">
+                                    //     <input
+                                    //         class="form-control form-control-lg"
+                                    //         type="email"
+                                    //         placeholder="Email"
+                                    //         value={&self.request.email}
+                                    //         oninput=oninput_email />
+                                    // </fieldset>
+                                    // <fieldset class="form-group">
+                                    //     <input
+                                    //         class="form-control form-control-lg"
+                                    //         type="password"
+                                    //         placeholder="New Password"
+                                    //         value={&self.password}
+                                    //         oninput=oninput_password />
+                                    // </fieldset>
+                                    // <button
+                                    //     class="btn btn-lg btn-primary pull-xs-right"
+                                    //     type="submit"
+                                    //     disabled=false>
+                                    //     { "Update Settings" }
+                                    // </button>
                                 </fieldset>
                             </form>
                             <hr />
-                            <button
-                                class="btn btn-outline-danger"
-                                onclick=onclick >
-                                { "Or click here to logout."}
-                            </button>
+                            // <button
+                            //     class="btn btn-outline-danger"
+                            //     onclick=onclick >
+                            //     { "Or click here to logout."}
+                            // </button>
                         </div>
                     </div>
                 </div>

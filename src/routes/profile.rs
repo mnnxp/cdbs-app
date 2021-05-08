@@ -6,7 +6,7 @@ use crate::components::article_list::{ArticleList, ArticleListFilter};
 use crate::error::Error;
 use crate::routes::AppRoute;
 use crate::services::Profiles;
-use crate::types::{ProfileInfo, ProfileInfoWrapper, UserInfo};
+use crate::types::{ProfileInfo, ProfileInfoWrapper, SlimUser};
 
 /// Profile for an author
 pub struct Profile {
@@ -21,7 +21,7 @@ pub struct Profile {
 #[derive(Properties, Clone)]
 pub struct Props {
     pub username: String,
-    pub current_user: Option<UserInfo>,
+    pub current_user: Option<SlimUser>,
     pub tab: ProfileTab,
 }
 

@@ -18,8 +18,15 @@ impl Auth {
         }
     }
 
+    /// Get current user slim data
+    pub fn current(&mut self, callback: Callback<Result<SlimUserWrapper, Error>>) -> FetchTask {
+        self.requests
+            .get::<SlimUserWrapper>("/me".to_string(), callback)
+    }
+
+
     /// Get current user info
-    pub fn current(&mut self, callback: Callback<Result<UserInfoWrapper, Error>>) -> FetchTask {
+    pub fn user_info(&mut self, callback: Callback<Result<UserInfoWrapper, Error>>) -> FetchTask {
         self.requests
             .get::<UserInfoWrapper>("/user".to_string(), callback)
     }
@@ -28,9 +35,9 @@ impl Auth {
     pub fn login(
         &mut self,
         login_info: LoginInfoWrapper,
-        callback: Callback<Result<UserInfoWrapper, Error>>,
+        callback: Callback<Result<SlimUserWrapper, Error>>,
     ) -> FetchTask {
-        self.requests.post::<LoginInfoWrapper, UserInfoWrapper>(
+        self.requests.post::<LoginInfoWrapper, SlimUserWrapper>(
             "/users/login".to_string(),
             login_info,
             callback,
@@ -41,9 +48,9 @@ impl Auth {
     pub fn register(
         &mut self,
         register_info: RegisterInfoWrapper,
-        callback: Callback<Result<UserInfoWrapper, Error>>,
+        callback: Callback<Result<SlimUserWrapper, Error>>,
     ) -> FetchTask {
-        self.requests.post::<RegisterInfoWrapper, UserInfoWrapper>(
+        self.requests.post::<RegisterInfoWrapper, SlimUserWrapper>(
             "/users".to_string(),
             register_info,
             callback,
