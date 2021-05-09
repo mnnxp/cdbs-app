@@ -33,9 +33,15 @@ pub enum Msg {
     Request,
     Response(Result<SlimUserWrapper, Error>),
     Ignore,
+    UpdateFirstname(String),
+    UpdateLastname(String),
+    UpdateSecondname(String),
+    UpdateUsername(String),
     UpdateEmail(String),
     UpdatePassword(String),
-    UpdateUsername(String),
+    UpdateIdTypeUser(String),
+    UpdateIsSupplier(String),
+    UpdateIdNameCad(String),
 }
 
 impl Component for Register {
@@ -74,6 +80,16 @@ impl Component for Register {
                 self.error = Some(err);
                 self.task = None;
             }
+
+            Msg::UpdateFirstname(firstname) => {
+                self.request.firstname = firstname;
+            }
+            Msg::UpdateLastname(lastname) => {
+                self.request.lastname = lastname;
+            }
+            Msg::UpdateSecondname(secondname) => {
+                self.request.secondname = secondname;
+            }
             Msg::UpdateEmail(email) => {
                 self.request.email = email;
             }
@@ -82,6 +98,15 @@ impl Component for Register {
             }
             Msg::UpdateUsername(username) => {
                 self.request.username = username;
+            }
+            Msg::UpdateIdTypeUser(id_type_user) => {
+                self.request.id_type_user = id_type_user.parse::<i32>().unwrap_or(1);
+            }
+            Msg::UpdateIsSupplier(is_supplier) => {
+                self.request.is_supplier = is_supplier.parse::<i32>().unwrap_or(0);
+            }
+            Msg::UpdateIdNameCad(id_name_cad) => {
+                self.request.id_name_cad = id_name_cad.parse::<i32>().unwrap_or(1);
             }
             Msg::Ignore => {}
         }
@@ -98,6 +123,15 @@ impl Component for Register {
             ev.prevent_default();
             Msg::Request
         });
+        let oninput_firstname = self
+            .link
+            .callback(|ev: InputData| Msg::UpdateFirstname(ev.value));
+        let oninput_lastname = self
+            .link
+            .callback(|ev: InputData| Msg::UpdateLastname(ev.value));
+        let oninput_secondname = self
+            .link
+            .callback(|ev: InputData| Msg::UpdateSecondname(ev.value));
         let oninput_username = self
             .link
             .callback(|ev: InputData| Msg::UpdateUsername(ev.value));
@@ -107,6 +141,15 @@ impl Component for Register {
         let oninput_password = self
             .link
             .callback(|ev: InputData| Msg::UpdatePassword(ev.value));
+        let oninput_id_type_user = self
+            .link
+            .callback(|ev: InputData| Msg::UpdateIdTypeUser(ev.value));
+        let oninput_is_supplier = self
+            .link
+            .callback(|ev: InputData| Msg::UpdateIsSupplier(ev.value));
+        let oninput_id_name_cad = self
+            .link
+            .callback(|ev: InputData| Msg::UpdateIdNameCad(ev.value));
 
         html! {
             <div class="auth-page">
@@ -126,8 +169,8 @@ impl Component for Register {
                                     class="input"
                                     type="text"
                                     placeholder="Text input"
-                                    // value=&self.request.firstname
-                                    // oninput=oninput_firstname
+                                    value=&self.request.firstname
+                                    oninput=oninput_firstname
                                     />
                             </div>
                         </fieldset>
@@ -138,8 +181,8 @@ impl Component for Register {
                                     class="input"
                                     type="text"
                                     placeholder="Text input"
-                                    // value=&self.request.lastname
-                                    // oninput=oninput_lastname
+                                    value=&self.request.lastname
+                                    oninput=oninput_lastname
                                     />
                             </div>
                         </fieldset>
@@ -150,8 +193,8 @@ impl Component for Register {
                                     class="input"
                                     type="text"
                                     placeholder="Text input"
-                                    // value=&self.request.secondname
-                                    // oninput=oninput_secondname
+                                    value=&self.request.secondname
+                                    oninput=oninput_secondname
                                     />
                             </div>
                         </fieldset>
@@ -209,6 +252,19 @@ impl Component for Register {
                             </div>
                         </fieldset>
                         <fieldset class="field">
+                            <label class="label">{"Select type profile:"}</label>
+                            <div class="control">
+                                <div class="select">
+                                  <select
+                                      select=&self.request.id_type_user
+                                      oninput=oninput_id_type_user
+                                      >
+                                    <option value=1>{1}</option>
+                                  </select>
+                                </div>
+                            </div>
+                        </fieldset>
+                        <fieldset class="field">
                             <label class="label">{"You're supplier?"}</label>
                             <div class="control">
                                 <label class="radio">
@@ -216,7 +272,9 @@ impl Component for Register {
                                   {1}
                                 </label>
                                 <label class="radio">
-                                  <input type="radio" name="question"/>
+                                  <input type="radio" name="question"
+                                  select=&self.request.is_supplier
+                                  oninput=oninput_is_supplier/>
                                   {0}
                                 </label>
                             </div>
@@ -225,9 +283,12 @@ impl Component for Register {
                             <label class="label">{"What's CAD you use?"}</label>
                             <div class="control">
                                 <div class="select">
-                                  <select>
-                                    <option>{1}</option>
-                                    <option>{2}</option>
+                                  <select
+                                      select=&self.request.id_name_cad
+                                      oninput=oninput_id_name_cad
+                                      >
+                                    <option value=1>{1}</option>
+                                    <option value=2>{2}</option>
                                   </select>
                                 </div>
                             </div>
@@ -253,88 +314,3 @@ impl Component for Register {
         }
     }
 }
-
-// <div class="field">
-//   <label class="label">Name</label>
-//   <div class="control">
-//     <input class="input" type="text" placeholder="Text input">
-//   </div>
-// </div>
-//
-// <div class="field">
-//   <label class="label">Username</label>
-//   <div class="control has-icons-left has-icons-right">
-//     <input class="input is-success" type="text" placeholder="Text input" value="bulma">
-//     <span class="icon is-small is-left">
-//       <i class="fas fa-user"></i>
-//     </span>
-//     <span class="icon is-small is-right">
-//       <i class="fas fa-check"></i>
-//     </span>
-//   </div>
-//   <p class="help is-success">This username is available</p>
-// </div>
-//
-// <div class="field">
-//   <label class="label">Email</label>
-//   <div class="control has-icons-left has-icons-right">
-//     <input class="input is-danger" type="email" placeholder="Email input" value="hello@">
-//     <span class="icon is-small is-left">
-//       <i class="fas fa-envelope"></i>
-//     </span>
-//     <span class="icon is-small is-right">
-//       <i class="fas fa-exclamation-triangle"></i>
-//     </span>
-//   </div>
-//   <p class="help is-danger">This email is invalid</p>
-// </div>
-//
-// <div class="field">
-//   <label class="label">Subject</label>
-//   <div class="control">
-//     <div class="select">
-//       <select>
-//         <option>Select dropdown</option>
-//         <option>With options</option>
-//       </select>
-//     </div>
-//   </div>
-// </div>
-//
-// <div class="field">
-//   <label class="label">Message</label>
-//   <div class="control">
-//     <textarea class="textarea" placeholder="Textarea"></textarea>
-//   </div>
-// </div>
-//
-// <div class="field">
-//   <div class="control">
-//     <label class="checkbox">
-//       <input type="checkbox">
-//       I agree to the <a href="#">terms and conditions</a>
-//     </label>
-//   </div>
-// </div>
-//
-// <div class="field">
-//   <div class="control">
-//     <label class="radio">
-//       <input type="radio" name="question">
-//       Yes
-//     </label>
-//     <label class="radio">
-//       <input type="radio" name="question">
-//       No
-//     </label>
-//   </div>
-// </div>
-//
-// <div class="field is-grouped">
-//   <div class="control">
-//     <button class="button is-link">Submit</button>
-//   </div>
-//   <div class="control">
-//     <button class="button is-link is-light">Cancel</button>
-//   </div>
-// </div>
