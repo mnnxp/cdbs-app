@@ -25,7 +25,7 @@ impl Component for Footer {
 
     fn view(&self) -> Html {
         html! {
-            <footer class="footer">
+            <footer class="footer" style="display: flex">
                 // left footer
                 <div class="content has-text-left">
                     <h4>
