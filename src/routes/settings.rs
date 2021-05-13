@@ -268,9 +268,9 @@ impl Component for Settings {
                             <h1 class="title">{ "Your Settings" }</h1>
                             <ListErrors error=&self.error/>
                             <form onsubmit=onsubmit>
-                                <fieldset style="display: flex">
+                                <fieldset class="columns">
                                     // main data of username
-                                    <fieldset class="has-text-left">
+                                    <fieldset class="column">
                                         <fieldset class="field">
                                             <input
                                                 class="input"
@@ -321,7 +321,7 @@ impl Component for Settings {
                                         </fieldset>
                                     </fieldset>
 
-                                    <fieldset class="has-text-right">
+                                    <fieldset class="column">
                                         <fieldset class="field">
                                             <input
                                                 class="input"
@@ -375,20 +375,20 @@ impl Component for Settings {
                                     <fieldset>
                                     {
                                         // todo!(view different data for different type user)
-                                        if false {
+                                        if true {
                                             self.for_type_user_1()
                                         } else {
                                             self.for_type_user_2()
                                         }
                                     }
                                     </fieldset>
-                                    <button
-                                        class="button"
-                                        type="submit"
-                                        disabled=false>
-                                        { "Update Settings" }
-                                    </button>
                                 </fieldset>
+                                <button
+                                    class="button"
+                                    type="submit"
+                                    disabled=false>
+                                    { "Update Settings" }
+                                </button>
                             </form>
                             <hr />
                             <button
@@ -406,10 +406,7 @@ impl Component for Settings {
 
 impl Settings {
     fn for_type_user_1(&self) -> Html {
-        html! {
-            <>
-            </>
-        }
+        html! { }
     }
     fn for_type_user_2(&self) -> Html {
         let oninput_orgname = self
@@ -438,7 +435,7 @@ impl Settings {
             .callback(|ev: InputData| Msg::UpdateIsSupplier(ev.value));
 
         html! {
-            <>
+            <fieldset class="column">
                 // data user for id_type_user 2-11
                 <fieldset class="field">
                     <input
@@ -504,7 +501,7 @@ impl Settings {
                         value={&self.request.is_supplier}
                         oninput=oninput_is_supplier />
                 </fieldset>
-            </>
+            </fieldset>
         }
     }
 }
