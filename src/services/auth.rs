@@ -57,6 +57,11 @@ impl Auth {
         )
     }
 
+    /// Query new token for logged users
+    pub fn token_query() {
+        unimplemented!()
+    }
+
     /// Save info of current user
     pub fn save(
         &mut self,

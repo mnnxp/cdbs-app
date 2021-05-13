@@ -65,6 +65,7 @@ impl Component for Login {
             Msg::Response(Ok(user_info)) => {
                 // Set global token after logged in
                 // set_token(Some(user_info.user.token.clone()));
+                // set_token(Some(Auth::token_query());
                 self.props.callback.emit(user_info.user);
                 self.error = None;
                 self.task = None;
