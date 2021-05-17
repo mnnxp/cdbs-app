@@ -20,7 +20,7 @@ pub struct Profile {
 
 #[derive(Properties, Clone)]
 pub struct Props {
-    pub username: String,
+    pub uuid: String,
     pub current_user: Option<SlimUser>,
     pub tab: ProfileTab,
 }
@@ -57,7 +57,7 @@ impl Component for Profile {
         if first_render {
             self.task = Some(
                 self.profiles
-                    .get(self.props.username.clone(), self.response.clone()),
+                    .get(self.props.uuid.clone(), self.response.clone()),
             );
         }
     }
@@ -67,13 +67,13 @@ impl Component for Profile {
             Msg::Follow => {
                 self.task = Some(
                     self.profiles
-                        .follow(self.props.username.clone(), self.response.clone()),
+                        .follow(self.props.uuid.clone(), self.response.clone()),
                 );
             }
             Msg::UnFollow => {
                 self.task = Some(
                     self.profiles
-                        .unfollow(self.props.username.clone(), self.response.clone()),
+                        .unfollow(self.props.uuid.clone(), self.response.clone()),
                 );
             }
             Msg::Response(Ok(profile_info)) => {
@@ -94,7 +94,7 @@ impl Component for Profile {
 
     fn view(&self) -> Html {
         let is_current_user = if let Some(current_user) = &self.props.current_user {
-            current_user.username == self.props.username
+            current_user.uuid == self.props.uuid
         } else {
             false
         };
@@ -106,8 +106,8 @@ impl Component for Profile {
                         <div class="container">
                             <div class="row">
                                 <div class="col-xs-12 col-md-10 offset-md-1">
-                                    <img src={ &profile.image } class="user-img" alt={ &profile.username } />
-                                    <h4>{ &profile.username }</h4>
+                                    <img src={ &profile.image } class="user-img" alt={ &profile.uuid } />
+                                    <h4>{ &profile.uuid }</h4>
                                     <p>
                                         {
                                             if let Some(bio) = &profile.bio {
@@ -135,10 +135,10 @@ impl Component for Profile {
                                 {
                                     match self.props.tab {
                                         ProfileTab::ByAuthor => {
-                                            html! { <ArticleList filter=ArticleListFilter::ByAuthor(profile.username.clone()) /> }
+                                            html! { <ArticleList filter=ArticleListFilter::ByAuthor(profile.uuid.clone()) /> }
                                         }
                                         ProfileTab::FavoritedBy => {
-                                            html! { <ArticleList filter=ArticleListFilter::FavoritedBy(profile.username.clone()) /> }
+                                            html! { <ArticleList filter=ArticleListFilter::FavoritedBy(profile.uuid.clone()) /> }
                                         }
                                     }
                                 }
@@ -209,14 +209,14 @@ impl Profile {
                     <li class="nav-item">
                         <RouterAnchor<AppRoute>
                             classes=classes.0
-                            route=AppRoute::Profile(profile.username.clone())>
+                            route=AppRoute::Profile(profile.uuid.clone())>
                             { "My Articles" }
                         </RouterAnchor<AppRoute>>
                     </li>
                     <li class="nav-item">
                         <RouterAnchor<AppRoute>
                             classes=classes.1
-                            route=AppRoute::ProfileFavorites(profile.username.clone())>
+                            route=AppRoute::ProfileFavorites(profile.uuid.clone())>
                             { "Favorited Articles" }
                         </RouterAnchor<AppRoute>>
                     </li>
