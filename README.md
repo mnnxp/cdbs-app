@@ -2,12 +2,10 @@ CADBase Frontend
 =====
 The platform for publishing and sharing information on drawings and manufacturers.
 
-## How to run it
-- Make sure you have Rust Nightly enabled for the project.
+## Getting Started
 - You will need Trunk, an amazing light weight bundler (no need for webpack madness): `cargo install trunk`
-- Create a `.env` file in root and add a `DATABASE_URL` variable with your local psql db.
-- In backend dir: `cargo run`, in frontend dir: `trunk serve`
-- That's it!
+- Check a `.env` file in root
+- Run `trunk serve`
 
 ## Collection of major crates used in CADBase Frontend
 - yew - [link](https://yew.rs/)
