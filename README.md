@@ -3,7 +3,7 @@ CADBase Frontend
 The platform for publishing and sharing information on drawings and manufacturers.
 
 ## Getting Started
-- You will need Trunk, an amazing light weight bundler (no need for webpack madness): `cargo install trunk`
+- You will need Trunk: `cargo install trunk`
 - Check a `.env` file in root
 - Run `trunk serve`
 
