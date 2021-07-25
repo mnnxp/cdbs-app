@@ -266,7 +266,7 @@ impl Component for Settings {
                     <div class="row">
                         <div>
                             <h1 class="title">{ "Your Settings" }</h1>
-                            <ListErrors error=&self.error/>
+                            <ListErrors error=self.error.clone()/>
                             <form onsubmit=onsubmit>
                                 <fieldset class="columns">
                                     // main data of username
@@ -276,7 +276,7 @@ impl Component for Settings {
                                                 class="input"
                                                 type="text"
                                                 placeholder="firstname"
-                                                value={&self.request.firstname}
+                                                value={self.request.firstname.clone()}
                                                 oninput=oninput_firstname />
                                         </fieldset>
                                         <fieldset class="field">
@@ -284,7 +284,7 @@ impl Component for Settings {
                                                 class="input"
                                                 type="text"
                                                 placeholder="lastname"
-                                                value={&self.request.lastname}
+                                                value={self.request.lastname.clone()}
                                                 oninput=oninput_lastname />
                                         </fieldset>
                                         <fieldset class="field">
@@ -292,7 +292,7 @@ impl Component for Settings {
                                                 class="input"
                                                 type="text"
                                                 placeholder="secondname"
-                                                value={&self.request.secondname}
+                                                value={self.request.secondname.clone()}
                                                 oninput=oninput_secondname />
                                         </fieldset>
                                         <fieldset class="field">
@@ -300,7 +300,7 @@ impl Component for Settings {
                                                 class="input"
                                                 type="text"
                                                 placeholder="username"
-                                                value={&self.request.username}
+                                                value={self.request.username.clone()}
                                                 oninput=oninput_username />
                                         </fieldset>
                                         <fieldset class="field">
@@ -308,7 +308,7 @@ impl Component for Settings {
                                                 class="input"
                                                 type="email"
                                                 placeholder="email"
-                                                value={&self.request.email}
+                                                value={self.request.email.clone()}
                                                 oninput=oninput_email />
                                         </fieldset>
                                         <fieldset class="field">
@@ -316,7 +316,7 @@ impl Component for Settings {
                                                 class="input"
                                                 type="password"
                                                 placeholder="New Password"
-                                                value={&self.password}
+                                                value={self.password.to_string()}
                                                 oninput=oninput_password />
                                         </fieldset>
                                     </fieldset>
@@ -327,7 +327,7 @@ impl Component for Settings {
                                                 class="input"
                                                 type="text"
                                                 placeholder="time_zone"
-                                                value={&self.request.time_zone}
+                                                value={self.request.time_zone.to_string()}
                                                 oninput=oninput_time_zone />
                                         </fieldset>
                                         <fieldset class="field">
@@ -335,7 +335,7 @@ impl Component for Settings {
                                                 class="input"
                                                 type="text"
                                                 placeholder="position"
-                                                value={&self.request.position}
+                                                value={self.request.position.clone()}
                                                 oninput=oninput_position />
                                         </fieldset>
                                         <fieldset class="field">
@@ -343,7 +343,7 @@ impl Component for Settings {
                                                 class="input"
                                                 type="text"
                                                 placeholder="uuid_file_info_icon"
-                                                value={&self.request.uuid_file_info_icon}
+                                                value={self.request.uuid_file_info_icon.clone()}
                                                 oninput=oninput_uuid_file_info_icon />
                                         </fieldset>
                                         <fieldset class="field">
@@ -351,7 +351,7 @@ impl Component for Settings {
                                                 class="input"
                                                 type="text"
                                                 placeholder="id_region"
-                                                value={&self.request.id_region}
+                                                value={self.request.id_region.to_string()}
                                                 oninput=oninput_id_region />
                                         </fieldset>
                                         <fieldset class="field">
@@ -359,7 +359,7 @@ impl Component for Settings {
                                                 class="input"
                                                 type="text"
                                                 placeholder="id_name_cad"
-                                                value={&self.request.id_name_cad}
+                                                value={self.request.id_name_cad.to_string()}
                                                 oninput=oninput_id_name_cad />
                                         </fieldset>
                                         <fieldset class="field">
@@ -367,7 +367,7 @@ impl Component for Settings {
                                                 class="input"
                                                 type="text"
                                                 placeholder="id_type_user"
-                                                value={&self.request.id_type_user}
+                                                value={self.request.id_type_user.to_string()}
                                                 oninput=oninput_id_type_user />
                                         </fieldset>
                                     </fieldset>
@@ -442,7 +442,7 @@ impl Settings {
                         class="input"
                         type="text"
                         placeholder="orgname"
-                        value={&self.request.orgname}
+                        value={self.request.orgname.clone()}
                         oninput=oninput_orgname />
                 </fieldset>
                 <fieldset class="field">
@@ -450,7 +450,7 @@ impl Settings {
                         class="input"
                         type="text"
                         placeholder="shortname"
-                        value={&self.request.shortname}
+                        value={self.request.shortname.clone()}
                         oninput=oninput_shortname />
                 </fieldset>
                 <fieldset class="field">
@@ -458,7 +458,7 @@ impl Settings {
                         class="input"
                         type="text"
                         placeholder="inn"
-                        value={&self.request.inn}
+                        value={self.request.inn.clone()}
                         oninput=oninput_inn />
                 </fieldset>
                 <fieldset class="field">
@@ -466,7 +466,7 @@ impl Settings {
                         class="input"
                         type="text"
                         placeholder="phone"
-                        value={&self.request.phone}
+                        value={self.request.phone.clone()}
                         oninput=oninput_phone />
                 </fieldset>
                 <fieldset class="field">
@@ -474,7 +474,7 @@ impl Settings {
                         class="input"
                         type="text"
                         placeholder="comment"
-                        value={&self.request.comment}
+                        value={self.request.comment.clone()}
                         oninput=oninput_comment />
                 </fieldset>
                 <fieldset class="field">
@@ -482,7 +482,7 @@ impl Settings {
                         class="input"
                         type="text"
                         placeholder="address"
-                        value={&self.request.address}
+                        value={self.request.address.clone()}
                         oninput=oninput_address />
                 </fieldset>
                 <fieldset class="field">
@@ -490,7 +490,7 @@ impl Settings {
                         class="input"
                         type="text"
                         placeholder="site_url"
-                        value={&self.request.site_url}
+                        value={self.request.site_url.clone()}
                         oninput=oninput_site_url />
                 </fieldset>
                 <fieldset class="field">
@@ -498,7 +498,7 @@ impl Settings {
                         class="input"
                         type="text"
                         placeholder="is_supplier"
-                        value={&self.request.is_supplier}
+                        value={self.request.is_supplier.to_string()}
                         oninput=oninput_is_supplier />
                 </fieldset>
             </fieldset>

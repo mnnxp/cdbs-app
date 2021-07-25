@@ -93,7 +93,7 @@ impl Component for MainView {
                     </ul>
                 </div>
 
-                <ArticleList filter=&self.filter />
+                <ArticleList filter=self.filter.clone() />
             </div>
         }
     }
@@ -167,7 +167,7 @@ impl MainView {
 
 impl MainView {
     /// Get Msg and css class for tabs
-    fn get_tab_msg_class(&self, tab: Tab) -> (Msg, &str) {
+    fn get_tab_msg_class(&self, tab: Tab) -> (Msg, &'static str) {
         let class = if self.tab == tab {
             "nav-link active"
         } else {

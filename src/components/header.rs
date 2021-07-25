@@ -56,7 +56,7 @@ impl Component for Header {
                             { "Catalog" }
                         </RouterAnchor<AppRoute>>
 
-                        <RouterAnchor<AppRoute> route=AppRoute::Home classes="navbar-item">
+                        <RouterAnchor<AppRoute> route=AppRoute::Tenders classes="navbar-item">
                             { "Tenders" }
                         </RouterAnchor<AppRoute>>
 

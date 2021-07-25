@@ -20,9 +20,11 @@ pub struct Profile {
 
 #[derive(Properties, Clone)]
 pub struct Props {
+    #[prop_or_default]
     pub uuid: String,
     pub current_user: Option<SlimUser>,
     pub tab: ProfileTab,
+    pub username: String
 }
 
 #[derive(Clone)]
@@ -106,7 +108,7 @@ impl Component for Profile {
                         <div class="container">
                             <div class="row">
                                 <div class="col-xs-12 col-md-10 offset-md-1">
-                                    <img src={ &profile.image } class="user-img" alt={ &profile.uuid } />
+                                    <img src={ profile.image.clone() } class="user-img" alt={ profile.uuid.clone() } />
                                     <h4>{ &profile.uuid }</h4>
                                     <p>
                                         {

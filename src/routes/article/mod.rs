@@ -92,8 +92,8 @@ impl Component for Article {
                         <div class="container">
                             <h1>{&article.title}</h1>
                             <ArticleMeta
-                                slug=&article.slug
-                                author=&article.author
+                                slug={article.slug.clone()}
+                                author={article.author.clone()}
                                 can_modify=can_modify
                                 created_at=created_at />
                         </div>

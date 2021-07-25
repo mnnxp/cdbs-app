@@ -52,7 +52,7 @@ pub fn is_authenticated() -> bool {
 }
 
 /// Http request
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub struct Requests {}
 
 impl Requests {

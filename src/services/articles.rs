@@ -6,7 +6,7 @@ use crate::error::Error;
 use crate::types::*;
 
 /// Apis for articles
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub struct Articles {
     requests: Requests,
 }

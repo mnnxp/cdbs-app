@@ -12,6 +12,7 @@ use crate::routes::{
     fix_fragment_routes,
     home::Home,
     login::Login,
+    tenders::Tenders,
     profile::{Profile, ProfileTab},
     register::Register,
     settings::Settings,
@@ -101,7 +102,7 @@ impl Component for App {
 
         html! {
             <>
-                <Header current_user=&self.current_user/>
+                <Header current_user=self.current_user.clone()/>
                 {
                     // Routes to render sub components
                     if let Some(route) = &self.current_route {
@@ -111,14 +112,15 @@ impl Component for App {
                             AppRoute::Home => html!{<Home />},
                             AppRoute::Editor(slug) => html!{<Editor slug=Some(slug.clone())/>},
                             AppRoute::EditorCreate => html!{<Editor />},
-                            AppRoute::Article(slug) => html!{<Article slug=slug current_user=&self.current_user />},
+                            AppRoute::Article(slug) => html!{<Article slug=slug.clone() current_user=self.current_user.clone() />},
                             AppRoute::Settings => html!{<Settings callback=callback_logout />},
                             AppRoute::ProfileFavorites(username) => html!{
-                                <Profile username=username current_user=&self.current_user tab=ProfileTab::FavoritedBy />
+                                <Profile username=username.clone() current_user=self.current_user.clone() tab=ProfileTab::FavoritedBy />
                             },
                             AppRoute::Profile(username) => html!{
-                                <Profile username=username current_user=&self.current_user tab=ProfileTab::ByAuthor />
+                                <Profile username=username.clone() current_user=self.current_user.clone() tab=ProfileTab::ByAuthor />
                             },
+                            AppRoute::Tenders => html!{<Tenders />},
                         }
                     } else {
                         // 404 when route matches no component

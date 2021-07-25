@@ -159,7 +159,7 @@ impl Component for Register {
                         { "Have an account?" }
                     </RouterAnchor<AppRoute>>
                 </h2>
-                <ListErrors error=&self.error />
+                <ListErrors error=self.error.clone() />
                 <form onsubmit=onsubmit>
                     <fieldset>
                         <fieldset class="field">
@@ -169,7 +169,7 @@ impl Component for Register {
                                     class="input"
                                     type="text"
                                     placeholder="Text input"
-                                    value=&self.request.firstname
+                                    value=self.request.firstname.clone()
                                     oninput=oninput_firstname
                                     />
                             </div>
@@ -181,7 +181,7 @@ impl Component for Register {
                                     class="input"
                                     type="text"
                                     placeholder="Text input"
-                                    value=&self.request.lastname
+                                    value=self.request.lastname.clone()
                                     oninput=oninput_lastname
                                     />
                             </div>
@@ -193,7 +193,7 @@ impl Component for Register {
                                     class="input"
                                     type="text"
                                     placeholder="Text input"
-                                    value=&self.request.secondname
+                                    value=self.request.secondname.clone()
                                     oninput=oninput_secondname
                                     />
                             </div>
@@ -205,7 +205,7 @@ impl Component for Register {
                                     class="input"
                                     type="text"
                                     placeholder="Username"
-                                    value=&self.request.username
+                                    value=self.request.username.clone()
                                     oninput=oninput_username
                                     />
                                 <span class="icon is-small is-left">
@@ -224,7 +224,7 @@ impl Component for Register {
                                     class="input"
                                     type="email"
                                     placeholder="Email"
-                                    value=&self.request.email
+                                    value=self.request.email.clone()
                                     oninput=oninput_email
                                     />
                                 <span class="icon is-small is-left">
@@ -243,7 +243,7 @@ impl Component for Register {
                                     class="input"
                                     type="password"
                                     placeholder="Password"
-                                    value=&self.request.password
+                                    value=self.request.password.clone()
                                     oninput=oninput_password
                                     />
                                 <span class="icon is-small is-left">
@@ -256,7 +256,7 @@ impl Component for Register {
                             <div class="control">
                                 <div class="select">
                                   <select
-                                      select=&self.request.id_type_user
+                                      select=self.request.id_type_user.to_string()
                                       oninput=oninput_id_type_user
                                       >
                                     <option value=1>{1}</option>
@@ -273,7 +273,7 @@ impl Component for Register {
                                 </label>
                                 <label class="radio">
                                   <input type="radio" name="question"
-                                  select=&self.request.is_supplier
+                                  select=self.request.is_supplier.to_string()
                                   oninput=oninput_is_supplier/>
                                   {0}
                                 </label>
@@ -284,7 +284,7 @@ impl Component for Register {
                             <div class="control">
                                 <div class="select">
                                   <select
-                                      select=&self.request.id_name_cad
+                                      select=self.request.id_name_cad.to_string()
                                       oninput=oninput_id_name_cad
                                       >
                                     <option value=1>{1}</option>
