@@ -5,7 +5,7 @@ use yew::{
 };
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
 
-use crate::components::list_errors::ListErrors;
+use crate::fragments::list_errors::ListErrors;
 use crate::error::Error;
 use crate::routes::AppRoute;
 use crate::services::{set_token, Auth};

@@ -4,7 +4,7 @@ use yew::services::fetch::FetchTask;
 use yew::{agent::Bridged, html, Bridge, Callback, Component, ComponentLink, Html, ShouldRender};
 use yew_router::prelude::*;
 
-use crate::components::{footer::Footer, header::Header};
+use crate::fragments::{footer::Footer, header::Header};
 use crate::error::Error;
 use crate::routes::{
     article::Article,

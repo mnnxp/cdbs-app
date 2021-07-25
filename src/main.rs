@@ -3,7 +3,7 @@
 #![allow(clippy::eval_order_dependence)]
 
 pub mod app;
-pub mod components;
+pub mod fragments;
 pub mod error;
 pub mod routes;
 pub mod services;

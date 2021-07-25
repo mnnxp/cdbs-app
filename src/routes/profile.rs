@@ -2,7 +2,7 @@ use yew::services::fetch::FetchTask;
 use yew::{html, Callback, Component, ComponentLink, Html, Properties, ShouldRender};
 use yew_router::prelude::*;
 
-use crate::components::article_list::{ArticleList, ArticleListFilter};
+use crate::fragments::article_list::{ArticleList, ArticleListFilter};
 use crate::error::Error;
 use crate::routes::AppRoute;
 use crate::services::Profiles;

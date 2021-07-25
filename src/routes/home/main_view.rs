@@ -1,6 +1,6 @@
 use yew::{html, Component, ComponentLink, Html, MouseEvent, Properties, ShouldRender};
 
-use crate::components::article_list::{ArticleList, ArticleListFilter};
+use crate::fragments::article_list::{ArticleList, ArticleListFilter};
 use crate::services::is_authenticated;
 
 /// Main content with tabs of article list for home page

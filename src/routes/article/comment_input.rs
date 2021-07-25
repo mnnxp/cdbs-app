@@ -3,7 +3,7 @@ use yew::{
     html, Callback, Component, ComponentLink, FocusEvent, Html, InputData, Properties, ShouldRender,
 };
 
-use crate::components::list_errors::ListErrors;
+use crate::fragments::list_errors::ListErrors;
 use crate::error::Error;
 use crate::services::Comments;
 use crate::types::{
