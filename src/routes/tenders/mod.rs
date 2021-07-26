@@ -1,3 +1,6 @@
+mod item;
+
+use item::Item;
 use yew::prelude::*;
 
 pub enum Msg {
@@ -16,10 +19,7 @@ impl Component for Tenders {
     type Properties = ();
 
     fn create(_props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        Self {
-            link,
-            value: 0,
-        }
+        Self { link, value: 0 }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
@@ -42,9 +42,23 @@ impl Component for Tenders {
 
     fn view(&self) -> Html {
         html! {
-            <div>
-                <button onclick=self.link.callback(|_| Msg::AddOne)>{ "+1" }</button>
-                <p>{ self.value }</p>
+            <div class="tendersBox" >
+              <div class="level" >
+                <div class="level-left ">
+                  <button class="button is-info">{"Create"}</button>
+                </div>
+                <div class="level-right">
+                <div class="select">
+                <select>
+                  <option>{"Select dropdown"}</option>
+                  <option>{"With options"}</option>
+                </select>
+              </div>
+                </div>
+              </div>
+              {vec![1;3].iter().map(|_| {
+                html! { <Item/> }
+              }).collect::<Html>()}
             </div>
         }
     }

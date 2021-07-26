@@ -128,10 +128,10 @@ impl Component for Login {
                                     oninput=oninput_username
                                     />
                                 <span class="icon is-small is-left">
-                                    <i class="fas fa-user"></i>
+                                  <i class="fas fa-user"></i>
                                 </span>
                                 <span class="icon is-small is-right">
-                                <i class="fas fa-check"></i>
+                                  <i class="fas fa-check"></i>
                                 </span>
                             </div>
                             // <p class="help is-success">{"This username is available"}</p>
