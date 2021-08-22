@@ -8,6 +8,7 @@ pub mod profile;
 pub mod register;
 pub mod settings;
 pub mod tenders;
+pub mod catalog;
 
 use yew_router::prelude::*;
 
@@ -24,6 +25,8 @@ pub enum AppRoute {
     EditorCreate,
     #[to = "#/tenders"]
     Tenders,
+    #[to = "#/catalog"]
+    Catalog,
     #[to = "#/article/{slug}"]
     Article(String),
     #[to = "#/settings"]

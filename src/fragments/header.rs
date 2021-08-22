@@ -8,9 +8,16 @@ pub struct Header {
     props: Props,
 }
 
+#[derive(Clone)]
+pub struct NavMenu {
+    text: String,
+    route: AppRoute,
+}
+
 #[derive(Properties, Clone)]
 pub struct Props {
     pub current_user: Option<SlimUser>,
+    // pub nav_menu: Vec<NavMenu>,
 }
 
 pub enum Msg {}
@@ -33,6 +40,21 @@ impl Component for Header {
     }
 
     fn view(&self) -> Html {
+        let nav_menu = vec![
+            NavMenu {
+                text: "catalog".to_string(),
+                route: AppRoute::Catalog,
+            },
+            NavMenu {
+                text: "tenders".to_string(),
+                route: AppRoute::Tenders,
+            },
+            NavMenu {
+                text: "About Us".to_string(),
+                route: AppRoute::Home,
+            },
+        ];
+
         html! {
             <nav class="navbar" role="navigation" aria-label="main navigation">
                 <div class="navbar-brand">
@@ -52,17 +74,26 @@ impl Component for Header {
                 </div>
                 <div class="navbar-menu">
                     <div class="navbar-start">
-                        <RouterAnchor<AppRoute> route=AppRoute::Home classes="navbar-item">
-                            { "Catalog" }
-                        </RouterAnchor<AppRoute>>
+                        {
+                          for nav_menu.iter().map(|item| {
+                            html!{
+                              <RouterAnchor<AppRoute> route=item.clone().route classes="navbar-item">
+                                { item.text.clone() }
+                              </RouterAnchor<AppRoute>>
+                            }
+                          })
+                        }
+                        // <RouterAnchor<AppRoute> route=AppRoute::Catalog classes="navbar-item">
+                        //     { "Catalog" }
+                        // </RouterAnchor<AppRoute>>
 
-                        <RouterAnchor<AppRoute> route=AppRoute::Tenders classes="navbar-item">
-                            { "Tenders" }
-                        </RouterAnchor<AppRoute>>
+                        // <RouterAnchor<AppRoute> route=AppRoute::Tenders classes="navbar-item">
+                        //     { "Tenders" }
+                        // </RouterAnchor<AppRoute>>
 
-                        <RouterAnchor<AppRoute> route=AppRoute::Home classes="navbar-item">
-                            { "About Us" }
-                        </RouterAnchor<AppRoute>>
+                        // <RouterAnchor<AppRoute> route=AppRoute::Home classes="navbar-item">
+                        //     { "About Us" }
+                        // </RouterAnchor<AppRoute>>
                     </div>
                     <div class="navbar-end">
                     {

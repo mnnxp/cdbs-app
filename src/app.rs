@@ -17,6 +17,7 @@ use crate::routes::{
     register::Register,
     settings::Settings,
     AppRoute,
+    catalog::Catalog
 };
 use crate::services::{is_authenticated, Auth};
 use crate::types::{SlimUser, SlimUserWrapper};
@@ -121,6 +122,7 @@ impl Component for App {
                                 <Profile username=username.clone() current_user=self.current_user.clone() tab=ProfileTab::ByAuthor />
                             },
                             AppRoute::Tenders => html!{<Tenders />},
+                            AppRoute::Catalog => html!{<Catalog />}
                         }
                     } else {
                         // 404 when route matches no component
