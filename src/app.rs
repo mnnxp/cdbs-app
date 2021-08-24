@@ -4,20 +4,21 @@ use yew::services::fetch::FetchTask;
 use yew::{agent::Bridged, html, Bridge, Callback, Component, ComponentLink, Html, ShouldRender};
 use yew_router::prelude::*;
 
-use crate::fragments::{footer::Footer, header::Header};
 use crate::error::Error;
+use crate::fragments::{footer::Footer, header::Header};
 use crate::routes::{
     article::Article,
+    catalog::Catalog,
+    createTender::CreateTender,
     editor::Editor,
     fix_fragment_routes,
     home::Home,
     login::Login,
-    tenders::Tenders,
     profile::{Profile, ProfileTab},
     register::Register,
     settings::Settings,
+    tenders::Tenders,
     AppRoute,
-    catalog::Catalog
 };
 use crate::services::{is_authenticated, Auth};
 use crate::types::{SlimUser, SlimUserWrapper};
@@ -122,7 +123,8 @@ impl Component for App {
                                 <Profile username=username.clone() current_user=self.current_user.clone() tab=ProfileTab::ByAuthor />
                             },
                             AppRoute::Tenders => html!{<Tenders />},
-                            AppRoute::Catalog => html!{<Catalog />}
+                            AppRoute::Catalog => html!{<Catalog />},
+                            AppRoute::CreateTender => html!{<CreateTender />},
                         }
                     } else {
                         // 404 when route matches no component

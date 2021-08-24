@@ -1,9 +1,12 @@
 mod boxItem;
 mod listItem;
 
+use crate::routes::AppRoute;
+
 use boxItem::BoxItem;
 use listItem::ListItem;
 use yew::prelude::*;
+use yew_router::prelude::*;
 
 pub enum Msg {
     AddOne,
@@ -66,7 +69,9 @@ impl Component for Catalog {
             <div class="tendersBox" >
               <div class="level" >
                 <div class="level-left ">
-                  <button class="button is-info">{"Create"}</button>
+                <RouterAnchor<AppRoute> route=AppRoute::CreateTender >
+                  <button class="button is-info" >{"Create"}</button>
+                </RouterAnchor<AppRoute>>
                 </div>
                 <div class="level-right">
                   <div class="select">
