@@ -3,8 +3,200 @@ schema {
   mutation: MutationRoot
 }
 
-# Directs the executor to query only when the field exists.
+"""Directs the executor to query only when the field exists."""
 directive @ifdef on FIELD
+
+"""
+Direct the client to resolve this field locally, either from the cache or local resolvers.
+"""
+directive @client(
+  """
+  When true, the client will never use the cache for this value. See
+  https://www.apollographql.com/docs/react/essentials/local-state/#forcing-resolvers-with-clientalways-true
+  """
+  always: Boolean
+) on FIELD | FRAGMENT_DEFINITION | INLINE_FRAGMENT
+
+"""
+Export this locally resolved field as a variable to be used in the remainder of this query. See
+https://www.apollographql.com/docs/react/essentials/local-state/#using-client-fields-as-variables
+"""
+directive @export(
+  """The variable name to export this field as."""
+  as: String!
+) on FIELD
+
+"""
+Specify a custom store key for this result. See
+https://www.apollographql.com/docs/react/advanced/caching/#the-connection-directive
+"""
+directive @connection(
+  """Specify the store key."""
+  key: String!
+
+  """
+  An array of query argument names to include in the generated custom store key.
+  """
+  filter: [String!]
+) on FIELD
+
+type ActualStatusTranslateList {
+  actualStatusId: Int!
+  langId: Int!
+  name: String!
+}
+
+type CertificateWithSlimFile {
+  file: SlimFile!
+  userUuid: UUID!
+  description: String!
+}
+
+type Claims {
+  iss: String!
+  username: String!
+  sub: String!
+  iat: String!
+  exp: String!
+}
+
+type CompanyAndRelatedData {
+  uuid: UUID!
+  orgname: String!
+  shortname: String!
+  inn: String!
+  phone: String!
+  email: String!
+  description: String!
+  address: String!
+  siteUrl: String!
+  timeZone: String!
+  ownerUser: ShowUserShort!
+  imageFile: SlimFile!
+  region: RegionTranslateList!
+  companyRepresents: [CompanyRepresentAndRelatedData!]!
+  companyType: CompanyTypeTranslateList!
+  companyCertificates: [CertificateWithSlimFile!]!
+  companySpecs: [CompanySpecWithTranslation!]!
+  isSupplier: Boolean!
+  isEmailVerified: Boolean!
+  subscribers: Int!
+  isFollowed: Boolean!
+  isEnabled: Boolean!
+  isDelete: Boolean!
+  createdAt: NaiveDateTime!
+  updatedAt: NaiveDateTime!
+}
+
+type CompanyFav {
+  companyUuid: ID!
+  userUuid: ID!
+  isEnabled: Boolean!
+  createdAt: NaiveDateTime!
+}
+
+type CompanyRepresentAndRelatedData {
+  uuid: UUID!
+  companyUuid: UUID!
+  region: RegionTranslateList!
+  representationType: RepresentationTypeTranslateList!
+  name: String!
+  address: String!
+  phone: String!
+}
+
+type CompanySpecWithTranslation {
+  spec: SpecTranslateList!
+  companyUuid: UUID!
+}
+
+type CompanyTypeTranslateList {
+  companyTypeId: Int!
+  langId: Int!
+  name: String!
+  shortname: String!
+}
+
+type ComponentAndRelatedData {
+  uuid: UUID!
+  parentComponentUuid: UUID!
+  name: String!
+  description: String!
+  ownerUser: ShowUserShort!
+  typeAccessId: Int!
+  componentType: ComponentTypeTranslateList!
+  actualStatus: ActualStatusTranslateList!
+  isStandard: Boolean!
+  subscribers: Int!
+  isFollowed: Boolean!
+  updatedAt: NaiveDateTime!
+  licenses: [License!]!
+  componentParams: [ComponentParamWithTranslation!]!
+  files: [ShowFile!]!
+  componentSpecs: [ComponentSpecWithTranslation!]!
+  componentKeywords: [Keyword!]!
+  componentModifications: [ComponentModificationAndRelatedData!]!
+  componentSuppliers: [ComponentSupplierRelatedData!]!
+}
+
+type ComponentFav {
+  componentUuid: ID!
+  userUuid: ID!
+  isEnabled: Boolean!
+  createdAt: NaiveDateTime!
+}
+
+type ComponentModificationAndRelatedData {
+  uuid: UUID!
+  componentUuid: UUID!
+  parentModificationUuid: UUID!
+  modificationName: String!
+  description: String!
+  actualStatus: ActualStatusTranslateList!
+  updatedAt: NaiveDateTime!
+  filesetsForProgram: [SetOfFilesProgramRelatedData!]!
+  modificationParams: [ModificationParamWithTranslation!]!
+}
+
+type ComponentParamWithTranslation {
+  componentUuid: UUID!
+  param: ParamTranslateList!
+  value: String!
+}
+
+type ComponentSpecWithTranslation {
+  spec: SpecTranslateList!
+  componentUuid: UUID!
+}
+
+type ComponentSupplierRelatedData {
+  supplier: SlimCompany!
+  componentUuid: UUID!
+  description: String!
+}
+
+type ComponentTypeTranslateList {
+  componentTypeId: Int!
+  langId: Int!
+  componentType: String!
+}
+
+type Extension {
+  id: Int!
+  extension: String!
+  programId: Int!
+}
+
+type FileToSetModification {
+  setId: Int!
+  fileUuid: ID!
+}
+
+input IptCompanyCertificateData {
+  companyUuid: UUID!
+  description: String!
+  filename: String!
+}
 
 input IptCompanyData {
   orgname: String!
@@ -15,65 +207,126 @@ input IptCompanyData {
   description: String!
   address: String!
   siteUrl: String!
-  timeZone: Int!
-  uuidUser: ID!
-  uuidImageFile: ID!
-  idRegion: Int!
-  idTypeOrg: Int!
+  timeZone: String!
+  regionId: Int!
+  companyTypeId: Int!
 }
 
 input IptCompanyRepresentData {
-  uuidCompany: ID!
-  idRegion: Int!
-  idRepresentationType: Int!
+  companyUuid: ID!
+  regionId: Int!
+  representationTypeId: Int!
   name: String!
   address: String!
   phone: String!
 }
 
 input IptComponentData {
-  uuidComponentParent: ID!
+  parentComponentUuid: ID
   name: String!
   description: String!
-  idTypeAccess: Int!
-  idComponentType: Int!
-  idActualStatus: Int!
+  typeAccessId: Int!
+  componentTypeId: Int!
+  actualStatusId: Int!
   isStandard: Boolean!
 }
 
+input IptComponentFavData {
+  componentUuid: UUID!
+  userUuid: UUID!
+}
+
 input IptComponentModificationData {
-  uuidComponent: ID!
-  uuidModificationParent: ID!
+  componentUuid: ID!
+  parentModificationUuid: ID!
   modificationName: String!
   description: String!
-  idActualStatus: Int!
+  actualStatusId: Int!
 }
 
-input IptLicenseToComponentData {
-  uuidComponent: ID!
-  idLicense: Int!
+input IptExtensionData {
+  extension: String!
+  programId: Int!
 }
 
-input IptParamToModelData {
-  uuid: ID!
-  idParam: Int!
+input IptFileToSetModificationData {
+  setId: Int!
+  fileUuid: ID!
+}
+
+input IptKeywordComponentData {
+  componentUuid: ID!
+  keywordId: Int!
+}
+
+input IptKeywordData {
+  keyword: String!
+}
+
+input IptLicenseComponentData {
+  componentUuid: ID!
+  licenseId: Int!
+}
+
+input IptParamComponentData {
+  componentUuid: ID!
+  paramId: Int!
   value: String!
 }
 
+input IptParamModificationData {
+  modificationUuid: ID!
+  paramId: Int!
+  value: String!
+}
+
+input IptParamTranslateListData {
+  langId: Int!
+  paramname: String!
+}
+
+input IptProgramData {
+  name: String!
+}
+
+input IptRegionTranslateListData {
+  langId: Int!
+  region: String!
+}
+
+input IptSetOfFilesProgramData {
+  modificationUuid: ID!
+  programId: Int!
+}
+
+input IptSpecComponentData {
+  componentUuid: ID!
+  specId: Int!
+}
+
 input IptStandardData {
-  uuidStandardParent: ID!
+  parentStandardUuid: ID
   classifier: String!
   name: String!
   description: String!
   specifiedTolerance: String!
   technicalCommittee: String!
   publicationAt: NaiveDateTime!
-  uuidImageFile: ID!
-  uuidUser: ID!
-  uuidCompany: ID!
-  idTypeAccess: Int!
-  idStandardStatus: Int!
-  idRegion: Int!
+  companyUuid: ID!
+  typeAccessId: Int!
+  standardStatusId: Int!
+  regionId: Int!
+}
+
+input IptSupplierComponentData {
+  componentUuid: ID!
+  companyUuid: ID!
+  description: String!
+}
+
+input IptUserCertificateData {
+  description: String!
+  filename: String!
 }
 
 input IptUserData {
@@ -87,57 +340,93 @@ input IptUserData {
   description: String!
   address: String!
   position: String!
-  timeZone: Int!
-  uuidImageFile: ID!
-  idRegion: Int!
-  idProgram: Int!
+  timeZone: String!
+  regionId: Int!
+  programId: Int!
+}
+
+type Keyword {
+  id: Int!
+  keyword: String!
+}
+
+type KeywordComponent {
+  keywordId: Int!
+  componentUuid: ID!
+}
+
+type Language {
+  id: Int!
+  lang: String!
+  langshort: String!
 }
 
 type License {
   id: Int!
   name: String!
   keyword: String!
-  description: String!
   publicationAt: NaiveDateTime!
+}
+
+type LicenseComponent {
+  componentUuid: ID!
+  licenseId: Int!
 }
 
 input LicenseData {
   name: String!
   keyword: String!
-  description: String!
   publicationAt: NaiveDateTime!
 }
 
-type LicenseToComponent {
-  id: Int!
-  uuidComponent: ID!
-  idLicense: Int!
+type ModificationParamWithTranslation {
+  modificationUuid: UUID!
+  param: ParamTranslateList!
+  value: String!
 }
 
 type MutationRoot {
-  userRegister(data: IptUserData!): SlimUser!
-  notificationRegister(data: NotificationData!): SlimNotification!
-  notificationDelete(idNotification: Int!): Notification!
-  componentRegister(data: IptComponentData!): SlimComponent!
-  componentModificationRegister(
-    data: IptComponentModificationData!
-  ): SlimComponentModification!
-  licenseRegister(data: LicenseData!): License!
-  licenseComponentRegister(
-    data: IptLicenseToComponentData!
-  ): LicenseToComponent!
-  paramRegister(data: ParamData!): Param!
-  paramComponentRegister(data: IptParamToModelData!): ParamToModel!
-  paramModificationRegister(data: IptParamToModelData!): ParamToModel!
-  companyRegister(data: IptCompanyData!): SlimCompany!
-  companyRepresentRegister(
-    data: IptCompanyRepresentData!
-  ): SlimCompanyRepresent!
-  companyRepresentDelete(
-    targetUuidCompany: String!
-    targetUuidCompanyRepresent: String!
-  ): SlimCompanyRepresent!
-  standardRegister(data: IptStandardData!): SlimStandard!
+  registerUser(data: IptUserData!): SlimUser!
+  uploadFavicon(filename: String!): String!
+  uploadUserCertificate(certData: IptUserCertificateData!): String!
+  addCompanyFav(companyUuid: String!): CompanyFav!
+  deleteCompanyFav(companyUuid: String!): CompanyFav!
+  addComponentFav(componentUuid: String!): ComponentFav!
+  deleteComponentFav(componentUuid: String!): ComponentFav!
+  addStandardFav(standardUuid: String!): StandardFav!
+  deleteStandardFav(standardUuid: String!): StandardFav!
+  addUserFav(userUuid: String!): UserFav!
+  deleteUserFav(userUuid: String!): UserFav!
+  registerNotification(data: NotificationData!): SlimNotification!
+  deleteNotification(notificationId: Int!): Notification!
+  registerComponent(data: IptComponentData!): SlimComponent!
+  registerParamComponent(data: IptParamComponentData!): ParamComponent!
+  registerLicenseComponent(data: IptLicenseComponentData!): LicenseComponent!
+  addComponentSpec(data: IptSpecComponentData!): SpecComponent!
+  addKeywordComponent(data: IptKeywordComponentData!): KeywordComponent!
+  addSupplierComponent(data: IptSupplierComponentData!): SupplierComponent!
+  registerComponentModification(data: IptComponentModificationData!): SlimComponentModification!
+  registerParamModification(data: IptParamModificationData!): ParamModification!
+  registerSetFilesModification(data: IptSetOfFilesProgramData!): SetOfFilesProgram!
+  addFileToSetModification(data: IptFileToSetModificationData!): FileToSetModification!
+  addComponentFavorite(data: IptComponentFavData!): ComponentFav!
+  registerStandard(data: IptStandardData!): SlimStandard!
+  registerCompany(data: IptCompanyData!): SlimCompany!
+  uploadCompanyCertificate(certData: IptCompanyCertificateData!): String!
+  registerCompanyRepresent(data: IptCompanyRepresentData!): SlimCompanyRepresent!
+  deleteCompanyRepresent(companyUuid: String!, companyUuidRepresent: String!): SlimCompanyRepresent!
+  registerExtension(data: IptExtensionData!): Extension!
+  registerKeyword(data: IptKeywordData!): Keyword!
+  registerLicense(data: LicenseData!): License!
+  registerParam(data: IptParamTranslateListData!): ParamTranslateList!
+  registerProgram(data: IptProgramData!): Program!
+  registerRegion(data: IptRegionTranslateListData!): RegionTranslateList!
+
+  """Сonfirmation of successful upload of files to storage"""
+  uploadCompleted(filesUuids: [String!]!): Int!
+
+  """Delete file in storage"""
+  deleteFile(fileUuid: String!): Int!
 }
 
 scalar NaiveDateTime
@@ -145,192 +434,156 @@ scalar NaiveDateTime
 type Notification {
   id: Int!
   notification: String!
-  idDegreeImportance: Int!
+  degreeImportanceId: Int!
   generatedAt: NaiveDateTime!
   isRead: Boolean!
 }
 
 input NotificationData {
   notification: String!
-  idDegreeImportance: Int!
+  degreeImportanceId: Int!
 }
 
-type Param {
-  id: Int!
-  paramname: String!
-}
-
-input ParamData {
-  paramname: String!
-}
-
-type ParamToModel {
-  id: Int!
-  uuid: ID!
-  idParam: Int!
+type ParamComponent {
+  componentUuid: ID!
+  paramId: Int!
   value: String!
 }
 
+type ParamModification {
+  modificationUuid: ID!
+  paramId: Int!
+  value: String!
+}
+
+type ParamTranslateList {
+  paramId: Int!
+  langId: Int!
+  paramname: String!
+}
+
+type Program {
+  id: Int!
+  name: String!
+}
+
 type QueryRoot {
-  users(uuid: String, limit: Int, offset: Int): [ShowUser!]!
-  notifications(idNotification: Int, limit: Int, offset: Int): [Notification!]!
-  files(
-    uuidUser: String
-    uuidComponent: String
-    uuidComponentModification: String
-    limit: Int
-    offset: Int
-  ): [ShowFile!]!
-  components(uuidComponent: String, limit: Int, offset: Int): [ShowComponent!]!
-  componentModification(
-    uuidComponent: String
-    limit: Int
-    offset: Int
-  ): [ShowComponentModification!]!
-  licenses(idLicense: [Int!], limit: Int, offset: Int): [License!]!
-  licenseComponent(
-    idLicense: Int
-    uuidComponent: String
-    limit: Int
-    offset: Int
-  ): [LicenseToComponent!]!
-  param(idParam: [Int!]!, limit: Int, offset: Int): [Param!]!
-  paramComponent(
-    idParam: Int
-    uuidComponent: String
-    limit: Int
-    offset: Int
-  ): [ParamToModel!]!
-  paramModification(
-    idParam: Int
-    uuidModification: String
-    limit: Int
-    offset: Int
-  ): [ParamToModel!]!
-  companies(uuidCompany: String, limit: Int, offset: Int): [ShowCompany!]!
-  companyRepresents(
-    uuidCompany: String
-    limit: Int
-    offset: Int
-  ): [ShowCompanyRepresent!]!
-  standards(uuidStandard: String, limit: Int, offset: Int): [ShowStandard!]!
+  users(usersUuids: [String!]!): [ShowUserShort!]!
+  user(userUuid: String!): UserAndRelatedData!
+  myself: SlimUser!
+  showTokens: [UserToken!]!
+  getToken: Token!
+  updateToken: Token!
+  decodeToken: Claims!
+  deleteToken(token: String!): String!
+  deleteAllTokens: String!
+  logout: String!
+  notifications(selectIds: [Int!], limit: Int, offset: Int): [Notification!]!
+  components(componentsUuids: [String!]!): [ShowComponentShort!]!
+  component(componentUuid: String!): ComponentAndRelatedData!
+  filesSetModification(setId: Int, limit: Int, offset: Int): [FileToSetModification!]!
+  standards(standardsUuids: [String!]!): [ShowStandardShort!]!
+  standard(standardUuid: String!): StandardAndRelatedData!
+  companies(companiesUuids: [String!]!): [ShowCompanyShort!]!
+  company(companyUuid: String!): CompanyAndRelatedData!
+  companyRepresents(companyUuid: String, representsUuids: [String!]): [CompanyRepresentAndRelatedData!]!
+  keywords(keywordId: [Int!], limit: Int, offset: Int): [Keyword!]!
+  languages(langId: [Int!], limit: Int, offset: Int): [Language!]!
+  licenses(licenseId: [Int!], limit: Int, offset: Int): [License!]!
+  params(paramId: [Int!], limit: Int, offset: Int): [ParamTranslateList!]!
+  programs(programId: [Int!], limit: Int, offset: Int): [Program!]!
+  regions(regionId: [Int!], limit: Int, offset: Int): [RegionTranslateList!]!
+  specs(specId: [Int!], limit: Int, offset: Int): [SpecTranslateList!]!
+
+  """Presigned URL for download file from storage"""
+  presignedUrl(fileUuid: String!): String!
   _service: _Service!
   _entities(representations: [_Any!]!): [_Entity]!
 }
 
-type ShowCompany {
-  uuid: ID!
-  orgname: String!
+type RegionTranslateList {
+  regionId: Int!
+  langId: Int!
+  region: String!
+}
+
+type RepresentationTypeTranslateList {
+  representationTypeId: Int!
+  langId: Int!
+  representationType: String!
+}
+
+type SetOfFilesProgram {
+  id: Int!
+  modificationUuid: ID!
+  programId: Int!
+}
+
+type SetOfFilesProgramRelatedData {
+  id: Int!
+  modificationUuid: UUID!
+  program: Program!
+}
+
+type ShowCompanyShort {
+  uuid: UUID!
   shortname: String!
   inn: String!
-  phone: String!
-  email: String!
   description: String!
-  address: String!
-  siteUrl: String!
-  timeZone: Int!
-  uuidUser: ID!
-  uuidImageFile: ID!
-  idRegion: Int!
-  idTypeOrg: Int!
+  imageFile: SlimFile!
+  region: RegionTranslateList!
+  companyType: CompanyTypeTranslateList!
   isSupplier: Boolean!
-  isEmailVerified: Boolean!
-  isEnabled: Boolean!
-  isDelete: Boolean!
-  createdAt: NaiveDateTime!
+  isFollowed: Boolean!
   updatedAt: NaiveDateTime!
 }
 
-type ShowCompanyRepresent {
-  uuid: ID!
-  uuidCompany: ID!
-  idRegion: Int!
-  idRepresentationType: Int!
-  name: String!
-  address: String!
-  phone: String!
-}
-
-type ShowComponent {
-  uuid: ID!
-  uuidComponentParent: ID!
+type ShowComponentShort {
+  uuid: UUID!
   name: String!
   description: String!
-  uuidUser: ID!
-  idTypeAccess: Int!
-  idComponentType: Int!
-  idActualStatus: Int!
+  ownerUser: ShowUserShort!
+  typeAccessId: Int!
+  componentType: ComponentTypeTranslateList!
+  actualStatus: ActualStatusTranslateList!
+  isFollowed: Boolean!
   isStandard: Boolean!
-  isDelete: Boolean!
-  createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!
-}
-
-type ShowComponentModification {
-  uuid: ID!
-  uuidComponent: ID!
-  uuidModificationParent: ID!
-  modificationName: String!
-  description: String!
-  idActualStatus: Int!
-  isDelete: Boolean!
-  createdAt: NaiveDateTime!
-  updatedAt: NaiveDateTime!
+  licenses: [License!]!
+  files: [ShowFile!]!
+  componentSuppliers: [ComponentSupplierRelatedData!]!
 }
 
 type ShowFile {
   uuid: ID!
-  uuidFileParent: ID!
-  uuidUser: ID!
+  parentFileUuid: ID!
+  userUuid: ID!
   filename: String!
+  contentType: String!
   idExt: Int!
-  valueExt: String!
   filesize: Int!
   pathFile: String!
   createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!
 }
 
-type ShowStandard {
-  uuid: ID!
-  uuidStandardParent: ID!
+type ShowStandardShort {
+  uuid: UUID!
   classifier: String!
   name: String!
   description: String!
   specifiedTolerance: String!
-  technicalCommittee: String!
   publicationAt: NaiveDateTime!
-  uuidImageFile: ID!
-  uuidUser: ID!
-  uuidCompany: ID!
-  idTypeAccess: Int!
-  idStandardStatus: Int!
-  idRegion: Int!
-  isDelete: Boolean!
-  createdAt: NaiveDateTime!
+  ownerCompany: ShowCompanyShort!
+  standardStatus: StandardStatusTranslateList!
   updatedAt: NaiveDateTime!
+  isFollowed: Boolean!
 }
 
-type ShowUser {
+type ShowUserShort {
   uuid: ID!
-  email: String!
-  firstname: String!
-  lastname: String!
-  secondname: String!
   username: String!
-  phone: String!
-  description: String!
-  address: String!
-  position: String!
-  timeZone: Int!
-  uuidImageFile: ID!
-  idRegion: Int!
-  idProgram: Int!
-  isEmailVerified: Boolean!
-  isEnabled: Boolean!
-  isDelete: Boolean!
-  createdAt: NaiveDateTime!
-  updatedAt: NaiveDateTime!
+  imageFile: SlimFile!
 }
 
 type SlimCompany {
@@ -341,7 +594,7 @@ type SlimCompany {
 
 type SlimCompanyRepresent {
   uuid: ID!
-  uuidCompany: ID!
+  companyUuid: ID!
   name: String!
   address: String!
   phone: String!
@@ -351,24 +604,31 @@ type SlimComponent {
   uuid: ID!
   name: String!
   description: String!
-  idTypeAccess: Int!
-  idComponentType: Int!
-  idActualStatus: Int!
+  typeAccessId: Int!
+  componentTypeId: Int!
+  actualStatusId: Int!
   isStandard: Boolean!
-  createdAt: NaiveDateTime!
+  updatedAt: NaiveDateTime!
 }
 
 type SlimComponentModification {
   uuid: ID!
-  uuidComponent: ID!
+  componentUuid: ID!
   modificationName: String!
   description: String!
   updatedAt: NaiveDateTime!
 }
 
+type SlimFile {
+  uuid: ID!
+  filename: String!
+  filesize: Int!
+  pathFile: String!
+}
+
 type SlimNotification {
   notification: String!
-  idDegreeImportance: Int!
+  degreeImportanceId: Int!
   isRead: Boolean!
 }
 
@@ -379,16 +639,130 @@ type SlimStandard {
   specifiedTolerance: String!
   technicalCommittee: String!
   publicationAt: NaiveDateTime!
-  idStandardStatus: Int!
+  standardStatusId: Int!
 }
 
 type SlimUser {
   uuid: ID!
-  idProgram: Int!
+  programId: Int!
   username: String!
 }
 
-# The `_Any` scalar is used to pass representations of entities from external services into the root `_entities` field for execution.
+type SpecComponent {
+  specId: Int!
+  componentUuid: ID!
+}
+
+type SpecTranslateList {
+  specId: Int!
+  langId: Int!
+  spec: String!
+}
+
+type StandardAndRelatedData {
+  uuid: UUID!
+  parentStandardUuid: UUID!
+  classifier: String!
+  name: String!
+  description: String!
+  specifiedTolerance: String!
+  technicalCommittee: String!
+  publicationAt: NaiveDateTime!
+  imageFile: SlimFile!
+  ownerUser: ShowUserShort!
+  ownerCompany: ShowCompanyShort!
+  typeAccessId: Int!
+  standardStatus: StandardStatusTranslateList!
+  region: RegionTranslateList!
+  isDelete: Boolean!
+  createdAt: NaiveDateTime!
+  updatedAt: NaiveDateTime!
+  standardFiles: [ShowFile!]!
+  standardSpecs: [StandardSpecWithTranslation!]!
+  standardKeywords: [Keyword!]!
+  subscribers: Int!
+  isFollowed: Boolean!
+}
+
+type StandardFav {
+  standardUuid: ID!
+  userUuid: ID!
+  isEnabled: Boolean!
+  createdAt: NaiveDateTime!
+}
+
+type StandardSpecWithTranslation {
+  spec: SpecTranslateList!
+  standardUuid: UUID!
+}
+
+type StandardStatusTranslateList {
+  standardStatusId: Int!
+  langId: Int!
+  name: String!
+}
+
+type SupplierComponent {
+  companyUuid: ID!
+  componentUuid: ID!
+  description: String!
+}
+
+type Token {
+  bearer: String
+}
+
+scalar UUID
+
+type UserAndRelatedData {
+  uuid: UUID!
+  email: String!
+  firstname: String!
+  lastname: String!
+  secondname: String!
+  username: String!
+  phone: String!
+  description: String!
+  address: String!
+  position: String!
+  timeZone: String!
+  imageFile: SlimFile!
+  region: RegionTranslateList!
+  program: Program!
+  isEmailVerified: Boolean!
+  isEnabled: Boolean!
+  isDelete: Boolean!
+  createdAt: NaiveDateTime!
+  updatedAt: NaiveDateTime!
+  certificates: [CertificateWithSlimFile!]!
+  subscribers: Int!
+  isFollowed: Boolean!
+  companiesCount: Int!
+  componentsCount: Int!
+  standardsCount: Int!
+  favCompaniesCount: Int!
+  favComponentsCount: Int!
+  favStandardsCount: Int!
+  favUsersCount: Int!
+}
+
+type UserFav {
+  userFavoriteUuid: ID!
+  userFollowerUuid: ID!
+  isEnabled: Boolean!
+  createdAt: NaiveDateTime!
+}
+
+type UserToken {
+  userUuid: ID!
+  token: String!
+  createdAt: NaiveDateTime!
+  expirationAt: NaiveDateTime!
+}
+
+"""
+The `_Any` scalar is used to pass representations of entities from external services into the root `_entities` field for execution.
+"""
 scalar _Any
 
 union _Entity

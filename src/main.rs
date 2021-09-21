@@ -8,6 +8,7 @@ pub mod error;
 pub mod routes;
 pub mod services;
 pub mod types;
+pub mod gqls;
 
 // use wasm_bindgen::prelude::*;
 

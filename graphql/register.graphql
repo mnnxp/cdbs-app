@@ -1,0 +1,20 @@
+query RegisterOpt {
+  programs {
+    id
+    name
+  }
+
+  regions {
+    regionId
+    langId
+    region
+  }
+}
+
+mutation RegUser($data: IptUserData!) {
+  registerUser(data: $data) {
+    uuid
+    username
+    programId
+  }
+}

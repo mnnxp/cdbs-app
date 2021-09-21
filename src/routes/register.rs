@@ -1,12 +1,18 @@
+use graphql_client::{GraphQLQuery, Response};
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+use wasm_bindgen_futures::{spawn_local, JsFuture};
 use yew::services::fetch::FetchTask;
+use yew::services::ConsoleService;
 use yew::{
     agent::Bridged, html, Bridge, Callback, Component, ComponentLink, FocusEvent, Html, InputData,
     Properties, ShouldRender,
 };
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
 
-use crate::fragments::list_errors::ListErrors;
 use crate::error::Error;
+use crate::fragments::list_errors::ListErrors;
+use crate::gqls::make_query;
 use crate::routes::AppRoute;
 use crate::services::{set_token, Auth};
 use crate::types::{RegisterInfo, RegisterInfoWrapper, SlimUser, SlimUserWrapper};
@@ -20,8 +26,39 @@ pub struct Register {
     response: Callback<Result<SlimUserWrapper, Error>>,
     router_agent: Box<dyn Bridge<RouteAgent>>,
     task: Option<FetchTask>,
+    regions: Vec<Region>,
+    programs: Vec<Program>,
     link: ComponentLink<Self>,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Region {
+    langId: usize,
+    region: String,
+    regionId: usize,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Program {
+    id: usize,
+    name: String,
+}
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/register.graphql",
+    response_derives = "Debug"
+)]
+struct RegisterOpt;
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/register.graphql",
+    response_derives = "Debug"
+)]
+struct RegUser;
 
 #[derive(PartialEq, Properties, Clone)]
 pub struct Props {
@@ -42,6 +79,8 @@ pub enum Msg {
     UpdateIdTypeUser(String),
     UpdateIsSupplier(String),
     UpdateIdNameCad(String),
+    UpdateList(String),
+    GetRegister(String),
 }
 
 impl Component for Register {
@@ -58,16 +97,64 @@ impl Component for Register {
             props,
             router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             link,
+            programs: Vec::new(),
+            regions: Vec::new(),
+        }
+    }
+
+    fn rendered(&mut self, first_render: bool) {
+        let link = self.link.clone();
+        if first_render {
+            spawn_local(async move {
+                let res = make_query(RegisterOpt::build_query(register_opt::Variables)).await;
+                link.send_message(Msg::UpdateList(res.unwrap()))
+            });
         }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
+        let link = self.link.clone();
         match msg {
             Msg::Request => {
-                let request = RegisterInfoWrapper {
-                    user: self.request.clone(),
-                };
-                self.task = Some(self.auth.register(request, self.response.clone()));
+                // let request = RegisterInfoWrapper {
+                //     user: self.request.clone(),
+                // };
+                // self.task = Some(self.auth.register(request, self.response.clone()));
+                let request = self.request.clone();
+                spawn_local(async move {
+                    let RegisterInfo {
+                        firstname,
+                        lastname,
+                        secondname,
+                        username,
+                        email,
+                        password,
+                        phone,
+                        description,
+                        address,
+                        time_zone,
+                        position,
+                        regionId,
+                        programId,
+                    } = request;
+                    let data = reg_user::IptUserData {
+                        firstname,
+                        lastname,
+                        secondname,
+                        username,
+                        email,
+                        password,
+                        phone,
+                        description,
+                        address,
+                        timeZone: time_zone.to_string(),
+                        position,
+                        regionId: regionId.parse().unwrap_or(1),
+                        programId: programId.parse().unwrap_or(1),
+                    };
+                    let res = make_query(RegUser::build_query(reg_user::Variables { data })).await;
+                    link.send_message(Msg::GetRegister(res.unwrap()));
+                })
             }
             Msg::Response(Ok(user_info)) => {
                 // set_token(Some(user_info.user.token.clone()));
@@ -100,14 +187,26 @@ impl Component for Register {
                 self.request.username = username;
             }
             Msg::UpdateIdTypeUser(id_type_user) => {
-                self.request.id_type_user = id_type_user.parse::<i32>().unwrap_or(1);
+                // self.request.id_type_user = id_type_user.parse::<i32>().unwrap_or(1);
             }
             Msg::UpdateIsSupplier(is_supplier) => {
-                self.request.is_supplier = is_supplier.parse::<i32>().unwrap_or(0);
+                // self.request.is_supplier = is_supplier.parse::<i32>().unwrap_or(0);
             }
             Msg::UpdateIdNameCad(id_name_cad) => {
-                self.request.id_name_cad = id_name_cad.parse::<i32>().unwrap_or(1);
+                // self.request.id_name_cad = id_name_cad.parse::<i32>().unwrap_or(1);
             }
+            Msg::UpdateList(res) => {
+                // self.list = res;
+                // true
+                let data: Value = serde_json::from_str(res.as_str()).unwrap();
+                let res = data.as_object().unwrap().get("data").unwrap();
+                let programs = res.get("programs").unwrap();
+                self.regions = serde_json::from_value(res.get("regions").unwrap().clone()).unwrap();
+                self.programs =
+                    serde_json::from_value(res.get("programs").unwrap().clone()).unwrap();
+                ConsoleService::info(format!("Update: {:?}", self.programs).as_ref());
+            }
+            Msg::GetRegister(res) => {}
             Msg::Ignore => {}
         }
         true
@@ -252,43 +351,46 @@ impl Component for Register {
                             </div>
                         </fieldset>
                         <fieldset class="field">
-                            <label class="label">{"Select type profile:"}</label>
+                            <label class="label">{"Select a program:"}</label>
                             <div class="control">
                                 <div class="select">
                                   <select
-                                      select=self.request.id_type_user.to_string()
+                                      select=self.request.programId.to_string()
                                       oninput=oninput_id_type_user
                                       >
-                                    <option value=1>{1}</option>
+                                    { for self.programs.iter().map(|x| html!{
+                                      <option value={x.id.to_string()} >{&x.name}</option>
+                                    }) }
                                   </select>
                                 </div>
                             </div>
                         </fieldset>
+                        // <fieldset class="field">
+                        //     <label class="label">{"You're supplier?"}</label>
+                        //     <div class="control">
+                        //         <label class="radio">
+                        //           <input type="radio" name="question"/>
+                        //           {1}
+                        //         </label>
+                        //         <label class="radio">
+                        //           <input type="radio" name="question"
+                        //           select=self.request.is_supplier.to_string()
+                        //           oninput=oninput_is_supplier/>
+                        //           {0}
+                        //         </label>
+                        //     </div>
+                        // </fieldset>
                         <fieldset class="field">
-                            <label class="label">{"You're supplier?"}</label>
-                            <div class="control">
-                                <label class="radio">
-                                  <input type="radio" name="question"/>
-                                  {1}
-                                </label>
-                                <label class="radio">
-                                  <input type="radio" name="question"
-                                  select=self.request.is_supplier.to_string()
-                                  oninput=oninput_is_supplier/>
-                                  {0}
-                                </label>
-                            </div>
-                        </fieldset>
-                        <fieldset class="field">
-                            <label class="label">{"What's CAD you use?"}</label>
+                            <label class="label">{"What's your region?"}</label>
                             <div class="control">
                                 <div class="select">
                                   <select
-                                      select=self.request.id_name_cad.to_string()
+                                      select=self.request.regionId.to_string()
                                       oninput=oninput_id_name_cad
                                       >
-                                    <option value=1>{1}</option>
-                                    <option value=2>{2}</option>
+                                      { for self.regions.iter().map(|x| html!{
+                                        <option value={x.regionId.to_string()} >{&x.region}</option>
+                                      }) }
                                   </select>
                                 </div>
                             </div>

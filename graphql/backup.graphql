@@ -1,0 +1,398 @@
+schema {
+  query: QueryRoot
+  mutation: MutationRoot
+}
+
+# Directs the executor to query only when the field exists.
+directive @ifdef on FIELD
+
+input IptCompanyData {
+  orgname: String!
+  shortname: String!
+  inn: String!
+  phone: String!
+  email: String!
+  description: String!
+  address: String!
+  siteUrl: String!
+  timeZone: Int!
+  uuidUser: ID!
+  uuidImageFile: ID!
+  idRegion: Int!
+  idTypeOrg: Int!
+}
+
+input IptCompanyRepresentData {
+  uuidCompany: ID!
+  idRegion: Int!
+  idRepresentationType: Int!
+  name: String!
+  address: String!
+  phone: String!
+}
+
+input IptComponentData {
+  uuidComponentParent: ID!
+  name: String!
+  description: String!
+  idTypeAccess: Int!
+  idComponentType: Int!
+  idActualStatus: Int!
+  isStandard: Boolean!
+}
+
+input IptComponentModificationData {
+  uuidComponent: ID!
+  uuidModificationParent: ID!
+  modificationName: String!
+  description: String!
+  idActualStatus: Int!
+}
+
+input IptLicenseToComponentData {
+  uuidComponent: ID!
+  idLicense: Int!
+}
+
+input IptParamToModelData {
+  uuid: ID!
+  idParam: Int!
+  value: String!
+}
+
+input IptStandardData {
+  uuidStandardParent: ID!
+  classifier: String!
+  name: String!
+  description: String!
+  specifiedTolerance: String!
+  technicalCommittee: String!
+  publicationAt: NaiveDateTime!
+  uuidImageFile: ID!
+  uuidUser: ID!
+  uuidCompany: ID!
+  idTypeAccess: Int!
+  idStandardStatus: Int!
+  idRegion: Int!
+}
+
+input IptUserData {
+  email: String!
+  password: String!
+  firstname: String!
+  lastname: String!
+  secondname: String!
+  username: String!
+  phone: String!
+  description: String!
+  address: String!
+  position: String!
+  timeZone: Int!
+  uuidImageFile: ID!
+  idRegion: Int!
+  idProgram: Int!
+}
+
+type License {
+  id: Int!
+  name: String!
+  keyword: String!
+  description: String!
+  publicationAt: NaiveDateTime!
+}
+
+input LicenseData {
+  name: String!
+  keyword: String!
+  description: String!
+  publicationAt: NaiveDateTime!
+}
+
+type LicenseToComponent {
+  id: Int!
+  uuidComponent: ID!
+  idLicense: Int!
+}
+
+type MutationRoot {
+  userRegister(data: IptUserData!): SlimUser!
+  notificationRegister(data: NotificationData!): SlimNotification!
+  notificationDelete(idNotification: Int!): Notification!
+  componentRegister(data: IptComponentData!): SlimComponent!
+  componentModificationRegister(
+    data: IptComponentModificationData!
+  ): SlimComponentModification!
+  licenseRegister(data: LicenseData!): License!
+  licenseComponentRegister(
+    data: IptLicenseToComponentData!
+  ): LicenseToComponent!
+  paramRegister(data: ParamData!): Param!
+  paramComponentRegister(data: IptParamToModelData!): ParamToModel!
+  paramModificationRegister(data: IptParamToModelData!): ParamToModel!
+  companyRegister(data: IptCompanyData!): SlimCompany!
+  companyRepresentRegister(
+    data: IptCompanyRepresentData!
+  ): SlimCompanyRepresent!
+  companyRepresentDelete(
+    targetUuidCompany: String!
+    targetUuidCompanyRepresent: String!
+  ): SlimCompanyRepresent!
+  standardRegister(data: IptStandardData!): SlimStandard!
+}
+
+scalar NaiveDateTime
+
+type Notification {
+  id: Int!
+  notification: String!
+  idDegreeImportance: Int!
+  generatedAt: NaiveDateTime!
+  isRead: Boolean!
+}
+
+input NotificationData {
+  notification: String!
+  idDegreeImportance: Int!
+}
+
+type Param {
+  id: Int!
+  paramname: String!
+}
+
+input ParamData {
+  paramname: String!
+}
+
+type ParamToModel {
+  id: Int!
+  uuid: ID!
+  idParam: Int!
+  value: String!
+}
+
+type QueryRoot {
+  users(uuid: String, limit: Int, offset: Int): [ShowUser!]!
+  notifications(idNotification: Int, limit: Int, offset: Int): [Notification!]!
+  files(
+    uuidUser: String
+    uuidComponent: String
+    uuidComponentModification: String
+    limit: Int
+    offset: Int
+  ): [ShowFile!]!
+  components(uuidComponent: String, limit: Int, offset: Int): [ShowComponent!]!
+  componentModification(
+    uuidComponent: String
+    limit: Int
+    offset: Int
+  ): [ShowComponentModification!]!
+  licenses(idLicense: [Int!], limit: Int, offset: Int): [License!]!
+  licenseComponent(
+    idLicense: Int
+    uuidComponent: String
+    limit: Int
+    offset: Int
+  ): [LicenseToComponent!]!
+  param(idParam: [Int!]!, limit: Int, offset: Int): [Param!]!
+  paramComponent(
+    idParam: Int
+    uuidComponent: String
+    limit: Int
+    offset: Int
+  ): [ParamToModel!]!
+  paramModification(
+    idParam: Int
+    uuidModification: String
+    limit: Int
+    offset: Int
+  ): [ParamToModel!]!
+  companies(uuidCompany: String, limit: Int, offset: Int): [ShowCompany!]!
+  companyRepresents(
+    uuidCompany: String
+    limit: Int
+    offset: Int
+  ): [ShowCompanyRepresent!]!
+  standards(uuidStandard: String, limit: Int, offset: Int): [ShowStandard!]!
+  _service: _Service!
+  _entities(representations: [_Any!]!): [_Entity]!
+}
+
+type ShowCompany {
+  uuid: ID!
+  orgname: String!
+  shortname: String!
+  inn: String!
+  phone: String!
+  email: String!
+  description: String!
+  address: String!
+  siteUrl: String!
+  timeZone: Int!
+  uuidUser: ID!
+  uuidImageFile: ID!
+  idRegion: Int!
+  idTypeOrg: Int!
+  isSupplier: Boolean!
+  isEmailVerified: Boolean!
+  isEnabled: Boolean!
+  isDelete: Boolean!
+  createdAt: NaiveDateTime!
+  updatedAt: NaiveDateTime!
+}
+
+type ShowCompanyRepresent {
+  uuid: ID!
+  uuidCompany: ID!
+  idRegion: Int!
+  idRepresentationType: Int!
+  name: String!
+  address: String!
+  phone: String!
+}
+
+type ShowComponent {
+  uuid: ID!
+  uuidComponentParent: ID!
+  name: String!
+  description: String!
+  uuidUser: ID!
+  idTypeAccess: Int!
+  idComponentType: Int!
+  idActualStatus: Int!
+  isStandard: Boolean!
+  isDelete: Boolean!
+  createdAt: NaiveDateTime!
+  updatedAt: NaiveDateTime!
+}
+
+type ShowComponentModification {
+  uuid: ID!
+  uuidComponent: ID!
+  uuidModificationParent: ID!
+  modificationName: String!
+  description: String!
+  idActualStatus: Int!
+  isDelete: Boolean!
+  createdAt: NaiveDateTime!
+  updatedAt: NaiveDateTime!
+}
+
+type ShowFile {
+  uuid: ID!
+  uuidFileParent: ID!
+  uuidUser: ID!
+  filename: String!
+  idExt: Int!
+  valueExt: String!
+  filesize: Int!
+  pathFile: String!
+  createdAt: NaiveDateTime!
+  updatedAt: NaiveDateTime!
+}
+
+type ShowStandard {
+  uuid: ID!
+  uuidStandardParent: ID!
+  classifier: String!
+  name: String!
+  description: String!
+  specifiedTolerance: String!
+  technicalCommittee: String!
+  publicationAt: NaiveDateTime!
+  uuidImageFile: ID!
+  uuidUser: ID!
+  uuidCompany: ID!
+  idTypeAccess: Int!
+  idStandardStatus: Int!
+  idRegion: Int!
+  isDelete: Boolean!
+  createdAt: NaiveDateTime!
+  updatedAt: NaiveDateTime!
+}
+
+type ShowUser {
+  uuid: ID!
+  email: String!
+  firstname: String!
+  lastname: String!
+  secondname: String!
+  username: String!
+  phone: String!
+  description: String!
+  address: String!
+  position: String!
+  timeZone: Int!
+  uuidImageFile: ID!
+  idRegion: Int!
+  idProgram: Int!
+  isEmailVerified: Boolean!
+  isEnabled: Boolean!
+  isDelete: Boolean!
+  createdAt: NaiveDateTime!
+  updatedAt: NaiveDateTime!
+}
+
+type SlimCompany {
+  uuid: ID!
+  shortname: String!
+  isSupplier: Boolean!
+}
+
+type SlimCompanyRepresent {
+  uuid: ID!
+  uuidCompany: ID!
+  name: String!
+  address: String!
+  phone: String!
+}
+
+type SlimComponent {
+  uuid: ID!
+  name: String!
+  description: String!
+  idTypeAccess: Int!
+  idComponentType: Int!
+  idActualStatus: Int!
+  isStandard: Boolean!
+  createdAt: NaiveDateTime!
+}
+
+type SlimComponentModification {
+  uuid: ID!
+  uuidComponent: ID!
+  modificationName: String!
+  description: String!
+  updatedAt: NaiveDateTime!
+}
+
+type SlimNotification {
+  notification: String!
+  idDegreeImportance: Int!
+  isRead: Boolean!
+}
+
+type SlimStandard {
+  uuid: ID!
+  classifier: String!
+  name: String!
+  specifiedTolerance: String!
+  technicalCommittee: String!
+  publicationAt: NaiveDateTime!
+  idStandardStatus: Int!
+}
+
+type SlimUser {
+  uuid: ID!
+  idProgram: Int!
+  username: String!
+}
+
+# The `_Any` scalar is used to pass representations of entities from external services into the root `_entities` field for execution.
+scalar _Any
+
+union _Entity
+
+type _Service {
+  sdl: String
+}

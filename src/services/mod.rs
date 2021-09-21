@@ -6,6 +6,7 @@ mod comments;
 mod profiles;
 mod requests;
 mod tags;
+mod register;
 
 pub use articles::Articles;
 pub use auth::Auth;
@@ -13,3 +14,4 @@ pub use comments::Comments;
 pub use profiles::Profiles;
 pub use requests::{get_token, is_authenticated, limit, set_token, Requests};
 pub use tags::Tags;
+pub use register::Register;
