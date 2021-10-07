@@ -5,7 +5,7 @@ use wasm_bindgen_futures::{spawn_local, JsFuture};
 use yew::services::fetch::FetchTask;
 use yew::services::ConsoleService;
 use yew::{
-    agent::Bridged, html, Bridge, Callback, Component, ComponentLink, FocusEvent, Html, InputData,
+    agent::Bridged, html, Bridge, Callback, Component, ComponentLink, FocusEvent, Html, InputData,ChangeData,
     Properties, ShouldRender,
 };
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
@@ -76,9 +76,9 @@ pub enum Msg {
     UpdateUsername(String),
     UpdateEmail(String),
     UpdatePassword(String),
-    UpdateIdTypeUser(String),
+    UpdateProgramId(String),
     UpdateIsSupplier(String),
-    UpdateIdNameCad(String),
+    UpdateRegionId(String),
     UpdateList(String),
     GetRegister(String),
 }
@@ -149,8 +149,8 @@ impl Component for Register {
                         address,
                         timeZone: time_zone.to_string(),
                         position,
-                        regionId: regionId.parse().unwrap_or(1),
-                        programId: programId.parse().unwrap_or(1),
+                        regionId: regionId.into(),
+                        programId: programId.into(),
                     };
                     let res = make_query(RegUser::build_query(reg_user::Variables { data })).await;
                     link.send_message(Msg::GetRegister(res.unwrap()));
@@ -186,14 +186,16 @@ impl Component for Register {
             Msg::UpdateUsername(username) => {
                 self.request.username = username;
             }
-            Msg::UpdateIdTypeUser(id_type_user) => {
-                // self.request.id_type_user = id_type_user.parse::<i32>().unwrap_or(1);
+            Msg::UpdateProgramId(program_id) => {
+                self.request.programId = program_id.parse::<i32>().unwrap_or(1);
+                ConsoleService::info(format!("Update: {:?}", program_id).as_ref());
             }
             Msg::UpdateIsSupplier(is_supplier) => {
                 // self.request.is_supplier = is_supplier.parse::<i32>().unwrap_or(0);
             }
-            Msg::UpdateIdNameCad(id_name_cad) => {
-                // self.request.id_name_cad = id_name_cad.parse::<i32>().unwrap_or(1);
+            Msg::UpdateRegionId(region_id) => {
+                self.request.regionId = region_id.parse::<i32>().unwrap_or(1);
+                ConsoleService::info(format!("Update: {:?}", region_id).as_ref());
             }
             Msg::UpdateList(res) => {
                 // self.list = res;
@@ -206,7 +208,9 @@ impl Component for Register {
                     serde_json::from_value(res.get("programs").unwrap().clone()).unwrap();
                 ConsoleService::info(format!("Update: {:?}", self.programs).as_ref());
             }
-            Msg::GetRegister(res) => {}
+            Msg::GetRegister(res) => {
+              self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
+            }
             Msg::Ignore => {}
         }
         true
@@ -240,15 +244,21 @@ impl Component for Register {
         let oninput_password = self
             .link
             .callback(|ev: InputData| Msg::UpdatePassword(ev.value));
-        let oninput_id_type_user = self
+        let oninput_program_id = self
             .link
-            .callback(|ev: InputData| Msg::UpdateIdTypeUser(ev.value));
+            .callback(|ev: ChangeData| Msg::UpdateProgramId(match ev {
+              ChangeData::Select(el) => el.value(),
+              _ => "1".to_string(),
+          }));
         let oninput_is_supplier = self
             .link
             .callback(|ev: InputData| Msg::UpdateIsSupplier(ev.value));
-        let oninput_id_name_cad = self
+        let onchange_region_id = self
             .link
-            .callback(|ev: InputData| Msg::UpdateIdNameCad(ev.value));
+            .callback(|ev: ChangeData| Msg::UpdateProgramId(match ev {
+              ChangeData::Select(el) => el.value(),
+              _ => "1".to_string(),
+          }));
 
         html! {
             <div class="auth-page">
@@ -356,7 +366,7 @@ impl Component for Register {
                                 <div class="select">
                                   <select
                                       select=self.request.programId.to_string()
-                                      oninput=oninput_id_type_user
+                                      onchange=oninput_program_id
                                       >
                                     { for self.programs.iter().map(|x| html!{
                                       <option value={x.id.to_string()} >{&x.name}</option>
@@ -386,7 +396,7 @@ impl Component for Register {
                                 <div class="select">
                                   <select
                                       select=self.request.regionId.to_string()
-                                      oninput=oninput_id_name_cad
+                                      onchange=onchange_region_id
                                       >
                                       { for self.regions.iter().map(|x| html!{
                                         <option value={x.regionId.to_string()} >{&x.region}</option>

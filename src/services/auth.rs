@@ -35,10 +35,10 @@ impl Auth {
     pub fn login(
         &mut self,
         login_info: LoginInfoWrapper,
-        callback: Callback<Result<SlimUserWrapper, Error>>,
+        callback: Callback<Result<UserToken, Error>>,
     ) -> FetchTask {
-        self.requests.post::<LoginInfoWrapper, SlimUserWrapper>(
-            "/users/login".to_string(),
+        self.requests.post::<LoginInfoWrapper, UserToken>(
+            "/login".to_string(),
             login_info,
             callback,
         )

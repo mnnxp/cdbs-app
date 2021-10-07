@@ -15,7 +15,7 @@ pub use articles::{
 };
 pub use auth::{
     LoginInfo, LoginInfoWrapper, RegisterInfo, RegisterInfoWrapper, SlimUser, SlimUserWrapper,
-    UserInfo, UserInfoWrapper, UserUpdateInfo, UserUpdateInfoWrapper,
+    UserInfo, UserInfoWrapper, UserUpdateInfo, UserUpdateInfoWrapper, UserToken
 };
 pub use comments::{
     CommentCreateInfo, CommentCreateInfoWrapper, CommentInfo, CommentInfoWrapper, CommentListInfo,

@@ -4,19 +4,20 @@ use yew::{
     Properties, ShouldRender,
 };
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
+use yew::services::ConsoleService;
 
 use crate::fragments::list_errors::ListErrors;
 use crate::error::Error;
 use crate::routes::AppRoute;
-use crate::services::{set_token, Auth};
-use crate::types::{LoginInfo, LoginInfoWrapper, SlimUser, SlimUserWrapper};
+use crate::services::{set_token, Auth, get_token};
+use crate::types::{LoginInfo, LoginInfoWrapper, SlimUser, SlimUserWrapper, UserToken};
 
 /// Login page
 pub struct Login {
     auth: Auth,
     error: Option<Error>,
     request: LoginInfo,
-    response: Callback<Result<SlimUserWrapper, Error>>,
+    response: Callback<Result<UserToken, Error>>,
     task: Option<FetchTask>,
     props: Props,
     router_agent: Box<dyn Bridge<RouteAgent>>,
@@ -31,7 +32,7 @@ pub struct Props {
 
 pub enum Msg {
     Request,
-    Response(Result<SlimUserWrapper, Error>),
+    Response(Result<UserToken, Error>),
     Ignore,
     UpdateUsername(String),
     UpdatePassword(String),
@@ -66,11 +67,13 @@ impl Component for Login {
                 // Set global token after logged in
                 // set_token(Some(user_info.user.token.clone()));
                 // set_token(Some(Auth::token_query());
-                self.props.callback.emit(user_info.user);
-                self.error = None;
-                self.task = None;
-                // Route to home page after logged in
-                self.router_agent.send(ChangeRoute(AppRoute::Home.into()));
+                // self.props.callback.emit(user_info.user);
+                // self.error = None;
+                // self.task = None;
+                // // Route to home page after logged in
+                // self.router_agent.send(ChangeRoute(AppRoute::Home.into()));
+                set_token(Some(user_info.to_string()));
+                ConsoleService::info(format!("{}", get_token().unwrap()).as_ref());
             }
             Msg::Response(Err(err)) => {
                 self.error = Some(err);

@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::fmt;
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 // #[serde(rename_all = "camelCase")]
@@ -34,8 +35,8 @@ pub struct RegisterInfo {
     pub address: String,
     pub time_zone: i32,
     pub position: String,
-    pub regionId: String,
-    pub programId: String,
+    pub regionId: i32,
+    pub programId: i32,
     // pub site_url: String,
     // pub uuid_file_info_icon: String,
     // pub id_region: i32,
@@ -65,8 +66,8 @@ impl Default for RegisterInfo {
             lastname: ("".to_owned()),
             firstname: ("".to_owned()),
             description: ("".to_owned()),
-            regionId: ("".to_owned()),
-            programId: ("".to_owned()),
+            regionId: 1,
+            programId: 1,
         }
     }
 }
@@ -75,6 +76,18 @@ impl Default for RegisterInfo {
 // #[serde(rename_all = "camelCase")]
 pub struct RegisterInfoWrapper {
     pub user: RegisterInfo,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+// #[serde(rename_all = "camelCase")]
+pub struct UserToken {
+    pub bearer: String,
+}
+
+impl fmt::Display for UserToken {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+      write!(f, "{}", self.bearer)
+  }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
