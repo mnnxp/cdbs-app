@@ -1,0 +1,7 @@
+query GetMySelf {
+  myself {
+    uuid
+    programId
+    username
+  }
+}

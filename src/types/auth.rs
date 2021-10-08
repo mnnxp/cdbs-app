@@ -93,7 +93,8 @@ impl fmt::Display for UserToken {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct SlimUser {
     pub uuid: String,
-    pub is_supplier: i32,
+    // pub is_supplier: i32,
+    pub programId: i32,
     pub username: String,
 }
 

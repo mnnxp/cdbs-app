@@ -5,12 +5,16 @@ use yew::{
 };
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
 use yew::services::ConsoleService;
+use graphql_client::{GraphQLQuery, Response};
 
 use crate::fragments::list_errors::ListErrors;
 use crate::error::Error;
 use crate::routes::AppRoute;
 use crate::services::{set_token, Auth, get_token};
 use crate::types::{LoginInfo, LoginInfoWrapper, SlimUser, SlimUserWrapper, UserToken};
+use crate::gqls::make_query;
+use wasm_bindgen_futures::{spawn_local, JsFuture};
+use std::sync::{Arc,Mutex};
 
 /// Login page
 pub struct Login {
@@ -20,7 +24,7 @@ pub struct Login {
     response: Callback<Result<UserToken, Error>>,
     task: Option<FetchTask>,
     props: Props,
-    router_agent: Box<dyn Bridge<RouteAgent>>,
+    router_agent: Arc<Mutex<Box<dyn Bridge<RouteAgent>>>>,
     link: ComponentLink<Self>,
 }
 
@@ -38,6 +42,14 @@ pub enum Msg {
     UpdatePassword(String),
 }
 
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/user.graphql",
+    response_derives = "Debug"
+)]
+struct GetMySelf;
+
 impl Component for Login {
     type Message = Msg;
     type Properties = Props;
@@ -49,13 +61,16 @@ impl Component for Login {
             props,
             request: LoginInfo::default(),
             response: link.callback(Msg::Response),
-            router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
+            router_agent: Arc::new(Mutex::new(RouteAgent::bridge(link.callback(|_| Msg::Ignore)))) ,
             task: None,
             link,
         }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
+        // let link = self.link.clone();
+        let props = self.props.clone();
+        let router_agent = self.router_agent.clone();
         match msg {
             Msg::Request => {
                 let request = LoginInfoWrapper {
@@ -73,6 +88,16 @@ impl Component for Login {
                 // // Route to home page after logged in
                 // self.router_agent.send(ChangeRoute(AppRoute::Home.into()));
                 set_token(Some(user_info.to_string()));
+                spawn_local(async move {
+                    let res = make_query(GetMySelf::build_query(get_my_self::Variables)).await.unwrap();
+                    ConsoleService::info(format!("{}", res).as_ref());
+                    let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
+                    let res = data.as_object().unwrap().get("data").unwrap();
+                    let user : SlimUser = serde_json::from_value(res.get("myself").unwrap().clone()).unwrap();
+                    ConsoleService::info(format!("{}", user.username).as_ref());
+                    props.callback.emit(user);
+                    router_agent.lock().unwrap().send(ChangeRoute(AppRoute::Home.into()));
+                });
                 ConsoleService::info(format!("{}", get_token().unwrap()).as_ref());
             }
             Msg::Response(Err(err)) => {
