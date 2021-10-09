@@ -58,9 +58,12 @@ where
     opts.method("POST");
     opts.body(Some(&JsValue::from_str(query.to_string().as_str())));
     opts.mode(RequestMode::Cors);
-    opts.headers(&JsValue::from_serde(&serde_json::json!(serde_json::json!(HttpHeaders{
-      Authorization: format!("Bearer {}", get_token().unwrap()) 
-    }))).unwrap());
+    if get_token().is_some() {
+      opts.headers(&JsValue::from_serde(&serde_json::json!(serde_json::json!(HttpHeaders{
+        Authorization: format!("Bearer {}", get_token().unwrap()) 
+      }))).unwrap());
+    }
+    
     let url = String::from(API_GPL);
     let request = Request::new_with_str_and_init(url.as_str(), &opts)?;
 
