@@ -98,7 +98,7 @@ pub struct UserInfo {
     pub address: String,
     pub position: String,
     pub time_zone: String,
-    pub image_file: ImageFile,  // obj
+    pub image_file: ShortFile,  // obj
     pub region: Region,  // obj
     pub program: Program,  // obj
     pub is_email_verified: String,
@@ -106,7 +106,7 @@ pub struct UserInfo {
     pub is_delete: String,
     pub created_at: String,
     pub updated_at: String,
-    pub certificates: Certificates, // obj
+    pub certificates: Vec<Certificate>, // obj
     pub subscribers: i32,
     pub is_followed: bool,
     pub companies_count: i32,
@@ -118,17 +118,31 @@ pub struct UserInfo {
     pub fav_users_count: i32,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct ShortFile {
+    pub uuid: String,
+    pub filename: String,
+    pub filesize: usize,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Region {
-    pub langId: usize,
+    pub lang_id: usize,
     pub region: String,
     pub region_id: usize,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Program {
     pub id: usize,
     pub name: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct Certificate {
+    pub user_uuid: String,
+    pub file: ShortFile,
+    pub description: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
