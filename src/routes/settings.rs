@@ -5,11 +5,17 @@ use yew::{
 };
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
 
-use crate::fragments::list_errors::ListErrors;
+use crate::gqls::make_query;
+use graphql_client::{GraphQLQuery, Response};
+use serde_json::Value;
+use wasm_bindgen_futures::{spawn_local, JsFuture};
+
+
 use crate::error::Error;
+use crate::fragments::list_errors::ListErrors;
 use crate::routes::AppRoute;
 use crate::services::{is_authenticated, set_token, Auth};
-use crate::types::{UserInfoWrapper, SlimUserWrapper, UserUpdateInfo, UserUpdateInfoWrapper};
+use crate::types::{UUID, SlimUserWrapper, UserInfoWrapper, UserUpdateInfo, UserUpdateInfoWrapper};
 
 /// Update settings of the author or logout
 pub struct Settings {
@@ -17,7 +23,7 @@ pub struct Settings {
     error: Option<Error>,
     request: UserUpdateInfo,
     response: Callback<Result<usize, Error>>,
-    loaded: Callback<Result<usize, Error>>,
+    loaded: Callback<Result<GetSelfData, Error>>,
     task: Option<FetchTask>,
     router_agent: Box<dyn Bridge<RouteAgent>>,
     props: Props,
@@ -29,10 +35,18 @@ pub struct Props {
     pub callback: Callback<()>,
 }
 
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/user.graphql",
+    response_derives = "Debug"
+)]
+struct GetSelfData;
+
 pub enum Msg {
     Request,
     Response(Result<usize, Error>),
-    Loaded(Result<usize, Error>),
+    Loaded(Result<GetSelfData, Error>),
     Ignore,
     Logout,
     UpdateEmail(String),
@@ -68,8 +82,15 @@ impl Component for Settings {
     }
 
     fn rendered(&mut self, first_render: bool) {
+        let link = self.link.clone();
+
         if first_render && is_authenticated() {
-            self.task = Some(self.auth.user_info(self.loaded.clone()));
+            // self.task = Some(self.auth.user_info(self.loaded.clone()));
+
+            spawn_local(async move {
+                let res = make_query(GetSelfData::build_query(get_self_data::Variables)).await;
+                link.send_message(Msg::Loaded(res.unwrap()))
+            });
         }
     }
 
@@ -80,7 +101,7 @@ impl Component for Settings {
                     user: self.request.clone(),
                 };
 
-                self.task = Some(self.auth.save(request, self.response));
+                self.task = Some(self.auth.save(request, self.response.clone()));
             }
             Msg::Response(Ok(_)) => {
                 self.error = None;
@@ -91,22 +112,23 @@ impl Component for Settings {
                 self.error = Some(err);
                 self.task = None;
             }
-            Msg::Loaded(Ok(user_info)) => {
+            Msg::Loaded(Ok(data)) => {
                 self.error = None;
                 self.task = None;
+
                 self.request = UserUpdateInfo {
-                    email: user_info.user.email,
-                    firstname: user_info.user.firstname,
-                    lastname: user_info.user.lastname,
-                    secondname: user_info.user.secondname,
-                    username: user_info.user.username,
-                    phone: user_info.user.phone,
-                    description: user_info.user.description,
-                    address: user_info.user.address,
-                    position: user_info.user.position,
-                    timeZone: user_info.user.timeZone,
-                    regionId: user_info.user.region.regionId,
-                    programId: user_info.user.program.id,
+                    email: data.user.email,
+                    firstname: data.user.firstname,
+                    lastname: data.user.lastname,
+                    secondname: data.user.secondname,
+                    username: data.user.username,
+                    phone: data.user.phone,
+                    description: data.user.description,
+                    address: data.user.address,
+                    position: data.user.position,
+                    time_zone: data.user.time_zone,
+                    region_id: data.user.region.region_id,
+                    program_id: data.user.program.id,
                 };
             }
             Msg::Loaded(Err(err)) => {
@@ -122,42 +144,18 @@ impl Component for Settings {
                 // Redirect to home page
                 self.router_agent.send(ChangeRoute(AppRoute::Home.into()));
             }
-            Msg::UpdateEmail(email) => {
-                self.request.email = email
-            },
-            Msg::UpdateFirstname(firstname) => {
-                self.request.firstname = firstname
-            },
-            Msg::UpdateLastname(lastname) => {
-                self.request.lastname = lastname
-            },
-            Msg::UpdateSecondname(secondname) => {
-                self.request.secondname = secondname
-            },
-            Msg::UpdateUsername(username) => {
-                self.request.username = username
-            },
-            Msg::UpdatePhone(phone) => {
-                self.request.phone = phone
-            },
-            Msg::UpdateDescription(description) => {
-                self.request.description = description
-            },
-            Msg::UpdateAddress(address) => {
-                self.request.address = address
-            },
-            Msg::UpdatePosition(position) => {
-                self.request.position = position
-            },
-            Msg::UpdateTimeZone(timeZone) => {
-                self.request.timeZone = timeZone
-            },
-            Msg::UpdateRegionId(regionId) => {
-                self.request.regionId = regionId
-            },
-            Msg::UpdateProgramId(programId) => {
-                self.request.programId = programId
-            },
+            Msg::UpdateEmail(email) => self.request.email = email,
+            Msg::UpdateFirstname(firstname) => self.request.firstname = firstname,
+            Msg::UpdateLastname(lastname) => self.request.lastname = lastname,
+            Msg::UpdateSecondname(secondname) => self.request.secondname = secondname,
+            Msg::UpdateUsername(username) => self.request.username = username,
+            Msg::UpdatePhone(phone) => self.request.phone = phone,
+            Msg::UpdateDescription(description) => self.request.description = description,
+            Msg::UpdateAddress(address) => self.request.address = address,
+            Msg::UpdatePosition(position) => self.request.position = position,
+            Msg::UpdateTimeZone(time_zone) => self.request.time_zone = time_zone,
+            Msg::UpdateRegionId(region_id) => self.request.region_id = region_id,
+            Msg::UpdateProgramId(program_id) => self.request.program_id = program_id,
         }
         true
     }
@@ -188,28 +186,16 @@ impl Component for Settings {
         let oninput_email = self
             .link
             .callback(|ev: InputData| Msg::UpdateEmail(ev.value));
-        // let oninput_password = self
-        //     .link
-        //     .callback(|ev: InputData| Msg::UpdatePassword(ev.value));
-        let oninput_id_name_cad = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateIdNameCad(ev.value));
-        let oninput_id_type_user = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateIdTypeUser(ev.value));
-        let oninput_time_zone = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateTimeZone(ev.value));
         let oninput_position = self
             .link
             .callback(|ev: InputData| Msg::UpdatePosition(ev.value));
-        let oninput_uuid_file_info_icon = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateUuidFileInfoIcon(ev.value));
-        let oninput_id_region = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateIdRegion(ev.value));
         let onclick = self.link.callback(|_| Msg::Logout);
+        let oninput_phone = self
+            .link
+            .callback(|ev: InputData| Msg::UpdatePhone(ev.value));
+        let oninput_address = self
+            .link
+            .callback(|ev: InputData| Msg::UpdateAddress(ev.value));
 
         html! {
             <div class="settings-page">
@@ -262,25 +248,9 @@ impl Component for Settings {
                                                 value={self.request.email.clone()}
                                                 oninput=oninput_email />
                                         </fieldset>
-                                        // <fieldset class="field">
-                                        //     <input
-                                        //         class="input"
-                                        //         type="password"
-                                        //         placeholder="New Password"
-                                        //         value={self.password.to_string()}
-                                        //         oninput=oninput_password />
-                                        // </fieldset>
                                     </fieldset>
 
                                     <fieldset class="column">
-                                        <fieldset class="field">
-                                            <input
-                                                class="input"
-                                                type="text"
-                                                placeholder="time_zone"
-                                                value={self.request.time_zone.to_string()}
-                                                oninput=oninput_time_zone />
-                                        </fieldset>
                                         <fieldset class="field">
                                             <input
                                                 class="input"
@@ -289,49 +259,25 @@ impl Component for Settings {
                                                 value={self.request.position.clone()}
                                                 oninput=oninput_position />
                                         </fieldset>
-                                        <fieldset class="field">
-                                            <input
-                                                class="input"
-                                                type="text"
-                                                placeholder="uuid_file_info_icon"
-                                                value={self.request.uuid_file_info_icon.clone()}
-                                                oninput=oninput_uuid_file_info_icon />
-                                        </fieldset>
-                                        <fieldset class="field">
-                                            <input
-                                                class="input"
-                                                type="text"
-                                                placeholder="id_region"
-                                                value={self.request.id_region.to_string()}
-                                                oninput=oninput_id_region />
-                                        </fieldset>
-                                        <fieldset class="field">
-                                            <input
-                                                class="input"
-                                                type="text"
-                                                placeholder="id_name_cad"
-                                                value={self.request.id_name_cad.to_string()}
-                                                oninput=oninput_id_name_cad />
-                                        </fieldset>
-                                        <fieldset class="field">
-                                            <input
-                                                class="input"
-                                                type="text"
-                                                placeholder="id_type_user"
-                                                value={self.request.id_type_user.to_string()}
-                                                oninput=oninput_id_type_user />
-                                        </fieldset>
                                     </fieldset>
-
-                                    <fieldset>
-                                    {
-                                        // todo!(view different data for different type user)
-                                        if true {
-                                            self.for_type_user_1()
-                                        } else {
-                                            self.for_type_user_2()
-                                        }
-                                    }
+                                    <fieldset class="column">
+                                        // data user for id_type_user 2-11
+                                        <fieldset class="field">
+                                            <input
+                                                class="input"
+                                                type="text"
+                                                placeholder="phone"
+                                                value={self.request.phone.clone()}
+                                                oninput=oninput_phone />
+                                        </fieldset>
+                                        <fieldset class="field">
+                                            <input
+                                                class="input"
+                                                type="text"
+                                                placeholder="address"
+                                                value={self.request.address.clone()}
+                                                oninput=oninput_address />
+                                        </fieldset>
                                     </fieldset>
                                 </fieldset>
                                 <button
@@ -340,6 +286,11 @@ impl Component for Settings {
                                     disabled=false>
                                     { "Update Settings" }
                                 </button>
+                                <fieldset class="field">
+                                    <span class="tag is-info is-light">
+                                        {0}
+                                    </span>
+                                </fieldset>
                             </form>
                             <hr />
                             <button
@@ -351,108 +302,6 @@ impl Component for Settings {
                     </div>
                 </div>
             </div>
-        }
-    }
-}
-
-impl Settings {
-    fn for_type_user_1(&self) -> Html {
-        html! { }
-    }
-    fn for_type_user_2(&self) -> Html {
-        let oninput_orgname = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateOrgname(ev.value));
-        let oninput_shortname = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateShortname(ev.value));
-        let oninput_inn = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateInn(ev.value));
-        let oninput_phone = self
-            .link
-            .callback(|ev: InputData| Msg::UpdatePhone(ev.value));
-        let oninput_comment = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateComment(ev.value));
-        let oninput_address = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateAddress(ev.value));
-        let oninput_site_url = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateSiteUrl(ev.value));
-        let oninput_is_supplier = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateIsSupplier(ev.value));
-
-        html! {
-            <fieldset class="column">
-                // data user for id_type_user 2-11
-                <fieldset class="field">
-                    <input
-                        class="input"
-                        type="text"
-                        placeholder="orgname"
-                        value={self.request.orgname.clone()}
-                        oninput=oninput_orgname />
-                </fieldset>
-                <fieldset class="field">
-                    <input
-                        class="input"
-                        type="text"
-                        placeholder="shortname"
-                        value={self.request.shortname.clone()}
-                        oninput=oninput_shortname />
-                </fieldset>
-                <fieldset class="field">
-                    <input
-                        class="input"
-                        type="text"
-                        placeholder="inn"
-                        value={self.request.inn.clone()}
-                        oninput=oninput_inn />
-                </fieldset>
-                <fieldset class="field">
-                    <input
-                        class="input"
-                        type="text"
-                        placeholder="phone"
-                        value={self.request.phone.clone()}
-                        oninput=oninput_phone />
-                </fieldset>
-                <fieldset class="field">
-                    <input
-                        class="input"
-                        type="text"
-                        placeholder="comment"
-                        value={self.request.comment.clone()}
-                        oninput=oninput_comment />
-                </fieldset>
-                <fieldset class="field">
-                    <input
-                        class="input"
-                        type="text"
-                        placeholder="address"
-                        value={self.request.address.clone()}
-                        oninput=oninput_address />
-                </fieldset>
-                <fieldset class="field">
-                    <input
-                        class="input"
-                        type="text"
-                        placeholder="site_url"
-                        value={self.request.site_url.clone()}
-                        oninput=oninput_site_url />
-                </fieldset>
-                <fieldset class="field">
-                    <input
-                        class="input"
-                        type="text"
-                        placeholder="is_supplier"
-                        value={self.request.is_supplier.to_string()}
-                        oninput=oninput_is_supplier />
-                </fieldset>
-            </fieldset>
         }
     }
 }

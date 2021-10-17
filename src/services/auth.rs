@@ -66,9 +66,9 @@ impl Auth {
     pub fn save(
         &mut self,
         user_update_info: UserUpdateInfoWrapper,
-        callback: Callback<Result<UserInfoWrapper, Error>>,
+        callback: Callback<Result<usize, Error>>,
     ) -> FetchTask {
-        self.requests.put::<UserUpdateInfoWrapper, UserInfoWrapper>(
+        self.requests.put::<UserUpdateInfoWrapper, usize>(
             "/user".to_string(),
             user_update_info,
             callback,
