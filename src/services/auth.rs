@@ -27,8 +27,7 @@ impl Auth {
 
     /// Get current user info
     pub fn user_info(&mut self, callback: Callback<Result<UserInfoWrapper, Error>>) -> FetchTask {
-        self.requests
-            .get::<UserInfoWrapper>("/user".to_string(), callback)
+        unimplemented!()
     }
 
     /// Login a user
@@ -50,11 +49,7 @@ impl Auth {
         register_info: RegisterInfoWrapper,
         callback: Callback<Result<SlimUserWrapper, Error>>,
     ) -> FetchTask {
-        self.requests.post::<RegisterInfoWrapper, SlimUserWrapper>(
-            "/users".to_string(),
-            register_info,
-            callback,
-        )
+        unimplemented!()
     }
 
     /// Query new token for logged users
@@ -68,10 +63,6 @@ impl Auth {
         user_update_info: UserUpdateInfoWrapper,
         callback: Callback<Result<usize, Error>>,
     ) -> FetchTask {
-        self.requests.put::<UserUpdateInfoWrapper, usize>(
-            "/user".to_string(),
-            user_update_info,
-            callback,
-        )
+        unimplemented!()
     }
 }
