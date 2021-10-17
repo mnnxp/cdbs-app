@@ -35,8 +35,8 @@ pub struct RegisterInfo {
     pub address: String,
     pub time_zone: i32,
     pub position: String,
-    pub regionId: i32,
-    pub programId: i32,
+    pub region_id: i32,
+    pub program_id: i32,
     // pub site_url: String,
     // pub uuid_file_info_icon: String,
     // pub id_region: i32,
@@ -66,8 +66,8 @@ impl Default for RegisterInfo {
             lastname: ("".to_owned()),
             firstname: ("".to_owned()),
             description: ("".to_owned()),
-            regionId: 1,
-            programId: 1,
+            region_id: 1,
+            program_id: 1,
         }
     }
 }
@@ -94,7 +94,7 @@ impl fmt::Display for UserToken {
 pub struct SlimUser {
     pub uuid: String,
     // pub is_supplier: i32,
-    pub programId: i32,
+    pub program_id: i32,
     pub username: String,
 }
 

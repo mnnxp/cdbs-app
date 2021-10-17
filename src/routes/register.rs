@@ -134,8 +134,8 @@ impl Component for Register {
                         address,
                         time_zone,
                         position,
-                        regionId,
-                        programId,
+                        region_id,
+                        program_id,
                     } = request;
                     let data = reg_user::IptUserData {
                         firstname,
@@ -149,8 +149,8 @@ impl Component for Register {
                         address,
                         timeZone: time_zone.to_string(),
                         position,
-                        regionId: regionId.into(),
-                        programId: programId.into(),
+                        regionId: region_id.into(),
+                        programId: program_id.into(),
                     };
                     let res = make_query(RegUser::build_query(reg_user::Variables { data })).await;
                     link.send_message(Msg::GetRegister(res.unwrap()));
@@ -187,14 +187,14 @@ impl Component for Register {
                 self.request.username = username;
             }
             Msg::UpdateProgramId(program_id) => {
-                self.request.programId = program_id.parse::<i32>().unwrap_or(1);
+                self.request.program_id = program_id.parse::<i32>().unwrap_or(1);
                 ConsoleService::info(format!("Update: {:?}", program_id).as_ref());
             }
             Msg::UpdateIsSupplier(is_supplier) => {
                 // self.request.is_supplier = is_supplier.parse::<i32>().unwrap_or(0);
             }
             Msg::UpdateRegionId(region_id) => {
-                self.request.regionId = region_id.parse::<i32>().unwrap_or(1);
+                self.request.region_id = region_id.parse::<i32>().unwrap_or(1);
                 ConsoleService::info(format!("Update: {:?}", region_id).as_ref());
             }
             Msg::UpdateList(res) => {
@@ -365,7 +365,7 @@ impl Component for Register {
                             <div class="control">
                                 <div class="select">
                                   <select
-                                      select=self.request.programId.to_string()
+                                      select=self.request.program_id.to_string()
                                       onchange=oninput_program_id
                                       >
                                     { for self.programs.iter().map(|x| html!{
@@ -395,7 +395,7 @@ impl Component for Register {
                             <div class="control">
                                 <div class="select">
                                   <select
-                                      select=self.request.regionId.to_string()
+                                      select=self.request.region_id.to_string()
                                       onchange=onchange_region_id
                                       >
                                       { for self.regions.iter().map(|x| html!{
