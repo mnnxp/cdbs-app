@@ -4,12 +4,12 @@ use yew::{
     Properties, ShouldRender,
 };
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
+use chrono::NaiveDateTime;
 
-use crate::gqls::make_query;
 use graphql_client::{GraphQLQuery, Response};
 use serde_json::Value;
 use wasm_bindgen_futures::{spawn_local, JsFuture};
-
+use crate::gqls::make_query;
 
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
@@ -82,15 +82,16 @@ impl Component for Settings {
     }
 
     fn rendered(&mut self, first_render: bool) {
-        let link = self.link.clone();
-
         if first_render && is_authenticated() {
             // self.task = Some(self.auth.user_info(self.loaded.clone()));
 
-            spawn_local(async move {
-                let res = make_query(GetSelfData::build_query(get_self_data::Variables)).await;
-                link.send_message(Msg::Loaded(res.unwrap()))
-            });
+            self.task = Some(
+                // spawn_local(async move {
+                //     let res = make_query(GetSelfData::build_query(get_self_data::Variables)).await;
+                //     link.send_message(Msg::Loaded(res.unwrap()))
+                // })
+                self.auth.user_info(self.loaded.clone())
+            );
         }
     }
 
@@ -117,18 +118,18 @@ impl Component for Settings {
                 self.task = None;
 
                 self.request = UserUpdateInfo {
-                    email: data.user.email,
-                    firstname: data.user.firstname,
-                    lastname: data.user.lastname,
-                    secondname: data.user.secondname,
-                    username: data.user.username,
-                    phone: data.user.phone,
-                    description: data.user.description,
-                    address: data.user.address,
-                    position: data.user.position,
-                    time_zone: data.user.time_zone,
-                    region_id: data.user.region.region_id,
-                    program_id: data.user.program.id,
+                    email: data.email,
+                    firstname: data.firstname,
+                    lastname: data.lastname,
+                    secondname: data.secondname,
+                    username: data.username,
+                    phone: data.phone,
+                    description: data.description,
+                    address: data.address,
+                    position: data.position,
+                    time_zone: data.time_zone,
+                    region_id: data.region.region_id,
+                    program_id: data.program.id,
                 };
             }
             Msg::Loaded(Err(err)) => {
