@@ -5,3 +5,56 @@ query GetMySelf {
     username
   }
 }
+
+query GetSelfData {
+  selfData {
+    uuid
+    email
+    firstname
+    lastname
+    secondname
+    username
+    phone
+    description
+    address
+    position
+    timeZone
+    imageFile {
+      uuid
+      filename
+      filesize
+    }
+    region {
+      regionId
+      langId
+      region
+    }
+    program {
+      id
+      name
+    }
+    isEmailVerified
+    isEnabled
+    isDelete
+    createdAt
+    updatedAt
+    certificates {
+      userUuid
+      file {
+        uuid
+        filename
+        filesize
+      }
+      description
+    }
+    subscribers
+    isFollowed
+    companiesCount
+    componentsCount
+    standardsCount
+    favCompaniesCount
+    favComponentsCount
+    favStandardsCount
+    favUsersCount
+  }
+}
