@@ -31,3 +31,6 @@ pub struct ErrorInfo {
 }
 
 pub type DeleteWrapper = HashMap<(), ()>;
+
+// pub type UUID = Uuid;
+pub type UUID = String;
