@@ -137,19 +137,20 @@ impl Component for Register {
                         program_id,
                     } = request;
                     let data = reg_user::IptUserData {
-                        firstname,
-                        lastname,
-                        secondname,
-                        username,
                         email,
+                        username,
                         password,
-                        phone,
-                        description,
-                        address,
-                        timeZone: time_zone.to_string(),
-                        position,
-                        regionId: region_id.into(),
-                        programId: program_id.into(),
+                        firstname: Some(firstname),
+                        lastname: Some(lastname),
+                        secondname: Some(secondname),
+                        phone: Some(phone),
+                        description: Some(description),
+                        address: Some(address),
+                        timeZone: Some(time_zone.to_string()),
+                        position: Some(position),
+                        regionId: Some(region_id.into()),
+                        programId: Some(program_id.into()),
+                        typeAccessId: Some(3), // todo!(make change in future)
                     };
                     let res = make_query(RegUser::build_query(reg_user::Variables { data })).await;
                     link.send_message(Msg::GetRegister(res.unwrap()));
