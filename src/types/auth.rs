@@ -28,8 +28,8 @@ pub struct RegisterInfo {
     pub address: String,
     pub time_zone: String,
     pub position: String,
-    pub regionId: i32,
-    pub programId: i32,
+    pub region_id: i32,
+    pub program_id: i32,
 }
 
 impl Default for RegisterInfo {
@@ -46,8 +46,8 @@ impl Default for RegisterInfo {
             address: String::new(),
             time_zone: String::new(),
             position: String::new(),
-            regionId: 1,
-            programId: 1,
+            region_id: 1,
+            program_id: 1,
         }
     }
 }
@@ -97,32 +97,32 @@ pub struct UserInfo {
     pub description: String,
     pub address: String,
     pub position: String,
-    pub timeZone: String,
-    pub imageFile: ImageFile,  // obj
+    pub time_zone: String,
+    pub image_file: ImageFile,  // obj
     pub region: Region,  // obj
     pub program: Program,  // obj
-    pub isEmailVerified: String,
-    pub isEnabled: String,
-    pub isDelete: String,
-    pub createdAt: String,
-    pub updatedAt: String,
+    pub is_email_verified: String,
+    pub is_enabled: String,
+    pub is_delete: String,
+    pub created_at: String,
+    pub updated_at: String,
     pub certificates: Certificates, // obj
     pub subscribers: i32,
-    pub isFollowed: bool,
-    pub companiesCount: i32,
-    pub componentsCount: i32,
-    pub standardsCount: i32,
-    pub favCompaniesCount: i32,
-    pub favComponentsCount: i32,
-    pub favStandardsCount: i32,
-    pub favUsersCount: i32,
+    pub is_followed: bool,
+    pub companies_count: i32,
+    pub components_count: i32,
+    pub standards_count: i32,
+    pub fav_companies_count: i32,
+    pub fav_components_count: i32,
+    pub fav_standards_count: i32,
+    pub fav_users_count: i32,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Region {
     pub langId: usize,
     pub region: String,
-    pub regionId: usize,
+    pub region_id: usize,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -149,9 +149,9 @@ pub struct UserUpdateInfo {
     pub description: String,
     pub address: String,
     pub position: String,
-    pub timeZone: String,
-    pub regionId: usize,
-    pub programId: usize,
+    pub time_zone: String,
+    pub region_id: usize,
+    pub program_id: usize,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
