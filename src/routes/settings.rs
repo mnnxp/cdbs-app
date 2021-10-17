@@ -16,9 +16,8 @@ pub struct Settings {
     auth: Auth,
     error: Option<Error>,
     request: UserUpdateInfo,
-    password: String,
-    response: Callback<Result<UserInfoWrapper, Error>>,
-    loaded: Callback<Result<UserInfoWrapper, Error>>,
+    response: Callback<Result<usize, Error>>,
+    loaded: Callback<Result<usize, Error>>,
     task: Option<FetchTask>,
     router_agent: Box<dyn Bridge<RouteAgent>>,
     props: Props,
@@ -32,30 +31,22 @@ pub struct Props {
 
 pub enum Msg {
     Request,
-    Response(Result<UserInfoWrapper, Error>),
-    Loaded(Result<UserInfoWrapper, Error>),
+    Response(Result<usize, Error>),
+    Loaded(Result<usize, Error>),
     Ignore,
     Logout,
+    UpdateEmail(String),
     UpdateFirstname(String),
     UpdateLastname(String),
     UpdateSecondname(String),
     UpdateUsername(String),
-    UpdateEmail(String),
-    UpdatePassword(String),
-    UpdateIdTypeUser(String),
-    UpdateIsSupplier(String),
-    UpdateOrgname(String),
-    UpdateShortname(String),
-    UpdateInn(String),
     UpdatePhone(String),
-    UpdateIdNameCad(String),
-    UpdateComment(String),
+    UpdateDescription(String),
     UpdateAddress(String),
-    UpdateTimeZone(String),
     UpdatePosition(String),
-    UpdateSiteUrl(String),
-    UpdateUuidFileInfoIcon(String),
-    UpdateIdRegion(String),
+    UpdateTimeZone(String),
+    UpdateRegionId(usize),
+    UpdateProgramId(usize),
 }
 
 impl Component for Settings {
@@ -67,7 +58,6 @@ impl Component for Settings {
             auth: Auth::new(),
             error: None,
             request: UserUpdateInfo::default(),
-            password: String::default(),
             response: link.callback(Msg::Response),
             loaded: link.callback(Msg::Loaded),
             task: None,
@@ -89,10 +79,8 @@ impl Component for Settings {
                 let mut request = UserUpdateInfoWrapper {
                     user: self.request.clone(),
                 };
-                if !self.password.is_empty() {
-                    request.user.password = Some(self.password.clone());
-                }
-                self.task = Some(self.auth.save(request, self.response.clone()));
+
+                self.task = Some(self.auth.save(request, self.response));
             }
             Msg::Response(Ok(_)) => {
                 self.error = None;
@@ -107,31 +95,18 @@ impl Component for Settings {
                 self.error = None;
                 self.task = None;
                 self.request = UserUpdateInfo {
-                    // email: user_info.user.email,
-                    // username: user_info.user.username,
-                    // password: None,
-                    // image: user_info.user.image.unwrap_or_default(),
-                    // bio: user_info.user.bio.unwrap_or_default(),
+                    email: user_info.user.email,
                     firstname: user_info.user.firstname,
                     lastname: user_info.user.lastname,
                     secondname: user_info.user.secondname,
                     username: user_info.user.username,
-                    email: user_info.user.email,
-                    password: None,
-                    id_type_user: user_info.user.id_type_user,
-                    is_supplier: user_info.user.is_supplier,
-                    orgname: user_info.user.orgname,
-                    shortname: user_info.user.shortname,
-                    inn: user_info.user.inn,
                     phone: user_info.user.phone,
-                    id_name_cad: user_info.user.id_name_cad,
-                    comment: user_info.user.comment,
+                    description: user_info.user.description,
                     address: user_info.user.address,
-                    time_zone: user_info.user.time_zone,
                     position: user_info.user.position,
-                    site_url: user_info.user.site_url,
-                    uuid_file_info_icon: user_info.user.uuid_file_info_icon,
-                    id_region: user_info.user.id_region,
+                    timeZone: user_info.user.timeZone,
+                    regionId: user_info.user.region.regionId,
+                    programId: user_info.user.program.id,
                 };
             }
             Msg::Loaded(Err(err)) => {
@@ -147,66 +122,42 @@ impl Component for Settings {
                 // Redirect to home page
                 self.router_agent.send(ChangeRoute(AppRoute::Home.into()));
             }
-            Msg::UpdateFirstname(firstname) => {
-                self.request.firstname = firstname;
-            }
-            Msg::UpdateLastname(lastname) => {
-                self.request.lastname = lastname;
-            }
-            Msg::UpdateSecondname(secondname) => {
-                self.request.secondname = secondname;
-            }
             Msg::UpdateEmail(email) => {
-                self.request.email = email;
-            }
-            Msg::UpdatePassword(password) => {
-                self.password = password;
-            }
+                self.request.email = email
+            },
+            Msg::UpdateFirstname(firstname) => {
+                self.request.firstname = firstname
+            },
+            Msg::UpdateLastname(lastname) => {
+                self.request.lastname = lastname
+            },
+            Msg::UpdateSecondname(secondname) => {
+                self.request.secondname = secondname
+            },
             Msg::UpdateUsername(username) => {
-                self.request.username = username;
-            }
-            Msg::UpdateIdTypeUser(id_type_user) => {
-                self.request.id_type_user = id_type_user.parse::<i32>().unwrap_or(1);
-            }
-            Msg::UpdateIsSupplier(is_supplier) => {
-                self.request.is_supplier = is_supplier.parse::<i32>().unwrap_or(0);
-            }
-            Msg::UpdateOrgname(orgname) => {
-                self.request.orgname = orgname;
-            }
-            Msg::UpdateShortname(shortname) => {
-                self.request.shortname = shortname;
-            }
-            Msg::UpdateInn(inn) => {
-                self.request.inn = inn;
-            }
+                self.request.username = username
+            },
             Msg::UpdatePhone(phone) => {
-                self.request.phone = phone;
-            }
-            Msg::UpdateIdNameCad(id_name_cad) => {
-                self.request.id_name_cad = id_name_cad.parse::<i32>().unwrap_or(1);
-            }
-            Msg::UpdateComment(comment) => {
-                self.request.comment = comment;
-            }
+                self.request.phone = phone
+            },
+            Msg::UpdateDescription(description) => {
+                self.request.description = description
+            },
             Msg::UpdateAddress(address) => {
-                self.request.address = address;
-            }
-            Msg::UpdateTimeZone(time_zone) => {
-                self.request.time_zone = time_zone.parse::<i32>().unwrap_or(3);
-            }
+                self.request.address = address
+            },
             Msg::UpdatePosition(position) => {
-                self.request.position = position;
-            }
-            Msg::UpdateSiteUrl(site_url) => {
-                self.request.site_url = site_url;
-            }
-            Msg::UpdateUuidFileInfoIcon(uuid_file_info_icon) => {
-                self.request.uuid_file_info_icon = uuid_file_info_icon;
-            }
-            Msg::UpdateIdRegion(id_region) => {
-                self.request.id_region = id_region.parse::<i32>().unwrap_or(1);
-            }
+                self.request.position = position
+            },
+            Msg::UpdateTimeZone(timeZone) => {
+                self.request.timeZone = timeZone
+            },
+            Msg::UpdateRegionId(regionId) => {
+                self.request.regionId = regionId
+            },
+            Msg::UpdateProgramId(programId) => {
+                self.request.programId = programId
+            },
         }
         true
     }
@@ -237,9 +188,9 @@ impl Component for Settings {
         let oninput_email = self
             .link
             .callback(|ev: InputData| Msg::UpdateEmail(ev.value));
-        let oninput_password = self
-            .link
-            .callback(|ev: InputData| Msg::UpdatePassword(ev.value));
+        // let oninput_password = self
+        //     .link
+        //     .callback(|ev: InputData| Msg::UpdatePassword(ev.value));
         let oninput_id_name_cad = self
             .link
             .callback(|ev: InputData| Msg::UpdateIdNameCad(ev.value));
@@ -311,14 +262,14 @@ impl Component for Settings {
                                                 value={self.request.email.clone()}
                                                 oninput=oninput_email />
                                         </fieldset>
-                                        <fieldset class="field">
-                                            <input
-                                                class="input"
-                                                type="password"
-                                                placeholder="New Password"
-                                                value={self.password.to_string()}
-                                                oninput=oninput_password />
-                                        </fieldset>
+                                        // <fieldset class="field">
+                                        //     <input
+                                        //         class="input"
+                                        //         type="password"
+                                        //         placeholder="New Password"
+                                        //         value={self.password.to_string()}
+                                        //         oninput=oninput_password />
+                                        // </fieldset>
                                     </fieldset>
 
                                     <fieldset class="column">

@@ -77,7 +77,6 @@ pub enum Msg {
     UpdateEmail(String),
     UpdatePassword(String),
     UpdateProgramId(String),
-    UpdateIsSupplier(String),
     UpdateRegionId(String),
     UpdateList(String),
     GetRegister(String),
@@ -190,9 +189,6 @@ impl Component for Register {
                 self.request.programId = program_id.parse::<i32>().unwrap_or(1);
                 ConsoleService::info(format!("Update: {:?}", program_id).as_ref());
             }
-            Msg::UpdateIsSupplier(is_supplier) => {
-                // self.request.is_supplier = is_supplier.parse::<i32>().unwrap_or(0);
-            }
             Msg::UpdateRegionId(region_id) => {
                 self.request.regionId = region_id.parse::<i32>().unwrap_or(1);
                 ConsoleService::info(format!("Update: {:?}", region_id).as_ref());
@@ -250,9 +246,6 @@ impl Component for Register {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
-        let oninput_is_supplier = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateIsSupplier(ev.value));
         let onchange_region_id = self
             .link
             .callback(|ev: ChangeData| Msg::UpdateProgramId(match ev {
@@ -375,21 +368,6 @@ impl Component for Register {
                                 </div>
                             </div>
                         </fieldset>
-                        // <fieldset class="field">
-                        //     <label class="label">{"You're supplier?"}</label>
-                        //     <div class="control">
-                        //         <label class="radio">
-                        //           <input type="radio" name="question"/>
-                        //           {1}
-                        //         </label>
-                        //         <label class="radio">
-                        //           <input type="radio" name="question"
-                        //           select=self.request.is_supplier.to_string()
-                        //           oninput=oninput_is_supplier/>
-                        //           {0}
-                        //         </label>
-                        //     </div>
-                        // </fieldset>
                         <fieldset class="field">
                             <label class="label">{"What's your region?"}</label>
                             <div class="control">
