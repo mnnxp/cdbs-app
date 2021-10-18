@@ -6,6 +6,8 @@ use yew::{
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
 use chrono::NaiveDateTime;
 
+use yew::services::ConsoleService;
+
 use graphql_client::{GraphQLQuery, Response};
 use serde_json::Value;
 use wasm_bindgen_futures::{spawn_local, JsFuture};
@@ -15,7 +17,7 @@ use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::routes::AppRoute;
 use crate::services::{is_authenticated, set_token, Auth};
-use crate::types::{UUID, SlimUserWrapper, UserInfoWrapper, UserUpdateInfo, UserUpdateInfoWrapper};
+use crate::types::{UUID, SlimUserWrapper, UserInfoWrapper, UserUpdateInfo, UserUpdateInfoWrapper, UserInfo};
 
 /// Update settings of the author or logout
 pub struct Settings {
@@ -23,11 +25,11 @@ pub struct Settings {
     error: Option<Error>,
     request: UserUpdateInfo,
     response: Callback<Result<usize, Error>>,
-    loaded: Callback<Result<GetSelfData, Error>>,
     task: Option<FetchTask>,
     router_agent: Box<dyn Bridge<RouteAgent>>,
     props: Props,
     link: ComponentLink<Self>,
+    user_data: Option<UserInfo>,
 }
 
 #[derive(Properties, Clone)]
@@ -46,7 +48,7 @@ struct GetSelfData;
 pub enum Msg {
     Request,
     Response(Result<usize, Error>),
-    Loaded(Result<GetSelfData, Error>),
+    GetData(String),
     Ignore,
     Logout,
     UpdateEmail(String),
@@ -73,25 +75,23 @@ impl Component for Settings {
             error: None,
             request: UserUpdateInfo::default(),
             response: link.callback(Msg::Response),
-            loaded: link.callback(Msg::Loaded),
             task: None,
             router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             props,
             link,
+            user_data: None,
         }
     }
 
     fn rendered(&mut self, first_render: bool) {
+        let link = self.link.clone();
         if first_render && is_authenticated() {
             // self.task = Some(self.auth.user_info(self.loaded.clone()));
 
-            self.task = Some(
-                // spawn_local(async move {
-                //     let res = make_query(GetSelfData::build_query(get_self_data::Variables)).await;
-                //     link.send_message(Msg::Loaded(res.unwrap()))
-                // })
-                self.auth.user_info(self.loaded.clone())
-            );
+            spawn_local(async move {
+                let res = make_query(GetSelfData::build_query(get_self_data::Variables)).await;
+                link.send_message(Msg::GetData(res.unwrap()))
+            })
         }
     }
 
@@ -113,28 +113,11 @@ impl Component for Settings {
                 self.error = Some(err);
                 self.task = None;
             }
-            Msg::Loaded(Ok(data)) => {
-                self.error = None;
-                self.task = None;
-
-                self.request = UserUpdateInfo {
-                    email: data.email,
-                    firstname: data.firstname,
-                    lastname: data.lastname,
-                    secondname: data.secondname,
-                    username: data.username,
-                    phone: data.phone,
-                    description: data.description,
-                    address: data.address,
-                    position: data.position,
-                    time_zone: data.time_zone,
-                    region_id: data.region.region_id,
-                    program_id: data.program.id,
-                };
-            }
-            Msg::Loaded(Err(err)) => {
-                self.error = Some(err);
-                self.task = None;
+            Msg::GetData(res) => {
+                let data: Value = serde_json::from_str(res.as_str()).unwrap();
+                let res = data.as_object().unwrap().get("data").unwrap();
+                self.user_data = Some(serde_json::from_value(res.get("selfData").unwrap().clone()).unwrap());
+                ConsoleService::info(format!("User data: {:?}", self.user_data).as_ref());
             }
             Msg::Ignore => {}
             Msg::Logout => {
@@ -167,6 +150,39 @@ impl Component for Settings {
     }
 
     fn view(&self) -> Html {
+        let preload_firstname = match &self.user_data {
+            Some(x) => x.firstname.clone(),
+            None => "firstname".to_string(),
+        };
+        let preload_lastname = match &self.user_data {
+            Some(x) => x.lastname.clone(),
+            None => "lastname".to_string(),
+        };
+        let preload_secondname = match &self.user_data {
+            Some(x) => x.secondname.clone(),
+            None => "secondname".to_string(),
+        };
+        let preload_username = match &self.user_data {
+            Some(x) => x.username.clone(),
+            None => "username".to_string(),
+        };
+        let preload_email = match &self.user_data {
+            Some(x) => x.email.clone(),
+            None => "email".to_string(),
+        };
+        let preload_position = match &self.user_data {
+            Some(x) => x.position.clone(),
+            None => "position".to_string(),
+        };
+        let preload_phone = match &self.user_data {
+            Some(x) => x.phone.clone(),
+            None => "phone".to_string(),
+        };
+        let preload_address = match &self.user_data {
+            Some(x) => x.address.clone(),
+            None => "address".to_string(),
+        };
+
         let onsubmit = self.link.callback(|ev: FocusEvent| {
             ev.prevent_default();
             Msg::Request
@@ -213,7 +229,7 @@ impl Component for Settings {
                                             <input
                                                 class="input"
                                                 type="text"
-                                                placeholder="firstname"
+                                                placeholder={preload_firstname}
                                                 value={self.request.firstname.clone()}
                                                 oninput=oninput_firstname />
                                         </fieldset>
@@ -221,7 +237,7 @@ impl Component for Settings {
                                             <input
                                                 class="input"
                                                 type="text"
-                                                placeholder="lastname"
+                                                placeholder={preload_lastname}
                                                 value={self.request.lastname.clone()}
                                                 oninput=oninput_lastname />
                                         </fieldset>
@@ -229,7 +245,7 @@ impl Component for Settings {
                                             <input
                                                 class="input"
                                                 type="text"
-                                                placeholder="secondname"
+                                                placeholder = {preload_secondname}
                                                 value={self.request.secondname.clone()}
                                                 oninput=oninput_secondname />
                                         </fieldset>
@@ -237,7 +253,7 @@ impl Component for Settings {
                                             <input
                                                 class="input"
                                                 type="text"
-                                                placeholder="username"
+                                                placeholder={preload_username}
                                                 value={self.request.username.clone()}
                                                 oninput=oninput_username />
                                         </fieldset>
@@ -245,7 +261,7 @@ impl Component for Settings {
                                             <input
                                                 class="input"
                                                 type="email"
-                                                placeholder="email"
+                                                placeholder={preload_email}
                                                 value={self.request.email.clone()}
                                                 oninput=oninput_email />
                                         </fieldset>
@@ -256,7 +272,7 @@ impl Component for Settings {
                                             <input
                                                 class="input"
                                                 type="text"
-                                                placeholder="position"
+                                                placeholder={preload_position}
                                                 value={self.request.position.clone()}
                                                 oninput=oninput_position />
                                         </fieldset>
@@ -267,7 +283,7 @@ impl Component for Settings {
                                             <input
                                                 class="input"
                                                 type="text"
-                                                placeholder="phone"
+                                                placeholder={preload_phone}
                                                 value={self.request.phone.clone()}
                                                 oninput=oninput_phone />
                                         </fieldset>
@@ -275,7 +291,7 @@ impl Component for Settings {
                                             <input
                                                 class="input"
                                                 type="text"
-                                                placeholder="address"
+                                                placeholder={preload_address}
                                                 value={self.request.address.clone()}
                                                 oninput=oninput_address />
                                         </fieldset>

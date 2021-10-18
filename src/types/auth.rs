@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::fmt;
+use chrono::NaiveDateTime;
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 // #[serde(rename_all = "camelCase")]
@@ -85,7 +86,7 @@ pub struct SlimUserWrapper {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-// #[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase")]
 pub struct UserInfo {
     pub uuid: String,
     pub email: String,
@@ -98,49 +99,49 @@ pub struct UserInfo {
     pub address: String,
     pub position: String,
     pub time_zone: String,
-    pub image_file: ShortFile,  // obj
-    pub region: Region,  // obj
-    pub program: Program,  // obj
-    pub is_email_verified: String,
-    pub is_enabled: String,
-    pub is_delete: String,
-    pub created_at: String,
-    pub updated_at: String,
+    pub image_file: ShortFile, // obj
+    pub region: Region, // obj
+    pub program: Program, // obj
+    pub is_email_verified: bool,
+    pub is_enabled: bool,
+    pub is_delete: bool,
+    pub created_at: NaiveDateTime,
+    pub updated_at: NaiveDateTime,
     pub certificates: Vec<Certificate>, // obj
-    pub subscribers: i32,
+    pub subscribers: usize,
     pub is_followed: bool,
-    pub companies_count: i32,
-    pub components_count: i32,
-    pub standards_count: i32,
-    pub fav_companies_count: i32,
-    pub fav_components_count: i32,
-    pub fav_standards_count: i32,
-    pub fav_users_count: i32,
+    pub companies_count: usize,
+    pub components_count: usize,
+    pub standards_count: usize,
+    pub fav_companies_count: usize,
+    pub fav_components_count: usize,
+    pub fav_standards_count: usize,
+    pub fav_users_count: usize,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Default, Debug)]
 pub struct ShortFile {
     pub uuid: String,
     pub filename: String,
     pub filesize: usize,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Default, Debug)]
 pub struct Region {
-    pub lang_id: usize,
+    pub langId: usize,
     pub region: String,
-    pub region_id: usize,
+    pub regionId: usize,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Default, Debug)]
 pub struct Program {
     pub id: usize,
     pub name: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Default, Debug)]
 pub struct Certificate {
-    pub user_uuid: String,
+    pub userUuid: String,
     pub file: ShortFile,
     pub description: String,
 }
