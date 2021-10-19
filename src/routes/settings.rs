@@ -19,7 +19,7 @@ use crate::routes::AppRoute;
 use crate::services::{is_authenticated, set_token, Auth};
 use crate::types::{UUID, SlimUserWrapper, UserInfoWrapper, UserUpdateInfo, UserUpdateInfoWrapper, UserInfo};
 
-/// For get user data
+/// Get data current user
 impl From<UserInfo> for UserUpdateInfo {
     fn from(data: UserInfo) -> Self {
         let UserInfo {
@@ -157,18 +157,45 @@ impl Component for Settings {
                 // Redirect to home page
                 self.router_agent.send(ChangeRoute(AppRoute::Home.into()));
             }
-            Msg::UpdateEmail(email) => self.request.email = Some(email),
-            Msg::UpdateFirstname(firstname) => self.request.firstname = Some(firstname),
-            Msg::UpdateLastname(lastname) => self.request.lastname = Some(lastname),
-            Msg::UpdateSecondname(secondname) => self.request.secondname = Some(secondname),
-            Msg::UpdateUsername(username) => self.request.username = Some(username),
-            Msg::UpdatePhone(phone) => self.request.phone = Some(phone),
-            Msg::UpdateDescription(description) => self.request.description = Some(description),
-            Msg::UpdateAddress(address) => self.request.address = Some(address),
-            Msg::UpdatePosition(position) => self.request.position = Some(position),
-            Msg::UpdateTimeZone(time_zone) => self.request.time_zone = Some(time_zone),
-            Msg::UpdateRegionId(region_id) => self.request.region_id = Some(region_id),
-            Msg::UpdateProgramId(program_id) => self.request.program_id = Some(program_id),
+            Msg::UpdateEmail(email) => {
+                self.request.email = Some(email);
+            },
+            Msg::UpdateFirstname(firstname) => {
+                self.request.firstname = Some(firstname);
+            },
+            Msg::UpdateLastname(lastname) => {
+                self.request.lastname = Some(lastname);
+            },
+            Msg::UpdateSecondname(secondname) => {
+                self.request.secondname = Some(secondname);
+            },
+            Msg::UpdateUsername(username) => {
+                self.request.username = Some(username);
+            },
+            Msg::UpdatePhone(phone) => {
+                self.request.phone = Some(phone);
+            },
+            Msg::UpdateDescription(description) => {
+                self.request.description = Some(description);
+            },
+            Msg::UpdateAddress(address) => {
+                self.request.address = Some(address);
+            },
+            Msg::UpdatePosition(position) => {
+                self.request.position = Some(position);
+            },
+            Msg::UpdateTimeZone(time_zone) => {
+                self.request.time_zone = Some(time_zone);
+            },
+            Msg::UpdateRegionId(region_id) => {
+                self.request.region_id = Some(region_id);
+            },
+            Msg::UpdateProgramId(program_id) => {
+                self.request.program_id = Some(program_id);
+            },
+            Msg::GetResult(res) => {
+                self.get_result = res.parse::<usize>().unwrap_or(0);
+            },
         }
         true
     }
