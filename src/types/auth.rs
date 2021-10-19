@@ -127,10 +127,11 @@ pub struct ShortFile {
 }
 
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct Region {
-    pub langId: usize,
+    pub lang_id: usize,
     pub region: String,
-    pub regionId: usize,
+    pub region_id: usize,
 }
 
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]
@@ -140,8 +141,9 @@ pub struct Program {
 }
 
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct Certificate {
-    pub userUuid: String,
+    pub user_uuid: String,
     pub file: ShortFile,
     pub description: String,
 }
