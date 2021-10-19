@@ -155,18 +155,18 @@ pub struct UserInfoWrapper {
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 // #[serde(rename_all = "camelCase")]
 pub struct UserUpdateInfo {
-    pub email: String,
-    pub firstname: String,
-    pub lastname: String,
-    pub secondname: String,
-    pub username: String,
-    pub phone: String,
-    pub description: String,
-    pub address: String,
-    pub position: String,
-    pub time_zone: String,
-    pub region_id: usize,
-    pub program_id: usize,
+    pub email: Option<String>,
+    pub firstname: Option<String>,
+    pub lastname: Option<String>,
+    pub secondname: Option<String>,
+    pub username: Option<String>,
+    pub phone: Option<String>,
+    pub description: Option<String>,
+    pub address: Option<String>,
+    pub position: Option<String>,
+    pub time_zone: Option<String>,
+    pub region_id: Option<usize>,
+    pub program_id: Option<usize>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

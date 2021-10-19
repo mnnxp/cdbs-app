@@ -19,6 +19,38 @@ use crate::routes::AppRoute;
 use crate::services::{is_authenticated, set_token, Auth};
 use crate::types::{UUID, SlimUserWrapper, UserInfoWrapper, UserUpdateInfo, UserUpdateInfoWrapper, UserInfo};
 
+/// For get user data
+impl From<UserInfo> for UserUpdateInfo {
+    fn from(data: UserInfo) -> Self {
+        let UserInfo {
+            firstname,
+            lastname,
+            secondname,
+            username,
+            email,
+            position,
+            phone,
+            address,
+            ..
+        } = data;
+
+        Self {
+            firstname: Some(firstname),
+            lastname: Some(lastname),
+            secondname: Some(secondname),
+            username: Some(username),
+            email: Some(email),
+            description: None,
+            position: Some(position),
+            phone: Some(phone),
+            time_zone: None,
+            address: Some(address),
+            region_id: None,
+            program_id: None,
+        }
+    }
+}
+
 /// Update settings of the author or logout
 pub struct Settings {
     auth: Auth,
@@ -29,7 +61,6 @@ pub struct Settings {
     router_agent: Box<dyn Bridge<RouteAgent>>,
     props: Props,
     link: ComponentLink<Self>,
-    user_data: Option<UserInfo>,
 }
 
 #[derive(Properties, Clone)]
@@ -79,15 +110,12 @@ impl Component for Settings {
             router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             props,
             link,
-            user_data: None,
         }
     }
 
     fn rendered(&mut self, first_render: bool) {
         let link = self.link.clone();
         if first_render && is_authenticated() {
-            // self.task = Some(self.auth.user_info(self.loaded.clone()));
-
             spawn_local(async move {
                 let res = make_query(GetSelfData::build_query(get_self_data::Variables)).await;
                 link.send_message(Msg::GetData(res.unwrap()))
@@ -98,7 +126,7 @@ impl Component for Settings {
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
             Msg::Request => {
-                let mut request = UserUpdateInfoWrapper {
+                let request = UserUpdateInfoWrapper {
                     user: self.request.clone(),
                 };
 
@@ -116,8 +144,9 @@ impl Component for Settings {
             Msg::GetData(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res = data.as_object().unwrap().get("data").unwrap();
-                self.user_data = Some(serde_json::from_value(res.get("selfData").unwrap().clone()).unwrap());
-                ConsoleService::info(format!("User data: {:?}", self.user_data).as_ref());
+                let user_data: UserInfo = serde_json::from_value(res.get("selfData").unwrap().clone()).unwrap();
+                ConsoleService::info(format!("User data: {:?}", user_data).as_ref());
+                self.request = user_data.into();
             }
             Msg::Ignore => {}
             Msg::Logout => {
@@ -128,18 +157,18 @@ impl Component for Settings {
                 // Redirect to home page
                 self.router_agent.send(ChangeRoute(AppRoute::Home.into()));
             }
-            Msg::UpdateEmail(email) => self.request.email = email,
-            Msg::UpdateFirstname(firstname) => self.request.firstname = firstname,
-            Msg::UpdateLastname(lastname) => self.request.lastname = lastname,
-            Msg::UpdateSecondname(secondname) => self.request.secondname = secondname,
-            Msg::UpdateUsername(username) => self.request.username = username,
-            Msg::UpdatePhone(phone) => self.request.phone = phone,
-            Msg::UpdateDescription(description) => self.request.description = description,
-            Msg::UpdateAddress(address) => self.request.address = address,
-            Msg::UpdatePosition(position) => self.request.position = position,
-            Msg::UpdateTimeZone(time_zone) => self.request.time_zone = time_zone,
-            Msg::UpdateRegionId(region_id) => self.request.region_id = region_id,
-            Msg::UpdateProgramId(program_id) => self.request.program_id = program_id,
+            Msg::UpdateEmail(email) => self.request.email = Some(email),
+            Msg::UpdateFirstname(firstname) => self.request.firstname = Some(firstname),
+            Msg::UpdateLastname(lastname) => self.request.lastname = Some(lastname),
+            Msg::UpdateSecondname(secondname) => self.request.secondname = Some(secondname),
+            Msg::UpdateUsername(username) => self.request.username = Some(username),
+            Msg::UpdatePhone(phone) => self.request.phone = Some(phone),
+            Msg::UpdateDescription(description) => self.request.description = Some(description),
+            Msg::UpdateAddress(address) => self.request.address = Some(address),
+            Msg::UpdatePosition(position) => self.request.position = Some(position),
+            Msg::UpdateTimeZone(time_zone) => self.request.time_zone = Some(time_zone),
+            Msg::UpdateRegionId(region_id) => self.request.region_id = Some(region_id),
+            Msg::UpdateProgramId(program_id) => self.request.program_id = Some(program_id),
         }
         true
     }
@@ -150,39 +179,6 @@ impl Component for Settings {
     }
 
     fn view(&self) -> Html {
-        let preload_firstname = match &self.user_data {
-            Some(x) => x.firstname.clone(),
-            None => "firstname".to_string(),
-        };
-        let preload_lastname = match &self.user_data {
-            Some(x) => x.lastname.clone(),
-            None => "lastname".to_string(),
-        };
-        let preload_secondname = match &self.user_data {
-            Some(x) => x.secondname.clone(),
-            None => "secondname".to_string(),
-        };
-        let preload_username = match &self.user_data {
-            Some(x) => x.username.clone(),
-            None => "username".to_string(),
-        };
-        let preload_email = match &self.user_data {
-            Some(x) => x.email.clone(),
-            None => "email".to_string(),
-        };
-        let preload_position = match &self.user_data {
-            Some(x) => x.position.clone(),
-            None => "position".to_string(),
-        };
-        let preload_phone = match &self.user_data {
-            Some(x) => x.phone.clone(),
-            None => "phone".to_string(),
-        };
-        let preload_address = match &self.user_data {
-            Some(x) => x.address.clone(),
-            None => "address".to_string(),
-        };
-
         let onsubmit = self.link.callback(|ev: FocusEvent| {
             ev.prevent_default();
             Msg::Request
@@ -229,40 +225,40 @@ impl Component for Settings {
                                             <input
                                                 class="input"
                                                 type="text"
-                                                placeholder={preload_firstname}
-                                                value={self.request.firstname.clone()}
+                                                placeholder="firstname"
+                                                value={self.request.firstname.as_ref().map(|x| x.to_string()).unwrap_or_default()}
                                                 oninput=oninput_firstname />
                                         </fieldset>
                                         <fieldset class="field">
                                             <input
                                                 class="input"
                                                 type="text"
-                                                placeholder={preload_lastname}
-                                                value={self.request.lastname.clone()}
+                                                placeholder="lastname"
+                                                value={self.request.lastname.as_ref().map(|x| x.to_string()).unwrap_or_default()}
                                                 oninput=oninput_lastname />
                                         </fieldset>
                                         <fieldset class="field">
                                             <input
                                                 class="input"
                                                 type="text"
-                                                placeholder = {preload_secondname}
-                                                value={self.request.secondname.clone()}
+                                                placeholder="secondname"
+                                                value={self.request.secondname.as_ref().map(|x| x.to_string()).unwrap_or_default()}
                                                 oninput=oninput_secondname />
                                         </fieldset>
                                         <fieldset class="field">
                                             <input
                                                 class="input"
                                                 type="text"
-                                                placeholder={preload_username}
-                                                value={self.request.username.clone()}
+                                                placeholder="username"
+                                                value={self.request.username.as_ref().map(|x| x.to_string()).unwrap_or_default()}
                                                 oninput=oninput_username />
                                         </fieldset>
                                         <fieldset class="field">
                                             <input
                                                 class="input"
                                                 type="email"
-                                                placeholder={preload_email}
-                                                value={self.request.email.clone()}
+                                                placeholder="email"
+                                                value={self.request.email.as_ref().map(|x| x.to_string()).unwrap_or_default()}
                                                 oninput=oninput_email />
                                         </fieldset>
                                     </fieldset>
@@ -272,8 +268,8 @@ impl Component for Settings {
                                             <input
                                                 class="input"
                                                 type="text"
-                                                placeholder={preload_position}
-                                                value={self.request.position.clone()}
+                                                placeholder="position"
+                                                value={self.request.position.as_ref().map(|x| x.to_string()).unwrap_or_default()}
                                                 oninput=oninput_position />
                                         </fieldset>
                                     </fieldset>
@@ -283,16 +279,16 @@ impl Component for Settings {
                                             <input
                                                 class="input"
                                                 type="text"
-                                                placeholder={preload_phone}
-                                                value={self.request.phone.clone()}
+                                                placeholder="phone"
+                                                value={self.request.phone.as_ref().map(|x| x.to_string()).unwrap_or_default()}
                                                 oninput=oninput_phone />
                                         </fieldset>
                                         <fieldset class="field">
                                             <input
                                                 class="input"
                                                 type="text"
-                                                placeholder={preload_address}
-                                                value={self.request.address.clone()}
+                                                placeholder="address"
+                                                value={self.request.address.as_ref().map(|x| x.to_string()).unwrap_or_default()}
                                                 oninput=oninput_address />
                                         </fieldset>
                                     </fieldset>
