@@ -8,16 +8,16 @@ use chrono::NaiveDateTime;
 
 use yew::services::ConsoleService;
 
-use graphql_client::{GraphQLQuery, Response};
+use graphql_client::GraphQLQuery;
 use serde_json::Value;
-use wasm_bindgen_futures::{spawn_local, JsFuture};
+use wasm_bindgen_futures::spawn_local;
 use crate::gqls::make_query;
 
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::routes::AppRoute;
 use crate::services::{is_authenticated, set_token, Auth};
-use crate::types::{UUID, SlimUserWrapper, UserInfoWrapper, UserUpdateInfo, UserUpdateInfoWrapper, UserInfo};
+use crate::types::{UUID, UserUpdateInfo, UserInfo};
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -61,10 +61,10 @@ impl From<UserInfo> for UserUpdateInfo {
 
 /// Update settings of the author or logout
 pub struct Settings {
-    auth: Auth,
+    // auth: Auth,
     error: Option<Error>,
     request: UserUpdateInfo,
-    response: Callback<Result<usize, Error>>,
+    // response: Callback<Result<usize, Error>>,
     task: Option<FetchTask>,
     router_agent: Box<dyn Bridge<RouteAgent>>,
     props: Props,
@@ -112,10 +112,10 @@ impl Component for Settings {
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
         Settings {
-            auth: Auth::new(),
+            // auth: Auth::new(),
             error: None,
             request: UserUpdateInfo::default(),
-            response: link.callback(Msg::Response),
+            // response: link.callback(Msg::Response),
             task: None,
             router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             props,
@@ -237,9 +237,22 @@ impl Component for Settings {
             Msg::GetResult(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res = data.as_object().unwrap().get("data").unwrap();
-                let updated_rows: usize = serde_json::from_value(res.get("putUserUpdate").unwrap().clone()).unwrap();
-                ConsoleService::info(format!("Updated rows: {:?}", updated_rows).as_ref());
-                self.get_result = updated_rows;
+
+                match res.is_null() {
+                    false => {
+                        let updated_rows: usize =
+                            serde_json::from_value(res.get("putUserUpdate").unwrap().clone()).unwrap();
+                        ConsoleService::info(format!("Updated rows: {:?}", updated_rows).as_ref());
+                        self.get_result = updated_rows;
+                    },
+                    true => {
+                        let val_err = data.as_object().unwrap().get("errors").unwrap();
+                        let err_message: String =
+                            serde_json::from_value(val_err.get(0).unwrap().get("message").unwrap().clone()).unwrap();
+                        ConsoleService::info(format!("Err update rows: {:?}", err_message).as_ref());
+                        link.send_message(Msg::Response(Err(Error::BadRequest(err_message))))
+                    }
+                }
             },
         }
         true
