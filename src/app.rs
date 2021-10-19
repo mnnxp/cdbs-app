@@ -7,14 +7,14 @@ use yew_router::prelude::*;
 use crate::error::Error;
 use crate::fragments::{footer::Footer, header::Header};
 use crate::routes::{
-    article::Article,
+    // article::Article,
     catalog::Catalog,
     createTender::CreateTender,
-    editor::Editor,
+    // editor::Editor,
     fix_fragment_routes,
     home::Home,
     login::Login,
-    profile::{Profile, ProfileTab},
+    // profile::{Profile, ProfileTab},
     register::Register,
     settings::Settings,
     tenders::Tenders,
@@ -112,16 +112,16 @@ impl Component for App {
                             AppRoute::Login => html!{<Login callback=callback_login />},
                             AppRoute::Register => html!{<Register callback=callback_register />},
                             AppRoute::Home => html!{<Home />},
-                            AppRoute::Editor(slug) => html!{<Editor slug=Some(slug.clone())/>},
-                            AppRoute::EditorCreate => html!{<Editor />},
-                            AppRoute::Article(slug) => html!{<Article slug=slug.clone() current_user=self.current_user.clone() />},
+                            // AppRoute::Editor(slug) => html!{<Editor slug=Some(slug.clone())/>},
+                            // AppRoute::EditorCreate => html!{<Editor />},
+                            // AppRoute::Article(slug) => html!{<Article slug=slug.clone() current_user=self.current_user.clone() />},
                             AppRoute::Settings => html!{<Settings callback=callback_logout />},
-                            AppRoute::ProfileFavorites(username) => html!{
-                                <Profile username=username.clone() current_user=self.current_user.clone() tab=ProfileTab::FavoritedBy />
-                            },
-                            AppRoute::Profile(username) => html!{
-                                <Profile username=username.clone() current_user=self.current_user.clone() tab=ProfileTab::ByAuthor />
-                            },
+                            // AppRoute::ProfileFavorites(username) => html!{
+                            //     <Profile username=username.clone() current_user=self.current_user.clone() tab=ProfileTab::FavoritedBy />
+                            // },
+                            // AppRoute::Profile(username) => html!{
+                            //     <Profile username=username.clone() current_user=self.current_user.clone()/>
+                            // },
                             AppRoute::Tenders => html!{<Tenders />},
                             AppRoute::Catalog => html!{<Catalog />},
                             AppRoute::CreateTender => html!{<CreateTender />},

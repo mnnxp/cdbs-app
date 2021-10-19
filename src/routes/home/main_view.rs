@@ -1,13 +1,12 @@
 use yew::{html, Component, ComponentLink, Html, MouseEvent, Properties, ShouldRender};
 
-use crate::fragments::article_list::{ArticleList, ArticleListFilter};
 use crate::services::is_authenticated;
 
 /// Main content with tabs of article list for home page
 pub struct MainView {
     props: Props,
     tab: Tab,
-    filter: ArticleListFilter,
+    // filter: ArticleListFilter,
     link: ComponentLink<Self>,
 }
 
@@ -40,45 +39,47 @@ impl Component for MainView {
             Tab::All
         };
 
-        let filter = if is_authenticated() {
-            ArticleListFilter::Feed
-        } else {
-            ArticleListFilter::All
-        };
+        // let filter = if is_authenticated() {
+        //     ArticleListFilter::Feed
+        // } else {
+        //     ArticleListFilter::All
+        // };
 
         MainView {
             props,
             tab,
-            filter,
+            // filter,
             link,
         }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        match msg {
-            Msg::TagChanged(tab) => {
-                self.tab = tab;
-                match self.tab {
-                    Tab::Feed => self.filter = ArticleListFilter::Feed,
-                    Tab::All => self.filter = ArticleListFilter::All,
-                    Tab::Tag => {
-                        if let Some(tag) = &self.props.tag {
-                            self.filter = ArticleListFilter::ByTag(tag.clone());
-                        }
-                    }
-                }
-                true
-            }
-            Msg::Ignore => false,
-        }
+        // match msg {
+        //     Msg::TagChanged(tab) => {
+        //         self.tab = tab;
+        //         match self.tab {
+        //             Tab::Feed => self.filter = ArticleListFilter::Feed,
+        //             Tab::All => self.filter = ArticleListFilter::All,
+        //             Tab::Tag => {
+        //                 if let Some(tag) = &self.props.tag {
+        //                     self.filter = ArticleListFilter::ByTag(tag.clone());
+        //                 }
+        //             }
+        //         }
+        //         true
+        //     }
+        //     Msg::Ignore => false,
+        // }
+
+        false
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
         self.props = props;
         self.tab = Tab::Tag;
-        if let Some(tag) = &self.props.tag {
-            self.filter = ArticleListFilter::ByTag(tag.clone());
-        }
+        // if let Some(tag) = &self.props.tag {
+        //     self.filter = ArticleListFilter::ByTag(tag.clone());
+        // }
         true
     }
 
@@ -93,7 +94,7 @@ impl Component for MainView {
                     </ul>
                 </div>
 
-                <ArticleList filter=self.filter.clone() />
+                // <ArticleList filter=self.filter.clone() />
             </div>
         }
     }

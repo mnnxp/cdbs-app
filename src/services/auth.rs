@@ -24,12 +24,6 @@ impl Auth {
             .get::<SlimUserWrapper>("/me".to_string(), callback)
     }
 
-
-    /// Get current user info
-    pub fn user_info(&mut self, callback: Callback<Result<UserInfoWrapper, Error>>) -> FetchTask {
-        unimplemented!()
-    }
-
     /// Login a user
     pub fn login(
         &mut self,
@@ -41,28 +35,5 @@ impl Auth {
             login_info,
             callback,
         )
-    }
-
-    /// Register a new user
-    pub fn register(
-        &mut self,
-        register_info: RegisterInfoWrapper,
-        callback: Callback<Result<SlimUserWrapper, Error>>,
-    ) -> FetchTask {
-        unimplemented!()
-    }
-
-    /// Query new token for logged users
-    pub fn token_query() {
-        unimplemented!()
-    }
-
-    /// Save info of current user
-    pub fn save(
-        &mut self,
-        user_update_info: UserUpdateInfoWrapper,
-        callback: Callback<Result<usize, Error>>,
-    ) -> FetchTask {
-        unimplemented!()
     }
 }

@@ -124,15 +124,18 @@ impl Header {
         }
     }
 
-    fn logged_in_view(&self, user_info: &SlimUser) -> Html {
+    fn logged_in_view(
+        &self,
+        user_info: &SlimUser
+    ) -> Html {
         html! {
             <div class="buttons">
                  <RouterAnchor<AppRoute> route=AppRoute::Settings classes="button">
                   { "Settings" }
                  </RouterAnchor<AppRoute>>
-                 <RouterAnchor<AppRoute> route=AppRoute::Profile(user_info.username.clone())  classes="button">
-                  { &user_info.username }
-                 </RouterAnchor<AppRoute>>
+                 // <RouterAnchor<AppRoute> route=AppRoute::Profile(user_info.username.clone())  classes="button">
+                 //  { &user_info.username }
+                 // </RouterAnchor<AppRoute>>
             </div>
         }
     }

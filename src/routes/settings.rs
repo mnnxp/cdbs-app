@@ -16,7 +16,7 @@ use crate::gqls::make_query;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::routes::AppRoute;
-use crate::services::{is_authenticated, set_token, Auth};
+use crate::services::{is_authenticated, set_token};
 use crate::types::{UUID, UserUpdateInfo, UserInfo};
 
 #[derive(GraphQLQuery)]

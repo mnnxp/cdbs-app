@@ -14,8 +14,8 @@ use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::gqls::make_query;
 use crate::routes::AppRoute;
-use crate::services::{set_token, Auth};
-use crate::types::{RegisterInfo, RegisterInfoWrapper, SlimUser, SlimUserWrapper};
+use crate::services::Auth;
+use crate::types::{RegisterInfo, SlimUser, SlimUserWrapper};
 
 /// Register page
 pub struct Register {
@@ -115,10 +115,6 @@ impl Component for Register {
         let link = self.link.clone();
         match msg {
             Msg::Request => {
-                // let request = RegisterInfoWrapper {
-                //     user: self.request.clone(),
-                // };
-                // self.task = Some(self.auth.register(request, self.response.clone()));
                 let request = self.request.clone();
                 spawn_local(async move {
                     let RegisterInfo {
@@ -157,7 +153,6 @@ impl Component for Register {
                 })
             }
             Msg::Response(Ok(user_info)) => {
-                // set_token(Some(user_info.user.token.clone()));
                 self.props.callback.emit(user_info.user);
                 self.error = None;
                 self.task = None;

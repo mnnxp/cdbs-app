@@ -1,10 +1,7 @@
 //! Routes by yew_router
 
-pub mod article;
-pub mod editor;
 pub mod home;
 pub mod login;
-pub mod profile;
 pub mod register;
 pub mod settings;
 pub mod tenders;
@@ -20,24 +17,18 @@ pub enum AppRoute {
     Login,
     #[to = "#/register"]
     Register,
-    #[to = "#/editor/{slug}"]
-    Editor(String),
-    #[to = "#/editor"]
-    EditorCreate,
     #[to = "#/tenders/create"]
     CreateTender,
     #[to = "#/tenders"]
     Tenders,
     #[to = "#/catalog"]
     Catalog,
-    #[to = "#/article/{slug}"]
-    Article(String),
     #[to = "#/settings"]
     Settings,
-    #[to = "#/@{username}/favorites"]
-    ProfileFavorites(String),
-    #[to = "#/@{username}"]
-    Profile(String),
+    // #[to = "#/@{username}/favorites"]
+    // ProfileFavorites(String),
+    // #[to = "#/@{username}"]
+    // Profile(String),
     #[to = "#/"]
     Home,
 }

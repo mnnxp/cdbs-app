@@ -1,26 +1,19 @@
 //! Common types
 
-mod articles;
 mod auth;
-mod comments;
+mod file;
 mod profiles;
+mod relate;
 mod tags;
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-pub use articles::{
-    ArticleCreateUpdateInfo, ArticleCreateUpdateInfoWrapper, ArticleInfo, ArticleInfoWrapper,
-    ArticleListInfo,
-};
 pub use auth::{
     LoginInfo, LoginInfoWrapper, RegisterInfo, RegisterInfoWrapper, SlimUser, SlimUserWrapper,
-    UserInfo, UserInfoWrapper, UserUpdateInfo, UserUpdateInfoWrapper, UserToken
+    UserUpdateInfo, UserUpdateInfoWrapper, UserToken
 };
-pub use comments::{
-    CommentCreateInfo, CommentCreateInfoWrapper, CommentInfo, CommentInfoWrapper, CommentListInfo,
-};
-pub use profiles::{ProfileInfo, ProfileInfoWrapper};
+pub use profiles::UserInfo;
 pub use tags::TagListInfo;
 
 /// Conduit api error info for Unprocessable Entity error
@@ -32,5 +25,5 @@ pub struct ErrorInfo {
 
 pub type DeleteWrapper = HashMap<(), ()>;
 
-// pub type UUID = Uuid;
+/// For GraphQLQuery
 pub type UUID = String;

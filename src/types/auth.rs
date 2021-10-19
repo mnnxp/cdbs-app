@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::fmt;
-use chrono::NaiveDateTime;
+// use chrono::NaiveDateTime;
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 // #[serde(rename_all = "camelCase")]
@@ -83,75 +83,6 @@ pub struct SlimUser {
 // #[serde(rename_all = "camelCase")]
 pub struct SlimUserWrapper {
     pub user: SlimUser,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct UserInfo {
-    pub uuid: String,
-    pub email: String,
-    pub firstname: String,
-    pub lastname: String,
-    pub secondname: String,
-    pub username: String,
-    pub phone: String,
-    pub description: String,
-    pub address: String,
-    pub position: String,
-    pub time_zone: String,
-    pub image_file: ShortFile, // obj
-    pub region: Region, // obj
-    pub program: Program, // obj
-    pub is_email_verified: bool,
-    pub is_enabled: bool,
-    pub is_delete: bool,
-    pub created_at: NaiveDateTime,
-    pub updated_at: NaiveDateTime,
-    pub certificates: Vec<Certificate>, // obj
-    pub subscribers: usize,
-    pub is_followed: bool,
-    pub companies_count: usize,
-    pub components_count: usize,
-    pub standards_count: usize,
-    pub fav_companies_count: usize,
-    pub fav_components_count: usize,
-    pub fav_standards_count: usize,
-    pub fav_users_count: usize,
-}
-
-#[derive(Serialize, Deserialize, Clone, Default, Debug)]
-pub struct ShortFile {
-    pub uuid: String,
-    pub filename: String,
-    pub filesize: usize,
-}
-
-#[derive(Serialize, Deserialize, Clone, Default, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct Region {
-    pub lang_id: usize,
-    pub region: String,
-    pub region_id: usize,
-}
-
-#[derive(Serialize, Deserialize, Clone, Default, Debug)]
-pub struct Program {
-    pub id: usize,
-    pub name: String,
-}
-
-#[derive(Serialize, Deserialize, Clone, Default, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct Certificate {
-    pub user_uuid: String,
-    pub file: ShortFile,
-    pub description: String,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-// #[serde(rename_all = "camelCase")]
-pub struct UserInfoWrapper {
-    pub user: UserInfo,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
