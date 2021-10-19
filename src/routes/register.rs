@@ -1,7 +1,6 @@
-use graphql_client::{GraphQLQuery, Response};
-use serde::{Deserialize, Serialize};
+use graphql_client::GraphQLQuery;
 use serde_json::Value;
-use wasm_bindgen_futures::{spawn_local, JsFuture};
+use wasm_bindgen_futures::spawn_local;
 use yew::services::fetch::FetchTask;
 use yew::services::ConsoleService;
 use yew::{
@@ -14,34 +13,22 @@ use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::gqls::make_query;
 use crate::routes::AppRoute;
-use crate::services::Auth;
-use crate::types::{RegisterInfo, SlimUser, SlimUserWrapper};
+use crate::types::{
+    RegisterInfo, SlimUser, SlimUserWrapper, Region, Program
+};
 
 /// Register page
 pub struct Register {
-    auth: Auth,
+    // auth: Auth,
     error: Option<Error>,
     props: Props,
     request: RegisterInfo,
-    response: Callback<Result<SlimUserWrapper, Error>>,
+    // response: Callback<Result<SlimUserWrapper, Error>>,
     router_agent: Box<dyn Bridge<RouteAgent>>,
     task: Option<FetchTask>,
     regions: Vec<Region>,
     programs: Vec<Program>,
     link: ComponentLink<Self>,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct Region {
-    langId: usize,
-    region: String,
-    regionId: usize,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct Program {
-    id: usize,
-    name: String,
 }
 
 #[derive(GraphQLQuery)]
@@ -68,7 +55,7 @@ pub struct Props {
 
 pub enum Msg {
     Request,
-    Response(Result<SlimUserWrapper, Error>),
+    // Response(Result<SlimUserWrapper, Error>),
     Ignore,
     UpdateFirstname(String),
     UpdateLastname(String),
@@ -88,10 +75,10 @@ impl Component for Register {
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
         Register {
-            auth: Auth::new(),
+            // auth: Auth::new(),
             error: None,
             request: RegisterInfo::default(),
-            response: link.callback(Msg::Response),
+            // response: link.callback(Msg::Response),
             task: None,
             props,
             router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
@@ -152,17 +139,16 @@ impl Component for Register {
                     link.send_message(Msg::GetRegister(res.unwrap()));
                 })
             }
-            Msg::Response(Ok(user_info)) => {
-                self.props.callback.emit(user_info.user);
-                self.error = None;
-                self.task = None;
-                self.router_agent.send(ChangeRoute(AppRoute::Home.into()));
-            }
-            Msg::Response(Err(err)) => {
-                self.error = Some(err);
-                self.task = None;
-            }
-
+            // Msg::Response(Ok(user_info)) => {
+            //     self.props.callback.emit(user_info.user);
+            //     self.error = None;
+            //     self.task = None;
+            //     self.router_agent.send(ChangeRoute(AppRoute::Home.into()));
+            // }
+            // Msg::Response(Err(err)) => {
+            //     self.error = Some(err);
+            //     self.task = None;
+            // }
             Msg::UpdateFirstname(firstname) => {
                 self.request.firstname = firstname;
             }
@@ -190,17 +176,15 @@ impl Component for Register {
                 ConsoleService::info(format!("Update: {:?}", region_id).as_ref());
             }
             Msg::UpdateList(res) => {
-                // self.list = res;
-                // true
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res = data.as_object().unwrap().get("data").unwrap();
-                let programs = res.get("programs").unwrap();
-                self.regions = serde_json::from_value(res.get("regions").unwrap().clone()).unwrap();
+                self.regions =
+                    serde_json::from_value(res.get("regions").unwrap().clone()).unwrap();
                 self.programs =
                     serde_json::from_value(res.get("programs").unwrap().clone()).unwrap();
                 ConsoleService::info(format!("Update: {:?}", self.programs).as_ref());
             }
-            Msg::GetRegister(res) => {
+            Msg::GetRegister(_res) => {
               self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
             }
             Msg::Ignore => {}
@@ -373,7 +357,7 @@ impl Component for Register {
                                       onchange=onchange_region_id
                                       >
                                       { for self.regions.iter().map(|x| html!{
-                                        <option value={x.regionId.to_string()} >{&x.region}</option>
+                                        <option value={x.region_id.to_string()} >{&x.region}</option>
                                       }) }
                                   </select>
                                 </div>

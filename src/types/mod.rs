@@ -14,6 +14,8 @@ pub use auth::{
     UserUpdateInfo, UserUpdateInfoWrapper, UserToken
 };
 pub use profiles::UserInfo;
+pub use file::ShortFile;
+pub use relate::{Region, Program};
 pub use tags::TagListInfo;
 
 /// Conduit api error info for Unprocessable Entity error
