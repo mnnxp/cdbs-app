@@ -19,6 +19,14 @@ use crate::routes::AppRoute;
 use crate::services::{is_authenticated, set_token, Auth};
 use crate::types::{UUID, SlimUserWrapper, UserInfoWrapper, UserUpdateInfo, UserUpdateInfoWrapper, UserInfo};
 
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/user.graphql",
+    response_derives = "Debug"
+)]
+struct UserUpdate;
+
 /// Get data current user
 impl From<UserInfo> for UserUpdateInfo {
     fn from(data: UserInfo) -> Self {
@@ -61,6 +69,7 @@ pub struct Settings {
     router_agent: Box<dyn Bridge<RouteAgent>>,
     props: Props,
     link: ComponentLink<Self>,
+    get_result: usize,
 }
 
 #[derive(Properties, Clone)]
@@ -80,6 +89,7 @@ pub enum Msg {
     Request,
     Response(Result<usize, Error>),
     GetData(String),
+    GetResult(String),
     Ignore,
     Logout,
     UpdateEmail(String),
@@ -92,8 +102,8 @@ pub enum Msg {
     UpdateAddress(String),
     UpdatePosition(String),
     UpdateTimeZone(String),
-    UpdateRegionId(usize),
-    UpdateProgramId(usize),
+    UpdateRegionId(i64),
+    UpdateProgramId(i64),
 }
 
 impl Component for Settings {
@@ -110,6 +120,7 @@ impl Component for Settings {
             router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             props,
             link,
+            get_result: 0,
         }
     }
 
@@ -124,13 +135,43 @@ impl Component for Settings {
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
+        let link = self.link.clone();
+
         match msg {
             Msg::Request => {
-                let request = UserUpdateInfoWrapper {
-                    user: self.request.clone(),
-                };
-
-                self.task = Some(self.auth.save(request, self.response.clone()));
+                let request = self.request.clone();
+                spawn_local(async move {
+                    let UserUpdateInfo {
+                        email,
+                        firstname,
+                        lastname,
+                        secondname,
+                        username,
+                        phone,
+                        description,
+                        address,
+                        position,
+                        time_zone,
+                        region_id,
+                        program_id,
+                    } = request;
+                    let data = user_update::IptUpdateUserData {
+                        email,
+                        firstname,
+                        lastname,
+                        secondname,
+                        username,
+                        phone,
+                        description,
+                        address,
+                        position,
+                        timeZone: time_zone,
+                        regionId: region_id,
+                        programId: program_id,
+                    };
+                    let res = make_query(UserUpdate::build_query(user_update::Variables { data })).await;
+                    link.send_message(Msg::GetResult(res.unwrap()));
+                })
             }
             Msg::Response(Ok(_)) => {
                 self.error = None;
@@ -194,7 +235,11 @@ impl Component for Settings {
                 self.request.program_id = Some(program_id);
             },
             Msg::GetResult(res) => {
-                self.get_result = res.parse::<usize>().unwrap_or(0);
+                let data: Value = serde_json::from_str(res.as_str()).unwrap();
+                let res = data.as_object().unwrap().get("data").unwrap();
+                let updated_rows: usize = serde_json::from_value(res.get("putUserUpdate").unwrap().clone()).unwrap();
+                ConsoleService::info(format!("Updated rows: {:?}", updated_rows).as_ref());
+                self.get_result = updated_rows;
             },
         }
         true
@@ -328,7 +373,7 @@ impl Component for Settings {
                                 </button>
                                 <fieldset class="field">
                                     <span class="tag is-info is-light">
-                                        {0}
+                                        { self.get_result.clone() }
                                     </span>
                                 </fieldset>
                             </form>

@@ -58,3 +58,7 @@ query GetSelfData {
     favUsersCount
   }
 }
+
+mutation UserUpdate($data: IptUpdateUserData!) {
+  putUserUpdate(data: $data)
+}

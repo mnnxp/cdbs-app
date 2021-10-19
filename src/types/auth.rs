@@ -165,8 +165,8 @@ pub struct UserUpdateInfo {
     pub address: Option<String>,
     pub position: Option<String>,
     pub time_zone: Option<String>,
-    pub region_id: Option<usize>,
-    pub program_id: Option<usize>,
+    pub region_id: Option<i64>,
+    pub program_id: Option<i64>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
