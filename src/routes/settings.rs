@@ -307,7 +307,9 @@ impl Component for Settings {
                                     // main data of username
                                     <fieldset class="column">
                                         <fieldset class="field">
+                                            <label class="label">{"Firstname"}</label>
                                             <input
+                                                id="firstname"
                                                 class="input"
                                                 type="text"
                                                 placeholder="firstname"
@@ -315,7 +317,9 @@ impl Component for Settings {
                                                 oninput=oninput_firstname />
                                         </fieldset>
                                         <fieldset class="field">
+                                            <label class="label">{"Lastname"}</label>
                                             <input
+                                                id="lastname"
                                                 class="input"
                                                 type="text"
                                                 placeholder="lastname"
@@ -323,7 +327,9 @@ impl Component for Settings {
                                                 oninput=oninput_lastname />
                                         </fieldset>
                                         <fieldset class="field">
+                                            <label class="label">{"Secondname"}</label>
                                             <input
+                                                id="secondname"
                                                 class="input"
                                                 type="text"
                                                 placeholder="secondname"
@@ -331,7 +337,9 @@ impl Component for Settings {
                                                 oninput=oninput_secondname />
                                         </fieldset>
                                         <fieldset class="field">
+                                            <label class="label">{"Username"}</label>
                                             <input
+                                                id="username"
                                                 class="input"
                                                 type="text"
                                                 placeholder="username"
@@ -339,7 +347,9 @@ impl Component for Settings {
                                                 oninput=oninput_username />
                                         </fieldset>
                                         <fieldset class="field">
+                                            <label class="label">{"Email"}</label>
                                             <input
+                                                id="email"
                                                 class="input"
                                                 type="email"
                                                 placeholder="email"
@@ -350,7 +360,9 @@ impl Component for Settings {
 
                                     <fieldset class="column">
                                         <fieldset class="field">
+                                            <label class="label">{"Position"}</label>
                                             <input
+                                                id="position"
                                                 class="input"
                                                 type="text"
                                                 placeholder="position"
@@ -361,7 +373,9 @@ impl Component for Settings {
                                     <fieldset class="column">
                                         // data user for id_type_user 2-11
                                         <fieldset class="field">
+                                            <label class="label">{"Phone"}</label>
                                             <input
+                                                id="phone"
                                                 class="input"
                                                 type="text"
                                                 placeholder="phone"
@@ -369,7 +383,9 @@ impl Component for Settings {
                                                 oninput=oninput_phone />
                                         </fieldset>
                                         <fieldset class="field">
+                                            <label class="label">{"Address"}</label>
                                             <input
+                                                id="address"
                                                 class="input"
                                                 type="text"
                                                 placeholder="address"
@@ -379,6 +395,7 @@ impl Component for Settings {
                                     </fieldset>
                                 </fieldset>
                                 <button
+                                    id="update-settings"
                                     class="button"
                                     type="submit"
                                     disabled=false>
@@ -392,6 +409,7 @@ impl Component for Settings {
                             </form>
                             <hr />
                             <button
+                                id="logout-button"
                                 class="button"
                                 onclick=onclick >
                                 { "Or click here to logout."}
