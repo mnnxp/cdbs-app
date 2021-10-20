@@ -7,6 +7,10 @@ The platform for publishing and sharing information on drawings and manufacturer
 - Check a `.env` file in root
 - Run `trunk serve`
 
+## Started tests
+- Install TestCafe [link](https://testcafe.io/documentation): `yarn install`
+- Run `yarn testcafe firefox tests/*`
+
 ## Collection of major crates used in CADBase Frontend
 - yew - [link](https://yew.rs/)
 - wasm-bindgen - [link](https://docs.rs/wasm-bindgen/)
