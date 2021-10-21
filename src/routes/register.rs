@@ -1,7 +1,7 @@
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
-use yew::services::fetch::FetchTask;
+// use yew::services::fetch::FetchTask;
 use yew::services::ConsoleService;
 use yew::{
     agent::Bridged, html, Bridge, Callback, Component, ComponentLink, FocusEvent, Html, InputData,ChangeData,
@@ -14,7 +14,7 @@ use crate::fragments::list_errors::ListErrors;
 use crate::gqls::make_query;
 use crate::routes::AppRoute;
 use crate::types::{
-    RegisterInfo, SlimUser, SlimUserWrapper, Region, Program
+    RegisterInfo, SlimUser, Region, Program
 };
 
 /// Register page
@@ -25,7 +25,7 @@ pub struct Register {
     request: RegisterInfo,
     // response: Callback<Result<SlimUserWrapper, Error>>,
     router_agent: Box<dyn Bridge<RouteAgent>>,
-    task: Option<FetchTask>,
+    // task: Option<FetchTask>,
     regions: Vec<Region>,
     programs: Vec<Program>,
     link: ComponentLink<Self>,
@@ -79,7 +79,7 @@ impl Component for Register {
             error: None,
             request: RegisterInfo::default(),
             // response: link.callback(Msg::Response),
-            task: None,
+            // task: None,
             props,
             router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             link,
@@ -133,7 +133,7 @@ impl Component for Register {
                         position: Some(position),
                         regionId: Some(region_id.into()),
                         programId: Some(program_id.into()),
-                        typeAccessId: Some(3), // todo!(make change in future)
+                        typeAccessId: Some(1), // todo!(make change in future)
                     };
                     let res = make_query(RegUser::build_query(reg_user::Variables { data })).await;
                     link.send_message(Msg::GetRegister(res.unwrap()));
