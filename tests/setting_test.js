@@ -12,9 +12,13 @@ const goodSecondname = "qweasd";
 const goodUsername = "qwe";
 const goodPassword = "qweqwe";
 const goodEmail = "qweasd@qwe.qwe";
+const goodDescription = "description for qwe";
 const goodPosition = "qweasd";
 const goodPhone = "qweasd";
 const goodAddress = "qweasd";
+const goodProgram = "Creo";
+const goodRegion = "Altai Republic";
+
 
 
 // fixture `Check update user data`// declare the fixture
@@ -61,8 +65,8 @@ test('Update user data', async t => {
         .typeText('#lastname', goodLastname)
         .typeText('#secondname', goodSecondname)
         // .typeText('#username', goodUsername)
-        // .typeText('#email', goodEmail)
-        // .typeText('#position', goodPosition)
+        .typeText('#email', goodEmail, { replace: true })
+        .typeText('#position', goodPosition)
         .typeText('#phone', goodPhone)
         .typeText('#address', goodAddress)
         .click('#update-settings')
@@ -72,7 +76,7 @@ test('Update user data', async t => {
           .filter('.tag')
           .filter('.is-info')
           .filter('.is-light')
-          .innerText).eql('6');
+          .innerText).eql('Updated rows: 7');
 
     await t.click('#update-settings')
 
@@ -87,8 +91,8 @@ test('Update user data', async t => {
         .typeText('#lastname', goodLastname, { replace: true })
         .typeText('#secondname', goodSecondname, { replace: true })
         // .typeText('#username', goodUsername, { replace: true })
-        // .typeText('#email', goodEmail, { replace: true })
-        // .typeText('#position', goodPosition, { replace: true })
+        .typeText('#email', goodEmail, { replace: true })
+        .typeText('#position', goodPosition, { replace: true })
         .typeText('#phone', goodPhone, { replace: true })
         .typeText('#address', goodAddress, { replace: true })
         .click('#update-settings')
@@ -98,5 +102,5 @@ test('Update user data', async t => {
           .filter('.tag')
           .filter('.is-info')
           .filter('.is-light')
-          .innerText).eql('6');
+          .innerText).eql('Updated rows: 7');
 });

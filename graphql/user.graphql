@@ -6,7 +6,7 @@ query GetMySelf {
   }
 }
 
-query GetSelfData {
+query GetSelfDataOpt {
   selfData {
     uuid
     email
@@ -56,6 +56,17 @@ query GetSelfData {
     favComponentsCount
     favStandardsCount
     favUsersCount
+  }
+
+  programs {
+    id
+    name
+  }
+
+  regions {
+    regionId
+    langId
+    region
   }
 }
 

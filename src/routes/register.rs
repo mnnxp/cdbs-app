@@ -4,8 +4,8 @@ use wasm_bindgen_futures::spawn_local;
 // use yew::services::fetch::FetchTask;
 use yew::services::ConsoleService;
 use yew::{
-    agent::Bridged, html, Bridge, Callback, Component, ComponentLink, FocusEvent, Html, InputData,ChangeData,
-    Properties, ShouldRender,
+    agent::Bridged, html, Bridge, Callback, Component, ComponentLink,
+    FocusEvent, Html, InputData, ChangeData, Properties, ShouldRender,
 };
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
 

@@ -1,7 +1,7 @@
 use yew::services::fetch::FetchTask;
 use yew::{
-    agent::Bridged, html, Bridge, Callback, Component, ComponentLink, FocusEvent, Html, InputData,
-    Properties, ShouldRender,
+    agent::Bridged, html, Bridge, Callback, Component, ComponentLink,
+    FocusEvent, Html, InputData, ChangeData, Properties, ShouldRender,
 };
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
 use chrono::NaiveDateTime;
@@ -17,7 +17,9 @@ use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::routes::AppRoute;
 use crate::services::{is_authenticated, set_token};
-use crate::types::{UUID, UserUpdateInfo, UserInfo};
+use crate::types::{
+    UUID, UserUpdateInfo, UserInfo, Program, Region
+};
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -36,9 +38,12 @@ impl From<UserInfo> for UserUpdateInfo {
             secondname,
             username,
             email,
+            description,
             position,
             phone,
             address,
+            region,
+            program,
             ..
         } = data;
 
@@ -48,13 +53,13 @@ impl From<UserInfo> for UserUpdateInfo {
             secondname: Some(secondname),
             username: Some(username),
             email: Some(email),
-            description: None,
+            description: Some(description),
             position: Some(position),
             phone: Some(phone),
             time_zone: None,
             address: Some(address),
-            region_id: None,
-            program_id: None,
+            region_id: Some(region.region_id as i64),
+            program_id: Some(program.id as i64),
         }
     }
 }
@@ -69,6 +74,9 @@ pub struct Settings {
     router_agent: Box<dyn Bridge<RouteAgent>>,
     props: Props,
     link: ComponentLink<Self>,
+    current_data: Option<UserInfo>,
+    programs: Vec<Program>,
+    regions: Vec<Region>,
     get_result: usize,
 }
 
@@ -83,7 +91,7 @@ pub struct Props {
     query_path = "./graphql/user.graphql",
     response_derives = "Debug"
 )]
-struct GetSelfData;
+struct GetSelfDataOpt;
 
 pub enum Msg {
     Request,
@@ -92,18 +100,19 @@ pub enum Msg {
     GetResult(String),
     Ignore,
     Logout,
-    UpdateEmail(String),
     UpdateFirstname(String),
     UpdateLastname(String),
     UpdateSecondname(String),
     UpdateUsername(String),
-    UpdatePhone(String),
+    UpdateEmail(String),
     UpdateDescription(String),
+    UpdatePhone(String),
     UpdateAddress(String),
     UpdatePosition(String),
     UpdateTimeZone(String),
-    UpdateRegionId(i64),
-    UpdateProgramId(i64),
+    UpdateProgramId(String),
+    UpdateRegionId(String),
+    UpdateList(String),
 }
 
 impl Component for Settings {
@@ -120,6 +129,9 @@ impl Component for Settings {
             router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             props,
             link,
+            current_data: None,
+            programs: Vec::new(),
+            regions: Vec::new(),
             get_result: 0,
         }
     }
@@ -128,8 +140,11 @@ impl Component for Settings {
         let link = self.link.clone();
         if first_render && is_authenticated() {
             spawn_local(async move {
-                let res = make_query(GetSelfData::build_query(get_self_data::Variables)).await;
-                link.send_message(Msg::GetData(res.unwrap()))
+                let res = make_query(
+                    GetSelfDataOpt::build_query(get_self_data_opt::Variables)
+                ).await.unwrap();
+                link.send_message(Msg::GetData(res.clone()));
+                link.send_message(Msg::UpdateList(res));
             })
         }
     }
@@ -187,6 +202,7 @@ impl Component for Settings {
                 let res = data.as_object().unwrap().get("data").unwrap();
                 let user_data: UserInfo = serde_json::from_value(res.get("selfData").unwrap().clone()).unwrap();
                 ConsoleService::info(format!("User data: {:?}", user_data).as_ref());
+                self.current_data = Some(user_data.clone());
                 self.request = user_data.into();
             }
             Msg::Ignore => {}
@@ -228,11 +244,22 @@ impl Component for Settings {
             Msg::UpdateTimeZone(time_zone) => {
                 self.request.time_zone = Some(time_zone);
             },
-            Msg::UpdateRegionId(region_id) => {
-                self.request.region_id = Some(region_id);
-            },
             Msg::UpdateProgramId(program_id) => {
-                self.request.program_id = Some(program_id);
+                self.request.program_id = Some(program_id.parse::<i64>().unwrap_or_default());
+                ConsoleService::info(format!("Update: {:?}", program_id).as_ref());
+            },
+            Msg::UpdateRegionId(region_id) => {
+                self.request.region_id = Some(region_id.parse::<i64>().unwrap_or_default());
+                ConsoleService::info(format!("Update: {:?}", region_id).as_ref());
+            },
+            Msg::UpdateList(res) => {
+                let data: Value = serde_json::from_str(res.as_str()).unwrap();
+                let res = data.as_object().unwrap().get("data").unwrap();
+                self.regions =
+                    serde_json::from_value(res.get("regions").unwrap().clone()).unwrap();
+                self.programs =
+                    serde_json::from_value(res.get("programs").unwrap().clone()).unwrap();
+                ConsoleService::info(format!("Update: {:?}", self.programs).as_ref());
             },
             Msg::GetResult(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
@@ -284,6 +311,9 @@ impl Component for Settings {
         let oninput_email = self
             .link
             .callback(|ev: InputData| Msg::UpdateEmail(ev.value));
+        let oninput_description = self
+            .link
+            .callback(|ev: InputData| Msg::UpdateDescription(ev.value));
         let oninput_position = self
             .link
             .callback(|ev: InputData| Msg::UpdatePosition(ev.value));
@@ -294,6 +324,18 @@ impl Component for Settings {
         let oninput_address = self
             .link
             .callback(|ev: InputData| Msg::UpdateAddress(ev.value));
+        let oninput_program_id = self
+            .link
+            .callback(|ev: ChangeData| Msg::UpdateProgramId(match ev {
+              ChangeData::Select(el) => el.value(),
+              _ => "1".to_string(),
+          }));
+        let onchange_region_id = self
+            .link
+            .callback(|ev: ChangeData| Msg::UpdateRegionId(match ev {
+              ChangeData::Select(el) => el.value(),
+              _ => "1".to_string(),
+          }));
 
         html! {
             <div class="settings-page">
@@ -301,10 +343,21 @@ impl Component for Settings {
                     <div class="row">
                         <div>
                             <h1 class="title">{ "Your Settings" }</h1>
+                            // <fieldset class="field">
+                                <span class="tag is-info is-light">
+                                    { format!("Updated rows: {}", self.get_result.clone()) }
+                                </span>
+                                <span class="tag is-info is-light">{
+                                    match &self.current_data {
+                                        Some(data) => format!("Last update: {}", data.updated_at),
+                                        None => "Not data".to_string(),
+                                    }
+                                }</span>
+                            // </fieldset>
                             <ListErrors error=self.error.clone()/>
                             <form onsubmit=onsubmit>
                                 <fieldset class="columns">
-                                    // main data of username
+                                    // first column
                                     <fieldset class="column">
                                         <fieldset class="field">
                                             <label class="label">{"Firstname"}</label>
@@ -313,7 +366,10 @@ impl Component for Settings {
                                                 class="input"
                                                 type="text"
                                                 placeholder="firstname"
-                                                value={self.request.firstname.as_ref().map(|x| x.to_string()).unwrap_or_default()}
+                                                value={self.request.firstname
+                                                    .as_ref()
+                                                    .map(|x| x.to_string())
+                                                    .unwrap_or_default()}
                                                 oninput=oninput_firstname />
                                         </fieldset>
                                         <fieldset class="field">
@@ -323,7 +379,10 @@ impl Component for Settings {
                                                 class="input"
                                                 type="text"
                                                 placeholder="lastname"
-                                                value={self.request.lastname.as_ref().map(|x| x.to_string()).unwrap_or_default()}
+                                                value={self.request.lastname
+                                                    .as_ref()
+                                                    .map(|x| x.to_string())
+                                                    .unwrap_or_default()}
                                                 oninput=oninput_lastname />
                                         </fieldset>
                                         <fieldset class="field">
@@ -333,7 +392,10 @@ impl Component for Settings {
                                                 class="input"
                                                 type="text"
                                                 placeholder="secondname"
-                                                value={self.request.secondname.as_ref().map(|x| x.to_string()).unwrap_or_default()}
+                                                value={self.request.secondname
+                                                    .as_ref()
+                                                    .map(|x| x.to_string())
+                                                    .unwrap_or_default()}
                                                 oninput=oninput_secondname />
                                         </fieldset>
                                         <fieldset class="field">
@@ -343,7 +405,10 @@ impl Component for Settings {
                                                 class="input"
                                                 type="text"
                                                 placeholder="username"
-                                                value={self.request.username.as_ref().map(|x| x.to_string()).unwrap_or_default()}
+                                                value={self.request.username
+                                                    .as_ref()
+                                                    .map(|x| x.to_string())
+                                                    .unwrap_or_default()}
                                                 oninput=oninput_username />
                                         </fieldset>
                                         <fieldset class="field">
@@ -353,12 +418,29 @@ impl Component for Settings {
                                                 class="input"
                                                 type="email"
                                                 placeholder="email"
-                                                value={self.request.email.as_ref().map(|x| x.to_string()).unwrap_or_default()}
+                                                value={self.request.email
+                                                    .as_ref()
+                                                    .map(|x| x.to_string())
+                                                    .unwrap_or_default()}
                                                 oninput=oninput_email />
                                         </fieldset>
                                     </fieldset>
 
+                                    // second column
                                     <fieldset class="column">
+                                        <fieldset class="field">
+                                            <label class="label">{"Description"}</label>
+                                            <input
+                                                id="description"
+                                                class="input"
+                                                type="description"
+                                                placeholder="description"
+                                                value={self.request.description
+                                                    .as_ref()
+                                                    .map(|x| x.to_string())
+                                                    .unwrap_or_default()}
+                                                oninput=oninput_description />
+                                        </fieldset>
                                         <fieldset class="field">
                                             <label class="label">{"Position"}</label>
                                             <input
@@ -366,12 +448,12 @@ impl Component for Settings {
                                                 class="input"
                                                 type="text"
                                                 placeholder="position"
-                                                value={self.request.position.as_ref().map(|x| x.to_string()).unwrap_or_default()}
+                                                value={self.request.position
+                                                    .as_ref()
+                                                    .map(|x| x.to_string())
+                                                    .unwrap_or_default()}
                                                 oninput=oninput_position />
                                         </fieldset>
-                                    </fieldset>
-                                    <fieldset class="column">
-                                        // data user for id_type_user 2-11
                                         <fieldset class="field">
                                             <label class="label">{"Phone"}</label>
                                             <input
@@ -379,7 +461,10 @@ impl Component for Settings {
                                                 class="input"
                                                 type="text"
                                                 placeholder="phone"
-                                                value={self.request.phone.as_ref().map(|x| x.to_string()).unwrap_or_default()}
+                                                value={self.request.phone
+                                                    .as_ref()
+                                                    .map(|x| x.to_string())
+                                                    .unwrap_or_default()}
                                                 oninput=oninput_phone />
                                         </fieldset>
                                         <fieldset class="field">
@@ -389,8 +474,69 @@ impl Component for Settings {
                                                 class="input"
                                                 type="text"
                                                 placeholder="address"
-                                                value={self.request.address.as_ref().map(|x| x.to_string()).unwrap_or_default()}
+                                                value={self.request.address
+                                                    .as_ref()
+                                                    .map(|x| x.to_string())
+                                                    .unwrap_or_default()}
                                                 oninput=oninput_address />
+                                        </fieldset>
+                                    </fieldset>
+
+                                    // third column
+                                    <fieldset class="column">
+                                        <fieldset class="field">
+                                            <label class="label">{"Program"}</label>
+                                            <div class="control">
+                                                <div class="select">
+                                                  <select
+                                                      id="program"
+                                                      select={self.request.program_id.unwrap_or_default().to_string()}
+                                                      onchange=oninput_program_id
+                                                      >
+                                                    { for self.programs.iter().map(|x|
+                                                        match self.current_data.as_ref().unwrap().program.id == x.id {
+                                                            true => {
+                                                                html!{
+                                                                    <option value={x.id.to_string()} selected=true>{&x.name}</option>
+                                                                }
+                                                            },
+                                                            false => {
+                                                                html!{
+                                                                    <option value={x.id.to_string()}>{&x.name}</option>
+                                                                }
+                                                            },
+                                                        }
+                                                    )}
+                                                  </select>
+                                                </div>
+                                            </div>
+                                        </fieldset>
+                                        <fieldset class="field">
+                                            <label class="label">{"Region"}</label>
+                                            <div class="control">
+                                                <div class="select">
+                                                  <select
+                                                      id="region"
+                                                      select={self.request.region_id.unwrap_or_default().to_string()}
+                                                      onchange=onchange_region_id
+                                                      >
+                                                    { for self.regions.iter().map(|x|
+                                                        match self.current_data.as_ref().unwrap().region.region_id == x.region_id {
+                                                            true => {
+                                                                html!{
+                                                                    <option value={x.region_id.to_string()} selected=true>{&x.region}</option>
+                                                                }
+                                                            },
+                                                            false => {
+                                                                html!{
+                                                                    <option value={x.region_id.to_string()}>{&x.region}</option>
+                                                                }
+                                                            },
+                                                        }
+                                                    )}
+                                                  </select>
+                                                </div>
+                                            </div>
                                         </fieldset>
                                     </fieldset>
                                 </fieldset>
@@ -401,11 +547,6 @@ impl Component for Settings {
                                     disabled=false>
                                     { "Update Settings" }
                                 </button>
-                                <fieldset class="field">
-                                    <span class="tag is-info is-light">
-                                        { self.get_result.clone() }
-                                    </span>
-                                </fieldset>
                             </form>
                             <hr />
                             <button
