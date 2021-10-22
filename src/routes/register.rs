@@ -1,47 +1,34 @@
-use graphql_client::{GraphQLQuery, Response};
-use serde::{Deserialize, Serialize};
+use graphql_client::GraphQLQuery;
 use serde_json::Value;
-use wasm_bindgen_futures::{spawn_local, JsFuture};
-use yew::services::fetch::FetchTask;
+use wasm_bindgen_futures::spawn_local;
+// use yew::services::fetch::FetchTask;
 use yew::services::ConsoleService;
 use yew::{
-    agent::Bridged, html, Bridge, Callback, Component, ComponentLink, FocusEvent, Html, InputData,ChangeData,
-    Properties, ShouldRender,
+    agent::Bridged, html, Bridge, Callback, Component, ComponentLink,
+    FocusEvent, Html, InputData, ChangeData, Properties, ShouldRender,
 };
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
 
-use crate::error::Error;
+use crate::error::{Error, get_error};
 use crate::fragments::list_errors::ListErrors;
 use crate::gqls::make_query;
 use crate::routes::AppRoute;
-use crate::services::{set_token, Auth};
-use crate::types::{RegisterInfo, RegisterInfoWrapper, SlimUser, SlimUserWrapper};
+use crate::types::{
+    RegisterInfo, SlimUser, Region, Program
+};
 
 /// Register page
 pub struct Register {
-    auth: Auth,
+    // auth: Auth,
     error: Option<Error>,
     props: Props,
     request: RegisterInfo,
-    response: Callback<Result<SlimUserWrapper, Error>>,
+    // response: Callback<Result<SlimUserWrapper, Error>>,
     router_agent: Box<dyn Bridge<RouteAgent>>,
-    task: Option<FetchTask>,
+    // task: Option<FetchTask>,
     regions: Vec<Region>,
     programs: Vec<Program>,
     link: ComponentLink<Self>,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct Region {
-    langId: usize,
-    region: String,
-    regionId: usize,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct Program {
-    id: usize,
-    name: String,
 }
 
 #[derive(GraphQLQuery)]
@@ -68,7 +55,7 @@ pub struct Props {
 
 pub enum Msg {
     Request,
-    Response(Result<SlimUserWrapper, Error>),
+    // Response(Result<SlimUser, Error>),
     Ignore,
     UpdateFirstname(String),
     UpdateLastname(String),
@@ -77,7 +64,6 @@ pub enum Msg {
     UpdateEmail(String),
     UpdatePassword(String),
     UpdateProgramId(String),
-    UpdateIsSupplier(String),
     UpdateRegionId(String),
     UpdateList(String),
     GetRegister(String),
@@ -89,11 +75,11 @@ impl Component for Register {
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
         Register {
-            auth: Auth::new(),
+            // auth: Auth::new(),
             error: None,
             request: RegisterInfo::default(),
-            response: link.callback(Msg::Response),
-            task: None,
+            // response: link.callback(Msg::Response),
+            // task: None,
             props,
             router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             link,
@@ -116,10 +102,6 @@ impl Component for Register {
         let link = self.link.clone();
         match msg {
             Msg::Request => {
-                // let request = RegisterInfoWrapper {
-                //     user: self.request.clone(),
-                // };
-                // self.task = Some(self.auth.register(request, self.response.clone()));
                 let request = self.request.clone();
                 spawn_local(async move {
                     let RegisterInfo {
@@ -138,36 +120,35 @@ impl Component for Register {
                         program_id,
                     } = request;
                     let data = reg_user::IptUserData {
-                        firstname,
-                        lastname,
-                        secondname,
-                        username,
                         email,
+                        username,
                         password,
-                        phone,
-                        description,
-                        address,
-                        timeZone: time_zone.to_string(),
-                        position,
-                        regionId: region_id.into(),
-                        programId: program_id.into(),
+                        firstname: Some(firstname),
+                        lastname: Some(lastname),
+                        secondname: Some(secondname),
+                        phone: Some(phone),
+                        description: Some(description),
+                        address: Some(address),
+                        timeZone: Some(time_zone.to_string()),
+                        position: Some(position),
+                        regionId: Some(region_id.into()),
+                        programId: Some(program_id.into()),
+                        typeAccessId: Some(1), // todo!(make change in future)
                     };
                     let res = make_query(RegUser::build_query(reg_user::Variables { data })).await;
                     link.send_message(Msg::GetRegister(res.unwrap()));
                 })
             }
-            Msg::Response(Ok(user_info)) => {
-                // set_token(Some(user_info.user.token.clone()));
-                self.props.callback.emit(user_info.user);
-                self.error = None;
-                self.task = None;
-                self.router_agent.send(ChangeRoute(AppRoute::Home.into()));
-            }
-            Msg::Response(Err(err)) => {
-                self.error = Some(err);
-                self.task = None;
-            }
-
+            // Msg::Response(Ok(slim_user)) => {
+            //     self.props.callback.emit(slim_user);
+            //     self.error = None;
+            //     self.task = None;
+            //     self.router_agent.send(ChangeRoute(AppRoute::Home.into()));
+            // }
+            // Msg::Response(Err(err)) => {
+            //     self.error = Some(err);
+            //     self.task = None;
+            // }
             Msg::UpdateFirstname(firstname) => {
                 self.request.firstname = firstname;
             }
@@ -190,26 +171,31 @@ impl Component for Register {
                 self.request.program_id = program_id.parse::<i32>().unwrap_or(1);
                 ConsoleService::info(format!("Update: {:?}", program_id).as_ref());
             }
-            Msg::UpdateIsSupplier(is_supplier) => {
-                // self.request.is_supplier = is_supplier.parse::<i32>().unwrap_or(0);
-            }
             Msg::UpdateRegionId(region_id) => {
                 self.request.region_id = region_id.parse::<i32>().unwrap_or(1);
                 ConsoleService::info(format!("Update: {:?}", region_id).as_ref());
             }
             Msg::UpdateList(res) => {
-                // self.list = res;
-                // true
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res = data.as_object().unwrap().get("data").unwrap();
-                let programs = res.get("programs").unwrap();
-                self.regions = serde_json::from_value(res.get("regions").unwrap().clone()).unwrap();
+                self.regions =
+                    serde_json::from_value(res.get("regions").unwrap().clone()).unwrap();
                 self.programs =
                     serde_json::from_value(res.get("programs").unwrap().clone()).unwrap();
                 ConsoleService::info(format!("Update: {:?}", self.programs).as_ref());
             }
             Msg::GetRegister(res) => {
-              self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
+                let data: Value = serde_json::from_str(res.as_str()).unwrap();
+                let res = data.as_object().unwrap().get("data").unwrap();
+
+                match res.is_null() {
+                    false => {
+                        self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
+                    },
+                    true => {
+                        self.error = Some(get_error(&data));
+                    }
+                }
             }
             Msg::Ignore => {}
         }
@@ -250,9 +236,6 @@ impl Component for Register {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
-        let oninput_is_supplier = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateIsSupplier(ev.value));
         let onchange_region_id = self
             .link
             .callback(|ev: ChangeData| Msg::UpdateProgramId(match ev {
@@ -275,9 +258,10 @@ impl Component for Register {
                             <label class="label">{"Firstname"}</label>
                             <div class="control">
                                 <input
+                                    id="firstname"
                                     class="input"
                                     type="text"
-                                    placeholder="Text input"
+                                    placeholder="Firstname"
                                     value=self.request.firstname.clone()
                                     oninput=oninput_firstname
                                     />
@@ -287,9 +271,10 @@ impl Component for Register {
                             <label class="label">{"Lastname"}</label>
                             <div class="control">
                                 <input
+                                    id="lastname"
                                     class="input"
                                     type="text"
-                                    placeholder="Text input"
+                                    placeholder="Lastname"
                                     value=self.request.lastname.clone()
                                     oninput=oninput_lastname
                                     />
@@ -299,9 +284,10 @@ impl Component for Register {
                             <label class="label">{"Secondname"}</label>
                             <div class="control">
                                 <input
+                                    id="secondname"
                                     class="input"
                                     type="text"
-                                    placeholder="Text input"
+                                    placeholder="Secondname"
                                     value=self.request.secondname.clone()
                                     oninput=oninput_secondname
                                     />
@@ -311,6 +297,7 @@ impl Component for Register {
                             <label class="label">{"Username"}</label>
                             <div class="control has-icons-left has-icons-right">
                                 <input
+                                    id="username"
                                     class="input"
                                     type="text"
                                     placeholder="Username"
@@ -330,6 +317,7 @@ impl Component for Register {
                             <label class="label">{"Email"}</label>
                             <div class="control has-icons-left has-icons-right">
                                 <input
+                                    id="email"
                                     class="input"
                                     type="email"
                                     placeholder="Email"
@@ -349,6 +337,7 @@ impl Component for Register {
                             <label class="label">{"Password"}</label>
                             <div class="control has-icons-left">
                                 <input
+                                    id="password"
                                     class="input"
                                     type="password"
                                     placeholder="Password"
@@ -365,6 +354,7 @@ impl Component for Register {
                             <div class="control">
                                 <div class="select">
                                   <select
+                                      id="program"
                                       select=self.request.program_id.to_string()
                                       onchange=oninput_program_id
                                       >
@@ -375,51 +365,42 @@ impl Component for Register {
                                 </div>
                             </div>
                         </fieldset>
-                        // <fieldset class="field">
-                        //     <label class="label">{"You're supplier?"}</label>
-                        //     <div class="control">
-                        //         <label class="radio">
-                        //           <input type="radio" name="question"/>
-                        //           {1}
-                        //         </label>
-                        //         <label class="radio">
-                        //           <input type="radio" name="question"
-                        //           select=self.request.is_supplier.to_string()
-                        //           oninput=oninput_is_supplier/>
-                        //           {0}
-                        //         </label>
-                        //     </div>
-                        // </fieldset>
                         <fieldset class="field">
                             <label class="label">{"What's your region?"}</label>
                             <div class="control">
                                 <div class="select">
                                   <select
+                                      id="region"
                                       select=self.request.region_id.to_string()
                                       onchange=onchange_region_id
                                       >
                                       { for self.regions.iter().map(|x| html!{
-                                        <option value={x.regionId.to_string()} >{&x.region}</option>
+                                        <option value={x.region_id.to_string()} >{&x.region}</option>
                                       }) }
                                   </select>
                                 </div>
                             </div>
                         </fieldset>
-                        <div class="field">
-                          <div class="control">
-                            <label class="checkbox">
-                              <input type="checkbox"/>
-                              {" I agree to the "}<a href="#">{"terms and conditions"}</a>
-                            </label>
-                          </div>
-                        </div>
+                        // <div class="field">
+                        //   <div class="control">
+                        //     <label class="checkbox">
+                        //       <input id="accept-conditions" type="checkbox"/>
+                        //       {" I agree to the "}<a href="#">{"terms and conditions"}</a>
+                        //     </label>
+                        //   </div>
+                        // </div>
                         <button
+                            id="submit-button"
                             class="button"
                             type="submit"
                             disabled=false
                         >
                             { "Sign up" }
                         </button>
+                        <span class="tag is-info is-light is-large">
+                            {" By clicking, you agree to the "}
+                            <a href="#">{"terms and conditions"}</a>
+                        </span>
                     </fieldset>
                 </form>
             </div>

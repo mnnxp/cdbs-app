@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::fmt;
+// use chrono::NaiveDateTime;
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 // #[serde(rename_all = "camelCase")]
@@ -23,49 +24,29 @@ pub struct RegisterInfo {
     pub username: String,
     pub email: String,
     pub password: String,
-    // pub id_type_user: i32,
-    // pub is_supplier: i32,
-    // pub orgname: String,
-    // pub shortname: String,
-    // pub inn: String,
     pub phone: String,
     pub description: String,
-    // pub id_name_cad: i32,
-    // pub comment: String,
     pub address: String,
-    pub time_zone: i32,
+    pub time_zone: String,
     pub position: String,
     pub region_id: i32,
     pub program_id: i32,
-    // pub site_url: String,
-    // pub uuid_file_info_icon: String,
-    // pub id_region: i32,
 }
 
 impl Default for RegisterInfo {
     fn default() -> Self {
         Self {
-            // id_region: (1),
-            // uuid_file_info_icon: ("".to_owned()),
-            // site_url: ("".to_owned()),
-            position: ("".to_owned()),
-            time_zone: (3),
-            address: ("".to_owned()),
-            // comment: ("".to_owned()),
-            // id_name_cad: (1),
-            phone: ("".to_owned()),
-            // inn: ("".to_owned()),
-            // shortname: ("".to_owned()),
-            // orgname: ("".to_owned()),
-            // is_supplier: (0),
-            // id_type_user: (1),
-            password: ("".to_owned()),
-            email: ("".to_owned()),
-            username: ("".to_owned()),
-            secondname: ("".to_owned()),
-            lastname: ("".to_owned()),
-            firstname: ("".to_owned()),
-            description: ("".to_owned()),
+            firstname: String::new(),
+            lastname: String::new(),
+            secondname: String::new(),
+            username: String::new(),
+            email: String::new(),
+            password: String::new(),
+            phone: String::new(),
+            description: String::new(),
+            address: String::new(),
+            time_zone: String::new(),
+            position: String::new(),
             region_id: 1,
             program_id: 1,
         }
@@ -91,9 +72,9 @@ impl fmt::Display for UserToken {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct SlimUser {
     pub uuid: String,
-    // pub is_supplier: i32,
     pub program_id: i32,
     pub username: String,
 }
@@ -104,69 +85,21 @@ pub struct SlimUserWrapper {
     pub user: SlimUser,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-// #[serde(rename_all = "camelCase")]
-pub struct UserInfo {
-    // pub email: String,
-    // pub token: String,
-    // pub username: String,
-    // pub bio: Option<String>,
-    // pub image: Option<String>,
-    pub firstname: String,
-    pub lastname: String,
-    pub secondname: String,
-    pub username: String,
-    pub email: String,
-    pub id_type_user: i32,
-    pub is_supplier: i32,
-    pub orgname: String,
-    pub shortname: String,
-    pub inn: String,
-    pub phone: String,
-    pub id_name_cad: i32,
-    pub comment: String,
-    pub address: String,
-    pub time_zone: i32,
-    pub position: String,
-    pub site_url: String,
-    pub uuid_file_info_icon: String,
-    pub id_region: i32,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-// #[serde(rename_all = "camelCase")]
-pub struct UserInfoWrapper {
-    pub user: UserInfo,
-}
-
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 // #[serde(rename_all = "camelCase")]
 pub struct UserUpdateInfo {
-    // pub email: String,
-    // pub username: String,
-    // pub password: Option<String>,
-    // pub image: String,
-    // pub bio: String,
-    pub firstname: String,
-    pub lastname: String,
-    pub secondname: String,
-    pub username: String,
-    pub email: String,
-    pub password: Option<String>,
-    pub id_type_user: i32,
-    pub is_supplier: i32,
-    pub orgname: String,
-    pub shortname: String,
-    pub inn: String,
-    pub phone: String,
-    pub id_name_cad: i32,
-    pub comment: String,
-    pub address: String,
-    pub time_zone: i32,
-    pub position: String,
-    pub site_url: String,
-    pub uuid_file_info_icon: String,
-    pub id_region: i32,
+    pub email: Option<String>,
+    pub firstname: Option<String>,
+    pub lastname: Option<String>,
+    pub secondname: Option<String>,
+    pub username: Option<String>,
+    pub phone: Option<String>,
+    pub description: Option<String>,
+    pub address: Option<String>,
+    pub position: Option<String>,
+    pub time_zone: Option<String>,
+    pub region_id: Option<i64>,
+    pub program_id: Option<i64>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

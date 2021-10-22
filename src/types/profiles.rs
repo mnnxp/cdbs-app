@@ -1,42 +1,46 @@
-use chrono::prelude::*;
+use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
+use super::file::ShortFile;
+use super::relate::{Region, Program};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct ProfileInfo {
-    // pub username: String,
-    pub bio: Option<String>,
-    pub image: String,
-    pub following: bool,
+pub struct UserInfo {
     pub uuid: String,
     pub email: String,
-    pub email_verified: i32,
-    pub id_type_user: i32,
-    pub value_type_user: String,
-    pub is_supplier: i32,
     pub firstname: String,
     pub lastname: String,
     pub secondname: String,
     pub username: String,
-    pub orgname: String,
-    pub shortname: String,
-    pub inn: String,
     pub phone: String,
-    pub id_name_cad: i32,
-    pub value_name_cad: String,
-    pub comment: String,
+    pub description: String,
     pub address: String,
-    pub time_zone: i32,
     pub position: String,
-    pub site_url: String,
-    pub uuid_file_info_icon: String,
-    pub id_region: i32,
-    pub value_region: String,
-    pub created_at: DateTime<Utc>,
+    pub time_zone: String,
+    pub image_file: ShortFile, // obj
+    pub region: Region, // obj
+    pub program: Program, // obj
+    pub is_email_verified: bool,
+    pub is_enabled: bool,
+    pub is_delete: bool,
+    pub created_at: NaiveDateTime,
+    pub updated_at: NaiveDateTime,
+    pub certificates: Vec<Certificate>, // obj
+    pub subscribers: usize,
+    pub is_followed: bool,
+    pub companies_count: usize,
+    pub components_count: usize,
+    pub standards_count: usize,
+    pub fav_companies_count: usize,
+    pub fav_components_count: usize,
+    pub fav_standards_count: usize,
+    pub fav_users_count: usize,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Default, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct ProfileInfoWrapper {
-    pub profile: ProfileInfo,
+pub struct Certificate {
+    pub user_uuid: String,
+    pub file: ShortFile,
+    pub description: String,
 }

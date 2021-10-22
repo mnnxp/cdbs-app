@@ -3,42 +3,8 @@ schema {
   mutation: MutationRoot
 }
 
-"""Directs the executor to query only when the field exists."""
+# Directs the executor to query only when the field exists.
 directive @ifdef on FIELD
-
-"""
-Direct the client to resolve this field locally, either from the cache or local resolvers.
-"""
-directive @client(
-  """
-  When true, the client will never use the cache for this value. See
-  https://www.apollographql.com/docs/react/essentials/local-state/#forcing-resolvers-with-clientalways-true
-  """
-  always: Boolean
-) on FIELD | FRAGMENT_DEFINITION | INLINE_FRAGMENT
-
-"""
-Export this locally resolved field as a variable to be used in the remainder of this query. See
-https://www.apollographql.com/docs/react/essentials/local-state/#using-client-fields-as-variables
-"""
-directive @export(
-  """The variable name to export this field as."""
-  as: String!
-) on FIELD
-
-"""
-Specify a custom store key for this result. See
-https://www.apollographql.com/docs/react/advanced/caching/#the-connection-directive
-"""
-directive @connection(
-  """Specify the store key."""
-  key: String!
-
-  """
-  An array of query argument names to include in the generated custom store key.
-  """
-  filter: [String!]
-) on FIELD
 
 type ActualStatusTranslateList {
   actualStatusId: Int!
@@ -46,10 +12,30 @@ type ActualStatusTranslateList {
   name: String!
 }
 
-type CertificateWithSlimFile {
-  file: SlimFile!
+type CertificateWithShowFile {
+  file: ShowFile!
   userUuid: UUID!
   description: String!
+}
+
+input ChangeOwnerComponent {
+  componentUuid: UUID!
+  newOwnerUserUuid: UUID!
+}
+
+input ChangeOwnerStandard {
+  standardUuid: UUID!
+  newOwnerUserUuid: UUID!
+}
+
+input ChangeTypeAccessComponent {
+  componentUuid: UUID!
+  newTypeAccessUuid: Int!
+}
+
+input ChangeTypeAccessStandard {
+  standardUuid: UUID!
+  newTypeAccessUuid: Int!
 }
 
 type Claims {
@@ -58,6 +44,24 @@ type Claims {
   sub: String!
   iat: String!
   exp: String!
+}
+
+type CompanyAccessComponentAndRelatedData {
+  componentUuid: UUID!
+  companyUuid: UUID!
+  typeAccess: TypeAccessTranslateList!
+  isEnabled: Boolean!
+  createdAt: NaiveDateTime!
+  updatedAt: NaiveDateTime!
+}
+
+type CompanyAccessStandardAndRelatedData {
+  standardUuid: UUID!
+  companyUuid: UUID!
+  typeAccess: TypeAccessTranslateList!
+  isEnabled: Boolean!
+  createdAt: NaiveDateTime!
+  updatedAt: NaiveDateTime!
 }
 
 type CompanyAndRelatedData {
@@ -72,11 +76,11 @@ type CompanyAndRelatedData {
   siteUrl: String!
   timeZone: String!
   ownerUser: ShowUserShort!
-  imageFile: SlimFile!
+  imageFile: ShowFile!
   region: RegionTranslateList!
   companyRepresents: [CompanyRepresentAndRelatedData!]!
   companyType: CompanyTypeTranslateList!
-  companyCertificates: [CertificateWithSlimFile!]!
+  companyCertificates: [CertificateWithShowFile!]!
   companySpecs: [CompanySpecWithTranslation!]!
   isSupplier: Boolean!
   isEmailVerified: Boolean!
@@ -88,11 +92,13 @@ type CompanyAndRelatedData {
   updatedAt: NaiveDateTime!
 }
 
-type CompanyFav {
-  companyUuid: ID!
-  userUuid: ID!
+type CompanyMemberAndRelatedData {
+  companyUuid: UUID!
+  userUuid: UUID!
+  role: RoleMemberAndRelatedData!
   isEnabled: Boolean!
   createdAt: NaiveDateTime!
+  updatedAt: NaiveDateTime!
 }
 
 type CompanyRepresentAndRelatedData {
@@ -126,7 +132,7 @@ type ComponentAndRelatedData {
   typeAccessId: Int!
   componentType: ComponentTypeTranslateList!
   actualStatus: ActualStatusTranslateList!
-  isStandard: Boolean!
+  isBase: Boolean!
   subscribers: Int!
   isFollowed: Boolean!
   updatedAt: NaiveDateTime!
@@ -137,6 +143,7 @@ type ComponentAndRelatedData {
   componentKeywords: [Keyword!]!
   componentModifications: [ComponentModificationAndRelatedData!]!
   componentSuppliers: [ComponentSupplierRelatedData!]!
+  componentStandards: [ShowStandardShort!]!
 }
 
 type ComponentFav {
@@ -154,7 +161,7 @@ type ComponentModificationAndRelatedData {
   description: String!
   actualStatus: ActualStatusTranslateList!
   updatedAt: NaiveDateTime!
-  filesetsForProgram: [SetOfFilesProgramRelatedData!]!
+  filesetsForProgram: [FilesetProgramRelatedData!]!
   modificationParams: [ModificationParamWithTranslation!]!
 }
 
@@ -181,15 +188,140 @@ type ComponentTypeTranslateList {
   componentType: String!
 }
 
+input DelCompanyAccessComponentData {
+  componentUuid: UUID!
+  companyUuid: UUID!
+}
+
+input DelCompanyAccessStandardData {
+  standardUuid: UUID!
+  companyUuid: UUID!
+}
+
+input DelCompanyCertificateData {
+  companyUuid: UUID!
+  fileUuid: UUID!
+}
+
+input DelCompanyMemberData {
+  companyUuid: UUID!
+  userUuid: UUID!
+}
+
+input DelCompanyOfSuppliersData {
+  companyUuid: UUID!
+  componentUuid: UUID!
+}
+
+input DelComponentFileData {
+  fileUuid: UUID!
+  componentUuid: UUID!
+}
+
+input DelComponentModificationData {
+  componentUuid: UUID!
+  modificationUuid: UUID!
+}
+
+input DelComponentParamData {
+  componentUuid: UUID!
+  paramIds: [Int!]!
+}
+
+input DelFilesetProgramData {
+  modificationUuid: UUID!
+  filesetUuid: UUID!
+}
+
+input DelModificationFileData {
+  fileUuid: UUID!
+  modificationUuid: UUID!
+}
+
+input DelModificationFileFromFilesetData {
+  filesetUuid: UUID!
+  fileUuids: [UUID!]!
+}
+
+input DelModificationParamData {
+  modificationUuid: UUID!
+  paramIds: [Int!]!
+}
+
+input DelRoleAccessData {
+  roleId: Int!
+  typesAccessIds: [Int!]!
+}
+
+input DelRoleMemberData {
+  companyUuid: UUID!
+  roleId: Int!
+}
+
+input DelStandardToComponentData {
+  standardsUuids: [UUID!]!
+  componentUuid: UUID!
+}
+
+input DelSuppliersComponentData {
+  componentUuid: UUID!
+  companiesUuids: [UUID!]!
+}
+
+input DelUserAccessComponentData {
+  componentUuid: UUID!
+  userUuid: UUID!
+}
+
+input DelUserAccessStandardData {
+  standardUuid: UUID!
+  userUuid: UUID!
+}
+
+input DelUserCertificateData {
+  fileUuid: UUID!
+}
+
+input DeleteStandardFileData {
+  fileUuid: UUID!
+  standardUuid: UUID!
+}
+
+type DownloadFile {
+  uuid: ID!
+  filename: String!
+  filesize: Int!
+  downloadUrl: String!
+}
+
 type Extension {
   id: Int!
   extension: String!
   programId: Int!
 }
 
-type FileToSetModification {
-  setId: Int!
-  fileUuid: ID!
+type FilesetProgram {
+  uuid: ID!
+  modificationUuid: ID!
+  programId: Int!
+}
+
+type FilesetProgramRelatedData {
+  uuid: UUID!
+  modificationUuid: UUID!
+  program: Program!
+}
+
+input IptCompanyAccessComponentData {
+  componentUuid: UUID!
+  companyUuid: UUID!
+  typeAccessId: Int!
+}
+
+input IptCompanyAccessStandardData {
+  standardUuid: UUID!
+  companyUuid: UUID!
+  typeAccessId: Int!
 }
 
 input IptCompanyCertificateData {
@@ -212,8 +344,14 @@ input IptCompanyData {
   companyTypeId: Int!
 }
 
+input IptCompanyMemberData {
+  companyUuid: UUID!
+  userUuid: UUID!
+  roleId: Int!
+}
+
 input IptCompanyRepresentData {
-  companyUuid: ID!
+  companyUuid: UUID!
   regionId: Int!
   representationTypeId: Int!
   name: String!
@@ -221,27 +359,52 @@ input IptCompanyRepresentData {
   phone: String!
 }
 
+input IptCompanySpecData {
+  companyUuid: UUID!
+  specIds: [Int!]!
+}
+
 input IptComponentData {
-  parentComponentUuid: ID
+  parentComponentUuid: UUID
   name: String!
   description: String!
   typeAccessId: Int!
   componentTypeId: Int!
   actualStatusId: Int!
-  isStandard: Boolean!
+  isBase: Boolean!
 }
 
-input IptComponentFavData {
+input IptComponentFileData {
+  filename: [String!]!
   componentUuid: UUID!
-  userUuid: UUID!
+}
+
+input IptComponentKeywordData {
+  componentUuid: UUID!
+  keywordIds: [Int!]!
+}
+
+input IptComponentLicenseData {
+  componentUuid: UUID!
+  licenseId: Int!
 }
 
 input IptComponentModificationData {
-  componentUuid: ID!
-  parentModificationUuid: ID!
+  componentUuid: UUID!
+  parentModificationUuid: UUID!
   modificationName: String!
   description: String!
   actualStatusId: Int!
+}
+
+input IptComponentParamData {
+  componentUuid: UUID!
+  params: [IptParamData!]!
+}
+
+input IptComponentSpecData {
+  componentUuid: UUID!
+  specIds: [Int!]!
 }
 
 input IptExtensionData {
@@ -249,33 +412,31 @@ input IptExtensionData {
   programId: Int!
 }
 
-input IptFileToSetModificationData {
-  setId: Int!
-  fileUuid: ID!
-}
-
-input IptKeywordComponentData {
-  componentUuid: ID!
-  keywordId: Int!
+input IptFilesetProgramData {
+  modificationUuid: UUID!
+  programId: Int!
 }
 
 input IptKeywordData {
   keyword: String!
 }
 
-input IptLicenseComponentData {
-  componentUuid: ID!
-  licenseId: Int!
+input IptModificationFileData {
+  filename: [String!]!
+  modificationUuid: UUID!
 }
 
-input IptParamComponentData {
-  componentUuid: ID!
-  paramId: Int!
-  value: String!
+input IptModificationFileFromFilesetData {
+  filesetUuid: UUID!
+  filename: [String!]!
 }
 
-input IptParamModificationData {
-  modificationUuid: ID!
+input IptModificationParamData {
+  modificationUuid: UUID!
+  params: [IptParamData!]!
+}
+
+input IptParamData {
   paramId: Int!
   value: String!
 }
@@ -294,34 +455,153 @@ input IptRegionTranslateListData {
   region: String!
 }
 
-input IptSetOfFilesProgramData {
-  modificationUuid: ID!
-  programId: Int!
+input IptRoleAccessData {
+  roleId: Int!
+  typesAccessIds: [Int!]!
 }
 
-input IptSpecComponentData {
-  componentUuid: ID!
-  specId: Int!
+input IptRoleMemberData {
+  companyUuid: UUID!
+  langId: Int!
+  name: String!
 }
 
 input IptStandardData {
-  parentStandardUuid: ID
+  parentStandardUuid: UUID
   classifier: String!
   name: String!
   description: String!
   specifiedTolerance: String!
   technicalCommittee: String!
   publicationAt: NaiveDateTime!
-  companyUuid: ID!
+  companyUuid: UUID!
   typeAccessId: Int!
   standardStatusId: Int!
   regionId: Int!
 }
 
+input IptStandardFilesData {
+  filename: [String!]!
+  standardUuid: UUID!
+}
+
+input IptStandardKeywordsData {
+  standardUuid: UUID!
+  keywordIds: [Int!]!
+}
+
+input IptStandardSpecsData {
+  standardUuid: UUID!
+  specIds: [Int!]!
+}
+
+input IptStandardToComponentData {
+  standardUuid: UUID!
+  componentUuid: UUID!
+}
+
 input IptSupplierComponentData {
-  componentUuid: ID!
-  companyUuid: ID!
+  componentUuid: UUID!
+  companyUuid: UUID!
   description: String!
+}
+
+input IptUpdataNameRoleData {
+  companyUuid: UUID!
+  roleId: Int!
+  langId: Int!
+  name: String!
+}
+
+input IptUpdateCompanyCertificateData {
+  companyUuid: UUID!
+  fileUuid: UUID!
+  description: String!
+}
+
+input IptUpdateCompanyData {
+  orgname: String
+  shortname: String
+  inn: String
+  phone: String
+  email: String
+  description: String
+  address: String
+  siteUrl: String
+  timeZone: String
+  regionId: Int
+  companyTypeId: Int
+}
+
+input IptUpdateCompanyRepresentData {
+  regionId: Int
+  representationTypeId: Int
+  name: String
+  address: String
+  phone: String
+}
+
+input IptUpdateComponentData {
+  parentComponentUuid: UUID
+  name: String
+  description: String
+  componentTypeId: Int
+  actualStatusId: Int
+}
+
+input IptUpdateComponentModificationData {
+  modificationName: String
+  description: String
+  actualStatusId: Int
+}
+
+input IptUpdatePassword {
+  oldPassword: String!
+  newPassword: String!
+}
+
+input IptUpdateStandardData {
+  classifier: String
+  name: String
+  description: String
+  specifiedTolerance: String
+  technicalCommittee: String
+  publicationAt: NaiveDateTime
+  companyUuid: UUID
+  standardStatusId: Int
+  regionId: Int
+}
+
+input IptUpdateUserCertificateData {
+  fileUuid: UUID!
+  description: String!
+}
+
+input IptUpdateUserData {
+  email: String
+  firstname: String
+  lastname: String
+  secondname: String
+  username: String
+  phone: String
+  description: String
+  address: String
+  position: String
+  timeZone: String
+  regionId: Int
+  programId: Int
+}
+
+input IptUserAccessComponentData {
+  componentUuid: UUID!
+  userUuid: UUID!
+  typeAccessId: Int!
+}
+
+input IptUserAccessStandardData {
+  standardUuid: UUID!
+  userUuid: UUID!
+  typeAccessId: Int!
 }
 
 input IptUserCertificateData {
@@ -331,28 +611,24 @@ input IptUserCertificateData {
 
 input IptUserData {
   email: String!
-  password: String!
-  firstname: String!
-  lastname: String!
-  secondname: String!
   username: String!
-  phone: String!
-  description: String!
-  address: String!
-  position: String!
-  timeZone: String!
-  regionId: Int!
-  programId: Int!
+  password: String!
+  firstname: String
+  lastname: String
+  secondname: String
+  phone: String
+  description: String
+  address: String
+  position: String
+  timeZone: String
+  regionId: Int
+  programId: Int
+  typeAccessId: Int
 }
 
 type Keyword {
   id: Int!
   keyword: String!
-}
-
-type KeywordComponent {
-  keywordId: Int!
-  componentUuid: ID!
 }
 
 type Language {
@@ -366,11 +642,6 @@ type License {
   name: String!
   keyword: String!
   publicationAt: NaiveDateTime!
-}
-
-type LicenseComponent {
-  componentUuid: ID!
-  licenseId: Int!
 }
 
 input LicenseData {
@@ -387,34 +658,134 @@ type ModificationParamWithTranslation {
 
 type MutationRoot {
   registerUser(data: IptUserData!): SlimUser!
+  deleteUserData(password: String!): Boolean!
+  putUpdatePassword(data: IptUpdatePassword!): Boolean!
+  changeTypeAccessUser(newTypeAccess: Int!): Boolean!
+  putUserUpdate(data: IptUpdateUserData!): Int!
   uploadFavicon(filename: String!): String!
-  uploadUserCertificate(certData: IptUserCertificateData!): String!
-  addCompanyFav(companyUuid: String!): CompanyFav!
-  deleteCompanyFav(companyUuid: String!): CompanyFav!
-  addComponentFav(componentUuid: String!): ComponentFav!
-  deleteComponentFav(componentUuid: String!): ComponentFav!
-  addStandardFav(standardUuid: String!): StandardFav!
-  deleteStandardFav(standardUuid: String!): StandardFav!
-  addUserFav(userUuid: String!): UserFav!
-  deleteUserFav(userUuid: String!): UserFav!
-  registerNotification(data: NotificationData!): SlimNotification!
-  deleteNotification(notificationId: Int!): Notification!
+  uploadUserCertificate(certData: IptUserCertificateData!): UploadFile!
+
+  # Update user certificate description
+  updateUserCertificate(data: IptUpdateUserCertificateData!): Boolean!
+  deleteUserCertificate(data: DelUserCertificateData!): Boolean!
+  addCompanyFav(companyUuid: UUID!): Boolean!
+  deleteCompanyFav(companyUuid: UUID!): Boolean!
+  addComponentFav(componentUuid: UUID!): Boolean!
+  deleteComponentFav(componentUuid: UUID!): Boolean!
+  addStandardFav(standardUuid: UUID!): Boolean!
+  deleteStandardFav(standardUuid: UUID!): Boolean!
+  addUserFav(userUuid: UUID!): Boolean!
+  deleteUserFav(userUuid: UUID!): Boolean!
+  readNotification(notificationId: Int!): Boolean!
+  deleteNotification(notificationIds: [Int!]!): Int!
   registerComponent(data: IptComponentData!): SlimComponent!
-  registerParamComponent(data: IptParamComponentData!): ParamComponent!
-  registerLicenseComponent(data: IptLicenseComponentData!): LicenseComponent!
-  addComponentSpec(data: IptSpecComponentData!): SpecComponent!
-  addKeywordComponent(data: IptKeywordComponentData!): KeywordComponent!
-  addSupplierComponent(data: IptSupplierComponentData!): SupplierComponent!
-  registerComponentModification(data: IptComponentModificationData!): SlimComponentModification!
-  registerParamModification(data: IptParamModificationData!): ParamModification!
-  registerSetFilesModification(data: IptSetOfFilesProgramData!): SetOfFilesProgram!
-  addFileToSetModification(data: IptFileToSetModificationData!): FileToSetModification!
-  addComponentFavorite(data: IptComponentFavData!): ComponentFav!
+
+  # Transfer component ownership to another user
+  transferComponentOwnership(data: ChangeOwnerComponent!): Boolean!
+
+  # Change component type access
+  changeComponentAccess(data: ChangeTypeAccessComponent!): Boolean!
+  putComponentUpdate(componentUuid: UUID!, data: IptUpdateComponentData!): Int!
+  deleteComponent(componentUuid: UUID!): SlimComponent!
+  setCompanyAccessComponent(data: IptCompanyAccessComponentData!): Boolean!
+  deleteCompanyAccessComponent(data: DelCompanyAccessComponentData!): Boolean!
+  setUserAccessComponent(data: IptUserAccessComponentData!): Boolean!
+  deleteUserAccessComponent(data: DelUserAccessComponentData!): Boolean!
+  putComponentParams(data: IptComponentParamData!): Int!
+  deleteComponentParams(data: DelComponentParamData!): Int!
+  addComponentLicense(data: IptComponentLicenseData!): Boolean!
+  deleteComponentLicense(data: IptComponentLicenseData!): Int!
+  addComponentSpecs(data: IptComponentSpecData!): Int!
+  deleteComponentSpecs(data: IptComponentSpecData!): Int!
+  addComponentKeywords(data: IptComponentKeywordData!): Int!
+  deleteComponentKeywords(data: IptComponentKeywordData!): Int!
+  uploadComponentFiles(data: IptComponentFileData!): [UploadFile!]!
+  deleteComponentFile(data: DelComponentFileData!): Boolean!
+  deleteSuppliersComponent(data: DelSuppliersComponentData!): Int!
+  addStandardToComponent(data: IptStandardToComponentData!): Boolean!
+  deleteStandardsComponent(data: DelStandardToComponentData!): Int!
+  registerComponentModification(
+    data: IptComponentModificationData!
+  ): SlimComponentModification!
+  putComponentModificationUpdate(
+    componentModificationUuid: UUID!
+    data: IptUpdateComponentModificationData!
+  ): Int!
+  deleteComponentModification(
+    data: DelComponentModificationData!
+  ): SlimComponentModification!
+  putModificationParams(data: IptModificationParamData!): Int!
+  deleteModificationParams(data: DelModificationParamData!): Int!
+  uploadModificationFiles(data: IptModificationFileData!): [UploadFile!]!
+  deleteModificationFile(data: DelModificationFileData!): Boolean!
+  registerModificationFileset(data: IptFilesetProgramData!): FilesetProgram!
+  deleteModificationFileset(data: DelFilesetProgramData!): Boolean!
+  uploadFilesToFileset(
+    data: IptModificationFileFromFilesetData!
+  ): [UploadFile!]!
+  deleteFilesFromFileset(data: DelModificationFileFromFilesetData!): Boolean!
+  addComponentFavorite(componentUuid: UUID!): ComponentFav!
   registerStandard(data: IptStandardData!): SlimStandard!
+
+  # Transfer component ownership to another user
+  transferStandardOwnership(data: ChangeOwnerStandard!): Boolean!
+
+  # Change standard type access
+  changeStandardAccess(data: ChangeTypeAccessStandard!): Boolean!
+  putStandardUpdate(standardUuid: UUID!, data: IptUpdateStandardData!): Int!
+  deleteStandard(standardUuid: UUID!): SlimStandard!
+  setCompanyAccessStandard(data: IptCompanyAccessStandardData!): Boolean!
+  deleteCompanyAccessStandard(data: DelCompanyAccessStandardData!): Boolean!
+  setUserAccessStandard(data: IptUserAccessStandardData!): Boolean!
+  deleteUserAccessStandard(data: DelUserAccessStandardData!): Boolean!
+  addStandardSpecs(data: IptStandardSpecsData!): Int!
+  deleteStandardSpecs(data: IptStandardSpecsData!): Int!
+  addStandardKeywords(data: IptStandardKeywordsData!): Int!
+  deleteStandardKeywords(data: IptStandardKeywordsData!): Int!
+  uploadStandardFiles(data: IptStandardFilesData!): [UploadFile!]!
+  standardFiles(standardUuid: UUID!): [DownloadFile!]!
+  deleteStandardFiles(data: DeleteStandardFileData!): Boolean!
   registerCompany(data: IptCompanyData!): SlimCompany!
-  uploadCompanyCertificate(certData: IptCompanyCertificateData!): String!
-  registerCompanyRepresent(data: IptCompanyRepresentData!): SlimCompanyRepresent!
-  deleteCompanyRepresent(companyUuid: String!, companyUuidRepresent: String!): SlimCompanyRepresent!
+  putCompanyUpdate(companyUuid: UUID!, data: IptUpdateCompanyData!): Int!
+  deleteCompany(companyUuid: UUID!): SlimCompany!
+  uploadCompanyCertificate(certData: IptCompanyCertificateData!): UploadFile!
+
+  # Update company certificate description
+  updateCompanyCertificate(data: IptUpdateCompanyCertificateData!): Boolean!
+  deleteCompanyCertificate(data: DelCompanyCertificateData!): Boolean!
+  addCompanySpecs(data: IptCompanySpecData!): Int!
+  deleteCompanySpecs(data: IptCompanySpecData!): Int!
+  registerCompanyRepresent(
+    data: IptCompanyRepresentData!
+  ): SlimCompanyRepresent!
+  updateCompanyRepresent(
+    companyUuid: UUID!
+    companyRepresentUuid: UUID!
+    data: IptUpdateCompanyRepresentData!
+  ): Int!
+  deleteCompanyRepresent(
+    companyUuid: UUID!
+    companyRepresentUuid: UUID!
+  ): SlimCompanyRepresent!
+  addCompanyMember(data: IptCompanyMemberData!): SlimCompanyMember!
+
+  # Change access role for member
+  changeRoleMember(data: IptCompanyMemberData!): Boolean!
+  deleteCompanyMember(data: DelCompanyMemberData!): SlimCompanyMember!
+  registerCompanyRole(data: IptRoleMemberData!): Int!
+  changeNameRoleCompany(data: IptUpdataNameRoleData!): Boolean!
+  deleteCompanyRole(data: DelRoleMemberData!): Int!
+  addAccessRole(data: IptRoleAccessData!): Boolean!
+  deleteAccessRole(data: DelRoleAccessData!): Int!
+
+  # Add company to suppliers list component
+  addComponentSupplier(data: IptSupplierComponentData!): Boolean!
+
+  # Set company as main supplier component
+  setCompanyOwnerSupplier(data: IptSupplierComponentData!): Boolean!
+
+  # Delete company of suppliers list
+  deleteSupplierCompany(data: DelCompanyOfSuppliersData!): Boolean!
   registerExtension(data: IptExtensionData!): Extension!
   registerKeyword(data: IptKeywordData!): Keyword!
   registerLicense(data: LicenseData!): License!
@@ -422,11 +793,11 @@ type MutationRoot {
   registerProgram(data: IptProgramData!): Program!
   registerRegion(data: IptRegionTranslateListData!): RegionTranslateList!
 
-  """Сonfirmation of successful upload of files to storage"""
-  uploadCompleted(filesUuids: [String!]!): Int!
+  # Сonfirmation of successful upload of files to storage
+  uploadCompleted(fileUuids: [UUID!]!): Int!
 
-  """Delete file in storage"""
-  deleteFile(fileUuid: String!): Int!
+  # Delete file in storage
+  deleteFile(fileUuid: UUID!): Boolean!
 }
 
 scalar NaiveDateTime
@@ -435,25 +806,8 @@ type Notification {
   id: Int!
   notification: String!
   degreeImportanceId: Int!
-  generatedAt: NaiveDateTime!
+  createdAt: NaiveDateTime!
   isRead: Boolean!
-}
-
-input NotificationData {
-  notification: String!
-  degreeImportanceId: Int!
-}
-
-type ParamComponent {
-  componentUuid: ID!
-  paramId: Int!
-  value: String!
-}
-
-type ParamModification {
-  modificationUuid: ID!
-  paramId: Int!
-  value: String!
 }
 
 type ParamTranslateList {
@@ -468,25 +822,56 @@ type Program {
 }
 
 type QueryRoot {
-  users(usersUuids: [String!]!): [ShowUserShort!]!
-  user(userUuid: String!): UserAndRelatedData!
+  users(usersUuids: [UUID!]!): [ShowUserShort!]!
+  user(userUuid: UUID!): UserAndRelatedData!
   myself: SlimUser!
+  selfData: UserAndRelatedData!
   showTokens: [UserToken!]!
   getToken: Token!
   updateToken: Token!
   decodeToken: Claims!
-  deleteToken(token: String!): String!
-  deleteAllTokens: String!
+  deleteToken(token: String!): Boolean!
+  deleteAllTokens: Int!
   logout: String!
   notifications(selectIds: [Int!], limit: Int, offset: Int): [Notification!]!
-  components(componentsUuids: [String!]!): [ShowComponentShort!]!
-  component(componentUuid: String!): ComponentAndRelatedData!
-  filesSetModification(setId: Int, limit: Int, offset: Int): [FileToSetModification!]!
-  standards(standardsUuids: [String!]!): [ShowStandardShort!]!
-  standard(standardUuid: String!): StandardAndRelatedData!
-  companies(companiesUuids: [String!]!): [ShowCompanyShort!]!
-  company(companyUuid: String!): CompanyAndRelatedData!
-  companyRepresents(companyUuid: String, representsUuids: [String!]): [CompanyRepresentAndRelatedData!]!
+  components(componentsUuids: [UUID!]!): [ShowComponentShort!]!
+  component(componentUuid: UUID!): ComponentAndRelatedData!
+  getCompaniesListAccessComponent(
+    componentUuid: UUID!
+  ): [CompanyAccessComponentAndRelatedData!]!
+  getUsersListAccessComponent(
+    componentUuid: UUID!
+  ): [UserAccessComponentAndRelatedData!]!
+  componentFiles(componentUuid: UUID!): [DownloadFile!]!
+  componentModificationFiles(modificationUuid: UUID!): [DownloadFile!]!
+  componentModificationFilesets(
+    modificationUuid: UUID!
+    programId: [Int!]
+    limit: Int
+    offset: Int
+  ): [FilesetProgramRelatedData!]!
+  componentModificationFilesOfFileset(
+    filesetUuid: UUID!
+    fileUuids: [UUID!]
+    limit: Int
+    offset: Int
+  ): [ShowFileOfFileset!]!
+  standards(standardsUuids: [UUID!]!): [ShowStandardShort!]!
+  standard(standardUuid: UUID!): StandardAndRelatedData!
+  getCompaniesListAccessStandard(
+    standardUuid: UUID!
+  ): [CompanyAccessStandardAndRelatedData!]!
+  getUsersListAccessStandard(
+    standardUuid: UUID!
+  ): [UserAccessStandardAndRelatedData!]!
+  companies(companiesUuids: [UUID!]!): [ShowCompanyShort!]!
+  company(companyUuid: UUID!): CompanyAndRelatedData!
+  companyRepresents(
+    companyUuid: UUID
+    representsUuids: [UUID!]
+  ): [CompanyRepresentAndRelatedData!]!
+  companyMembers(companyUuid: UUID!): [CompanyMemberAndRelatedData!]!
+  companyRoles(companyUuid: UUID!): [RoleMemberAndRelatedData!]!
   keywords(keywordId: [Int!], limit: Int, offset: Int): [Keyword!]!
   languages(langId: [Int!], limit: Int, offset: Int): [Language!]!
   licenses(licenseId: [Int!], limit: Int, offset: Int): [License!]!
@@ -495,8 +880,8 @@ type QueryRoot {
   regions(regionId: [Int!], limit: Int, offset: Int): [RegionTranslateList!]!
   specs(specId: [Int!], limit: Int, offset: Int): [SpecTranslateList!]!
 
-  """Presigned URL for download file from storage"""
-  presignedUrl(fileUuid: String!): String!
+  # Presigned URL for download file from storage
+  presignedUrl(fileUuid: UUID!): String!
   _service: _Service!
   _entities(representations: [_Any!]!): [_Entity]!
 }
@@ -513,16 +898,15 @@ type RepresentationTypeTranslateList {
   representationType: String!
 }
 
-type SetOfFilesProgram {
-  id: Int!
-  modificationUuid: ID!
-  programId: Int!
+type RoleMemberAndRelatedData {
+  role: RoleMemberTranslateList!
+  access: [TypeAccessTranslateList!]!
 }
 
-type SetOfFilesProgramRelatedData {
-  id: Int!
-  modificationUuid: UUID!
-  program: Program!
+type RoleMemberTranslateList {
+  roleMemberId: Int!
+  langId: Int!
+  name: String!
 }
 
 type ShowCompanyShort {
@@ -530,7 +914,7 @@ type ShowCompanyShort {
   shortname: String!
   inn: String!
   description: String!
-  imageFile: SlimFile!
+  imageFile: ShowFile!
   region: RegionTranslateList!
   companyType: CompanyTypeTranslateList!
   isSupplier: Boolean!
@@ -547,7 +931,7 @@ type ShowComponentShort {
   componentType: ComponentTypeTranslateList!
   actualStatus: ActualStatusTranslateList!
   isFollowed: Boolean!
-  isStandard: Boolean!
+  isBase: Boolean!
   updatedAt: NaiveDateTime!
   licenses: [License!]!
   files: [ShowFile!]!
@@ -562,9 +946,13 @@ type ShowFile {
   contentType: String!
   idExt: Int!
   filesize: Int!
-  pathFile: String!
   createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!
+}
+
+type ShowFileOfFileset {
+  filesetUuid: UUID!
+  showFile: ShowFile!
 }
 
 type ShowStandardShort {
@@ -583,13 +971,19 @@ type ShowStandardShort {
 type ShowUserShort {
   uuid: ID!
   username: String!
-  imageFile: SlimFile!
+  imageFile: ShowFile!
 }
 
 type SlimCompany {
   uuid: ID!
   shortname: String!
   isSupplier: Boolean!
+}
+
+type SlimCompanyMember {
+  companyUuid: UUID!
+  userUuid: UUID!
+  roleId: Int!
 }
 
 type SlimCompanyRepresent {
@@ -607,7 +1001,7 @@ type SlimComponent {
   typeAccessId: Int!
   componentTypeId: Int!
   actualStatusId: Int!
-  isStandard: Boolean!
+  isBase: Boolean!
   updatedAt: NaiveDateTime!
 }
 
@@ -617,19 +1011,6 @@ type SlimComponentModification {
   modificationName: String!
   description: String!
   updatedAt: NaiveDateTime!
-}
-
-type SlimFile {
-  uuid: ID!
-  filename: String!
-  filesize: Int!
-  pathFile: String!
-}
-
-type SlimNotification {
-  notification: String!
-  degreeImportanceId: Int!
-  isRead: Boolean!
 }
 
 type SlimStandard {
@@ -644,13 +1025,8 @@ type SlimStandard {
 
 type SlimUser {
   uuid: ID!
-  programId: Int!
   username: String!
-}
-
-type SpecComponent {
-  specId: Int!
-  componentUuid: ID!
+  programId: Int!
 }
 
 type SpecTranslateList {
@@ -668,7 +1044,7 @@ type StandardAndRelatedData {
   specifiedTolerance: String!
   technicalCommittee: String!
   publicationAt: NaiveDateTime!
-  imageFile: SlimFile!
+  imageFile: ShowFile!
   ownerUser: ShowUserShort!
   ownerCompany: ShowCompanyShort!
   typeAccessId: Int!
@@ -684,13 +1060,6 @@ type StandardAndRelatedData {
   isFollowed: Boolean!
 }
 
-type StandardFav {
-  standardUuid: ID!
-  userUuid: ID!
-  isEnabled: Boolean!
-  createdAt: NaiveDateTime!
-}
-
 type StandardSpecWithTranslation {
   spec: SpecTranslateList!
   standardUuid: UUID!
@@ -702,17 +1071,41 @@ type StandardStatusTranslateList {
   name: String!
 }
 
-type SupplierComponent {
-  companyUuid: ID!
-  componentUuid: ID!
-  description: String!
-}
-
 type Token {
   bearer: String
 }
 
+type TypeAccessTranslateList {
+  typeAccessId: Int!
+  langId: Int!
+  name: String!
+}
+
 scalar UUID
+
+type UploadFile {
+  fileUuid: ID!
+  filename: String!
+  uploadUrl: String!
+}
+
+type UserAccessComponentAndRelatedData {
+  componentUuid: UUID!
+  userUuid: UUID!
+  typeAccess: TypeAccessTranslateList!
+  isEnabled: Boolean!
+  createdAt: NaiveDateTime!
+  updatedAt: NaiveDateTime!
+}
+
+type UserAccessStandardAndRelatedData {
+  standardUuid: UUID!
+  userUuid: UUID!
+  typeAccess: TypeAccessTranslateList!
+  isEnabled: Boolean!
+  createdAt: NaiveDateTime!
+  updatedAt: NaiveDateTime!
+}
 
 type UserAndRelatedData {
   uuid: UUID!
@@ -726,7 +1119,7 @@ type UserAndRelatedData {
   address: String!
   position: String!
   timeZone: String!
-  imageFile: SlimFile!
+  imageFile: ShowFile!
   region: RegionTranslateList!
   program: Program!
   isEmailVerified: Boolean!
@@ -734,7 +1127,7 @@ type UserAndRelatedData {
   isDelete: Boolean!
   createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!
-  certificates: [CertificateWithSlimFile!]!
+  certificates: [CertificateWithShowFile!]!
   subscribers: Int!
   isFollowed: Boolean!
   companiesCount: Int!
@@ -746,13 +1139,6 @@ type UserAndRelatedData {
   favUsersCount: Int!
 }
 
-type UserFav {
-  userFavoriteUuid: ID!
-  userFollowerUuid: ID!
-  isEnabled: Boolean!
-  createdAt: NaiveDateTime!
-}
-
 type UserToken {
   userUuid: ID!
   token: String!
@@ -760,9 +1146,7 @@ type UserToken {
   expirationAt: NaiveDateTime!
 }
 
-"""
-The `_Any` scalar is used to pass representations of entities from external services into the root `_entities` field for execution.
-"""
+# The `_Any` scalar is used to pass representations of entities from external services into the root `_entities` field for execution.
 scalar _Any
 
 union _Entity

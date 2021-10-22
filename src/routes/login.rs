@@ -149,6 +149,7 @@ impl Component for Login {
                             <label class="label">{"Username"}</label>
                             <div class="control has-icons-left has-icons-right">
                                 <input
+                                    id="username"
                                     class="input"
                                     type="text"
                                     placeholder="Username"
@@ -168,6 +169,7 @@ impl Component for Login {
                             <p class="control has-icons-left">
                                 <label class="label">{"Password"}</label>
                                 <input
+                                    id="password"
                                     class="input"
                                     type="password"
                                     placeholder="Password"
@@ -180,6 +182,7 @@ impl Component for Login {
                             </p>
                         </fieldset>
                         <button
+                            id="submit-button"
                             class="button"
                             type="submit"
                             disabled=false>

@@ -1,28 +1,99 @@
 use yew::services::fetch::FetchTask;
 use yew::{
-    agent::Bridged, html, Bridge, Callback, Component, ComponentLink, FocusEvent, Html, InputData,
-    Properties, ShouldRender,
+    agent::Bridged, html, Bridge, Callback, Component, ComponentLink,
+    FocusEvent, Html, InputData, ChangeData, Properties, ShouldRender,
 };
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
+use chrono::NaiveDateTime;
 
+use yew::services::ConsoleService;
+
+use graphql_client::GraphQLQuery;
+use serde_json::Value;
+use wasm_bindgen_futures::spawn_local;
+use crate::gqls::make_query;
+
+use crate::error::{Error, get_error};
 use crate::fragments::list_errors::ListErrors;
-use crate::error::Error;
 use crate::routes::AppRoute;
-use crate::services::{is_authenticated, set_token, Auth};
-use crate::types::{UserInfoWrapper, SlimUserWrapper, UserUpdateInfo, UserUpdateInfoWrapper};
+use crate::services::{is_authenticated, set_token};
+use crate::types::{
+    UUID, UserUpdateInfo, UserInfo, Program, Region
+};
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/user.graphql",
+    response_derives = "Debug"
+)]
+struct GetSelfDataOpt;
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/user.graphql",
+    response_derives = "Debug"
+)]
+struct GetSelfData;
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/user.graphql",
+    response_derives = "Debug"
+)]
+struct UserUpdate;
+
+/// Get data current user
+impl From<UserInfo> for UserUpdateInfo {
+    fn from(data: UserInfo) -> Self {
+        let UserInfo {
+            firstname,
+            lastname,
+            secondname,
+            username,
+            email,
+            description,
+            position,
+            phone,
+            address,
+            region,
+            program,
+            ..
+        } = data;
+
+        Self {
+            firstname: Some(firstname),
+            lastname: Some(lastname),
+            secondname: Some(secondname),
+            username: Some(username),
+            email: Some(email),
+            description: Some(description),
+            position: Some(position),
+            phone: Some(phone),
+            time_zone: None,
+            address: Some(address),
+            region_id: Some(region.region_id as i64),
+            program_id: Some(program.id as i64),
+        }
+    }
+}
 
 /// Update settings of the author or logout
 pub struct Settings {
-    auth: Auth,
+    // auth: Auth,
     error: Option<Error>,
     request: UserUpdateInfo,
-    password: String,
-    response: Callback<Result<UserInfoWrapper, Error>>,
-    loaded: Callback<Result<UserInfoWrapper, Error>>,
+    // response: Callback<Result<usize, Error>>,
     task: Option<FetchTask>,
     router_agent: Box<dyn Bridge<RouteAgent>>,
     props: Props,
     link: ComponentLink<Self>,
+    current_data: Option<UserInfo>,
+    programs: Vec<Program>,
+    regions: Vec<Region>,
+    get_result: usize,
 }
 
 #[derive(Properties, Clone)]
@@ -32,8 +103,9 @@ pub struct Props {
 
 pub enum Msg {
     Request,
-    Response(Result<UserInfoWrapper, Error>),
-    Loaded(Result<UserInfoWrapper, Error>),
+    Response(Result<usize, Error>),
+    GetData(String),
+    GetResult(String),
     Ignore,
     Logout,
     UpdateFirstname(String),
@@ -41,21 +113,15 @@ pub enum Msg {
     UpdateSecondname(String),
     UpdateUsername(String),
     UpdateEmail(String),
-    UpdatePassword(String),
-    UpdateIdTypeUser(String),
-    UpdateIsSupplier(String),
-    UpdateOrgname(String),
-    UpdateShortname(String),
-    UpdateInn(String),
+    UpdateDescription(String),
     UpdatePhone(String),
-    UpdateIdNameCad(String),
-    UpdateComment(String),
     UpdateAddress(String),
-    UpdateTimeZone(String),
     UpdatePosition(String),
-    UpdateSiteUrl(String),
-    UpdateUuidFileInfoIcon(String),
-    UpdateIdRegion(String),
+    UpdateTimeZone(String),
+    UpdateProgramId(String),
+    UpdateRegionId(String),
+    UpdateList(String),
+    GetCurrentData(),
 }
 
 impl Component for Settings {
@@ -64,35 +130,72 @@ impl Component for Settings {
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
         Settings {
-            auth: Auth::new(),
+            // auth: Auth::new(),
             error: None,
             request: UserUpdateInfo::default(),
-            password: String::default(),
-            response: link.callback(Msg::Response),
-            loaded: link.callback(Msg::Loaded),
+            // response: link.callback(Msg::Response),
             task: None,
             router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             props,
             link,
+            current_data: None,
+            programs: Vec::new(),
+            regions: Vec::new(),
+            get_result: 0,
         }
     }
 
     fn rendered(&mut self, first_render: bool) {
+        let link = self.link.clone();
         if first_render && is_authenticated() {
-            self.task = Some(self.auth.user_info(self.loaded.clone()));
+            spawn_local(async move {
+                let res = make_query(
+                    GetSelfDataOpt::build_query(get_self_data_opt::Variables)
+                ).await.unwrap();
+                link.send_message(Msg::GetData(res.clone()));
+                link.send_message(Msg::UpdateList(res));
+            })
         }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
+        let link = self.link.clone();
+
         match msg {
             Msg::Request => {
-                let mut request = UserUpdateInfoWrapper {
-                    user: self.request.clone(),
-                };
-                if !self.password.is_empty() {
-                    request.user.password = Some(self.password.clone());
-                }
-                self.task = Some(self.auth.save(request, self.response.clone()));
+                let request = self.request.clone();
+                spawn_local(async move {
+                    let UserUpdateInfo {
+                        email,
+                        firstname,
+                        lastname,
+                        secondname,
+                        username,
+                        phone,
+                        description,
+                        address,
+                        position,
+                        time_zone,
+                        region_id,
+                        program_id,
+                    } = request;
+                    let data = user_update::IptUpdateUserData {
+                        email,
+                        firstname,
+                        lastname,
+                        secondname,
+                        username,
+                        phone,
+                        description,
+                        address,
+                        position,
+                        timeZone: time_zone,
+                        regionId: region_id,
+                        programId: program_id,
+                    };
+                    let res = make_query(UserUpdate::build_query(user_update::Variables { data })).await;
+                    link.send_message(Msg::GetResult(res.unwrap()));
+                })
             }
             Msg::Response(Ok(_)) => {
                 self.error = None;
@@ -103,40 +206,21 @@ impl Component for Settings {
                 self.error = Some(err);
                 self.task = None;
             }
-            Msg::Loaded(Ok(user_info)) => {
-                self.error = None;
-                self.task = None;
-                self.request = UserUpdateInfo {
-                    // email: user_info.user.email,
-                    // username: user_info.user.username,
-                    // password: None,
-                    // image: user_info.user.image.unwrap_or_default(),
-                    // bio: user_info.user.bio.unwrap_or_default(),
-                    firstname: user_info.user.firstname,
-                    lastname: user_info.user.lastname,
-                    secondname: user_info.user.secondname,
-                    username: user_info.user.username,
-                    email: user_info.user.email,
-                    password: None,
-                    id_type_user: user_info.user.id_type_user,
-                    is_supplier: user_info.user.is_supplier,
-                    orgname: user_info.user.orgname,
-                    shortname: user_info.user.shortname,
-                    inn: user_info.user.inn,
-                    phone: user_info.user.phone,
-                    id_name_cad: user_info.user.id_name_cad,
-                    comment: user_info.user.comment,
-                    address: user_info.user.address,
-                    time_zone: user_info.user.time_zone,
-                    position: user_info.user.position,
-                    site_url: user_info.user.site_url,
-                    uuid_file_info_icon: user_info.user.uuid_file_info_icon,
-                    id_region: user_info.user.id_region,
-                };
-            }
-            Msg::Loaded(Err(err)) => {
-                self.error = Some(err);
-                self.task = None;
+            Msg::GetData(res) => {
+                let data: Value = serde_json::from_str(res.as_str()).unwrap();
+                let res = data.as_object().unwrap().get("data").unwrap();
+
+                match res.is_null() {
+                    false => {
+                        let user_data: UserInfo = serde_json::from_value(res.get("selfData").unwrap().clone()).unwrap();
+                        ConsoleService::info(format!("User data: {:?}", user_data).as_ref());
+                        self.current_data = Some(user_data.clone());
+                        self.request = user_data.into();
+                    },
+                    true => {
+                        link.send_message(Msg::Response(Err(get_error(&data))));
+                    }
+                }
             }
             Msg::Ignore => {}
             Msg::Logout => {
@@ -147,66 +231,78 @@ impl Component for Settings {
                 // Redirect to home page
                 self.router_agent.send(ChangeRoute(AppRoute::Home.into()));
             }
-            Msg::UpdateFirstname(firstname) => {
-                self.request.firstname = firstname;
-            }
-            Msg::UpdateLastname(lastname) => {
-                self.request.lastname = lastname;
-            }
-            Msg::UpdateSecondname(secondname) => {
-                self.request.secondname = secondname;
-            }
             Msg::UpdateEmail(email) => {
-                self.request.email = email;
-            }
-            Msg::UpdatePassword(password) => {
-                self.password = password;
-            }
+                self.request.email = Some(email);
+            },
+            Msg::UpdateFirstname(firstname) => {
+                self.request.firstname = Some(firstname);
+            },
+            Msg::UpdateLastname(lastname) => {
+                self.request.lastname = Some(lastname);
+            },
+            Msg::UpdateSecondname(secondname) => {
+                self.request.secondname = Some(secondname);
+            },
             Msg::UpdateUsername(username) => {
-                self.request.username = username;
-            }
-            Msg::UpdateIdTypeUser(id_type_user) => {
-                self.request.id_type_user = id_type_user.parse::<i32>().unwrap_or(1);
-            }
-            Msg::UpdateIsSupplier(is_supplier) => {
-                self.request.is_supplier = is_supplier.parse::<i32>().unwrap_or(0);
-            }
-            Msg::UpdateOrgname(orgname) => {
-                self.request.orgname = orgname;
-            }
-            Msg::UpdateShortname(shortname) => {
-                self.request.shortname = shortname;
-            }
-            Msg::UpdateInn(inn) => {
-                self.request.inn = inn;
-            }
+                self.request.username = Some(username);
+            },
             Msg::UpdatePhone(phone) => {
-                self.request.phone = phone;
-            }
-            Msg::UpdateIdNameCad(id_name_cad) => {
-                self.request.id_name_cad = id_name_cad.parse::<i32>().unwrap_or(1);
-            }
-            Msg::UpdateComment(comment) => {
-                self.request.comment = comment;
-            }
+                self.request.phone = Some(phone);
+            },
+            Msg::UpdateDescription(description) => {
+                self.request.description = Some(description);
+            },
             Msg::UpdateAddress(address) => {
-                self.request.address = address;
-            }
-            Msg::UpdateTimeZone(time_zone) => {
-                self.request.time_zone = time_zone.parse::<i32>().unwrap_or(3);
-            }
+                self.request.address = Some(address);
+            },
             Msg::UpdatePosition(position) => {
-                self.request.position = position;
-            }
-            Msg::UpdateSiteUrl(site_url) => {
-                self.request.site_url = site_url;
-            }
-            Msg::UpdateUuidFileInfoIcon(uuid_file_info_icon) => {
-                self.request.uuid_file_info_icon = uuid_file_info_icon;
-            }
-            Msg::UpdateIdRegion(id_region) => {
-                self.request.id_region = id_region.parse::<i32>().unwrap_or(1);
-            }
+                self.request.position = Some(position);
+            },
+            Msg::UpdateTimeZone(time_zone) => {
+                self.request.time_zone = Some(time_zone);
+            },
+            Msg::UpdateProgramId(program_id) => {
+                self.request.program_id = Some(program_id.parse::<i64>().unwrap_or_default());
+                ConsoleService::info(format!("Update: {:?}", program_id).as_ref());
+            },
+            Msg::UpdateRegionId(region_id) => {
+                self.request.region_id = Some(region_id.parse::<i64>().unwrap_or_default());
+                ConsoleService::info(format!("Update: {:?}", region_id).as_ref());
+            },
+            Msg::UpdateList(res) => {
+                let data: Value = serde_json::from_str(res.as_str()).unwrap();
+                let res = data.as_object().unwrap().get("data").unwrap();
+                self.regions =
+                    serde_json::from_value(res.get("regions").unwrap().clone()).unwrap();
+                self.programs =
+                    serde_json::from_value(res.get("programs").unwrap().clone()).unwrap();
+                ConsoleService::info(format!("Update: {:?}", self.programs).as_ref());
+            },
+            Msg::GetResult(res) => {
+                let data: Value = serde_json::from_str(res.as_str()).unwrap();
+                let res = data.as_object().unwrap().get("data").unwrap();
+
+                match res.is_null() {
+                    false => {
+                        let updated_rows: usize =
+                            serde_json::from_value(res.get("putUserUpdate").unwrap().clone()).unwrap();
+                        ConsoleService::info(format!("Updated rows: {:?}", updated_rows).as_ref());
+                        self.get_result = updated_rows;
+                        link.send_message(Msg::GetCurrentData());
+                    },
+                    true => {
+                        link.send_message(Msg::Response(Err(get_error(&data))));
+                    }
+                }
+            },
+            Msg::GetCurrentData() => {
+                spawn_local(async move {
+                    let res = make_query(
+                        GetSelfData::build_query(get_self_data::Variables)
+                    ).await.unwrap();
+                    link.send_message(Msg::GetData(res));
+                })
+            },
         }
         true
     }
@@ -237,28 +333,31 @@ impl Component for Settings {
         let oninput_email = self
             .link
             .callback(|ev: InputData| Msg::UpdateEmail(ev.value));
-        let oninput_password = self
+        let oninput_description = self
             .link
-            .callback(|ev: InputData| Msg::UpdatePassword(ev.value));
-        let oninput_id_name_cad = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateIdNameCad(ev.value));
-        let oninput_id_type_user = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateIdTypeUser(ev.value));
-        let oninput_time_zone = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateTimeZone(ev.value));
+            .callback(|ev: InputData| Msg::UpdateDescription(ev.value));
         let oninput_position = self
             .link
             .callback(|ev: InputData| Msg::UpdatePosition(ev.value));
-        let oninput_uuid_file_info_icon = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateUuidFileInfoIcon(ev.value));
-        let oninput_id_region = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateIdRegion(ev.value));
         let onclick = self.link.callback(|_| Msg::Logout);
+        let oninput_phone = self
+            .link
+            .callback(|ev: InputData| Msg::UpdatePhone(ev.value));
+        let oninput_address = self
+            .link
+            .callback(|ev: InputData| Msg::UpdateAddress(ev.value));
+        let oninput_program_id = self
+            .link
+            .callback(|ev: ChangeData| Msg::UpdateProgramId(match ev {
+              ChangeData::Select(el) => el.value(),
+              _ => "1".to_string(),
+          }));
+        let onchange_region_id = self
+            .link
+            .callback(|ev: ChangeData| Msg::UpdateRegionId(match ev {
+              ChangeData::Select(el) => el.value(),
+              _ => "1".to_string(),
+          }));
 
         html! {
             <div class="settings-page">
@@ -266,124 +365,205 @@ impl Component for Settings {
                     <div class="row">
                         <div>
                             <h1 class="title">{ "Your Settings" }</h1>
+                            // <fieldset class="field">
+                                <span class="tag is-info is-light">
+                                    { format!("Updated rows: {}", self.get_result.clone()) }
+                                </span>
+                                <span class="tag is-info is-light">{
+                                    match &self.current_data {
+                                        Some(data) => format!("Last updated: {}", data.updated_at),
+                                        None => "Not data".to_string(),
+                                    }
+                                }</span>
+                            // </fieldset>
                             <ListErrors error=self.error.clone()/>
                             <form onsubmit=onsubmit>
                                 <fieldset class="columns">
-                                    // main data of username
+                                    // first column
                                     <fieldset class="column">
                                         <fieldset class="field">
+                                            <label class="label">{"Firstname"}</label>
                                             <input
+                                                id="firstname"
                                                 class="input"
                                                 type="text"
                                                 placeholder="firstname"
-                                                value={self.request.firstname.clone()}
+                                                value={self.request.firstname
+                                                    .as_ref()
+                                                    .map(|x| x.to_string())
+                                                    .unwrap_or_default()}
                                                 oninput=oninput_firstname />
                                         </fieldset>
                                         <fieldset class="field">
+                                            <label class="label">{"Lastname"}</label>
                                             <input
+                                                id="lastname"
                                                 class="input"
                                                 type="text"
                                                 placeholder="lastname"
-                                                value={self.request.lastname.clone()}
+                                                value={self.request.lastname
+                                                    .as_ref()
+                                                    .map(|x| x.to_string())
+                                                    .unwrap_or_default()}
                                                 oninput=oninput_lastname />
                                         </fieldset>
                                         <fieldset class="field">
+                                            <label class="label">{"Secondname"}</label>
                                             <input
+                                                id="secondname"
                                                 class="input"
                                                 type="text"
                                                 placeholder="secondname"
-                                                value={self.request.secondname.clone()}
+                                                value={self.request.secondname
+                                                    .as_ref()
+                                                    .map(|x| x.to_string())
+                                                    .unwrap_or_default()}
                                                 oninput=oninput_secondname />
                                         </fieldset>
                                         <fieldset class="field">
+                                            <label class="label">{"Username"}</label>
                                             <input
+                                                id="username"
                                                 class="input"
                                                 type="text"
                                                 placeholder="username"
-                                                value={self.request.username.clone()}
+                                                value={self.request.username
+                                                    .as_ref()
+                                                    .map(|x| x.to_string())
+                                                    .unwrap_or_default()}
                                                 oninput=oninput_username />
                                         </fieldset>
                                         <fieldset class="field">
+                                            <label class="label">{"Email"}</label>
                                             <input
+                                                id="email"
                                                 class="input"
                                                 type="email"
                                                 placeholder="email"
-                                                value={self.request.email.clone()}
+                                                value={self.request.email
+                                                    .as_ref()
+                                                    .map(|x| x.to_string())
+                                                    .unwrap_or_default()}
                                                 oninput=oninput_email />
-                                        </fieldset>
-                                        <fieldset class="field">
-                                            <input
-                                                class="input"
-                                                type="password"
-                                                placeholder="New Password"
-                                                value={self.password.to_string()}
-                                                oninput=oninput_password />
                                         </fieldset>
                                     </fieldset>
 
+                                    // second column
                                     <fieldset class="column">
                                         <fieldset class="field">
+                                            <label class="label">{"Description"}</label>
                                             <input
+                                                id="description"
                                                 class="input"
-                                                type="text"
-                                                placeholder="time_zone"
-                                                value={self.request.time_zone.to_string()}
-                                                oninput=oninput_time_zone />
+                                                type="description"
+                                                placeholder="description"
+                                                value={self.request.description
+                                                    .as_ref()
+                                                    .map(|x| x.to_string())
+                                                    .unwrap_or_default()}
+                                                oninput=oninput_description />
                                         </fieldset>
                                         <fieldset class="field">
+                                            <label class="label">{"Position"}</label>
                                             <input
+                                                id="position"
                                                 class="input"
                                                 type="text"
                                                 placeholder="position"
-                                                value={self.request.position.clone()}
+                                                value={self.request.position
+                                                    .as_ref()
+                                                    .map(|x| x.to_string())
+                                                    .unwrap_or_default()}
                                                 oninput=oninput_position />
                                         </fieldset>
                                         <fieldset class="field">
+                                            <label class="label">{"Phone"}</label>
                                             <input
+                                                id="phone"
                                                 class="input"
                                                 type="text"
-                                                placeholder="uuid_file_info_icon"
-                                                value={self.request.uuid_file_info_icon.clone()}
-                                                oninput=oninput_uuid_file_info_icon />
+                                                placeholder="phone"
+                                                value={self.request.phone
+                                                    .as_ref()
+                                                    .map(|x| x.to_string())
+                                                    .unwrap_or_default()}
+                                                oninput=oninput_phone />
                                         </fieldset>
                                         <fieldset class="field">
+                                            <label class="label">{"Address"}</label>
                                             <input
+                                                id="address"
                                                 class="input"
                                                 type="text"
-                                                placeholder="id_region"
-                                                value={self.request.id_region.to_string()}
-                                                oninput=oninput_id_region />
-                                        </fieldset>
-                                        <fieldset class="field">
-                                            <input
-                                                class="input"
-                                                type="text"
-                                                placeholder="id_name_cad"
-                                                value={self.request.id_name_cad.to_string()}
-                                                oninput=oninput_id_name_cad />
-                                        </fieldset>
-                                        <fieldset class="field">
-                                            <input
-                                                class="input"
-                                                type="text"
-                                                placeholder="id_type_user"
-                                                value={self.request.id_type_user.to_string()}
-                                                oninput=oninput_id_type_user />
+                                                placeholder="address"
+                                                value={self.request.address
+                                                    .as_ref()
+                                                    .map(|x| x.to_string())
+                                                    .unwrap_or_default()}
+                                                oninput=oninput_address />
                                         </fieldset>
                                     </fieldset>
 
-                                    <fieldset>
-                                    {
-                                        // todo!(view different data for different type user)
-                                        if true {
-                                            self.for_type_user_1()
-                                        } else {
-                                            self.for_type_user_2()
-                                        }
-                                    }
+                                    // third column
+                                    <fieldset class="column">
+                                        <fieldset class="field">
+                                            <label class="label">{"Program"}</label>
+                                            <div class="control">
+                                                <div class="select">
+                                                  <select
+                                                      id="program"
+                                                      select={self.request.program_id.unwrap_or_default().to_string()}
+                                                      onchange=oninput_program_id
+                                                      >
+                                                    { for self.programs.iter().map(|x|
+                                                        match self.current_data.as_ref().unwrap().program.id == x.id {
+                                                            true => {
+                                                                html!{
+                                                                    <option value={x.id.to_string()} selected=true>{&x.name}</option>
+                                                                }
+                                                            },
+                                                            false => {
+                                                                html!{
+                                                                    <option value={x.id.to_string()}>{&x.name}</option>
+                                                                }
+                                                            },
+                                                        }
+                                                    )}
+                                                  </select>
+                                                </div>
+                                            </div>
+                                        </fieldset>
+                                        <fieldset class="field">
+                                            <label class="label">{"Region"}</label>
+                                            <div class="control">
+                                                <div class="select">
+                                                  <select
+                                                      id="region"
+                                                      select={self.request.region_id.unwrap_or_default().to_string()}
+                                                      onchange=onchange_region_id
+                                                      >
+                                                    { for self.regions.iter().map(|x|
+                                                        match self.current_data.as_ref().unwrap().region.region_id == x.region_id {
+                                                            true => {
+                                                                html!{
+                                                                    <option value={x.region_id.to_string()} selected=true>{&x.region}</option>
+                                                                }
+                                                            },
+                                                            false => {
+                                                                html!{
+                                                                    <option value={x.region_id.to_string()}>{&x.region}</option>
+                                                                }
+                                                            },
+                                                        }
+                                                    )}
+                                                  </select>
+                                                </div>
+                                            </div>
+                                        </fieldset>
                                     </fieldset>
                                 </fieldset>
                                 <button
+                                    id="update-settings"
                                     class="button"
                                     type="submit"
                                     disabled=false>
@@ -392,6 +572,7 @@ impl Component for Settings {
                             </form>
                             <hr />
                             <button
+                                id="logout-button"
                                 class="button"
                                 onclick=onclick >
                                 { "Or click here to logout."}
@@ -400,108 +581,6 @@ impl Component for Settings {
                     </div>
                 </div>
             </div>
-        }
-    }
-}
-
-impl Settings {
-    fn for_type_user_1(&self) -> Html {
-        html! { }
-    }
-    fn for_type_user_2(&self) -> Html {
-        let oninput_orgname = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateOrgname(ev.value));
-        let oninput_shortname = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateShortname(ev.value));
-        let oninput_inn = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateInn(ev.value));
-        let oninput_phone = self
-            .link
-            .callback(|ev: InputData| Msg::UpdatePhone(ev.value));
-        let oninput_comment = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateComment(ev.value));
-        let oninput_address = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateAddress(ev.value));
-        let oninput_site_url = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateSiteUrl(ev.value));
-        let oninput_is_supplier = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateIsSupplier(ev.value));
-
-        html! {
-            <fieldset class="column">
-                // data user for id_type_user 2-11
-                <fieldset class="field">
-                    <input
-                        class="input"
-                        type="text"
-                        placeholder="orgname"
-                        value={self.request.orgname.clone()}
-                        oninput=oninput_orgname />
-                </fieldset>
-                <fieldset class="field">
-                    <input
-                        class="input"
-                        type="text"
-                        placeholder="shortname"
-                        value={self.request.shortname.clone()}
-                        oninput=oninput_shortname />
-                </fieldset>
-                <fieldset class="field">
-                    <input
-                        class="input"
-                        type="text"
-                        placeholder="inn"
-                        value={self.request.inn.clone()}
-                        oninput=oninput_inn />
-                </fieldset>
-                <fieldset class="field">
-                    <input
-                        class="input"
-                        type="text"
-                        placeholder="phone"
-                        value={self.request.phone.clone()}
-                        oninput=oninput_phone />
-                </fieldset>
-                <fieldset class="field">
-                    <input
-                        class="input"
-                        type="text"
-                        placeholder="comment"
-                        value={self.request.comment.clone()}
-                        oninput=oninput_comment />
-                </fieldset>
-                <fieldset class="field">
-                    <input
-                        class="input"
-                        type="text"
-                        placeholder="address"
-                        value={self.request.address.clone()}
-                        oninput=oninput_address />
-                </fieldset>
-                <fieldset class="field">
-                    <input
-                        class="input"
-                        type="text"
-                        placeholder="site_url"
-                        value={self.request.site_url.clone()}
-                        oninput=oninput_site_url />
-                </fieldset>
-                <fieldset class="field">
-                    <input
-                        class="input"
-                        type="text"
-                        placeholder="is_supplier"
-                        value={self.request.is_supplier.to_string()}
-                        oninput=oninput_is_supplier />
-                </fieldset>
-            </fieldset>
         }
     }
 }
