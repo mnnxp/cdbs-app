@@ -4,8 +4,8 @@ const apiPort = process.env.PORT || 8080;
 const apiDomain = process.env.DOMAIN || "0.0.0.0";
 const url = `http://${apiDomain}:${apiPort}`;
 
-const baseUsername = "qwe";
-const basePassword = "qweqwe";
+const baseUsername = "asd";
+const basePassword = "asd";
 
 fixture `Check login`// declare the fixture
     .page `${url}/#/login`;  // specify the start page
