@@ -29,31 +29,6 @@ const goodAddress = "qweasd";
 const goodProgram = "Creo";
 const goodRegion = "Altai Republic";
 
-
-
-// fixture `Check update user data`// declare the fixture
-//     .page `${url}/#/settings`;  // specify the start page
-//
-// // Unauthorized not token
-// test('Token not found', async t => {
-//     await t
-//         .typeText('#firstname', goodFirstname)
-//         .typeText('#lastname', goodLastname)
-//         .typeText('#secondname', goodSecondname)
-//         .typeText('#username', goodUsername)
-//         .typeText('#email', goodEmail)
-//         .typeText('#position', goodPosition)
-//         .typeText('#phone', goodPhone)
-//         .typeText('#address', goodAddress)
-//         .click('#update-settings')
-//
-//         // Use the assertion to check if the actual header text is equal to the expected one
-//         .expect(Selector('div')
-//           .filter('.notification')
-//           .filter('.is-danger').innerText)
-//           .eql('BadRequest: Token not found.');
-// });
-
 fixture `Check update user data`// declare the fixture
     .page `${url}/#/login`;  // specify the start page
 
