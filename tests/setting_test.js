@@ -4,6 +4,16 @@ const apiPort = process.env.PORT || 8080;
 const apiDomain = process.env.DOMAIN || "0.0.0.0";
 const url = `http://${apiDomain}:${apiPort}`;
 
+const programTarget = 'Creo';
+const programTarget2 = 'DesignSpark Mechanical';
+const programSelect = Selector('#program');
+const programOption = programSelect.find('option');
+
+const regionTarget = 'Chuy valley';
+const regionTarget2 = 'Talas region';
+const regionSelect = Selector('#region');
+const regionOption = regionSelect.find('option');
+
 const settingButton = Selector('a').withAttribute('href', '#/settings');
 
 const goodFirstname = "qweasd";
@@ -70,6 +80,10 @@ test('Update user data', async t => {
         .typeText('#position', goodPosition)
         .typeText('#phone', goodPhone)
         .typeText('#address', goodAddress)
+        .click(programSelect)
+        .click(programOption.withText(programTarget))
+        .click(regionSelect)
+        .click(regionOption.withText(regionTarget))
         .click('#update-settings')
 
         // check count updated rows
@@ -77,7 +91,7 @@ test('Update user data', async t => {
           .filter('.tag')
           .filter('.is-info')
           .filter('.is-light')
-          .innerText).eql('Updated rows: 7');
+          .innerText).eql('Updated rows: 9');
 
     await t.click('#update-settings')
 
@@ -97,6 +111,10 @@ test('Update user data', async t => {
         .typeText('#position', goodPosition, { replace: true })
         .typeText('#phone', goodPhone, { replace: true })
         .typeText('#address', goodAddress, { replace: true })
+        .click(programSelect)
+        .click(programOption.withText(programTarget2))
+        .click(regionSelect)
+        .click(regionOption.withText(regionTarget2))
         .click('#update-settings')
 
         // return old data
@@ -104,5 +122,5 @@ test('Update user data', async t => {
           .filter('.tag')
           .filter('.is-info')
           .filter('.is-light')
-          .innerText).eql('Updated rows: 7');
+          .innerText).eql('Updated rows: 9');
 });
