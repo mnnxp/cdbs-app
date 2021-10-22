@@ -27,6 +27,22 @@ use crate::types::{
     query_path = "./graphql/user.graphql",
     response_derives = "Debug"
 )]
+struct GetSelfDataOpt;
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/user.graphql",
+    response_derives = "Debug"
+)]
+struct GetSelfData;
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/user.graphql",
+    response_derives = "Debug"
+)]
 struct UserUpdate;
 
 /// Get data current user
@@ -85,14 +101,6 @@ pub struct Props {
     pub callback: Callback<()>,
 }
 
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/user.graphql",
-    response_derives = "Debug"
-)]
-struct GetSelfDataOpt;
-
 pub enum Msg {
     Request,
     Response(Result<usize, Error>),
@@ -113,6 +121,7 @@ pub enum Msg {
     UpdateProgramId(String),
     UpdateRegionId(String),
     UpdateList(String),
+    GetCurrentData(),
 }
 
 impl Component for Settings {
@@ -200,10 +209,22 @@ impl Component for Settings {
             Msg::GetData(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res = data.as_object().unwrap().get("data").unwrap();
-                let user_data: UserInfo = serde_json::from_value(res.get("selfData").unwrap().clone()).unwrap();
-                ConsoleService::info(format!("User data: {:?}", user_data).as_ref());
-                self.current_data = Some(user_data.clone());
-                self.request = user_data.into();
+
+                match res.is_null() {
+                    false => {
+                        let user_data: UserInfo = serde_json::from_value(res.get("selfData").unwrap().clone()).unwrap();
+                        ConsoleService::info(format!("User data: {:?}", user_data).as_ref());
+                        self.current_data = Some(user_data.clone());
+                        self.request = user_data.into();
+                    },
+                    true => {
+                        let val_err = data.as_object().unwrap().get("errors").unwrap();
+                        let err_message: String =
+                            serde_json::from_value(val_err.get(0).unwrap().get("message").unwrap().clone()).unwrap();
+                        ConsoleService::info(format!("Err update rows: {:?}", err_message).as_ref());
+                        link.send_message(Msg::Response(Err(Error::BadRequest(err_message))))
+                    }
+                }
             }
             Msg::Ignore => {}
             Msg::Logout => {
@@ -271,6 +292,7 @@ impl Component for Settings {
                             serde_json::from_value(res.get("putUserUpdate").unwrap().clone()).unwrap();
                         ConsoleService::info(format!("Updated rows: {:?}", updated_rows).as_ref());
                         self.get_result = updated_rows;
+                        link.send_message(Msg::GetCurrentData());
                     },
                     true => {
                         let val_err = data.as_object().unwrap().get("errors").unwrap();
@@ -280,6 +302,14 @@ impl Component for Settings {
                         link.send_message(Msg::Response(Err(Error::BadRequest(err_message))))
                     }
                 }
+            },
+            Msg::GetCurrentData() => {
+                spawn_local(async move {
+                    let res = make_query(
+                        GetSelfData::build_query(get_self_data::Variables)
+                    ).await.unwrap();
+                    link.send_message(Msg::GetData(res));
+                })
             },
         }
         true
