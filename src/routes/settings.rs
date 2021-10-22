@@ -452,7 +452,7 @@ impl Component for Settings {
                                     <fieldset class="column">
                                         <fieldset class="field">
                                             <label class="label">{"Description"}</label>
-                                            <input
+                                            <textarea
                                                 id="description"
                                                 class="input"
                                                 type="description"
