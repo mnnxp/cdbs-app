@@ -4,6 +4,7 @@ pub mod home;
 pub mod login;
 pub mod register;
 pub mod settings;
+pub mod profile;
 pub mod tenders;
 pub mod catalog;
 pub mod createTender;
@@ -27,8 +28,8 @@ pub enum AppRoute {
     Settings,
     // #[to = "#/@{username}/favorites"]
     // ProfileFavorites(String),
-    // #[to = "#/@{username}"]
-    // Profile(String),
+    #[to = "#/@{username}"]
+    Profile(String),
     #[to = "#/"]
     Home,
 }

@@ -3,6 +3,7 @@
 use yew::services::fetch::FetchTask;
 use yew::{agent::Bridged, html, Bridge, Callback, Component, ComponentLink, Html, ShouldRender};
 use yew_router::prelude::*;
+use wasm_bindgen_futures::spawn_local;
 
 use crate::error::Error;
 use crate::fragments::{footer::Footer, header::Header};
@@ -14,13 +15,13 @@ use crate::routes::{
     fix_fragment_routes,
     home::Home,
     login::Login,
-    // profile::{Profile, ProfileTab},
+    profile::{Profile, ProfileTab},
     register::Register,
     settings::Settings,
     tenders::Tenders,
     AppRoute,
 };
-use crate::services::{is_authenticated, Auth};
+use crate::services::{is_authenticated, Auth, get_current_user};
 use crate::types::{SlimUser, SlimUserWrapper};
 
 /// The root app component
@@ -28,7 +29,6 @@ pub struct App {
     auth: Auth,
     current_route: Option<AppRoute>,
     current_user: Option<SlimUser>,
-    current_user_response: Callback<Result<SlimUserWrapper, Error>>,
     current_user_task: Option<FetchTask>,
     #[allow(unused)]
     router_agent: Box<dyn Bridge<RouteAgent>>,
@@ -36,7 +36,7 @@ pub struct App {
 }
 
 pub enum Msg {
-    CurrentUserResponse(Result<SlimUserWrapper, Error>),
+    CurrentUserResponse(Result<SlimUser, Error>),
     Route(Route),
     Authenticated(SlimUser),
     Logout,
@@ -56,7 +56,6 @@ impl Component for App {
             current_route: AppRoute::switch(route),
             router_agent,
             current_user: None,
-            current_user_response: link.callback(Msg::CurrentUserResponse),
             current_user_task: None,
             link,
         }
@@ -65,19 +64,27 @@ impl Component for App {
     fn rendered(&mut self, first_render: bool) {
         // Get current user info if a token is available when mounted
         if first_render && is_authenticated() {
-            let task = self.auth.current(self.current_user_response.clone());
-            self.current_user_task = Some(task);
+            let link = self.link.clone();
+            // let task = self.auth.current(self.current_user_response.clone());
+            // self.current_user_task = Some(task);
+            spawn_local(async move {
+                let res = get_current_user().await;
+                link.send_message(Msg::CurrentUserResponse(res));
+            })
         }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
-            Msg::CurrentUserResponse(Ok(slim_user)) => {
-                self.current_user = Some(slim_user.user);
-                self.current_user_task = None;
-            }
-            Msg::CurrentUserResponse(Err(_)) => {
-                self.current_user_task = None;
+            Msg::CurrentUserResponse(res) => {
+                match res {
+                    Ok(slim_user) => {
+                        self.current_user = Some(slim_user);
+                    },
+                    Err(err) => {
+                        self.current_user_task = None;
+                    },
+                }
             }
             Msg::Route(mut route) => {
                 fix_fragment_routes(&mut route);
@@ -119,9 +126,12 @@ impl Component for App {
                             // AppRoute::ProfileFavorites(username) => html!{
                             //     <Profile username=username.clone() current_user=self.current_user.clone() tab=ProfileTab::FavoritedBy />
                             // },
-                            // AppRoute::Profile(username) => html!{
-                            //     <Profile username=username.clone() current_user=self.current_user.clone()/>
-                            // },
+                            AppRoute::Profile(username) => html!{
+                                <Profile
+                                    username=username.clone()
+                                    current_user=self.current_user.clone()
+                                />
+                            },
                             AppRoute::Tenders => html!{<Tenders />},
                             AppRoute::Catalog => html!{<Catalog />},
                             AppRoute::CreateTender => html!{<CreateTender />},
