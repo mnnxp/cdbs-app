@@ -371,7 +371,7 @@ impl Component for Settings {
                                 </span>
                                 <span class="tag is-info is-light">{
                                     match &self.current_data {
-                                        Some(data) => format!("Last update: {}", data.updated_at),
+                                        Some(data) => format!("Last updated: {}", data.updated_at),
                                         None => "Not data".to_string(),
                                     }
                                 }</span>
