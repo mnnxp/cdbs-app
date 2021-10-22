@@ -5,15 +5,15 @@ use yew::{
 };
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
 use yew::services::ConsoleService;
-use graphql_client::{GraphQLQuery, Response};
+use graphql_client::GraphQLQuery;
 
 use crate::fragments::list_errors::ListErrors;
 use crate::error::Error;
 use crate::routes::AppRoute;
 use crate::services::{set_token, Auth, get_token};
-use crate::types::{LoginInfo, LoginInfoWrapper, SlimUser, SlimUserWrapper, UserToken};
+use crate::types::{LoginInfo, LoginInfoWrapper, SlimUser, UserToken};
 use crate::gqls::make_query;
-use wasm_bindgen_futures::{spawn_local, JsFuture};
+use wasm_bindgen_futures::spawn_local;
 use std::sync::{Arc,Mutex};
 
 /// Login page
