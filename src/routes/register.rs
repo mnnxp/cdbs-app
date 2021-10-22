@@ -9,7 +9,7 @@ use yew::{
 };
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
 
-use crate::error::Error;
+use crate::error::{Error, get_error};
 use crate::fragments::list_errors::ListErrors;
 use crate::gqls::make_query;
 use crate::routes::AppRoute;
@@ -55,7 +55,7 @@ pub struct Props {
 
 pub enum Msg {
     Request,
-    // Response(Result<SlimUserWrapper, Error>),
+    // Response(Result<SlimUser, Error>),
     Ignore,
     UpdateFirstname(String),
     UpdateLastname(String),
@@ -139,8 +139,8 @@ impl Component for Register {
                     link.send_message(Msg::GetRegister(res.unwrap()));
                 })
             }
-            // Msg::Response(Ok(user_info)) => {
-            //     self.props.callback.emit(user_info.user);
+            // Msg::Response(Ok(slim_user)) => {
+            //     self.props.callback.emit(slim_user);
             //     self.error = None;
             //     self.task = None;
             //     self.router_agent.send(ChangeRoute(AppRoute::Home.into()));
@@ -184,8 +184,18 @@ impl Component for Register {
                     serde_json::from_value(res.get("programs").unwrap().clone()).unwrap();
                 ConsoleService::info(format!("Update: {:?}", self.programs).as_ref());
             }
-            Msg::GetRegister(_res) => {
-              self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
+            Msg::GetRegister(res) => {
+                let data: Value = serde_json::from_str(res.as_str()).unwrap();
+                let res = data.as_object().unwrap().get("data").unwrap();
+
+                match res.is_null() {
+                    false => {
+                        self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
+                    },
+                    true => {
+                        self.error = Some(get_error(&data));
+                    }
+                }
             }
             Msg::Ignore => {}
         }
@@ -344,6 +354,7 @@ impl Component for Register {
                             <div class="control">
                                 <div class="select">
                                   <select
+                                      id="program"
                                       select=self.request.program_id.to_string()
                                       onchange=oninput_program_id
                                       >
@@ -359,6 +370,7 @@ impl Component for Register {
                             <div class="control">
                                 <div class="select">
                                   <select
+                                      id="region"
                                       select=self.request.region_id.to_string()
                                       onchange=onchange_region_id
                                       >

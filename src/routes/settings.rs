@@ -13,7 +13,7 @@ use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 use crate::gqls::make_query;
 
-use crate::error::Error;
+use crate::error::{Error, get_error};
 use crate::fragments::list_errors::ListErrors;
 use crate::routes::AppRoute;
 use crate::services::{is_authenticated, set_token};
@@ -218,11 +218,7 @@ impl Component for Settings {
                         self.request = user_data.into();
                     },
                     true => {
-                        let val_err = data.as_object().unwrap().get("errors").unwrap();
-                        let err_message: String =
-                            serde_json::from_value(val_err.get(0).unwrap().get("message").unwrap().clone()).unwrap();
-                        ConsoleService::info(format!("Err update rows: {:?}", err_message).as_ref());
-                        link.send_message(Msg::Response(Err(Error::BadRequest(err_message))))
+                        link.send_message(Msg::Response(Err(get_error(&data))));
                     }
                 }
             }
@@ -295,11 +291,7 @@ impl Component for Settings {
                         link.send_message(Msg::GetCurrentData());
                     },
                     true => {
-                        let val_err = data.as_object().unwrap().get("errors").unwrap();
-                        let err_message: String =
-                            serde_json::from_value(val_err.get(0).unwrap().get("message").unwrap().clone()).unwrap();
-                        ConsoleService::info(format!("Err update rows: {:?}", err_message).as_ref());
-                        link.send_message(Msg::Response(Err(Error::BadRequest(err_message))))
+                        link.send_message(Msg::Response(Err(get_error(&data))));
                     }
                 }
             },
