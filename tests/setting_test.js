@@ -14,26 +14,43 @@ const regionTarget2 = 'Talas region';
 const regionSelect = Selector('#region');
 const regionOption = regionSelect.find('option');
 
+const registerButton = Selector('a').withAttribute('href', '#/register');
 const settingButton = Selector('a').withAttribute('href', '#/settings');
 
-const goodFirstname = "qweasd";
-const goodLastname = "qweasd";
-const goodSecondname = "qweasd";
-const goodUsername = "qwe";
-const goodPassword = "qweqwe";
-const goodEmail = "qweasd@qwe.qwe";
-const goodDescription = "description for qwe";
-const goodPosition = "qweasd";
-const goodPhone = "qweasd";
-const goodAddress = "qweasd";
+const goodFirstname = "Testfirstname";
+const goodLastname = "Testlastname";
+const goodSecondname = "Testsecondname";
+const goodUsername = "testusername"+Math.random();
+const goodPassword = "testpassword";
+const goodEmail = "test@example.domen";
+const goodDescription = "description for test username";
+const goodPosition = "engineer";
+const goodPhone = "+321234567890";
+const goodAddress = "City, Street, home, appart 1";
 const goodProgram = "Creo";
 const goodRegion = "Altai Republic";
 
 fixture `Check update user data`// declare the fixture
-    .page `${url}/#/login`;  // specify the start page
+    .page `${url}`;  // specify the start page
 
 // Update user data and return old data
 test('Update user data', async t => {
+  // open register page
+  await t.click(registerButton)
+
+  await t
+      .typeText('#firstname', goodFirstname)
+      .typeText('#lastname', goodLastname)
+      .typeText('#secondname', goodSecondname)
+      .typeText('#email', goodEmail)
+      .typeText('#username', goodUsername)
+      .typeText('#password', goodPassword)
+      .click(programSelect)
+      .click(programOption.withText(goodProgram))
+      .click(regionSelect)
+      .click(regionOption.withText(goodRegion))
+      .click('#submit-button')
+
     await t
         .typeText('#username', goodUsername)
         .typeText('#password', goodPassword)
@@ -66,7 +83,7 @@ test('Update user data', async t => {
           .filter('.tag')
           .filter('.is-info')
           .filter('.is-light')
-          .innerText).eql('Updated rows: 9');
+          .innerText).eql('Updated rows: 10');
 
     await t.click('#update-settings')
 
@@ -97,5 +114,5 @@ test('Update user data', async t => {
           .filter('.tag')
           .filter('.is-info')
           .filter('.is-light')
-          .innerText).eql('Updated rows: 9');
+          .innerText).eql('Updated rows: 6');
 });
