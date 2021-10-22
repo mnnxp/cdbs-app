@@ -248,9 +248,10 @@ impl Component for Register {
                             <label class="label">{"Firstname"}</label>
                             <div class="control">
                                 <input
+                                    id="firstname"
                                     class="input"
                                     type="text"
-                                    placeholder="Text input"
+                                    placeholder="Firstname"
                                     value=self.request.firstname.clone()
                                     oninput=oninput_firstname
                                     />
@@ -260,9 +261,10 @@ impl Component for Register {
                             <label class="label">{"Lastname"}</label>
                             <div class="control">
                                 <input
+                                    id="lastname"
                                     class="input"
                                     type="text"
-                                    placeholder="Text input"
+                                    placeholder="Lastname"
                                     value=self.request.lastname.clone()
                                     oninput=oninput_lastname
                                     />
@@ -272,9 +274,10 @@ impl Component for Register {
                             <label class="label">{"Secondname"}</label>
                             <div class="control">
                                 <input
+                                    id="secondname"
                                     class="input"
                                     type="text"
-                                    placeholder="Text input"
+                                    placeholder="Secondname"
                                     value=self.request.secondname.clone()
                                     oninput=oninput_secondname
                                     />
@@ -284,6 +287,7 @@ impl Component for Register {
                             <label class="label">{"Username"}</label>
                             <div class="control has-icons-left has-icons-right">
                                 <input
+                                    id="username"
                                     class="input"
                                     type="text"
                                     placeholder="Username"
@@ -303,6 +307,7 @@ impl Component for Register {
                             <label class="label">{"Email"}</label>
                             <div class="control has-icons-left has-icons-right">
                                 <input
+                                    id="email"
                                     class="input"
                                     type="email"
                                     placeholder="Email"
@@ -322,6 +327,7 @@ impl Component for Register {
                             <label class="label">{"Password"}</label>
                             <div class="control has-icons-left">
                                 <input
+                                    id="password"
                                     class="input"
                                     type="password"
                                     placeholder="Password"
@@ -363,21 +369,26 @@ impl Component for Register {
                                 </div>
                             </div>
                         </fieldset>
-                        <div class="field">
-                          <div class="control">
-                            <label class="checkbox">
-                              <input type="checkbox"/>
-                              {" I agree to the "}<a href="#">{"terms and conditions"}</a>
-                            </label>
-                          </div>
-                        </div>
+                        // <div class="field">
+                        //   <div class="control">
+                        //     <label class="checkbox">
+                        //       <input id="accept-conditions" type="checkbox"/>
+                        //       {" I agree to the "}<a href="#">{"terms and conditions"}</a>
+                        //     </label>
+                        //   </div>
+                        // </div>
                         <button
+                            id="submit-button"
                             class="button"
                             type="submit"
                             disabled=false
                         >
                             { "Sign up" }
                         </button>
+                        <span class="tag is-info is-light is-large">
+                            {" By clicking, you agree to the "}
+                            <a href="#">{"terms and conditions"}</a>
+                        </span>
                     </fieldset>
                 </form>
             </div>
