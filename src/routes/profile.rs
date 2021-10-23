@@ -1,9 +1,9 @@
-use yew::services::fetch::FetchTask;
+// use yew::services::fetch::FetchTask;
 use yew::{
-    agent::Bridged, html, Bridge, Callback, Component, ComponentLink,
-    FocusEvent, Html, InputData, ChangeData, Properties, ShouldRender,
+    html, Component, ComponentLink,
+    Html, Properties, ShouldRender,
 };
-use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
+// use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
 use chrono::NaiveDateTime;
 
 use yew::services::ConsoleService;
@@ -15,7 +15,7 @@ use crate::gqls::make_query;
 
 use crate::error::{Error, get_error};
 use crate::fragments::list_errors::ListErrors;
-use crate::routes::AppRoute;
+// use crate::routes::AppRoute;
 use crate::services::{is_authenticated, set_token};
 use crate::types::{
     UUID, UserInfo, SlimUser, Program, Region
@@ -41,7 +41,7 @@ struct GetSelfData;
 pub struct Profile {
     error: Option<Error>,
     profile: Option<UserInfo>,
-    task: Option<FetchTask>,
+    // task: Option<FetchTask>,
     // router_agent: Box<dyn Bridge<RouteAgent>>,
     props: Props,
     link: ComponentLink<Self>,
@@ -84,7 +84,7 @@ impl Component for Profile {
         Profile {
             error: None,
             profile: None,
-            task: None,
+            // task: None,
             // router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             props,
             link,
@@ -107,7 +107,7 @@ impl Component for Profile {
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
+        // let link = self.link.clone();
 
         match msg {
             Msg::GetData(res) => {
@@ -196,16 +196,31 @@ impl Component for Profile {
                                             format!("{} {}", data.firstname, data.lastname)
                                         }</p>
                                         <p class="subtitle is-6">{
-                                            format!("Profile {}", data.username)
+                                            format!("@{}", data.username)
                                         }</p>
                                       </div>
                                     </div>
 
                                     <div class="content">
-                                        // format!("{}", data.description);
-                                      // <br>
-                                      // <time datetime="">format!("{}", data.updated_at)</time>
+                                        { format!("{}", data.description) }
+                                        <br/>
+                                        <time datetime={ data.updated_at.to_string() }>{
+                                            format!("Updated at: {:.*}", 19, data.updated_at.to_string())
+                                        }</time>
                                     </div>
+
+                                    <footer class="card-footer">
+                                        <p class="card-footer-item">
+                                          <span>
+                                            { "View on" } <a href="https://twitter.com/codinghorror/status/506010907021828096">{"Twitter"}</a>
+                                          </span>
+                                        </p>
+                                        <p class="card-footer-item">
+                                          <span>
+                                            { "Share on" } <a href="#">{"Facebook"}</a>
+                                          </span>
+                                        </p>
+                                    </footer>
                                   </div>
                                 </div>
                             </div>
