@@ -165,63 +165,110 @@ impl Component for Profile {
         match &self.profile {
             Some(data) => html! {
                 <div class="profile-page">
+                    <ListErrors error=self.error.clone()/>
                     <div class="container page">
                         <div class="row">
-                            <div>
-                                // <h1 class="title">{ title }</h1>
-                                // <fieldset class="field">
-                                    // <span class="tag is-info is-light">{
-                                    //     match &self.profile {
-                                    //         Some(data) => format!("Last updated: {}", data.updated_at),
-                                    //         None => "Not data".to_string(),
-                                    //     }
-                                    // }</span>
-                                // </fieldset>
-                                <ListErrors error=self.error.clone()/>
-                                <div class="card">
-                                  // <div class="card-image">
-                                  //   <figure class="image is-4by3">
-                                  //     <img src="https://bulma.io/images/placeholders/1280x960.png" alt="Placeholder image"/>
-                                  //   </figure>
-                                  // </div>
-                                  <div class="card-content">
-                                    <div class="media">
-                                      <div class="media-left">
-                                        <figure class="image is-48x48">
-                                          <img src="https://bulma.io/images/placeholders/96x96.png" alt="Placeholder image"/>
-                                        </figure>
-                                      </div>
-                                      <div class="media-content">
-                                        <p class="title is-4">{
-                                            format!("{} {}", data.firstname, data.lastname)
-                                        }</p>
-                                        <p class="subtitle is-6">{
-                                            format!("@{}", data.username)
-                                        }</p>
+                            <div class="columns">
+                                <div class="column is-one-quarter">
+                                    <aside class="menu">
+                                        <p class="menu-label">
+                                            {"Profile"}
+                                        </p>
+                                        <ul class="menu-list">
+                                            <li><a>{"Components"}</a></li>
+                                            <li><a>{"Standards"}</a></li>
+                                            <li><a>{"Companies"}</a></li>
+                                            // <li><a>{"Certificates"}</a></li>
+                                            // <li><a>{"Balance"}</a></li>
+                                            // <li>
+                                            //     <a class="is-active">{"Metric"}</a>
+                                            //     <ul>
+                                            //         <li><a>{ format!("Subscribers: {}", data.subscribers.to_string()) }</a></li>
+                                            //         <li><a>{ format!("Companies: {}", data.companies_count.to_string()) }</a></li>
+                                            //         <li><a>{ format!("Components: {}", data.components_count.to_string()) }</a></li>
+                                            //         <li><a>{ format!("Favorite companies: {}", data.fav_companies_count.to_string()) }</a></li>
+                                            //         <li><a>{ format!("Favorite components: {}", data.fav_components_count.to_string()) }</a></li>
+                                            //         <li><a>{ format!("Favorite standards: {}", data.fav_standards_count.to_string()) }</a></li>
+                                            //         <li><a>{ format!("Favorite users: {}", data.fav_users_count.to_string()) }</a></li>
+                                            //     </ul>
+                                            // </li>
+                                        </ul>
+                                    </aside>
+                                </div>
+                                <div class="column">
+                                    // <h1 class="title">{ title }</h1>
+                                    // <fieldset class="field">
+                                        // <span class="tag is-info is-light">{
+                                        //     match &self.profile {
+                                        //         Some(data) => format!("Last updated: {}", data.updated_at),
+                                        //         None => "Not data".to_string(),
+                                        //     }
+                                        // }</span>
+                                    // </fieldset>
+                                    <div class="card">
+                                      // <div class="card-image">
+                                      //   <figure class="image is-4by3">
+                                      //     <img src="https://bulma.io/images/placeholders/1280x960.png" alt="Placeholder image"/>
+                                      //   </figure>
+                                      // </div>
+                                      <div class="card-content">
+                                        <div class="media">
+                                          <div class="media-left">
+                                            <figure class="image is-48x48">
+                                              <img src="https://bulma.io/images/placeholders/96x96.png" alt="Placeholder image"/>
+                                            </figure>
+                                          </div>
+                                          <div class="media-content">
+                                            <p class="title is-4">{
+                                                format!("{} {}", data.firstname, data.lastname)
+                                            }</p>
+                                            <p class="subtitle is-6">{
+                                                format!("@{}", data.username)
+                                            }</p>
+                                          </div>
+                                          <div class="media-right">
+                                            <p class="subtitle is-6 left">
+                                                { format!("{:.*}", 19, data.updated_at.to_string()) }
+                                                <br/>
+                                                { format!("followers: {}", 0) } // todo!(make show followers of data.followers.to_string())
+                                            </p>
+                                          </div>
+                                        </div>
+
+                                        <div class="content">
+                                            { format!("{}", data.description) }
+                                        </div>
+
+                                        <div class="content">
+                                            // { format!("{}", data.description) }
+                                            { format!("Position: {}", data.position.to_string()) }
+                                            <br/>
+                                            { format!("Region: {}", data.region.region.to_string()) }
+                                            <br/>
+                                            { format!("Working software: {}", data.program.name.to_string()) }
+                                            // <br/>
+                                            // { format!("{:#?}", data.certificates) }
+                                        </div>
+
+                                        // <footer class="card-footer">
+                                        //     <p class="card-footer-item">
+                                        //       <span>
+                                        //         { format!("Position: {}", data.position.to_string()) }
+                                        //       </span>
+                                        //     </p>
+                                        //     <p class="card-footer-item">
+                                        //       <span>
+                                        //         { format!("Region: {}", data.region.region.to_string()) }
+                                        //       </span>
+                                        //     </p>
+                                        //     <p class="card-footer-item">
+                                        //       <span>
+                                        //         { format!("Working software: {}", data.program.name.to_string()) }
+                                        //       </span>
+                                        //     </p>
+                                        // </footer>
                                       </div>
                                     </div>
-
-                                    <div class="content">
-                                        { format!("{}", data.description) }
-                                        <br/>
-                                        <time datetime={ data.updated_at.to_string() }>{
-                                            format!("Updated at: {:.*}", 19, data.updated_at.to_string())
-                                        }</time>
-                                    </div>
-
-                                    <footer class="card-footer">
-                                        <p class="card-footer-item">
-                                          <span>
-                                            { "View on" } <a href="https://twitter.com/codinghorror/status/506010907021828096">{"Twitter"}</a>
-                                          </span>
-                                        </p>
-                                        <p class="card-footer-item">
-                                          <span>
-                                            { "Share on" } <a href="#">{"Facebook"}</a>
-                                          </span>
-                                        </p>
-                                    </footer>
-                                  </div>
                                 </div>
                             </div>
                         </div>
