@@ -10,11 +10,11 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 pub use auth::{
-    LoginInfo, LoginInfoWrapper, RegisterInfo, RegisterInfoWrapper, SlimUser, SlimUserWrapper,
-    UserUpdateInfo, UserUpdateInfoWrapper, UserToken
+    LoginInfo, LoginInfoWrapper, RegisterInfo, SlimUser,
+    UserUpdateInfo, UserToken
 };
-pub use profiles::UserInfo;
-pub use file::ShortFile;
+pub use profiles::SelfUserInfo;
+pub use file::ShowFileForDownload;
 pub use relate::{Region, Program};
 pub use tags::TagListInfo;
 

@@ -18,7 +18,7 @@ use crate::fragments::list_errors::ListErrors;
 // use crate::routes::AppRoute;
 use crate::services::{is_authenticated, set_token};
 use crate::types::{
-    UUID, UserInfo, SlimUser, Program, Region
+    UUID, SelfUserInfo, SlimUser, Program, Region
 };
 
 #[derive(GraphQLQuery)]
@@ -40,7 +40,7 @@ struct GetSelfData;
 /// Profile user with relate data
 pub struct Profile {
     error: Option<Error>,
-    profile: Option<UserInfo>,
+    profile: Option<SelfUserInfo>,
     // task: Option<FetchTask>,
     // router_agent: Box<dyn Bridge<RouteAgent>>,
     props: Props,
@@ -116,7 +116,7 @@ impl Component for Profile {
 
                 match res.is_null() {
                     false => {
-                        let user_data: UserInfo = serde_json::from_value(res.get("selfData").unwrap().clone()).unwrap();
+                        let user_data: SelfUserInfo = serde_json::from_value(res.get("selfData").unwrap().clone()).unwrap();
                         ConsoleService::info(format!("User data: {:?}", user_data).as_ref());
                         self.profile = Some(user_data);
                     },

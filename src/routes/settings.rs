@@ -18,7 +18,7 @@ use crate::fragments::list_errors::ListErrors;
 use crate::routes::AppRoute;
 use crate::services::{is_authenticated, set_token};
 use crate::types::{
-    UUID, UserUpdateInfo, UserInfo, Program, Region
+    UUID, UserUpdateInfo, SelfUserInfo, Program, Region
 };
 
 #[derive(GraphQLQuery)]
@@ -46,9 +46,9 @@ struct GetSelfData;
 struct UserUpdate;
 
 /// Get data current user
-impl From<UserInfo> for UserUpdateInfo {
-    fn from(data: UserInfo) -> Self {
-        let UserInfo {
+impl From<SelfUserInfo> for UserUpdateInfo {
+    fn from(data: SelfUserInfo) -> Self {
+        let SelfUserInfo {
             firstname,
             lastname,
             secondname,
@@ -90,7 +90,7 @@ pub struct Settings {
     router_agent: Box<dyn Bridge<RouteAgent>>,
     props: Props,
     link: ComponentLink<Self>,
-    current_data: Option<UserInfo>,
+    current_data: Option<SelfUserInfo>,
     programs: Vec<Program>,
     regions: Vec<Region>,
     get_result: usize,
@@ -212,7 +212,7 @@ impl Component for Settings {
 
                 match res.is_null() {
                     false => {
-                        let user_data: UserInfo = serde_json::from_value(res.get("selfData").unwrap().clone()).unwrap();
+                        let user_data: SelfUserInfo = serde_json::from_value(res.get("selfData").unwrap().clone()).unwrap();
                         ConsoleService::info(format!("User data: {:?}", user_data).as_ref());
                         self.current_data = Some(user_data.clone());
                         self.request = user_data.into();

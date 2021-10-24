@@ -22,7 +22,7 @@ use crate::routes::{
     AppRoute,
 };
 use crate::services::{is_authenticated, Auth, get_current_user};
-use crate::types::{SlimUser, SlimUserWrapper};
+use crate::types::SlimUser;
 
 /// The root app component
 pub struct App {
