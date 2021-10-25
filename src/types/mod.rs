@@ -13,7 +13,7 @@ pub use auth::{
     LoginInfo, LoginInfoWrapper, RegisterInfo, SlimUser,
     UserUpdateInfo, UserToken
 };
-pub use profiles::SelfUserInfo;
+pub use profiles::{SelfUserInfo, UserInfo};
 pub use file::ShowFileForDownload;
 pub use relate::{Region, Program};
 pub use tags::TagListInfo;
