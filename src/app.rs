@@ -1,8 +1,9 @@
 //! The root app contains initial authentication and url routes
 
 use yew::services::fetch::FetchTask;
-use yew::{agent::Bridged, html, Bridge, Callback, Component, ComponentLink, Html, ShouldRender};
+use yew::{agent::Bridged, html, Bridge, Component, ComponentLink, Html, ShouldRender};
 use yew_router::prelude::*;
+use yew::services::ConsoleService;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::error::Error;
@@ -26,7 +27,7 @@ use crate::types::SlimUser;
 
 /// The root app component
 pub struct App {
-    auth: Auth,
+    // auth: Auth,
     current_route: Option<AppRoute>,
     current_user: Option<SlimUser>,
     current_user_task: Option<FetchTask>,
@@ -52,7 +53,7 @@ impl Component for App {
         let mut route = route_service.get_route();
         fix_fragment_routes(&mut route);
         App {
-            auth: Auth::new(),
+            // auth: Auth::new(),
             current_route: AppRoute::switch(route),
             router_agent,
             current_user: None,
@@ -82,6 +83,7 @@ impl Component for App {
                         self.current_user = Some(slim_user);
                     },
                     Err(err) => {
+                        ConsoleService::info(format!("Error with CurrentUserResponse: {:#?}", err).as_ref());
                         self.current_user_task = None;
                     },
                 }
@@ -128,6 +130,7 @@ impl Component for App {
                             // },
                             AppRoute::Profile(username) => html!{
                                 <Profile
+                                    // current_route=self.current_route.clone()
                                     username=username.clone()
                                     current_user=self.current_user.clone()
                                 />
