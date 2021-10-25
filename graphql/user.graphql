@@ -107,14 +107,14 @@ fragment selfUserFields on UserAndRelatedData {
 }
 
 
-query UserData {
-  user (userUuid: String) {
+query GetUserData($username: String) {
+  user (username: $username) {
     ...userFields
   }
 }
 
-query UserDataOpt {
-  user (userUuid: String) {
+query GetUserDataOpt ($username: String) {
+  user (username: $username) {
     ...userFields
   }
 
