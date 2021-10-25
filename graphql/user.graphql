@@ -8,13 +8,13 @@ query GetMySelf {
 
 query GetSelfData {
   selfData {
-    ...userFields
+    ...selfUserFields
   }
 }
 
 query GetSelfDataOpt {
   selfData {
-    ...userFields
+    ...selfUserFields
   }
 
   programs {
@@ -33,7 +33,7 @@ mutation UserUpdate($data: IptUpdateUserData!) {
   putUserUpdate(data: $data)
 }
 
-fragment userFields on UserAndRelatedData {
+fragment selfUserFields on UserAndRelatedData {
   uuid
   email
   firstname
@@ -49,6 +49,7 @@ fragment userFields on UserAndRelatedData {
     uuid
     filename
     filesize
+    downloadUrl
   }
   region {
     regionId
@@ -68,13 +69,34 @@ fragment userFields on UserAndRelatedData {
     userUuid
     file {
       uuid
-      filename
-      filesize
+      parentFileUuid
+      download {
+        uuid
+        filename
+        filesize
+        downloadUrl
+      }
+      ownerUser {
+        uuid
+        username
+        imageFile {
+          uuid
+          filename
+          filesize
+          downloadUrl
+        }
+      }
+      contentType
+      program {
+        id
+        name
+      }
+      createdAt
+      updatedAt
     }
     description
   }
   subscribers
-  isFollowed
   companiesCount
   componentsCount
   standardsCount
@@ -82,4 +104,88 @@ fragment userFields on UserAndRelatedData {
   favComponentsCount
   favStandardsCount
   favUsersCount
+}
+
+
+query GetUserData($username: String) {
+  user (username: $username) {
+    ...userFields
+  }
+}
+
+query GetUserDataOpt ($username: String) {
+  user (username: $username) {
+    ...userFields
+  }
+
+  programs {
+    id
+    name
+  }
+
+  regions {
+    regionId
+    langId
+    region
+  }
+}
+
+fragment userFields on ShowUserAndRelatedData {
+  uuid
+  firstname
+  lastname
+  secondname
+  username
+  description
+  position
+  imageFile {
+    uuid
+    filename
+    filesize
+    downloadUrl
+  }
+  region {
+    regionId
+    langId
+    region
+  }
+  program {
+    id
+    name
+  }
+  createdAt
+  updatedAt
+  certificates {
+    userUuid
+    file {
+      uuid
+      parentFileUuid
+      download {
+        uuid
+        filename
+        filesize
+        downloadUrl
+      }
+      ownerUser {
+        uuid
+        username
+        imageFile {
+          uuid
+          filename
+          filesize
+          downloadUrl
+        }
+      }
+      contentType
+      program {
+        id
+        name
+      }
+      createdAt
+      updatedAt
+    }
+    description
+  }
+  subscribers
+  isFollowed
 }

@@ -133,9 +133,9 @@ impl Header {
                  <RouterAnchor<AppRoute> route=AppRoute::Settings classes="button">
                   { "Settings" }
                  </RouterAnchor<AppRoute>>
-                 // <RouterAnchor<AppRoute> route=AppRoute::Profile(user_info.username.clone())  classes="button">
-                 //  { &user_info.username }
-                 // </RouterAnchor<AppRoute>>
+                 <RouterAnchor<AppRoute> route=AppRoute::Profile(user_info.username.clone())  classes="button">
+                  { &user_info.username }
+                 </RouterAnchor<AppRoute>>
             </div>
         }
     }

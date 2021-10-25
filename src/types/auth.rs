@@ -55,12 +55,6 @@ impl Default for RegisterInfo {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 // #[serde(rename_all = "camelCase")]
-pub struct RegisterInfoWrapper {
-    pub user: RegisterInfo,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-// #[serde(rename_all = "camelCase")]
 pub struct UserToken {
     pub bearer: String,
 }
@@ -79,14 +73,8 @@ pub struct SlimUser {
     pub username: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-// #[serde(rename_all = "camelCase")]
-pub struct SlimUserWrapper {
-    pub user: SlimUser,
-}
-
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
-// #[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase")]
 pub struct UserUpdateInfo {
     pub email: Option<String>,
     pub firstname: Option<String>,
@@ -100,10 +88,4 @@ pub struct UserUpdateInfo {
     pub time_zone: Option<String>,
     pub region_id: Option<i64>,
     pub program_id: Option<i64>,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-// #[serde(rename_all = "camelCase")]
-pub struct UserUpdateInfoWrapper {
-    pub user: UserUpdateInfo,
 }
