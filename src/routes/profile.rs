@@ -268,33 +268,20 @@ impl Component for Profile {
                                     </aside>
                                 </div>
                                 <div class="column">
-                                    // <h1 class="title">{ title }</h1>
-                                    // <fieldset class="field">
-                                        // <span class="tag is-info is-light">{
-                                        //     match &self.profile {
-                                        //         Some(data) => format!("Last updated: {}", data.updated_at),
-                                        //         None => "Not data".to_string(),
-                                        //     }
-                                        // }</span>
-                                    // </fieldset>
                                     <div class="card">
-                                      // <div class="card-image">
-                                      //   <figure class="image is-4by3">
-                                      //     <img src="https://bulma.io/images/placeholders/1280x960.png" alt="Placeholder image"/>
-                                      //   </figure>
-                                      // </div>
                                       <div class="card-content">
                                         <div class="media">
                                           <div class="media-left">
                                             <figure class="image is-48x48">
-                                              <img src="https://bulma.io/images/placeholders/96x96.png" alt="Placeholder image"/>
+                                              // <img src="https://bulma.io/images/placeholders/96x96.png" alt="Placeholder image"/>
+                                              <img src={self_data.image_file.download_url.to_string()} alt="Favicon profile"/>
                                             </figure>
                                           </div>
                                           <div class="media-content">
-                                            <p class="title is-4">{
+                                            <p id="title-fl" class="title is-4">{
                                                 format!("{} {}", self_data.firstname, self_data.lastname)
                                             }</p>
-                                            <p class="subtitle is-6">{
+                                            <p id="subtitle-username" class="subtitle is-6">{
                                                 format!("@{}", self_data.username)
                                             }</p>
                                           </div>
@@ -314,17 +301,25 @@ impl Component for Profile {
                                           </div>
                                         </div>
 
-                                        <div class="content">
+                                        <div id="description" class="content">
                                             { format!("{}", self_data.description) }
                                         </div>
 
                                         <div class="content">
-                                            // { format!("{}", self_data.description) }
-                                            { format!("Position: {}", self_data.position.to_string()) }
+                                            <span id="position">
+                                              <i class="fas fa-briefcase"></i>
+                                              { format!("Position: {}", self_data.position.to_string()) }
+                                            </span>
                                             <br/>
-                                            { format!("Region: {}", self_data.region.region.to_string()) }
+                                            <span id="region">
+                                              <i class="fas fa-map-marker-alt"></i>
+                                              { format!("Region: {}", self_data.region.region.to_string()) }
+                                            </span>
                                             <br/>
-                                            { format!("Working software: {}", self_data.program.name.to_string()) }
+                                            <span id="program">
+                                              <i class="fab fa-uncharted"></i>
+                                              { format!("Working software: {}", self_data.program.name.to_string()) }
+                                            </span>
                                             // <br/>
                                             // { format!("{:#?}", data.certificates) }
                                         </div>
@@ -374,25 +369,13 @@ impl Component for Profile {
                                 </div>
                                 <div class="column">
                                     // <h1 class="title">{ title }</h1>
-                                    // <fieldset class="field">
-                                        // <span class="tag is-info is-light">{
-                                        //     match &self.profile {
-                                        //         Some(user_data) => format!("Last updated: {}", user_data.updated_at),
-                                        //         None => "Not user_data".to_string(),
-                                        //     }
-                                        // }</span>
-                                    // </fieldset>
                                     <div class="card">
-                                      // <div class="card-image">
-                                      //   <figure class="image is-4by3">
-                                      //     <img src="https://bulma.io/images/placeholders/1280x960.png" alt="Placeholder image"/>
-                                      //   </figure>
-                                      // </div>
                                       <div class="card-content">
                                         <div class="media">
                                           <div class="media-left">
                                             <figure class="image is-48x48">
-                                              <img src="https://bulma.io/images/placeholders/96x96.png" alt="Placeholder image"/>
+                                              // <img src="https://bulma.io/images/placeholders/96x96.png" alt="Placeholder image"/>
+                                              <img src={user_data.image_file.download_url.to_string()} alt="Favicon profile"/>
                                             </figure>
                                           </div>
                                           <div class="media-content">
@@ -433,38 +416,28 @@ impl Component for Profile {
                                           </div>
                                         </div>
 
-                                        <div class="content">
+                                        <div id="description" class="content">
                                             { format!("{}", user_data.description) }
                                         </div>
 
                                         <div class="content">
-                                            // { format!("{}", user_data.description) }
-                                            { format!("Position: {}", user_data.position.to_string()) }
+                                            <span id="position">
+                                              <i class="fas fa-briefcase"></i>
+                                              { format!("Position: {}", user_data.position.to_string()) }
+                                            </span>
                                             <br/>
-                                            { format!("Region: {}", user_data.region.region.to_string()) }
+                                            <span id="region">
+                                              <i class="fas fa-map-marker-alt"></i>
+                                              { format!("Region: {}", user_data.region.region.to_string()) }
+                                            </span>
                                             <br/>
-                                            { format!("Working software: {}", user_data.program.name.to_string()) }
+                                            <span id="program">
+                                              <i class="fab fa-uncharted"></i>
+                                              { format!("Working software: {}", user_data.program.name.to_string()) }
+                                            </span>
                                             // <br/>
                                             // { format!("{:#?}", user_data.certificates) }
                                         </div>
-
-                                        // <footer class="card-footer">
-                                        //     <p class="card-footer-item">
-                                        //       <span>
-                                        //         { format!("Position: {}", user_data.position.to_string()) }
-                                        //       </span>
-                                        //     </p>
-                                        //     <p class="card-footer-item">
-                                        //       <span>
-                                        //         { format!("Region: {}", user_data.region.region.to_string()) }
-                                        //       </span>
-                                        //     </p>
-                                        //     <p class="card-footer-item">
-                                        //       <span>
-                                        //         { format!("Working software: {}", user_data.program.name.to_string()) }
-                                        //       </span>
-                                        //     </p>
-                                        // </footer>
                                       </div>
                                     </div>
                                 </div>
