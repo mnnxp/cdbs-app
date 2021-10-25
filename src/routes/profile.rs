@@ -18,7 +18,7 @@ use crate::fragments::list_errors::ListErrors;
 // use crate::routes::AppRoute;
 use crate::services::{is_authenticated, set_token};
 use crate::types::{
-    UUID, SelfUserInfo, SlimUser, Program, Region
+    UUID, SelfUserInfo, UserInfo, SlimUser, Program, Region
 };
 
 #[derive(GraphQLQuery)]
@@ -37,10 +37,28 @@ struct GetSelfDataOpt;
 )]
 struct GetSelfData;
 
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/user.graphql",
+    response_derives = "Debug"
+)]
+struct GetUserDataOpt;
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/user.graphql",
+    response_derives = "Debug"
+)]
+struct GetUserData;
+
 /// Profile user with relate data
 pub struct Profile {
     error: Option<Error>,
-    profile: Option<SelfUserInfo>,
+    self_profile: Option<SelfUserInfo>,
+    profile: Option<UserInfo>,
+    // current_profile: String,
     // task: Option<FetchTask>,
     // router_agent: Box<dyn Bridge<RouteAgent>>,
     props: Props,
@@ -51,7 +69,7 @@ pub struct Profile {
 
 #[derive(Properties, Clone)]
 pub struct Props {
-    // pub callback: Callback<()>,
+    // pub current_route: Option<AppRoute>,
     pub username: String,
     pub current_user: Option<SlimUser>,
     // pub tab: ProfileTab,
@@ -61,7 +79,8 @@ pub struct Props {
 pub enum Msg {
     // Follow,
     // UnFollow,
-    GetData(String),
+    GetSelfData(String),
+    GetUserData(String),
     UpdateList(String),
     Ignore,
     Logout,
@@ -83,7 +102,9 @@ impl Component for Profile {
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
         Profile {
             error: None,
+            self_profile: None,
             profile: None,
+            // current_profile: String::new(),
             // task: None,
             // router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             props,
@@ -94,14 +115,50 @@ impl Component for Profile {
     }
 
     fn rendered(&mut self, first_render: bool) {
+        // get username for request user data
+        let target_username = self.props.username.to_string();
+
+        // check get self data
+        let get_self = matches!(
+            &self.props.current_user,
+            Some(cu) if cu.username == target_username
+        );
+
         let link = self.link.clone();
+
+        // // if open profile different with new
+        // let change_profile = matches!(
+        //     &self.props.current_user,
+        //     Some(cu) if cu.username != self.current_profile
+        // );
+
         if first_render && is_authenticated() {
+            // // update current_profile
+            // if let Some(cp) = &self.props.current_user {
+            //     self.current_profile = cp.username.to_string();
+            // }
+
             spawn_local(async move {
-                let res = make_query(
-                    GetSelfDataOpt::build_query(get_self_data_opt::Variables)
-                ).await.unwrap();
-                link.send_message(Msg::GetData(res.clone()));
-                link.send_message(Msg::UpdateList(res));
+                match get_self {
+                    true => {
+                        let res = make_query(
+                            GetSelfDataOpt::build_query(get_self_data_opt::Variables)
+                        ).await.unwrap();
+
+                        link.send_message(Msg::GetSelfData(res.clone()));
+                        link.send_message(Msg::UpdateList(res));
+                    },
+                    false => {
+                        let res = make_query(
+                            GetUserDataOpt::build_query(get_user_data_opt::Variables {
+                                username: Some(target_username),
+                            })
+                        ).await.unwrap();
+
+                        link.send_message(Msg::GetUserData(res.clone()));
+                        link.send_message(Msg::UpdateList(res));
+                    },
+                }
             })
         }
     }
@@ -110,13 +167,34 @@ impl Component for Profile {
         // let link = self.link.clone();
 
         match msg {
-            Msg::GetData(res) => {
+            Msg::GetSelfData(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
+                let res_value = data.as_object().unwrap().get("data").unwrap();
 
-                match res.is_null() {
+                // clean profile data if get self user data
+                self.profile = None;
+
+                match res_value.is_null() {
                     false => {
-                        let user_data: SelfUserInfo = serde_json::from_value(res.get("selfData").unwrap().clone()).unwrap();
+                        let self_data: SelfUserInfo = serde_json::from_value(res_value.get("selfData").unwrap().clone()).unwrap();
+                        ConsoleService::info(format!("User self data: {:?}", self_data).as_ref());
+                        self.self_profile = Some(self_data);
+                    },
+                    true => {
+                        self.error = Some(get_error(&data));
+                    },
+                }
+            },
+            Msg::GetUserData(res) => {
+                let data: Value = serde_json::from_str(res.as_str()).unwrap();
+                let res_value = data.as_object().unwrap().get("data").unwrap();
+
+                // clean sef data if get data other user
+                self.self_profile = None;
+
+                match res_value.is_null() {
+                    false => {
+                        let user_data: UserInfo = serde_json::from_value(res_value.get("user").unwrap().clone()).unwrap();
                         ConsoleService::info(format!("User data: {:?}", user_data).as_ref());
                         self.profile = Some(user_data);
                     },
@@ -136,12 +214,20 @@ impl Component for Profile {
             },
             Msg::UpdateList(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-                self.regions =
-                    serde_json::from_value(res.get("regions").unwrap().clone()).unwrap();
-                self.programs =
-                    serde_json::from_value(res.get("programs").unwrap().clone()).unwrap();
-                ConsoleService::info(format!("Update: {:?}", self.programs).as_ref());
+                let res_value = data.as_object().unwrap().get("data").unwrap();
+
+                match res_value.is_null() {
+                    false => {
+                        self.regions =
+                            serde_json::from_value(res_value.get("regions").unwrap().clone()).unwrap();
+                        self.programs =
+                            serde_json::from_value(res_value.get("programs").unwrap().clone()).unwrap();
+                        ConsoleService::info(format!("Update: {:?}", self.programs).as_ref());
+                    },
+                    true => {
+                        self.error = Some(get_error(&data));
+                    },
+                }
             },
         }
         true
@@ -162,8 +248,8 @@ impl Component for Profile {
         //     None => "Not data".to_string(),
         // };
 
-        match &self.profile {
-            Some(data) => html! {
+        match (&self.self_profile, &self.profile) {
+            (Some(self_data), _) => html! {
                 <div class="profile-page">
                     <ListErrors error=self.error.clone()/>
                     <div class="container page">
@@ -178,20 +264,6 @@ impl Component for Profile {
                                             <li><a>{"Components"}</a></li>
                                             <li><a>{"Standards"}</a></li>
                                             <li><a>{"Companies"}</a></li>
-                                            // <li><a>{"Certificates"}</a></li>
-                                            // <li><a>{"Balance"}</a></li>
-                                            // <li>
-                                            //     <a class="is-active">{"Metric"}</a>
-                                            //     <ul>
-                                            //         <li><a>{ format!("Subscribers: {}", data.subscribers.to_string()) }</a></li>
-                                            //         <li><a>{ format!("Companies: {}", data.companies_count.to_string()) }</a></li>
-                                            //         <li><a>{ format!("Components: {}", data.components_count.to_string()) }</a></li>
-                                            //         <li><a>{ format!("Favorite companies: {}", data.fav_companies_count.to_string()) }</a></li>
-                                            //         <li><a>{ format!("Favorite components: {}", data.fav_components_count.to_string()) }</a></li>
-                                            //         <li><a>{ format!("Favorite standards: {}", data.fav_standards_count.to_string()) }</a></li>
-                                            //         <li><a>{ format!("Favorite users: {}", data.fav_users_count.to_string()) }</a></li>
-                                            //     </ul>
-                                            // </li>
                                         </ul>
                                     </aside>
                                 </div>
@@ -220,32 +292,39 @@ impl Component for Profile {
                                           </div>
                                           <div class="media-content">
                                             <p class="title is-4">{
-                                                format!("{} {}", data.firstname, data.lastname)
+                                                format!("{} {}", self_data.firstname, self_data.lastname)
                                             }</p>
                                             <p class="subtitle is-6">{
-                                                format!("@{}", data.username)
+                                                format!("@{}", self_data.username)
                                             }</p>
                                           </div>
                                           <div class="media-right">
                                             <p class="subtitle is-6 left">
-                                                { format!("{:.*}", 19, data.updated_at.to_string()) }
+                                                // date formatting for show on page
+                                                { format!("{:.*}", 19, self_data.updated_at.to_string()) }
                                                 <br/>
-                                                { format!("followers: {}", 0) } // todo!(make show followers of data.followers.to_string())
+                                                // for self user data not show button "following"
+                                                <div class="media-right flexBox " >
+                                                    <span class="icon is-small">
+                                                      <i class="fas fa-bookmark"></i>
+                                                      { format!(" {}", self_data.subscribers.to_string()) }
+                                                    </span>
+                                                </div>
                                             </p>
                                           </div>
                                         </div>
 
                                         <div class="content">
-                                            { format!("{}", data.description) }
+                                            { format!("{}", self_data.description) }
                                         </div>
 
                                         <div class="content">
-                                            // { format!("{}", data.description) }
-                                            { format!("Position: {}", data.position.to_string()) }
+                                            // { format!("{}", self_data.description) }
+                                            { format!("Position: {}", self_data.position.to_string()) }
                                             <br/>
-                                            { format!("Region: {}", data.region.region.to_string()) }
+                                            { format!("Region: {}", self_data.region.region.to_string()) }
                                             <br/>
-                                            { format!("Working software: {}", data.program.name.to_string()) }
+                                            { format!("Working software: {}", self_data.program.name.to_string()) }
                                             // <br/>
                                             // { format!("{:#?}", data.certificates) }
                                         </div>
@@ -275,10 +354,128 @@ impl Component for Profile {
                     </div>
                 </div>
             },
-            None => html! {<div>
-                <ListErrors error=self.error.clone()/>
+            (_, Some(user_data)) => html! {
+                <div class="profile-page">
+                    <ListErrors error=self.error.clone()/>
+                    <div class="container page">
+                        <div class="row">
+                            <div class="columns">
+                                <div class="column is-one-quarter">
+                                    <aside class="menu">
+                                        <p class="menu-label">
+                                            {"Profile"}
+                                        </p>
+                                        <ul class="menu-list">
+                                            <li><a>{"Components"}</a></li>
+                                            <li><a>{"Standards"}</a></li>
+                                            <li><a>{"Companies"}</a></li>
+                                        </ul>
+                                    </aside>
+                                </div>
+                                <div class="column">
+                                    // <h1 class="title">{ title }</h1>
+                                    // <fieldset class="field">
+                                        // <span class="tag is-info is-light">{
+                                        //     match &self.profile {
+                                        //         Some(user_data) => format!("Last updated: {}", user_data.updated_at),
+                                        //         None => "Not user_data".to_string(),
+                                        //     }
+                                        // }</span>
+                                    // </fieldset>
+                                    <div class="card">
+                                      // <div class="card-image">
+                                      //   <figure class="image is-4by3">
+                                      //     <img src="https://bulma.io/images/placeholders/1280x960.png" alt="Placeholder image"/>
+                                      //   </figure>
+                                      // </div>
+                                      <div class="card-content">
+                                        <div class="media">
+                                          <div class="media-left">
+                                            <figure class="image is-48x48">
+                                              <img src="https://bulma.io/images/placeholders/96x96.png" alt="Placeholder image"/>
+                                            </figure>
+                                          </div>
+                                          <div class="media-content">
+                                            <p class="title is-4">{
+                                                format!("{} {}", user_data.firstname, user_data.lastname)
+                                            }</p>
+                                            <p class="subtitle is-6">{
+                                                format!("@{}", user_data.username)
+                                            }</p>
+                                          </div>
+                                          <div class="media-right">
+                                            <p class="subtitle is-6 left">
+                                                // date formatting for show on page
+                                                { format!("{:.*}", 19, user_data.updated_at.to_string()) }
+                                                <br/>
+                                                <div class="media-right flexBox " >
+                                                    {
+                                                        match user_data.is_followed {
+                                                            true => html! {
+                                                                <button class="button">
+                                                                  <span class="icon is-small">
+                                                                    <i class="fas fa-bookmark"></i>
+                                                                  </span>
+                                                                </button>
+                                                            },
+                                                            false => html! {
+                                                                <button class="button">
+                                                                  <span class="icon is-small">
+                                                                    <i class="far fa-bookmark"></i>
+                                                                  </span>
+                                                                </button>
+                                                            },
+                                                        }
+                                                    }
+                                                  { format!(" {}", user_data.subscribers.to_string()) }
+                                                </div>
+                                            </p>
+                                          </div>
+                                        </div>
 
-                <h1>{"Not data"}</h1>
+                                        <div class="content">
+                                            { format!("{}", user_data.description) }
+                                        </div>
+
+                                        <div class="content">
+                                            // { format!("{}", user_data.description) }
+                                            { format!("Position: {}", user_data.position.to_string()) }
+                                            <br/>
+                                            { format!("Region: {}", user_data.region.region.to_string()) }
+                                            <br/>
+                                            { format!("Working software: {}", user_data.program.name.to_string()) }
+                                            // <br/>
+                                            // { format!("{:#?}", user_data.certificates) }
+                                        </div>
+
+                                        // <footer class="card-footer">
+                                        //     <p class="card-footer-item">
+                                        //       <span>
+                                        //         { format!("Position: {}", user_data.position.to_string()) }
+                                        //       </span>
+                                        //     </p>
+                                        //     <p class="card-footer-item">
+                                        //       <span>
+                                        //         { format!("Region: {}", user_data.region.region.to_string()) }
+                                        //       </span>
+                                        //     </p>
+                                        //     <p class="card-footer-item">
+                                        //       <span>
+                                        //         { format!("Working software: {}", user_data.program.name.to_string()) }
+                                        //       </span>
+                                        //     </p>
+                                        // </footer>
+                                      </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            },
+            _ => html! {<div>
+                <ListErrors error=self.error.clone()/>
+                // <h1>{"Not data"}</h1>
             </div>},
         }
     }
