@@ -25,7 +25,7 @@ pub struct SelfUserInfo {
     pub is_delete: bool,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
-    pub certificates: Vec<Certificate>, // obj
+    pub certificates: Vec<UserCertificate>, // obj
     pub subscribers: usize,
     pub companies_count: usize,
     pub components_count: usize,
@@ -51,7 +51,7 @@ pub struct UserInfo {
     pub program: Program, // obj
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
-    pub certificates: Vec<Certificate>, // obj
+    pub certificates: Vec<UserCertificate>, // obj
     pub subscribers: usize,
     pub is_followed: bool,
 }
@@ -66,7 +66,7 @@ pub struct ShowUserShort {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct Certificate {
+pub struct UserCertificate {
     pub user_uuid: String,
     pub file: ShowFileForDownload,
     pub description: String,

@@ -14,11 +14,11 @@ use wasm_bindgen_futures::spawn_local;
 use crate::gqls::make_query;
 
 use crate::error::{Error, get_error};
-use crate::fragments::list_errors::ListErrors;
+use crate::fragments::{list_errors::ListErrors, certificate::CertificateCard};
 // use crate::routes::AppRoute;
 use crate::services::{is_authenticated, set_token};
 use crate::types::{
-    UUID, SelfUserInfo, UserInfo, SlimUser, Program, Region
+    UUID, SelfUserInfo, UserInfo, SlimUser, Program, Region, Certificate
 };
 
 #[derive(GraphQLQuery)]
@@ -320,29 +320,31 @@ impl Component for Profile {
                                               <i class="fab fa-uncharted"></i>
                                               { format!("Working software: {}", self_data.program.name.to_string()) }
                                             </span>
-                                            // <br/>
-                                            // { format!("{:#?}", data.certificates) }
                                         </div>
 
-                                        // <footer class="card-footer">
-                                        //     <p class="card-footer-item">
-                                        //       <span>
-                                        //         { format!("Position: {}", data.position.to_string()) }
-                                        //       </span>
-                                        //     </p>
-                                        //     <p class="card-footer-item">
-                                        //       <span>
-                                        //         { format!("Region: {}", data.region.region.to_string()) }
-                                        //       </span>
-                                        //     </p>
-                                        //     <p class="card-footer-item">
-                                        //       <span>
-                                        //         { format!("Working software: {}", data.program.name.to_string()) }
-                                        //       </span>
-                                        //     </p>
-                                        // </footer>
-                                      </div>
+                                        <footer class="card-footer">
+                                            <>{
+                                                match self_data.certificates.is_empty() {
+                                                    true => html!{},
+                                                    false => {
+                                                        html!{
+                                                            // <p class="card-footer-item">
+                                                            <>{
+                                                                for self_data.certificates.iter().map(|cert| {
+                                                                    let view_cert: Certificate = cert.into();
+                                                                    html! {
+                                                                        <CertificateCard certificate = view_cert />
+                                                                    }
+                                                                })
+                                                            }</>
+                                                            // </p>
+                                                        }
+                                                    },
+                                                }
+                                            }</>
+                                        </footer>
                                     </div>
+                                  </div>
                                 </div>
                             </div>
                         </div>
@@ -435,9 +437,29 @@ impl Component for Profile {
                                               <i class="fab fa-uncharted"></i>
                                               { format!("Working software: {}", user_data.program.name.to_string()) }
                                             </span>
-                                            // <br/>
-                                            // { format!("{:#?}", user_data.certificates) }
                                         </div>
+
+                                        <footer class="card-footer">
+                                            <>{
+                                                match user_data.certificates.is_empty() {
+                                                    true => html!{},
+                                                    false => {
+                                                        html!{
+                                                            // <p class="card-footer-item">
+                                                            <>{
+                                                                for user_data.certificates.iter().map(|cert| {
+                                                                    let view_cert: Certificate = cert.into();
+                                                                    html! {
+                                                                        <CertificateCard certificate = view_cert />
+                                                                    }
+                                                                })
+                                                            }</>
+                                                            // </p>
+                                                        }
+                                                    },
+                                                }
+                                            }</>
+                                        </footer>
                                       </div>
                                     </div>
                                 </div>
