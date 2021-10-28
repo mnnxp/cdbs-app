@@ -189,3 +189,11 @@ fragment userFields on ShowUserAndRelatedData {
   subscribers
   isFollowed
 }
+
+mutation AddUserFav($userUuid: String!) {
+  addUserFav(userUuid: $userUuid)
+}
+
+mutation DeleteUserFav($userUuid: String!) {
+  deleteUserFav(userUuid: $userUuid)
+}
