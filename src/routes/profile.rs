@@ -81,6 +81,8 @@ pub struct Profile {
     link: ComponentLink<Self>,
     programs: Vec<Program>,
     regions: Vec<Region>,
+    subscribers: usize,
+    is_followed: bool,
 }
 
 #[derive(Properties, Clone)]
@@ -94,7 +96,9 @@ pub struct Props {
 #[derive(Clone)]
 pub enum Msg {
     Follow,
+    AddFollow(String),
     UnFollow,
+    DelFollow(String),
     GetSelfData(String),
     GetUserData(String),
     UpdateList(String),
@@ -127,6 +131,8 @@ impl Component for Profile {
             link,
             programs: Vec::new(),
             regions: Vec::new(),
+            subscribers: 0,
+            is_followed: false,
         }
     }
 
@@ -184,6 +190,7 @@ impl Component for Profile {
 
         match msg {
             Msg::Follow => {
+                let link = self.link.clone();
                 let user_uuid_string = self.profile.as_ref().unwrap().uuid.to_string();
 
                 spawn_local(async move {
@@ -193,10 +200,29 @@ impl Component for Profile {
                         })
                     ).await.unwrap();
 
-                    // link.send_message(Msg::GetSelfData(res.clone()));
+                    link.send_message(Msg::AddFollow(res.clone()));
                 })
             },
+            Msg::AddFollow(res) => {
+                let data: Value = serde_json::from_str(res.as_str()).unwrap();
+                let res_value = data.as_object().unwrap().get("data").unwrap();
+
+                match res_value.is_null() {
+                    false => {
+                        let result: bool = serde_json::from_value(res_value.get("addUserFav").unwrap().clone()).unwrap();
+
+                        if result {
+                            self.subscribers += 1;
+                            self.is_followed = true;
+                        }
+                    },
+                    true => {
+                        self.error = Some(get_error(&data));
+                    },
+                }
+            },
             Msg::UnFollow => {
+                let link = self.link.clone();
                 let user_uuid_string = self.profile.as_ref().unwrap().uuid.to_string();
 
                 spawn_local(async move {
@@ -206,8 +232,26 @@ impl Component for Profile {
                         })
                     ).await.unwrap();
 
-                    // link.send_message(Msg::GetSelfData(res.clone()));
+                    link.send_message(Msg::DelFollow(res.clone()));
                 })
+            },
+            Msg::DelFollow(res) => {
+                let data: Value = serde_json::from_str(res.as_str()).unwrap();
+                let res_value = data.as_object().unwrap().get("data").unwrap();
+
+                match res_value.is_null() {
+                    false => {
+                        let result: bool = serde_json::from_value(res_value.get("deleteUserFav").unwrap().clone()).unwrap();
+
+                        if result {
+                            self.subscribers -= 1;
+                            self.is_followed = false;
+                        }
+                    },
+                    true => {
+                        self.error = Some(get_error(&data));
+                    },
+                }
             },
             Msg::GetSelfData(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
@@ -220,6 +264,9 @@ impl Component for Profile {
                     false => {
                         let self_data: SelfUserInfo = serde_json::from_value(res_value.get("selfData").unwrap().clone()).unwrap();
                         ConsoleService::info(format!("User self data: {:?}", self_data).as_ref());
+
+                        self.subscribers = self_data.subscribers.to_owned();
+
                         self.self_profile = Some(self_data);
                     },
                     true => {
@@ -238,6 +285,10 @@ impl Component for Profile {
                     false => {
                         let user_data: UserInfo = serde_json::from_value(res_value.get("user").unwrap().clone()).unwrap();
                         ConsoleService::info(format!("User data: {:?}", user_data).as_ref());
+
+                        self.subscribers = user_data.subscribers.to_owned();
+                        self.is_followed = user_data.is_followed.to_owned();
+
                         self.profile = Some(user_data);
                     },
                     true => {
@@ -310,7 +361,7 @@ impl Component for Profile {
                                               self_data.lastname.as_str(),
                                               self_data.username.as_str(),
                                               &self_data.updated_at,
-                                              &self_data.subscribers,
+                                              &self.subscribers,
                                               None,
                                           ) }
                                         </div>
@@ -355,7 +406,7 @@ impl Component for Profile {
                                               user_data.lastname.as_str(),
                                               user_data.username.as_str(),
                                               &user_data.updated_at,
-                                              &user_data.subscribers,
+                                              &self.subscribers,
                                               Some(user_data.is_followed),
                                           ) }
                                         </div>
@@ -441,16 +492,16 @@ impl Profile {
                       {
                           match is_followed {
                               Some(following) => {
-                                let class_fav = if following {
+                                let class_fav = if self.is_followed {
                                     "fas fa-bookmark"
                                 } else {
                                     "far fa-bookmark"
                                 };
 
-                                let onclick = if following {
-                                    self.link.callback(|_| Msg::UnFollow)
-                                } else {
+                                let onclick = if self.is_followed {
                                     self.link.callback(|_| Msg::Follow)
+                                } else {
+                                    self.link.callback(|_| Msg::UnFollow)
                                 };
 
                                 html! {
