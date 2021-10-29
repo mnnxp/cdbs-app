@@ -499,9 +499,9 @@ impl Profile {
                                 };
 
                                 let onclick = if self.is_followed {
-                                    self.link.callback(|_| Msg::Follow)
-                                } else {
                                     self.link.callback(|_| Msg::UnFollow)
+                                } else {
+                                    self.link.callback(|_| Msg::Follow)
                                 };
 
                                 html! {
