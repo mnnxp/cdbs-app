@@ -116,7 +116,7 @@ pub enum Msg {
     GetData(String),
     GetResult(String),
     Ignore,
-    Logout,
+    // Logout,
     UpdateFirstname(String),
     UpdateLastname(String),
     UpdateSecondname(String),
@@ -250,14 +250,14 @@ impl Component for Settings {
                 }
             }
             Msg::Ignore => {}
-            Msg::Logout => {
-                // Clear global token after logged out
-                set_token(None);
-                // Notify app to clear current user info
-                self.props.callback.emit(());
-                // Redirect to home page
-                self.router_agent.send(ChangeRoute(AppRoute::Home.into()));
-            }
+            // Msg::Logout => {
+            //     // Clear global token after logged out
+            //     set_token(None);
+            //     // Notify app to clear current user info
+            //     self.props.callback.emit(());
+            //     // Redirect to home page
+            //     self.router_agent.send(ChangeRoute(AppRoute::Home.into()));
+            // }
             Msg::UpdateEmail(email) => {
                 self.request.email = Some(email);
             },
@@ -352,7 +352,7 @@ impl Component for Settings {
             Msg::RequestUpdateProfile
         });
 
-        let onclick_logout = self.link.callback(|_| Msg::Logout);
+        // let onclick_logout = self.link.callback(|_| Msg::Logout);
 
         html! {
             <div class="settings-page">
@@ -404,13 +404,13 @@ impl Component for Settings {
                             </div>
                         </div>
                     </div>
-                    <hr />
-                    <button
-                        id="logout-button"
-                        class="button"
-                        onclick=onclick_logout >
-                        { "Or click here to logout."}
-                    </button>
+                    // <hr />
+                    // <button
+                    //     id="logout-button"
+                    //     class="button"
+                    //     onclick=onclick_logout >
+                    //     { "Or click here to logout."}
+                    // </button>
                 </div>
             </div>
           </div>
