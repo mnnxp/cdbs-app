@@ -27,7 +27,7 @@ use crate::types::{
     query_path = "./graphql/user.graphql",
     response_derives = "Debug"
 )]
-struct GetSelfDataOpt;
+struct GetSettingDataOpt;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -160,7 +160,7 @@ impl Component for Settings {
         if first_render && is_authenticated() {
             spawn_local(async move {
                 let res = make_query(
-                    GetSelfDataOpt::build_query(get_self_data_opt::Variables)
+                    GetSettingDataOpt::build_query(get_setting_data_opt::Variables)
                 ).await.unwrap();
                 link.send_message(Msg::GetData(res.clone()));
                 link.send_message(Msg::UpdateList(res));
@@ -471,6 +471,7 @@ impl Settings {
                     </a></li>
                     // <li><a>{"Notification"}</a></li>
                     // <li><a>{"Billing"}</a></li>
+                    // <li><a>{"Close account"}</a></li>
                 </ul>
             </aside>
         }

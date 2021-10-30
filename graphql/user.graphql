@@ -29,8 +29,35 @@ query GetSelfDataOpt {
   }
 }
 
+query GetSettingDataOpt {
+  selfData {
+    ...selfUserFields
+  }
+
+  programs {
+    id
+    name
+  }
+
+  regions {
+    regionId
+    langId
+    region
+  }
+
+
+}
+
 mutation UserUpdate($data: IptUpdateUserData!) {
   putUserUpdate(data: $data)
+}
+
+mutation updatePassword($data: IptUpdatePassword!) {
+  putUpdatePassword(data: $data)
+}
+
+mutation changeTypeAccessUser($newTypeAccess: Int!) {
+  changeTypeAccessUser(newTypeAccess: $newTypeAccess)
 }
 
 fragment selfUserFields on UserAndRelatedData {
