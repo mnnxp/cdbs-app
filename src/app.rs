@@ -113,7 +113,7 @@ impl Component for App {
 
         html! {
             <>
-                <Header current_user=self.current_user.clone()/>
+                <Header current_user=self.current_user.clone() callback=callback_logout.clone() />
                 {
                     // Routes to render sub components
                     if let Some(route) = &self.current_route {

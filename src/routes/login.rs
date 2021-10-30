@@ -98,7 +98,8 @@ impl Component for Login {
                     props.callback.emit(user);
                     router_agent.lock().unwrap().send(ChangeRoute(AppRoute::Home.into()));
                 });
-                ConsoleService::info(format!("{}", get_token().unwrap()).as_ref());
+                // ConsoleService::info(format!("{}", get_token().unwrap()).as_ref());
+                crate::yewLog!(get_token().unwrap());
             }
             Msg::Response(Err(err)) => {
                 self.error = Some(err);

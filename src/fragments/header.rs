@@ -1,11 +1,17 @@
-use yew::{html, Component, ComponentLink, Html, Properties, ShouldRender};
-use yew_router::prelude::*;
+use yew::{
+  agent::Bridged, html, Bridge, Callback, Component, ComponentLink,
+  FocusEvent, MouseEvent, Html, InputData, ChangeData, Properties, ShouldRender,
+};
+use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
+use crate::services::{is_authenticated, set_token};
 
 use crate::routes::AppRoute;
 use crate::types::SlimUser;
 
 pub struct Header {
     props: Props,
+    router_agent: Box<dyn Bridge<RouteAgent>>,
+    link: ComponentLink<Self>,
 }
 
 #[derive(Clone)]
@@ -17,20 +23,36 @@ pub struct NavMenu {
 #[derive(Properties, Clone)]
 pub struct Props {
     pub current_user: Option<SlimUser>,
+    pub callback: Callback<()>,
     // pub nav_menu: Vec<NavMenu>,
 }
 
-pub enum Msg {}
+pub enum Msg {
+  Logout,
+  Ignore
+}
 
 impl Component for Header {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, _: ComponentLink<Self>) -> Self {
-        Header { props }
+    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+        Header { props, router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)), link}
     }
 
-    fn update(&mut self, _msg: Self::Message) -> ShouldRender {
+    fn update(&mut self, msg: Self::Message) -> ShouldRender {
+        match msg { 
+          Msg::Logout => {
+              // Clear global token after logged out
+              set_token(None);
+              // Notify app to clear current user info
+              self.props.callback.emit(());
+              // Redirect to home page
+              self.router_agent.send(ChangeRoute(AppRoute::Home.into()));
+          },
+          Msg::Ignore => {}
+        }
+
         true
     }
 
@@ -54,6 +76,8 @@ impl Component for Header {
                 route: AppRoute::Home,
             },
         ];
+
+        let onclick = self.link.callback(|_| Msg::Logout);
 
         html! {
             <nav class="navbar" role="navigation" aria-label="main navigation">
@@ -98,7 +122,7 @@ impl Component for Header {
                     <div class="navbar-end">
                     {
                         if let Some(user_info) = &self.props.current_user {
-                            self.logged_in_view(&user_info)
+                            self.logged_in_view(&user_info, onclick)
                         } else {
                             self.logged_out_view()
                         }
@@ -124,18 +148,35 @@ impl Header {
         }
     }
 
-    fn logged_in_view(
-        &self,
-        user_info: &SlimUser
-    ) -> Html {
+    fn logged_in_view(&self, user_info: &SlimUser, logout:yew::Callback<MouseEvent> ) -> Html {
         html! {
             <div class="buttons">
                  <RouterAnchor<AppRoute> route=AppRoute::Settings classes="button">
                   { "Settings" }
                  </RouterAnchor<AppRoute>>
-                 <RouterAnchor<AppRoute> route=AppRoute::Profile(user_info.username.clone())  classes="button">
-                  { &user_info.username }
-                 </RouterAnchor<AppRoute>>
+                 <div class="dropdown is-hoverable  is-right">
+                  <div class="dropdown-trigger">
+                    <button class="button" aria-haspopup="true" aria-controls="dropdown-menu">
+                      <span>{ &user_info.username }</span>
+                      <span class="icon is-small">
+                        <i class="fas fa-angle-down" aria-hidden="true"></i>
+                      </span>
+                    </button>
+                  </div>
+                  <div class="dropdown-menu" id="dropdown-menu" role="menu">
+                    <div class="dropdown-content">
+                      <RouterAnchor<AppRoute> route=AppRoute::Profile(user_info.username.clone()) >
+                        <a class="dropdown-item">
+                          { "profile" }
+                        </a>
+                      </RouterAnchor<AppRoute>>
+                      <hr class="dropdown-divider" />
+                      <a class="dropdown-item" onclick=logout >
+                        {"logout"}
+                      </a>
+                    </div>
+                  </div>
+                </div>
             </div>
         }
     }

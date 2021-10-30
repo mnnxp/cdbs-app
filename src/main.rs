@@ -9,6 +9,7 @@ pub mod routes;
 pub mod services;
 pub mod types;
 pub mod gqls;
+pub mod utils;
 
 // use wasm_bindgen::prelude::*;
 
