@@ -325,46 +325,7 @@ impl Component for Settings {
             Msg::Request
         });
 
-        let oninput_firstname = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateFirstname(ev.value));
-        let oninput_lastname = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateLastname(ev.value));
-        let oninput_secondname = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateSecondname(ev.value));
-        let oninput_username = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateUsername(ev.value));
-        let oninput_email = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateEmail(ev.value));
-        let oninput_description = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateDescription(ev.value));
-        let oninput_position = self
-            .link
-            .callback(|ev: InputData| Msg::UpdatePosition(ev.value));
         let onclick = self.link.callback(|_| Msg::Logout);
-        let oninput_phone = self
-            .link
-            .callback(|ev: InputData| Msg::UpdatePhone(ev.value));
-        let oninput_address = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateAddress(ev.value));
-        let oninput_program_id = self
-            .link
-            .callback(|ev: ChangeData| Msg::UpdateProgramId(match ev {
-              ChangeData::Select(el) => el.value(),
-              _ => "1".to_string(),
-          }));
-        let onchange_region_id = self
-            .link
-            .callback(|ev: ChangeData| Msg::UpdateRegionId(match ev {
-              ChangeData::Select(el) => el.value(),
-              _ => "1".to_string(),
-          }));
 
         html! {
             <div class="settings-page">
@@ -389,197 +350,14 @@ impl Component for Settings {
                                       }
                                      }</span>
                                     <form onsubmit=onsubmit>
-                                    <fieldset class="columns">
-                                        // first column
-                                        <fieldset class="column">
-                                            <fieldset class="field">
-                                                <label class="label">{"Firstname"}</label>
-                                                <input
-                                                    id="firstname"
-                                                    class="input"
-                                                    type="text"
-                                                    placeholder="firstname"
-                                                    value={self.request.firstname
-                                                        .as_ref()
-                                                        .map(|x| x.to_string())
-                                                        .unwrap_or_default()}
-                                                    oninput=oninput_firstname />
-                                            </fieldset>
-                                            <fieldset class="field">
-                                                <label class="label">{"Lastname"}</label>
-                                                <input
-                                                    id="lastname"
-                                                    class="input"
-                                                    type="text"
-                                                    placeholder="lastname"
-                                                    value={self.request.lastname
-                                                        .as_ref()
-                                                        .map(|x| x.to_string())
-                                                        .unwrap_or_default()}
-                                                    oninput=oninput_lastname />
-                                            </fieldset>
-                                            <fieldset class="field">
-                                                <label class="label">{"Secondname"}</label>
-                                                <input
-                                                    id="secondname"
-                                                    class="input"
-                                                    type="text"
-                                                    placeholder="secondname"
-                                                    value={self.request.secondname
-                                                        .as_ref()
-                                                        .map(|x| x.to_string())
-                                                        .unwrap_or_default()}
-                                                    oninput=oninput_secondname />
-                                            </fieldset>
-                                            <fieldset class="field">
-                                                <label class="label">{"Username"}</label>
-                                                <input
-                                                    id="username"
-                                                    class="input"
-                                                    type="text"
-                                                    placeholder="username"
-                                                    value={self.request.username
-                                                        .as_ref()
-                                                        .map(|x| x.to_string())
-                                                        .unwrap_or_default()}
-                                                    oninput=oninput_username />
-                                            </fieldset>
-                                            <fieldset class="field">
-                                                <label class="label">{"Email"}</label>
-                                                <input
-                                                    id="email"
-                                                    class="input"
-                                                    type="email"
-                                                    placeholder="email"
-                                                    value={self.request.email
-                                                        .as_ref()
-                                                        .map(|x| x.to_string())
-                                                        .unwrap_or_default()}
-                                                    oninput=oninput_email />
-                                            </fieldset>
-                                        </fieldset>
-
-                                        // second column
-                                        <fieldset class="column">
-                                            <fieldset class="field">
-                                                <label class="label">{"Description"}</label>
-                                                <textarea
-                                                    id="description"
-                                                    class="input"
-                                                    type="description"
-                                                    placeholder="description"
-                                                    value={self.request.description
-                                                        .as_ref()
-                                                        .map(|x| x.to_string())
-                                                        .unwrap_or_default()}
-                                                    oninput=oninput_description />
-                                            </fieldset>
-                                            <fieldset class="field">
-                                                <label class="label">{"Position"}</label>
-                                                <input
-                                                    id="position"
-                                                    class="input"
-                                                    type="text"
-                                                    placeholder="position"
-                                                    value={self.request.position
-                                                        .as_ref()
-                                                        .map(|x| x.to_string())
-                                                        .unwrap_or_default()}
-                                                    oninput=oninput_position />
-                                            </fieldset>
-                                            <fieldset class="field">
-                                                <label class="label">{"Phone"}</label>
-                                                <input
-                                                    id="phone"
-                                                    class="input"
-                                                    type="text"
-                                                    placeholder="phone"
-                                                    value={self.request.phone
-                                                        .as_ref()
-                                                        .map(|x| x.to_string())
-                                                        .unwrap_or_default()}
-                                                    oninput=oninput_phone />
-                                            </fieldset>
-                                            <fieldset class="field">
-                                                <label class="label">{"Address"}</label>
-                                                <input
-                                                    id="address"
-                                                    class="input"
-                                                    type="text"
-                                                    placeholder="address"
-                                                    value={self.request.address
-                                                        .as_ref()
-                                                        .map(|x| x.to_string())
-                                                        .unwrap_or_default()}
-                                                    oninput=oninput_address />
-                                            </fieldset>
-                                        </fieldset>
-
-                                        // third column
-                                        <fieldset class="column">
-                                            <fieldset class="field">
-                                                <label class="label">{"Program"}</label>
-                                                <div class="control">
-                                                    <div class="select">
-                                                      <select
-                                                          id="program"
-                                                          select={self.request.program_id.unwrap_or_default().to_string()}
-                                                          onchange=oninput_program_id
-                                                          >
-                                                        { for self.programs.iter().map(|x|
-                                                            match self.current_data.as_ref().unwrap().program.id == x.id {
-                                                                true => {
-                                                                    html!{
-                                                                        <option value={x.id.to_string()} selected=true>{&x.name}</option>
-                                                                    }
-                                                                },
-                                                                false => {
-                                                                    html!{
-                                                                        <option value={x.id.to_string()}>{&x.name}</option>
-                                                                    }
-                                                                },
-                                                            }
-                                                        )}
-                                                      </select>
-                                                    </div>
-                                                </div>
-                                            </fieldset>
-                                            <fieldset class="field">
-                                                <label class="label">{"Region"}</label>
-                                                <div class="control">
-                                                    <div class="select">
-                                                      <select
-                                                          id="region"
-                                                          select={self.request.region_id.unwrap_or_default().to_string()}
-                                                          onchange=onchange_region_id
-                                                          >
-                                                        { for self.regions.iter().map(|x|
-                                                            match self.current_data.as_ref().unwrap().region.region_id == x.region_id {
-                                                                true => {
-                                                                    html!{
-                                                                        <option value={x.region_id.to_string()} selected=true>{&x.region}</option>
-                                                                    }
-                                                                },
-                                                                false => {
-                                                                    html!{
-                                                                        <option value={x.region_id.to_string()}>{&x.region}</option>
-                                                                    }
-                                                                },
-                                                            }
-                                                        )}
-                                                      </select>
-                                                    </div>
-                                                </div>
-                                            </fieldset>
-                                        </fieldset>
-                                    </fieldset>
-                                    <button
-                                        id="update-settings"
-                                        class="button"
-                                        type="submit"
-                                        disabled=false>
-                                        { "Update Settings" }
-                                    </button>
+                                        { self.fieldset_profile() }
+                                        <button
+                                            id="update-settings"
+                                            class="button"
+                                            type="submit"
+                                            disabled=false>
+                                            { "Update Settings" }
+                                        </button>
                                     </form>
                                 </div>
                             </div>
@@ -616,6 +394,237 @@ impl Settings {
                     // <li><a>{"Billing"}</a></li>
                 </ul>
             </aside>
+        }
+    }
+
+    fn fieldset_profile(
+        &self
+    ) -> Html {
+        let oninput_firstname = self
+            .link
+            .callback(|ev: InputData| Msg::UpdateFirstname(ev.value));
+        let oninput_lastname = self
+            .link
+            .callback(|ev: InputData| Msg::UpdateLastname(ev.value));
+        let oninput_secondname = self
+            .link
+            .callback(|ev: InputData| Msg::UpdateSecondname(ev.value));
+        let oninput_username = self
+            .link
+            .callback(|ev: InputData| Msg::UpdateUsername(ev.value));
+        let oninput_email = self
+            .link
+            .callback(|ev: InputData| Msg::UpdateEmail(ev.value));
+        let oninput_description = self
+            .link
+            .callback(|ev: InputData| Msg::UpdateDescription(ev.value));
+        let oninput_position = self
+            .link
+            .callback(|ev: InputData| Msg::UpdatePosition(ev.value));
+        let oninput_phone = self
+            .link
+            .callback(|ev: InputData| Msg::UpdatePhone(ev.value));
+        let oninput_address = self
+            .link
+            .callback(|ev: InputData| Msg::UpdateAddress(ev.value));
+        let oninput_program_id = self
+            .link
+            .callback(|ev: ChangeData| Msg::UpdateProgramId(match ev {
+              ChangeData::Select(el) => el.value(),
+              _ => "1".to_string(),
+          }));
+        let onchange_region_id = self
+            .link
+            .callback(|ev: ChangeData| Msg::UpdateRegionId(match ev {
+              ChangeData::Select(el) => el.value(),
+              _ => "1".to_string(),
+          }));
+
+        html! {
+            <fieldset class="columns">
+                // first column
+                <fieldset class="column">
+                    <fieldset class="field">
+                        <label class="label">{"Firstname"}</label>
+                        <input
+                            id="firstname"
+                            class="input"
+                            type="text"
+                            placeholder="firstname"
+                            value={self.request.firstname
+                                .as_ref()
+                                .map(|x| x.to_string())
+                                .unwrap_or_default()}
+                            oninput=oninput_firstname />
+                    </fieldset>
+                    <fieldset class="field">
+                        <label class="label">{"Lastname"}</label>
+                        <input
+                            id="lastname"
+                            class="input"
+                            type="text"
+                            placeholder="lastname"
+                            value={self.request.lastname
+                                .as_ref()
+                                .map(|x| x.to_string())
+                                .unwrap_or_default()}
+                            oninput=oninput_lastname />
+                    </fieldset>
+                    <fieldset class="field">
+                        <label class="label">{"Secondname"}</label>
+                        <input
+                            id="secondname"
+                            class="input"
+                            type="text"
+                            placeholder="secondname"
+                            value={self.request.secondname
+                                .as_ref()
+                                .map(|x| x.to_string())
+                                .unwrap_or_default()}
+                            oninput=oninput_secondname />
+                    </fieldset>
+                    <fieldset class="field">
+                        <label class="label">{"Username"}</label>
+                        <input
+                            id="username"
+                            class="input"
+                            type="text"
+                            placeholder="username"
+                            value={self.request.username
+                                .as_ref()
+                                .map(|x| x.to_string())
+                                .unwrap_or_default()}
+                            oninput=oninput_username />
+                    </fieldset>
+                    <fieldset class="field">
+                        <label class="label">{"Email"}</label>
+                        <input
+                            id="email"
+                            class="input"
+                            type="email"
+                            placeholder="email"
+                            value={self.request.email
+                                .as_ref()
+                                .map(|x| x.to_string())
+                                .unwrap_or_default()}
+                            oninput=oninput_email />
+                    </fieldset>
+                </fieldset>
+
+                // second column
+                <fieldset class="column">
+                    <fieldset class="field">
+                        <label class="label">{"Description"}</label>
+                        <textarea
+                            id="description"
+                            class="input"
+                            type="description"
+                            placeholder="description"
+                            value={self.request.description
+                                .as_ref()
+                                .map(|x| x.to_string())
+                                .unwrap_or_default()}
+                            oninput=oninput_description />
+                    </fieldset>
+                    <fieldset class="field">
+                        <label class="label">{"Position"}</label>
+                        <input
+                            id="position"
+                            class="input"
+                            type="text"
+                            placeholder="position"
+                            value={self.request.position
+                                .as_ref()
+                                .map(|x| x.to_string())
+                                .unwrap_or_default()}
+                            oninput=oninput_position />
+                    </fieldset>
+                    <fieldset class="field">
+                        <label class="label">{"Phone"}</label>
+                        <input
+                            id="phone"
+                            class="input"
+                            type="text"
+                            placeholder="phone"
+                            value={self.request.phone
+                                .as_ref()
+                                .map(|x| x.to_string())
+                                .unwrap_or_default()}
+                            oninput=oninput_phone />
+                    </fieldset>
+                    <fieldset class="field">
+                        <label class="label">{"Address"}</label>
+                        <input
+                            id="address"
+                            class="input"
+                            type="text"
+                            placeholder="address"
+                            value={self.request.address
+                                .as_ref()
+                                .map(|x| x.to_string())
+                                .unwrap_or_default()}
+                            oninput=oninput_address />
+                    </fieldset>
+                </fieldset>
+
+                // third column
+                <fieldset class="column">
+                    <fieldset class="field">
+                        <label class="label">{"Program"}</label>
+                        <div class="control">
+                            <div class="select">
+                              <select
+                                  id="program"
+                                  select={self.request.program_id.unwrap_or_default().to_string()}
+                                  onchange=oninput_program_id
+                                  >
+                                { for self.programs.iter().map(|x|
+                                    match self.current_data.as_ref().unwrap().program.id == x.id {
+                                        true => {
+                                            html!{
+                                                <option value={x.id.to_string()} selected=true>{&x.name}</option>
+                                            }
+                                        },
+                                        false => {
+                                            html!{
+                                                <option value={x.id.to_string()}>{&x.name}</option>
+                                            }
+                                        },
+                                    }
+                                )}
+                              </select>
+                            </div>
+                        </div>
+                    </fieldset>
+                    <fieldset class="field">
+                        <label class="label">{"Region"}</label>
+                        <div class="control">
+                            <div class="select">
+                              <select
+                                  id="region"
+                                  select={self.request.region_id.unwrap_or_default().to_string()}
+                                  onchange=onchange_region_id
+                                  >
+                                { for self.regions.iter().map(|x|
+                                    match self.current_data.as_ref().unwrap().region.region_id == x.region_id {
+                                        true => {
+                                            html!{
+                                                <option value={x.region_id.to_string()} selected=true>{&x.region}</option>
+                                            }
+                                        },
+                                        false => {
+                                            html!{
+                                                <option value={x.region_id.to_string()}>{&x.region}</option>
+                                            }
+                                        },
+                                    }
+                                )}
+                              </select>
+                            </div>
+                        </div>
+                    </fieldset>
+                </fieldset>
+            </fieldset>
         }
     }
 }
