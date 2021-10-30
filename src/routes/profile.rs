@@ -14,12 +14,28 @@ use wasm_bindgen_futures::spawn_local;
 use crate::gqls::make_query;
 
 use crate::error::{Error, get_error};
-use crate::fragments::list_errors::ListErrors;
+use crate::fragments::{list_errors::ListErrors, certificate::CertificateCard};
 // use crate::routes::AppRoute;
 use crate::services::{is_authenticated, set_token};
 use crate::types::{
-    UUID, SelfUserInfo, UserInfo, SlimUser, Program, Region
+    UUID, SelfUserInfo, UserInfo, SlimUser, Program, Region, Certificate, UserCertificate
 };
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/user.graphql",
+    response_derives = "Debug"
+)]
+struct AddUserFav;
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/user.graphql",
+    response_derives = "Debug"
+)]
+struct DeleteUserFav;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -65,6 +81,8 @@ pub struct Profile {
     link: ComponentLink<Self>,
     programs: Vec<Program>,
     regions: Vec<Region>,
+    subscribers: usize,
+    is_followed: bool,
 }
 
 #[derive(Properties, Clone)]
@@ -77,8 +95,10 @@ pub struct Props {
 
 #[derive(Clone)]
 pub enum Msg {
-    // Follow,
-    // UnFollow,
+    Follow,
+    AddFollow(String),
+    UnFollow,
+    DelFollow(String),
     GetSelfData(String),
     GetUserData(String),
     UpdateList(String),
@@ -111,6 +131,8 @@ impl Component for Profile {
             link,
             programs: Vec::new(),
             regions: Vec::new(),
+            subscribers: 0,
+            is_followed: false,
         }
     }
 
@@ -167,6 +189,70 @@ impl Component for Profile {
         // let link = self.link.clone();
 
         match msg {
+            Msg::Follow => {
+                let link = self.link.clone();
+                let user_uuid_string = self.profile.as_ref().unwrap().uuid.to_string();
+
+                spawn_local(async move {
+                    let res = make_query(
+                        AddUserFav::build_query(add_user_fav::Variables {
+                            user_uuid: user_uuid_string,
+                        })
+                    ).await.unwrap();
+
+                    link.send_message(Msg::AddFollow(res.clone()));
+                })
+            },
+            Msg::AddFollow(res) => {
+                let data: Value = serde_json::from_str(res.as_str()).unwrap();
+                let res_value = data.as_object().unwrap().get("data").unwrap();
+
+                match res_value.is_null() {
+                    false => {
+                        let result: bool = serde_json::from_value(res_value.get("addUserFav").unwrap().clone()).unwrap();
+
+                        if result {
+                            self.subscribers += 1;
+                            self.is_followed = true;
+                        }
+                    },
+                    true => {
+                        self.error = Some(get_error(&data));
+                    },
+                }
+            },
+            Msg::UnFollow => {
+                let link = self.link.clone();
+                let user_uuid_string = self.profile.as_ref().unwrap().uuid.to_string();
+
+                spawn_local(async move {
+                    let res = make_query(
+                        DeleteUserFav::build_query(delete_user_fav::Variables {
+                            user_uuid: user_uuid_string,
+                        })
+                    ).await.unwrap();
+
+                    link.send_message(Msg::DelFollow(res.clone()));
+                })
+            },
+            Msg::DelFollow(res) => {
+                let data: Value = serde_json::from_str(res.as_str()).unwrap();
+                let res_value = data.as_object().unwrap().get("data").unwrap();
+
+                match res_value.is_null() {
+                    false => {
+                        let result: bool = serde_json::from_value(res_value.get("deleteUserFav").unwrap().clone()).unwrap();
+
+                        if result {
+                            self.subscribers -= 1;
+                            self.is_followed = false;
+                        }
+                    },
+                    true => {
+                        self.error = Some(get_error(&data));
+                    },
+                }
+            },
             Msg::GetSelfData(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
@@ -178,6 +264,9 @@ impl Component for Profile {
                     false => {
                         let self_data: SelfUserInfo = serde_json::from_value(res_value.get("selfData").unwrap().clone()).unwrap();
                         ConsoleService::info(format!("User self data: {:?}", self_data).as_ref());
+
+                        self.subscribers = self_data.subscribers.to_owned();
+
                         self.self_profile = Some(self_data);
                     },
                     true => {
@@ -196,6 +285,10 @@ impl Component for Profile {
                     false => {
                         let user_data: UserInfo = serde_json::from_value(res_value.get("user").unwrap().clone()).unwrap();
                         ConsoleService::info(format!("User data: {:?}", user_data).as_ref());
+
+                        self.subscribers = user_data.subscribers.to_owned();
+                        self.is_followed = user_data.is_followed.to_owned();
+
                         self.profile = Some(user_data);
                     },
                     true => {
@@ -256,93 +349,37 @@ impl Component for Profile {
                         <div class="row">
                             <div class="columns">
                                 <div class="column is-one-quarter">
-                                    <aside class="menu">
-                                        <p class="menu-label">
-                                            {"Profile"}
-                                        </p>
-                                        <ul class="menu-list">
-                                            <li><a>{"Components"}</a></li>
-                                            <li><a>{"Standards"}</a></li>
-                                            <li><a>{"Companies"}</a></li>
-                                        </ul>
-                                    </aside>
+                                    { self.view_menu() }
                                 </div>
                                 <div class="column">
                                     <div class="card">
                                       <div class="card-content">
                                         <div class="media">
-                                          <div class="media-left">
-                                            <figure class="image is-48x48">
-                                              // <img src="https://bulma.io/images/placeholders/96x96.png" alt="Placeholder image"/>
-                                              <img src={self_data.image_file.download_url.to_string()} alt="Favicon profile"/>
-                                            </figure>
-                                          </div>
-                                          <div class="media-content">
-                                            <p id="title-fl" class="title is-4">{
-                                                format!("{} {}", self_data.firstname, self_data.lastname)
-                                            }</p>
-                                            <p id="subtitle-username" class="subtitle is-6">{
-                                                format!("@{}", self_data.username)
-                                            }</p>
-                                          </div>
-                                          <div class="media-right">
-                                            <p class="subtitle is-6 left">
-                                                // date formatting for show on page
-                                                { format!("{:.*}", 19, self_data.updated_at.to_string()) }
-                                                <br/>
-                                                // for self user data not show button "following"
-                                                <div class="media-right flexBox " >
-                                                    <span class="icon is-small">
-                                                      <i class="fas fa-bookmark"></i>
-                                                      { format!(" {}", self_data.subscribers.to_string()) }
-                                                    </span>
-                                                </div>
-                                            </p>
-                                          </div>
-                                        </div>
-
-                                        <div id="description" class="content">
-                                            { format!("{}", self_data.description) }
+                                          { self.view_card(
+                                              self_data.image_file.download_url.as_str(),
+                                              self_data.firstname.as_str(),
+                                              self_data.lastname.as_str(),
+                                              self_data.username.as_str(),
+                                              &self_data.updated_at,
+                                              &self.subscribers,
+                                              None,
+                                          ) }
                                         </div>
 
                                         <div class="content">
-                                            <span id="position">
-                                              <i class="fas fa-briefcase"></i>
-                                              { format!("Position: {}", self_data.position.to_string()) }
-                                            </span>
-                                            <br/>
-                                            <span id="region">
-                                              <i class="fas fa-map-marker-alt"></i>
-                                              { format!("Region: {}", self_data.region.region.to_string()) }
-                                            </span>
-                                            <br/>
-                                            <span id="program">
-                                              <i class="fab fa-uncharted"></i>
-                                              { format!("Working software: {}", self_data.program.name.to_string()) }
-                                            </span>
-                                            // <br/>
-                                            // { format!("{:#?}", data.certificates) }
+                                            { self.view_content(
+                                                self_data.description.as_str(),
+                                                self_data.position.as_str(),
+                                                self_data.region.region.as_str(),
+                                                self_data.program.name.as_str(),
+                                            ) }
                                         </div>
 
-                                        // <footer class="card-footer">
-                                        //     <p class="card-footer-item">
-                                        //       <span>
-                                        //         { format!("Position: {}", data.position.to_string()) }
-                                        //       </span>
-                                        //     </p>
-                                        //     <p class="card-footer-item">
-                                        //       <span>
-                                        //         { format!("Region: {}", data.region.region.to_string()) }
-                                        //       </span>
-                                        //     </p>
-                                        //     <p class="card-footer-item">
-                                        //       <span>
-                                        //         { format!("Working software: {}", data.program.name.to_string()) }
-                                        //       </span>
-                                        //     </p>
-                                        // </footer>
-                                      </div>
+                                        <footer class="card-footer">
+                                            { self.view_certificates(&self_data.certificates) }
+                                        </footer>
                                     </div>
+                                  </div>
                                 </div>
                             </div>
                         </div>
@@ -356,88 +393,36 @@ impl Component for Profile {
                         <div class="row">
                             <div class="columns">
                                 <div class="column is-one-quarter">
-                                    <aside class="menu">
-                                        <p class="menu-label">
-                                            {"Profile"}
-                                        </p>
-                                        <ul class="menu-list">
-                                            <li><a>{"Components"}</a></li>
-                                            <li><a>{"Standards"}</a></li>
-                                            <li><a>{"Companies"}</a></li>
-                                        </ul>
-                                    </aside>
+                                    { self.view_menu() }
                                 </div>
                                 <div class="column">
                                     // <h1 class="title">{ title }</h1>
                                     <div class="card">
                                       <div class="card-content">
                                         <div class="media">
-                                          <div class="media-left">
-                                            <figure class="image is-48x48">
-                                              // <img src="https://bulma.io/images/placeholders/96x96.png" alt="Placeholder image"/>
-                                              <img src={user_data.image_file.download_url.to_string()} alt="Favicon profile"/>
-                                            </figure>
-                                          </div>
-                                          <div class="media-content">
-                                            <p class="title is-4">{
-                                                format!("{} {}", user_data.firstname, user_data.lastname)
-                                            }</p>
-                                            <p class="subtitle is-6">{
-                                                format!("@{}", user_data.username)
-                                            }</p>
-                                          </div>
-                                          <div class="media-right">
-                                            <p class="subtitle is-6 left">
-                                                // date formatting for show on page
-                                                { format!("{:.*}", 19, user_data.updated_at.to_string()) }
-                                                <br/>
-                                                <div class="media-right flexBox " >
-                                                    {
-                                                        match user_data.is_followed {
-                                                            true => html! {
-                                                                <button class="button">
-                                                                  <span class="icon is-small">
-                                                                    <i class="fas fa-bookmark"></i>
-                                                                  </span>
-                                                                </button>
-                                                            },
-                                                            false => html! {
-                                                                <button class="button">
-                                                                  <span class="icon is-small">
-                                                                    <i class="far fa-bookmark"></i>
-                                                                  </span>
-                                                                </button>
-                                                            },
-                                                        }
-                                                    }
-                                                  { format!(" {}", user_data.subscribers.to_string()) }
-                                                </div>
-                                            </p>
-                                          </div>
-                                        </div>
-
-                                        <div id="description" class="content">
-                                            { format!("{}", user_data.description) }
+                                          { self.view_card(
+                                              user_data.image_file.download_url.as_str(),
+                                              user_data.firstname.as_str(),
+                                              user_data.lastname.as_str(),
+                                              user_data.username.as_str(),
+                                              &user_data.updated_at,
+                                              &self.subscribers,
+                                              Some(user_data.is_followed),
+                                          ) }
                                         </div>
 
                                         <div class="content">
-                                            <span id="position">
-                                              <i class="fas fa-briefcase"></i>
-                                              { format!("Position: {}", user_data.position.to_string()) }
-                                            </span>
-                                            <br/>
-                                            <span id="region">
-                                              <i class="fas fa-map-marker-alt"></i>
-                                              { format!("Region: {}", user_data.region.region.to_string()) }
-                                            </span>
-                                            <br/>
-                                            <span id="program">
-                                              <i class="fab fa-uncharted"></i>
-                                              { format!("Working software: {}", user_data.program.name.to_string()) }
-                                            </span>
-                                            // <br/>
-                                            // { format!("{:#?}", user_data.certificates) }
+                                            { self.view_content(
+                                                user_data.description.as_str(),
+                                                user_data.position.as_str(),
+                                                user_data.region.region.as_str(),
+                                                user_data.program.name.as_str(),
+                                            ) }
                                         </div>
+
+                                        <footer class="card-footer">
+                                            { self.view_certificates(&user_data.certificates) }
+                                        </footer>
                                       </div>
                                     </div>
                                 </div>
@@ -450,6 +435,147 @@ impl Component for Profile {
                 <ListErrors error=self.error.clone()/>
                 // <h1>{"Not data"}</h1>
             </div>},
+        }
+    }
+}
+
+impl Profile {
+    fn view_menu(
+        &self
+    ) -> Html {
+        html! {
+            <aside class="menu">
+                <p class="menu-label">
+                    {"Profile"}
+                </p>
+                <ul class="menu-list">
+                    <li><a>{"Components"}</a></li>
+                    <li><a>{"Standards"}</a></li>
+                    <li><a>{"Companies"}</a></li>
+                </ul>
+            </aside>
+        }
+    }
+
+    fn view_card(
+        &self,
+        image_file: &str,
+        firstname: &str,
+        lastname: &str,
+        username: &str,
+        updated_at: &NaiveDateTime,
+        subscribers: &usize,
+        is_followed: Option<bool>,
+    ) -> Html {
+        html! {<>
+            <div class="media-left">
+              <figure class="image is-48x48">
+                // <img src="https://bulma.io/images/placeholders/96x96.png" alt="Placeholder image"/>
+                <img src={image_file.to_string()} alt="Favicon profile"/>
+              </figure>
+            </div>
+            <div class="media-content">
+              <p id="title-fl" class="title is-4">{
+                  format!("{} {}", firstname, lastname)
+              }</p>
+              <p id="subtitle-username" class="subtitle is-6">{
+                  format!("@{}", username)
+              }</p>
+            </div>
+            <div class="media-right">
+              <p class="subtitle is-6 left">
+                  // date formatting for show on page
+                  { format!("{:.*}", 19, updated_at) }
+                  <br/>
+                  // for self user data not show button "following"
+                  <div class="media-right flexBox " >
+                      {
+                          match is_followed {
+                              Some(following) => {
+                                let class_fav = if self.is_followed {
+                                    "fas fa-bookmark"
+                                } else {
+                                    "far fa-bookmark"
+                                };
+
+                                let onclick = if self.is_followed {
+                                    self.link.callback(|_| Msg::UnFollow)
+                                } else {
+                                    self.link.callback(|_| Msg::Follow)
+                                };
+
+                                html! {
+                                    <button
+                                        id="following-button"
+                                        class="button"
+                                        onclick=onclick >
+                                      <span class="icon is-small">
+                                        <i class={class_fav}></i>
+                                      </span>
+                                    </button>
+                                }
+                            },
+                            None => html! {
+                                // maybe link to setting profile?
+                            },
+                        }
+                      }
+                    { format!(" {}", subscribers.to_string()) }
+                  </div>
+              </p>
+            </div>
+        </>}
+    }
+
+    fn view_content(
+        &self,
+        description: &str,
+        position: &str,
+        region: &str,
+        program: &str,
+    ) -> Html {
+        html! {<>
+            <div id="description" class="content">
+              { format!("{}", description) }
+            </div>
+            <br/>
+            <span id="position">
+              <i class="fas fa-briefcase"></i>
+              { format!("Position: {}", position) }
+            </span>
+            <br/>
+            <span id="region">
+              <i class="fas fa-map-marker-alt"></i>
+              { format!("Region: {}", region) }
+            </span>
+            <br/>
+            <span id="program">
+              <i class="fab fa-uncharted"></i>
+              { format!("Working software: {}", program) }
+            </span>
+        </>}
+    }
+
+    fn view_certificates(
+        &self,
+        certificates: &[UserCertificate],
+    ) -> Html {
+        match certificates.is_empty() {
+            true => html!{},
+            false => {
+                html!{
+                    // <p class="card-footer-item">
+                    <>{
+                        for certificates.iter().map(|cert| {
+                            let view_cert: Certificate = cert.into();
+                            html! {
+                                <CertificateCard certificate = view_cert />
+                            }
+                        })
+                    }</>
+                    // </p>
+                }
+            },
         }
     }
 }

@@ -107,8 +107,8 @@ fragment selfUserFields on UserAndRelatedData {
 }
 
 
-query GetUserData($username: String) {
-  user (username: $username) {
+query GetUserData($userUuid: String, $username: String) {
+  user (userUuid: $userUuid, username: $username) {
     ...userFields
   }
 }
@@ -188,4 +188,12 @@ fragment userFields on ShowUserAndRelatedData {
   }
   subscribers
   isFollowed
+}
+
+mutation AddUserFav($userUuid: String!) {
+  addUserFav(userUuid: $userUuid)
+}
+
+mutation DeleteUserFav($userUuid: String!) {
+  deleteUserFav(userUuid: $userUuid)
 }
