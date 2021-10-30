@@ -1,7 +1,7 @@
 use yew::services::fetch::FetchTask;
 use yew::{
     agent::Bridged, html, Bridge, Callback, Component, ComponentLink,
-    FocusEvent, Html, InputData, ChangeData, Properties, ShouldRender,
+    FocusEvent, MouseEvent, Html, InputData, ChangeData, Properties, ShouldRender,
 };
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
 use chrono::NaiveDateTime;
@@ -80,6 +80,12 @@ impl From<SelfUserInfo> for UserUpdateInfo {
     }
 }
 
+pub enum Menu {
+    Profile,
+    Access,
+    Password,
+}
+
 /// Update settings of the author or logout
 pub struct Settings {
     // auth: Auth,
@@ -94,6 +100,7 @@ pub struct Settings {
     programs: Vec<Program>,
     regions: Vec<Region>,
     get_result: usize,
+    select_menu: Menu,
 }
 
 #[derive(Properties, Clone)]
@@ -102,7 +109,9 @@ pub struct Props {
 }
 
 pub enum Msg {
-    Request,
+    SelectMenu(Menu),
+    RequestUpdateProfile,
+    RequestChangeAccess,
     Response(Result<usize, Error>),
     GetData(String),
     GetResult(String),
@@ -142,6 +151,7 @@ impl Component for Settings {
             programs: Vec::new(),
             regions: Vec::new(),
             get_result: 0,
+            select_menu: Menu::Profile,
         }
     }
 
@@ -162,7 +172,11 @@ impl Component for Settings {
         let link = self.link.clone();
 
         match msg {
-            Msg::Request => {
+            Msg::SelectMenu(value) => {
+                self.select_menu = value;
+                self.rendered(false);
+            },
+            Msg::RequestUpdateProfile => {
                 let request = self.request.clone();
                 spawn_local(async move {
                     let UserUpdateInfo {
@@ -195,6 +209,19 @@ impl Component for Settings {
                     };
                     let res = make_query(UserUpdate::build_query(user_update::Variables { data })).await;
                     link.send_message(Msg::GetResult(res.unwrap()));
+                })
+            }
+            Msg::RequestChangeAccess => {
+                let request = self.request.clone();
+                spawn_local(async move {
+                    // let UserUpdateInfo {
+                    //     ..
+                    // } = request;
+                    // let data = user_update::IptUpdateUserData {
+                    //     ..
+                    // };
+                    // let res = make_query(UserUpdate::build_query(user_update::Variables { data })).await;
+                    // link.send_message(Msg::GetResult(res.unwrap()));
                 })
             }
             Msg::Response(Ok(_)) => {
@@ -320,12 +347,12 @@ impl Component for Settings {
     }
 
     fn view(&self) -> Html {
-        let onsubmit = self.link.callback(|ev: FocusEvent| {
+        let onsubmit_update_profile = self.link.callback(|ev: FocusEvent| {
             ev.prevent_default();
-            Msg::Request
+            Msg::RequestUpdateProfile
         });
 
-        let onclick = self.link.callback(|_| Msg::Logout);
+        let onclick_logout = self.link.callback(|_| Msg::Logout);
 
         html! {
             <div class="settings-page">
@@ -340,25 +367,39 @@ impl Component for Settings {
                             <div class="column">
                                 <div class="card">
                                   <div class="card-content">
-                                     <span class="tag is-info is-light">
-                                      { format!("Updated rows: {}", self.get_result.clone()) }
-                                     </span>
-                                     <span class="tag is-info is-light">{
+                                    <span class="tag is-info is-light">{
                                       match &self.current_data {
                                           Some(data) => format!("Last updated: {}", data.updated_at),
                                           None => "Not data".to_string(),
                                       }
-                                     }</span>
-                                    <form onsubmit=onsubmit>
-                                        { self.fieldset_profile() }
-                                        <button
-                                            id="update-settings"
-                                            class="button"
-                                            type="submit"
-                                            disabled=false>
-                                            { "Update Settings" }
-                                        </button>
-                                    </form>
+                                    }</span>
+
+                                    {match self.select_menu {
+                                        Menu::Profile => html! {<>
+                                            // Show interface for change profile data
+                                            <span class="tag is-info is-light">
+                                              { format!("Updated rows: {}", self.get_result.clone()) }
+                                            </span>
+                                            <form onsubmit=onsubmit_update_profile>
+                                                { self.fieldset_profile() }
+                                                <button
+                                                    id="update-settings"
+                                                    class="button"
+                                                    type="submit"
+                                                    disabled=false>
+                                                    { "Update Settings" }
+                                                </button>
+                                            </form>
+                                        </>},
+                                        // Show interface for change access
+                                        Menu::Access => html! {
+
+                                        },
+                                        // Show interface for change password
+                                        Menu::Password => html! {
+
+                                        },
+                                    }}
                                 </div>
                             </div>
                         </div>
@@ -367,7 +408,7 @@ impl Component for Settings {
                     <button
                         id="logout-button"
                         class="button"
-                        onclick=onclick >
+                        onclick=onclick_logout >
                         { "Or click here to logout."}
                     </button>
                 </div>
@@ -381,15 +422,53 @@ impl Settings {
     fn view_menu(
         &self
     ) -> Html {
+        let onclick_profile = self.link
+            .callback(|_| Msg::SelectMenu(
+                Menu::Profile
+            ));
+        let onclick_access = self.link
+            .callback(|_| Msg::SelectMenu(
+                Menu::Access
+            ));
+        let onclick_password = self.link
+            .callback(|_| Msg::SelectMenu(
+                Menu::Password
+            ));
+
+        let mut active_profile = "";
+        let mut active_access = "";
+        let mut active_password = "";
+
+        match self.select_menu {
+            Menu::Profile => active_profile = "is-active",
+            Menu::Access => active_access = "is-active",
+            Menu::Password => active_password = "is-active",
+        }
+
         html! {
             <aside class="menu">
                 <p class="menu-label">
                     {"User Settings"}
                 </p>
                 <ul class="menu-list">
-                    <li><a>{"Profile"}</a></li>
-                    <li><a>{"Access"}</a></li>
-                    <li><a>{"Password"}</a></li>
+                    <li><a
+                      id="profile"
+                      class=active_profile
+                      onclick=onclick_profile>
+                        { "Profile" }
+                    </a></li>
+                    <li><a
+                      id="access"
+                      class=active_access
+                      onclick=onclick_access>
+                        { "Access" }
+                    </a></li>
+                    <li><a
+                      id="password"
+                      class=active_password
+                      onclick=onclick_password>
+                        { "Password" }
+                    </a></li>
                     // <li><a>{"Notification"}</a></li>
                     // <li><a>{"Billing"}</a></li>
                 </ul>
