@@ -79,10 +79,7 @@ test('Update user data', async t => {
         .click('#update-settings')
 
         // check count updated rows
-        .expect(Selector('span')
-          .filter('.tag')
-          .filter('.is-info')
-          .filter('.is-light')
+        .expect(Selector('#tag-info-updated-rows')
           .innerText).eql('Updated rows: 10');
 
     await t.click('#update-settings')
@@ -110,9 +107,50 @@ test('Update user data', async t => {
         .click('#update-settings')
 
         // return old data
-        .expect(Selector('span')
-          .filter('.tag')
-          .filter('.is-info')
-          .filter('.is-light')
+        .expect(Selector('#tag-info-updated-rows')
           .innerText).eql('Updated rows: 6');
+
+
+    await t.click('#password');
+    // update password
+    await t
+        .typeText('#old-password', goodPassword)
+        .typeText('#new-password', goodEmail)
+        .click('#update-password')
+
+        // return old data
+        .expect(Selector('#tag-info-updated-pwd')
+          .innerText).eql('Updated password: true');
+
+    // update with not valid password
+    await t
+        .typeText('#old-password', goodPassword, { replace: true })
+        .typeText('#new-password', goodEmail, { replace: true })
+        .click('#update-password')
+        .expect(Selector('div')
+          .filter('.notification')
+          .filter('.is-danger').innerText)
+          .eql('BadRequest: Password is not correct.');
+
+    // update with duplicate password
+    await t
+        .typeText('#old-password', goodEmail, { replace: true })
+        .typeText('#new-password', goodEmail, { replace: true })
+        .click('#update-password')
+        .expect(Selector('#tag-info-updated-pwd')
+          .innerText).eql('Updated password: false');
+
+
+    // return old password
+    await t
+        .typeText('#old-password', goodEmail, { replace: true })
+        .typeText('#new-password', goodPassword, { replace: true })
+        .click('#update-password')
+        .expect(Selector('#tag-info-updated-pwd')
+          .innerText).eql('Updated password: true');
+
+    await t
+        .typeText('#old-password', goodFirstname, { replace: true })
+        .typeText('#new-password', goodLastname, { replace: true })
+        .click('#update-password')
 });

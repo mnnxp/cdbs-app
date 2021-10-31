@@ -434,13 +434,13 @@ impl Component for Settings {
                                     {match self.select_menu {
                                         // Show interface for change profile data
                                         Menu::Profile => html! {<>
-                                            <span class="tag is-info is-light">{
+                                            <span id="tag-info-updated-date" class="tag is-info is-light">{
                                                 match &self.current_data {
                                                     Some(data) => format!("Last updated: {}", data.updated_at),
                                                     None => "Not data".to_string(),
                                                 }
                                             }</span>
-                                            <span class="tag is-info is-light">
+                                            <span id="tag-info-updated-rows" class="tag is-info is-light">
                                                 { format!("Updated rows: {}", self.get_result.clone()) }
                                             </span>
                                             <form onsubmit=onsubmit_update_profile>
@@ -460,7 +460,7 @@ impl Component for Settings {
                                         },
                                         // Show interface for change password
                                         Menu::Password => html! {<>
-                                            <span class="tag is-info is-light">
+                                            <span id="tag-info-updated-pwd" class="tag is-info is-light">
                                               { format!("Updated password: {}", self.get_result_bool.clone()) }
                                             </span>
                                             <form onsubmit=onsubmit_update_password>
@@ -569,7 +569,7 @@ impl Settings {
                     <fieldset class="field">
                         <label class="label">{"Old password"}</label>
                         <input
-                            id="old_password"
+                            id="old-password"
                             class="input"
                             type="password"
                             placeholder="old password"
@@ -579,7 +579,7 @@ impl Settings {
                     <fieldset class="field">
                         <label class="label">{"New password"}</label>
                         <input
-                            id="new_password"
+                            id="new-password"
                             class="input"
                             type="password"
                             placeholder="new password"
