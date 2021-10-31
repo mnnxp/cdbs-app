@@ -272,8 +272,8 @@ impl Component for Settings {
 
                 match res.is_null() {
                     false => {
-                        let result: bool = serde_json::from_value(res.get("UpdatePassword").unwrap().clone()).unwrap();
-                        ConsoleService::info(format!("Update password: {:?}", result).as_ref());
+                        let result: bool = serde_json::from_value(res.get("putUpdatePassword").unwrap().clone()).unwrap();
+                        ConsoleService::info(format!("putUpdatePassword: {:?}", result).as_ref());
                         self.get_result_bool = result;
                     },
                     true => {
@@ -429,18 +429,17 @@ impl Component for Settings {
                             <div class="column">
                                 <div class="card">
                                   <div class="card-content">
-                                    <span class="tag is-info is-light">{
-                                      match &self.current_data {
-                                          Some(data) => format!("Last updated: {}", data.updated_at),
-                                          None => "Not data".to_string(),
-                                      }
-                                    }</span>
-
                                     {match self.select_menu {
                                         // Show interface for change profile data
                                         Menu::Profile => html! {<>
+                                            <span class="tag is-info is-light">{
+                                                match &self.current_data {
+                                                    Some(data) => format!("Last updated: {}", data.updated_at),
+                                                    None => "Not data".to_string(),
+                                                }
+                                            }</span>
                                             <span class="tag is-info is-light">
-                                              { format!("Updated rows: {}", self.get_result.clone()) }
+                                                { format!("Updated rows: {}", self.get_result.clone()) }
                                             </span>
                                             <form onsubmit=onsubmit_update_profile>
                                                 { self.fieldset_profile() }
