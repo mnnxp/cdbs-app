@@ -250,12 +250,12 @@ impl Component for Settings {
                         old_password,
                         new_password,
                     } = request_password;
-                    let data = put_update_password::IptUpdatePassword {
+                    let data_update_pwd = put_update_password::IptUpdatePassword {
                         oldPassword: old_password,
                         newPassword: new_password,
                     };
                     let res = make_query(PutUpdatePassword::build_query(
-                        put_update_password::Variables { data })
+                        put_update_password::Variables { data_update_pwd })
                     ).await;
                     link.send_message(Msg::GetBoolResult(res.unwrap()));
                 })

@@ -52,8 +52,8 @@ mutation UserUpdate($data: IptUpdateUserData!) {
   putUserUpdate(data: $data)
 }
 
-mutation PutUpdatePassword($data: IptUpdatePassword!) {
-  putUpdatePassword(data: $data)
+mutation PutUpdatePassword($dataUpdatePwd: IptUpdatePassword!) {
+  putUpdatePassword(data: $dataUpdatePwd)
 }
 
 mutation changeTypeAccessUser($newTypeAccess: Int!) {
