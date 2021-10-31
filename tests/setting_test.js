@@ -21,6 +21,7 @@ const regionSelect = Selector('#region');
 const regionOption = regionSelect.find('option');
 
 const registerButton = Selector('a').withAttribute('href', '#/register');
+const headerMenuButton = Selector('#header-menu-button');
 const settingButton = Selector('a').withAttribute('href', '#/settings');
 
 const goodFirstname = "Testfirstname";
@@ -65,6 +66,7 @@ test('Update user data', async t => {
         // check route to home
         .expect(Selector('h2').filter('.subtitle').innerText).eql('engineer component supplier');
 
+    await t.click(headerMenuButton)
     // open setting page
     await t.click(settingButton)
 

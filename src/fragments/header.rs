@@ -1,9 +1,10 @@
 use yew::{
   agent::Bridged, html, Bridge, Callback, Component, ComponentLink,
-  FocusEvent, MouseEvent, Html, InputData, ChangeData, Properties, ShouldRender,
+  FocusEvent, MouseEvent, Html, Properties, ShouldRender,
+  // InputData, ChangeData,
 };
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
-use crate::services::{is_authenticated, set_token};
+use crate::services::set_token; // is_authenticated
 
 use crate::routes::AppRoute;
 use crate::types::SlimUser;
@@ -41,7 +42,7 @@ impl Component for Header {
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        match msg { 
+        match msg {
           Msg::Logout => {
               // Clear global token after logged out
               set_token(None);
@@ -151,28 +152,39 @@ impl Header {
     fn logged_in_view(&self, user_info: &SlimUser, logout:yew::Callback<MouseEvent> ) -> Html {
         html! {
             <div class="buttons">
-                 <RouterAnchor<AppRoute> route=AppRoute::Settings classes="button">
-                  { "Settings" }
-                 </RouterAnchor<AppRoute>>
                  <div class="dropdown is-hoverable  is-right">
                   <div class="dropdown-trigger">
-                    <button class="button" aria-haspopup="true" aria-controls="dropdown-menu">
-                      <span>{ &user_info.username }</span>
-                      <span class="icon is-small">
-                        <i class="fas fa-angle-down" aria-hidden="true"></i>
-                      </span>
+                    <button
+                        id="header-menu-button"
+                        class="button"
+                        aria-haspopup="true"
+                        aria-controls="dropdown-menu">
+                          <span>
+                            <RouterAnchor<AppRoute> route=AppRoute::Profile(user_info.username.clone()) >
+                              { &user_info.username }
+                            </RouterAnchor<AppRoute>>
+                          </span>
+                          // <span>{ &user_info.username }</span>
+                          <span class="icon is-small">
+                            <i class="fas fa-angle-down" aria-hidden="true"></i>
+                          </span>
                     </button>
                   </div>
                   <div class="dropdown-menu" id="dropdown-menu" role="menu">
                     <div class="dropdown-content">
                       <RouterAnchor<AppRoute> route=AppRoute::Profile(user_info.username.clone()) >
                         <a class="dropdown-item">
-                          { "profile" }
+                          { "Profile" }
+                        </a>
+                      </RouterAnchor<AppRoute>>
+                      <RouterAnchor<AppRoute> route=AppRoute::Settings>
+                        <a class="dropdown-item">
+                          { "Settings" }
                         </a>
                       </RouterAnchor<AppRoute>>
                       <hr class="dropdown-divider" />
                       <a class="dropdown-item" onclick=logout >
-                        {"logout"}
+                        {"Logout"}
                       </a>
                     </div>
                   </div>
