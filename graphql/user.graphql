@@ -48,8 +48,8 @@ query GetSettingDataOpt {
 
 }
 
-mutation UserUpdate($data: IptUpdateUserData!) {
-  putUserUpdate(data: $data)
+mutation UserUpdate($dataUserUpdate: IptUpdateUserData!) {
+  putUserUpdate(data: $dataUserUpdate)
 }
 
 mutation PutUpdatePassword($dataUpdatePwd: IptUpdatePassword!) {

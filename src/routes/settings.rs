@@ -212,7 +212,7 @@ impl Component for Settings {
                         region_id,
                         program_id,
                     } = request_profile;
-                    let data = user_update::IptUpdateUserData {
+                    let data_user_update = user_update::IptUpdateUserData {
                         email,
                         firstname,
                         lastname,
@@ -226,7 +226,9 @@ impl Component for Settings {
                         regionId: region_id,
                         programId: program_id,
                     };
-                    let res = make_query(UserUpdate::build_query(user_update::Variables { data })).await;
+                    let res = make_query(UserUpdate::build_query(user_update::Variables {
+                        data_user_update
+                    })).await;
                     link.send_message(Msg::GetUpdateProfileResult(res.unwrap()));
                 })
             },
