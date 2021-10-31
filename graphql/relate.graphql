@@ -1,0 +1,11 @@
+query GetTypesAccess($typeAccessIds: [Int!]) {
+  typeAccess(typeAccessIds: $typeAccessIds) {
+    ...typeAccessTransListFileds
+  }
+}
+
+fragment typeAccessTransListFileds on TypeAccessTranslateList {
+  typeAccessId
+  langId
+  name
+}
