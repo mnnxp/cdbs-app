@@ -1,7 +1,7 @@
 use yew::services::fetch::FetchTask;
 use yew::{
     agent::Bridged, html, Bridge, Callback, Component, ComponentLink,
-    FocusEvent, MouseEvent, Html, InputData, ChangeData, Properties, ShouldRender,
+    FocusEvent, Html, InputData, ChangeData, Properties, ShouldRender,
 };
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
 use chrono::NaiveDateTime;
@@ -16,9 +16,10 @@ use crate::gqls::make_query;
 use crate::error::{Error, get_error};
 use crate::fragments::list_errors::ListErrors;
 use crate::routes::AppRoute;
-use crate::services::{is_authenticated, set_token};
+use crate::services::is_authenticated;
 use crate::types::{
-    UUID, UserUpdateInfo, SelfUserInfo, Program, Region
+    UUID, UserUpdateInfo, SelfUserInfo, Program, Region,
+    UpdatePasswordInfo
 };
 
 #[derive(GraphQLQuery)]
@@ -44,6 +45,14 @@ struct GetSelfData;
     response_derives = "Debug"
 )]
 struct UserUpdate;
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/user.graphql",
+    response_derives = "Debug"
+)]
+struct PutUpdatePassword;
 
 /// Get data current user
 impl From<SelfUserInfo> for UserUpdateInfo {
@@ -90,7 +99,9 @@ pub enum Menu {
 pub struct Settings {
     // auth: Auth,
     error: Option<Error>,
-    request: UserUpdateInfo,
+    request_profile: UserUpdateInfo,
+    // request_access: UserUpdateInfo,
+    request_password: UpdatePasswordInfo,
     // response: Callback<Result<usize, Error>>,
     task: Option<FetchTask>,
     router_agent: Box<dyn Bridge<RouteAgent>>,
@@ -100,6 +111,7 @@ pub struct Settings {
     programs: Vec<Program>,
     regions: Vec<Region>,
     get_result: usize,
+    get_result_bool: bool,
     select_menu: Menu,
 }
 
@@ -112,11 +124,15 @@ pub enum Msg {
     SelectMenu(Menu),
     RequestUpdateProfile,
     RequestChangeAccess,
+    RequestUpdatePassword,
     Response(Result<usize, Error>),
-    GetData(String),
-    GetResult(String),
+    GetBoolResult(String),
+    GetUpdateProfileData(String),
+    GetUpdateProfileResult(String),
     Ignore,
     // Logout,
+    UpdateOldPassword(String),
+    UpdateNewPassword(String),
     UpdateFirstname(String),
     UpdateLastname(String),
     UpdateSecondname(String),
@@ -141,7 +157,9 @@ impl Component for Settings {
         Settings {
             // auth: Auth::new(),
             error: None,
-            request: UserUpdateInfo::default(),
+            request_profile: UserUpdateInfo::default(),
+            // request_access: UserUpdateInfo::default(),
+            request_password: UpdatePasswordInfo::default(),
             // response: link.callback(Msg::Response),
             task: None,
             router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
@@ -151,6 +169,7 @@ impl Component for Settings {
             programs: Vec::new(),
             regions: Vec::new(),
             get_result: 0,
+            get_result_bool: false,
             select_menu: Menu::Profile,
         }
     }
@@ -162,7 +181,7 @@ impl Component for Settings {
                 let res = make_query(
                     GetSettingDataOpt::build_query(get_setting_data_opt::Variables)
                 ).await.unwrap();
-                link.send_message(Msg::GetData(res.clone()));
+                link.send_message(Msg::GetUpdateProfileData(res.clone()));
                 link.send_message(Msg::UpdateList(res));
             })
         }
@@ -177,7 +196,7 @@ impl Component for Settings {
                 self.rendered(false);
             },
             Msg::RequestUpdateProfile => {
-                let request = self.request.clone();
+                let request_profile = self.request_profile.clone();
                 spawn_local(async move {
                     let UserUpdateInfo {
                         email,
@@ -192,7 +211,7 @@ impl Component for Settings {
                         time_zone,
                         region_id,
                         program_id,
-                    } = request;
+                    } = request_profile;
                     let data = user_update::IptUpdateUserData {
                         email,
                         firstname,
@@ -208,22 +227,60 @@ impl Component for Settings {
                         programId: program_id,
                     };
                     let res = make_query(UserUpdate::build_query(user_update::Variables { data })).await;
-                    link.send_message(Msg::GetResult(res.unwrap()));
+                    link.send_message(Msg::GetUpdateProfileResult(res.unwrap()));
                 })
-            }
+            },
             Msg::RequestChangeAccess => {
-                let request = self.request.clone();
+                let request_profile = self.request_profile.clone();
                 spawn_local(async move {
                     // let UserUpdateInfo {
                     //     ..
-                    // } = request;
+                    // } = request_profile;
                     // let data = user_update::IptUpdateUserData {
                     //     ..
                     // };
                     // let res = make_query(UserUpdate::build_query(user_update::Variables { data })).await;
-                    // link.send_message(Msg::GetResult(res.unwrap()));
+                    // link.send_message(Msg::GetUpdateProfileResult(res.unwrap()));
                 })
-            }
+            },
+            Msg::RequestUpdatePassword => {
+                let request_password = self.request_password.clone();
+                spawn_local(async move {
+                    let UpdatePasswordInfo {
+                        old_password,
+                        new_password,
+                    } = request_password;
+                    let data = put_update_password::IptUpdatePassword {
+                        oldPassword: old_password,
+                        newPassword: new_password,
+                    };
+                    let res = make_query(PutUpdatePassword::build_query(
+                        put_update_password::Variables { data })
+                    ).await;
+                    link.send_message(Msg::GetBoolResult(res.unwrap()));
+                })
+            },
+            Msg::UpdateOldPassword(old_password) => {
+                self.request_password.old_password = old_password;
+            },
+            Msg::UpdateNewPassword(new_password) => {
+                self.request_password.new_password = new_password;
+            },
+            Msg::GetBoolResult(res) => {
+                let data: Value = serde_json::from_str(res.as_str()).unwrap();
+                let res = data.as_object().unwrap().get("data").unwrap();
+
+                match res.is_null() {
+                    false => {
+                        let result: bool = serde_json::from_value(res.get("UpdatePassword").unwrap().clone()).unwrap();
+                        ConsoleService::info(format!("Update password: {:?}", result).as_ref());
+                        self.get_result_bool = result;
+                    },
+                    true => {
+                        link.send_message(Msg::Response(Err(get_error(&data))));
+                    }
+                }
+            },
             Msg::Response(Ok(_)) => {
                 self.error = None;
                 self.task = None;
@@ -233,7 +290,7 @@ impl Component for Settings {
                 self.error = Some(err);
                 self.task = None;
             }
-            Msg::GetData(res) => {
+            Msg::GetUpdateProfileData(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res = data.as_object().unwrap().get("data").unwrap();
 
@@ -242,7 +299,7 @@ impl Component for Settings {
                         let user_data: SelfUserInfo = serde_json::from_value(res.get("selfData").unwrap().clone()).unwrap();
                         ConsoleService::info(format!("User data: {:?}", user_data).as_ref());
                         self.current_data = Some(user_data.clone());
-                        self.request = user_data.into();
+                        self.request_profile = user_data.into();
                     },
                     true => {
                         link.send_message(Msg::Response(Err(get_error(&data))));
@@ -259,41 +316,41 @@ impl Component for Settings {
             //     self.router_agent.send(ChangeRoute(AppRoute::Home.into()));
             // }
             Msg::UpdateEmail(email) => {
-                self.request.email = Some(email);
+                self.request_profile.email = Some(email);
             },
             Msg::UpdateFirstname(firstname) => {
-                self.request.firstname = Some(firstname);
+                self.request_profile.firstname = Some(firstname);
             },
             Msg::UpdateLastname(lastname) => {
-                self.request.lastname = Some(lastname);
+                self.request_profile.lastname = Some(lastname);
             },
             Msg::UpdateSecondname(secondname) => {
-                self.request.secondname = Some(secondname);
+                self.request_profile.secondname = Some(secondname);
             },
             Msg::UpdateUsername(username) => {
-                self.request.username = Some(username);
+                self.request_profile.username = Some(username);
             },
             Msg::UpdatePhone(phone) => {
-                self.request.phone = Some(phone);
+                self.request_profile.phone = Some(phone);
             },
             Msg::UpdateDescription(description) => {
-                self.request.description = Some(description);
+                self.request_profile.description = Some(description);
             },
             Msg::UpdateAddress(address) => {
-                self.request.address = Some(address);
+                self.request_profile.address = Some(address);
             },
             Msg::UpdatePosition(position) => {
-                self.request.position = Some(position);
+                self.request_profile.position = Some(position);
             },
             Msg::UpdateTimeZone(time_zone) => {
-                self.request.time_zone = Some(time_zone);
+                self.request_profile.time_zone = Some(time_zone);
             },
             Msg::UpdateProgramId(program_id) => {
-                self.request.program_id = Some(program_id.parse::<i64>().unwrap_or_default());
+                self.request_profile.program_id = Some(program_id.parse::<i64>().unwrap_or_default());
                 ConsoleService::info(format!("Update: {:?}", program_id).as_ref());
             },
             Msg::UpdateRegionId(region_id) => {
-                self.request.region_id = Some(region_id.parse::<i64>().unwrap_or_default());
+                self.request_profile.region_id = Some(region_id.parse::<i64>().unwrap_or_default());
                 ConsoleService::info(format!("Update: {:?}", region_id).as_ref());
             },
             Msg::UpdateList(res) => {
@@ -312,7 +369,7 @@ impl Component for Settings {
                     },
                 }
             },
-            Msg::GetResult(res) => {
+            Msg::GetUpdateProfileResult(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res = data.as_object().unwrap().get("data").unwrap();
 
@@ -334,7 +391,7 @@ impl Component for Settings {
                     let res = make_query(
                         GetSelfData::build_query(get_self_data::Variables)
                     ).await.unwrap();
-                    link.send_message(Msg::GetData(res));
+                    link.send_message(Msg::GetUpdateProfileData(res));
                 })
             },
         }
@@ -350,6 +407,11 @@ impl Component for Settings {
         let onsubmit_update_profile = self.link.callback(|ev: FocusEvent| {
             ev.prevent_default();
             Msg::RequestUpdateProfile
+        });
+
+        let onsubmit_update_password = self.link.callback(|ev: FocusEvent| {
+            ev.prevent_default();
+            Msg::RequestUpdatePassword
         });
 
         // let onclick_logout = self.link.callback(|_| Msg::Logout);
@@ -375,8 +437,8 @@ impl Component for Settings {
                                     }</span>
 
                                     {match self.select_menu {
+                                        // Show interface for change profile data
                                         Menu::Profile => html! {<>
-                                            // Show interface for change profile data
                                             <span class="tag is-info is-light">
                                               { format!("Updated rows: {}", self.get_result.clone()) }
                                             </span>
@@ -387,7 +449,7 @@ impl Component for Settings {
                                                     class="button"
                                                     type="submit"
                                                     disabled=false>
-                                                    { "Update Settings" }
+                                                    { "Update Profile" }
                                                 </button>
                                             </form>
                                         </>},
@@ -396,9 +458,21 @@ impl Component for Settings {
 
                                         },
                                         // Show interface for change password
-                                        Menu::Password => html! {
-
-                                        },
+                                        Menu::Password => html! {<>
+                                            <span class="tag is-info is-light">
+                                              { format!("Updated password: {}", self.get_result_bool.clone()) }
+                                            </span>
+                                            <form onsubmit=onsubmit_update_password>
+                                                { self.fieldset_password() }
+                                                <button
+                                                    id="update-password"
+                                                    class="button"
+                                                    type="submit"
+                                                    disabled=false>
+                                                    { "Update Password" }
+                                                </button>
+                                            </form>
+                                        </>},
                                     }}
                                 </div>
                             </div>
@@ -477,6 +551,45 @@ impl Settings {
         }
     }
 
+    fn fieldset_password(
+        &self
+    ) -> Html {
+        let oninput_old_password = self
+            .link
+            .callback(|ev: InputData| Msg::UpdateOldPassword(ev.value));
+        let oninput_new_password = self
+            .link
+            .callback(|ev: InputData| Msg::UpdateNewPassword(ev.value));
+
+        html! {
+            <fieldset class="columns">
+                // first column
+                <fieldset class="column">
+                    <fieldset class="field">
+                        <label class="label">{"Old password"}</label>
+                        <input
+                            id="old_password"
+                            class="input"
+                            type="password"
+                            placeholder="old password"
+                            value={self.request_password.old_password.to_string()}
+                            oninput=oninput_old_password />
+                    </fieldset>
+                    <fieldset class="field">
+                        <label class="label">{"New password"}</label>
+                        <input
+                            id="new_password"
+                            class="input"
+                            type="password"
+                            placeholder="new password"
+                            value={self.request_password.new_password.to_string()}
+                            oninput=oninput_new_password />
+                    </fieldset>
+                </fieldset>
+            </fieldset>
+        }
+    }
+
     fn fieldset_profile(
         &self
     ) -> Html {
@@ -531,7 +644,7 @@ impl Settings {
                             class="input"
                             type="text"
                             placeholder="firstname"
-                            value={self.request.firstname
+                            value={self.request_profile.firstname
                                 .as_ref()
                                 .map(|x| x.to_string())
                                 .unwrap_or_default()}
@@ -544,7 +657,7 @@ impl Settings {
                             class="input"
                             type="text"
                             placeholder="lastname"
-                            value={self.request.lastname
+                            value={self.request_profile.lastname
                                 .as_ref()
                                 .map(|x| x.to_string())
                                 .unwrap_or_default()}
@@ -557,7 +670,7 @@ impl Settings {
                             class="input"
                             type="text"
                             placeholder="secondname"
-                            value={self.request.secondname
+                            value={self.request_profile.secondname
                                 .as_ref()
                                 .map(|x| x.to_string())
                                 .unwrap_or_default()}
@@ -570,7 +683,7 @@ impl Settings {
                             class="input"
                             type="text"
                             placeholder="username"
-                            value={self.request.username
+                            value={self.request_profile.username
                                 .as_ref()
                                 .map(|x| x.to_string())
                                 .unwrap_or_default()}
@@ -583,7 +696,7 @@ impl Settings {
                             class="input"
                             type="email"
                             placeholder="email"
-                            value={self.request.email
+                            value={self.request_profile.email
                                 .as_ref()
                                 .map(|x| x.to_string())
                                 .unwrap_or_default()}
@@ -600,7 +713,7 @@ impl Settings {
                             class="input"
                             type="description"
                             placeholder="description"
-                            value={self.request.description
+                            value={self.request_profile.description
                                 .as_ref()
                                 .map(|x| x.to_string())
                                 .unwrap_or_default()}
@@ -613,7 +726,7 @@ impl Settings {
                             class="input"
                             type="text"
                             placeholder="position"
-                            value={self.request.position
+                            value={self.request_profile.position
                                 .as_ref()
                                 .map(|x| x.to_string())
                                 .unwrap_or_default()}
@@ -626,7 +739,7 @@ impl Settings {
                             class="input"
                             type="text"
                             placeholder="phone"
-                            value={self.request.phone
+                            value={self.request_profile.phone
                                 .as_ref()
                                 .map(|x| x.to_string())
                                 .unwrap_or_default()}
@@ -639,7 +752,7 @@ impl Settings {
                             class="input"
                             type="text"
                             placeholder="address"
-                            value={self.request.address
+                            value={self.request_profile.address
                                 .as_ref()
                                 .map(|x| x.to_string())
                                 .unwrap_or_default()}
@@ -655,7 +768,7 @@ impl Settings {
                             <div class="select">
                               <select
                                   id="program"
-                                  select={self.request.program_id.unwrap_or_default().to_string()}
+                                  select={self.request_profile.program_id.unwrap_or_default().to_string()}
                                   onchange=oninput_program_id
                                   >
                                 { for self.programs.iter().map(|x|
@@ -682,7 +795,7 @@ impl Settings {
                             <div class="select">
                               <select
                                   id="region"
-                                  select={self.request.region_id.unwrap_or_default().to_string()}
+                                  select={self.request_profile.region_id.unwrap_or_default().to_string()}
                                   onchange=onchange_region_id
                                   >
                                 { for self.regions.iter().map(|x|

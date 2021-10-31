@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 pub use auth::{
-    LoginInfo, LoginInfoWrapper, RegisterInfo, SlimUser,
+    LoginInfo, LoginInfoWrapper, UpdatePasswordInfo, RegisterInfo, SlimUser,
     UserUpdateInfo, UserToken
 };
 pub use profiles::{SelfUserInfo, UserInfo, UserCertificate};

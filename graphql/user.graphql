@@ -52,7 +52,7 @@ mutation UserUpdate($data: IptUpdateUserData!) {
   putUserUpdate(data: $data)
 }
 
-mutation updatePassword($data: IptUpdatePassword!) {
+mutation PutUpdatePassword($data: IptUpdatePassword!) {
   putUpdatePassword(data: $data)
 }
 

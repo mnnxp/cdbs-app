@@ -15,6 +15,13 @@ pub struct LoginInfoWrapper {
     pub user: LoginInfo,
 }
 
+#[derive(Serialize, Deserialize, Clone, Default, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdatePasswordInfo {
+    pub old_password: String,
+    pub new_password: String,
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 // #[serde(rename_all = "camelCase")]
 pub struct RegisterInfo {
