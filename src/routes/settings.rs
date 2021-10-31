@@ -62,6 +62,14 @@ struct PutUpdatePassword;
 )]
 struct ChangeTypeAccessUser;
 
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/user.graphql",
+    response_derives = "Debug"
+)]
+struct DeleteUserData;
+
 /// Get data current user
 impl From<SelfUserInfo> for UserUpdateInfo {
     fn from(data: SelfUserInfo) -> Self {
@@ -101,6 +109,7 @@ pub enum Menu {
     Profile,
     Access,
     Password,
+    RemoveProfile,
 }
 
 /// Update settings of the author or logout
@@ -110,6 +119,7 @@ pub struct Settings {
     request_profile: UserUpdateInfo,
     request_access: i64,
     request_password: UpdatePasswordInfo,
+    request_user_password: String,
     // response: Callback<Result<usize, Error>>,
     task: Option<FetchTask>,
     router_agent: Box<dyn Bridge<RouteAgent>>,
@@ -122,6 +132,7 @@ pub struct Settings {
     get_result_profile: usize,
     get_result_access: bool,
     get_result_pwd: bool,
+    get_result_remove_profile: bool,
     select_menu: Menu,
 }
 
@@ -135,12 +146,15 @@ pub enum Msg {
     RequestUpdateProfile,
     RequestChangeAccess,
     RequestUpdatePassword,
+    RequestRemoveProfile,
     ResponseError(Error),
     GetUpdateAccessResult(String),
     GetUpdatePwdResult(String),
     GetUpdateProfileData(String),
     GetUpdateProfileResult(String),
+    GetRemoveProfileResult(String),
     Ignore,
+    UpdateUserPassword(String),
     UpdateTypeAccessId(String),
     UpdateOldPassword(String),
     UpdateNewPassword(String),
@@ -183,6 +197,8 @@ impl Component for Settings {
             get_result_profile: 0,
             get_result_access: false,
             get_result_pwd: false,
+            get_result_remove_profile: false,
+            request_user_password: String::new(),
             select_menu: Menu::Profile,
         }
     }
@@ -415,6 +431,37 @@ impl Component for Settings {
                     link.send_message(Msg::GetUpdateProfileData(res));
                 })
             },
+            Msg::RequestRemoveProfile => {
+                let user_password = self.request_user_password.clone();
+                spawn_local(async move {
+                    let res = make_query(DeleteUserData::build_query(
+                        delete_user_data::Variables { user_password })
+                    ).await;
+                    link.send_message(Msg::GetRemoveProfileResult(res.unwrap()));
+                })
+            },
+            Msg::UpdateUserPassword(user_password) => {
+                self.request_user_password = user_password;
+            },
+            Msg::GetRemoveProfileResult(res) => {
+                let data: Value = serde_json::from_str(res.as_str()).unwrap();
+                let res = data.as_object().unwrap().get("data").unwrap();
+
+                match res.is_null() {
+                    false => {
+                        let delete_user: bool =
+                            serde_json::from_value(res.get("deleteUserData").unwrap().clone()).unwrap();
+                        ConsoleService::info(format!("Delete user data: {:?}", delete_user).as_ref());
+                        self.get_result_remove_profile = delete_user;
+                        if delete_user {
+                            self.router_agent.send(ChangeRoute(AppRoute::Home.into()));
+                        }
+                    },
+                    true => {
+                        link.send_message(Msg::ResponseError(get_error(&data)));
+                    }
+                }
+            },
         }
         true
     }
@@ -438,6 +485,11 @@ impl Component for Settings {
         let onsubmit_update_password = self.link.callback(|ev: FocusEvent| {
             ev.prevent_default();
             Msg::RequestUpdatePassword
+        });
+
+        let onsubmit_remove_profile = self.link.callback(|ev: FocusEvent| {
+            ev.prevent_default();
+            Msg::RequestRemoveProfile
         });
 
         // let onclick_logout = self.link.callback(|_| Msg::Logout);
@@ -516,6 +568,27 @@ impl Component for Settings {
                                                 </button>
                                             </form>
                                         </>},
+                                        // Show interface for remove profile
+                                        Menu::RemoveProfile => html! {<>
+                                            <span id="tag-danger-remove-profile" class="tag is-danger is-light">
+                                              { "Warning: this removed all data related with profile, it cannot be canceled!" }
+                                            </span>
+                                            <br/>
+                                            <span id="tag-info-remove-profile" class="tag is-info is-light">
+                                              { format!("Profile delete: {}", self.get_result_remove_profile) }
+                                            </span>
+                                            <br/>
+                                            <form onsubmit=onsubmit_remove_profile>
+                                                { self.fieldset_remove_profile() }
+                                                <button
+                                                    id="button-remove-profile"
+                                                    class="button"
+                                                    type="submit"
+                                                    disabled=false>
+                                                    { "Delete profile data" }
+                                                </button>
+                                            </form>
+                                        </>},
                                     }}
                                 </div>
                             </div>
@@ -551,15 +624,21 @@ impl Settings {
             .callback(|_| Msg::SelectMenu(
                 Menu::Password
             ));
+        let onclick_remove_profile = self.link
+            .callback(|_| Msg::SelectMenu(
+                Menu::RemoveProfile
+            ));
 
         let mut active_profile = "";
         let mut active_access = "";
         let mut active_password = "";
+        let mut active_remove_profile = "";
 
         match self.select_menu {
             Menu::Profile => active_profile = "is-active",
             Menu::Access => active_access = "is-active",
             Menu::Password => active_password = "is-active",
+            Menu::RemoveProfile => active_remove_profile = "is-active",
         }
 
         html! {
@@ -586,6 +665,12 @@ impl Settings {
                       onclick=onclick_password>
                         { "Password" }
                     </a></li>
+                    <li><a
+                      id="remove-profile"
+                      class=active_remove_profile
+                      onclick=onclick_remove_profile>
+                        { "Remove profile" }
+                    </a></li>
                     // <li><a>{"Notification"}</a></li>
                     // <li><a>{"Billing"}</a></li>
                     // <li><a>{"Close account"}</a></li>
@@ -593,7 +678,7 @@ impl Settings {
             </aside>
         }
     }
-    
+
     fn fieldset_access(
         &self
     ) -> Html {
@@ -904,6 +989,32 @@ impl Settings {
                               </select>
                             </div>
                         </div>
+                    </fieldset>
+                </fieldset>
+            </fieldset>
+        }
+    }
+
+    fn fieldset_remove_profile(
+        &self
+    ) -> Html {
+        let oninput_user_password = self
+            .link
+            .callback(|ev: InputData| Msg::UpdateUserPassword(ev.value));
+
+        html! {
+            <fieldset class="columns">
+                // first column
+                <fieldset class="column">
+                    <fieldset class="field">
+                        <label class="label">{"Input your password for confirm delete profile"}</label>
+                        <input
+                            id="user-password"
+                            class="input"
+                            type="password"
+                            placeholder="your password"
+                            value={self.request_user_password.to_string()}
+                            oninput=oninput_user_password />
                     </fieldset>
                 </fieldset>
             </fieldset>

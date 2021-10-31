@@ -233,3 +233,7 @@ mutation AddUserFav($userUuid: String!) {
 mutation DeleteUserFav($userUuid: String!) {
   deleteUserFav(userUuid: $userUuid)
 }
+
+mutation DeleteUserData($UserPassword: String!) {
+  deleteUserData(password: $UserPassword)
+}

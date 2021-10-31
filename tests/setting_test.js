@@ -175,8 +175,20 @@ test('Update user data', async t => {
         .expect(Selector('#tag-info-updated-pwd')
           .innerText).eql('Updated password: true');
 
+
+    await t.click('#remove-profile');
+    // try remove with not valid password
     await t
-        .typeText('#old-password', goodFirstname, { replace: true })
-        .typeText('#new-password', goodLastname, { replace: true })
-        .click('#update-password')
+        .typeText('#user-password', goodEmail)
+        .click('#button-remove-profile')
+        .expect(Selector('#tag-info-remove-profile')
+          .innerText).eql('Profile delete: false');
+
+    // remove profile
+    await t
+        .typeText('#user-password', goodPassword, { replace: true })
+        .click('#button-remove-profile')
+        // check route to home page
+        .expect(Selector('h2').filter('.subtitle').innerText)
+          .eql('engineer component supplier');
 });
