@@ -667,7 +667,7 @@ type MutationRoot {
   putUpdatePassword(data: IptUpdatePassword!): Boolean!
   changeTypeAccessUser(newTypeAccess: Int!): Boolean!
   putUserUpdate(data: IptUpdateUserData!): Int!
-  uploadFavicon(filename: String!): String!
+  uploadFavicon(filename: String!): UploadFile!
   uploadUserCertificate(certData: IptUserCertificateData!): UploadFile!
 
   # Update user certificate description
@@ -828,7 +828,7 @@ type Program {
 
 type QueryRoot {
   users(usersUuids: [UUID!]!): [ShowUserShort!]!
-  user(userUuid: UUID!): ShowUserAndRelatedData!
+  user(userUuid: UUID, username: String): ShowUserAndRelatedData!
   myself: SlimUser!
   selfData: UserAndRelatedData!
   showTokens: [UserToken!]!
@@ -887,6 +887,11 @@ type QueryRoot {
 
   # Presigned URL for download file from storage
   presignedUrl(fileUuid: UUID!): DownloadFile!
+  typesAccess(
+    typeAccessIds: [Int!]
+    limit: Int
+    offset: Int
+  ): [TypeAccessTranslateList!]!
   _service: _Service!
   _entities(representations: [_Any!]!): [_Entity]!
 }
@@ -1140,6 +1145,7 @@ type UserAndRelatedData {
   imageFile: DownloadFile!
   region: RegionTranslateList!
   program: Program!
+  typeAccess: TypeAccessTranslateList!
   isEmailVerified: Boolean!
   isEnabled: Boolean!
   isDelete: Boolean!

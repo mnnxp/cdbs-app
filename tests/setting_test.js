@@ -9,6 +9,12 @@ const programTarget2 = 'DesignSpark Mechanical';
 const programSelect = Selector('#program');
 const programOption = programSelect.find('option');
 
+const typeAccessTarget1 = 'Private';
+const typeAccessTarget2 = 'Protected';
+const typeAccessTarget3 = 'Public';
+const typeAccessSelect = Selector('#types-access');
+const typeAccessOption = typeAccessSelect.find('option');
+
 const regionTarget = 'Chuy valley';
 const regionTarget2 = 'Talas region';
 const regionSelect = Selector('#region');
@@ -110,6 +116,28 @@ test('Update user data', async t => {
         .expect(Selector('#tag-info-updated-rows')
           .innerText).eql('Updated rows: 6');
 
+    await t.click('#access');
+    // change access
+    await t
+        .click(typeAccessSelect)
+        .click(typeAccessOption.withText(typeAccessTarget2))
+        .click('#update-access')
+        .expect(Selector('#tag-info-updated-access')
+          .innerText).eql('Updated access: true');
+
+    await t
+        .click(typeAccessSelect)
+        .click(typeAccessOption.withText(typeAccessTarget2))
+        .click('#update-access')
+        .expect(Selector('#tag-info-updated-access')
+          .innerText).eql('Updated access: false');
+
+    await t
+        .click(typeAccessSelect)
+        .click(typeAccessOption.withText(typeAccessTarget3))
+        .click('#update-access')
+        .expect(Selector('#tag-info-updated-access')
+          .innerText).eql('Updated access: true');
 
     await t.click('#password');
     // update password
@@ -117,8 +145,6 @@ test('Update user data', async t => {
         .typeText('#old-password', goodPassword)
         .typeText('#new-password', goodEmail)
         .click('#update-password')
-
-        // return old data
         .expect(Selector('#tag-info-updated-pwd')
           .innerText).eql('Updated password: true');
 

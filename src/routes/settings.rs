@@ -19,7 +19,7 @@ use crate::routes::AppRoute;
 use crate::services::is_authenticated;
 use crate::types::{
     UUID, UserUpdateInfo, SelfUserInfo, Program, Region,
-    UpdatePasswordInfo
+    UpdatePasswordInfo, TypeAccessTranslateListInfo
 };
 
 #[derive(GraphQLQuery)]
@@ -53,6 +53,14 @@ struct UserUpdate;
     response_derives = "Debug"
 )]
 struct PutUpdatePassword;
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/user.graphql",
+    response_derives = "Debug"
+)]
+struct ChangeTypeAccessUser;
 
 /// Get data current user
 impl From<SelfUserInfo> for UserUpdateInfo {
@@ -100,7 +108,7 @@ pub struct Settings {
     // auth: Auth,
     error: Option<Error>,
     request_profile: UserUpdateInfo,
-    // request_access: UserUpdateInfo,
+    request_access: i64,
     request_password: UpdatePasswordInfo,
     // response: Callback<Result<usize, Error>>,
     task: Option<FetchTask>,
@@ -110,8 +118,10 @@ pub struct Settings {
     current_data: Option<SelfUserInfo>,
     programs: Vec<Program>,
     regions: Vec<Region>,
-    get_result: usize,
-    get_result_bool: bool,
+    types_access: Vec<TypeAccessTranslateListInfo>,
+    get_result_profile: usize,
+    get_result_access: bool,
+    get_result_pwd: bool,
     select_menu: Menu,
 }
 
@@ -125,12 +135,13 @@ pub enum Msg {
     RequestUpdateProfile,
     RequestChangeAccess,
     RequestUpdatePassword,
-    Response(Result<usize, Error>),
-    GetBoolResult(String),
+    ResponseError(Error),
+    GetUpdateAccessResult(String),
+    GetUpdatePwdResult(String),
     GetUpdateProfileData(String),
     GetUpdateProfileResult(String),
     Ignore,
-    // Logout,
+    UpdateTypeAccessId(String),
     UpdateOldPassword(String),
     UpdateNewPassword(String),
     UpdateFirstname(String),
@@ -158,7 +169,7 @@ impl Component for Settings {
             // auth: Auth::new(),
             error: None,
             request_profile: UserUpdateInfo::default(),
-            // request_access: UserUpdateInfo::default(),
+            request_access: 0,
             request_password: UpdatePasswordInfo::default(),
             // response: link.callback(Msg::Response),
             task: None,
@@ -168,8 +179,10 @@ impl Component for Settings {
             current_data: None,
             programs: Vec::new(),
             regions: Vec::new(),
-            get_result: 0,
-            get_result_bool: false,
+            types_access: Vec::new(),
+            get_result_profile: 0,
+            get_result_access: false,
+            get_result_pwd: false,
             select_menu: Menu::Profile,
         }
     }
@@ -233,17 +246,34 @@ impl Component for Settings {
                 })
             },
             Msg::RequestChangeAccess => {
-                let request_profile = self.request_profile.clone();
+                let new_type_access = self.request_access.clone();
                 spawn_local(async move {
-                    // let UserUpdateInfo {
-                    //     ..
-                    // } = request_profile;
-                    // let data = user_update::IptUpdateUserData {
-                    //     ..
-                    // };
-                    // let res = make_query(UserUpdate::build_query(user_update::Variables { data })).await;
-                    // link.send_message(Msg::GetUpdateProfileResult(res.unwrap()));
+                    let res = make_query(ChangeTypeAccessUser::build_query(
+                        change_type_access_user::Variables {
+                            new_type_access,
+                        }
+                    )).await;
+                    link.send_message(Msg::GetUpdateAccessResult(res.unwrap()));
                 })
+            },
+            Msg::UpdateTypeAccessId(type_access_id) => {
+                self.request_access = type_access_id.parse::<i64>().unwrap_or_default();
+                ConsoleService::info(format!("Update: {:?}", type_access_id).as_ref());
+            },
+            Msg::GetUpdateAccessResult(res) => {
+                let data: Value = serde_json::from_str(res.as_str()).unwrap();
+                let res = data.as_object().unwrap().get("data").unwrap();
+
+                match res.is_null() {
+                    false => {
+                        let result: bool = serde_json::from_value(res.get("changeTypeAccessUser").unwrap().clone()).unwrap();
+                        ConsoleService::info(format!("changeTypeAccessUser: {:?}", result).as_ref());
+                        self.get_result_access = result;
+                    },
+                    true => {
+                        link.send_message(Msg::ResponseError(get_error(&data)));
+                    }
+                }
             },
             Msg::RequestUpdatePassword => {
                 let request_password = self.request_password.clone();
@@ -259,7 +289,7 @@ impl Component for Settings {
                     let res = make_query(PutUpdatePassword::build_query(
                         put_update_password::Variables { data_update_pwd })
                     ).await;
-                    link.send_message(Msg::GetBoolResult(res.unwrap()));
+                    link.send_message(Msg::GetUpdatePwdResult(res.unwrap()));
                 })
             },
             Msg::UpdateOldPassword(old_password) => {
@@ -268,7 +298,7 @@ impl Component for Settings {
             Msg::UpdateNewPassword(new_password) => {
                 self.request_password.new_password = new_password;
             },
-            Msg::GetBoolResult(res) => {
+            Msg::GetUpdatePwdResult(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res = data.as_object().unwrap().get("data").unwrap();
 
@@ -276,19 +306,14 @@ impl Component for Settings {
                     false => {
                         let result: bool = serde_json::from_value(res.get("putUpdatePassword").unwrap().clone()).unwrap();
                         ConsoleService::info(format!("putUpdatePassword: {:?}", result).as_ref());
-                        self.get_result_bool = result;
+                        self.get_result_pwd = result;
                     },
                     true => {
-                        link.send_message(Msg::Response(Err(get_error(&data))));
+                        link.send_message(Msg::ResponseError(get_error(&data)));
                     }
                 }
             },
-            Msg::Response(Ok(_)) => {
-                self.error = None;
-                self.task = None;
-                self.router_agent.send(ChangeRoute(AppRoute::Home.into()));
-            }
-            Msg::Response(Err(err)) => {
+            Msg::ResponseError(err) => {
                 self.error = Some(err);
                 self.task = None;
             }
@@ -304,19 +329,11 @@ impl Component for Settings {
                         self.request_profile = user_data.into();
                     },
                     true => {
-                        link.send_message(Msg::Response(Err(get_error(&data))));
+                        link.send_message(Msg::ResponseError(get_error(&data)));
                     }
                 }
             }
             Msg::Ignore => {}
-            // Msg::Logout => {
-            //     // Clear global token after logged out
-            //     set_token(None);
-            //     // Notify app to clear current user info
-            //     self.props.callback.emit(());
-            //     // Redirect to home page
-            //     self.router_agent.send(ChangeRoute(AppRoute::Home.into()));
-            // }
             Msg::UpdateEmail(email) => {
                 self.request_profile.email = Some(email);
             },
@@ -360,11 +377,13 @@ impl Component for Settings {
                 let res_value = data.as_object().unwrap().get("data").unwrap();
                 match res_value.is_null() {
                     false => {
+                        // ConsoleService::info(format!("Result: {:#?}", res_value.clone()).as_ref());
                         self.regions =
                             serde_json::from_value(res_value.get("regions").unwrap().clone()).unwrap();
                         self.programs =
                             serde_json::from_value(res_value.get("programs").unwrap().clone()).unwrap();
-                        ConsoleService::info(format!("Update: {:?}", self.programs).as_ref());
+                        self.types_access =
+                            serde_json::from_value(res_value.get("typesAccess").unwrap().clone()).unwrap();
                     },
                     true => {
                         self.error = Some(get_error(&data));
@@ -380,11 +399,11 @@ impl Component for Settings {
                         let updated_rows: usize =
                             serde_json::from_value(res.get("putUserUpdate").unwrap().clone()).unwrap();
                         ConsoleService::info(format!("Updated rows: {:?}", updated_rows).as_ref());
-                        self.get_result = updated_rows;
+                        self.get_result_profile = updated_rows;
                         link.send_message(Msg::GetCurrentData());
                     },
                     true => {
-                        link.send_message(Msg::Response(Err(get_error(&data))));
+                        link.send_message(Msg::ResponseError(get_error(&data)));
                     }
                 }
             },
@@ -409,6 +428,11 @@ impl Component for Settings {
         let onsubmit_update_profile = self.link.callback(|ev: FocusEvent| {
             ev.prevent_default();
             Msg::RequestUpdateProfile
+        });
+
+        let onsubmit_update_access = self.link.callback(|ev: FocusEvent| {
+            ev.prevent_default();
+            Msg::RequestChangeAccess
         });
 
         let onsubmit_update_password = self.link.callback(|ev: FocusEvent| {
@@ -441,7 +465,7 @@ impl Component for Settings {
                                                 }
                                             }</span>
                                             <span id="tag-info-updated-rows" class="tag is-info is-light">
-                                                { format!("Updated rows: {}", self.get_result.clone()) }
+                                                { format!("Updated rows: {}", self.get_result_profile.clone()) }
                                             </span>
                                             <form onsubmit=onsubmit_update_profile>
                                                 { self.fieldset_profile() }
@@ -455,13 +479,31 @@ impl Component for Settings {
                                             </form>
                                         </>},
                                         // Show interface for change access
-                                        Menu::Access => html! {
+                                        Menu::Access => html! {<>
+                                            <span id="tag-info-updated-access" class="tag is-info is-light">
+                                                { format!("Updated access: {}", self.get_result_access.clone()) }
+                                            </span>
+                                            <form onsubmit=onsubmit_update_access>
+                                                { self.fieldset_access() }
+                                                <button
+                                                    id="update-access"
+                                                    class="button"
+                                                    type="submit"
+                                                    disabled=false>
+                                                    { "Update Profile" }
+                                                </button>
+                                            </form>
 
-                                        },
+                                            // show Tokens
+                                            // update Token
+                                            // get new Token
+                                            // remove Token
+                                            // removed all Tokens
+                                        </>},
                                         // Show interface for change password
                                         Menu::Password => html! {<>
                                             <span id="tag-info-updated-pwd" class="tag is-info is-light">
-                                              { format!("Updated password: {}", self.get_result_bool.clone()) }
+                                              { format!("Updated password: {}", self.get_result_pwd.clone()) }
                                             </span>
                                             <form onsubmit=onsubmit_update_password>
                                                 { self.fieldset_password() }
@@ -549,6 +591,52 @@ impl Settings {
                     // <li><a>{"Close account"}</a></li>
                 </ul>
             </aside>
+        }
+    }
+    
+    fn fieldset_access(
+        &self
+    ) -> Html {
+      let onchange_type_access_id = self
+          .link
+          .callback(|ev: ChangeData| Msg::UpdateTypeAccessId(match ev {
+            ChangeData::Select(el) => el.value(),
+            _ => "1".to_string(),
+        }));
+
+        html! {
+            <fieldset class="columns">
+                // first column
+                <fieldset class="column">
+                    <fieldset class="field">
+                        <label class="label">{"Type Access"}</label>
+                        <div class="control">
+                            <div class="select">
+                              <select
+                                  id="types-access"
+                                  select={self.request_access.to_string()}
+                                  onchange=onchange_type_access_id
+                                  >
+                                { for self.types_access.iter().map(|x|
+                                    match self.current_data.as_ref().unwrap().type_access.type_access_id == x.type_access_id {
+                                        true => {
+                                            html!{
+                                                <option value={x.type_access_id.to_string()} selected=true>{&x.name}</option>
+                                            }
+                                        },
+                                        false => {
+                                            html!{
+                                                <option value={x.type_access_id.to_string()}>{&x.name}</option>
+                                            }
+                                        },
+                                    }
+                                )}
+                              </select>
+                            </div>
+                        </div>
+                    </fieldset>
+                </fieldset>
+            </fieldset>
         }
     }
 

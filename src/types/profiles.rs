@@ -1,7 +1,7 @@
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use super::file::{ShowFileForDownload, DownloadFile};
-use super::relate::{Region, Program};
+use super::relate::{Region, Program, TypeAccessTranslateListInfo};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -20,6 +20,7 @@ pub struct SelfUserInfo {
     pub image_file: DownloadFile, // obj
     pub region: Region, // obj
     pub program: Program, // obj
+    pub type_access: TypeAccessTranslateListInfo, // obj
     pub is_email_verified: bool,
     pub is_enabled: bool,
     pub is_delete: bool,
