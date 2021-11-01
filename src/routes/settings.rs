@@ -1,4 +1,4 @@
-use yew::services::fetch::FetchTask;
+// use yew::services::fetch::FetchTask;
 use yew::{
     agent::Bridged, html, Bridge, Callback, Component, ComponentLink,
     FocusEvent, Html, InputData, ChangeData, Properties, ShouldRender,
@@ -14,12 +14,15 @@ use wasm_bindgen_futures::spawn_local;
 use crate::gqls::make_query;
 
 use crate::error::{Error, get_error};
-use crate::fragments::list_errors::ListErrors;
+use crate::fragments::{
+    list_errors::ListErrors, certificate::CertificateCard
+};
 use crate::routes::AppRoute;
 use crate::services::is_authenticated;
 use crate::types::{
     UUID, UserUpdateInfo, SelfUserInfo, Program, Region,
-    UpdatePasswordInfo, TypeAccessTranslateListInfo
+    UpdatePasswordInfo, TypeAccessTranslateListInfo,
+    Certificate, UserCertificate,
 };
 
 #[derive(GraphQLQuery)]
@@ -107,6 +110,7 @@ impl From<SelfUserInfo> for UserUpdateInfo {
 
 pub enum Menu {
     Profile,
+    Certificates,
     Access,
     Password,
     RemoveProfile,
@@ -121,7 +125,7 @@ pub struct Settings {
     request_password: UpdatePasswordInfo,
     request_user_password: String,
     // response: Callback<Result<usize, Error>>,
-    task: Option<FetchTask>,
+    // task: Option<FetchTask>,
     router_agent: Box<dyn Bridge<RouteAgent>>,
     props: Props,
     link: ComponentLink<Self>,
@@ -185,8 +189,9 @@ impl Component for Settings {
             request_profile: UserUpdateInfo::default(),
             request_access: 0,
             request_password: UpdatePasswordInfo::default(),
+            request_user_password: String::new(),
             // response: link.callback(Msg::Response),
-            task: None,
+            // task: None,
             router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             props,
             link,
@@ -198,7 +203,6 @@ impl Component for Settings {
             get_result_access: false,
             get_result_pwd: false,
             get_result_remove_profile: false,
-            request_user_password: String::new(),
             select_menu: Menu::Profile,
         }
     }
@@ -331,7 +335,7 @@ impl Component for Settings {
             },
             Msg::ResponseError(err) => {
                 self.error = Some(err);
-                self.task = None;
+                // self.task = None;
             }
             Msg::GetUpdateProfileData(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
@@ -530,6 +534,14 @@ impl Component for Settings {
                                                 </button>
                                             </form>
                                         </>},
+                                        // Show interface for add and update Certificates
+                                        Menu::Certificates => html! {<>
+                                            <span id="tag-info-updated-certificates" class="tag is-info is-light">
+                                                // { format!("Updated certificates: {}", self.get_result_certificates.clone()) }
+                                                { "Certificates" }
+                                            </span>
+                                            { self.fieldset_certificates() }
+                                        </>},
                                         // Show interface for change access
                                         Menu::Access => html! {<>
                                             <span id="tag-info-updated-access" class="tag is-info is-light">
@@ -616,6 +628,10 @@ impl Settings {
             .callback(|_| Msg::SelectMenu(
                 Menu::Profile
             ));
+        let onclick_certificates = self.link
+            .callback(|_| Msg::SelectMenu(
+                Menu::Certificates
+            ));
         let onclick_access = self.link
             .callback(|_| Msg::SelectMenu(
                 Menu::Access
@@ -630,12 +646,14 @@ impl Settings {
             ));
 
         let mut active_profile = "";
+        let mut active_certificates = "";
         let mut active_access = "";
         let mut active_password = "";
         let mut active_remove_profile = "";
 
         match self.select_menu {
             Menu::Profile => active_profile = "is-active",
+            Menu::Certificates => active_certificates = "is-active",
             Menu::Access => active_access = "is-active",
             Menu::Password => active_password = "is-active",
             Menu::RemoveProfile => active_remove_profile = "is-active",
@@ -652,6 +670,12 @@ impl Settings {
                       class=active_profile
                       onclick=onclick_profile>
                         { "Profile" }
+                    </a></li>
+                    <li><a
+                      id="certificates"
+                      class=active_certificates
+                      onclick=onclick_certificates>
+                        { "Certificates" }
                     </a></li>
                     <li><a
                       id="access"
@@ -676,6 +700,43 @@ impl Settings {
                     // <li><a>{"Close account"}</a></li>
                 </ul>
             </aside>
+        }
+    }
+
+    fn fieldset_certificates(
+        &self
+    ) -> Html {
+        let mut certificates: &[UserCertificate] = &Vec::new();
+        if let Some(ref data) = self.current_data {
+            certificates = data.certificates.as_ref();
+        };
+
+        match certificates.is_empty() {
+            true => html!{
+                <span id="tag-info-no-certificates" class="tag is-info is-light">
+                    // { format!("Updated certificates: {}", self.get_result_certificates.clone()) }
+                    { "You don't have Certificates" }
+                </span>
+            },
+            false => {
+                html!{
+                    // <p class="card-footer-item">
+                    <>{
+                        for certificates.iter().map(|cert| {
+                            let view_cert: Certificate = cert.into();
+                            html! {
+                                <CertificateCard
+                                    certificate = view_cert
+                                    download_btn = false
+                                    change_btn = true
+                                    company_uuid = None
+                                    />
+                            }
+                        })
+                    }</>
+                    // </p>
+                }
+            },
         }
     }
 

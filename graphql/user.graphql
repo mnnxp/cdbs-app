@@ -234,6 +234,14 @@ mutation DeleteUserFav($userUuid: String!) {
   deleteUserFav(userUuid: $userUuid)
 }
 
+mutation UpdateUserCertificate($updateUserCertData: IptUpdateUserCertificateData!) {
+  updateUserCertificate(data: $updateUserCertData)
+}
+
+mutation DeleteUserCertificate($delUserCertData: DelUserCertificateData!) {
+  deleteUserCertificate(data: $delUserCertData)
+}
+
 mutation DeleteUserData($UserPassword: String!) {
   deleteUserData(password: $UserPassword)
 }

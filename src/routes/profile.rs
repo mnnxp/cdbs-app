@@ -569,7 +569,12 @@ impl Profile {
                         for certificates.iter().map(|cert| {
                             let view_cert: Certificate = cert.into();
                             html! {
-                                <CertificateCard certificate = view_cert />
+                                <CertificateCard
+                                    certificate = view_cert
+                                    download_btn = true
+                                    change_btn = false
+                                    company_uuid = None
+                                 />
                             }
                         })
                     }</>
