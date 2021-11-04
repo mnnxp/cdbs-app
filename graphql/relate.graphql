@@ -1,11 +1,15 @@
 query GetTypesAccess($typeAccessIds: [Int!]) {
-  typeAccess(typeAccessIds: $typeAccessIds) {
-    ...typeAccessTransListFileds
+  typesAccess(typesAccessIds: $typesAccessIds) {
+    ...typesAccessTransListFileds
   }
 }
 
-fragment typeAccessTransListFileds on TypeAccessTranslateList {
+fragment typesAccessTransListFileds on TypeAccessTranslateList {
   typeAccessId
   langId
   name
+}
+
+mutation ConfirmUploadCompleted($fileUuids: [String!]!) {
+  uploadCompleted(fileUuids: $fileUuids)
 }

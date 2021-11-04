@@ -14,7 +14,9 @@ pub use auth::{
     UserUpdateInfo, UserToken
 };
 pub use profiles::{SelfUserInfo, UserInfo, UserCertificate};
-pub use file::ShowFileForDownload;
+pub use file::{
+    ShowFileForDownload, DownloadFile, UploadFile,
+};
 pub use relate::{
     Region, Program, Certificate, TypeAccessTranslateListInfo
 };

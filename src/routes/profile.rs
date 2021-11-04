@@ -492,13 +492,13 @@ impl Profile {
                       {
                           match is_followed {
                               Some(following) => {
-                                let class_fav = if self.is_followed {
+                                let class_fav = if following {
                                     "fas fa-bookmark"
                                 } else {
                                     "far fa-bookmark"
                                 };
 
-                                let onclick = if self.is_followed {
+                                let onclick = if following {
                                     self.link.callback(|_| Msg::UnFollow)
                                 } else {
                                     self.link.callback(|_| Msg::Follow)

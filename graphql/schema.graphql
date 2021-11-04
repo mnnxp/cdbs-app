@@ -839,7 +839,12 @@ type QueryRoot {
   deleteAllTokens: Int!
   logout: String!
   notifications(selectIds: [Int!], limit: Int, offset: Int): [Notification!]!
-  components(componentsUuids: [UUID!]!): [ShowComponentShort!]!
+  components(
+    componentsUuids: [UUID!]
+    favorite: Boolean
+    userUuid: UUID
+    companyUuid: UUID
+  ): [ShowComponentShort!]!
   component(componentUuid: UUID!): ComponentAndRelatedData!
   getCompaniesListAccessComponent(
     componentUuid: UUID!

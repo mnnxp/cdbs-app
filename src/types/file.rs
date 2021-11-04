@@ -24,3 +24,11 @@ pub struct DownloadFile {
     pub filesize: usize,
     pub download_url: String,
 }
+
+#[derive(Serialize, Deserialize, Clone, Default, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct UploadFile {
+    pub file_uuid: String,
+    pub filename: String,
+    pub upload_url: String,
+}

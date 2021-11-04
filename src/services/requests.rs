@@ -158,10 +158,51 @@ impl Requests {
     ) -> FetchTask
     where
         for<'de> T: Deserialize<'de> + 'static + std::fmt::Debug,
-        B: Serialize,
+        B: Serialize + std::fmt::Debug,
     {
+        let handler = move |response: Response<Text>| {
+            if let (meta, Ok(data)) = response.into_parts() {
+                debug!("Response: {:?}", data);
+                if meta.status.is_success() {
+                    let data: Result<T, _> = serde_json::from_str(&data);
+                    if let Ok(data) = data {
+                        callback.emit(Ok(data))
+                    } else {
+                        callback.emit(Err(Error::DeserializeError))
+                    }
+                } else {
+                    match meta.status.as_u16() {
+                        401 => callback.emit(Err(Error::Unauthorized)),
+                        403 => callback.emit(Err(Error::Forbidden)),
+                        404 => callback.emit(Err(Error::NotFound)),
+                        500 => callback.emit(Err(Error::InternalServerError)),
+                        422 => {
+                            let data: Result<ErrorInfo, _> = serde_json::from_str(&data);
+                            if let Ok(data) = data {
+                                callback.emit(Err(Error::UnprocessableEntity(data)))
+                            } else {
+                                callback.emit(Err(Error::DeserializeError))
+                            }
+                        }
+                        _ => callback.emit(Err(Error::RequestError)),
+                    }
+                }
+            } else {
+                callback.emit(Err(Error::RequestError))
+            }
+        };
+
         let body: Text = Json(&body).into();
-        self.builder("PUT", url, body, callback)
+        // self.builder("PUT", url, body, callback)
+        let builder = Request::builder()
+            .method("PUT")
+            .uri(url.as_str())
+            .header("Content-Type", "application/json");
+
+        let request = builder.body(body).unwrap();
+        debug!("Request: {:?}", request);
+
+        FetchService::fetch(request, handler.into()).unwrap()
     }
 }
 

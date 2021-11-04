@@ -15,7 +15,9 @@ use crate::gqls::make_query;
 
 use crate::error::{Error, get_error};
 use crate::fragments::{
-    list_errors::ListErrors, certificate::CertificateCard
+    list_errors::ListErrors,
+    certificate::CertificateCard,
+    add_certificate::AddCertificateCard,
 };
 use crate::routes::AppRoute;
 use crate::services::is_authenticated;
@@ -175,7 +177,7 @@ pub enum Msg {
     UpdateProgramId(String),
     UpdateRegionId(String),
     UpdateList(String),
-    GetCurrentData(),
+    GetCurrentData,
 }
 
 impl Component for Settings {
@@ -420,14 +422,14 @@ impl Component for Settings {
                             serde_json::from_value(res.get("putUserUpdate").unwrap().clone()).unwrap();
                         ConsoleService::info(format!("Updated rows: {:?}", updated_rows).as_ref());
                         self.get_result_profile = updated_rows;
-                        link.send_message(Msg::GetCurrentData());
+                        link.send_message(Msg::GetCurrentData);
                     },
                     true => {
                         link.send_message(Msg::ResponseError(get_error(&data)));
                     }
                 }
             },
-            Msg::GetCurrentData() => {
+            Msg::GetCurrentData => {
                 spawn_local(async move {
                     let res = make_query(
                         GetSelfData::build_query(get_self_data::Variables)
@@ -541,6 +543,8 @@ impl Component for Settings {
                                                 { "Certificates" }
                                             </span>
                                             { self.fieldset_certificates() }
+                                            <br/>
+                                            { self.fieldset_add_certificate() }
                                         </>},
                                         // Show interface for change access
                                         Menu::Access => html! {<>
@@ -713,10 +717,12 @@ impl Settings {
 
         match certificates.is_empty() {
             true => html!{
-                <span id="tag-info-no-certificates" class="tag is-info is-light">
-                    // { format!("Updated certificates: {}", self.get_result_certificates.clone()) }
-                    { "You don't have Certificates" }
-                </span>
+                <div>
+                    <span id="tag-info-no-certificates" class="tag is-info is-light">
+                        // { format!("Updated certificates: {}", self.get_result_certificates.clone()) }
+                        { "You don't have Certificates" }
+                    </span>
+                </div>
             },
             false => {
                 html!{
@@ -737,6 +743,25 @@ impl Settings {
                     // </p>
                 }
             },
+        }
+    }
+
+    fn fieldset_add_certificate(
+        &self
+    ) -> Html {
+        let user_uuid = self.current_data
+            .as_ref()
+            .map(|user| user.uuid.to_string())
+            .unwrap_or_default();
+
+        let callback_upload_cert = self.link.callback(|_| Msg::GetCurrentData);
+
+        html! {
+            <AddCertificateCard
+                user_uuid = Some(user_uuid)
+                company_uuid = None
+                callback=callback_upload_cert
+                />
         }
     }
 

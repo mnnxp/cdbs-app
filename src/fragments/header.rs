@@ -148,12 +148,12 @@ impl Header {
                         class="button"
                         aria-haspopup="true"
                         aria-controls="dropdown-menu">
-                          <span>
-                            <RouterAnchor<AppRoute> route=AppRoute::Profile(user_info.username.clone()) >
-                              { &user_info.username }
-                            </RouterAnchor<AppRoute>>
-                          </span>
-                          // <span>{ &user_info.username }</span>
+                          // <span>
+                          //   <RouterAnchor<AppRoute> route=AppRoute::Profile(user_info.username.clone()) >
+                          //     { &user_info.username }
+                          //   </RouterAnchor<AppRoute>>
+                          // </span>
+                          <span>{ &user_info.username }</span>
                           <span class="icon is-small">
                             <i class="fas fa-angle-down" aria-hidden="true"></i>
                           </span>

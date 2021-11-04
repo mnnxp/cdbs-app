@@ -234,6 +234,18 @@ mutation DeleteUserFav($userUuid: String!) {
   deleteUserFav(userUuid: $userUuid)
 }
 
+mutation UploadUserCertificate($certData: IptUserCertificateData!) {
+  uploadUserCertificate(certData: $certData) {
+    ...uploadUrlFields
+  }
+}
+
+fragment uploadUrlFields on UploadFile {
+  fileUuid
+  filename
+  uploadUrl
+}
+
 mutation UpdateUserCertificate($updateUserCertData: IptUpdateUserCertificateData!) {
   updateUserCertificate(data: $updateUserCertData)
 }
