@@ -164,7 +164,7 @@ impl Requests {
         self.builder("PUT", url, body, callback)
     }
 
-    /// Put request for sent file to storage
+    /// Put request for send file to storage
     pub fn put_f<T>(
         &mut self,
         url: String,
