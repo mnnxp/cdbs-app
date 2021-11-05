@@ -146,13 +146,6 @@ type ComponentAndRelatedData {
   componentStandards: [ShowStandardShort!]!
 }
 
-type ComponentFav {
-  componentUuid: ID!
-  userUuid: ID!
-  isEnabled: Boolean!
-  createdAt: NaiveDateTime!
-}
-
 type ComponentModificationAndRelatedData {
   uuid: UUID!
   componentUuid: UUID!
@@ -729,7 +722,6 @@ type MutationRoot {
     data: IptModificationFileFromFilesetData!
   ): [UploadFile!]!
   deleteFilesFromFileset(data: DelModificationFileFromFilesetData!): Boolean!
-  addComponentFavorite(componentUuid: UUID!): ComponentFav!
   registerStandard(data: IptStandardData!): SlimStandard!
 
   # Transfer component ownership to another user
@@ -805,6 +797,11 @@ type MutationRoot {
   deleteFile(fileUuid: UUID!): Boolean!
 }
 
+# ISO 8601 combined date and time without timezone.
+#
+# # Examples
+#
+# * `2015-07-01T08:59:60.123`,
 scalar NaiveDateTime
 
 type Notification {
@@ -897,8 +894,6 @@ type QueryRoot {
     limit: Int
     offset: Int
   ): [TypeAccessTranslateList!]!
-  _service: _Service!
-  _entities(representations: [_Any!]!): [_Entity]!
 }
 
 type RegionTranslateList {
@@ -1109,6 +1104,14 @@ type TypeAccessTranslateList {
   name: String!
 }
 
+# A UUID is a unique 128-bit number, stored as 16 octets. UUIDs are parsed as Strings
+# within GraphQL. UUIDs are used to assign unique identifiers to entities without requiring a central
+# allocating authority.
+#
+# # References
+#
+# * [Wikipedia: Universally Unique Identifier](http://en.wikipedia.org/wiki/Universally_unique_identifier)
+# * [RFC4122: A Universally Unique IDentifier (UUID) URN Namespace](http://tools.ietf.org/html/rfc4122)
 scalar UUID
 
 type UploadFile {
@@ -1172,13 +1175,4 @@ type UserToken {
   token: String!
   createdAt: NaiveDateTime!
   expirationAt: NaiveDateTime!
-}
-
-# The `_Any` scalar is used to pass representations of entities from external services into the root `_entities` field for execution.
-scalar _Any
-
-union _Entity
-
-type _Service {
-  sdl: String
 }
