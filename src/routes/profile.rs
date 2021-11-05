@@ -571,8 +571,8 @@ impl Profile {
                             html! {
                                 <CertificateCard
                                     certificate = view_cert
-                                    show_cert = false
-                                    download_btn = true
+                                    show_cert_btn = true
+                                    download_btn = false
                                     change_btn = false
                                     company_uuid = None
                                  />

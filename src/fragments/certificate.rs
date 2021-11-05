@@ -31,7 +31,7 @@ struct DeleteUserCertificate;
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
     pub certificate: Certificate,
-    pub show_cert: bool,
+    pub show_cert_btn: bool,
     pub download_btn: bool,
     pub change_btn: bool,
     pub company_uuid: Option<String>,
@@ -59,6 +59,7 @@ pub struct CertificateCard {
     link: ComponentLink<Self>,
     get_result_update: bool,
     get_result_delete: bool,
+    show_cert: bool,
 }
 
 pub enum Msg {
@@ -69,7 +70,7 @@ pub enum Msg {
     GetDeleteCertResult(String),
     Ignore,
     UpdateDescription(String),
-    // ClearCertCard(),
+    ShowCert,
     // UpdateDeleteCert(String),
     // UpdateList(String),
     // GetCurrentData(),
@@ -88,6 +89,7 @@ impl Component for CertificateCard {
             link,
             get_result_update: false,
             get_result_delete: false,
+            show_cert: false,
         }
     }
 
@@ -171,9 +173,12 @@ impl Component for CertificateCard {
                 // ConsoleService::info(format!("Description: {:?}", description).as_ref());
                 self.request_update = description;
             },
-            // Msg::ClearCertCard => {
-            //     self.request_update = description;
-            // },
+            Msg::ShowCert => {
+                match self.show_cert {
+                    true => self.show_cert = false,
+                    false => self.show_cert = true,
+                }
+            },
         }
 
         true
@@ -187,7 +192,7 @@ impl Component for CertificateCard {
     fn view(&self) -> Html {
         let Props {
             certificate,
-            show_cert,
+            show_cert_btn,
             download_btn,
             change_btn,
             .. //company_uuid,
@@ -214,19 +219,15 @@ impl Component for CertificateCard {
             html! {
                 <div class="card">
                     <ListErrors error=self.error.clone()/>
-                    {match show_cert {
+                    {match self.show_cert {
                         true => html! {
-                            <div class="card-image">
-                                <figure class="image is-4by5">
-                                    <img src={ certificate.file.download.download_url.to_string() } loading="lazy" />
-                                </figure>
-                            </div>
+                            { self.show_certificate_on_page() }
                         },
-                        false => html! {},
+                        false => html! {
+                            { certificate.file.download.filename.to_string() }
+                        },
                     }}
                     <div class="card-content">
-                        { certificate.file.download.filename.to_string() }
-                        <br/>
                         {match (download_btn, change_btn) {
                             (true, false) => html! {<>
                                 { self.show_cert_description() }
@@ -245,7 +246,16 @@ impl Component for CertificateCard {
                                 <br/>
                                 { self.show_btn_download() }
                             </>},
-                            (false, false) => html! {},
+                            (false, false) => html! {<>
+                                { self.show_cert_description() }
+                                <br/>
+                            </>},
+                        }}
+                        {match show_cert_btn {
+                            true => html! {
+                                { self.show_btn_certificate() }
+                            },
+                            false => html! {},
                         }}
                     </div>
                 </div>
@@ -255,6 +265,38 @@ impl Component for CertificateCard {
 }
 
 impl CertificateCard {
+    fn show_certificate_on_page(
+        &self,
+    ) -> Html {
+        html! {<div class="card-image">
+            <figure class="image is-4by5">
+                <img src=
+                    { self.props.certificate.file.download.download_url.to_string() }
+                    loading="lazy" />
+            </figure>
+        </div>}
+    }
+
+    fn show_btn_certificate(
+        &self,
+    ) -> Html {
+        let onclick_show_cert = self
+            .link
+            .callback(|_| Msg::ShowCert);
+
+        let text_btn = match self.show_cert {
+            true => "Hide",
+            false => "Show",
+        };
+
+        html! {<a id={ format!(
+            "btn-show-cert-{}", &self.props.certificate.file.uuid) }
+            class="button"
+            onclick=onclick_show_cert>
+            { text_btn }
+        </a>}
+    }
+
     fn show_cert_description(
         &self,
     ) -> Html {

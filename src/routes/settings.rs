@@ -734,7 +734,7 @@ impl Settings {
                             html! {
                                 <CertificateCard
                                     certificate = view_cert
-                                    show_cert = false
+                                    show_cert_btn = true
                                     download_btn = false
                                     change_btn = true
                                     company_uuid = None
