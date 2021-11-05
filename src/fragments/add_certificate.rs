@@ -73,6 +73,7 @@ pub struct AddCertificateCard {
     // filename: String,
     // file_data: Vec<u8>,
     description: String,
+    dis_upload_btn: bool,
 }
 
 pub enum Msg {
@@ -86,6 +87,7 @@ pub enum Msg {
     GetUploadData(String),
     GetUploadFile(Option<String>),
     GetUploadCompleted(String),
+    ClearFileBoxed,
     Ignore,
 }
 
@@ -112,6 +114,7 @@ impl Component for AddCertificateCard {
             // file_data: Vec::new(),
             file: None,
             description: String::new(),
+            dis_upload_btn: true,
         }
     }
 
@@ -120,6 +123,9 @@ impl Component for AddCertificateCard {
 
         match msg {
             Msg::RequestUploadData => {
+                // see loading button
+                self.get_result_up_data = true;
+
                 if let Some(file) = &self.file {
                     // ConsoleService::info(format!("RequestUploadData: {:?}", &self.request_update).as_ref());
                     let request_update = NewUserCertData {
@@ -173,6 +179,10 @@ impl Component for AddCertificateCard {
                 self.error = Some(err);
             },
             Msg::UpdateFile(op_file) => {
+                if op_file.is_some() {
+                    // enable bnt if file selected
+                    self.dis_upload_btn = false;
+                }
                 self.file = op_file.clone();
             },
             Msg::UpdateDescription(new_description) => {
@@ -226,6 +236,11 @@ impl Component for AddCertificateCard {
                     }
                 }
             },
+            Msg::ClearFileBoxed => {
+                self.file = None;
+                self.description = String::new();
+                self.dis_upload_btn = true;
+            },
             Msg::Ignore => {},
         }
 
@@ -248,14 +263,24 @@ impl Component for AddCertificateCard {
             <div class="card">
               <ListErrors error=self.error.clone()/>
               <div class="columns">
-                <div class="column">
-                  <label class="label">{"Upload new certificate:"}</label>
-                  { self.show_input_description() }
-                  <br/>
-                  { self.show_frame_upload_file() }
-                  <br/>
-                  { self.show_btn_upload() }
-                </div>
+                {match self.get_result_up_completed > 0 {
+                    true => html! {
+                        <div class="column">
+                          { self.show_success_upload() }
+                        </div>
+                    },
+                    false => html! {
+                        <div class="column">
+                          <label class="label">{"Upload new certificate:"}</label>
+                          { self.show_input_description() }
+                          <br/>
+                          { self.show_frame_upload_file() }
+                          <br/>
+                          { self.show_btn_clear() }
+                          { self.show_btn_upload() }
+                        </div>
+                    },
+                }}
               </div>
             </div>
         }
@@ -267,19 +292,11 @@ impl AddCertificateCard {
         &self,
     ) -> Html {
         let onchange_cert_file = self.link.callback(move |value| {
-            // let mut result = Vec::new();
             if let ChangeData::Files(files) = value {
-            //     let files = js_sys::try_iter(&files)
-            //         .unwrap()
-            //         .unwrap()
-            //         .map(|v| File::from(v.unwrap()));
-                // result.extend(files);
                 Msg::UpdateFile(files.get(0))
             } else {
                 Msg::Ignore
             }
-
-            // Msg::Files(result, flag)
         });
 
         html! {<>
@@ -341,12 +358,59 @@ impl AddCertificateCard {
             .link
             .callback(|_| Msg::RequestUploadData);
 
+        let mut class_btn = "button";
+
+        if self.get_result_up_data {
+            // enable "loading" btn if send data
+            class_btn = "button is-loading";
+        }
+
+        if self.get_result_up_completed > 0 {
+            // enable "success" btn if send data
+            // class_btn = "button is-success";
+            class_btn = "button";
+        }
+
         html! {
             <a id="btn-new-cert-upload"
-                  class="button"
-                  onclick=onclick_upload_cert>
+                  class={class_btn}
+                  onclick=onclick_upload_cert
+                  disabled={self.dis_upload_btn} >
                 { "Upload" }
             </a>
+        }
+    }
+
+    fn show_btn_clear(
+        &self,
+    ) -> Html {
+        let onclick_clear_boxed = self
+            .link
+            .callback(|_| Msg::ClearFileBoxed);
+
+        html! {
+            <a id="btn-new-cert-clear"
+                  // class="button is-danger"
+                  class="button"
+                  onclick=onclick_clear_boxed
+                  disabled={self.dis_upload_btn} >
+                { "Clear" }
+            </a>
+        }
+    }
+
+    fn show_success_upload(
+        &self,
+    ) -> Html {
+        html! {
+            <article class="message is-success">
+              <div class="message-header">
+                <p>{ "Success" }</p>
+              </div>
+              <div class="message-body">
+                { "This certificate upload!" }
+              </div>
+            </article>
         }
     }
 }

@@ -31,6 +31,7 @@ struct DeleteUserCertificate;
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
     pub certificate: Certificate,
+    pub show_cert: bool,
     pub download_btn: bool,
     pub change_btn: bool,
     pub company_uuid: Option<String>,
@@ -54,10 +55,6 @@ pub struct DeleteUserCertData {
 pub struct CertificateCard {
     error: Option<Error>,
     request_update: String,
-    // request_delete: DeleteUserCertData,
-    // certificate: Certificate,
-    // download_btn: bool,
-    // change_btn: bool,
     props: Props,
     link: ComponentLink<Self>,
     get_result_update: bool,
@@ -190,6 +187,7 @@ impl Component for CertificateCard {
     fn view(&self) -> Html {
         let Props {
             certificate,
+            show_cert,
             download_btn,
             change_btn,
             .. //company_uuid,
@@ -216,11 +214,16 @@ impl Component for CertificateCard {
             html! {
                 <div class="card">
                     <ListErrors error=self.error.clone()/>
-                    <div class="card-image">
-                        <figure class="image is-4by5">
-                            <img src={ certificate.file.download.download_url.to_string() } loading="lazy" />
-                        </figure>
-                    </div>
+                    {match show_cert {
+                        true => html! {
+                            <div class="card-image">
+                                <figure class="image is-4by5">
+                                    <img src={ certificate.file.download.download_url.to_string() } loading="lazy" />
+                                </figure>
+                            </div>
+                        },
+                        false => html! {},
+                    }}
                     <div class="card-content">
                         { certificate.file.download.filename.to_string() }
                         <br/>

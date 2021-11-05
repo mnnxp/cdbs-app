@@ -349,6 +349,7 @@ impl Component for Settings {
                         ConsoleService::info(format!("User data: {:?}", user_data).as_ref());
                         self.current_data = Some(user_data.clone());
                         self.request_profile = user_data.into();
+                        self.rendered(false);
                     },
                     true => {
                         link.send_message(Msg::ResponseError(get_error(&data)));
@@ -733,6 +734,7 @@ impl Settings {
                             html! {
                                 <CertificateCard
                                     certificate = view_cert
+                                    show_cert = false
                                     download_btn = false
                                     change_btn = true
                                     company_uuid = None
