@@ -165,15 +165,15 @@ impl Requests {
     }
 
     /// Put request with a body
-    pub fn put_f<B, T>(
+    pub fn put_f<T>(
         &mut self,
         url: String,
-        body: B,
+        body: Vec<u8>,
         callback: Callback<Result<Option<T>, Error>>,
     ) -> FetchTask
     where
         for<'de> T: Deserialize<'de> + 'static + std::fmt::Debug,
-        B: Serialize + std::fmt::Debug,
+        // B: Serialize + std::fmt::Debug,
     {
         let handler = move |response: Response<Binary>| {
             if let (meta, Ok(data)) = response.into_parts() {
@@ -215,7 +215,7 @@ impl Requests {
             }
         };
 
-        let body: Binary = Json(&body).into();
+        let body: Binary = Ok(body);
         // self.builder("PUT", url, body, callback)
         let builder = Request::builder()
             .method("PUT")

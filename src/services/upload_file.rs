@@ -35,7 +35,7 @@ impl PutUploadFile {
         callback: Callback<Result<Option<String>, Error>>,
     ) -> FetchTask {
         // ConsoleService::info(format!("File data: {:?}", &upload_data.file_data).as_ref());
-        self.requests.put_f::<Vec<u8>, String>(
+        self.requests.put_f::<String>(
             upload_data.upload_url,
             upload_data.file_data,
             callback,
