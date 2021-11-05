@@ -8,6 +8,8 @@ use yew::services::ConsoleService;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
+use log::debug;
+
 use crate::gqls::make_query;
 
 use crate::fragments::list_errors::ListErrors;
@@ -56,7 +58,7 @@ pub struct NewUserCertData {
 pub struct AddCertificateCard {
     error: Option<Error>,
     request_upload_data: UploadFile,
-    request_upload_file: Callback<Result<String, Error>>,
+    request_upload_file: Callback<Result<Option<String>, Error>>,
     request_upload_completed: String,
     response_upload_file: Option<Result<String, Error>>,
     task_read: Option<(FileName, ReaderTask)>,
@@ -65,7 +67,7 @@ pub struct AddCertificateCard {
     link: ComponentLink<Self>,
     get_result_up_data: bool,
     get_result_up_file: bool,
-    get_result_up_completed: bool,
+    get_result_up_completed: usize,
     put_upload_file: PutUploadFile,
     file: Option<File>,
     // filename: String,
@@ -76,13 +78,13 @@ pub struct AddCertificateCard {
 pub enum Msg {
     RequestUploadData,
     RequestUploadFile(Vec<u8>),
-    ResponseUploadFile(Result<String, Error>),
+    ResponseUploadFile(Result<Option<String>, Error>),
     RequestUploadCompleted,
     ResponseError(Error),
     UpdateFile(Option<File>),
     UpdateDescription(String),
     GetUploadData(String),
-    GetUploadFile(String),
+    GetUploadFile(Option<String>),
     GetUploadCompleted(String),
     Ignore,
 }
@@ -104,7 +106,7 @@ impl Component for AddCertificateCard {
             link,
             get_result_up_data: false,
             get_result_up_file: false,
-            get_result_up_completed: false,
+            get_result_up_completed: 0,
             put_upload_file: PutUploadFile::new(),
             // filename: String::new(),
             // file_data: Vec::new(),
@@ -151,8 +153,6 @@ impl Component for AddCertificateCard {
             },
             Msg::ResponseUploadFile(Ok(res)) => {
                 link.send_message(Msg::GetUploadFile(res))
-                // ConsoleService::info(format!("{}", get_token().unwrap()).as_ref());
-                // crate::yewLog!(get_token().unwrap());
             },
             Msg::ResponseUploadFile(Err(err)) => {
                 self.error = Some(err);
@@ -207,7 +207,8 @@ impl Component for AddCertificateCard {
                 }
             },
             Msg::GetUploadFile(res) => {
-                crate::yewLog!(res);
+                debug!("res: {:?}", res);
+                self.get_result_up_file = true;
                 link.send_message(Msg::RequestUploadCompleted)
             },
             Msg::GetUploadCompleted(res) => {
@@ -216,9 +217,9 @@ impl Component for AddCertificateCard {
 
                 match res_value.is_null() {
                     false => {
-                        let result: bool = serde_json::from_value(res_value.get("uploadCompleted").unwrap().clone()).unwrap();
+                        let result: usize = serde_json::from_value(res_value.get("uploadCompleted").unwrap().clone()).unwrap();
                         crate::yewLog!(result);
-                        self.get_result_up_file = result;
+                        self.get_result_up_completed = result;
                     },
                     true => {
                         link.send_message(Msg::ResponseError(get_error(&data)));

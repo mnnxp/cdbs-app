@@ -1,5 +1,5 @@
 query GetTypesAccess($typeAccessIds: [Int!]) {
-  typesAccess(typesAccessIds: $typesAccessIds) {
+  typesAccess(typeAccessIds: $typeAccessIds) {
     ...typesAccessTransListFileds
   }
 }

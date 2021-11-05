@@ -216,11 +216,11 @@ impl Component for CertificateCard {
             html! {
                 <div class="card">
                     <ListErrors error=self.error.clone()/>
-                    // <div class="card-image">
-                    //     <figure class="image is-4by5">
-                    //         <img src={ certificate.file.download.download_url.to_string() } loading="lazy" />
-                    //     </figure>
-                    // </div>
+                    <div class="card-image">
+                        <figure class="image is-4by5">
+                            <img src={ certificate.file.download.download_url.to_string() } loading="lazy" />
+                        </figure>
+                    </div>
                     <div class="card-content">
                         { certificate.file.download.filename.to_string() }
                         <br/>
@@ -290,7 +290,7 @@ impl CertificateCard {
                  { "Description updated!" }
                 </span>}
             } else { html! {} }}
-            
+
             <input
                 id={ format!("cert-description-{}", &self.props.certificate.file.uuid) }
                 class="input"

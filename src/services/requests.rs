@@ -4,7 +4,7 @@ use log::debug;
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use yew::callback::Callback;
-use yew::format::{Json, Nothing, Text};
+use yew::format::{Json, Nothing, Text, Binary};
 use yew::services::fetch::{FetchService, FetchTask, Request, Response};
 use yew::services::storage::{Area, StorageService};
 
@@ -158,17 +158,40 @@ impl Requests {
     ) -> FetchTask
     where
         for<'de> T: Deserialize<'de> + 'static + std::fmt::Debug,
+        B: Serialize,
+    {
+        let body: Text = Json(&body).into();
+        self.builder("PUT", url, body, callback)
+    }
+
+    /// Put request with a body
+    pub fn put_f<B, T>(
+        &mut self,
+        url: String,
+        body: B,
+        callback: Callback<Result<Option<T>, Error>>,
+    ) -> FetchTask
+    where
+        for<'de> T: Deserialize<'de> + 'static + std::fmt::Debug,
         B: Serialize + std::fmt::Debug,
     {
-        let handler = move |response: Response<Text>| {
+        let handler = move |response: Response<Binary>| {
             if let (meta, Ok(data)) = response.into_parts() {
                 debug!("Response: {:?}", data);
+                debug!("Meta status: {:?}", meta.status.is_success());
                 if meta.status.is_success() {
-                    let data: Result<T, _> = serde_json::from_str(&data);
-                    if let Ok(data) = data {
-                        callback.emit(Ok(data))
+                    debug!("Data: {:?}", data);
+                    // let data: Result<T, _> = serde_json::from_slice(&data);
+                    // debug!("Result T: {:?}", data);
+                    // if let Ok(data) = data {
+                    //     callback.emit(Ok(data.into()))
+                    // } else {
+                    //     callback.emit(Err(Error::DeserializeError))
+                    // }
+                    if data.is_empty() {
+                        callback.emit(Ok(None))
                     } else {
-                        callback.emit(Err(Error::DeserializeError))
+                        callback.emit(Err(Error::InternalServerError))
                     }
                 } else {
                     match meta.status.as_u16() {
@@ -177,7 +200,7 @@ impl Requests {
                         404 => callback.emit(Err(Error::NotFound)),
                         500 => callback.emit(Err(Error::InternalServerError)),
                         422 => {
-                            let data: Result<ErrorInfo, _> = serde_json::from_str(&data);
+                            let data: Result<ErrorInfo, _> = serde_json::from_slice(&data);
                             if let Ok(data) = data {
                                 callback.emit(Err(Error::UnprocessableEntity(data)))
                             } else {
@@ -192,17 +215,16 @@ impl Requests {
             }
         };
 
-        let body: Text = Json(&body).into();
+        let body: Binary = Json(&body).into();
         // self.builder("PUT", url, body, callback)
         let builder = Request::builder()
             .method("PUT")
-            .uri(url.as_str())
-            .header("Content-Type", "application/json");
+            .uri(url.as_str());
 
         let request = builder.body(body).unwrap();
         debug!("Request: {:?}", request);
 
-        FetchService::fetch(request, handler.into()).unwrap()
+        FetchService::fetch_binary(request, handler.into()).unwrap()
     }
 }
 

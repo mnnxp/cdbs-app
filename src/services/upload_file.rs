@@ -32,10 +32,10 @@ impl PutUploadFile {
     pub fn put_file(
         &mut self,
         upload_data: UploadData,
-        callback: Callback<Result<String, Error>>,
+        callback: Callback<Result<Option<String>, Error>>,
     ) -> FetchTask {
         // ConsoleService::info(format!("File data: {:?}", &upload_data.file_data).as_ref());
-        self.requests.put::<Vec<u8>, String>(
+        self.requests.put_f::<Vec<u8>, String>(
             upload_data.upload_url,
             upload_data.file_data,
             callback,
