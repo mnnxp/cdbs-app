@@ -173,7 +173,6 @@ impl Requests {
     ) -> FetchTask
     where
         for<'de> T: Deserialize<'de> + 'static + std::fmt::Debug,
-        // B: Serialize + std::fmt::Debug,
     {
         let handler = move |response: Response<Binary>| {
             if let (meta, Ok(data)) = response.into_parts() {
@@ -181,13 +180,6 @@ impl Requests {
                 debug!("Meta status: {:?}", meta.status.is_success());
                 if meta.status.is_success() {
                     debug!("Data: {:?}", data);
-                    // let data: Result<T, _> = serde_json::from_slice(&data);
-                    // debug!("Result T: {:?}", data);
-                    // if let Ok(data) = data {
-                    //     callback.emit(Ok(data.into()))
-                    // } else {
-                    //     callback.emit(Err(Error::DeserializeError))
-                    // }
                     if data.is_empty() {
                         callback.emit(Ok(None))
                     } else {
@@ -216,7 +208,7 @@ impl Requests {
         };
 
         let body: Binary = Ok(body);
-        // self.builder("PUT", url, body, callback)
+        
         let builder = Request::builder()
             .method("PUT")
             .uri(url.as_str());
