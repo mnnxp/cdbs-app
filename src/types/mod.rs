@@ -8,6 +8,7 @@ mod tags;
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+pub use chrono::NaiveDateTime;
 
 pub use auth::{
     LoginInfo, LoginInfoWrapper, RegisterInfo, SlimUser,
@@ -29,3 +30,4 @@ pub type DeleteWrapper = HashMap<(), ()>;
 
 /// For GraphQLQuery
 pub type UUID = String;
+// pub type NaiveDateTime = NaiveDateTime;

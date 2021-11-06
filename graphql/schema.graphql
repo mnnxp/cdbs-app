@@ -146,13 +146,6 @@ type ComponentAndRelatedData {
   componentStandards: [ShowStandardShort!]!
 }
 
-type ComponentFav {
-  componentUuid: ID!
-  userUuid: ID!
-  isEnabled: Boolean!
-  createdAt: NaiveDateTime!
-}
-
 type ComponentModificationAndRelatedData {
   uuid: UUID!
   componentUuid: UUID!
@@ -186,6 +179,12 @@ type ComponentTypeTranslateList {
   componentTypeId: Int!
   langId: Int!
   componentType: String!
+}
+
+type DegreeImportanceTranslateList {
+  degreeImportanceId: Int!
+  langId: Int!
+  degree: String!
 }
 
 input DelCompanyAccessComponentData {
@@ -667,7 +666,7 @@ type MutationRoot {
   putUpdatePassword(data: IptUpdatePassword!): Boolean!
   changeTypeAccessUser(newTypeAccess: Int!): Boolean!
   putUserUpdate(data: IptUpdateUserData!): Int!
-  uploadFavicon(filename: String!): String!
+  uploadFavicon(filename: String!): UploadFile!
   uploadUserCertificate(certData: IptUserCertificateData!): UploadFile!
 
   # Update user certificate description
@@ -729,7 +728,6 @@ type MutationRoot {
     data: IptModificationFileFromFilesetData!
   ): [UploadFile!]!
   deleteFilesFromFileset(data: DelModificationFileFromFilesetData!): Boolean!
-  addComponentFavorite(componentUuid: UUID!): ComponentFav!
   registerStandard(data: IptStandardData!): SlimStandard!
 
   # Transfer component ownership to another user
@@ -805,15 +803,12 @@ type MutationRoot {
   deleteFile(fileUuid: UUID!): Boolean!
 }
 
+# ISO 8601 combined date and time without timezone.
+#
+# # Examples
+#
+# * `2015-07-01T08:59:60.123`,
 scalar NaiveDateTime
-
-type Notification {
-  id: Int!
-  notification: String!
-  degreeImportanceId: Int!
-  createdAt: NaiveDateTime!
-  isRead: Boolean!
-}
 
 type ParamTranslateList {
   paramId: Int!
@@ -828,7 +823,7 @@ type Program {
 
 type QueryRoot {
   users(usersUuids: [UUID!]!): [ShowUserShort!]!
-  user(userUuid: UUID!): ShowUserAndRelatedData!
+  user(userUuid: UUID, username: String): ShowUserAndRelatedData!
   myself: SlimUser!
   selfData: UserAndRelatedData!
   showTokens: [UserToken!]!
@@ -838,8 +833,17 @@ type QueryRoot {
   deleteToken(token: String!): Boolean!
   deleteAllTokens: Int!
   logout: String!
-  notifications(selectIds: [Int!], limit: Int, offset: Int): [Notification!]!
-  components(componentsUuids: [UUID!]!): [ShowComponentShort!]!
+  notifications(
+    selectIds: [Int!]
+    limit: Int
+    offset: Int
+  ): [ShowNotification!]!
+  components(
+    componentsUuids: [UUID!]
+    favorite: Boolean
+    userUuid: UUID
+    companyUuid: UUID
+  ): [ShowComponentShort!]!
   component(componentUuid: UUID!): ComponentAndRelatedData!
   getCompaniesListAccessComponent(
     componentUuid: UUID!
@@ -887,8 +891,11 @@ type QueryRoot {
 
   # Presigned URL for download file from storage
   presignedUrl(fileUuid: UUID!): DownloadFile!
-  _service: _Service!
-  _entities(representations: [_Any!]!): [_Entity]!
+  typesAccess(
+    typeAccessIds: [Int!]
+    limit: Int
+    offset: Int
+  ): [TypeAccessTranslateList!]!
 }
 
 type RegionTranslateList {
@@ -952,6 +959,14 @@ type ShowFileForDownload {
   program: Program!
   createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!
+}
+
+type ShowNotification {
+  id: Int!
+  notification: String!
+  degreeImportance: DegreeImportanceTranslateList!
+  createdAt: NaiveDateTime!
+  isRead: Boolean!
 }
 
 type ShowStandardShort {
@@ -1099,6 +1114,14 @@ type TypeAccessTranslateList {
   name: String!
 }
 
+# A UUID is a unique 128-bit number, stored as 16 octets. UUIDs are parsed as Strings
+# within GraphQL. UUIDs are used to assign unique identifiers to entities without requiring a central
+# allocating authority.
+#
+# # References
+#
+# * [Wikipedia: Universally Unique Identifier](http://en.wikipedia.org/wiki/Universally_unique_identifier)
+# * [RFC4122: A Universally Unique IDentifier (UUID) URN Namespace](http://tools.ietf.org/html/rfc4122)
 scalar UUID
 
 type UploadFile {
@@ -1140,6 +1163,7 @@ type UserAndRelatedData {
   imageFile: DownloadFile!
   region: RegionTranslateList!
   program: Program!
+  typeAccess: TypeAccessTranslateList!
   isEmailVerified: Boolean!
   isEnabled: Boolean!
   isDelete: Boolean!
@@ -1161,13 +1185,4 @@ type UserToken {
   token: String!
   createdAt: NaiveDateTime!
   expirationAt: NaiveDateTime!
-}
-
-# The `_Any` scalar is used to pass representations of entities from external services into the root `_entities` field for execution.
-scalar _Any
-
-union _Entity
-
-type _Service {
-  sdl: String
 }
