@@ -93,6 +93,15 @@ pub struct Props {
     // pub tab: ProfileTab,
 }
 
+#[derive(Default, Debug)]
+pub struct UserDataCard<'a> {
+    pub image_file: &'a str,
+    pub firstname: &'a str,
+    pub lastname: &'a str,
+    pub username: &'a str,
+    pub updated_at: String,
+}
+
 #[derive(Clone)]
 pub enum Msg {
     Follow,
@@ -355,15 +364,7 @@ impl Component for Profile {
                                     <div class="card">
                                       <div class="card-content">
                                         <div class="media">
-                                          { self.view_card(
-                                              self_data.image_file.download_url.as_str(),
-                                              self_data.firstname.as_str(),
-                                              self_data.lastname.as_str(),
-                                              self_data.username.as_str(),
-                                              &self_data.updated_at,
-                                              &self.subscribers,
-                                              None,
-                                          ) }
+                                          { self.view_card() }
                                         </div>
 
                                         <div class="content">
@@ -400,15 +401,7 @@ impl Component for Profile {
                                     <div class="card">
                                       <div class="card-content">
                                         <div class="media">
-                                          { self.view_card(
-                                              user_data.image_file.download_url.as_str(),
-                                              user_data.firstname.as_str(),
-                                              user_data.lastname.as_str(),
-                                              user_data.username.as_str(),
-                                              &user_data.updated_at,
-                                              &self.subscribers,
-                                              Some(user_data.is_followed),
-                                          ) }
+                                          { self.view_card() }
                                         </div>
 
                                         <div class="content">
@@ -459,14 +452,31 @@ impl Profile {
 
     fn view_card(
         &self,
-        image_file: &str,
-        firstname: &str,
-        lastname: &str,
-        username: &str,
-        updated_at: &NaiveDateTime,
-        subscribers: &usize,
-        is_followed: Option<bool>,
     ) -> Html {
+        let UserDataCard {
+            image_file,
+            firstname,
+            lastname,
+            username,
+            updated_at,
+        } = match (&self.self_profile, &self.profile) {
+            (_, Some(ref other_data)) => UserDataCard {
+                image_file: &other_data.image_file.download_url,
+                firstname: &other_data.firstname,
+                lastname: &other_data.lastname,
+                username: &other_data.username,
+                updated_at: format!("{:.*}", 19, &other_data.updated_at.to_string()),
+            },
+            (Some(ref self_data), _) => UserDataCard {
+                image_file: &self_data.image_file.download_url,
+                firstname: &self_data.firstname,
+                lastname: &self_data.lastname,
+                username: &self_data.username,
+                updated_at: format!("{:.*}", 19, &self_data.updated_at.to_string()),
+            },
+            (None, None) => UserDataCard::default(),
+        };
+
         html! {<>
             <div class="media-left">
               <figure class="image is-48x48">
@@ -485,46 +495,84 @@ impl Profile {
             <div class="media-right">
               <p class="subtitle is-6 left">
                   // date formatting for show on page
-                  { format!("{:.*}", 19, updated_at) }
+                  { updated_at }
                   <br/>
                   // for self user data not show button "following"
                   <div class="media-right flexBox " >
-                      {
-                          match is_followed {
-                              Some(following) => {
-                                let class_fav = if following {
-                                    "fas fa-bookmark"
-                                } else {
-                                    "far fa-bookmark"
-                                };
-
-                                let onclick = if following {
-                                    self.link.callback(|_| Msg::UnFollow)
-                                } else {
-                                    self.link.callback(|_| Msg::Follow)
-                                };
-
-                                html! {
-                                    <button
-                                        id="following-button"
-                                        class="button"
-                                        onclick=onclick >
-                                      <span class="icon is-small">
-                                        <i class={class_fav}></i>
-                                      </span>
-                                    </button>
-                                }
-                            },
-                            None => html! {
-                                // maybe link to setting profile?
-                            },
-                        }
-                      }
-                    { format!(" {}", subscribers.to_string()) }
+                    { self.show_profile_followers() }
                   </div>
               </p>
             </div>
         </>}
+    }
+
+    fn show_profile_followers (
+        &self,
+    ) -> Html {
+        let class_fav = match self.is_followed {
+            true => "fas fa-bookmark",
+            false => "far fa-bookmark",
+        };
+
+        let onclick_following = match self.is_followed {
+            true => self.link.callback(|_| Msg::UnFollow),
+            false => self.link.callback(|_| Msg::Follow),
+        };
+
+        match (&self.self_profile, &self.profile) {
+            (_, Some(ref other_data)) => html! {
+                // for self user data not show button "following"
+                <div class="media-right flexBox" >
+                  <button
+                      id="following-button"
+                      class="button"
+                      onclick=onclick_following >
+                    <span class="icon is-small">
+                      <i class={class_fav}></i>
+                    </span>
+                  </button>
+
+                  { format!(" {}", other_data.subscribers.to_string()) }
+                </div>
+            },
+            (Some(ref self_data), _) => html!{<>
+                { format!(" {}", self_data.subscribers.to_string()) }
+            </>},
+            _ => html! {},
+        }
+    }
+
+    fn show_profile_action (
+        &self,
+    ) -> Html {
+        match &self.self_profile {
+            Some(ref self_data) => html!{<>
+                <div class="columns">
+                    <div class="column">
+                        <span>{ "objects count" }</span>
+                        <br/>
+                        { format!("companies: {}", self_data.companies_count.to_string()) }
+                        <br/>
+                        { format!("components: {}", self_data.components_count.to_string()) }
+                        <br/>
+                        { format!("standards: {}", self_data.standards_count.to_string()) }
+                    </div>
+                    <div class="column">
+                        <span>{ "favorites count" }</span>
+                        <br/>
+                        { format!("companies: {}", self_data.fav_companies_count.to_string()) }
+                        <br/>
+                        { format!("components: {}", self_data.fav_components_count.to_string()) }
+                        <br/>
+                        { format!("standards: {}", self_data.fav_standards_count.to_string()) }
+                        <br/>
+                        { format!("users: {}", self_data.fav_users_count.to_string()) }
+                    </div>
+                    // <div class="column"></div>
+                </div>
+            </>},
+            None => html! {},
+        }
     }
 
     fn view_content(
@@ -538,21 +586,28 @@ impl Profile {
             <div id="description" class="content">
               { format!("{}", description) }
             </div>
-            <br/>
-            <span id="position">
-              <i class="fas fa-briefcase"></i>
-              { format!("Position: {}", position) }
-            </span>
-            <br/>
-            <span id="region">
-              <i class="fas fa-map-marker-alt"></i>
-              { format!("Region: {}", region) }
-            </span>
-            <br/>
-            <span id="program">
-              <i class="fab fa-uncharted"></i>
-              { format!("Working software: {}", program) }
-            </span>
+            <div class="columns">
+                <div class="column">
+                    <br/>
+                    <span id="position">
+                      <i class="fas fa-briefcase"></i>
+                      { format!("Position: {}", position) }
+                    </span>
+                    <br/>
+                    <span id="region">
+                      <i class="fas fa-map-marker-alt"></i>
+                      { format!("Region: {}", region) }
+                    </span>
+                    <br/>
+                    <span id="program">
+                      <i class="fab fa-uncharted"></i>
+                      { format!("Working software: {}", program) }
+                    </span>
+                </div>
+                <div class="column">
+                    { self.show_profile_action() }
+                </div>
+            </div>
         </>}
     }
 
