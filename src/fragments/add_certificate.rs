@@ -1,12 +1,12 @@
 use yew::services::fetch::FetchTask;
-use yew::services::reader::{File, FileChunk, FileData, ReaderService, ReaderTask};
+use yew::services::reader::{File, FileData, ReaderService, ReaderTask};
 use yew::{
-    agent::Bridged, html, Bridge, Callback, Component, ComponentLink, FocusEvent, Html, InputData,
+    html, Callback, Component, ComponentLink, Html, InputData,
     Properties, ShouldRender, ChangeData,
 };
 use yew::services::ConsoleService;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
+// use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
 
@@ -16,7 +16,8 @@ use crate::fragments::list_errors::ListErrors;
 use crate::error::{Error, get_error};
 use crate::services::{PutUploadFile, UploadData};
 use crate::types::{
-    UUID, Certificate, UploadFile
+    // UUID, Certificate,
+    UploadFile
 };
 
 type FileName = String;
@@ -253,12 +254,6 @@ impl Component for AddCertificateCard {
     }
 
     fn view(&self) -> Html {
-        let Props {
-            user_uuid,
-            company_uuid,
-            ..
-        } = &self.props;
-
         html! {
             <div class="card">
               <ListErrors error=self.error.clone()/>

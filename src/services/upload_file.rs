@@ -1,13 +1,13 @@
 use yew::callback::Callback;
 use yew::services::fetch::FetchTask;
-use yew::services::ConsoleService;
+// use yew::services::ConsoleService;
 
-use graphql_client::GraphQLQuery;
-use serde_json::Value;
+// use graphql_client::GraphQLQuery;
+// use serde_json::Value;
 
 use super::Requests;
-use crate::error::{Error, get_error};
-use crate::types::*;
+use crate::error::Error;
+// use crate::types::*;
 
 #[derive(Default, Debug)]
 pub struct UploadData {
