@@ -257,3 +257,33 @@ mutation DeleteUserCertificate($delUserCertData: DelUserCertificateData!) {
 mutation DeleteUserData($UserPassword: String!) {
   deleteUserData(password: $UserPassword)
 }
+
+query GetNotifications(
+  $selectNotificationsIds: [Int!],
+  $notificationsLimit: Int,
+  $notificationsOffset: Int,
+) {
+  notifications(
+    selectIds: $selectNotificationsIds,
+    limit: $notificationsLimit,
+    offset: $notificationsOffset,
+  ) {
+    ...notificationsFields
+  }
+}
+
+fragment notificationsFields on ShowNotification {
+    id
+    isRead
+    createdAt
+    notification
+    degreeImportance {
+      degreeImportanceId
+      langId
+      degree
+    }
+}
+
+mutation SetReadNotifications($ReadNotificationsIds: [Int!]!) {
+  readNotifications(notificationsIds: $ReadNotificationsIds)
+}

@@ -4,6 +4,7 @@ pub mod home;
 pub mod login;
 pub mod register;
 pub mod settings;
+pub mod notification;
 pub mod profile;
 pub mod tenders;
 pub mod catalog;
@@ -24,6 +25,8 @@ pub enum AppRoute {
     Tenders,
     #[to = "#/catalog"]
     Catalog,
+    #[to = "#/notifications"]
+    Notifications,
     #[to = "#/settings"]
     Settings,
     // #[to = "#/@{username}/favorites"]

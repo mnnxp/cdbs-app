@@ -181,6 +181,12 @@ type ComponentTypeTranslateList {
   componentType: String!
 }
 
+type DegreeImportanceTranslateList {
+  degreeImportanceId: Int!
+  langId: Int!
+  degree: String!
+}
+
 input DelCompanyAccessComponentData {
   componentUuid: UUID!
   companyUuid: UUID!
@@ -674,8 +680,8 @@ type MutationRoot {
   deleteStandardFav(standardUuid: UUID!): Boolean!
   addUserFav(userUuid: UUID!): Boolean!
   deleteUserFav(userUuid: UUID!): Boolean!
-  readNotification(notificationId: Int!): Boolean!
-  deleteNotification(notificationIds: [Int!]!): Int!
+  readNotifications(notificationsIds: [Int!]!): Boolean!
+  deleteNotifications(notificationsIds: [Int!]!): Int!
   registerComponent(data: IptComponentData!): SlimComponent!
 
   # Transfer component ownership to another user
@@ -804,14 +810,6 @@ type MutationRoot {
 # * `2015-07-01T08:59:60.123`,
 scalar NaiveDateTime
 
-type Notification {
-  id: Int!
-  notification: String!
-  degreeImportanceId: Int!
-  createdAt: NaiveDateTime!
-  isRead: Boolean!
-}
-
 type ParamTranslateList {
   paramId: Int!
   langId: Int!
@@ -835,7 +833,11 @@ type QueryRoot {
   deleteToken(token: String!): Boolean!
   deleteAllTokens: Int!
   logout: String!
-  notifications(selectIds: [Int!], limit: Int, offset: Int): [Notification!]!
+  notifications(
+    selectIds: [Int!]
+    limit: Int
+    offset: Int
+  ): [ShowNotification!]!
   components(
     componentsUuids: [UUID!]
     favorite: Boolean
@@ -957,6 +959,14 @@ type ShowFileForDownload {
   program: Program!
   createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!
+}
+
+type ShowNotification {
+  id: Int!
+  notification: String!
+  degreeImportance: DegreeImportanceTranslateList!
+  createdAt: NaiveDateTime!
+  isRead: Boolean!
 }
 
 type ShowStandardShort {

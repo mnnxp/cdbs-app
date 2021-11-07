@@ -13,7 +13,9 @@ pub use auth::{
     LoginInfo, LoginInfoWrapper, UpdatePasswordInfo, RegisterInfo, SlimUser,
     UserUpdateInfo, UserToken
 };
-pub use profiles::{SelfUserInfo, UserInfo, UserCertificate};
+pub use profiles::{
+    SelfUserInfo, UserInfo, UserCertificate, ShowNotification, DegreeImportanceTranslateList,
+};
 pub use file::{
     ShowFileForDownload, DownloadFile, UploadFile,
 };
