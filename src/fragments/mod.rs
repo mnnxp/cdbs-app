@@ -6,3 +6,4 @@ pub mod list_errors;
 pub mod list_pagination;
 pub mod certificate;
 pub mod add_certificate;
+pub mod upload_favicon;

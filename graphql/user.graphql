@@ -291,3 +291,9 @@ mutation SetReadNotifications($readNotificationsIds: [Int!]!) {
 mutation DeleteNotifications($deleteNotificationsIds: [Int!]!) {
   deleteNotifications(notificationsIds: $deleteNotificationsIds)
 }
+
+mutation UploadUserFavicon($filenameUploadFavicon: String!) {
+  uploadFavicon(filename: $filenameUploadFavicon) {
+    ...uploadUrlFields
+  }
+}

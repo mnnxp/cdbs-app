@@ -18,6 +18,7 @@ use crate::fragments::{
     list_errors::ListErrors,
     certificate::CertificateCard,
     add_certificate::AddCertificateCard,
+    upload_favicon::UpdateFaviconCard,
 };
 use crate::routes::AppRoute;
 use crate::services::is_authenticated;
@@ -112,6 +113,7 @@ impl From<SelfUserInfo> for UserUpdateInfo {
 
 pub enum Menu {
     Profile,
+    UpdataFavicon,
     Certificates,
     Access,
     Password,
@@ -537,6 +539,14 @@ impl Component for Settings {
                                                 </button>
                                             </form>
                                         </>},
+                                        // Show interface for change favicon user
+                                        Menu::UpdataFavicon => html! {<>
+                                            <span id="tag-info-updated-favicon-user" class="tag is-info is-light">
+                                                // { format!("Updated certificates: {}", self.get_result_certificates.clone()) }
+                                                { "Update favicon" }
+                                            </span>
+                                            { self.fieldset_update_favicon() }
+                                        </>},
                                         // Show interface for add and update Certificates
                                         Menu::Certificates => html! {<>
                                             <span id="tag-info-updated-certificates" class="tag is-info is-light">
@@ -633,6 +643,10 @@ impl Settings {
             .callback(|_| Msg::SelectMenu(
                 Menu::Profile
             ));
+        let onclick_favicon = self.link
+            .callback(|_| Msg::SelectMenu(
+                Menu::UpdataFavicon
+            ));
         let onclick_certificates = self.link
             .callback(|_| Msg::SelectMenu(
                 Menu::Certificates
@@ -651,6 +665,7 @@ impl Settings {
             ));
 
         let mut active_profile = "";
+        let mut active_favicon = "";
         let mut active_certificates = "";
         let mut active_access = "";
         let mut active_password = "";
@@ -658,6 +673,7 @@ impl Settings {
 
         match self.select_menu {
             Menu::Profile => active_profile = "is-active",
+            Menu::UpdataFavicon => active_favicon = "is-active",
             Menu::Certificates => active_certificates = "is-active",
             Menu::Access => active_access = "is-active",
             Menu::Password => active_password = "is-active",
@@ -675,6 +691,12 @@ impl Settings {
                       class=active_profile
                       onclick=onclick_profile>
                         { "Profile" }
+                    </a></li>
+                    <li><a
+                      id="profile"
+                      class=active_favicon
+                      onclick=onclick_favicon>
+                        { "Favicon" }
                     </a></li>
                     <li><a
                       id="certificates"
@@ -705,6 +727,19 @@ impl Settings {
                     // <li><a>{"Close account"}</a></li>
                 </ul>
             </aside>
+        }
+    }
+
+    fn fieldset_update_favicon(
+        &self
+    ) -> Html {
+        let callback_update_favicon = self.link.callback(|_| Msg::GetCurrentData);
+
+        html! {
+            <UpdateFaviconCard
+                company_uuid = None
+                callback=callback_update_favicon
+                />
         }
     }
 
