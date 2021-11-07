@@ -45,6 +45,14 @@ struct GetNotifications;
 )]
 struct SetReadNotifications;
 
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/user.graphql",
+    response_derives = "Debug"
+)]
+struct DeleteNotifications;
+
 pub enum Menu {
     GetAll,
     GetNotRead,
@@ -63,6 +71,7 @@ pub struct Notifications {
     link: ComponentLink<Self>,
     props: Props,
     read_notification: Vec<i64>,
+    delete_notification: Vec<i64>,
     select_menu: Menu,
 }
 
@@ -75,11 +84,13 @@ pub enum Msg {
     SelectMenu(Menu),
     RequestReadNotification,
     RequestRemoveNotification,
-    AddReadNotificationIds(i64),
+    ReadOneNotificationIds(i64),
+    RemoveOneNotificationIds(i64),
     GetAllNotification(String),
     GetNotificationByDegree(String),
     GetNotReadNotification(String),
     GetReadNotification(String),
+    GetRemoveNotification(String),
     Ignore,
     GetCurrentData,
 }
@@ -95,6 +106,7 @@ impl Component for Notifications {
             link,
             props,
             read_notification: vec![],
+            delete_notification: vec![],
             select_menu: Menu::GetAll,
         }
     }
@@ -135,12 +147,28 @@ impl Component for Notifications {
                     link.send_message(Msg::GetReadNotification(res));
                 })
             },
-            Msg::RequestRemoveNotification => {},
-            Msg::AddReadNotificationIds(id) => {
-                debug!("AddReadNotificationIds: {}", id);
+            Msg::RequestRemoveNotification => {
+                let delete_notifications_ids = self.delete_notification.clone();
+                spawn_local(async move {
+                    let res = make_query(
+                        DeleteNotifications::build_query(delete_notifications::Variables {
+                            delete_notifications_ids
+                        })
+                    ).await.unwrap();
+                    link.send_message(Msg::GetRemoveNotification(res));
+                })
+            },
+            Msg::ReadOneNotificationIds(id) => {
+                debug!("ReadOneNotificationIds: {}", id);
                 self.read_notification.push(id);
 
                 link.send_message(Msg::RequestReadNotification);
+            },
+            Msg::RemoveOneNotificationIds(id) => {
+                debug!("RemoveOneNotificationIds: {}", id);
+                self.delete_notification.push(id);
+
+                link.send_message(Msg::RequestRemoveNotification);
             },
             Msg::GetAllNotification(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
@@ -166,11 +194,28 @@ impl Component for Notifications {
 
                 match res_value.is_null() {
                     false => {
-                        let read_notification: bool = serde_json::from_value(res_value.get("readNotifications").unwrap().clone()).unwrap();
+                        let read_notification: usize = serde_json::from_value(res_value.get("readNotifications").unwrap().clone()).unwrap();
                         ConsoleService::info(format!("Read notifications data: {:?}", read_notification).as_ref());
 
-                        // self.notifications = read_notification;
-                        if read_notification {
+                        if read_notification > 0 {
+                            self.rendered(true);
+                        }
+                    },
+                    true => {
+                        self.error = Some(get_error(&data));
+                    },
+                }
+            },
+            Msg::GetRemoveNotification(res) => {
+                let data: Value = serde_json::from_str(res.as_str()).unwrap();
+                let res_value = data.as_object().unwrap().get("data").unwrap();
+
+                match res_value.is_null() {
+                    false => {
+                        let delete_notification: usize = serde_json::from_value(res_value.get("deleteNotifications").unwrap().clone()).unwrap();
+                        ConsoleService::info(format!("Read notifications data: {:?}", delete_notification).as_ref());
+
+                        if delete_notification > 0 {
                             self.rendered(true);
                         }
                     },
@@ -385,7 +430,12 @@ impl Notifications {
 
         let onclick_set_read = self.link
             .callback(move |_| {
-                Msg::AddReadNotificationIds(notif_id.clone())
+                Msg::ReadOneNotificationIds(notif_id.clone())
+            });
+
+        let onclick_delete_notif = self.link
+            .callback(move |_| {
+                Msg::RemoveOneNotificationIds(notif_id.clone())
             });
 
         let mut notification_class_degree = "";
@@ -433,6 +483,10 @@ impl Notifications {
                             degree,
                             19, created_at.to_string()) }
                     </span>
+                    <a class="button"
+                        onclick=onclick_delete_notif>
+                        <i class="icon fas fa-trash is-danger"></i>
+                    </a>
                 </div>
             </div>
             <br/>

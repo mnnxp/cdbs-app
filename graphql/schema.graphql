@@ -680,7 +680,7 @@ type MutationRoot {
   deleteStandardFav(standardUuid: UUID!): Boolean!
   addUserFav(userUuid: UUID!): Boolean!
   deleteUserFav(userUuid: UUID!): Boolean!
-  readNotifications(notificationsIds: [Int!]!): Boolean!
+  readNotifications(notificationsIds: [Int!]!): Int!
   deleteNotifications(notificationsIds: [Int!]!): Int!
   registerComponent(data: IptComponentData!): SlimComponent!
 

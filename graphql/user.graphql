@@ -284,6 +284,10 @@ fragment notificationsFields on ShowNotification {
     }
 }
 
-mutation SetReadNotifications($ReadNotificationsIds: [Int!]!) {
-  readNotifications(notificationsIds: $ReadNotificationsIds)
+mutation SetReadNotifications($readNotificationsIds: [Int!]!) {
+  readNotifications(notificationsIds: $readNotificationsIds)
+}
+
+mutation DeleteNotifications($deleteNotificationsIds: [Int!]!) {
+  deleteNotifications(notificationsIds: $deleteNotificationsIds)
 }
