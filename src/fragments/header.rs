@@ -1,10 +1,9 @@
 use yew::{
   agent::Bridged, html, Bridge, Callback, Component, ComponentLink,
-  FocusEvent, MouseEvent, Html, Properties, ShouldRender,
-  // InputData, ChangeData,
+  MouseEvent, Html, Properties, ShouldRender,
 };
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
-use crate::services::set_token; // is_authenticated
+use crate::services::set_token;
 
 use crate::routes::AppRoute;
 use crate::types::SlimUser;

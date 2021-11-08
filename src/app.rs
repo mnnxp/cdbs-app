@@ -17,7 +17,7 @@ use crate::routes::{
     home::Home,
     login::Login,
     notification::Notifications,
-    profile::{Profile, ProfileTab},
+    profile::Profile, // , ProfileTab},
     register::Register,
     settings::Settings,
     tenders::Tenders,
