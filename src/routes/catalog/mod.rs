@@ -3,19 +3,19 @@ mod list_item;
 
 use crate::routes::AppRoute;
 
-use box_item::BoxItem;
+// use box_item::BoxItem;
 use list_item::ListItem;
 use yew::prelude::*;
 use yew_router::prelude::*;
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
-use crate::types::*;
+// use crate::types::*;
 // use chrono::NaiveDateTime;
 use crate::gqls::make_query;
 use serde::{Deserialize, Serialize};
 use crate::types::{
-  UUID, SelfUserInfo, UserInfo, SlimUser, Program, Region, Certificate, UserCertificate, NaiveDateTime
+  UUID, NaiveDateTime
 };
 
 
