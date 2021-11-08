@@ -1,15 +1,15 @@
-mod boxItem;
-mod listItem;
+mod box_item;
+mod list_item;
 
 use crate::routes::AppRoute;
 
-use boxItem::BoxItem;
-use listItem::ListItem;
+use box_item::BoxItem;
+use list_item::ListItem;
 use yew::prelude::*;
 use yew_router::prelude::*;
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
-use serde_json::{Value};
+use serde_json::Value;
 use crate::types::*;
 // use chrono::NaiveDateTime;
 use crate::gqls::make_query;
