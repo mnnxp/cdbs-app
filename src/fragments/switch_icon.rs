@@ -1,10 +1,8 @@
-use yew::prelude::*;
+// use yew::prelude::*;
 use yew::{
-  agent::Bridged, html, Bridge, Callback, Component, ComponentLink,
-  FocusEvent, MouseEvent, Html, InputData, ChangeData, Properties, ShouldRender,
-  Classes
+  html, Callback, MouseEvent, Html, Classes,
 };
-use yew_router::prelude::*;
+// use yew_router::prelude::*;
 
 // #[derive(PartialEq, Properties, Clone)]
 // pub struct BtnItem{
@@ -55,10 +53,10 @@ use yew_router::prelude::*;
 //     }
 // }
 
-pub fn resBtn (class: Classes, onclick:Callback<MouseEvent>, spanStyle: String) -> Html {
+pub fn res_btn (class: Classes, onclick:Callback<MouseEvent>, span_style: String) -> Html {
   html! {
     <button class="button" onclick=onclick >
-      <span class="icon is-small" style=spanStyle >
+      <span class="icon is-small" style=span_style >
         <i class=class></i>
       </span>
     </button>

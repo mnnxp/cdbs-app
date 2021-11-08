@@ -1,24 +1,24 @@
-use graphql_client::{GraphQLQuery, Response};
+// use graphql_client::{GraphQLQuery, Response};
 use std::{
     error::Error,
     fmt::{self, Debug, Display, Formatter},
 };
 use wasm_bindgen::{prelude::*, JsCast};
-use wasm_bindgen_futures::{spawn_local, JsFuture};
+use wasm_bindgen_futures::JsFuture;
 use web_sys::{Request, RequestInit, RequestMode, Response as Res};
-use yew::{html, Component, ComponentLink, Html, ShouldRender};
-use yewtil::future::LinkFuture;
-use serde::ser::{SerializeStruct, Serializer};
+// use yew::{html, Component, ComponentLink, Html, ShouldRender};
+// use yewtil::future::LinkFuture;
+// use serde::ser::{SerializeStruct, Serializer};
 use dotenv_codegen::dotenv;
 use crate::services::{get_token};
-use yew::services::ConsoleService;
+// use yew::services::ConsoleService;
 use serde::{Deserialize, Serialize};
 
 // use serde
 
 pub const API_GPL: &str = dotenv!("API_GPL");
 
-type ObjectId = String;
+// type ObjectId = String;
 
 /// Something wrong has occurred while fetching an external resource.
 #[derive(Debug, Clone, PartialEq)]
@@ -39,8 +39,9 @@ impl From<JsValue> for FetchError {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct HttpHeaders {
-  Authorization: String
+  authorization: String
 }
 
 // let token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJlbWFpbCI6ImlvazJAYnVkc2hvbWUuY29tIiwidXNlcm5hbWUiOiLmiJHmmK9vazIiLCJleHAiOjEwMDAwMDAwMDAwfQ.Gk98TjaFPpyW2Vdunn-pVqSPizP_zzTr89psBTE6zzfLQStUnBEXA2k0yVrS0CHBt9bHLLcFgmo4zYiioRBzBg";
@@ -60,10 +61,10 @@ where
     opts.mode(RequestMode::Cors);
     if get_token().is_some() {
       opts.headers(&JsValue::from_serde(&serde_json::json!(serde_json::json!(HttpHeaders{
-        Authorization: format!("Bearer {}", get_token().unwrap()) 
+        authorization: format!("Bearer {}", get_token().unwrap())
       }))).unwrap());
     }
-    
+
     let url = String::from(API_GPL);
     let request = Request::new_with_str_and_init(url.as_str(), &opts)?;
 

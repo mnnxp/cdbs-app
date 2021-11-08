@@ -1,9 +1,9 @@
 use yew::{
   agent::Bridged, html, Bridge, Callback, Component, ComponentLink,
-  FocusEvent, MouseEvent, Html, InputData, ChangeData, Properties, ShouldRender,
+  MouseEvent, Html, Properties, ShouldRender,
 };
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
-use crate::services::{is_authenticated, set_token};
+use crate::services::set_token;
 
 use crate::routes::AppRoute;
 use crate::types::SlimUser;
@@ -41,7 +41,7 @@ impl Component for Header {
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        match msg { 
+        match msg {
           Msg::Logout => {
               // Clear global token after logged out
               set_token(None);

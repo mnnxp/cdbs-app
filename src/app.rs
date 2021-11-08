@@ -11,18 +11,18 @@ use crate::fragments::{footer::Footer, header::Header};
 use crate::routes::{
     // article::Article,
     catalog::Catalog,
-    createTender::CreateTender,
+    create_tender::CreateTender,
     // editor::Editor,
     fix_fragment_routes,
     home::Home,
     login::Login,
-    profile::{Profile, ProfileTab},
+    profile::Profile, //, ProfileTab},
     register::Register,
     settings::Settings,
     tenders::Tenders,
     AppRoute,
 };
-use crate::services::{is_authenticated, Auth, get_current_user};
+use crate::services::{is_authenticated, get_current_user};
 use crate::types::SlimUser;
 
 /// The root app component

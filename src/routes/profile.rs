@@ -491,7 +491,7 @@ impl Profile {
                   <div class="media-right flexBox " >
                       {
                           match is_followed {
-                              Some(following) => {
+                              Some(_) => {
                                 let class_fav = if self.is_followed {
                                     "fas fa-bookmark"
                                 } else {

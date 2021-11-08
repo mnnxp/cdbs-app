@@ -1,5 +1,5 @@
 use yew::prelude::*;
-use crate::fragments::switch_icon::resBtn;
+use crate::fragments::switch_icon::res_btn;
 use super::ShowedComponent;
 
 pub enum Msg {
@@ -120,14 +120,14 @@ impl ListItem {
                 </div>
               </div>
               <div class="media-right flexBox " >
-                {resBtn(classes!(String::from("fas fa-cloud-download-alt")), self.link.callback(|_| Msg::AddOne ), "".to_string())}
+                {res_btn(classes!(String::from("fas fa-cloud-download-alt")), self.link.callback(|_| Msg::AddOne ), "".to_string())}
                 // <SwitchIcon callback={BtnItem{class: String::from("fas fa-cloud-download-alt"),clickEvent:self.link.callback(|_| Msg::AddOne )}} />
                 // <button class="button  is-info">
                 //   <span class="icon is-small">
                 //     <i class="fas fa-cloud-download-alt"></i>
                 //   </span>
                 // </button>
-                {resBtn(
+                {res_btn(
                     classes!(class_res_btn),
                     trigger_fab_btn,
                     class_color_btn.to_string()
@@ -180,7 +180,7 @@ impl ListItem {
                 <div class="btnBox">
                   <button class="button is-light is-fullwidth has-text-weight-bold">{"Download"}</button>
                   <div style="margin-left: 8px;">
-                  {resBtn(
+                  {res_btn(
                       classes!(class_res_btn),
                       trigger_fab_btn,
                       class_color_btn.to_string()

@@ -1,4 +1,4 @@
-mod box_item;
+// mod box_item;
 mod list_item;
 
 use crate::routes::AppRoute;
@@ -189,7 +189,7 @@ impl Component for Catalog {
             .link
             .callback(|_|Msg::SwitchShowType);
 
-        let mut class_for_icon: &str;
+        let class_for_icon: &str;
         let mut class_for_list = "";
         match self.show_type {
             ListState::Box => {

@@ -12,7 +12,7 @@ use crate::error::Error;
 use crate::types::ErrorInfo;
 
 const API_ROOT: &str = dotenv!("API_ROOT");
-const API_GPL: &str = dotenv!("API_GPL");
+// const API_GPL: &str = dotenv!("API_GPL");
 const TOKEN_KEY: &str = dotenv!("TOKEN_KEY");
 // const TOKEN_KEY: &str = "yew.token";
 
