@@ -10,10 +10,10 @@ pub enum Msg {
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
     pub data: ShowedComponent,
-    pub showList: bool,
+    pub show_list: bool,
     // pub triggerFav: Callback<MouseEvent>,
-    pub addFav: Callback<String>,
-    pub delFav : Callback<String>,
+    pub add_fav: Callback<String>,
+    pub del_fav : Callback<String>,
 }
 
 pub struct ListItem {
@@ -41,10 +41,10 @@ impl Component for ListItem {
                 crate::yewLog!(self.value);
             }
             Msg::TriggerFav => {
-                if !self.props.data.isFollowed {
-                    self.props.addFav.emit("".to_string());
+                if !self.props.data.is_followed {
+                    self.props.add_fav.emit("".to_string());
                 } else {
-                    self.props.delFav.emit("".to_string());
+                    self.props.del_fav.emit("".to_string());
                 }
             }
         }
@@ -55,8 +55,8 @@ impl Component for ListItem {
         // Should only return "true" if new properties are different to
         // previously received properties.
         // This component has no properties so we will always return "false".
-        if self.props.showList != props.showList || self.props.data.isFollowed != props.data.isFollowed {
-            self.props.showList = props.showList;
+        if self.props.show_list != props.show_list || self.props.data.is_followed != props.data.is_followed {
+            self.props.show_list = props.show_list;
             self.props.data = props.data;
             true
         } else {
@@ -66,77 +66,130 @@ impl Component for ListItem {
 
     fn view(&self) -> Html {
       // let clickEvent = self.link.ca;
-        let ShowedComponent { description, isBase, isFollowed, name, .. } = self.props.data.clone();
-        let Props { addFav, delFav, .. } = self.props.clone();
+      // let Props { add_fav, del_fav, .. } = self.props.clone();
 
-        if self.props.showList {
-          html! {
-            <div class="box itemBox">
-          <article class="media center-media">
-            <div class="media-left">
-              <figure class="image is-96x96">
-                <div hidden={!isBase} class="top-tag" >{"standard"}</div>
-                <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
-              </figure>
-            </div>
-            <div class="media-content" style="min-width: 0px;">
-              <div class="content">
-                <p>
-                  <div style="margin-bottom:0" >
-                    {"manufactured by "} <span class="id-box has-text-grey-light has-text-weight-bold">{"Alphametall"}</span>
-                  </div>
-                  <div class="overflow-title has-text-weight-bold	is-size-4" >{name}</div>
-                  <div>{description}</div>
-                </p>
-              </div>
-            </div>
-            <div class="media-right flexBox " >
-              {resBtn(classes!(String::from("fas fa-cloud-download-alt")), self.link.callback(|_| Msg::AddOne ), "".to_string())}
-              // <SwitchIcon callback={BtnItem{class: String::from("fas fa-cloud-download-alt"),clickEvent:self.link.callback(|_| Msg::AddOne )}} />
-              // <button class="button  is-info">
-              //   <span class="icon is-small">
-              //     <i class="fas fa-cloud-download-alt"></i>
-              //   </span>
-              // </button>
-              {resBtn(classes!( if isFollowed {"fas"} else {"far"} , "fa-bookmark"), self.link.callback(|_| Msg::TriggerFav ), if isFollowed {
-                "color: #3298DD;".to_string()
-              } else {
-                "".to_string()
-              })}
-              // <button class="button">
-              //   <span class="icon is-small">
-              //     <i class="fas fa-bookmark"></i>
-              //   </span>
-              // </button>
-            </div>
-          </article>
-        </div>
-          }
-        } else {
-          html! {
-            <div class="boxItem" >
-              <div class="innerBox" >
-                <div class="imgBox" >
-                  <div class="top-tag" hidden={!isBase} >{"standart"}</div>
+      match self.props.show_list {
+        true => { self.showing_in_list() },
+        false => { self.showing_in_box() },
+      }
+    }
+}
+
+impl ListItem {
+    fn showing_in_list(&self) -> Html {
+        let ShowedComponent {
+            description,
+            is_base,
+            is_followed,
+            name,
+            ..
+        } = &self.props.data;
+
+        let trigger_fab_btn = self.link.callback(|_| Msg::TriggerFav);
+
+        let mut class_res_btn = vec![];
+        let mut class_color_btn = "";
+        match is_followed {
+            true => {
+                class_res_btn.push("fas");
+                class_color_btn = "color: #3298DD;";
+            },
+            false => {
+                class_res_btn.push("far");
+            },
+        }
+        class_res_btn.push("fa-bookmark");
+
+        html! {
+          <div class="box itemBox">
+            <article class="media center-media">
+              <div class="media-left">
+                <figure class="image is-96x96">
+                  <div hidden={!is_base} class="top-tag" >{"standard"}</div>
                   <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
-                </div>
-                <div>
-                  {"manufactured by "}<span class="id-box has-text-grey-light has-text-weight-bold">{"Alphametall"}</span>
-                </div>
-                <div class="overflow-title has-text-weight-bold	is-size-4" >{name}</div>
-                  <div class="btnBox">
-                    <button class="button is-light is-fullwidth has-text-weight-bold">{"Download"}</button>
-                    <div style="margin-left: 8px;">
-                      {resBtn(classes!( if isFollowed {"fas"} else {"far"} , "fa-bookmark"), self.link.callback(|_| Msg::TriggerFav ), if isFollowed {
-                        "color: #3298DD;".to_string()
-                      } else {
-                        "".to_string()
-                      })}
-                    </div>
-                  </div>
+                </figure>
               </div>
+              <div class="media-content" style="min-width: 0px;">
+                <div class="content">
+                  <p>
+                    <div style="margin-bottom:0" >
+                      {"manufactured by "} <span class="id-box has-text-grey-light has-text-weight-bold">{"Alphametall"}</span>
+                    </div>
+                    <div class="overflow-title has-text-weight-bold	is-size-4" >{name}</div>
+                    <div>{description}</div>
+                  </p>
+                </div>
+              </div>
+              <div class="media-right flexBox " >
+                {resBtn(classes!(String::from("fas fa-cloud-download-alt")), self.link.callback(|_| Msg::AddOne ), "".to_string())}
+                // <SwitchIcon callback={BtnItem{class: String::from("fas fa-cloud-download-alt"),clickEvent:self.link.callback(|_| Msg::AddOne )}} />
+                // <button class="button  is-info">
+                //   <span class="icon is-small">
+                //     <i class="fas fa-cloud-download-alt"></i>
+                //   </span>
+                // </button>
+                {resBtn(
+                    classes!(class_res_btn),
+                    trigger_fab_btn,
+                    class_color_btn.to_string()
+                )}
+                // <button class="button">
+                //   <span class="icon is-small">
+                //     <i class="fas fa-bookmark"></i>
+                //   </span>
+                // </button>
+              </div>
+            </article>
+          </div>
+        }
+    }
+
+    fn showing_in_box(&self) -> Html {
+        let ShowedComponent {
+            is_base,
+            is_followed,
+            name,
+            ..
+        } = self.props.data.clone();
+
+        let trigger_fab_btn = self.link.callback(|_| Msg::TriggerFav);
+
+        let mut class_res_btn = vec![];
+        let mut class_color_btn = "";
+        match is_followed {
+            true => {
+                class_res_btn.push("fas");
+                class_color_btn = "color: #3298DD;";
+            },
+            false => {
+                class_res_btn.push("far");
+            },
+        }
+        class_res_btn.push("fa-bookmark");
+
+        html! {
+          <div class="boxItem" >
+            <div class="innerBox" >
+              <div class="imgBox" >
+                <div class="top-tag" hidden={!is_base} >{"standart"}</div>
+                <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
+              </div>
+              <div>
+                {"manufactured by "}<span class="id-box has-text-grey-light has-text-weight-bold">{"Alphametall"}</span>
+              </div>
+              <div class="overflow-title has-text-weight-bold	is-size-4" >{name}</div>
+                <div class="btnBox">
+                  <button class="button is-light is-fullwidth has-text-weight-bold">{"Download"}</button>
+                  <div style="margin-left: 8px;">
+                  {resBtn(
+                      classes!(class_res_btn),
+                      trigger_fab_btn,
+                      class_color_btn.to_string()
+                  )}
+                  </div>
+                </div>
             </div>
-          } 
+          </div>
         }
     }
 }

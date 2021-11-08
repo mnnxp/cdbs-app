@@ -60,29 +60,32 @@ pub enum ListState {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct ShowedComponent {
   uuid : UUID,
   name: String,
   description: String,
-  typeAccessId: usize,
-  isFollowed: bool,
-  isBase: bool,
-  updatedAt: NaiveDateTime,
-  componentSuppliers: Vec<Supplier>
+  type_access_id: usize,
+  is_followed: bool,
+  is_base: bool,
+  updated_at: NaiveDateTime,
+  component_suppliers: Vec<Supplier>
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct Supplier{
   supplier:SlimCompany,
-  componentUuid: UUID,
+  component_uuid: UUID,
   description: String
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct SlimCompany{
   uuid: UUID,
   shortname: String,
-  isSupplier: bool
+  is_supplier: bool
 }
 
 pub struct Catalog {
@@ -90,7 +93,7 @@ pub struct Catalog {
     // It can be used to send messages to the component
     link: ComponentLink<Self>,
     value: i64,
-    showType: ListState,
+    show_type: ListState,
     list: Vec<ShowedComponent>
 }
 
@@ -102,7 +105,7 @@ impl Component for Catalog {
         Self {
             link,
             value: 0,
-            showType: ListState::List,
+            show_type: ListState::List,
             list: Vec::new()
         }
     }
@@ -127,9 +130,9 @@ impl Component for Catalog {
                 // re-render for it to appear on the page
             }
             Msg::SwitchShowType => {
-                match self.showType {
-                    ListState::Box => self.showType = ListState::List,
-                    _ => self.showType = ListState::Box,
+                match self.show_type {
+                    ListState::Box => self.show_type = ListState::List,
+                    _ => self.show_type = ListState::Box,
                 }
             }
             Msg::GetList => {
@@ -180,7 +183,24 @@ impl Component for Catalog {
     }
 
     fn view(&self) -> Html {
-        let list = self.list.clone();
+        // let list = self.list.clone();
+
+        let onclick_change_view = self
+            .link
+            .callback(|_|Msg::SwitchShowType);
+
+        let mut class_for_icon = "";
+        let mut class_for_list = "";
+        match self.show_type {
+            ListState::Box => {
+                class_for_icon = "fas fa-bars";
+                class_for_list = "flex-box";
+            },
+            ListState::List => {
+                class_for_icon = "fas fa-th-large";
+            },
+        };
+
         html! {
             <div class="tendersBox" >
               <div class="level" >
@@ -196,31 +216,53 @@ impl Component for Catalog {
                       <option>{"With options"}</option>
                     </select>
                   </div>
-                  <button class="button" onclick={self.link.callback(|_|Msg::SwitchShowType)} >
-                    <span class="icon is-small">
-                      <i class=classes!("fas", if self.showType == ListState::Box { "fa-bars" } else { "fa-th-large" } )></i>
+                  <button class="button" onclick={onclick_change_view} >
+                    <span class={"icon is-small"}>
+                      <i class={class_for_icon}></i>
                     </span>
                   </button>
                 </div>
               </div>
-              <div class=classes!( if self.showType == ListState::Box { "flex-box" } else { " " } ) >
-                {for list.iter().map(|x| {
-                  let backup = x.clone();
-                  let uuid = x.uuid.clone();
-                  let uuid1 = x.uuid.clone();
-                  // let addMsg = Msg::AddFav(uuid.clone());
-                  // let delMsg = Msg::DelFav(uuid.clone());
-                  // let addEnv = move |ev: MouseEvent| {ev.prevent_default(); addMsg };
-                  // let delEnv = move |ev: MouseEvent| {ev.prevent_default(); delMsg };
-                  // let triggerFav = self.link.callback( );
-                  html! { <ListItem data={x.clone()} showList={self.showType == ListState::List} 
-                    // triggerFav={triggerFav} 
-                    addFav={self.link.callback(move |_| Msg::AddFav(uuid.clone()) )}
-                    delFav={self.link.callback(move |_| Msg::DelFav(uuid1.clone()) )}
-                   /> }
-                })}
+              <div class={class_for_list}>
+                {for self.list.iter().map(|x| self.show_card(&x))}
               </div>
             </div>
+        }
+    }
+}
+
+impl Catalog {
+    fn show_card(
+        &self,
+        show_comp: &ShowedComponent,
+    ) -> Html {
+        // let backup = x.clone();
+        // let uuid = x.uuid.clone();
+        // let uuid1 = x.uuid.clone();
+        // let addMsg = Msg::AddFav(uuid.clone());
+        // let delMsg = Msg::DelFav(uuid.clone());
+        // let addEnv = move |ev: MouseEvent| {ev.prevent_default(); addMsg };
+        // let delEnv = move |ev: MouseEvent| {ev.prevent_default(); delMsg };
+        // let triggerFav = self.link.callback( );
+
+        let target_uuid_add = show_comp.uuid.clone();
+        let target_uuid_del = show_comp.uuid.clone();
+
+        let onclick_add_fav = self.link.callback(move |_|
+                Msg::AddFav(target_uuid_add.clone())
+            );
+
+        let onclick_del_fav = self.link.callback(move |_|
+                Msg::DelFav(target_uuid_del.clone())
+            );
+
+        html! {
+            <ListItem data={show_comp.clone()}
+                show_list={self.show_type == ListState::List}
+                // triggerFav={triggerFav}
+                add_fav={onclick_add_fav}
+                del_fav={onclick_del_fav}
+                />
         }
     }
 }
