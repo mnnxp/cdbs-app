@@ -87,7 +87,7 @@ impl ListItem {
 
         let trigger_fab_btn = self.link.callback(|_| Msg::TriggerFav);
 
-        let mut class_res_btn = vec![];
+        let mut class_res_btn = vec!["fa-bookmark"];
         let mut class_color_btn = "";
         match is_followed {
             true => {
@@ -98,7 +98,6 @@ impl ListItem {
                 class_res_btn.push("far");
             },
         }
-        class_res_btn.push("fa-bookmark");
 
         html! {
           <div class="box itemBox">
