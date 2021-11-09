@@ -11,12 +11,18 @@ use std::collections::HashMap;
 pub use chrono::NaiveDateTime;
 
 pub use auth::{
-    LoginInfo, LoginInfoWrapper, RegisterInfo, SlimUser,
+    LoginInfo, LoginInfoWrapper, UpdatePasswordInfo, RegisterInfo, SlimUser,
     UserUpdateInfo, UserToken
 };
-pub use profiles::{SelfUserInfo, UserInfo, UserCertificate};
-pub use file::ShowFileForDownload;
-pub use relate::{Region, Program, Certificate};
+pub use profiles::{
+    SelfUserInfo, UserInfo, UserCertificate, ShowNotification, DegreeImportanceTranslateList,
+};
+pub use file::{
+    ShowFileForDownload, DownloadFile, UploadFile,
+};
+pub use relate::{
+    Region, Program, Certificate, TypeAccessTranslateListInfo
+};
 pub use tags::TagListInfo;
 
 /// Conduit api error info for Unprocessable Entity error

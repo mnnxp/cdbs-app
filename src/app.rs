@@ -16,7 +16,8 @@ use crate::routes::{
     fix_fragment_routes,
     home::Home,
     login::Login,
-    profile::Profile, //, ProfileTab},
+    notification::Notifications,
+    profile::Profile, // , ProfileTab},
     register::Register,
     settings::Settings,
     tenders::Tenders,
@@ -124,6 +125,7 @@ impl Component for App {
                             // AppRoute::Editor(slug) => html!{<Editor slug=Some(slug.clone())/>},
                             // AppRoute::EditorCreate => html!{<Editor />},
                             // AppRoute::Article(slug) => html!{<Article slug=slug.clone() current_user=self.current_user.clone() />},
+                            AppRoute::Notifications => html!{<Notifications callback=callback_logout />},
                             AppRoute::Settings => html!{<Settings callback=callback_logout />},
                             // AppRoute::ProfileFavorites(username) => html!{
                             //     <Profile username=username.clone() current_user=self.current_user.clone() tab=ProfileTab::FavoritedBy />

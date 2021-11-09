@@ -1,7 +1,7 @@
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use super::file::{ShowFileForDownload, DownloadFile};
-use super::relate::{Region, Program};
+use super::relate::{Region, Program, TypeAccessTranslateListInfo};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -20,6 +20,7 @@ pub struct SelfUserInfo {
     pub image_file: DownloadFile, // obj
     pub region: Region, // obj
     pub program: Program, // obj
+    pub type_access: TypeAccessTranslateListInfo, // obj
     pub is_email_verified: bool,
     pub is_enabled: bool,
     pub is_delete: bool,
@@ -70,4 +71,22 @@ pub struct UserCertificate {
     pub user_uuid: String,
     pub file: ShowFileForDownload,
     pub description: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct ShowNotification {
+    pub id: usize,
+    pub notification: String,
+    pub degree_importance: DegreeImportanceTranslateList,
+    pub created_at: NaiveDateTime,
+    pub is_read: bool,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct DegreeImportanceTranslateList {
+    pub degree_importance_id: usize,
+    pub lang_id: usize,
+    pub degree: String,
 }

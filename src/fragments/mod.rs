@@ -5,4 +5,5 @@ pub mod header;
 pub mod list_errors;
 pub mod list_pagination;
 pub mod certificate;
-pub mod switch_icon;
+pub mod add_certificate;
+pub mod upload_favicon;

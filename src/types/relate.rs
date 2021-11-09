@@ -56,3 +56,11 @@ impl From<&super::UserCertificate> for Certificate {
 //         }
 //     }
 // }
+
+#[derive(Serialize, Deserialize, Clone, Default, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct TypeAccessTranslateListInfo {
+    pub lang_id: usize,
+    pub name: String,
+    pub type_access_id: usize,
+}

@@ -64,11 +64,11 @@ impl Component for Header {
     fn view(&self) -> Html {
         let nav_menu = vec![
             NavMenu {
-                text: "catalog".to_string(),
+                text: "Сatalog".to_string(),
                 route: AppRoute::Catalog,
             },
             NavMenu {
-                text: "tenders".to_string(),
+                text: "Tenders".to_string(),
                 route: AppRoute::Tenders,
             },
             NavMenu {
@@ -107,17 +107,6 @@ impl Component for Header {
                             }
                           })
                         }
-                        // <RouterAnchor<AppRoute> route=AppRoute::Catalog classes="navbar-item">
-                        //     { "Catalog" }
-                        // </RouterAnchor<AppRoute>>
-
-                        // <RouterAnchor<AppRoute> route=AppRoute::Tenders classes="navbar-item">
-                        //     { "Tenders" }
-                        // </RouterAnchor<AppRoute>>
-
-                        // <RouterAnchor<AppRoute> route=AppRoute::Home classes="navbar-item">
-                        //     { "About Us" }
-                        // </RouterAnchor<AppRoute>>
                     </div>
                     <div class="navbar-end">
                     {
@@ -151,28 +140,39 @@ impl Header {
     fn logged_in_view(&self, user_info: &SlimUser, logout:yew::Callback<MouseEvent> ) -> Html {
         html! {
             <div class="buttons">
-                 <RouterAnchor<AppRoute> route=AppRoute::Settings classes="button">
-                  { "Settings" }
-                 </RouterAnchor<AppRoute>>
                  <div class="dropdown is-hoverable  is-right">
                   <div class="dropdown-trigger">
-                    <button class="button" aria-haspopup="true" aria-controls="dropdown-menu">
-                      <span>{ &user_info.username }</span>
-                      <span class="icon is-small">
-                        <i class="fas fa-angle-down" aria-hidden="true"></i>
-                      </span>
+                    <button
+                        id="header-menu-button"
+                        class="button"
+                        aria-haspopup="true"
+                        aria-controls="dropdown-menu">
+                          // <span>
+                          //   <RouterAnchor<AppRoute> route=AppRoute::Profile(user_info.username.clone()) >
+                          //     { &user_info.username }
+                          //   </RouterAnchor<AppRoute>>
+                          // </span>
+                          <span>{ &user_info.username }</span>
+                          <span class="icon is-small">
+                            <i class="fas fa-angle-down" aria-hidden="true"></i>
+                          </span>
                     </button>
                   </div>
                   <div class="dropdown-menu" id="dropdown-menu" role="menu">
                     <div class="dropdown-content">
                       <RouterAnchor<AppRoute> route=AppRoute::Profile(user_info.username.clone()) >
                         <a class="dropdown-item">
-                          { "profile" }
+                          { "Profile" }
+                        </a>
+                      </RouterAnchor<AppRoute>>
+                      <RouterAnchor<AppRoute> route=AppRoute::Settings>
+                        <a class="dropdown-item">
+                          { "Settings" }
                         </a>
                       </RouterAnchor<AppRoute>>
                       <hr class="dropdown-divider" />
                       <a class="dropdown-item" onclick=logout >
-                        {"logout"}
+                        {"Logout"}
                       </a>
                     </div>
                   </div>

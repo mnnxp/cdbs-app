@@ -9,12 +9,19 @@ const programTarget2 = 'DesignSpark Mechanical';
 const programSelect = Selector('#program');
 const programOption = programSelect.find('option');
 
+const typeAccessTarget1 = 'Private';
+const typeAccessTarget2 = 'Protected';
+const typeAccessTarget3 = 'Public';
+const typeAccessSelect = Selector('#types-access');
+const typeAccessOption = typeAccessSelect.find('option');
+
 const regionTarget = 'Chuy valley';
 const regionTarget2 = 'Talas region';
 const regionSelect = Selector('#region');
 const regionOption = regionSelect.find('option');
 
 const registerButton = Selector('a').withAttribute('href', '#/register');
+const headerMenuButton = Selector('#header-menu-button');
 const settingButton = Selector('a').withAttribute('href', '#/settings');
 
 const goodFirstname = "Testfirstname";
@@ -59,6 +66,7 @@ test('Update user data', async t => {
         // check route to home
         .expect(Selector('h2').filter('.subtitle').innerText).eql('engineer component supplier');
 
+    await t.click(headerMenuButton)
     // open setting page
     await t.click(settingButton)
 
@@ -79,10 +87,7 @@ test('Update user data', async t => {
         .click('#update-settings')
 
         // check count updated rows
-        .expect(Selector('span')
-          .filter('.tag')
-          .filter('.is-info')
-          .filter('.is-light')
+        .expect(Selector('#tag-info-updated-rows')
           .innerText).eql('Updated rows: 10');
 
     await t.click('#update-settings')
@@ -110,9 +115,82 @@ test('Update user data', async t => {
         .click('#update-settings')
 
         // return old data
-        .expect(Selector('span')
-          .filter('.tag')
-          .filter('.is-info')
-          .filter('.is-light')
+        .expect(Selector('#tag-info-updated-rows')
           .innerText).eql('Updated rows: 6');
+
+    await t.click('#access');
+    // change access
+    await t
+        .click(typeAccessSelect)
+        .click(typeAccessOption.withText(typeAccessTarget2))
+        .click('#update-access')
+        .expect(Selector('#tag-info-updated-access')
+          .innerText).eql('Updated access: true');
+
+    await t
+        .click(typeAccessSelect)
+        .click(typeAccessOption.withText(typeAccessTarget2))
+        .click('#update-access')
+        .expect(Selector('#tag-info-updated-access')
+          .innerText).eql('Updated access: false');
+
+    await t
+        .click(typeAccessSelect)
+        .click(typeAccessOption.withText(typeAccessTarget3))
+        .click('#update-access')
+        .expect(Selector('#tag-info-updated-access')
+          .innerText).eql('Updated access: true');
+
+    await t.click('#password');
+    // update password
+    await t
+        .typeText('#old-password', goodPassword)
+        .typeText('#new-password', goodEmail)
+        .click('#update-password')
+        .expect(Selector('#tag-info-updated-pwd')
+          .innerText).eql('Updated password: true');
+
+    // update with not valid password
+    await t
+        .typeText('#old-password', goodPassword, { replace: true })
+        .typeText('#new-password', goodEmail, { replace: true })
+        .click('#update-password')
+        .expect(Selector('div')
+          .filter('.notification')
+          .filter('.is-danger').innerText)
+          .eql('BadRequest: Password is not correct.');
+
+    // update with duplicate password
+    await t
+        .typeText('#old-password', goodEmail, { replace: true })
+        .typeText('#new-password', goodEmail, { replace: true })
+        .click('#update-password')
+        .expect(Selector('#tag-info-updated-pwd')
+          .innerText).eql('Updated password: false');
+
+
+    // return old password
+    await t
+        .typeText('#old-password', goodEmail, { replace: true })
+        .typeText('#new-password', goodPassword, { replace: true })
+        .click('#update-password')
+        .expect(Selector('#tag-info-updated-pwd')
+          .innerText).eql('Updated password: true');
+
+
+    await t.click('#remove-profile');
+    // try remove with not valid password
+    await t
+        .typeText('#user-password', goodEmail)
+        .click('#button-remove-profile')
+        .expect(Selector('#tag-info-remove-profile')
+          .innerText).eql('Profile delete: false');
+
+    // remove profile
+    await t
+        .typeText('#user-password', goodPassword, { replace: true })
+        .click('#button-remove-profile')
+        // check route to home page
+        .expect(Selector('h2').filter('.subtitle').innerText)
+          .eql('engineer component supplier');
 });

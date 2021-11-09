@@ -680,8 +680,8 @@ type MutationRoot {
   deleteStandardFav(standardUuid: UUID!): Boolean!
   addUserFav(userUuid: UUID!): Boolean!
   deleteUserFav(userUuid: UUID!): Boolean!
-  readNotification(notificationId: Int!): Boolean!
-  deleteNotification(notificationIds: [Int!]!): Int!
+  readNotifications(notificationsIds: [Int!]!): Int!
+  deleteNotifications(notificationsIds: [Int!]!): Int!
   registerComponent(data: IptComponentData!): SlimComponent!
 
   # Transfer component ownership to another user

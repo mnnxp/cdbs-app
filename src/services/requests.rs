@@ -4,7 +4,7 @@ use log::debug;
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use yew::callback::Callback;
-use yew::format::{Json, Nothing, Text};
+use yew::format::{Json, Nothing, Text, Binary};
 use yew::services::fetch::{FetchService, FetchTask, Request, Response};
 use yew::services::storage::{Area, StorageService};
 
@@ -162,6 +162,61 @@ impl Requests {
     {
         let body: Text = Json(&body).into();
         self.builder("PUT", url, body, callback)
+    }
+
+    /// Put request for send file to storage
+    pub fn put_f<T>(
+        &mut self,
+        url: String,
+        body: Vec<u8>,
+        callback: Callback<Result<Option<T>, Error>>,
+    ) -> FetchTask
+    where
+        for<'de> T: Deserialize<'de> + 'static + std::fmt::Debug,
+    {
+        let handler = move |response: Response<Binary>| {
+            if let (meta, Ok(data)) = response.into_parts() {
+                debug!("Response: {:?}", data);
+                debug!("Meta status: {:?}", meta.status.is_success());
+                if meta.status.is_success() {
+                    debug!("Data: {:?}", data);
+                    if data.is_empty() {
+                        callback.emit(Ok(None))
+                    } else {
+                        callback.emit(Err(Error::InternalServerError))
+                    }
+                } else {
+                    match meta.status.as_u16() {
+                        401 => callback.emit(Err(Error::Unauthorized)),
+                        403 => callback.emit(Err(Error::Forbidden)),
+                        404 => callback.emit(Err(Error::NotFound)),
+                        500 => callback.emit(Err(Error::InternalServerError)),
+                        422 => {
+                            let data: Result<ErrorInfo, _> = serde_json::from_slice(&data);
+                            if let Ok(data) = data {
+                                callback.emit(Err(Error::UnprocessableEntity(data)))
+                            } else {
+                                callback.emit(Err(Error::DeserializeError))
+                            }
+                        }
+                        _ => callback.emit(Err(Error::RequestError)),
+                    }
+                }
+            } else {
+                callback.emit(Err(Error::RequestError))
+            }
+        };
+
+        let body: Binary = Ok(body);
+
+        let builder = Request::builder()
+            .method("PUT")
+            .uri(url.as_str());
+
+        let request = builder.body(body).unwrap();
+        debug!("Request: {:?}", request);
+
+        FetchService::fetch_binary(request, handler.into()).unwrap()
     }
 }
 
