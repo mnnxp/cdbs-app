@@ -1,14 +1,17 @@
 //! Routes by yew_router
 
 pub mod home;
-pub mod login;
-pub mod register;
-pub mod settings;
-pub mod notification;
-pub mod profile;
-pub mod tenders;
-pub mod catalog;
-pub mod create_tender;
+pub mod user;
+pub mod tender;
+pub mod component;
+
+pub use user::{
+    login,
+    register,
+    settings,
+    notification,
+    profile,
+};
 
 use yew_router::prelude::*;
 
@@ -23,8 +26,8 @@ pub enum AppRoute {
     CreateTender,
     #[to = "#/tenders"]
     Tenders,
-    #[to = "#/catalog"]
-    Catalog,
+    #[to = "#/components"]
+    CatalogComponent,
     #[to = "#/notifications"]
     Notifications,
     #[to = "#/settings"]

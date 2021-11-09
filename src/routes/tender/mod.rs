@@ -1,4 +1,7 @@
+mod create_tender;
 mod item;
+
+pub use create_tender::CreateTender;
 
 use item::Item;
 use yew::prelude::*;
