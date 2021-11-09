@@ -10,8 +10,8 @@ use crate::error::Error;
 use crate::fragments::{footer::Footer, header::Header};
 use crate::routes::{
     // article::Article,
-    catalog::Catalog,
-    create_tender::CreateTender,
+    component::CatalogComponent,
+    tender::{Tenders, CreateTender},
     // editor::Editor,
     fix_fragment_routes,
     home::Home,
@@ -20,7 +20,6 @@ use crate::routes::{
     profile::Profile, // , ProfileTab},
     register::Register,
     settings::Settings,
-    tenders::Tenders,
     AppRoute,
 };
 use crate::services::{is_authenticated, get_current_user};
@@ -138,7 +137,7 @@ impl Component for App {
                                 />
                             },
                             AppRoute::Tenders => html!{<Tenders />},
-                            AppRoute::Catalog => html!{<Catalog />},
+                            AppRoute::CatalogComponent => html!{<CatalogComponent />},
                             AppRoute::CreateTender => html!{<CreateTender />},
                         }
                     } else {

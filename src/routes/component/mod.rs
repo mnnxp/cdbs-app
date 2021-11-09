@@ -1,6 +1,9 @@
-mod item;
+mod catalog;
+// mod item;
 
-use item::Item;
+pub use catalog::CatalogComponent;
+
+// use item::Item;
 use yew::prelude::*;
 
 pub enum Msg {
@@ -195,7 +198,7 @@ impl Component for ComponentTemp {
                 </div>
               </div>
             </div>
-        
+
             <div class="columns is-mobile">
               <div class="column">
                 <div class="tags are-large">

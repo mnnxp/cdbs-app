@@ -88,7 +88,7 @@ pub struct SlimCompany{
   is_supplier: bool
 }
 
-pub struct Catalog {
+pub struct CatalogComponent {
     // `ComponentLink` is like a reference to a component.
     // It can be used to send messages to the component
     link: ComponentLink<Self>,
@@ -97,7 +97,7 @@ pub struct Catalog {
     list: Vec<ShowedComponent>
 }
 
-impl Component for Catalog {
+impl Component for CatalogComponent {
     type Message = Msg;
     type Properties = ();
 
@@ -231,7 +231,7 @@ impl Component for Catalog {
     }
 }
 
-impl Catalog {
+impl CatalogComponent {
     fn show_card(
         &self,
         show_comp: &ShowedComponent,
