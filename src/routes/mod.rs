@@ -8,7 +8,7 @@ pub mod notification;
 pub mod profile;
 pub mod tenders;
 pub mod catalog;
-pub mod createTender;
+pub mod create_tender;
 
 use yew_router::prelude::*;
 

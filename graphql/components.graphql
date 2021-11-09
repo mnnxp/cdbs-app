@@ -1,0 +1,58 @@
+query GetRawList {
+  components {
+    uuid
+    name
+    description
+    typeAccessId
+    isFollowed
+    isBase
+    updatedAt
+    componentSuppliers {
+      ...componentSuppliers
+    }
+  }
+}
+
+query GetList(
+  $componentsUuids: [String!]
+  $favorite: Boolean
+  $userUuid: String
+  $companyUuid: String
+) {
+  components(
+    componentsUuids: $componentsUuids
+    favorite: $favorite
+    userUuid: $userUuid
+    companyUuid: $companyUuid
+  ) {
+    uuid
+    name
+    description
+    typeAccessId
+    isFollowed
+    isBase
+    updatedAt
+  }
+}
+
+fragment componentSuppliers on ComponentSupplierRelatedData {
+  supplier {
+    ...supplier
+  }
+  componentUuid
+  description
+}
+
+fragment supplier on SlimCompany {
+  uuid
+  shortname
+  isSupplier
+}
+
+mutation AddComponentFav($componentUuid: String!) {
+  addComponentFav(componentUuid: $componentUuid)
+}
+
+mutation DeleteComponentFav($componentUuid: String!) {
+  deleteComponentFav(componentUuid: $componentUuid)
+}
