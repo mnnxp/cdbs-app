@@ -1,7 +1,7 @@
 use yew::services::fetch::FetchTask;
 use yew::services::reader::{File, FileData, ReaderService, ReaderTask};
 use yew::{
-    html, Callback, Component, ComponentLink, Html, InputData,
+    html, Callback, Component, ComponentLink, Html,
     Properties, ShouldRender, ChangeData,
 };
 use yew::services::ConsoleService;

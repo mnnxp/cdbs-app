@@ -1,9 +1,9 @@
 // use yew::services::fetch::FetchTask;
 use yew::{
-    agent::Bridged, html, Bridge, Callback, Component, ComponentLink,
-    FocusEvent, Html, InputData, ChangeData, Properties, ShouldRender,
+    html, Callback, Component, ComponentLink,
+    Html, Properties, ShouldRender,
 };
-use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
+// use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
 use yew::services::ConsoleService;
 
 use log::debug;
@@ -15,17 +15,10 @@ use wasm_bindgen_futures::spawn_local;
 use crate::gqls::make_query;
 
 use crate::error::{Error, get_error};
-use crate::fragments::{
-    list_errors::ListErrors,
-    certificate::CertificateCard,
-    add_certificate::AddCertificateCard,
-};
-use crate::routes::AppRoute;
+use crate::fragments::list_errors::ListErrors;
+// use crate::routes::AppRoute;
 use crate::services::is_authenticated;
 use crate::types::{
-    UUID, UserUpdateInfo, SelfUserInfo, Program, Region,
-    UpdatePasswordInfo, TypeAccessTranslateListInfo,
-    Certificate, UserCertificate,
     ShowNotification, DegreeImportanceTranslateList,
 };
 
@@ -87,8 +80,8 @@ pub enum Msg {
     ReadOneNotificationIds(i64),
     RemoveOneNotificationIds(i64),
     GetAllNotification(String),
-    GetNotificationByDegree(String),
-    GetNotReadNotification(String),
+    // GetNotificationByDegree(String),
+    // GetNotReadNotification(String),
     GetReadNotification(String),
     GetRemoveNotification(String),
     Ignore,
@@ -186,8 +179,8 @@ impl Component for Notifications {
                     },
                 }
             },
-            Msg::GetNotificationByDegree(res) => {},
-            Msg::GetNotReadNotification(res) => {},
+            // Msg::GetNotificationByDegree(res) => {},
+            // Msg::GetNotReadNotification(res) => {},
             Msg::GetReadNotification(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
