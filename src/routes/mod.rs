@@ -11,6 +11,7 @@ pub use user::{
     settings,
     notification,
     profile,
+    catalog,
 };
 
 use yew_router::prelude::*;
@@ -34,6 +35,8 @@ pub enum AppRoute {
     Settings,
     // #[to = "#/@{username}/favorites"]
     // ProfileFavorites(String),
+    #[to = "#/users"]
+    CatalogUsers,
     #[to = "#/@{username}"]
     Profile(String),
     #[to = "#/"]

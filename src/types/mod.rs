@@ -15,7 +15,7 @@ pub use auth::{
     UserUpdateInfo, UserToken
 };
 pub use profiles::{
-    SelfUserInfo, UserInfo, UserCertificate, ShowNotification, DegreeImportanceTranslateList,
+    SelfUserInfo, UserInfo, ShowUserShort, UserCertificate, ShowNotification, DegreeImportanceTranslateList,
 };
 pub use file::{
     ShowFileForDownload, DownloadFile, UploadFile,

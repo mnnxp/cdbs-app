@@ -17,6 +17,7 @@ use crate::routes::{
     home::Home,
     login::Login,
     notification::Notifications,
+    catalog::CatalogUsers,
     profile::Profile, // , ProfileTab},
     register::Register,
     settings::Settings,
@@ -129,6 +130,7 @@ impl Component for App {
                             // AppRoute::ProfileFavorites(username) => html!{
                             //     <Profile username=username.clone() current_user=self.current_user.clone() tab=ProfileTab::FavoritedBy />
                             // },
+                            AppRoute::CatalogUsers => html!{<CatalogUsers />},
                             AppRoute::Profile(username) => html!{
                                 <Profile
                                     // current_route=self.current_route.clone()

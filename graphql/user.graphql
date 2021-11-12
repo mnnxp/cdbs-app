@@ -52,6 +52,16 @@ query GetSettingDataOpt {
   }
 }
 
+query GetUsersShortList($arguments: IptUsersArg) {
+  users(arguments: $arguments) {
+    uuid
+    username
+    imageFile {
+      ...downloadFileFields
+    }
+  }
+}
+
 mutation UserUpdate($dataUserUpdate: IptUpdateUserData!) {
   putUserUpdate(data: $dataUserUpdate)
 }
@@ -77,10 +87,7 @@ fragment selfUserFields on UserAndRelatedData {
   position
   timeZone
   imageFile {
-    uuid
-    filename
-    filesize
-    downloadUrl
+    ...downloadFileFields
   }
   region {
     regionId
@@ -116,10 +123,7 @@ fragment selfUserFields on UserAndRelatedData {
         uuid
         username
         imageFile {
-          uuid
-          filename
-          filesize
-          downloadUrl
+          ...downloadFileFields
         }
       }
       contentType
@@ -166,6 +170,13 @@ query GetUserDataOpt ($username: String) {
   }
 }
 
+fragment downloadFileFields on DownloadFile {
+  uuid
+  filename
+  filesize
+  downloadUrl
+}
+
 fragment userFields on ShowUserAndRelatedData {
   uuid
   firstname
@@ -175,10 +186,7 @@ fragment userFields on ShowUserAndRelatedData {
   description
   position
   imageFile {
-    uuid
-    filename
-    filesize
-    downloadUrl
+    ...downloadFileFields
   }
   region {
     regionId
@@ -206,10 +214,7 @@ fragment userFields on ShowUserAndRelatedData {
         uuid
         username
         imageFile {
-          uuid
-          filename
-          filesize
-          downloadUrl
+          ...downloadFileFields
         }
       }
       contentType
