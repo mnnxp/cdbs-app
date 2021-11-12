@@ -38,6 +38,10 @@ input ChangeTypeAccessStandard {
   newTypeAccessUuid: Int!
 }
 
+# The `Char` scalar type represents a unicode char.
+# The input and output values are a string, and there can only be one unicode character in this string.
+scalar Char
+
 type Claims {
   iss: String!
   username: String!
@@ -316,6 +320,14 @@ type FilesetProgramRelatedData {
   program: Program!
 }
 
+input IptCompaniesArg {
+  companiesUuids: [UUID!]
+  userUuid: UUID
+  favorite: Boolean
+  limit: Int
+  offset: Int
+}
+
 input IptCompanyAccessComponentData {
   componentUuid: UUID!
   companyUuid: UUID!
@@ -411,6 +423,16 @@ input IptComponentSpecData {
   specIds: [Int!]!
 }
 
+input IptComponentsArg {
+  componentsUuids: [UUID!]
+  companyUuid: UUID
+  standardUuid: UUID
+  userUuid: UUID
+  favorite: Boolean
+  limit: Int
+  offset: Int
+}
+
 input IptExtensionData {
   extension: String!
   programId: Int!
@@ -502,6 +524,14 @@ input IptStandardSpecsData {
 input IptStandardToComponentData {
   standardUuid: UUID!
   componentUuid: UUID!
+}
+
+input IptStandardsArg {
+  standardsUuids: [UUID!]
+  companyUuid: UUID
+  favorite: Boolean
+  limit: Int
+  offset: Int
 }
 
 input IptSupplierComponentData {
@@ -628,6 +658,14 @@ input IptUserData {
   regionId: Int
   programId: Int
   typeAccessId: Int
+}
+
+input IptUsersArg {
+  usersUuids: [UUID!]
+  subscribers: Boolean
+  favorite: Boolean
+  limit: Int
+  offset: Int
 }
 
 type Keyword {
@@ -822,7 +860,7 @@ type Program {
 }
 
 type QueryRoot {
-  users(usersUuids: [UUID!]!): [ShowUserShort!]!
+  users(arguments: IptUsersArg): [ShowUserShort!]!
   user(userUuid: UUID, username: String): ShowUserAndRelatedData!
   myself: SlimUser!
   selfData: UserAndRelatedData!
@@ -838,12 +876,7 @@ type QueryRoot {
     limit: Int
     offset: Int
   ): [ShowNotification!]!
-  components(
-    componentsUuids: [UUID!]
-    favorite: Boolean
-    userUuid: UUID
-    companyUuid: UUID
-  ): [ShowComponentShort!]!
+  components(arguments: IptComponentsArg): [ShowComponentShort!]!
   component(componentUuid: UUID!): ComponentAndRelatedData!
   getCompaniesListAccessComponent(
     componentUuid: UUID!
@@ -865,7 +898,7 @@ type QueryRoot {
     limit: Int
     offset: Int
   ): [FileOfFileset!]!
-  standards(standardsUuids: [UUID!]!): [ShowStandardShort!]!
+  standards(arguments: IptStandardsArg): [ShowStandardShort!]!
   standard(standardUuid: UUID!): StandardAndRelatedData!
   getCompaniesListAccessStandard(
     standardUuid: UUID!
@@ -873,7 +906,7 @@ type QueryRoot {
   getUsersListAccessStandard(
     standardUuid: UUID!
   ): [UserAccessStandardAndRelatedData!]!
-  companies(companiesUuids: [UUID!]!): [ShowCompanyShort!]!
+  companies(arguments: IptCompaniesArg): [ShowCompanyShort!]!
   company(companyUuid: UUID!): CompanyAndRelatedData!
   companyRepresents(
     companyUuid: UUID
@@ -888,6 +921,7 @@ type QueryRoot {
   programs(programId: [Int!], limit: Int, offset: Int): [Program!]!
   regions(regionId: [Int!], limit: Int, offset: Int): [RegionTranslateList!]!
   specs(specId: [Int!], limit: Int, offset: Int): [SpecTranslateList!]!
+  specPath(specId: Int!, splitChar: Char): String!
 
   # Presigned URL for download file from storage
   presignedUrl(fileUuid: UUID!): DownloadFile!

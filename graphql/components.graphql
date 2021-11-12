@@ -13,18 +13,8 @@ query GetRawList {
   }
 }
 
-query GetList(
-  $componentsUuids: [String!]
-  $favorite: Boolean
-  $userUuid: String
-  $companyUuid: String
-) {
-  components(
-    componentsUuids: $componentsUuids
-    favorite: $favorite
-    userUuid: $userUuid
-    companyUuid: $companyUuid
-  ) {
+query GetList($arguments: IptComponentsArg) {
+  components(arguments: $arguments) {
     uuid
     name
     description
