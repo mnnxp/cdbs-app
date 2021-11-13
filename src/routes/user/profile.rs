@@ -148,16 +148,11 @@ impl Component for Profile {
     fn rendered(&mut self, first_render: bool) {
         // get username for request user data
         let route_service: RouteService<()> = RouteService::new();
+        // get target user from route
         let target_username = route_service.get_fragment().trim_start_matches("#/@").to_string();
+        // get flag changing current profile in route
         let not_matches_username = target_username != self.current_profile;
-
-        // debug!("RouteService {:#?}", route_service.get_fragment());
-        // debug!("RouteService trim {:#?}", route_service.get_fragment().trim_start_matches("#/@"));
         // debug!("self.current_profile {:#?}", self.current_profile);
-        // debug!("not_matches_username {:#?}", not_matches_username);
-        // debug!("self profile {:#?}", &self.self_profile);
-        // debug!("profile {:#?}", &self.profile);
-
 
         // check get self data
         let get_self = matches!(
@@ -170,7 +165,7 @@ impl Component for Profile {
         // debug!("get_self {:?}", get_self);
 
         if (first_render || not_matches_username) && is_authenticated() {
-            // debug!("target_username {:?}", target_username);
+            // update current_profile for checking change profile in route
             self.current_profile = target_username.to_string();
 
             spawn_local(async move {
