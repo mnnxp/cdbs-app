@@ -5,7 +5,6 @@ use yew::{
 };
 // use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
 use chrono::NaiveDateTime;
-
 use yew::services::ConsoleService;
 
 use graphql_client::GraphQLQuery;
@@ -509,37 +508,37 @@ impl Profile {
     fn show_profile_followers (
         &self,
     ) -> Html {
-        let class_fav = match self.is_followed {
-            true => "fas fa-bookmark",
-            false => "far fa-bookmark",
-        };
+        html! {<>
+            {match &self.profile {
+                Some(_) => {
+                    let class_fav = match self.is_followed {
+                        true => "fas fa-bookmark",
+                        false => "far fa-bookmark",
+                    };
 
-        let onclick_following = match self.is_followed {
-            true => self.link.callback(|_| Msg::UnFollow),
-            false => self.link.callback(|_| Msg::Follow),
-        };
+                    let onclick_following = match self.is_followed {
+                        true => self.link.callback(|_| Msg::UnFollow),
+                        false => self.link.callback(|_| Msg::Follow),
+                    };
 
-        match (&self.self_profile, &self.profile) {
-            (_, Some(ref other_data)) => html! {
-                // for self user data not show button "following"
-                <div class="media-right flexBox" >
-                  <button
-                      id="following-button"
-                      class="button"
-                      onclick=onclick_following >
-                    <span class="icon is-small">
-                      <i class={class_fav}></i>
-                    </span>
-                  </button>
-
-                  { format!(" {}", other_data.subscribers.to_string()) }
-                </div>
-            },
-            (Some(ref self_data), _) => html!{<>
-                { format!(" {}", self_data.subscribers.to_string()) }
-            </>},
-            _ => html! {},
-        }
+                    html! {
+                        // for self user data not show button "following"
+                        <div class="media-right flexBox" >
+                          <button
+                              id="following-button"
+                              class="button"
+                              onclick=onclick_following >
+                            <span class="icon is-small">
+                              <i class={class_fav}></i>
+                            </span>
+                          </button>
+                        </div>
+                    }
+                },
+                None => html!{},
+            }}
+            { format!(" {}", &self.subscribers) }
+        </>}
     }
 
     fn show_profile_action (
