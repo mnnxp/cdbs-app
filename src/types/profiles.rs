@@ -2,11 +2,12 @@ use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use super::file::{ShowFileForDownload, DownloadFile};
 use super::relate::{Region, Program, TypeAccessTranslateListInfo};
+use super::UUID;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct SelfUserInfo {
-    pub uuid: String,
+    pub uuid: UUID,
     pub email: String,
     pub firstname: String,
     pub lastname: String,
@@ -38,7 +39,7 @@ pub struct SelfUserInfo {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct UserInfo {
-    pub uuid: String,
+    pub uuid: UUID,
     pub firstname: String,
     pub lastname: String,
     pub secondname: String,
@@ -58,7 +59,9 @@ pub struct UserInfo {
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct ShowUserShort {
-    pub uuid: String,
+    pub uuid: UUID,
+    pub firstname: String,
+    pub lastname: String,
     pub username: String,
     pub image_file: DownloadFile,
 }
@@ -66,7 +69,7 @@ pub struct ShowUserShort {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct UserCertificate {
-    pub user_uuid: String,
+    pub user_uuid: UUID,
     pub file: ShowFileForDownload,
     pub description: String,
 }

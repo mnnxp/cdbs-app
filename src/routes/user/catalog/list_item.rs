@@ -1,10 +1,18 @@
-use yew::prelude::*;
+use yew::{
+  prelude::*, agent::Bridged, html, Bridge, Component, ComponentLink,
+  Html, Properties, ShouldRender,
+};
+use yew_router::{
+    agent::RouteRequest::ChangeRoute,
+    prelude::*,
+};
+use crate::routes::AppRoute;
 use crate::fragments::switch_icon::res_btn;
 use super::ShowUserShort;
 
 pub enum Msg {
-    AddOne,
-    TriggerFav
+    ShowProfile,
+    Ignore,
 }
 
 #[derive(Clone, Debug, Properties)]
@@ -14,8 +22,10 @@ pub struct Props {
 }
 
 pub struct ListItem {
-    // link: ComponentLink<Self>,
-    props: Props
+    router_agent: Box<dyn Bridge<RouteAgent>>,
+    link: ComponentLink<Self>,
+    username: String,
+    props: Props,
 }
 
 impl Component for ListItem {
@@ -24,21 +34,30 @@ impl Component for ListItem {
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
         Self {
-            // link,
+            router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
+            link,
+            username: props.data.username.to_string(),
             props,
         }
     }
 
-    fn update(&mut self, _msg: Self::Message) -> ShouldRender {
-        false
+    fn update(&mut self, msg: Self::Message) -> ShouldRender {
+        match msg {
+            Msg::ShowProfile => {
+                // Redirect to profile page
+                self.router_agent.send(ChangeRoute(AppRoute::Profile(
+                    self.username.to_string()
+                ).into()));
+            },
+            Msg::Ignore => {},
+        }
+        true
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        // Should only return "true" if new properties are different to
-        // previously received properties.
-        // This component has no properties so we will always return "false".
         if self.props.show_list != props.show_list {
             self.props.show_list = props.show_list;
+            self.username = props.data.username.to_string();
             self.props.data = props.data;
             true
         } else {
@@ -47,9 +66,6 @@ impl Component for ListItem {
     }
 
     fn view(&self) -> Html {
-      // let clickEvent = self.link.ca;
-      // let Props { add_fav, del_fav, .. } = self.props.clone();
-
       match self.props.show_list {
         true => { self.showing_in_list() },
         false => { self.showing_in_box() },
@@ -58,6 +74,32 @@ impl Component for ListItem {
 }
 
 impl ListItem {
+    fn open_profile_page(
+        &self,
+        small_button: bool,
+    ) -> Html {
+        let onclick_open_profile = self
+            .link
+            .callback(|_| Msg::ShowProfile);
+
+        match small_button {
+            true => html! {
+                {res_btn(
+                    classes!(String::from("fas  fa-user-o")),
+                    onclick_open_profile,
+                    "".to_string()
+                )}
+            },
+            false => html! {
+                <button
+                      class="button is-light is-fullwidth has-text-weight-bold"
+                      onclick=onclick_open_profile >
+                    {"Show profile"}
+                </button>
+            },
+        }
+    }
+
     fn showing_in_list(&self) -> Html {
         let ShowUserShort {
             username,
@@ -77,11 +119,14 @@ impl ListItem {
                 <div class="content">
                   <p>
                     <div style="margin-bottom:0" >
-                      {username}
+                      {format!("@{}", username)}
                     </div>
                     // <div class="overflow-title has-text-weight-bold	is-size-4" >{username}</div>
                   </p>
                 </div>
+              </div>
+              <div class="media-right flexBox " >
+                {self.open_profile_page(false)}
               </div>
             </article>
           </div>
@@ -101,8 +146,12 @@ impl ListItem {
               <div class="imgBox" >
                 <img src={image_file.download_url.to_string()} alt="Favicon profile"/>
               </div>
-              {username}
+              {format!("@{}", username)}
               // <div class="overflow-title has-text-weight-bold	is-size-4" >{username}</div>
+            </div>
+            // <div class="overflow-title has-text-weight-bold	is-size-4" >{username}</div>
+            <div class="btnBox">
+                {self.open_profile_page(false)}
             </div>
           </div>
         }
