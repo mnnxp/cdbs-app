@@ -3,10 +3,11 @@ use yew::{
     html, Component, ComponentLink,
     Html, Properties, ShouldRender,
 };
+use yew_router::service::RouteService;
 // use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
-use chrono::NaiveDateTime;
 use yew::services::ConsoleService;
-
+use chrono::NaiveDateTime;
+// use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
@@ -73,7 +74,7 @@ pub struct Profile {
     error: Option<Error>,
     self_profile: Option<SelfUserInfo>,
     profile: Option<UserInfo>,
-    // current_profile: String,
+    current_profile: String,
     // task: Option<FetchTask>,
     // router_agent: Box<dyn Bridge<RouteAgent>>,
     props: Props,
@@ -87,7 +88,7 @@ pub struct Profile {
 #[derive(Properties, Clone)]
 pub struct Props {
     // pub current_route: Option<AppRoute>,
-    pub username: String,
+    // pub username: String,
     pub current_user: Option<SlimUser>,
     // pub tab: ProfileTab,
 }
@@ -132,7 +133,7 @@ impl Component for Profile {
             error: None,
             self_profile: None,
             profile: None,
-            // current_profile: String::new(),
+            current_profile: String::new(),
             // task: None,
             // router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             props,
@@ -146,7 +147,17 @@ impl Component for Profile {
 
     fn rendered(&mut self, first_render: bool) {
         // get username for request user data
-        let target_username = self.props.username.to_string();
+        let route_service: RouteService<()> = RouteService::new();
+        let target_username = route_service.get_fragment().trim_start_matches("#/@").to_string();
+        let not_matches_username = target_username != self.current_profile;
+
+        // debug!("RouteService {:#?}", route_service.get_fragment());
+        // debug!("RouteService trim {:#?}", route_service.get_fragment().trim_start_matches("#/@"));
+        // debug!("self.current_profile {:#?}", self.current_profile);
+        // debug!("not_matches_username {:#?}", not_matches_username);
+        // debug!("self profile {:#?}", &self.self_profile);
+        // debug!("profile {:#?}", &self.profile);
+
 
         // check get self data
         let get_self = matches!(
@@ -156,17 +167,11 @@ impl Component for Profile {
 
         let link = self.link.clone();
 
-        // // if open profile different with new
-        // let change_profile = matches!(
-        //     &self.props.current_user,
-        //     Some(cu) if cu.username != self.current_profile
-        // );
+        // debug!("get_self {:?}", get_self);
 
-        if first_render && is_authenticated() {
-            // // update current_profile
-            // if let Some(cp) = &self.props.current_user {
-            //     self.current_profile = cp.username.to_string();
-            // }
+        if (first_render || not_matches_username) && is_authenticated() {
+            // debug!("target_username {:?}", target_username);
+            self.current_profile = target_username.to_string();
 
             spawn_local(async move {
                 match get_self {

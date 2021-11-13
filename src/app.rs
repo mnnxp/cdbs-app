@@ -131,10 +131,10 @@ impl Component for App {
                             //     <Profile username=username.clone() current_user=self.current_user.clone() tab=ProfileTab::FavoritedBy />
                             // },
                             AppRoute::CatalogUsers => html!{<CatalogUsers />},
-                            AppRoute::Profile(username) => html!{
+                            AppRoute::Profile(_username) => html!{
                                 <Profile
                                     // current_route=self.current_route.clone()
-                                    username=username.clone()
+                                    // username=username.clone()
                                     current_user=self.current_user.clone()
                                 />
                             },

@@ -91,3 +91,14 @@ pub struct DegreeImportanceTranslateList {
     pub lang_id: usize,
     pub degree: String,
 }
+
+// for arguments users query
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct UsersQueryArg {
+    pub users_uuids:  Option<Vec<UUID>>,
+    pub subscribers: Option<bool>,
+    pub favorite: Option<bool>,
+    pub limit: Option<i64>,
+    pub offset: Option<i64>,
+}

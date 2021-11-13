@@ -11,7 +11,7 @@ use log::debug;
 use crate::error::{Error, get_error};
 // use crate::routes::AppRoute;
 use crate::gqls::make_query;
-use crate::types::{UUID, ShowUserShort};
+use crate::types::{UUID, ShowUserShort, UsersQueryArg};
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -50,9 +50,15 @@ pub enum ListState {
     Box,
 }
 
+#[derive(Properties, Clone)]
+pub struct Props {
+    pub arguments: Option<UsersQueryArg>,
+}
+
 pub struct CatalogUsers {
     error: Option<Error>,
     link: ComponentLink<Self>,
+    props: Props,
     value: i64,
     show_type: ListState,
     list: Vec<ShowUserShort>
@@ -60,12 +66,13 @@ pub struct CatalogUsers {
 
 impl Component for CatalogUsers {
     type Message = Msg;
-    type Properties = ();
+    type Properties = Props;
 
-    fn create(_props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
         Self {
             error: None,
             link,
+            props,
             value: 0,
             show_type: ListState::List,
             list: Vec::new()
@@ -94,20 +101,23 @@ impl Component for CatalogUsers {
                 }
             }
             Msg::GetList => {
-              spawn_local(async move {
-                  // let arguments = get_users_short_list::IptUsersArg {
-                  //     usersUuids: None,
-                  //     subscribers: None,
-                  //     favorite: None,
-                  //     limit: None,
-                  //     offset: None,
-                  // };
-                  let res = make_query(GetUsersShortList::build_query(get_users_short_list::Variables {
-                      arguments: None
-                  })).await.unwrap();
-                  debug!("users query: {}", res);
-                  link.send_message(Msg::UpdateList(res));
-              });
+                let arguments = match &self.props.arguments {
+                    Some(ref arg) => Some(get_users_short_list::IptUsersArg {
+                        usersUuids: arg.users_uuids.clone(),
+                        subscribers: arg.subscribers,
+                        favorite: arg.favorite,
+                        limit: arg.limit,
+                        offset: arg.offset,
+                    }),
+                    None => None,
+                };
+                spawn_local(async move {
+                    let res = make_query(GetUsersShortList::build_query(get_users_short_list::Variables {
+                        arguments
+                    })).await.unwrap();
+                    debug!("users query: {}", res);
+                    link.send_message(Msg::UpdateList(res));
+                });
             }
             Msg::UpdateList(res) => {
               let data: Value = serde_json::from_str(res.as_str()).unwrap();
