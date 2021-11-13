@@ -102,6 +102,8 @@ impl ListItem {
 
     fn showing_in_list(&self) -> Html {
         let ShowUserShort {
+            firstname,
+            lastname,
             username,
             image_file,
             ..
@@ -119,6 +121,9 @@ impl ListItem {
                 <div class="content">
                   <p>
                     <div style="margin-bottom:0" >
+                      <div class="overflow-title has-text-weight-bold is-size-4" >
+                        {format!("{} {}", firstname, lastname)}
+                      </div>
                       {format!("@{}", username)}
                     </div>
                     // <div class="overflow-title has-text-weight-bold	is-size-4" >{username}</div>
@@ -135,6 +140,8 @@ impl ListItem {
 
     fn showing_in_box(&self) -> Html {
         let ShowUserShort {
+            firstname,
+            lastname,
             username,
             image_file,
             ..
@@ -145,6 +152,9 @@ impl ListItem {
             <div class="innerBox" >
               <div class="imgBox" >
                 <img src={image_file.download_url.to_string()} alt="Favicon profile"/>
+              </div>
+              <div class="overflow-title has-text-weight-bold is-size-4" >
+                {format!("{} {}", firstname, lastname)}
               </div>
               {format!("@{}", username)}
               // <div class="overflow-title has-text-weight-bold	is-size-4" >{username}</div>
