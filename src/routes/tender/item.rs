@@ -8,21 +8,21 @@ pub struct Item {
     // `ComponentLink` is like a reference to a component.
     // It can be used to send messages to the component
     // link: ComponentLink<Self>,
-    value: i64,
+    // value: i64,
 }
 
 impl Component for Item {
     type Message = Msg;
     type Properties = ();
 
-    fn create(_props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(_props: Self::Properties, _link: ComponentLink<Self>) -> Self {
         Self {
             // link,
-            value: 0
+            // value: 0
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
+    fn update(&mut self, _msg: Self::Message) -> ShouldRender {
         // match msg {
         //     Msg::AddOne => {
         //         self.value += 1;

@@ -22,10 +22,10 @@ impl Component for Home {
     type Message = Msg;
     type Properties = ();
 
-    fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(_: Self::Properties, _link: ComponentLink<Self>) -> Self {
         Home {
             tag: None,
-            // link 
+            // link
         }
     }
 

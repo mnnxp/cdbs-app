@@ -21,9 +21,9 @@ impl Component for Tenders {
     type Message = Msg;
     type Properties = ();
 
-    fn create(_props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(_props: Self::Properties, _link: ComponentLink<Self>) -> Self {
         Self {
-            // link, 
+            // link,
             value: 0
         }
     }
