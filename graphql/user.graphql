@@ -55,6 +55,8 @@ query GetSettingDataOpt {
 query GetUsersShortList($arguments: IptUsersArg) {
   users(arguments: $arguments) {
     uuid
+    firstname
+    lastname
     username
     imageFile {
       ...downloadFileFields
@@ -104,8 +106,6 @@ fragment selfUserFields on UserAndRelatedData {
     name
   }
   isEmailVerified
-  isEnabled
-  isDelete
   createdAt
   updatedAt
   certificates {

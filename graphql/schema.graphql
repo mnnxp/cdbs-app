@@ -1037,6 +1037,8 @@ type ShowUserAndRelatedData {
 
 type ShowUserShort {
   uuid: UUID!
+  firstname: String!
+  lastname: String!
   username: String!
   imageFile: DownloadFile!
 }
@@ -1199,8 +1201,6 @@ type UserAndRelatedData {
   program: Program!
   typeAccess: TypeAccessTranslateList!
   isEmailVerified: Boolean!
-  isEnabled: Boolean!
-  isDelete: Boolean!
   createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!
   certificates: [CertificateAndFile!]!
