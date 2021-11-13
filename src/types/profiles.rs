@@ -90,12 +90,3 @@ pub struct DegreeImportanceTranslateList {
     pub lang_id: usize,
     pub degree: String,
 }
-
-// for arguments users query
-pub struct IptUsersArg {
-    pub users_uuids:  Option<Vec<String>>,
-    pub subscribers: Option<bool>,
-    pub favorite: Option<bool>,
-    pub limit: Option<i32>,
-    pub offset: Option<i32>,
-}
