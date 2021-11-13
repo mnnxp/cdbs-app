@@ -124,7 +124,7 @@ impl ListItem {
                       <div class="overflow-title has-text-weight-bold is-size-4" >
                         {format!("{} {}", firstname, lastname)}
                       </div>
-                      {format!("@{}", username)}
+                      <span class="overflow-title">{format!("@{}", username)}</span>
                     </div>
                     // <div class="overflow-title has-text-weight-bold	is-size-4" >{username}</div>
                   </p>
@@ -156,7 +156,7 @@ impl ListItem {
               <div class="overflow-title has-text-weight-bold is-size-4" >
                 {format!("{} {}", firstname, lastname)}
               </div>
-              {format!("@{}", username)}
+              <span class="overflow-title">{format!("@{}", username)}</span>
               // <div class="overflow-title has-text-weight-bold	is-size-4" >{username}</div>
             </div>
             // <div class="overflow-title has-text-weight-bold	is-size-4" >{username}</div>
