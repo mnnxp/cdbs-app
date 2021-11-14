@@ -7,7 +7,11 @@ use yew::services::ConsoleService;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::error::Error;
-use crate::fragments::{footer::Footer, header::Header};
+use crate::fragments::{
+    footer::Footer,
+    header::Header,
+    catalog_user::CatalogUsers, // for test
+};
 use crate::routes::{
     // article::Article,
     component::CatalogComponent,
@@ -17,7 +21,6 @@ use crate::routes::{
     home::Home,
     login::Login,
     notification::Notifications,
-    catalog::CatalogUsers,
     profile::Profile, // , ProfileTab},
     register::Register,
     settings::Settings,

@@ -9,9 +9,12 @@ use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::error::{get_error, Error};
-use crate::fragments::{certificate::CertificateCard, list_errors::ListErrors};
+use crate::fragments::{
+    certificate::CertificateCard,
+    list_errors::ListErrors,
+    catalog_user::CatalogUsers,
+};
 use crate::gqls::make_query;
-use crate::routes::user::catalog::CatalogUsers;
 // use crate::routes::AppRoute;
 use crate::services::{is_authenticated, set_token};
 use crate::types::{
@@ -388,8 +391,8 @@ impl Component for Profile {
                                         self_data.program.name.as_str(),
                                     ) }
                                 </div>
-
-                                <footer class="card-footer">
+                                <hr/>
+                                <div class="card-data">
                                     {match self.profile_tab {
                                         ProfileTab::Certificates => {
                                             self.view_certificates(&self_data.certificates)
@@ -398,7 +401,7 @@ impl Component for Profile {
                                             self.view_favorite_users()
                                         },
                                     }}
-                                </footer>
+                                </div>
                             </div>
                           </div>
                         </div>

@@ -167,7 +167,7 @@ impl Component for CatalogUsers {
         };
 
         html! {
-            <div class="tendersBox" >
+            <div class="usersBox" >
               <div class="level" >
                 <div class="level-left ">
                 </div>

@@ -11,8 +11,10 @@ pub use user::{
     settings,
     notification,
     profile,
-    catalog,
 };
+
+// for test, in future #/users route be delete
+pub use crate::fragments::catalog_user;
 
 use yew_router::prelude::*;
 
