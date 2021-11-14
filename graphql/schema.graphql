@@ -80,7 +80,7 @@ type CompanyAndRelatedData {
   siteUrl: String!
   timeZone: String!
   ownerUser: ShowUserShort!
-  imageFile: ShowFileForDownload!
+  imageFile: DownloadFile!
   region: RegionTranslateList!
   companyRepresents: [CompanyRepresentAndRelatedData!]!
   companyType: CompanyTypeTranslateList!
@@ -960,7 +960,7 @@ type ShowCompanyShort {
   shortname: String!
   inn: String!
   description: String!
-  imageFile: ShowFileForDownload!
+  imageFile: DownloadFile!
   region: RegionTranslateList!
   companyType: CompanyTypeTranslateList!
   isSupplier: Boolean!
@@ -1113,7 +1113,7 @@ type StandardAndRelatedData {
   specifiedTolerance: String!
   technicalCommittee: String!
   publicationAt: NaiveDateTime!
-  imageFile: ShowFileForDownload!
+  imageFile: DownloadFile!
   ownerUser: ShowUserShort!
   ownerCompany: ShowCompanyShort!
   typeAccessId: Int!

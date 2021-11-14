@@ -14,13 +14,14 @@ use crate::fragments::{
     list_errors::ListErrors,
     catalog_user::CatalogUsers,
     catalog_component::CatalogComponents,
+    catalog_company::CatalogCompanies,
 };
 use crate::gqls::make_query;
 // use crate::routes::AppRoute;
 use crate::services::{is_authenticated, set_token};
 use crate::types::{
     UUID, Certificate, Program, Region, SelfUserInfo, SlimUser, UserCertificate,
-    UserInfo, UsersQueryArg, ComponentsQueryArg,
+    UserInfo, UsersQueryArg, ComponentsQueryArg, CompaniesQueryArg,
 };
 
 #[derive(GraphQLQuery)]
@@ -76,7 +77,8 @@ pub struct Profile {
     error: Option<Error>,
     self_profile: Option<SelfUserInfo>,
     profile: Option<UserInfo>,
-    current_profile: String,
+    current_user_uuid: UUID,
+    current_username: String,
     // task: Option<FetchTask>,
     // router_agent: Box<dyn Bridge<RouteAgent>>,
     props: Props,
@@ -124,7 +126,6 @@ pub enum ProfileTab {
     Certificates,
     Components,
     Companies,
-    Standards,
     FavoriteComponents,
     FavoriteCompanies,
     FavoriteStandards,
@@ -140,7 +141,8 @@ impl Component for Profile {
             error: None,
             self_profile: None,
             profile: None,
-            current_profile: String::new(),
+            current_user_uuid: String::new(),
+            current_username: String::new(),
             // task: None,
             // router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             props,
@@ -162,8 +164,8 @@ impl Component for Profile {
             .trim_start_matches("#/@")
             .to_string();
         // get flag changing current profile in route
-        let not_matches_username = target_username != self.current_profile;
-        // debug!("self.current_profile {:#?}", self.current_profile);
+        let not_matches_username = target_username != self.current_username;
+        // debug!("self.current_username {:#?}", self.current_username);
 
         // check get self data
         let get_self = matches!(
@@ -176,8 +178,8 @@ impl Component for Profile {
         // debug!("get_self {:?}", get_self);
 
         if (first_render || not_matches_username) && is_authenticated() {
-            // update current_profile for checking change profile in route
-            self.current_profile = target_username.to_string();
+            // update current_username for checking change profile in route
+            self.current_username = target_username.to_string();
 
             spawn_local(async move {
                 match get_self {
@@ -295,7 +297,7 @@ impl Component for Profile {
                         debug!("User self data: {:?}", self_data);
 
                         self.subscribers = self_data.subscribers.to_owned();
-
+                        self.current_user_uuid = self_data.uuid.to_owned();
                         self.self_profile = Some(self_data);
                     }
                     true => {
@@ -318,7 +320,7 @@ impl Component for Profile {
 
                         self.subscribers = user_data.subscribers.to_owned();
                         self.is_followed = user_data.is_followed.to_owned();
-
+                        self.current_user_uuid = user_data.uuid.to_owned();
                         self.profile = Some(user_data);
                     }
                     true => {
@@ -404,21 +406,19 @@ impl Component for Profile {
                                             self.view_certificates(&self_data.certificates)
                                         },
                                         ProfileTab::Components => {
-                                            unimplemented!()
+                                            self.view_components()
                                         },
                                         ProfileTab::Companies => {
-                                            unimplemented!()
-                                        },
-                                        ProfileTab::Standards => {
-                                            unimplemented!()
+                                            self.view_companies()
                                         },
                                         ProfileTab::FavoriteComponents => {
                                             self.view_favorite_components()
                                         },
                                         ProfileTab::FavoriteCompanies => {
-                                            unimplemented!()
+                                            self.view_favorite_companies()
                                         },
                                         ProfileTab::FavoriteStandards => {
+                                            // self.view_favorite_standards()
                                             unimplemented!()
                                         },
                                         ProfileTab::FavoriteUsers => {
@@ -570,10 +570,6 @@ impl Profile {
             .link
             .callback(|_| Msg::ChangeTab(ProfileTab::Companies));
 
-        let onclick_standards = self
-            .link
-            .callback(|_| Msg::ChangeTab(ProfileTab::Standards));
-
         let onclick_fav_components = self
             .link
             .callback(|_| Msg::ChangeTab(ProfileTab::FavoriteComponents));
@@ -593,7 +589,6 @@ impl Profile {
         let mut active_certificates = "";
         let mut active_components = "";
         let mut active_companies = "";
-        let mut active_standards = "";
         let mut active_fav_components = "";
         let mut active_fav_companies = "";
         let mut active_fav_standards = "";
@@ -603,7 +598,6 @@ impl Profile {
             ProfileTab::Certificates => active_certificates = "is-active",
             ProfileTab::Components => active_components = "is-active",
             ProfileTab::Companies => active_companies = "is-active",
-            ProfileTab::Standards => active_standards = "is-active",
             ProfileTab::FavoriteComponents => active_fav_components = "is-active",
             ProfileTab::FavoriteCompanies => active_fav_companies = "is-active",
             ProfileTab::FavoriteStandards => active_fav_standards = "is-active",
@@ -628,11 +622,6 @@ impl Profile {
                             <li class={active_companies}>
                               <a onclick=onclick_companies>
                                 { format!("Companies {}", self_data.companies_count.to_string()) }
-                              </a>
-                            </li>
-                            <li class={active_standards}>
-                              <a onclick=onclick_standards>
-                                { format!("Standards {}", self_data.standards_count.to_string()) }
                               </a>
                             </li>
                             <li class={active_fav_components}>
@@ -742,6 +731,46 @@ impl Profile {
             />
         }
     }
+
+    fn view_components(&self) -> Html {
+        html! {
+            <CatalogComponents
+                show_create_btn = false
+                arguments = ComponentsQueryArg::set_user_uuid(
+                    &self.current_user_uuid
+                )
+            />
+        }
+    }
+
+    fn view_favorite_companies(&self) -> Html {
+        html! {
+            <CatalogCompanies
+                show_create_btn = false
+                arguments = CompaniesQueryArg::set_favorite()
+            />
+        }
+    }
+
+    fn view_companies(&self) -> Html {
+        html! {
+            <CatalogCompanies
+                show_create_btn = false
+                arguments = CompaniesQueryArg::set_user_uuid(
+                    &self.current_user_uuid
+                )
+            />
+        }
+    }
+
+    // fn view_favorite_standards(&self) -> Html {
+    //     html! {
+    //         <CatalogStandards
+    //             show_create_btn = false
+    //             arguments = StandardsQueryArg::set_favorite()
+    //         />
+    //     }
+    // }
 
     fn view_favorite_users(&self) -> Html {
         html! {

@@ -1,0 +1,44 @@
+query GetCompaniesShortList($arguments: IptCompaniesArg) {
+  companies(arguments: $arguments) {
+    uuid
+    shortname
+    inn
+    description
+    imageFile {
+      ...downloadFileFields
+    }
+    region {
+      regionId
+      langId
+      region
+    }
+    companyType {
+      ...companyTypeFields
+    }
+    isSupplier
+    isFollowed
+    updatedAt
+  }
+}
+
+mutation AddCompanyFav($companyUuid: String!) {
+  addCompanyFav(companyUuid: $companyUuid)
+}
+
+mutation DeleteCompanyFav($companyUuid: String!) {
+  deleteCompanyFav(companyUuid: $companyUuid)
+}
+
+fragment companyTypeFields on CompanyTypeTranslateList {
+  companyTypeId
+  langId
+  name
+  shortname
+}
+
+fragment downloadFileFields on DownloadFile {
+  uuid
+  filename
+  filesize
+  downloadUrl
+}

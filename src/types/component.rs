@@ -40,6 +40,13 @@ pub struct ComponentsQueryArg {
 }
 
 impl ComponentsQueryArg {
+    pub fn set_user_uuid(user_uuid: &UUID) -> Self {
+        Self {
+            user_uuid: Some(user_uuid.to_owned()),
+            ..Default::default()
+        }
+    }
+
     pub fn set_favorite() -> Self {
         Self {
             favorite: Some(true),

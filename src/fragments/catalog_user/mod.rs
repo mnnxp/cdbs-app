@@ -1,16 +1,14 @@
 mod list_item;
+
 use list_item::ListItem;
 use yew::prelude::*;
-// use yew_router::prelude::*;
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use log::debug;
-// use serde::{Deserialize, Serialize};
-// use chrono::NaiveDateTime;
-use crate::error::{Error, get_error};
-// use crate::routes::AppRoute;
 use crate::gqls::make_query;
+use crate::error::{Error, get_error};
+use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, ShowUserShort, UsersQueryArg};
 
 #[derive(GraphQLQuery)]
@@ -168,6 +166,7 @@ impl Component for CatalogUsers {
 
         html! {
             <div class="usersBox" >
+              <ListErrors error=self.error.clone()/>
               <div class="level" >
                 <div class="level-left ">
                 </div>

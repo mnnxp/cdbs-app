@@ -13,32 +13,32 @@ use crate::routes::AppRoute;
 use crate::error::{Error, get_error};
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{
-  UUID, ShowComponentShort, ComponentsQueryArg
+  UUID, ShowCompanyShort, CompaniesQueryArg
 };
 
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
+    query_path = "./graphql/companies.graphql",
     response_derives = "Debug"
 )]
-struct GetComponentsShortList;
+struct GetCompaniesShortList;
 
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
+    query_path = "./graphql/companies.graphql",
     response_derives = "Debug"
 )]
-struct AddComponentFav;
+struct AddCompanyFav;
 
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
+    query_path = "./graphql/companies.graphql",
     response_derives = "Debug"
 )]
-struct DeleteComponentFav;
+struct DeleteCompanyFav;
 
 
 pub enum Msg {
@@ -56,22 +56,22 @@ pub enum ListState {
     Box,
 }
 
-pub struct CatalogComponents {
+pub struct CatalogCompanies {
     error: Option<Error>,
     link: ComponentLink<Self>,
     props: Props,
     value: i64,
     show_type: ListState,
-    list: Vec<ShowComponentShort>
+    list: Vec<ShowCompanyShort>
 }
 
 #[derive(Properties, Clone)]
 pub struct Props {
     pub show_create_btn: bool,
-    pub arguments: Option<ComponentsQueryArg>,
+    pub arguments: Option<CompaniesQueryArg>,
 }
 
-impl Component for CatalogComponents {
+impl Component for CatalogCompanies {
     type Message = Msg;
     type Properties = Props;
 
@@ -111,10 +111,8 @@ impl Component for CatalogComponents {
             },
             Msg::GetList => {
                 let arguments = match &self.props.arguments {
-                    Some(ref arg) => Some(get_components_short_list::IptComponentsArg {
-                        componentsUuids: arg.components_uuids.clone(),
-                        companyUuid: arg.company_uuid.to_owned(),
-                        standardUuid: arg.standard_uuid.to_owned(),
+                    Some(ref arg) => Some(get_companies_short_list::IptCompaniesArg {
+                        companiesUuids: arg.companies_uuids.clone(),
                         userUuid: arg.user_uuid.to_owned(),
                         favorite: arg.favorite,
                         limit: arg.limit,
@@ -123,8 +121,8 @@ impl Component for CatalogComponents {
                     None => None,
                 };
                 spawn_local(async move {
-                    let res = make_query(GetComponentsShortList::build_query(
-                        get_components_short_list::Variables {
+                    let res = make_query(GetCompaniesShortList::build_query(
+                        get_companies_short_list::Variables {
                             arguments
                     })).await.unwrap();
                     debug!("GetList res: {:?}", res);
@@ -135,9 +133,11 @@ impl Component for CatalogComponents {
               let data: Value = serde_json::from_str(res.as_str()).unwrap();
               let res_value = data.as_object().unwrap().get("data").unwrap();
 
+              debug!("res value: {:#?}", res_value);
+
               match res_value.is_null() {
                   false => {
-                      let result: Vec<ShowComponentShort> = serde_json::from_value(res_value.get("components").unwrap().clone()).unwrap();
+                      let result: Vec<ShowCompanyShort> = serde_json::from_value(res_value.get("companies").unwrap().clone()).unwrap();
 
                       debug!("UpdateList result: {:?}", result);
 
@@ -148,19 +148,19 @@ impl Component for CatalogComponents {
                   },
               }
           },
-          Msg::AddFav(component_uuid) => {
+          Msg::AddFav(company_uuid) => {
               spawn_local(async move {
-                  let res = make_query(AddComponentFav::build_query(add_component_fav::Variables{
-                    component_uuid
+                  let res = make_query(AddCompanyFav::build_query(add_company_fav::Variables{
+                    company_uuid
                   })).await.unwrap();
                   debug!("AddFav res: {:?}", res);
                   link.send_message(Msg::GetList);
               });
           },
-          Msg::DelFav(component_uuid) => {
+          Msg::DelFav(company_uuid) => {
               spawn_local(async move {
-                  let res = make_query(DeleteComponentFav::build_query(delete_component_fav::Variables{
-                    component_uuid
+                  let res = make_query(DeleteCompanyFav::build_query(delete_company_fav::Variables{
+                    company_uuid
                   })).await.unwrap();
                   debug!("DelFav res: {:?}", res);
                   link.send_message(Msg::GetList);
@@ -173,7 +173,7 @@ impl Component for CatalogComponents {
     fn change(&mut self, _props: Self::Properties) -> ShouldRender {
         // Should only return "true" if new properties are different to
         // previously received properties.
-        // This component has no properties so we will always return "false".
+        // This company has no properties so we will always return "false".
         false
     }
 
@@ -197,7 +197,7 @@ impl Component for CatalogComponents {
         };
 
         html! {
-            <div class="tendersBox" >
+            <div class="companiesBox" >
               <ListErrors error=self.error.clone()/>
               <div class="level" >
                 <div class="level-left ">
@@ -232,13 +232,13 @@ impl Component for CatalogComponents {
     }
 }
 
-impl CatalogComponents {
+impl CatalogCompanies {
     fn show_card(
         &self,
-        show_comp: &ShowComponentShort,
+        show_company: &ShowCompanyShort,
     ) -> Html {
-        let target_uuid_add = show_comp.uuid.clone();
-        let target_uuid_del = show_comp.uuid.clone();
+        let target_uuid_add = show_company.uuid.clone();
+        let target_uuid_del = show_company.uuid.clone();
 
         let onclick_add_fav = self.link.callback(move |_|
                 Msg::AddFav(target_uuid_add.clone())
@@ -249,7 +249,7 @@ impl CatalogComponents {
             );
 
         html! {
-            <ListItem data={show_comp.clone()}
+            <ListItem data={show_company.clone()}
                 show_list={self.show_type == ListState::List}
                 // triggerFav={triggerFav}
                 add_fav={onclick_add_fav}
