@@ -93,7 +93,7 @@ pub struct DegreeImportanceTranslateList {
 }
 
 // for arguments users query
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Default, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct UsersQueryArg {
     pub users_uuids:  Option<Vec<UUID>>,
@@ -101,4 +101,19 @@ pub struct UsersQueryArg {
     pub favorite: Option<bool>,
     pub limit: Option<i64>,
     pub offset: Option<i64>,
+}
+
+impl UsersQueryArg {
+    pub fn set_favorite() -> Self {
+        Self {
+            favorite: Some(true),
+            ..Default::default()
+        }
+    }
+    pub fn set_subscribers() -> Self {
+        Self {
+            subscribers: Some(true),
+            ..Default::default()
+        }
+    }
 }
