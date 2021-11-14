@@ -1,6 +1,6 @@
 use yew::prelude::*;
 use crate::fragments::switch_icon::res_btn;
-use super::ShowedComponent;
+use crate::types::ShowComponentShort;
 
 pub enum Msg {
     AddOne,
@@ -9,7 +9,7 @@ pub enum Msg {
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
-    pub data: ShowedComponent,
+    pub data: ShowComponentShort,
     pub show_list: bool,
     // pub triggerFav: Callback<MouseEvent>,
     pub add_fav: Callback<String>,
@@ -77,7 +77,7 @@ impl Component for ListItem {
 
 impl ListItem {
     fn showing_in_list(&self) -> Html {
-        let ShowedComponent {
+        let ShowComponentShort {
             description,
             is_base,
             is_followed,
@@ -144,7 +144,7 @@ impl ListItem {
     }
 
     fn showing_in_box(&self) -> Html {
-        let ShowedComponent {
+        let ShowComponentShort {
             is_base,
             is_followed,
             name,

@@ -1,5 +1,5 @@
-query GetRawList {
-  components {
+query GetComponentsShortList($arguments: IptComponentsArg) {
+  components(arguments: $arguments) {
     uuid
     name
     description
@@ -13,8 +13,8 @@ query GetRawList {
   }
 }
 
-query GetList($arguments: IptComponentsArg) {
-  components(arguments: $arguments) {
+query GetList {
+  components {
     uuid
     name
     description

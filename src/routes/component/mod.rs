@@ -1,7 +1,7 @@
-mod catalog;
+// mod catalog;
 // mod item;
 
-pub use catalog::CatalogComponent;
+// pub use catalog::CatalogComponents;
 
 // use item::Item;
 use yew::prelude::*;

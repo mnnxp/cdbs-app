@@ -9,3 +9,4 @@ pub mod add_certificate;
 pub mod upload_favicon;
 pub mod switch_icon;
 pub mod catalog_user;
+pub mod catalog_component;

@@ -13,13 +13,14 @@ use crate::fragments::{
     certificate::CertificateCard,
     list_errors::ListErrors,
     catalog_user::CatalogUsers,
+    catalog_component::CatalogComponents,
 };
 use crate::gqls::make_query;
 // use crate::routes::AppRoute;
 use crate::services::{is_authenticated, set_token};
 use crate::types::{
-    Certificate, Program, Region, SelfUserInfo, SlimUser, UserCertificate, UserInfo, UsersQueryArg,
-    UUID,
+    UUID, Certificate, Program, Region, SelfUserInfo, SlimUser, UserCertificate,
+    UserInfo, UsersQueryArg, ComponentsQueryArg,
 };
 
 #[derive(GraphQLQuery)]
@@ -120,11 +121,13 @@ pub enum Msg {
 
 #[derive(Clone, PartialEq)]
 pub enum ProfileTab {
-    // ByCompany,
-    // ByCoponent,
-    // ByStandard,
-    // ByAuthor,
     Certificates,
+    Components,
+    Companies,
+    Standards,
+    FavoriteComponents,
+    FavoriteCompanies,
+    FavoriteStandards,
     FavoriteUsers,
 }
 
@@ -400,6 +403,24 @@ impl Component for Profile {
                                         ProfileTab::Certificates => {
                                             self.view_certificates(&self_data.certificates)
                                         },
+                                        ProfileTab::Components => {
+                                            unimplemented!()
+                                        },
+                                        ProfileTab::Companies => {
+                                            unimplemented!()
+                                        },
+                                        ProfileTab::Standards => {
+                                            unimplemented!()
+                                        },
+                                        ProfileTab::FavoriteComponents => {
+                                            self.view_favorite_components()
+                                        },
+                                        ProfileTab::FavoriteCompanies => {
+                                            unimplemented!()
+                                        },
+                                        ProfileTab::FavoriteStandards => {
+                                            unimplemented!()
+                                        },
                                         ProfileTab::FavoriteUsers => {
                                             self.view_favorite_users()
                                         },
@@ -537,20 +558,56 @@ impl Profile {
     }
 
     fn show_profile_action(&self) -> Html {
-        let onclick_certificate = self
+        let onclick_certificates = self
             .link
             .callback(|_| Msg::ChangeTab(ProfileTab::Certificates));
+
+        let onclick_components = self
+            .link
+            .callback(|_| Msg::ChangeTab(ProfileTab::Components));
+
+        let onclick_companies = self
+            .link
+            .callback(|_| Msg::ChangeTab(ProfileTab::Companies));
+
+        let onclick_standards = self
+            .link
+            .callback(|_| Msg::ChangeTab(ProfileTab::Standards));
+
+        let onclick_fav_components = self
+            .link
+            .callback(|_| Msg::ChangeTab(ProfileTab::FavoriteComponents));
+
+        let onclick_fav_companies = self
+            .link
+            .callback(|_| Msg::ChangeTab(ProfileTab::FavoriteCompanies));
+
+        let onclick_fav_standards = self
+            .link
+            .callback(|_| Msg::ChangeTab(ProfileTab::FavoriteStandards));
 
         let onclick_fav_users = self
             .link
             .callback(|_| Msg::ChangeTab(ProfileTab::FavoriteUsers));
 
-        let mut active_certificate = "";
-        let mut active_favorite_users = "";
+        let mut active_certificates = "";
+        let mut active_components = "";
+        let mut active_companies = "";
+        let mut active_standards = "";
+        let mut active_fav_components = "";
+        let mut active_fav_companies = "";
+        let mut active_fav_standards = "";
+        let mut active_fav_users = "";
 
         match &self.profile_tab {
-            ProfileTab::Certificates => active_certificate = "is-active",
-            ProfileTab::FavoriteUsers => active_favorite_users = "is-active",
+            ProfileTab::Certificates => active_certificates = "is-active",
+            ProfileTab::Components => active_components = "is-active",
+            ProfileTab::Companies => active_companies = "is-active",
+            ProfileTab::Standards => active_standards = "is-active",
+            ProfileTab::FavoriteComponents => active_fav_components = "is-active",
+            ProfileTab::FavoriteCompanies => active_fav_companies = "is-active",
+            ProfileTab::FavoriteStandards => active_fav_standards = "is-active",
+            ProfileTab::FavoriteUsers => active_fav_users = "is-active",
         }
 
         html! {
@@ -558,20 +615,50 @@ impl Profile {
                 <ul>
                     {match (&self.self_profile, &self.profile) {
                         (Some(ref self_data), _) => html! {<>
-                            <li class={active_certificate}>
-                              <a onclick=onclick_certificate>
+                            <li class={active_certificates}>
+                              <a onclick=onclick_certificates>
                                 { format!("Certificates {}", self_data.certificates.len().to_string()) }
                               </a>
                             </li>
-                            <li class={active_favorite_users}>
+                            <li class={active_components}>
+                              <a onclick=onclick_components>
+                                { format!("Components {}", self_data.components_count.to_string()) }
+                              </a>
+                            </li>
+                            <li class={active_companies}>
+                              <a onclick=onclick_companies>
+                                { format!("Companies {}", self_data.companies_count.to_string()) }
+                              </a>
+                            </li>
+                            <li class={active_standards}>
+                              <a onclick=onclick_standards>
+                                { format!("Standards {}", self_data.standards_count.to_string()) }
+                              </a>
+                            </li>
+                            <li class={active_fav_components}>
+                              <a onclick=onclick_fav_components>
+                                { format!("Fcomponents {}", self_data.fav_components_count.to_string()) }
+                              </a>
+                            </li>
+                            <li class={active_fav_companies}>
+                              <a onclick=onclick_fav_companies>
+                                { format!("Fcompanies {}", self_data.fav_companies_count.to_string()) }
+                              </a>
+                            </li>
+                            <li class={active_fav_standards}>
+                              <a onclick=onclick_fav_standards>
+                                { format!("Fstandards {}", self_data.fav_standards_count.to_string()) }
+                              </a>
+                            </li>
+                            <li class={active_fav_users}>
                               <a onclick=onclick_fav_users>
-                                { format!("Fav users {}", self_data.fav_users_count.to_string()) }
+                                { format!("Fusers {}", self_data.fav_users_count.to_string()) }
                               </a>
                             </li>
                         </>},
                         (_, Some(ref user_data)) => html! {<>
-                            <li class={active_certificate}>
-                              <a onclick=onclick_certificate>
+                            <li class={active_certificates}>
+                              <a onclick=onclick_certificates>
                                 { format!("Certificates {}", user_data.certificates.len().to_string()) }
                               </a>
                             </li>
@@ -644,6 +731,15 @@ impl Profile {
                     // </p>
                 }
             }
+        }
+    }
+
+    fn view_favorite_components(&self) -> Html {
+        html! {
+            <CatalogComponents
+                show_create_btn = false
+                arguments = ComponentsQueryArg::set_favorite()
+            />
         }
     }
 

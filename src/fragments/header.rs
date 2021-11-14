@@ -65,7 +65,7 @@ impl Component for Header {
         let nav_menu = vec![
             NavMenu {
                 text: "Сatalog".to_string(),
-                route: AppRoute::CatalogComponent,
+                route: AppRoute::CatalogComponents,
             },
             NavMenu {
                 text: "Tenders".to_string(),

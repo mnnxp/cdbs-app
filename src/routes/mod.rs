@@ -13,8 +13,11 @@ pub use user::{
     profile,
 };
 
-// for test, in future #/users route be delete
-pub use crate::fragments::catalog_user;
+// for test, in future this routes be delete and use #/search
+pub use crate::fragments::{
+    catalog_user,
+    catalog_component,
+};
 
 use yew_router::prelude::*;
 
@@ -30,7 +33,7 @@ pub enum AppRoute {
     #[to = "#/tenders"]
     Tenders,
     #[to = "#/components"]
-    CatalogComponent,
+    CatalogComponents,
     #[to = "#/notifications"]
     Notifications,
     #[to = "#/settings"]

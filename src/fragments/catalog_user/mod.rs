@@ -93,13 +93,13 @@ impl Component for CatalogUsers {
                 self.value += 1;
                 // the value has changed so we need to
                 // re-render for it to appear on the page
-            }
+            },
             Msg::SwitchShowType => {
                 match self.show_type {
                     ListState::Box => self.show_type = ListState::List,
                     _ => self.show_type = ListState::Box,
                 }
-            }
+            },
             Msg::GetList => {
                 let arguments = match &self.props.arguments {
                     Some(ref arg) => Some(get_users_short_list::IptUsersArg {
@@ -118,7 +118,7 @@ impl Component for CatalogUsers {
                     debug!("users query: {}", res);
                     link.send_message(Msg::UpdateList(res));
                 });
-            }
+            },
             Msg::UpdateList(res) => {
               let data: Value = serde_json::from_str(res.as_str()).unwrap();
               let res_value = data.as_object().unwrap().get("data").unwrap();

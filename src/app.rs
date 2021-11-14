@@ -11,10 +11,11 @@ use crate::fragments::{
     footer::Footer,
     header::Header,
     catalog_user::CatalogUsers, // for test
+    catalog_component::CatalogComponents, // for test
 };
 use crate::routes::{
     // article::Article,
-    component::CatalogComponent,
+    // component::CatalogComponents,
     tender::{Tenders, CreateTender},
     // editor::Editor,
     fix_fragment_routes,
@@ -142,7 +143,7 @@ impl Component for App {
                                 />
                             },
                             AppRoute::Tenders => html!{<Tenders />},
-                            AppRoute::CatalogComponent => html!{<CatalogComponent />},
+                            AppRoute::CatalogComponents => html!{<CatalogComponents show_create_btn = true />},
                             AppRoute::CreateTender => html!{<CreateTender />},
                         }
                     } else {

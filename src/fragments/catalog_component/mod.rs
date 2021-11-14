@@ -10,14 +10,14 @@ use yew_router::prelude::*;
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
-// use crate::types::*;
+use log::debug;
 // use chrono::NaiveDateTime;
 use crate::gqls::make_query;
-use serde::{Deserialize, Serialize};
+// use serde::{Deserialize, Serialize};
+use crate::error::{Error, get_error};
 use crate::types::{
-  UUID, NaiveDateTime
+  UUID, NaiveDateTime, ShowComponentShort, ComponentsQueryArg
 };
-
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -25,7 +25,7 @@ use crate::types::{
     query_path = "./graphql/components.graphql",
     response_derives = "Debug"
 )]
-struct GetRawList;
+struct GetComponentsShortList;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -59,51 +59,30 @@ pub enum ListState {
     Box,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct ShowedComponent {
-  uuid : UUID,
-  name: String,
-  description: String,
-  type_access_id: usize,
-  is_followed: bool,
-  is_base: bool,
-  updated_at: NaiveDateTime,
-  component_suppliers: Vec<Supplier>
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct Supplier{
-  supplier:SlimCompany,
-  component_uuid: UUID,
-  description: String
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct SlimCompany{
-  uuid: UUID,
-  shortname: String,
-  is_supplier: bool
-}
-
-pub struct CatalogComponent {
-    // `ComponentLink` is like a reference to a component.
-    // It can be used to send messages to the component
+pub struct CatalogComponents {
+    error: Option<Error>,
     link: ComponentLink<Self>,
+    props: Props,
     value: i64,
     show_type: ListState,
-    list: Vec<ShowedComponent>
+    list: Vec<ShowComponentShort>
 }
 
-impl Component for CatalogComponent {
-    type Message = Msg;
-    type Properties = ();
+#[derive(Properties, Clone)]
+pub struct Props {
+    pub show_create_btn: bool,
+    pub arguments: Option<ComponentsQueryArg>,
+}
 
-    fn create(_props: Self::Properties, link: ComponentLink<Self>) -> Self {
+impl Component for CatalogComponents {
+    type Message = Msg;
+    type Properties = Props;
+
+    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
         Self {
+            error: None,
             link,
+            props,
             value: 0,
             show_type: ListState::List,
             list: Vec::new()
@@ -114,9 +93,7 @@ impl Component for CatalogComponent {
         let link = self.link.clone();
         if first_render {
             spawn_local(async move {
-                let res = make_query(GetRawList::build_query(get_raw_list::Variables)).await.unwrap();
-                crate::yewLog!(res);
-                link.send_message(Msg::UpdateList(res));
+                link.send_message(Msg::GetList);
             });
         }
     }
@@ -128,48 +105,69 @@ impl Component for CatalogComponent {
                 self.value += 1;
                 // the value has changed so we need to
                 // re-render for it to appear on the page
-            }
+            },
             Msg::SwitchShowType => {
                 match self.show_type {
                     ListState::Box => self.show_type = ListState::List,
                     _ => self.show_type = ListState::Box,
                 }
-            }
+            },
             Msg::GetList => {
-              spawn_local(async move {
-                  let res = make_query(GetRawList::build_query(get_raw_list::Variables)).await.unwrap();
-                  crate::yewLog!(res);
-                  link.send_message(Msg::UpdateList(res));
-              });
-            }
+                let arguments = match &self.props.arguments {
+                    Some(ref arg) => Some(get_components_short_list::IptComponentsArg {
+                        componentsUuids: arg.components_uuids.clone(),
+                        companyUuid: arg.company_uuid.to_owned(),
+                        standardUuid: arg.standard_uuid.to_owned(),
+                        userUuid: arg.user_uuid.to_owned(),
+                        favorite: arg.favorite,
+                        limit: arg.limit,
+                        offset: arg.offset,
+                    }),
+                    None => None,
+                };
+                spawn_local(async move {
+                    let res = make_query(GetComponentsShortList::build_query(
+                        get_components_short_list::Variables {
+                            arguments
+                    })).await.unwrap();
+                    debug!("GetList res: {:?}", res);
+                    link.send_message(Msg::UpdateList(res));
+                });
+            },
             Msg::UpdateList(res) => {
               let data: Value = serde_json::from_str(res.as_str()).unwrap();
-              let res = data.as_object().unwrap().get("data").unwrap().get("components").unwrap();
-              self.list  = serde_json::from_value(res.clone()).unwrap();
-              crate::yewLog!(res);crate::yewLog!(self.list);
-              // self.regions =
-              //     serde_json::from_value(res.get("regions").unwrap().clone()).unwrap();
-              // self.programs =
-              //     serde_json::from_value(res.get("programs").unwrap().clone()).unwrap();
-              // ConsoleService::info(format!("Update: {:?}", self.programs).as_ref());
-          }
+              let res_value = data.as_object().unwrap().get("data").unwrap();
+
+              match res_value.is_null() {
+                  false => {
+                      let result: Vec<ShowComponentShort> = serde_json::from_value(res_value.get("components").unwrap().clone()).unwrap();
+
+                      debug!("UpdateList result: {:?}", result);
+
+                      self.list = result;
+                  },
+                  true => {
+                      self.error = Some(get_error(&data));
+                  },
+              }
+          },
           Msg::AddFav(component_uuid) => {
-            spawn_local(async move {
-                let res = make_query(AddComponentFav::build_query(add_component_fav::Variables{
-                  component_uuid
-                })).await.unwrap();
-                crate::yewLog!(res);
-                link.send_message(Msg::GetList);
-            });
-          }
+              spawn_local(async move {
+                  let res = make_query(AddComponentFav::build_query(add_component_fav::Variables{
+                    component_uuid
+                  })).await.unwrap();
+                  debug!("AddFav res: {:?}", res);
+                  link.send_message(Msg::GetList);
+              });
+          },
           Msg::DelFav(component_uuid) => {
-            spawn_local(async move {
-                let res = make_query(DeleteComponentFav::build_query(delete_component_fav::Variables{
-                  component_uuid
-                })).await.unwrap();
-                crate::yewLog!(res);
-                link.send_message(Msg::GetList);
-            });
+              spawn_local(async move {
+                  let res = make_query(DeleteComponentFav::build_query(delete_component_fav::Variables{
+                    component_uuid
+                  })).await.unwrap();
+                  debug!("DelFav res: {:?}", res);
+                  link.send_message(Msg::GetList);
+              });
           }
         }
         true
@@ -205,9 +203,14 @@ impl Component for CatalogComponent {
             <div class="tendersBox" >
               <div class="level" >
                 <div class="level-left ">
-                <RouterAnchor<AppRoute> route=AppRoute::CreateTender >
-                  <button class="button is-info" >{"Create"}</button>
-                </RouterAnchor<AppRoute>>
+                {match &self.props.show_create_btn {
+                    true => html! {
+                        <RouterAnchor<AppRoute> route=AppRoute::CreateTender >
+                          <button class="button is-info" >{"Create"}</button>
+                        </RouterAnchor<AppRoute>>
+                    },
+                    false => html! {},
+                }}
                 </div>
                 <div class="level-right">
                   <div class="select">
@@ -231,20 +234,11 @@ impl Component for CatalogComponent {
     }
 }
 
-impl CatalogComponent {
+impl CatalogComponents {
     fn show_card(
         &self,
-        show_comp: &ShowedComponent,
+        show_comp: &ShowComponentShort,
     ) -> Html {
-        // let backup = x.clone();
-        // let uuid = x.uuid.clone();
-        // let uuid1 = x.uuid.clone();
-        // let addMsg = Msg::AddFav(uuid.clone());
-        // let delMsg = Msg::DelFav(uuid.clone());
-        // let addEnv = move |ev: MouseEvent| {ev.prevent_default(); addMsg };
-        // let delEnv = move |ev: MouseEvent| {ev.prevent_default(); delMsg };
-        // let triggerFav = self.link.callback( );
-
         let target_uuid_add = show_comp.uuid.clone();
         let target_uuid_del = show_comp.uuid.clone();
 
