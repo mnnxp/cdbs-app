@@ -1,9 +1,9 @@
 // use yew::services::fetch::FetchTask;
 use chrono::NaiveDateTime;
-use yew::services::ConsoleService;
+// use yew::services::ConsoleService;
 use yew::{html, Component, ComponentLink, Html, Properties, ShouldRender};
 use yew_router::service::RouteService;
-// use log::debug;
+use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
@@ -282,12 +282,14 @@ impl Component for Profile {
                 // clean profile data if get self user data
                 self.profile = None;
 
+                debug!("res_value: {:#?}", res_value);
+
                 match res_value.is_null() {
                     false => {
                         let self_data: SelfUserInfo =
                             serde_json::from_value(res_value.get("selfData").unwrap().clone())
                                 .unwrap();
-                        ConsoleService::info(format!("User self data: {:?}", self_data).as_ref());
+                        debug!("User self data: {:?}", self_data);
 
                         self.subscribers = self_data.subscribers.to_owned();
 
@@ -309,7 +311,7 @@ impl Component for Profile {
                     false => {
                         let user_data: UserInfo =
                             serde_json::from_value(res_value.get("user").unwrap().clone()).unwrap();
-                        ConsoleService::info(format!("User data: {:?}", user_data).as_ref());
+                        debug!("User data: {:?}", user_data);
 
                         self.subscribers = user_data.subscribers.to_owned();
                         self.is_followed = user_data.is_followed.to_owned();
@@ -345,7 +347,7 @@ impl Component for Profile {
                         self.programs =
                             serde_json::from_value(res_value.get("programs").unwrap().clone())
                                 .unwrap();
-                        ConsoleService::info(format!("Update: {:?}", self.programs).as_ref());
+                        debug!("Update: {:?}", self.programs);
                     }
                     true => {
                         self.error = Some(get_error(&data));
@@ -391,8 +393,9 @@ impl Component for Profile {
                                         self_data.program.name.as_str(),
                                     ) }
                                 </div>
-                                <hr/>
-                                <div class="card-data">
+                                { self.show_profile_action() }
+                                // <hr/>
+                                <div class="card-relate-data">
                                     {match self.profile_tab {
                                         ProfileTab::Certificates => {
                                             self.view_certificates(&self_data.certificates)
@@ -428,10 +431,8 @@ impl Component for Profile {
                                         user_data.program.name.as_str(),
                                     ) }
                                 </div>
-
-                                <footer class="card-footer">
-                                    { self.view_certificates(&user_data.certificates) }
-                                </footer>
+                                // <hr/>
+                                { self.view_certificates(&user_data.certificates) }
                               </div>
                             </div>
                         </div>
@@ -536,50 +537,68 @@ impl Profile {
     }
 
     fn show_profile_action(&self) -> Html {
+        let onclick_certificate = self
+            .link
+            .callback(|_| Msg::ChangeTab(ProfileTab::Certificates));
+
         let onclick_fav_users = self
             .link
             .callback(|_| Msg::ChangeTab(ProfileTab::FavoriteUsers));
 
-        match &self.self_profile {
-            Some(ref self_data) => html! {<>
-                <div class="columns">
-                    <div class="column">
-                        <span>{ "objects count" }</span>
-                        <br/>
-                        { format!("companies: {}", self_data.companies_count.to_string()) }
-                        <br/>
-                        { format!("components: {}", self_data.components_count.to_string()) }
-                        <br/>
-                        { format!("standards: {}", self_data.standards_count.to_string()) }
-                    </div>
-                    <div class="column">
-                        <span>{ "favorites count" }</span>
-                        <br/>
-                        { format!("companies: {}", self_data.fav_companies_count.to_string()) }
-                        <br/>
-                        { format!("components: {}", self_data.fav_components_count.to_string()) }
-                        <br/>
-                        { format!("standards: {}", self_data.fav_standards_count.to_string()) }
-                        <br/>
-                        <a onclick=onclick_fav_users>
-                            { format!("users: {}", self_data.fav_users_count.to_string()) }
-                        </a>
-                    </div>
-                    // <div class="column"></div>
-                </div>
-            </>},
-            None => html! {},
+        let mut active_certificate = "";
+        let mut active_favorite_users = "";
+
+        match &self.profile_tab {
+            ProfileTab::Certificates => active_certificate = "is-active",
+            ProfileTab::FavoriteUsers => active_favorite_users = "is-active",
+        }
+
+        html! {
+            <div class="tabs">
+                <ul>
+                    {match (&self.self_profile, &self.profile) {
+                        (Some(ref self_data), _) => html! {<>
+                            <li class={active_certificate}>
+                              <a onclick=onclick_certificate>
+                                { format!("Certificates {}", self_data.certificates.len().to_string()) }
+                              </a>
+                            </li>
+                            <li class={active_favorite_users}>
+                              <a onclick=onclick_fav_users>
+                                { format!("Fav users {}", self_data.fav_users_count.to_string()) }
+                              </a>
+                            </li>
+                        </>},
+                        (_, Some(ref user_data)) => html! {<>
+                            <li class={active_certificate}>
+                              <a onclick=onclick_certificate>
+                                { format!("Certificates {}", user_data.certificates.len().to_string()) }
+                              </a>
+                            </li>
+                        </>},
+                        _ => html!{},
+                    }
+                }</ul>
+            </div>
         }
     }
 
-    fn view_content(&self, description: &str, position: &str, region: &str, program: &str) -> Html {
-        html! {<>
-            <div id="description" class="content">
-              { format!("{}", description) }
-            </div>
+    fn view_content(
+        &self,
+        description: &str,
+        position: &str,
+        region: &str,
+        program: &str
+    ) -> Html {
+        html! {
             <div class="columns">
                 <div class="column">
+                    <div id="description" class="content">
+                      { format!("{}", description) }
+                    </div>
                     <br/>
+                </div>
+                <div class="column">
                     <span id="position">
                       <i class="fas fa-briefcase"></i>
                       { format!("Position: {}", position) }
@@ -595,20 +614,20 @@ impl Profile {
                       { format!("Working software: {}", program) }
                     </span>
                 </div>
-                <div class="column">
-                    { self.show_profile_action() }
-                </div>
             </div>
-        </>}
+        }
     }
 
-    fn view_certificates(&self, certificates: &[UserCertificate]) -> Html {
+    fn view_certificates(
+        &self,
+        certificates: &[UserCertificate]
+    ) -> Html {
         match certificates.is_empty() {
             true => html! {},
             false => {
                 html! {
                     // <p class="card-footer-item">
-                    <>{
+                    <footer class="card-footer">{
                         for certificates.iter().map(|cert| {
                             let view_cert: Certificate = cert.into();
                             html! {
@@ -621,7 +640,7 @@ impl Profile {
                                  />
                             }
                         })
-                    }</>
+                    }</footer>
                     // </p>
                 }
             }

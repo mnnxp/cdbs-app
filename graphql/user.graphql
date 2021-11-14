@@ -54,13 +54,7 @@ query GetSettingDataOpt {
 
 query GetUsersShortList($arguments: IptUsersArg) {
   users(arguments: $arguments) {
-    uuid
-    firstname
-    lastname
-    username
-    imageFile {
-      ...downloadFileFields
-    }
+    ...showUserShortFields
   }
 }
 
@@ -74,6 +68,16 @@ mutation PutUpdatePassword($dataUpdatePwd: IptUpdatePassword!) {
 
 mutation ChangeTypeAccessUser($newTypeAccess: Int!) {
   changeTypeAccessUser(newTypeAccess: $newTypeAccess)
+}
+
+fragment showUserShortFields on ShowUserShort {
+  uuid
+  firstname
+  lastname
+  username
+  imageFile {
+    ...downloadFileFields
+  }
 }
 
 fragment selfUserFields on UserAndRelatedData {
@@ -120,11 +124,7 @@ fragment selfUserFields on UserAndRelatedData {
         downloadUrl
       }
       ownerUser {
-        uuid
-        username
-        imageFile {
-          ...downloadFileFields
-        }
+        ...showUserShortFields
       }
       contentType
       program {
@@ -211,11 +211,7 @@ fragment userFields on ShowUserAndRelatedData {
         downloadUrl
       }
       ownerUser {
-        uuid
-        username
-        imageFile {
-          ...downloadFileFields
-        }
+        ...showUserShortFields
       }
       contentType
       program {
