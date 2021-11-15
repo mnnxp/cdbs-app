@@ -407,16 +407,16 @@ impl Component for Profile {
                                             self.view_certificates(&self_data.certificates)
                                         },
                                         ProfileTab::Components => {
-                                            self.view_components()
+                                            self.view_components(&self_data.uuid)
                                         },
                                         ProfileTab::Companies => {
-                                            self.view_companies()
+                                            self.view_companies(&self_data.uuid)
                                         },
                                         ProfileTab::FavoriteComponents => {
-                                            self.view_favorite_components()
+                                            self.view_favorite_components(None)
                                         },
                                         ProfileTab::FavoriteCompanies => {
-                                            self.view_favorite_companies()
+                                            self.view_favorite_companies(None)
                                         },
                                         ProfileTab::FavoriteStandards => {
                                             self.view_favorite_standards()
@@ -452,8 +452,28 @@ impl Component for Profile {
                                         user_data.program.name.as_str(),
                                     ) }
                                 </div>
+                                { self.show_profile_action() }
                                 // <hr/>
-                                { self.view_certificates(&user_data.certificates) }
+                                <div class="card-relate-data">
+                                    {match self.profile_tab {
+                                        ProfileTab::Certificates => {
+                                            self.view_certificates(&user_data.certificates)
+                                        },
+                                        ProfileTab::Components => {
+                                            self.view_components(&user_data.uuid)
+                                        },
+                                        ProfileTab::Companies => {
+                                            self.view_companies(&user_data.uuid)
+                                        },
+                                        ProfileTab::FavoriteComponents => {
+                                            self.view_favorite_components(Some(user_data.uuid.clone()))
+                                        },
+                                        ProfileTab::FavoriteCompanies => {
+                                            self.view_favorite_companies(Some(user_data.uuid.clone()))
+                                        },
+                                        _ => html! {},
+                                    }}
+                                </div>
                               </div>
                             </div>
                         </div>
@@ -658,6 +678,24 @@ impl Profile {
                                 <span>{ format!("{} Certificates {}", '\u{f0a3}', user_data.certificates.len().to_string()) }</span>
                               </a>
                             </li>
+                            <li class={active_components}>
+                              <a onclick=onclick_components>{ "Components" }</a>
+                            </li>
+                            <li class={active_companies}>
+                              <a onclick=onclick_companies>{ "Companies" }</a>
+                            </li>
+                            <li class={active_fav_components}>
+                              <a onclick=onclick_fav_components>
+                                // <span class="icon is-small"><i class="fas fa-heart" aria-hidden="true"></i></span>
+                                <span>{ "Fav components" }</span>
+                              </a>
+                            </li>
+                            <li class={active_fav_companies}>
+                              <a onclick=onclick_fav_companies>
+                                // <span class="icon is-small"><i class="fas fa-heart" aria-hidden="true"></i></span>
+                                <span>{ "Fav companies" }</span>
+                              </a>
+                            </li>
                         </>},
                         _ => html!{},
                     }
@@ -730,42 +768,50 @@ impl Profile {
         }
     }
 
-    fn view_favorite_components(&self) -> Html {
+    fn view_favorite_components(
+        &self,
+        user_uuid: Option<UUID>,
+    ) -> Html {
         html! {
             <CatalogComponents
                 show_create_btn = false
-                arguments = ComponentsQueryArg::set_favorite()
+                arguments = ComponentsQueryArg::set_favorite(user_uuid)
             />
         }
     }
 
-    fn view_components(&self) -> Html {
+    fn view_components(
+        &self,
+        user_uuid: &UUID,
+    ) -> Html {
         html! {
             <CatalogComponents
                 show_create_btn = false
-                arguments = ComponentsQueryArg::set_user_uuid(
-                    &self.current_user_uuid
-                )
+                arguments = ComponentsQueryArg::set_user_uuid(user_uuid)
             />
         }
     }
 
-    fn view_favorite_companies(&self) -> Html {
+    fn view_favorite_companies(
+        &self,
+        user_uuid: Option<UUID>,
+    ) -> Html {
         html! {
             <CatalogCompanies
                 show_create_btn = false
-                arguments = CompaniesQueryArg::set_favorite()
+                arguments = CompaniesQueryArg::set_favorite(user_uuid)
             />
         }
     }
 
-    fn view_companies(&self) -> Html {
+    fn view_companies(
+        &self,
+        user_uuid: &UUID,
+    ) -> Html {
         html! {
             <CatalogCompanies
                 show_create_btn = false
-                arguments = CompaniesQueryArg::set_user_uuid(
-                    &self.current_user_uuid
-                )
+                arguments = CompaniesQueryArg::set_user_uuid(user_uuid)
             />
         }
     }

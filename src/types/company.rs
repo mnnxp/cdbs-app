@@ -54,9 +54,10 @@ impl CompaniesQueryArg {
             ..Default::default()
         }
     }
-    pub fn set_favorite() -> Self {
+    pub fn set_favorite(user_uuid: Option<UUID>) -> Self {
         Self {
             favorite: Some(true),
+            user_uuid,
             ..Default::default()
         }
     }
