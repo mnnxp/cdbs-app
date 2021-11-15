@@ -11,3 +11,4 @@ pub mod switch_icon;
 pub mod catalog_user;
 pub mod catalog_component;
 pub mod catalog_company;
+pub mod catalog_standard;

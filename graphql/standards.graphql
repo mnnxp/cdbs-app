@@ -1,0 +1,67 @@
+query GetStandardsShortList($arguments: IptStandardsArg) {
+  standards(arguments: $arguments) {
+    uuid
+    classifier
+    name
+    description
+    specifiedTolerance
+    publicationAt
+    ownerCompany {
+      ...companyShortFields
+    }
+    standardStatus {
+      ...standardStatusFields
+    }
+    updatedAt
+    isFollowed
+  }
+}
+
+mutation AddStandardFav($standardUuid: String!) {
+  addStandardFav(standardUuid: $standardUuid)
+}
+
+mutation DeleteStandardFav($standardUuid: String!) {
+  deleteStandardFav(standardUuid: $standardUuid)
+}
+
+fragment standardStatusFields on StandardStatusTranslateList {
+  standardStatusId
+  langId
+  name
+}
+
+fragment companyShortFields on ShowCompanyShort {
+  uuid
+  shortname
+  inn
+  description
+  imageFile {
+    ...downloadFileFields
+  }
+  region {
+    regionId
+    langId
+    region
+  }
+  companyType {
+    ...companyTypeFields
+  }
+  isSupplier
+  isFollowed
+  updatedAt
+}
+
+fragment companyTypeFields on CompanyTypeTranslateList {
+  companyTypeId
+  langId
+  name
+  shortname
+}
+
+fragment downloadFileFields on DownloadFile {
+  uuid
+  filename
+  filesize
+  downloadUrl
+}

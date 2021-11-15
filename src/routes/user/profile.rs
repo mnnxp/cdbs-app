@@ -15,13 +15,14 @@ use crate::fragments::{
     catalog_user::CatalogUsers,
     catalog_component::CatalogComponents,
     catalog_company::CatalogCompanies,
+    catalog_standard::CatalogStandards,
 };
 use crate::gqls::make_query;
 // use crate::routes::AppRoute;
 use crate::services::{is_authenticated, set_token};
 use crate::types::{
     UUID, Certificate, Program, Region, SelfUserInfo, SlimUser, UserCertificate,
-    UserInfo, UsersQueryArg, ComponentsQueryArg, CompaniesQueryArg,
+    UserInfo, UsersQueryArg, ComponentsQueryArg, CompaniesQueryArg, StandardsQueryArg,
 };
 
 #[derive(GraphQLQuery)]
@@ -418,8 +419,7 @@ impl Component for Profile {
                                             self.view_favorite_companies()
                                         },
                                         ProfileTab::FavoriteStandards => {
-                                            // self.view_favorite_standards()
-                                            unimplemented!()
+                                            self.view_favorite_standards()
                                         },
                                         ProfileTab::FavoriteUsers => {
                                             self.view_favorite_users()
@@ -611,7 +611,9 @@ impl Profile {
                         (Some(ref self_data), _) => html! {<>
                             <li class={active_certificates}>
                               <a onclick=onclick_certificates>
-                                { format!("Certificates {}", self_data.certificates.len().to_string()) }
+                                // <span class="icon is-small"><i class="fas fa-fa-certificate" aria-hidden="true"></i></span>
+                                // <span>{ format!("{} Certificates {}", '\u{f0a3}', self_data.certificates.len().to_string()) }</span>
+                                <span>{ format!("Certificates {}", self_data.certificates.len().to_string()) }</span>
                               </a>
                             </li>
                             <li class={active_components}>
@@ -626,29 +628,34 @@ impl Profile {
                             </li>
                             <li class={active_fav_components}>
                               <a onclick=onclick_fav_components>
-                                { format!("Fcomponents {}", self_data.fav_components_count.to_string()) }
+                                // <span class="icon is-small"><i class="fas fa-heart" aria-hidden="true"></i></span>
+                                <span>{ format!("Fav components {}", self_data.fav_components_count.to_string()) }</span>
                               </a>
                             </li>
                             <li class={active_fav_companies}>
                               <a onclick=onclick_fav_companies>
-                                { format!("Fcompanies {}", self_data.fav_companies_count.to_string()) }
+                                // <span class="icon is-small"><i class="fas fa-heart" aria-hidden="true"></i></span>
+                                <span>{ format!("Fav companies {}", self_data.fav_companies_count.to_string()) }</span>
                               </a>
                             </li>
                             <li class={active_fav_standards}>
                               <a onclick=onclick_fav_standards>
-                                { format!("Fstandards {}", self_data.fav_standards_count.to_string()) }
+                                // <span class="icon is-small"><i class="fas fa-heart" aria-hidden="true"></i></span>
+                                <span>{ format!("Fav standards {}", self_data.fav_standards_count.to_string()) }</span>
                               </a>
                             </li>
                             <li class={active_fav_users}>
                               <a onclick=onclick_fav_users>
-                                { format!("Fusers {}", self_data.fav_users_count.to_string()) }
+                                // <span class="icon is-small"><i class="fas fa-heart" aria-hidden="true"></i></span>
+                                <span>{ format!("Fav users {}", self_data.fav_users_count.to_string()) }</span>
                               </a>
                             </li>
                         </>},
                         (_, Some(ref user_data)) => html! {<>
                             <li class={active_certificates}>
                               <a onclick=onclick_certificates>
-                                { format!("Certificates {}", user_data.certificates.len().to_string()) }
+                                // <span class="icon is-small"><i class="fas fa-fa-certificate" aria-hidden="true"></i></span>
+                                <span>{ format!("{} Certificates {}", '\u{f0a3}', user_data.certificates.len().to_string()) }</span>
                               </a>
                             </li>
                         </>},
@@ -763,14 +770,14 @@ impl Profile {
         }
     }
 
-    // fn view_favorite_standards(&self) -> Html {
-    //     html! {
-    //         <CatalogStandards
-    //             show_create_btn = false
-    //             arguments = StandardsQueryArg::set_favorite()
-    //         />
-    //     }
-    // }
+    fn view_favorite_standards(&self) -> Html {
+        html! {
+            <CatalogStandards
+                show_create_btn = false
+                arguments = StandardsQueryArg::set_favorite()
+            />
+        }
+    }
 
     fn view_favorite_users(&self) -> Html {
         html! {
