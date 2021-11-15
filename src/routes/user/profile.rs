@@ -620,14 +620,14 @@ impl Profile {
         }
 
         fn li_generator(class:&'static str, onclick: Callback<MouseEvent>, info:String, number: usize) -> Html {
-          let showTag = number==0;
+          let show_tag = number==0;
 
           html!(
             <li>
               <a class={class} onclick=onclick style="display: flex;justify-content: space-between;" >
                 <span>{info}</span>
-                <span hidden=showTag>
-                  <span class="tag is-success is-small" >{number}</span>
+                <span hidden=show_tag>
+                  <span class="tag is-info is-small" >{number}</span>
                 </span>
               </a>
             </li>
