@@ -20,7 +20,7 @@ use crate::fragments::{
 };
 use crate::gqls::make_query;
 // use crate::routes::AppRoute;
-use crate::services::{is_authenticated, set_token};
+use crate::services::{is_authenticated, get_logged_user};
 use crate::types::{
     UUID, Certificate, Program, Region, SelfUserInfo, SlimUser, UserCertificate,
     UserInfo, UsersQueryArg, ComponentsQueryArg, CompaniesQueryArg, StandardsQueryArg,
@@ -120,7 +120,6 @@ pub enum Msg {
     UpdateList(String),
     ChangeTab(ProfileTab),
     Ignore,
-    Logout,
 }
 
 #[derive(Clone, PartialEq)]
@@ -171,7 +170,7 @@ impl Component for Profile {
 
         // check get self data
         let get_self = matches!(
-            &self.props.current_user,
+            get_logged_user(),
             Some(cu) if cu.username == target_username
         );
 
@@ -334,14 +333,6 @@ impl Component for Profile {
                 self.profile_tab = set_tab;
             }
             Msg::Ignore => {}
-            Msg::Logout => {
-                // Clear global token after logged out
-                set_token(None);
-                // Notify app to clear current user info
-                // self.props.callback.emit(());
-                // Redirect to home page
-                // self.router_agent.send(ChangeRoute(AppRoute::Home.into()));
-            }
             Msg::UpdateList(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
