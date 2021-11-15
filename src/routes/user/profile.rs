@@ -1,7 +1,8 @@
 // use yew::services::fetch::FetchTask;
 use chrono::NaiveDateTime;
+use web_sys::MouseEvent;
 // use yew::services::ConsoleService;
-use yew::{html, Component, ComponentLink, Html, Properties, ShouldRender};
+use yew::{Callback, Component, ComponentLink, Html, Properties, ShouldRender, html};
 use yew_router::service::RouteService;
 use log::debug;
 use graphql_client::GraphQLQuery;
@@ -399,9 +400,10 @@ impl Component for Profile {
                                         self_data.program.name.as_str(),
                                     ) }
                                 </div>
+                                <div style="display: flex;padding: 10px;padding-top: 20px;border-top: 5px dashed;">
                                 { self.show_profile_action() }
                                 // <hr/>
-                                <div class="card-relate-data">
+                                <div class="card-relate-data" style="flex:1;" >
                                     {match self.profile_tab {
                                         ProfileTab::Certificates => {
                                             self.view_certificates(&self_data.certificates)
@@ -425,6 +427,7 @@ impl Component for Profile {
                                             self.view_favorite_users()
                                         },
                                     }}
+                                </div>
                                 </div>
                             </div>
                           </div>
@@ -452,27 +455,28 @@ impl Component for Profile {
                                         user_data.program.name.as_str(),
                                     ) }
                                 </div>
-                                { self.show_profile_action() }
-                                // <hr/>
-                                <div class="card-relate-data">
-                                    {match self.profile_tab {
-                                        ProfileTab::Certificates => {
-                                            self.view_certificates(&user_data.certificates)
-                                        },
-                                        ProfileTab::Components => {
-                                            self.view_components(&user_data.uuid)
-                                        },
-                                        ProfileTab::Companies => {
-                                            self.view_companies(&user_data.uuid)
-                                        },
-                                        ProfileTab::FavoriteComponents => {
-                                            self.view_favorite_components(Some(user_data.uuid.clone()))
-                                        },
-                                        ProfileTab::FavoriteCompanies => {
-                                            self.view_favorite_companies(Some(user_data.uuid.clone()))
-                                        },
-                                        _ => html! {},
-                                    }}
+                                <div style="display: flex;padding: 10px;">
+                                  { self.show_profile_action() }
+                                  <div class="card-relate-data" style="flex:1;">
+                                      {match self.profile_tab {
+                                          ProfileTab::Certificates => {
+                                              self.view_certificates(&user_data.certificates)
+                                          },
+                                          ProfileTab::Components => {
+                                              self.view_components(&user_data.uuid)
+                                          },
+                                          ProfileTab::Companies => {
+                                              self.view_companies(&user_data.uuid)
+                                          },
+                                          ProfileTab::FavoriteComponents => {
+                                              self.view_favorite_components(Some(user_data.uuid.clone()))
+                                          },
+                                          ProfileTab::FavoriteCompanies => {
+                                              self.view_favorite_companies(Some(user_data.uuid.clone()))
+                                          },
+                                          _ => html! {},
+                                      }}
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -624,52 +628,95 @@ impl Profile {
             ProfileTab::FavoriteUsers => active_fav_users = "is-active",
         }
 
+        fn li_generator(class:&'static str, onclick: Callback<MouseEvent>, info:String, number: usize) -> Html {
+          let showTag = number==0;
+
+          html!(
+            <li>
+              <a class={class} onclick=onclick style="display: flex;justify-content: space-between;" >
+                <span>{info}</span>
+                <span hidden=showTag>
+                  <span class="tag is-success is-small" >{number}</span>
+                </span>
+              </a>
+            </li>
+          )
+        }
+
         html! {
-            <div class="tabs">
-                <ul>
+            <div class="card" style="padding: 10px;margin-right: 18px;" >
+                // <ul>
+                <aside class="menu">
                     {match (&self.self_profile, &self.profile) {
                         (Some(ref self_data), _) => html! {<>
-                            <li class={active_certificates}>
-                              <a onclick=onclick_certificates>
-                                // <span class="icon is-small"><i class="fas fa-fa-certificate" aria-hidden="true"></i></span>
-                                // <span>{ format!("{} Certificates {}", '\u{f0a3}', self_data.certificates.len().to_string()) }</span>
-                                <span>{ format!("Certificates {}", self_data.certificates.len().to_string()) }</span>
-                              </a>
-                            </li>
-                            <li class={active_components}>
-                              <a onclick=onclick_components>
-                                { format!("Components {}", self_data.components_count.to_string()) }
-                              </a>
-                            </li>
-                            <li class={active_companies}>
-                              <a onclick=onclick_companies>
-                                { format!("Companies {}", self_data.companies_count.to_string()) }
-                              </a>
-                            </li>
-                            <li class={active_fav_components}>
-                              <a onclick=onclick_fav_components>
-                                // <span class="icon is-small"><i class="fas fa-heart" aria-hidden="true"></i></span>
-                                <span>{ format!("Fav components {}", self_data.fav_components_count.to_string()) }</span>
-                              </a>
-                            </li>
-                            <li class={active_fav_companies}>
-                              <a onclick=onclick_fav_companies>
-                                // <span class="icon is-small"><i class="fas fa-heart" aria-hidden="true"></i></span>
-                                <span>{ format!("Fav companies {}", self_data.fav_companies_count.to_string()) }</span>
-                              </a>
-                            </li>
-                            <li class={active_fav_standards}>
-                              <a onclick=onclick_fav_standards>
-                                // <span class="icon is-small"><i class="fas fa-heart" aria-hidden="true"></i></span>
-                                <span>{ format!("Fav standards {}", self_data.fav_standards_count.to_string()) }</span>
-                              </a>
-                            </li>
-                            <li class={active_fav_users}>
-                              <a onclick=onclick_fav_users>
-                                // <span class="icon is-small"><i class="fas fa-heart" aria-hidden="true"></i></span>
-                                <span>{ format!("Fav users {}", self_data.fav_users_count.to_string()) }</span>
-                              </a>
-                            </li>
+                            <p class="menu-label">
+                              {"General"}
+                            </p>
+                            <ul class="menu-list">
+                            {li_generator(active_certificates, onclick_certificates, "Certificates".to_string(), self_data.certificates.len())}
+                            // <li class={active_certificates}>
+                            //   <a onclick=onclick_certificates>
+                            //     // <span class="icon is-small"><i class="fas fa-fa-certificate" aria-hidden="true"></i></span>
+                            //     // <span>{ format!("{} Certificates {}", '\u{f0a3}', self_data.certificates.len().to_string()) }</span>
+                            //     <span>{ format!("Certificates {}", self_data.certificates.len().to_string()) }</span>
+                            //   </a>
+                            // </li>
+                            </ul>
+                            <p class="menu-label">
+                              {"Components"}
+                            </p>
+                            <ul class="menu-list">
+                            {li_generator(active_components, onclick_components, "all".to_string(), self_data.components_count)}
+                            // <li class={active_components}>
+                            //   <a onclick=onclick_components>
+                            //     { format!("Components {}", self_data.components_count.to_string()) }
+                            //   </a>
+                            // </li>
+                            {li_generator(active_fav_components, onclick_fav_components, "fav".to_string(), self_data.fav_components_count)}
+                            // <li class={active_fav_components}>
+                            //   <a onclick=onclick_fav_components>
+                            //     // <span class="icon is-small"><i class="fas fa-heart" aria-hidden="true"></i></span>
+                            //     <span>{ format!("Fav components {}", self_data.fav_components_count.to_string()) }</span>
+                            //   </a>
+                            // </li>
+                            </ul>
+                            <p class="menu-label">
+                              {"Companies"}
+                            </p>
+                            <ul class="menu-list">
+                            {li_generator(active_companies, onclick_companies, "all".to_string(), self_data.companies_count)}
+                            // <li class={active_companies}>
+                            //   <a onclick=onclick_companies>
+                            //     { format!("Companies {}", self_data.companies_count.to_string()) }
+                            //   </a>
+                            // </li>
+                            {li_generator(active_fav_companies, onclick_fav_companies, "fav".to_string(), self_data.fav_companies_count)}
+                            // <li class={active_fav_companies}>
+                            //   <a onclick=onclick_fav_companies>
+                            //     // <span class="icon is-small"><i class="fas fa-heart" aria-hidden="true"></i></span>
+                            //     <span>{ format!("Fav companies {}", self_data.fav_companies_count.to_string()) }</span>
+                            //   </a>
+                            // </li>
+                            </ul>
+                            <p class="menu-label">
+                              {"Other Fav"}
+                            </p>
+                            <ul class="menu-list">
+                            {li_generator(active_fav_standards, onclick_fav_standards, "standards".to_string(), self_data.fav_standards_count)}
+                            // <li class={active_fav_standards}>
+                            //   <a onclick=onclick_fav_standards>
+                            //     // <span class="icon is-small"><i class="fas fa-heart" aria-hidden="true"></i></span>
+                            //     <span>{ format!("Fav standards {}", self_data.fav_standards_count.to_string()) }</span>
+                            //   </a>
+                            // </li>
+                            {li_generator(active_fav_users, onclick_fav_users, "users".to_string(), self_data.fav_users_count)}
+                            // <li class={active_fav_users}>
+                            //   <a onclick=onclick_fav_users>
+                            //     // <span class="icon is-small"><i class="fas fa-heart" aria-hidden="true"></i></span>
+                            //     <span>{ format!("Fav users {}", self_data.fav_users_count.to_string()) }</span>
+                            //   </a>
+                            // </li>
+                            </ul>
                         </>},
                         (_, Some(ref user_data)) => html! {<>
                             <li class={active_certificates}>
@@ -699,7 +746,9 @@ impl Profile {
                         </>},
                         _ => html!{},
                     }
-                }</ul>
+                }
+                // </ul>
+                </aside>
             </div>
         }
     }
