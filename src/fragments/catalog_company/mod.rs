@@ -87,11 +87,8 @@ impl Component for CatalogCompanies {
     }
 
     fn rendered(&mut self, first_render: bool) {
-        let link = self.link.clone();
         if first_render {
-            spawn_local(async move {
-                link.send_message(Msg::GetList);
-            });
+            self.link.send_message(Msg::GetList);
         }
     }
 
@@ -133,14 +130,12 @@ impl Component for CatalogCompanies {
               let data: Value = serde_json::from_str(res.as_str()).unwrap();
               let res_value = data.as_object().unwrap().get("data").unwrap();
 
-              debug!("res value: {:#?}", res_value);
+              // debug!("res value: {:#?}", res_value);
 
               match res_value.is_null() {
                   false => {
                       let result: Vec<ShowCompanyShort> = serde_json::from_value(res_value.get("companies").unwrap().clone()).unwrap();
-
-                      debug!("UpdateList result: {:?}", result);
-
+                      // debug!("UpdateList result: {:?}", result);
                       self.list = result;
                   },
                   true => {
@@ -150,19 +145,19 @@ impl Component for CatalogCompanies {
           },
           Msg::AddFav(company_uuid) => {
               spawn_local(async move {
-                  let res = make_query(AddCompanyFav::build_query(add_company_fav::Variables{
+                  make_query(AddCompanyFav::build_query(add_company_fav::Variables{
                     company_uuid
                   })).await.unwrap();
-                  debug!("AddFav res: {:?}", res);
+                  // debug!("AddFav res: {:?}", res);
                   link.send_message(Msg::GetList);
               });
           },
           Msg::DelFav(company_uuid) => {
               spawn_local(async move {
-                  let res = make_query(DeleteCompanyFav::build_query(delete_company_fav::Variables{
+                  make_query(DeleteCompanyFav::build_query(delete_company_fav::Variables{
                     company_uuid
                   })).await.unwrap();
-                  debug!("DelFav res: {:?}", res);
+                  // debug!("DelFav res: {:?}", res);
                   link.send_message(Msg::GetList);
               });
           }
@@ -170,11 +165,25 @@ impl Component for CatalogCompanies {
         true
     }
 
-    fn change(&mut self, _props: Self::Properties) -> ShouldRender {
-        // Should only return "true" if new properties are different to
-        // previously received properties.
-        // This company has no properties so we will always return "false".
-        false
+    fn change(&mut self, props: Self::Properties) -> ShouldRender {
+        let flag_change = match (&self.props.arguments, &props.arguments) {
+            (Some(self_arg), Some(arg)) => self_arg == arg,
+            (None, None) => true,
+            _ => false,
+        };
+
+        debug!("self_arg == arg: {}", flag_change);
+
+        if self.props.show_create_btn == props.show_create_btn && flag_change {
+            // debug!("if change");
+            false
+        } else {
+            self.props.show_create_btn = props.show_create_btn;
+            self.props.arguments = props.arguments;
+            self.link.send_message(Msg::GetList);
+            // debug!("else change");
+            true
+        }
     }
 
     fn view(&self) -> Html {

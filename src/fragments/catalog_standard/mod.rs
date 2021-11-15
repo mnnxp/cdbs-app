@@ -87,11 +87,8 @@ impl Component for CatalogStandards {
     }
 
     fn rendered(&mut self, first_render: bool) {
-        let link = self.link.clone();
         if first_render {
-            spawn_local(async move {
-                link.send_message(Msg::GetList);
-            });
+            self.link.send_message(Msg::GetList);
         }
     }
 
@@ -150,19 +147,19 @@ impl Component for CatalogStandards {
           },
           Msg::AddFav(standard_uuid) => {
               spawn_local(async move {
-                  let res = make_query(AddStandardFav::build_query(add_standard_fav::Variables{
+                  make_query(AddStandardFav::build_query(add_standard_fav::Variables{
                     standard_uuid
                   })).await.unwrap();
-                  debug!("AddFav res: {:?}", res);
+                  // debug!("AddFav res: {:?}", res);
                   link.send_message(Msg::GetList);
               });
           },
           Msg::DelFav(standard_uuid) => {
               spawn_local(async move {
-                  let res = make_query(DeleteStandardFav::build_query(delete_standard_fav::Variables{
+                  make_query(DeleteStandardFav::build_query(delete_standard_fav::Variables{
                     standard_uuid
                   })).await.unwrap();
-                  debug!("DelFav res: {:?}", res);
+                  // debug!("DelFav res: {:?}", res);
                   link.send_message(Msg::GetList);
               });
           }

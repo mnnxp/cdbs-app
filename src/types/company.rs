@@ -37,7 +37,7 @@ pub struct SlimCompany{
 }
 
 // for arguments users query
-#[derive(Serialize, Deserialize, Clone, Default, Debug)]
+#[derive(PartialEq, Serialize, Deserialize, Clone, Default, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct CompaniesQueryArg {
     pub companies_uuids:  Option<Vec<UUID>>,

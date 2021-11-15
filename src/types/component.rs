@@ -27,7 +27,7 @@ pub struct Supplier{
 }
 
 // for arguments users query
-#[derive(Serialize, Deserialize, Clone, Default, Debug)]
+#[derive(PartialEq, Serialize, Deserialize, Clone, Default, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct ComponentsQueryArg {
     pub components_uuids: Option<Vec<UUID>>,
