@@ -197,7 +197,7 @@ impl Component for CatalogComponents {
         };
 
         html! {
-            <div class="tendersBox" >
+            <div class="componentsBox" >
               <ListErrors error=self.error.clone()/>
               <div class="level" >
                 <div class="level-left ">
