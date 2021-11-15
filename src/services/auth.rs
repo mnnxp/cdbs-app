@@ -8,6 +8,7 @@ use serde_json::Value;
 use super::Requests;
 use crate::error::{Error, get_error};
 use crate::types::*;
+use crate::services::{get_logged_user, set_logged_user};
 use crate::gqls::make_query;
 
 
@@ -51,24 +52,34 @@ pub async fn get_current_user(
     // current_user: &mut Result<SlimUser, Error>,
     // error: &'static mut Option<Error>,
 ) -> Result<SlimUser, Error> {
-    let req = make_query(
-        GetMySelf::build_query(get_my_self::Variables)
-    ).await.unwrap();
+    // check data in local storage
+    match get_logged_user() {
+        Some(x) => Ok(x),
+        None => {
+            let req = make_query(
+                GetMySelf::build_query(get_my_self::Variables)
+            ).await.unwrap();
 
-    let data: Value = serde_json::from_str(req.as_str()).unwrap();
+            let data: Value = serde_json::from_str(req.as_str()).unwrap();
 
-    let res = data.as_object().unwrap().get("data").unwrap();
+            let res = data.as_object().unwrap().get("data").unwrap();
 
-    match res.is_null() {
-        false => {
-            let slim_user: SlimUser = serde_json::from_value(res.get("myself").unwrap().clone()).unwrap();
-            ConsoleService::info(format!("SlimUser data: {:?}", slim_user).as_ref());
-            // *current_user = Ok(slim_user);
-            Ok(slim_user)
-        },
-        true => {
-            // *current_user = Err(get_error(&data));
-            Err(get_error(&data))
+            match res.is_null() {
+                false => {
+                    let user_json = res.get("myself").unwrap().clone();
+                    // save data in local storage
+                    set_logged_user(Some(user_json.to_string()));
+
+                    let slim_user: SlimUser = serde_json::from_value(user_json).unwrap();
+                    ConsoleService::info(format!("SlimUser data: {:?}", slim_user).as_ref());
+                    // *current_user = Ok(slim_user);
+                    Ok(slim_user)
+                },
+                true => {
+                    // *current_user = Err(get_error(&data));
+                    Err(get_error(&data))
+                },
+            }
         },
     }
 }

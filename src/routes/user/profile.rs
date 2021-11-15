@@ -19,7 +19,7 @@ use crate::fragments::{
 };
 use crate::gqls::make_query;
 // use crate::routes::AppRoute;
-use crate::services::{is_authenticated, set_token};
+use crate::services::{is_authenticated, set_token, get_logged_user};
 use crate::types::{
     UUID, Certificate, Program, Region, SelfUserInfo, SlimUser, UserCertificate,
     UserInfo, UsersQueryArg, ComponentsQueryArg, CompaniesQueryArg, StandardsQueryArg,
@@ -170,7 +170,7 @@ impl Component for Profile {
 
         // check get self data
         let get_self = matches!(
-            &self.props.current_user,
+            get_logged_user(),
             Some(cu) if cu.username == target_username
         );
 

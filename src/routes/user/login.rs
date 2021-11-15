@@ -10,7 +10,7 @@ use graphql_client::GraphQLQuery;
 use crate::fragments::list_errors::ListErrors;
 use crate::error::Error;
 use crate::routes::AppRoute;
-use crate::services::{set_token, Auth, get_token};
+use crate::services::{set_token, Auth, get_token, set_logged_user};
 use crate::types::{LoginInfo, LoginInfoWrapper, SlimUser, UserToken};
 use crate::gqls::make_query;
 use wasm_bindgen_futures::spawn_local;
@@ -79,21 +79,15 @@ impl Component for Login {
                 self.task = Some(self.auth.login(request, self.response.clone()));
             }
             Msg::Response(Ok(user_info)) => {
-                // Set global token after logged in
-                // set_token(Some(user_info.user.token.clone()));
-                // set_token(Some(Auth::token_query());
-                // self.props.callback.emit(user_info.user);
-                // self.error = None;
-                // self.task = None;
-                // // Route to home page after logged in
-                // self.router_agent.send(ChangeRoute(AppRoute::Home.into()));
                 set_token(Some(user_info.to_string()));
                 spawn_local(async move {
                     let res = make_query(GetMySelf::build_query(get_my_self::Variables)).await.unwrap();
                     ConsoleService::info(format!("{}", res).as_ref());
                     let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
                     let res = data.as_object().unwrap().get("data").unwrap();
-                    let user : SlimUser = serde_json::from_value(res.get("myself").unwrap().clone()).unwrap();
+                    let user_json = res.get("myself").unwrap().clone();
+                    set_logged_user(Some(user_json.to_string()));
+                    let user : SlimUser = serde_json::from_value(user_json).unwrap();
                     ConsoleService::info(format!("{}", user.username).as_ref());
                     props.callback.emit(user);
                     router_agent.lock().unwrap().send(ChangeRoute(AppRoute::Home.into()));
