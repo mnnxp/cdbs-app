@@ -12,12 +12,6 @@ type ActualStatusTranslateList {
   name: String!
 }
 
-type CertificateAndFile {
-  file: ShowFileForDownload!
-  userUuid: UUID!
-  description: String!
-}
-
 input ChangeOwnerComponent {
   componentUuid: UUID!
   newOwnerUserUuid: UUID!
@@ -84,7 +78,7 @@ type CompanyAndRelatedData {
   region: RegionTranslateList!
   companyRepresents: [CompanyRepresentAndRelatedData!]!
   companyType: CompanyTypeTranslateList!
-  companyCertificates: [CertificateAndFile!]!
+  companyCertificates: [CompanyCertificateAndFile!]!
   companySpecs: [CompanySpecWithTranslation!]!
   isSupplier: Boolean!
   isEmailVerified: Boolean!
@@ -94,6 +88,12 @@ type CompanyAndRelatedData {
   isDelete: Boolean!
   createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!
+}
+
+type CompanyCertificateAndFile {
+  file: DownloadFile!
+  companyUuid: UUID!
+  description: String!
 }
 
 type CompanyMemberAndRelatedData {
@@ -720,6 +720,7 @@ type MutationRoot {
   deleteUserFav(userUuid: UUID!): Boolean!
   readNotifications(notificationsIds: [Int!]!): Int!
   deleteNotifications(notificationsIds: [Int!]!): Int!
+  logout: String!
   registerComponent(data: IptComponentData!): SlimComponent!
 
   # Transfer component ownership to another user
@@ -870,7 +871,6 @@ type QueryRoot {
   decodeToken: Claims!
   deleteToken(token: String!): Boolean!
   deleteAllTokens: Int!
-  logout: String!
   notifications(
     selectIds: [Int!]
     limit: Int
@@ -1030,7 +1030,7 @@ type ShowUserAndRelatedData {
   program: Program!
   createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!
-  certificates: [CertificateAndFile!]!
+  certificates: [UserCertificateAndFile!]!
   subscribers: Int!
   isFollowed: Boolean!
 }
@@ -1203,7 +1203,7 @@ type UserAndRelatedData {
   isEmailVerified: Boolean!
   createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!
-  certificates: [CertificateAndFile!]!
+  certificates: [UserCertificateAndFile!]!
   subscribers: Int!
   companiesCount: Int!
   componentsCount: Int!
@@ -1212,6 +1212,12 @@ type UserAndRelatedData {
   favComponentsCount: Int!
   favStandardsCount: Int!
   favUsersCount: Int!
+}
+
+type UserCertificateAndFile {
+  file: DownloadFile!
+  userUuid: UUID!
+  description: String!
 }
 
 type UserToken {

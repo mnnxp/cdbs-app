@@ -1,9 +1,9 @@
 use yew::callback::Callback;
 use yew::services::fetch::FetchTask;
-use yew::services::ConsoleService;
 
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
+use log::debug;
 
 use super::Requests;
 use crate::error::{Error, get_error};
@@ -19,6 +19,15 @@ use crate::gqls::make_query;
     response_derives = "Debug"
 )]
 struct GetMySelf;
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/user.graphql",
+    response_derives = "Debug"
+)]
+struct Logout;
+
 
 /// Apis for authentication
 #[derive(Default, Debug)]
@@ -71,7 +80,7 @@ pub async fn get_current_user(
                     set_logged_user(Some(user_json.to_string()));
 
                     let slim_user: SlimUser = serde_json::from_value(user_json).unwrap();
-                    ConsoleService::info(format!("SlimUser data: {:?}", slim_user).as_ref());
+                    debug!("SlimUser data: {:?}", slim_user);
                     // *current_user = Ok(slim_user);
                     Ok(slim_user)
                 },
@@ -80,6 +89,24 @@ pub async fn get_current_user(
                     Err(get_error(&data))
                 },
             }
+        },
+    }
+}
+
+/// Logout user
+pub async fn logout() -> String {
+    let req = make_query(Logout::build_query(logout::Variables)).await.unwrap();
+    let data: Value = serde_json::from_str(req.as_str()).unwrap();
+    let res = data.as_object().unwrap().get("data").unwrap();
+
+    match res.is_null() {
+        false => {
+            let goodbye: String = serde_json::from_value(res.get("logout").unwrap().clone()).unwrap();
+            goodbye
+        },
+        true => {
+            debug!("fail logout: {:?}", res);
+            String::from("fail logout")
         },
     }
 }

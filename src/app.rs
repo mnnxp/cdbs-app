@@ -3,8 +3,9 @@
 use yew::services::fetch::FetchTask;
 use yew::{agent::Bridged, html, Bridge, Component, ComponentLink, Html, ShouldRender};
 use yew_router::prelude::*;
-use yew::services::ConsoleService;
+
 use wasm_bindgen_futures::spawn_local;
+use log::debug;
 
 use crate::error::Error;
 use crate::fragments::{
@@ -88,7 +89,7 @@ impl Component for App {
                         self.current_user = Some(slim_user);
                     },
                     Err(err) => {
-                        ConsoleService::info(format!("Error with CurrentUserResponse: {:#?}", err).as_ref());
+                        debug!("Error with CurrentUserResponse: {:#?}", err);
                         self.current_user_task = None;
                     },
                 }
