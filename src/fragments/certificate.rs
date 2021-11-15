@@ -224,7 +224,7 @@ impl Component for CertificateCard {
                             { self.show_certificate_on_page() }
                         },
                         false => html! {
-                            { certificate.file.download.filename.to_string() }
+                            { certificate.file.filename.to_string() }
                         },
                     }}
                     <div class="card-content">
@@ -271,7 +271,7 @@ impl CertificateCard {
         html! {<div class="card-image">
             <figure class="image is-4by5">
                 <img src=
-                    { self.props.certificate.file.download.download_url.to_string() }
+                    { self.props.certificate.file.download_url.to_string() }
                     loading="lazy" />
             </figure>
         </div>}
@@ -309,8 +309,8 @@ impl CertificateCard {
         html! {
             <a id={ format!("btn-down-cert-{}", &self.props.certificate.file.uuid) }
                 class="button"
-                href={ self.props.certificate.file.download.download_url.to_string() }
-                download={ self.props.certificate.file.download.filename.to_string() }>
+                href={ self.props.certificate.file.download_url.to_string() }
+                download={ self.props.certificate.file.filename.to_string() }>
                 { "Download" }
             </a>
         }

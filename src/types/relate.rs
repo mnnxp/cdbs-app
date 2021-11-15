@@ -1,4 +1,4 @@
-use crate::types::file::ShowFileForDownload;
+use crate::types::file::DownloadFile;
 
 // use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
@@ -21,7 +21,7 @@ pub struct Program {
 #[serde(rename_all = "camelCase")]
 pub struct Certificate {
     pub owner_uuid: String,
-    pub file: ShowFileForDownload,
+    pub file: DownloadFile,
     pub description: String,
 }
 
