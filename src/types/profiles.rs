@@ -1,6 +1,6 @@
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
-use super::file::{ShowFileForDownload, DownloadFile};
+use super::file::DownloadFile;
 use super::relate::{Region, Program, TypeAccessTranslateListInfo};
 use super::UUID;
 
@@ -70,7 +70,7 @@ pub struct ShowUserShort {
 #[serde(rename_all = "camelCase")]
 pub struct UserCertificate {
     pub user_uuid: UUID,
-    pub file: ShowFileForDownload,
+    pub file: DownloadFile,
     pub description: String,
 }
 

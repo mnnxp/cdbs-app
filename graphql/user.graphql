@@ -115,24 +115,7 @@ fragment selfUserFields on UserAndRelatedData {
   certificates {
     userUuid
     file {
-      uuid
-      parentFileUuid
-      download {
-        uuid
-        filename
-        filesize
-        downloadUrl
-      }
-      ownerUser {
-        ...showUserShortFields
-      }
-      contentType
-      program {
-        id
-        name
-      }
-      createdAt
-      updatedAt
+      ...downloadFileFields
     }
     description
   }
@@ -202,24 +185,7 @@ fragment userFields on ShowUserAndRelatedData {
   certificates {
     userUuid
     file {
-      uuid
-      parentFileUuid
-      download {
-        uuid
-        filename
-        filesize
-        downloadUrl
-      }
-      ownerUser {
-        ...showUserShortFields
-      }
-      contentType
-      program {
-        id
-        name
-      }
-      createdAt
-      updatedAt
+      ...downloadFileFields
     }
     description
   }
