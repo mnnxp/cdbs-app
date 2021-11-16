@@ -1,6 +1,6 @@
 use yew::prelude::*;
 use crate::fragments::switch_icon::res_btn;
-use super::ShowedComponent;
+use crate::types::ShowCompanyShort;
 
 pub enum Msg {
     AddOne,
@@ -9,7 +9,7 @@ pub enum Msg {
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
-    pub data: ShowedComponent,
+    pub data: ShowCompanyShort,
     pub show_list: bool,
     // pub triggerFav: Callback<MouseEvent>,
     pub add_fav: Callback<String>,
@@ -17,8 +17,8 @@ pub struct Props {
 }
 
 pub struct ListItem {
-    // `ComponentLink` is like a reference to a component.
-    // It can be used to send messages to the component
+    // `ComponentLink` is like a reference to a company.
+    // It can be used to send messages to the company
     link: ComponentLink<Self>,
     value: i64,
     props: Props
@@ -54,7 +54,7 @@ impl Component for ListItem {
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
         // Should only return "true" if new properties are different to
         // previously received properties.
-        // This component has no properties so we will always return "false".
+        // This company has no properties so we will always return "false".
         if self.props.show_list != props.show_list || self.props.data.is_followed != props.data.is_followed {
             self.props.show_list = props.show_list;
             self.props.data = props.data;
@@ -77,11 +77,16 @@ impl Component for ListItem {
 
 impl ListItem {
     fn showing_in_list(&self) -> Html {
-        let ShowedComponent {
+        let ShowCompanyShort {
+            shortname,
+            inn,
             description,
-            is_base,
+            image_file,
+            region,
+            company_type,
+            is_supplier,
             is_followed,
-            name,
+            updated_at,
             ..
         } = &self.props.data;
 
@@ -104,39 +109,36 @@ impl ListItem {
             <article class="media center-media">
               <div class="media-left">
                 <figure class="image is-96x96">
-                  <div hidden={!is_base} class="top-tag" >{"standard"}</div>
-                  <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
+                  <div hidden={!is_supplier} class="top-tag" >{"supplier"}</div>
+                  // <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
+                  <img src={image_file.download_url.to_string()} alt="Favicon profile"/>
                 </figure>
               </div>
               <div class="media-content" style="min-width: 0px;">
                 <div class="content">
                   <p>
                     <div style="margin-bottom:0" >
-                      {"manufactured by "} <span class="id-box has-text-grey-light has-text-weight-bold">{"Alphametall"}</span>
+                      {"from "} <span class="id-box has-text-grey-light has-text-weight-bold">{region.region.to_string()}</span>
                     </div>
-                    <div class="overflow-title has-text-weight-bold	is-size-4" >{name}</div>
-                    <div>{description}</div>
+                    <div class="overflow-title has-text-weight-bold is-size-4">{shortname}</div>
+                    <div class="overflow-title has-text-weight-bold">{description}</div>
                   </p>
                 </div>
               </div>
+              <div class="media-right overflow-title">
+                  {format!("Updated at: {:.*}", 19, updated_at.to_string())}
+                  <br/>
+                  {format!("Type: {}", company_type.name.to_string())}
+                  <br/>
+                  {format!("Reg.№: {}", inn.to_string())}
+              </div>
               <div class="media-right flexBox " >
-                {res_btn(classes!(String::from("fas fa-cloud-download-alt")), self.link.callback(|_| Msg::AddOne ), "".to_string())}
-                // <SwitchIcon callback={BtnItem{class: String::from("fas fa-cloud-download-alt"),clickEvent:self.link.callback(|_| Msg::AddOne )}} />
-                // <button class="button  is-info">
-                //   <span class="icon is-small">
-                //     <i class="fas fa-cloud-download-alt"></i>
-                //   </span>
-                // </button>
+                {res_btn(classes!(String::from("fas fa-building")), self.link.callback(|_| Msg::AddOne ), "".to_string())}
                 {res_btn(
                     classes!(class_res_btn),
                     trigger_fab_btn,
                     class_color_btn.to_string()
                 )}
-                // <button class="button">
-                //   <span class="icon is-small">
-                //     <i class="fas fa-bookmark"></i>
-                //   </span>
-                // </button>
               </div>
             </article>
           </div>
@@ -144,10 +146,13 @@ impl ListItem {
     }
 
     fn showing_in_box(&self) -> Html {
-        let ShowedComponent {
-            is_base,
+        let ShowCompanyShort {
+            shortname,
+            image_file,
+            region,
+            company_type,
+            is_supplier,
             is_followed,
-            name,
             ..
         } = self.props.data.clone();
 
@@ -170,23 +175,25 @@ impl ListItem {
           <div class="boxItem" >
             <div class="innerBox" >
               <div class="imgBox" >
-                <div class="top-tag" hidden={!is_base} >{"standart"}</div>
-                <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
+                <div class="top-tag" hidden={!is_supplier} >{"supplier"}</div>
+                // <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
+                <img src={image_file.download_url.to_string()} alt="Favicon profile"/>
               </div>
               <div>
-                {"manufactured by "}<span class="id-box has-text-grey-light has-text-weight-bold">{"Alphametall"}</span>
+                {"from "}<span class="id-box has-text-grey-light has-text-weight-bold">{region.region.to_string()}</span>
               </div>
-              <div class="overflow-title has-text-weight-bold	is-size-4" >{name}</div>
-                <div class="btnBox">
-                  <button class="button is-light is-fullwidth has-text-weight-bold">{"Download"}</button>
-                  <div style="margin-left: 8px;">
-                  {res_btn(
-                      classes!(class_res_btn),
-                      trigger_fab_btn,
-                      class_color_btn.to_string()
-                  )}
-                  </div>
+              <div class="overflow-title has-text-weight-bold is-size-4">{shortname}</div>
+              <div class="overflow-title has-text-weight-bold">{company_type.shortname.to_string()}</div>
+              <div class="btnBox">
+                <button class="button is-light is-fullwidth has-text-weight-bold">{"Show company"}</button>
+                <div style="margin-left: 8px;">
+                {res_btn(
+                    classes!(class_res_btn),
+                    trigger_fab_btn,
+                    class_color_btn.to_string()
+                )}
                 </div>
+              </div>
             </div>
           </div>
         }

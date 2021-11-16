@@ -9,12 +9,13 @@ use yew::services::fetch::{FetchService, FetchTask, Request, Response};
 use yew::services::storage::{Area, StorageService};
 
 use crate::error::Error;
-use crate::types::ErrorInfo;
+use crate::types::{SlimUser, ErrorInfo};
 
 const API_ROOT: &str = dotenv!("API_ROOT");
 // const API_GPL: &str = dotenv!("API_GPL");
 const TOKEN_KEY: &str = dotenv!("TOKEN_KEY");
 // const TOKEN_KEY: &str = "yew.token";
+const LOGGED_USER_KEY: &str = dotenv!("LOGGED_USER_KEY");
 
 lazy_static! {
     /// Jwt token read from local storage.
@@ -22,6 +23,16 @@ lazy_static! {
         let storage = StorageService::new(Area::Local).expect("storage was disabled by the user");
         if let Ok(token) = storage.restore(TOKEN_KEY) {
             RwLock::new(Some(token))
+        } else {
+            RwLock::new(None)
+        }
+    };
+
+    /// Read SlimUser data from local storage.
+    pub static ref LOGGED_USER: RwLock<Option<String>> = {
+        let storage = StorageService::new(Area::Local).expect("storage was disabled by the user");
+        if let Ok(logged_user) = storage.restore(LOGGED_USER_KEY) {
+            RwLock::new(Some(logged_user))
         } else {
             RwLock::new(None)
         }
@@ -49,6 +60,27 @@ pub fn get_token() -> Option<String> {
 /// Check if current user is authenticated.
 pub fn is_authenticated() -> bool {
     get_token().is_some()
+}
+
+/// Set current user to local storage.
+pub fn set_logged_user(logged_user: Option<String>) {
+    let mut storage = StorageService::new(Area::Local).expect("storage was disabled by the user");
+    if let Some(u) = logged_user.clone() {
+        storage.store(LOGGED_USER_KEY, Ok(u));
+    } else {
+        storage.remove(LOGGED_USER_KEY);
+    }
+    let mut logged_user_lock = LOGGED_USER.write();
+    *logged_user_lock = logged_user;
+}
+
+/// Get authenticated user from lazy static.
+pub fn get_logged_user() -> Option<SlimUser> {
+    let logged_user_lock = LOGGED_USER.read();
+    let logged_user_lock: Option<SlimUser> = serde_json::from_str(
+        &logged_user_lock.clone().unwrap_or_default()
+      ).unwrap_or_default();
+    logged_user_lock.clone()
 }
 
 /// Http request

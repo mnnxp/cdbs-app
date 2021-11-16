@@ -10,7 +10,7 @@ pub enum Msg {
 pub struct CreateTender {
     // `ComponentLink` is like a reference to a component.
     // It can be used to send messages to the component
-    link: ComponentLink<Self>,
+    // link: ComponentLink<Self>,
     value: i64,
 }
 
@@ -18,8 +18,11 @@ impl Component for CreateTender {
     type Message = Msg;
     type Properties = ();
 
-    fn create(_props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        Self { link, value: 0 }
+    fn create(_props: Self::Properties, _link: ComponentLink<Self>) -> Self {
+        Self {
+            // link, 
+            value: 0
+        }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {

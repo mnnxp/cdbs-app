@@ -11,7 +11,7 @@ use banner::Banner;
 /// Home page with an article list and a tag list.
 pub struct Home {
     tag: Option<String>,
-    link: ComponentLink<Self>,
+    // link: ComponentLink<Self>,
 }
 
 pub enum Msg {
@@ -22,8 +22,11 @@ impl Component for Home {
     type Message = Msg;
     type Properties = ();
 
-    fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
-        Home { tag: None, link }
+    fn create(_: Self::Properties, _link: ComponentLink<Self>) -> Self {
+        Home {
+            tag: None,
+            // link
+        }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {

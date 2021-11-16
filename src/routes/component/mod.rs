@@ -1,7 +1,7 @@
-mod catalog;
+// mod catalog;
 // mod item;
 
-pub use catalog::CatalogComponent;
+// pub use catalog::CatalogComponents;
 
 // use item::Item;
 use yew::prelude::*;
@@ -13,7 +13,7 @@ pub enum Msg {
 pub struct ComponentTemp {
     // `ComponentLink` is like a reference to a component.
     // It can be used to send messages to the component
-    link: ComponentLink<Self>,
+    // link: ComponentLink<Self>,
     value: i64,
 }
 
@@ -21,8 +21,11 @@ impl Component for ComponentTemp {
     type Message = Msg;
     type Properties = ();
 
-    fn create(_props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        Self { link, value: 0 }
+    fn create(_props: Self::Properties, _link: ComponentLink<Self>) -> Self {
+        Self {
+            // link,
+            value: 0
+        }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {

@@ -1,3 +1,5 @@
+mutation Logout { logout }
+
 query GetMySelf {
   myself {
     uuid
@@ -52,6 +54,12 @@ query GetSettingDataOpt {
   }
 }
 
+query GetUsersShortList($arguments: IptUsersArg) {
+  users(arguments: $arguments) {
+    ...showUserShortFields
+  }
+}
+
 mutation UserUpdate($dataUserUpdate: IptUpdateUserData!) {
   putUserUpdate(data: $dataUserUpdate)
 }
@@ -62,6 +70,16 @@ mutation PutUpdatePassword($dataUpdatePwd: IptUpdatePassword!) {
 
 mutation ChangeTypeAccessUser($newTypeAccess: Int!) {
   changeTypeAccessUser(newTypeAccess: $newTypeAccess)
+}
+
+fragment showUserShortFields on ShowUserShort {
+  uuid
+  firstname
+  lastname
+  username
+  imageFile {
+    ...downloadFileFields
+  }
 }
 
 fragment selfUserFields on UserAndRelatedData {
@@ -77,10 +95,7 @@ fragment selfUserFields on UserAndRelatedData {
   position
   timeZone
   imageFile {
-    uuid
-    filename
-    filesize
-    downloadUrl
+    ...downloadFileFields
   }
   region {
     regionId
@@ -97,38 +112,12 @@ fragment selfUserFields on UserAndRelatedData {
     name
   }
   isEmailVerified
-  isEnabled
-  isDelete
   createdAt
   updatedAt
   certificates {
     userUuid
     file {
-      uuid
-      parentFileUuid
-      download {
-        uuid
-        filename
-        filesize
-        downloadUrl
-      }
-      ownerUser {
-        uuid
-        username
-        imageFile {
-          uuid
-          filename
-          filesize
-          downloadUrl
-        }
-      }
-      contentType
-      program {
-        id
-        name
-      }
-      createdAt
-      updatedAt
+      ...downloadFileFields
     }
     description
   }
@@ -166,6 +155,13 @@ query GetUserDataOpt ($username: String) {
   }
 }
 
+fragment downloadFileFields on DownloadFile {
+  uuid
+  filename
+  filesize
+  downloadUrl
+}
+
 fragment userFields on ShowUserAndRelatedData {
   uuid
   firstname
@@ -175,10 +171,7 @@ fragment userFields on ShowUserAndRelatedData {
   description
   position
   imageFile {
-    uuid
-    filename
-    filesize
-    downloadUrl
+    ...downloadFileFields
   }
   region {
     regionId
@@ -194,31 +187,7 @@ fragment userFields on ShowUserAndRelatedData {
   certificates {
     userUuid
     file {
-      uuid
-      parentFileUuid
-      download {
-        uuid
-        filename
-        filesize
-        downloadUrl
-      }
-      ownerUser {
-        uuid
-        username
-        imageFile {
-          uuid
-          filename
-          filesize
-          downloadUrl
-        }
-      }
-      contentType
-      program {
-        id
-        name
-      }
-      createdAt
-      updatedAt
+      ...downloadFileFields
     }
     description
   }

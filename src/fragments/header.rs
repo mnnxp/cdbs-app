@@ -3,8 +3,10 @@ use yew::{
   MouseEvent, Html, Properties, ShouldRender,
 };
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
-use crate::services::set_token;
+use wasm_bindgen_futures::spawn_local;
+use log::debug;
 
+use crate::services::{set_token, set_logged_user, logout};
 use crate::routes::AppRoute;
 use crate::types::SlimUser;
 
@@ -29,6 +31,7 @@ pub struct Props {
 
 pub enum Msg {
   Logout,
+  LogoutComplete(String),
   Ignore
 }
 
@@ -43,8 +46,17 @@ impl Component for Header {
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
           Msg::Logout => {
-              // Clear global token after logged out
+              let link = self.link.clone();
+              spawn_local(async move {
+                  let res = logout().await;
+                  link.send_message(Msg::LogoutComplete(res))
+              })
+          },
+          Msg::LogoutComplete(res) => {
+              debug!("logout: {:?}", res);
+              // Clear global token and logged user after logged out
               set_token(None);
+              set_logged_user(None);
               // Notify app to clear current user info
               self.props.callback.emit(());
               // Redirect to home page
@@ -65,7 +77,7 @@ impl Component for Header {
         let nav_menu = vec![
             NavMenu {
                 text: "Сatalog".to_string(),
-                route: AppRoute::CatalogComponent,
+                route: AppRoute::CatalogComponents,
             },
             NavMenu {
                 text: "Tenders".to_string(),

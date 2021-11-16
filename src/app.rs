@@ -3,14 +3,20 @@
 use yew::services::fetch::FetchTask;
 use yew::{agent::Bridged, html, Bridge, Component, ComponentLink, Html, ShouldRender};
 use yew_router::prelude::*;
-use yew::services::ConsoleService;
+
 use wasm_bindgen_futures::spawn_local;
+use log::debug;
 
 use crate::error::Error;
-use crate::fragments::{footer::Footer, header::Header};
+use crate::fragments::{
+    footer::Footer,
+    header::Header,
+    catalog_user::CatalogUsers, // for test
+    catalog_component::CatalogComponents, // for test
+};
 use crate::routes::{
     // article::Article,
-    component::CatalogComponent,
+    // component::CatalogComponents,
     tender::{Tenders, CreateTender},
     // editor::Editor,
     fix_fragment_routes,
@@ -83,7 +89,7 @@ impl Component for App {
                         self.current_user = Some(slim_user);
                     },
                     Err(err) => {
-                        ConsoleService::info(format!("Error with CurrentUserResponse: {:#?}", err).as_ref());
+                        debug!("Error with CurrentUserResponse: {:#?}", err);
                         self.current_user_task = None;
                     },
                 }
@@ -129,15 +135,16 @@ impl Component for App {
                             // AppRoute::ProfileFavorites(username) => html!{
                             //     <Profile username=username.clone() current_user=self.current_user.clone() tab=ProfileTab::FavoritedBy />
                             // },
-                            AppRoute::Profile(username) => html!{
+                            AppRoute::CatalogUsers => html!{<CatalogUsers />},
+                            AppRoute::Profile(_username) => html!{
                                 <Profile
                                     // current_route=self.current_route.clone()
-                                    username=username.clone()
+                                    // username=username.clone()
                                     current_user=self.current_user.clone()
                                 />
                             },
                             AppRoute::Tenders => html!{<Tenders />},
-                            AppRoute::CatalogComponent => html!{<CatalogComponent />},
+                            AppRoute::CatalogComponents => html!{<CatalogComponents show_create_btn = true />},
                             AppRoute::CreateTender => html!{<CreateTender />},
                         }
                     } else {
