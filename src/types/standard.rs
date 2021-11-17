@@ -45,6 +45,7 @@ impl StandardsQueryArg {
             ..Default::default()
         }
     }
+    
     pub fn set_favorite() -> Self {
         Self {
             favorite: Some(true),

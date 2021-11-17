@@ -84,8 +84,6 @@ type CompanyAndRelatedData {
   isEmailVerified: Boolean!
   subscribers: Int!
   isFollowed: Boolean!
-  isEnabled: Boolean!
-  isDelete: Boolean!
   createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!
 }
@@ -1119,7 +1117,6 @@ type StandardAndRelatedData {
   typeAccessId: Int!
   standardStatus: StandardStatusTranslateList!
   region: RegionTranslateList!
-  isDelete: Boolean!
   createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!
   standardFiles: [ShowFileForDownload!]!

@@ -1,3 +1,45 @@
+query GetCompanyData($companyUuid: UUID) {
+  company(companyUuid: $companyUuid) {
+    uuid
+    orgname
+    shortname
+    inn
+    phone
+    email
+    description
+    address
+    siteUrl
+    timeZone
+    ownerUser {
+      ...showUserShortFields
+    }
+    imageFile {
+      ...downloadFileFields
+    }
+    region {
+      ...regionFields
+    }
+    companyRepresents {
+      ...companyRepresentFields
+    }
+    companyType {
+      ...companyTypeFields
+    }
+    companyCertificates {
+      ...companyCertificateFields
+    }
+    companySpecs {
+      ...companySpecFields
+    }
+    isSupplier
+    isEmailVerified
+    subscribers
+    isFollowed
+    createdAt
+    updatedAt
+  }
+}
+
 query GetCompaniesShortList($arguments: IptCompaniesArg) {
   companies(arguments: $arguments) {
     ...companyShortFields
@@ -21,9 +63,7 @@ fragment companyShortFields on ShowCompanyShort {
     ...downloadFileFields
   }
   region {
-    regionId
-    langId
-    region
+    ...regionFields
   }
   companyType {
     ...companyTypeFields
@@ -45,4 +85,57 @@ fragment downloadFileFields on DownloadFile {
   filename
   filesize
   downloadUrl
+}
+
+fragment regionFields on RegionTranslateList {
+  regionId
+  langId
+  region
+}
+
+fragment companyCertificateFields on CompanyCertificateAndFile {
+  companyUuid
+  file {
+    ...downloadFileFields
+  }
+  description
+}
+
+fragment companySpecFields on CompanySpecWithTranslation {
+  companyUuid
+  spec {
+    specId
+    langId
+    spec
+  }
+}
+
+fragment companyRepresentFields on CompanyRepresentAndRelatedData {
+  uuid
+  companyUuid
+  region {
+    ...regionFields
+  }
+  representationType {
+    ...representationTypeFields
+  }
+  name
+  address
+  phone
+}
+
+fragment representationTypeFields on RepresentationTypeTranslateList {
+  representationTypeId
+  langId
+  representationType
+}
+
+fragment showUserShortFields on ShowUserShort {
+  uuid
+  firstname
+  lastname
+  username
+  imageFile {
+    ...downloadFileFields
+  }
 }

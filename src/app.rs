@@ -23,9 +23,10 @@ use crate::routes::{
     home::Home,
     login::Login,
     notification::Notifications,
-    profile::Profile, // , ProfileTab},
+    profile::Profile,
     register::Register,
     settings::Settings,
+    company::ShowCompany,
     AppRoute,
 };
 use crate::services::{is_authenticated, get_current_user};
@@ -132,17 +133,12 @@ impl Component for App {
                             // AppRoute::Article(slug) => html!{<Article slug=slug.clone() current_user=self.current_user.clone() />},
                             AppRoute::Notifications => html!{<Notifications callback=callback_logout />},
                             AppRoute::Settings => html!{<Settings callback=callback_logout />},
-                            // AppRoute::ProfileFavorites(username) => html!{
-                            //     <Profile username=username.clone() current_user=self.current_user.clone() tab=ProfileTab::FavoritedBy />
-                            // },
                             AppRoute::CatalogUsers => html!{<CatalogUsers />},
-                            AppRoute::Profile(_username) => html!{
-                                <Profile
-                                    // current_route=self.current_route.clone()
-                                    // username=username.clone()
-                                    current_user=self.current_user.clone()
-                                />
-                            },
+                            AppRoute::Profile(_username) => html!{<Profile current_user=self.current_user.clone()/>},
+                            AppRoute::ShowCompany(company_uuid) => html!{<ShowCompany
+                                current_user=self.current_user.clone()
+                                company_uuid=company_uuid.to_string()
+                            />},
                             AppRoute::Tenders => html!{<Tenders />},
                             AppRoute::CatalogComponents => html!{<CatalogComponents show_create_btn = true />},
                             AppRoute::CreateTender => html!{<CreateTender />},

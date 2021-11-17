@@ -1,8 +1,40 @@
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
+use super::profiles::ShowUserShort;
 use super::file::DownloadFile;
-use super::relate::Region;
+use super::relate::{Region, Spec};
 use super::UUID;
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct CompanyInfo {
+    pub uuid: UUID,
+    pub orgname: String,
+    pub shortname: String,
+    pub inn: String,
+    pub phone: String,
+    pub email: String,
+    pub description: String,
+    pub address: String,
+    pub site_url: String,
+    pub time_zone: String,
+    pub owner_user: ShowUserShort,
+    pub image_file: DownloadFile,
+    pub region: Region,
+    pub company_represents: Vec<CompanyRepresent>,
+    pub company_type: CompanyType,
+    // show certificates company
+    pub company_certificates: Vec<CompanyCertificate>,
+    pub company_specs: Vec<CompanySpec>,
+    pub is_supplier: bool,
+    pub is_email_verified: bool,
+    // count users to folloded the company
+    pub subscribers: usize,
+    // for display the checkbox "favorites"
+    pub is_followed: bool,
+    pub created_at: NaiveDateTime,
+    pub updated_at: NaiveDateTime,
+}
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -26,6 +58,21 @@ pub struct CompanyType{
   pub lang_id: i64,
   pub name: String,
   pub shortname: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct CompanyCertificate {
+    pub company_uuid: UUID,
+    pub file: DownloadFile,
+    pub description: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct CompanySpec {
+    pub spec: Spec,
+    pub company_uuid: UUID,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -61,4 +108,24 @@ impl CompaniesQueryArg {
             ..Default::default()
         }
     }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct CompanyRepresent {
+    pub uuid: UUID,
+    pub company_uuid: UUID,
+    pub region: Region,
+    pub representation_type: RepresentationType,
+    pub name: String,
+    pub address: String,
+    pub phone: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct RepresentationType {
+    pub representation_type_id: usize,
+    pub lang_id: usize,
+    pub representation_type: String,
 }

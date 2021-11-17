@@ -17,6 +17,14 @@ pub struct Program {
     pub name: String,
 }
 
+#[derive(Serialize, Deserialize, Clone, Default, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct Spec {
+    pub spec_id: i32,
+    pub lang_id: i32,
+    pub spec: String,
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Certificate {
@@ -41,21 +49,21 @@ impl From<&super::UserCertificate> for Certificate {
     }
 }
 
-// impl From<&super::CompanyCertificate> for Certificate {
-//     fn from(data: &super::CompanyCertificate) -> Self {
-//         let super::CompanyCertificate {
-//             company_uuid,
-//             file,
-//             description,
-//         } = data;
-//
-//         Self {
-//             owner_uuid: company_uuid.to_string(),
-//             file: file.to_owned(),
-//             description: description.to_string(),
-//         }
-//     }
-// }
+impl From<&super::CompanyCertificate> for Certificate {
+    fn from(data: &super::CompanyCertificate) -> Self {
+        let super::CompanyCertificate {
+            company_uuid,
+            file,
+            description,
+        } = data;
+
+        Self {
+            owner_uuid: company_uuid.to_string(),
+            file: file.to_owned(),
+            description: description.to_string(),
+        }
+    }
+}
 
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]
 #[serde(rename_all = "camelCase")]
