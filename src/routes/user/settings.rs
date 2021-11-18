@@ -6,8 +6,7 @@ use yew::{
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
 use chrono::NaiveDateTime;
 
-use yew::services::ConsoleService;
-
+use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
@@ -21,7 +20,7 @@ use crate::fragments::{
     upload_favicon::UpdateFaviconCard,
 };
 use crate::routes::AppRoute;
-use crate::services::is_authenticated;
+use crate::services::{is_authenticated, set_logged_user, get_current_user};
 use crate::types::{
     UUID, UserUpdateInfo, SelfUserInfo, Program, Region,
     UpdatePasswordInfo, TypeAccessTranslateListInfo,
@@ -282,7 +281,7 @@ impl Component for Settings {
             },
             Msg::UpdateTypeAccessId(type_access_id) => {
                 self.request_access = type_access_id.parse::<i64>().unwrap_or_default();
-                ConsoleService::info(format!("Update: {:?}", type_access_id).as_ref());
+                debug!("Update: {:?}", type_access_id);
             },
             Msg::GetUpdateAccessResult(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
@@ -291,7 +290,7 @@ impl Component for Settings {
                 match res.is_null() {
                     false => {
                         let result: bool = serde_json::from_value(res.get("changeTypeAccessUser").unwrap().clone()).unwrap();
-                        ConsoleService::info(format!("changeTypeAccessUser: {:?}", result).as_ref());
+                        debug!("changeTypeAccessUser: {:?}", result);
                         self.get_result_access = result;
                     },
                     true => {
@@ -329,7 +328,7 @@ impl Component for Settings {
                 match res.is_null() {
                     false => {
                         let result: bool = serde_json::from_value(res.get("putUpdatePassword").unwrap().clone()).unwrap();
-                        ConsoleService::info(format!("putUpdatePassword: {:?}", result).as_ref());
+                        debug!("putUpdatePassword: {:?}", result);
                         self.get_result_pwd = result;
                     },
                     true => {
@@ -348,7 +347,7 @@ impl Component for Settings {
                 match res.is_null() {
                     false => {
                         let user_data: SelfUserInfo = serde_json::from_value(res.get("selfData").unwrap().clone()).unwrap();
-                        ConsoleService::info(format!("User data: {:?}", user_data).as_ref());
+                        debug!("User data: {:?}", user_data);
                         self.current_data = Some(user_data.clone());
                         self.request_profile = user_data.into();
                         self.rendered(false);
@@ -391,18 +390,18 @@ impl Component for Settings {
             },
             Msg::UpdateProgramId(program_id) => {
                 self.request_profile.program_id = Some(program_id.parse::<i64>().unwrap_or_default());
-                ConsoleService::info(format!("Update: {:?}", program_id).as_ref());
+                debug!("Update: {:?}", program_id);
             },
             Msg::UpdateRegionId(region_id) => {
                 self.request_profile.region_id = Some(region_id.parse::<i64>().unwrap_or_default());
-                ConsoleService::info(format!("Update: {:?}", region_id).as_ref());
+                debug!("Update: {:?}", region_id);
             },
             Msg::UpdateList(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
                 match res_value.is_null() {
                     false => {
-                        // ConsoleService::info(format!("Result: {:#?}", res_value.clone()).as_ref());
+                        // debug!("Result: {:#?}", res_value.clone());
                         self.regions =
                             serde_json::from_value(res_value.get("regions").unwrap().clone()).unwrap();
                         self.programs =
@@ -423,7 +422,13 @@ impl Component for Settings {
                     false => {
                         let updated_rows: usize =
                             serde_json::from_value(res.get("putUserUpdate").unwrap().clone()).unwrap();
-                        ConsoleService::info(format!("Updated rows: {:?}", updated_rows).as_ref());
+                        debug!("Updated rows: {:?}", updated_rows);
+                        // update local data
+                        set_logged_user(None);
+                        spawn_local(async move {
+                            let res = get_current_user().await;
+                            debug!("update locale slim user: {:?}", res);
+                        });
                         self.get_result_profile = updated_rows;
                         link.send_message(Msg::GetCurrentData);
                     },
@@ -460,7 +465,7 @@ impl Component for Settings {
                     false => {
                         let delete_user: bool =
                             serde_json::from_value(res.get("deleteUserData").unwrap().clone()).unwrap();
-                        ConsoleService::info(format!("Delete user data: {:?}", delete_user).as_ref());
+                        debug!("Delete user data: {:?}", delete_user);
                         self.get_result_remove_profile = delete_user;
                         if delete_user {
                             self.router_agent.send(ChangeRoute(AppRoute::Home.into()));
