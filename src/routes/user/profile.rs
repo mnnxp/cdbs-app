@@ -11,7 +11,7 @@ use wasm_bindgen_futures::spawn_local;
 
 use crate::error::{get_error, Error};
 use crate::fragments::{
-    certificate::CertificateCard,
+    user_certificate::CertificateCard,
     list_errors::ListErrors,
     catalog_user::CatalogUsers,
     catalog_component::CatalogComponents,
@@ -486,11 +486,12 @@ impl Component for Profile {
 impl Profile {
     fn view_card(&self) -> Html {
         let UserDataCard {
-            image_file,
+            // image_file,
             firstname,
             lastname,
             username,
             updated_at,
+            ..
         } = match (&self.self_profile, &self.profile) {
             (_, Some(ref other_data)) => UserDataCard {
                 image_file: &other_data.image_file.download_url,
@@ -512,8 +513,8 @@ impl Profile {
         html! {<>
             <div class="media-left">
               <figure class="image is-48x48">
-                // <img src="https://bulma.io/images/placeholders/96x96.png" alt="Placeholder image"/>
-                <img src={image_file.to_string()} alt="Favicon profile"/>
+                <img src="https://bulma.io/images/placeholders/96x96.png" alt="Placeholder image"/>
+                // <img src={image_file.to_string()} alt="Favicon profile"/>
               </figure>
             </div>
             <div class="media-content">
@@ -797,7 +798,6 @@ impl Profile {
                                     show_cert_btn = true
                                     download_btn = false
                                     change_btn = false
-                                    company_uuid = None
                                  />
                             }
                         })

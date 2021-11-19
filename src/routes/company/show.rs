@@ -9,7 +9,8 @@ use wasm_bindgen_futures::spawn_local;
 
 use crate::error::{get_error, Error};
 use crate::fragments::{
-    certificate::CertificateCard,
+    company_certificate::CompanyCertificateCard,
+    company_represent::CompanyRepresents,
     list_errors::ListErrors,
     catalog_component::CatalogComponents,
     catalog_standard::CatalogStandards,
@@ -22,7 +23,7 @@ use crate::services::{
 };
 use crate::types::{
     UUID, CompanyInfo, Certificate, SlimUser,
-    ComponentsQueryArg, StandardsQueryArg,
+    ComponentsQueryArg, StandardsQueryArg, CompanyRepresent
     // CompanyCertificate, Program, Region, ShowUserShort,
 };
 
@@ -265,10 +266,7 @@ impl Component for ShowCompany {
                                 </div>
 
                                 <div class="content">
-                                    { self.view_content(
-                                        company_data.description.as_str(),
-                                        company_data.region.region.as_str(),
-                                    ) }
+                                    { self.view_content(company_data) }
                                 </div>
                                 <div style="display: flex;padding: 10px;padding-top: 20px;border-top: 5px dashed;">
                                 { self.show_profile_action() }
@@ -276,11 +274,10 @@ impl Component for ShowCompany {
                                 <div class="card-relate-data" style="flex:1;" >
                                     {match self.profile_tab {
                                         CompanyTab::Certificates => {
-                                            self.view_certificates()
+                                            self.view_certificates(company_data)
                                         },
                                         CompanyTab::Represent => {
-                                            // self.view_represent_users(&company_data.uuid)
-                                            unimplemented!()
+                                            self.view_represents(&company_data.company_represents)
                                         },
                                         CompanyTab::Components => {
                                             self.view_components(&company_data.uuid)
@@ -317,11 +314,23 @@ impl ShowCompany {
             Some(company_data) => html! {<>
                 <div class="media-left">
                   <figure class="image is-48x48">
+                    // <div hidden={!company_data.is_supplier} class="top-tag" >{"supplier"}</div>
                     // <img src="https://bulma.io/images/placeholders/96x96.png" alt="Placeholder image"/>
                     <img src={company_data.image_file.download_url.to_string()} alt="Favicon profile"/>
                   </figure>
                 </div>
                 <div class="media-content">
+                    <span>{"Company"}</span>
+                    <span hidden={!company_data.is_supplier} id="company-region">
+                      {" supplier"}
+                      // <i class="fa fa-diamond" aria-hidden="true"></i>
+                      <svg width="25" height="25" viewBox="0 0 197.249 197.25" xmlns="http://www.w3.org/2000/svg">
+                      <g transform="translate(-11.136 -18.506)">
+                      <path style="fill:none;stroke:#000;stroke-width:.434;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" d="m44.396 115.725 25.955-33.866h77.2l26.287 33.346-63.596 68.922z"/>
+                      <path style="fill:none;stroke:#000;stroke-width:.434204px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" d="m43.338 116.783 129.441-.52M122.778 81.857l17.736 33.672-30.272 68.598-31.858-68.419 17.978-33.843z"/>
+                      <path d="M208.167 130.384v-26.505c-13.539-4.814-22.092-6.167-26.398-16.557v-.008c-4.321-10.423.82-17.5 6.946-30.4l-18.738-18.739c-12.801 6.085-19.952 11.276-30.4 6.946h-.008c-10.406-4.313-11.768-12.924-16.557-26.398H96.508C91.735 32.131 90.365 40.8 79.95 45.121h-.007c-10.423 4.33-17.483-.804-30.4-6.946L30.805 56.914c6.11 12.858 11.276 19.96 6.946 30.4-4.322 10.423-12.99 11.792-26.398 16.565v26.505c13.383 4.756 22.076 6.142 26.398 16.557 4.346 10.513-.935 17.762-6.946 30.4l18.738 18.746c12.81-6.093 19.96-11.276 30.4-6.946h.008c10.415 4.314 11.776 12.95 16.557 26.398h26.504c4.773-13.416 6.151-22.06 16.623-26.422h.008c10.35-4.297 17.386.828 30.326 6.979l18.739-18.747c-6.101-12.818-11.276-19.952-6.954-30.392 4.321-10.423 13.022-11.809 26.414-16.573z" style="fill:none;stroke:#000;stroke-width:.434;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"/>
+                      <ellipse style="fill:none;stroke:#000;stroke-width:.433999;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" cx="109.449" cy="115.983" rx="69.586" ry="69.587"/></g></svg>
+                    </span>
                   <p id="title-fl" class="title is-4">{
                       format!("{} {}",
                         company_data.company_type.name.to_string(),
@@ -382,6 +391,15 @@ impl ShowCompany {
                 None => html!{},
             }}
             { format!(" {}", &self.subscribers) }
+            <div class="media-right flexBox" >
+              <button
+                  id="share-button"
+                  class="button" >
+                <span class="icon is-small">
+                  <i class="far fa-share"></i>
+                </span>
+              </button>
+            </div>
         </>}
     }
 
@@ -463,50 +481,82 @@ impl ShowCompany {
 
     fn view_content(
         &self,
-        description: &str,
-        region: &str,
+        company_data: &CompanyInfo,
     ) -> Html {
         html! {
             <div class="columns">
                 <div class="column">
                     <div id="description" class="content">
-                      { format!("{}", description) }
+                      { format!("{}", &company_data.description) }
                     </div>
                     <br/>
                 </div>
                 <div class="column">
-                    <span id="region">
+                    <span id="company-email">
+                      <i class="fas fa-envelope"></i>
+                      { format!("Email: {}", &company_data.email) }
+                    </span>
+                    <br/>
+                    <span id="company-phone">
+                      <i class="fas fa-phone"></i>
+                      { format!("Phone: {}", &company_data.phone) }
+                    </span>
+                    <br/>
+                    <span id="company-inn">
+                      <i class="fas fa-building"></i>
+                      { format!("Reg.№: {}", &company_data.inn) }
+                    </span>
+                    <br/>
+                    <span id="company-region">
                       <i class="fas fa-map-marker-alt"></i>
-                      { format!("Region: {}", region) }
+                      { format!("Location: {}, ", &company_data.region.region) }
+                    </span>
+                    <span id="company-address">
+                      { company_data.address.to_string() }
+                    </span>
+                    <br/>
+                    <span id="company-site">
+                      <i class="fas fa-building"></i>
+                      { format!("Site: {}", &company_data.site_url) }
                     </span>
                 </div>
             </div>
         }
     }
 
-    fn view_certificates(&self) -> Html {
-        match &self.profile {
-            None => html! {},
-            Some(company_profile) => {
-                html! {
-                    // <p class="card-footer-item">
-                    <footer class="card-footer">{
-                        for company_profile.company_certificates.iter().map(|cert| {
-                            let view_cert: Certificate = cert.into();
-                            html! {
-                                <CertificateCard
-                                    certificate = view_cert
-                                    show_cert_btn = true
-                                    download_btn = false
-                                    change_btn = false
-                                    company_uuid = None
-                                 />
-                            }
-                        })
-                    }</footer>
-                    // </p>
-                }
-            }
+    fn view_certificates(
+        &self,
+        company_data: &CompanyInfo,
+    ) -> Html {
+        html! {
+            // <p class="card-footer-item">
+            <footer class="card-footer">{
+                for company_data.company_certificates.iter().map(|cert| {
+                    let view_cert: Certificate = cert.into();
+                    html! {
+                        <CompanyCertificateCard
+                            company_uuid = company_data.uuid.to_string()
+                            certificate = view_cert
+                            show_cert_btn = true
+                            download_btn = false
+                            change_btn = false
+                         />
+                    }
+                })
+            }</footer>
+            // </p>
+        }
+    }
+
+    fn view_represents(
+        &self,
+        company_represents: &[CompanyRepresent],
+    ) -> Html {
+        html! {
+            <CompanyRepresents
+                show_manage_btn = false
+                list = company_represents.to_vec()
+            />
         }
     }
 

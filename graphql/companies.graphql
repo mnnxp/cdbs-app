@@ -139,3 +139,23 @@ fragment showUserShortFields on ShowUserShort {
     ...downloadFileFields
   }
 }
+
+mutation UploadCompanyCertificate($certData: IptCompanyCertificateData!) {
+  uploadCompanyCertificate(certData: $certData) {
+    ...uploadUrlFields
+  }
+}
+
+fragment uploadUrlFields on UploadFile {
+  fileUuid
+  filename
+  uploadUrl
+}
+
+mutation UpdateCompanyCertificate($updateCompanyCertData: IptUpdateCompanyCertificateData!) {
+  updateCompanyCertificate(data: $updateCompanyCertData)
+}
+
+mutation DeleteCompanyCertificate($delCompanyCertData: DelCompanyCertificateData!) {
+  deleteCompanyCertificate(data: $delCompanyCertData)
+}

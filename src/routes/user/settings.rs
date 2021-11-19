@@ -15,8 +15,8 @@ use crate::gqls::make_query;
 use crate::error::{Error, get_error};
 use crate::fragments::{
     list_errors::ListErrors,
-    certificate::CertificateCard,
-    add_certificate::AddCertificateCard,
+    user_certificate::CertificateCard,
+    user_add_certificate::AddCertificateCard,
     upload_favicon::UpdateFaviconCard,
 };
 use crate::routes::AppRoute;
@@ -777,7 +777,6 @@ impl Settings {
                                     show_cert_btn = true
                                     download_btn = false
                                     change_btn = true
-                                    company_uuid = None
                                     />
                             }
                         })
@@ -800,8 +799,7 @@ impl Settings {
 
         html! {
             <AddCertificateCard
-                user_uuid = Some(user_uuid)
-                company_uuid = None
+                user_uuid = user_uuid
                 callback=callback_upload_cert
                 />
         }
