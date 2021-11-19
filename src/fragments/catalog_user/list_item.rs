@@ -105,7 +105,7 @@ impl ListItem {
             firstname,
             lastname,
             username,
-            image_file,
+            // image_file,
             ..
         } = &self.props.data;
 
@@ -114,7 +114,8 @@ impl ListItem {
             <article class="media center-media">
               <div class="media-left">
                 <figure class="image is-96x96">
-                  <img src={image_file.download_url.to_string()} alt="Favicon profile"/>
+                  <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
+                  // <img src={image_file.download_url.to_string()} alt="Favicon profile"/>
                 </figure>
               </div>
               <div class="media-content" style="min-width: 0px;">
@@ -143,7 +144,7 @@ impl ListItem {
             firstname,
             lastname,
             username,
-            image_file,
+            // image_file,
             ..
         } = self.props.data.clone();
 
@@ -151,7 +152,8 @@ impl ListItem {
           <div class="boxItem" >
             <div class="innerBox" >
               <div class="imgBox" >
-                <img src={image_file.download_url.to_string()} alt="Favicon profile"/>
+                <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
+                // <img src={image_file.download_url.to_string()} alt="Favicon profile"/>
               </div>
               <div class="overflow-title has-text-weight-bold is-size-4" >
                 {format!("{} {}", firstname, lastname)}

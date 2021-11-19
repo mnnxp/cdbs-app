@@ -82,7 +82,7 @@ impl ListItem {
                 <div class="content">
                   <p>
                   <div style="margin-bottom:0" >
-                      <span class="overflow-title has-text-weight-bold">{name.to_string()}</span>
+                      <span class="title is-5 overflow-title">{name.to_string()}</span>
                       {" from "} <span class="id-box has-text-grey-light has-text-weight-bold">{region.region.to_string()}</span>
                     </div>
                     {format!("address: {}", address.to_string())}
@@ -120,25 +120,17 @@ impl ListItem {
               //   // <img src={image_file.download_url.to_string()} alt="Favicon profile"/>
               // </div>
               <div style="margin-bottom:0" >
-                  <span class="overflow-title has-text-weight-bold">{name.to_string()}</span>
+                  <span class="title is-5 overflow-title">{name.to_string()}</span>
                   {" from "} <span class="id-box has-text-grey-light has-text-weight-bold">{region.region.to_string()}</span>
-                </div>
-              //   {format!("address: {}", address.to_string())}
-              // <div class="overflow-title has-text-weight-bold">{
-              //     format!("type: {}", representation_type.representation_type.to_string())
-              // }</div>
-              // <div class="overflow-title has-text-weight-bold">{
-              //     format!("phone: {}", phone.to_string())
-              // }</div>
-              //
-              <div class="overflow-title has-text-weight-bold">{
+              </div>
+              <div class="overflow-title">{
                   format!("address: {}", address.to_string())
-              }</div>
-              <div class="overflow-title has-text-weight-bold">{
-                  format!("phone: {}", phone.to_string())
               }</div>
               <div class="overflow-title">{
                   format!("type: {}", representation_type.representation_type.to_string())
+              }</div>
+              <div class="overflow-title has-text-weight-bold">{
+                  format!("phone: {}", phone.to_string())
               }</div>
             </div>
           </div>
