@@ -1,12 +1,18 @@
 use chrono::NaiveDateTime;
 use web_sys::MouseEvent;
+use yew::prelude::*;
 use yew::{Callback, Component, ComponentLink, Html, Properties, ShouldRender, html};
-use yew_router::service::RouteService;
+use yew_router::{
+    service::RouteService,
+    agent::RouteRequest::ChangeRoute,
+    prelude::*,
+};
 use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
+use crate::routes::AppRoute;
 use crate::error::{get_error, Error};
 use crate::fragments::{
     company_certificate::CompanyCertificateCard,
@@ -16,7 +22,6 @@ use crate::fragments::{
     catalog_standard::CatalogStandards,
 };
 use crate::gqls::make_query;
-// use crate::routes::AppRoute;
 use crate::services::{
     is_authenticated,
     // get_logged_user
@@ -57,7 +62,7 @@ pub struct ShowCompany {
     profile: Option<CompanyInfo>,
     current_company_uuid: UUID,
     // task: Option<FetchTask>,
-    // router_agent: Box<dyn Bridge<RouteAgent>>,
+    router_agent: Box<dyn Bridge<RouteAgent>>,
     props: Props,
     link: ComponentLink<Self>,
     subscribers: usize,
@@ -79,6 +84,7 @@ pub enum Msg {
     DelFollow(String),
     GetCompanyData(String),
     ChangeTab(CompanyTab),
+    OpenOwnerCompany,
     Ignore,
 }
 
@@ -101,7 +107,7 @@ impl Component for ShowCompany {
             profile: None,
             current_company_uuid: String::new(),
             // task: None,
-            // router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
+            router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             props,
             link,
             subscribers: 0,
@@ -233,6 +239,14 @@ impl Component for ShowCompany {
             Msg::ChangeTab(set_tab) => {
                 self.profile_tab = set_tab;
             }
+            Msg::OpenOwnerCompany => {
+                if let Some(company_data) = &self.profile {
+                    // Redirect to owner profile page
+                    self.router_agent.send(ChangeRoute(AppRoute::Profile(
+                        company_data.owner_user.username.to_string()
+                    ).into()));
+                }
+            }
             Msg::Ignore => {}
         }
         true
@@ -309,6 +323,7 @@ impl Component for ShowCompany {
 
 impl ShowCompany {
     fn view_card(&self) -> Html {
+        let show_owner_profile_btn = self.link.callback(|_| Msg::OpenOwnerCompany);
 
         match &self.profile {
             Some(company_data) => html! {<>
@@ -348,6 +363,10 @@ impl ShowCompany {
                       {format!("Created at {:.*}", 19, company_data.created_at.to_string())}
                       <br/>
                       {format!("Updated at {:.*}", 19, company_data.updated_at.to_string())}
+                      <br/>
+                      <button class="button is-light is-fullwidth has-text-weight-bold"
+                          onclick=show_owner_profile_btn
+                          >{format!("Owner @{}", company_data.owner_user.username.to_string())}</button>
                       <br/>
                       // for self user data not show button "following"
                       <div class="media-right flexBox " >
@@ -464,7 +483,7 @@ impl ShowCompany {
                             </p>
                             <ul class="menu-list">
                                 {li_generator(active_certificates, onclick_certificates, "certificates".to_string(), company_data.company_certificates.len())}
-                                {li_generator(active_represent, onclick_represent, "represent".to_string(), 0)}
+                                {li_generator(active_represent, onclick_represent, "represent".to_string(), company_data.company_represents.len())}
                                 {li_generator(active_components, onclick_components, "components".to_string(), 0)}
                                 {li_generator(active_standards, onclick_standards, "standards".to_string(), 0)}
                                 // {li_generator(active_members, onclick_members, "members".to_string(), self_data.fav_standards_count)}
@@ -488,6 +507,13 @@ impl ShowCompany {
                 <div class="column">
                     <div id="description" class="content">
                       { format!("{}", &company_data.description) }
+                    </div>
+                    <br/>
+                    <span>{"company specs: "}</span>
+                    <div id="specs" class="tags">
+                        {for company_data.company_specs.iter().map(|spec| {
+                            html! {<div class="tag is-light">{&spec.spec.spec}</div>}
+                        })}
                     </div>
                     <br/>
                 </div>
