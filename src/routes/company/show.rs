@@ -85,6 +85,7 @@ pub enum Msg {
     GetCompanyData(String),
     ChangeTab(CompanyTab),
     OpenOwnerCompany,
+    OpenSettingCompany,
     Ignore,
 }
 
@@ -247,6 +248,14 @@ impl Component for ShowCompany {
                     ).into()));
                 }
             }
+            Msg::OpenSettingCompany => {
+                if let Some(company_data) = &self.profile {
+                    // Redirect to owner profile page
+                    self.router_agent.send(ChangeRoute(AppRoute::CompanySettings(
+                        company_data.uuid.to_string()
+                    ).into()));
+                }
+            }
             Msg::Ignore => {}
         }
         true
@@ -324,6 +333,7 @@ impl Component for ShowCompany {
 impl ShowCompany {
     fn view_card(&self) -> Html {
         let show_owner_profile_btn = self.link.callback(|_| Msg::OpenOwnerCompany);
+        let show_setting_company_btn = self.link.callback(|_| Msg::OpenSettingCompany);
 
         match &self.profile {
             Some(company_data) => html! {<>
@@ -367,6 +377,10 @@ impl ShowCompany {
                       <button class="button is-light is-fullwidth has-text-weight-bold"
                           onclick=show_owner_profile_btn
                           >{format!("Owner @{}", company_data.owner_user.username.to_string())}</button>
+                      <br/>
+                      <button class="button is-light is-fullwidth has-text-weight-bold"
+                          onclick=show_setting_company_btn
+                          >{"Setting company"}</button>
                       <br/>
                       // for self user data not show button "following"
                       <div class="media-right flexBox " >

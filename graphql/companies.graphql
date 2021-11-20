@@ -1,42 +1,6 @@
 query GetCompanyData($companyUuid: UUID) {
   company(companyUuid: $companyUuid) {
-    uuid
-    orgname
-    shortname
-    inn
-    phone
-    email
-    description
-    address
-    siteUrl
-    timeZone
-    ownerUser {
-      ...showUserShortFields
-    }
-    imageFile {
-      ...downloadFileFields
-    }
-    region {
-      ...regionFields
-    }
-    companyRepresents {
-      ...companyRepresentFields
-    }
-    companyType {
-      ...companyTypeFields
-    }
-    companyCertificates {
-      ...companyCertificateFields
-    }
-    companySpecs {
-      ...companySpecFields
-    }
-    isSupplier
-    isEmailVerified
-    subscribers
-    isFollowed
-    createdAt
-    updatedAt
+    ...companyFields
   }
 }
 
@@ -158,4 +122,68 @@ mutation UpdateCompanyCertificate($updateCompanyCertData: IptUpdateCompanyCertif
 
 mutation DeleteCompanyCertificate($delCompanyCertData: DelCompanyCertificateData!) {
   deleteCompanyCertificate(data: $delCompanyCertData)
+}
+
+mutation CompanyUpdate($companyUuid: String!, $dataCompanyUpdate: IptUpdateCompanyData!) {
+  putCompanyUpdate(companyUuid: $companyUuid, data: $dataCompanyUpdate)
+}
+
+query GetCompanySettingDataOpt ($companyUuid: String!) {
+  company(companyUuid: $companyUuid) {
+    ...companyFields
+  }
+
+  companyTypes {
+    ...companyTypeFields
+  }
+
+  regions {
+    ...regionFields
+  }
+
+  typesAccess {
+    typeAccessId
+    langId
+    name
+  }
+}
+
+fragment companyFields on CompanyAndRelatedData {
+  uuid
+  orgname
+  shortname
+  inn
+  phone
+  email
+  description
+  address
+  siteUrl
+  timeZone
+  ownerUser {
+    ...showUserShortFields
+  }
+  imageFile {
+    ...downloadFileFields
+  }
+  region {
+    ...regionFields
+  }
+  companyRepresents {
+    ...companyRepresentFields
+  }
+  companyType {
+    ...companyTypeFields
+  }
+  companyCertificates {
+    ...companyCertificateFields
+  }
+  companySpecs {
+    ...companySpecFields
+  }
+  isSupplier
+  isEmailVerified
+  subscribers
+  isFollowed
+  createdAt
+  updatedAt
 }

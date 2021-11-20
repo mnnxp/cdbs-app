@@ -912,6 +912,7 @@ type QueryRoot {
   ): [CompanyRepresentAndRelatedData!]!
   companyMembers(companyUuid: UUID!): [CompanyMemberAndRelatedData!]!
   companyRoles(companyUuid: UUID!): [RoleMemberAndRelatedData!]!
+  companyTypes: [CompanyTypeTranslateList!]!
   keywords(keywordId: [Int!], limit: Int, offset: Int): [Keyword!]!
   languages(langId: [Int!], limit: Int, offset: Int): [Language!]!
   licenses(licenseId: [Int!], limit: Int, offset: Int): [License!]!

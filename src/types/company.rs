@@ -129,3 +129,19 @@ pub struct RepresentationType {
     pub lang_id: usize,
     pub representation_type: String,
 }
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct CompanyUpdateInfo {
+    pub orgname: Option<String>,
+    pub shortname: Option<String>,
+    pub inn: Option<String>,
+    pub phone: Option<String>,
+    pub email: Option<String>,
+    pub description: Option<String>,
+    pub address: Option<String>,
+    pub site_url: Option<String>,
+    pub time_zone: Option<String>,
+    pub region_id: Option<i64>,
+    pub company_type_id: Option<i64>,
+}

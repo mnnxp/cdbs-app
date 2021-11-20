@@ -1,222 +1,208 @@
 // use yew::services::fetch::FetchTask;
 use yew::{
-    agent::Bridged, html, Bridge, Callback, Component, ComponentLink,
+    // agent::Bridged, Bridge,Callback,
+    html, Component, ComponentLink,
     FocusEvent, Html, InputData, ChangeData, Properties, ShouldRender,
 };
-use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
+use yew_router::service::RouteService;
+// use yew_router::{
+//     agent::RouteRequest::ChangeRoute,
+//     prelude::*
+// };
 use chrono::NaiveDateTime;
-
-use yew::services::ConsoleService;
-
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
-use crate::gqls::make_query;
+use log::debug;
 
+use crate::gqls::make_query;
 use crate::error::{Error, get_error};
 use crate::fragments::{
     list_errors::ListErrors,
-    certificate::CertificateCard,
-    add_certificate::AddCertificateCard,
-    upload_favicon::UpdateFaviconCard,
+    // company_certificate::CompanyCertificateCard,
+    // company_add_certificate::AddCertificateCard,
+    // upload_favicon::UpdateFaviconCard,
 };
-use crate::routes::AppRoute;
+// use crate::routes::AppRoute;
 use crate::services::is_authenticated;
 use crate::types::{
-    UUID, UserUpdateInfo, SelfUserInfo, Program, Region,
-    UpdatePasswordInfo, TypeAccessTranslateListInfo,
-    Certificate, UserCertificate,
+    UUID, SlimUser, CompanyUpdateInfo, CompanyInfo, Region,
+    CompanyType, TypeAccessTranslateListInfo,
+    // Certificate, CompanyCertificate,
 };
 
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/user.graphql",
+    query_path = "./graphql/companies.graphql",
     response_derives = "Debug"
 )]
-struct GetSettingDataOpt;
+struct GetCompanySettingDataOpt;
 
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/user.graphql",
+    query_path = "./graphql/companies.graphql",
     response_derives = "Debug"
 )]
-struct GetSelfData;
+struct GetCompanyData;
 
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/user.graphql",
+    query_path = "./graphql/companies.graphql",
     response_derives = "Debug"
 )]
-struct UserUpdate;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/user.graphql",
-    response_derives = "Debug"
-)]
-struct PutUpdatePassword;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/user.graphql",
-    response_derives = "Debug"
-)]
-struct ChangeTypeAccessUser;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/user.graphql",
-    response_derives = "Debug"
-)]
-struct DeleteUserData;
+struct CompanyUpdate;
 
 /// Get data current user
-impl From<SelfUserInfo> for UserUpdateInfo {
-    fn from(data: SelfUserInfo) -> Self {
-        let SelfUserInfo {
-            firstname,
-            lastname,
-            secondname,
-            username,
+impl From<CompanyInfo> for CompanyUpdateInfo {
+    fn from(data: CompanyInfo) -> Self {
+        let CompanyInfo {
+            orgname,
+            shortname,
+            inn,
+            phone,
             email,
             description,
-            position,
-            phone,
             address,
+            site_url,
+            time_zone,
             region,
-            program,
+            company_type,
             ..
         } = data;
 
         Self {
-            firstname: Some(firstname),
-            lastname: Some(lastname),
-            secondname: Some(secondname),
-            username: Some(username),
+            orgname: Some(orgname),
+            shortname: Some(shortname),
+            inn: Some(inn),
+            phone: Some(phone),
             email: Some(email),
             description: Some(description),
-            position: Some(position),
-            phone: Some(phone),
-            time_zone: None,
             address: Some(address),
+            site_url: Some(site_url),
+            time_zone: Some(time_zone),
             region_id: Some(region.region_id as i64),
-            program_id: Some(program.id as i64),
+            company_type_id: Some(company_type.company_type_id as i64),
         }
     }
 }
 
 pub enum Menu {
     Profile,
-    UpdataFavicon,
-    Certificates,
-    Access,
-    Password,
-    RemoveProfile,
+    // UpdataFavicon,
+    // Certificates,
+    // Access,
+    // Password,
+    // RemoveProfile,
 }
 
 /// Update settings of the author or logout
-pub struct Settings {
+pub struct CompanySettings {
     // auth: Auth,
     error: Option<Error>,
-    request_profile: UserUpdateInfo,
-    request_access: i64,
-    request_password: UpdatePasswordInfo,
-    request_user_password: String,
+    request_company: CompanyUpdateInfo,
+    // request_access: i64,
     // response: Callback<Result<usize, Error>>,
     // task: Option<FetchTask>,
-    router_agent: Box<dyn Bridge<RouteAgent>>,
+    // router_agent: Box<dyn Bridge<RouteAgent>>,
     props: Props,
     link: ComponentLink<Self>,
-    current_data: Option<SelfUserInfo>,
-    programs: Vec<Program>,
+    company_uuid: String,
+    current_data: Option<CompanyInfo>,
     regions: Vec<Region>,
     types_access: Vec<TypeAccessTranslateListInfo>,
-    get_result_profile: usize,
-    get_result_access: bool,
-    get_result_pwd: bool,
-    get_result_remove_profile: bool,
+    company_types: Vec<CompanyType>,
+    get_result_update: usize,
+    // get_result_access: bool,
+    // get_result_remove_profile: bool,
     select_menu: Menu,
 }
 
 #[derive(Properties, Clone)]
 pub struct Props {
-    pub callback: Callback<()>,
+    pub current_user: Option<SlimUser>,
+    pub company_uuid: UUID,
 }
 
 pub enum Msg {
     SelectMenu(Menu),
     RequestUpdateProfile,
-    RequestChangeAccess,
-    RequestUpdatePassword,
-    RequestRemoveProfile,
+    // RequestChangeAccess,
+    // RequestRemoveProfile,
     ResponseError(Error),
-    GetUpdateAccessResult(String),
-    GetUpdatePwdResult(String),
+    // GetUpdateAccessResult(String),
     GetUpdateProfileData(String),
     GetUpdateProfileResult(String),
-    GetRemoveProfileResult(String),
-    Ignore,
-    UpdateUserPassword(String),
-    UpdateTypeAccessId(String),
-    UpdateOldPassword(String),
-    UpdateNewPassword(String),
-    UpdateFirstname(String),
-    UpdateLastname(String),
-    UpdateSecondname(String),
-    UpdateUsername(String),
+    // GetRemoveProfileResult(String),
+    // UpdateTypeAccessId(String)
+    UpdateOrgname(String),
+    UpdateShortname(String),
+    UpdateInn(String),
+    UpdatePhone(String),
     UpdateEmail(String),
     UpdateDescription(String),
-    UpdatePhone(String),
     UpdateAddress(String),
-    UpdatePosition(String),
+    UpdateSiteUrl(String),
     UpdateTimeZone(String),
-    UpdateProgramId(String),
+    UpdateCompanyTypeId(String),
     UpdateRegionId(String),
     UpdateList(String),
     GetCurrentData,
+    Ignore,
 }
 
-impl Component for Settings {
+impl Component for CompanySettings {
     type Message = Msg;
     type Properties = Props;
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        Settings {
+        CompanySettings {
             // auth: Auth::new(),
             error: None,
-            request_profile: UserUpdateInfo::default(),
-            request_access: 0,
-            request_password: UpdatePasswordInfo::default(),
-            request_user_password: String::new(),
+            request_company: CompanyUpdateInfo::default(),
+            // request_access: 0,
             // response: link.callback(Msg::Response),
             // task: None,
-            router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
+            // router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             props,
             link,
+            company_uuid: String::new(),
             current_data: None,
-            programs: Vec::new(),
             regions: Vec::new(),
             types_access: Vec::new(),
-            get_result_profile: 0,
-            get_result_access: false,
-            get_result_pwd: false,
-            get_result_remove_profile: false,
+            company_types: Vec::new(),
+            get_result_update: 0,
+            // get_result_access: false,
+            // get_result_remove_profile: false,
             select_menu: Menu::Profile,
         }
     }
 
     fn rendered(&mut self, first_render: bool) {
         let link = self.link.clone();
-        if first_render && is_authenticated() {
+        self.company_uuid = match self.props.company_uuid.is_empty() {
+            true => {
+                // get company uuid for request
+                let route_service: RouteService<()> = RouteService::new();
+                // get target company from route
+                route_service
+                    .get_fragment()
+                    .trim_start_matches("#/company/settings/")
+                    .to_string()
+            },
+            false => self.props.company_uuid.clone(),
+        };
+
+        let company_uuid = self.company_uuid.clone();
+
+        if first_render && is_authenticated() && !company_uuid.is_empty() {
             spawn_local(async move {
                 let res = make_query(
-                    GetSettingDataOpt::build_query(get_setting_data_opt::Variables)
+                    GetCompanySettingDataOpt::build_query(get_company_setting_data_opt::Variables {
+                        company_uuid
+                    })
                 ).await.unwrap();
                 link.send_message(Msg::GetUpdateProfileData(res.clone()));
                 link.send_message(Msg::UpdateList(res));
@@ -233,109 +219,41 @@ impl Component for Settings {
                 self.rendered(false);
             },
             Msg::RequestUpdateProfile => {
-                let request_profile = self.request_profile.clone();
+                let company_uuid = self.company_uuid.clone();
+                let request_company = self.request_company.clone();
                 spawn_local(async move {
-                    let UserUpdateInfo {
-                        email,
-                        firstname,
-                        lastname,
-                        secondname,
-                        username,
+                    let CompanyUpdateInfo {
+                        orgname,
+                        shortname,
+                        inn,
                         phone,
+                        email,
                         description,
                         address,
-                        position,
+                        site_url,
                         time_zone,
                         region_id,
-                        program_id,
-                    } = request_profile;
-                    let data_user_update = user_update::IptUpdateUserData {
-                        email,
-                        firstname,
-                        lastname,
-                        secondname,
-                        username,
+                        company_type_id,
+                    } = request_company;
+                    let data_company_update = company_update::IptUpdateCompanyData {
+                        orgname,
+                        shortname,
+                        inn,
                         phone,
+                        email,
                         description,
                         address,
-                        position,
+                        siteUrl: site_url,
                         timeZone: time_zone,
                         regionId: region_id,
-                        programId: program_id,
+                        companyTypeId: company_type_id,
                     };
-                    let res = make_query(UserUpdate::build_query(user_update::Variables {
-                        data_user_update
+                    let res = make_query(CompanyUpdate::build_query(company_update::Variables {
+                        company_uuid,
+                        data_company_update
                     })).await;
                     link.send_message(Msg::GetUpdateProfileResult(res.unwrap()));
                 })
-            },
-            Msg::RequestChangeAccess => {
-                let new_type_access = self.request_access.clone();
-                spawn_local(async move {
-                    let res = make_query(ChangeTypeAccessUser::build_query(
-                        change_type_access_user::Variables {
-                            new_type_access,
-                        }
-                    )).await;
-                    link.send_message(Msg::GetUpdateAccessResult(res.unwrap()));
-                })
-            },
-            Msg::UpdateTypeAccessId(type_access_id) => {
-                self.request_access = type_access_id.parse::<i64>().unwrap_or_default();
-                ConsoleService::info(format!("Update: {:?}", type_access_id).as_ref());
-            },
-            Msg::GetUpdateAccessResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        let result: bool = serde_json::from_value(res.get("changeTypeAccessUser").unwrap().clone()).unwrap();
-                        ConsoleService::info(format!("changeTypeAccessUser: {:?}", result).as_ref());
-                        self.get_result_access = result;
-                    },
-                    true => {
-                        link.send_message(Msg::ResponseError(get_error(&data)));
-                    }
-                }
-            },
-            Msg::RequestUpdatePassword => {
-                let request_password = self.request_password.clone();
-                spawn_local(async move {
-                    let UpdatePasswordInfo {
-                        old_password,
-                        new_password,
-                    } = request_password;
-                    let data_update_pwd = put_update_password::IptUpdatePassword {
-                        oldPassword: old_password,
-                        newPassword: new_password,
-                    };
-                    let res = make_query(PutUpdatePassword::build_query(
-                        put_update_password::Variables { data_update_pwd })
-                    ).await;
-                    link.send_message(Msg::GetUpdatePwdResult(res.unwrap()));
-                })
-            },
-            Msg::UpdateOldPassword(old_password) => {
-                self.request_password.old_password = old_password;
-            },
-            Msg::UpdateNewPassword(new_password) => {
-                self.request_password.new_password = new_password;
-            },
-            Msg::GetUpdatePwdResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        let result: bool = serde_json::from_value(res.get("putUpdatePassword").unwrap().clone()).unwrap();
-                        ConsoleService::info(format!("putUpdatePassword: {:?}", result).as_ref());
-                        self.get_result_pwd = result;
-                    },
-                    true => {
-                        link.send_message(Msg::ResponseError(get_error(&data)));
-                    }
-                }
             },
             Msg::ResponseError(err) => {
                 self.error = Some(err);
@@ -347,10 +265,10 @@ impl Component for Settings {
 
                 match res.is_null() {
                     false => {
-                        let user_data: SelfUserInfo = serde_json::from_value(res.get("selfData").unwrap().clone()).unwrap();
-                        ConsoleService::info(format!("User data: {:?}", user_data).as_ref());
-                        self.current_data = Some(user_data.clone());
-                        self.request_profile = user_data.into();
+                        let company_data: CompanyInfo = serde_json::from_value(res.get("company").unwrap().clone()).unwrap();
+                        debug!("Company data: {:?}", company_data);
+                        self.current_data = Some(company_data.clone());
+                        self.request_company = company_data.into();
                         self.rendered(false);
                     },
                     true => {
@@ -358,55 +276,51 @@ impl Component for Settings {
                     }
                 }
             }
-            Msg::Ignore => {}
+            Msg::UpdateOrgname(orgname) => {
+                self.request_company.orgname = Some(orgname);
+            },
+            Msg::UpdateShortname(shortname) => {
+                self.request_company.shortname = Some(shortname);
+            },
+            Msg::UpdateInn(inn) => {
+                self.request_company.inn = Some(inn);
+            },
             Msg::UpdateEmail(email) => {
-                self.request_profile.email = Some(email);
-            },
-            Msg::UpdateFirstname(firstname) => {
-                self.request_profile.firstname = Some(firstname);
-            },
-            Msg::UpdateLastname(lastname) => {
-                self.request_profile.lastname = Some(lastname);
-            },
-            Msg::UpdateSecondname(secondname) => {
-                self.request_profile.secondname = Some(secondname);
-            },
-            Msg::UpdateUsername(username) => {
-                self.request_profile.username = Some(username);
+                self.request_company.email = Some(email);
             },
             Msg::UpdatePhone(phone) => {
-                self.request_profile.phone = Some(phone);
+                self.request_company.phone = Some(phone);
             },
             Msg::UpdateDescription(description) => {
-                self.request_profile.description = Some(description);
+                self.request_company.description = Some(description);
             },
             Msg::UpdateAddress(address) => {
-                self.request_profile.address = Some(address);
+                self.request_company.address = Some(address);
             },
-            Msg::UpdatePosition(position) => {
-                self.request_profile.position = Some(position);
+            Msg::UpdateSiteUrl(site_url) => {
+                self.request_company.site_url = Some(site_url);
             },
             Msg::UpdateTimeZone(time_zone) => {
-                self.request_profile.time_zone = Some(time_zone);
-            },
-            Msg::UpdateProgramId(program_id) => {
-                self.request_profile.program_id = Some(program_id.parse::<i64>().unwrap_or_default());
-                ConsoleService::info(format!("Update: {:?}", program_id).as_ref());
+                self.request_company.time_zone = Some(time_zone);
             },
             Msg::UpdateRegionId(region_id) => {
-                self.request_profile.region_id = Some(region_id.parse::<i64>().unwrap_or_default());
-                ConsoleService::info(format!("Update: {:?}", region_id).as_ref());
+                self.request_company.region_id = Some(region_id.parse::<i64>().unwrap_or_default());
+                debug!("Update: {:?}", region_id);
+            },
+            Msg::UpdateCompanyTypeId(type_id) => {
+                self.request_company.company_type_id = Some(type_id.parse::<i64>().unwrap_or_default());
+                debug!("Update: {:?}", type_id);
             },
             Msg::UpdateList(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
                 match res_value.is_null() {
                     false => {
-                        // ConsoleService::info(format!("Result: {:#?}", res_value.clone()).as_ref());
+                        // debug!("Result: {:#?}", res_value.clone);
                         self.regions =
                             serde_json::from_value(res_value.get("regions").unwrap().clone()).unwrap();
-                        self.programs =
-                            serde_json::from_value(res_value.get("programs").unwrap().clone()).unwrap();
+                        self.company_types =
+                            serde_json::from_value(res_value.get("companyTypes").unwrap().clone()).unwrap();
                         self.types_access =
                             serde_json::from_value(res_value.get("typesAccess").unwrap().clone()).unwrap();
                     },
@@ -422,9 +336,9 @@ impl Component for Settings {
                 match res.is_null() {
                     false => {
                         let updated_rows: usize =
-                            serde_json::from_value(res.get("putUserUpdate").unwrap().clone()).unwrap();
-                        ConsoleService::info(format!("Updated rows: {:?}", updated_rows).as_ref());
-                        self.get_result_profile = updated_rows;
+                            serde_json::from_value(res.get("putCompanyUpdate").unwrap().clone()).unwrap();
+                        debug!("Updated rows: {:?}", updated_rows);
+                        self.get_result_update = updated_rows;
                         link.send_message(Msg::GetCurrentData);
                     },
                     true => {
@@ -433,44 +347,17 @@ impl Component for Settings {
                 }
             },
             Msg::GetCurrentData => {
+                let company_uuid = Some(self.company_uuid.clone());
                 spawn_local(async move {
                     let res = make_query(
-                        GetSelfData::build_query(get_self_data::Variables)
+                        GetCompanyData::build_query(get_company_data::Variables {
+                            company_uuid
+                        })
                     ).await.unwrap();
                     link.send_message(Msg::GetUpdateProfileData(res));
                 })
             },
-            Msg::RequestRemoveProfile => {
-                let user_password = self.request_user_password.clone();
-                spawn_local(async move {
-                    let res = make_query(DeleteUserData::build_query(
-                        delete_user_data::Variables { user_password })
-                    ).await;
-                    link.send_message(Msg::GetRemoveProfileResult(res.unwrap()));
-                })
-            },
-            Msg::UpdateUserPassword(user_password) => {
-                self.request_user_password = user_password;
-            },
-            Msg::GetRemoveProfileResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        let delete_user: bool =
-                            serde_json::from_value(res.get("deleteUserData").unwrap().clone()).unwrap();
-                        ConsoleService::info(format!("Delete user data: {:?}", delete_user).as_ref());
-                        self.get_result_remove_profile = delete_user;
-                        if delete_user {
-                            self.router_agent.send(ChangeRoute(AppRoute::Home.into()));
-                        }
-                    },
-                    true => {
-                        link.send_message(Msg::ResponseError(get_error(&data)));
-                    }
-                }
-            },
+            Msg::Ignore => {},
         }
         true
     }
@@ -486,23 +373,6 @@ impl Component for Settings {
             Msg::RequestUpdateProfile
         });
 
-        let onsubmit_update_access = self.link.callback(|ev: FocusEvent| {
-            ev.prevent_default();
-            Msg::RequestChangeAccess
-        });
-
-        let onsubmit_update_password = self.link.callback(|ev: FocusEvent| {
-            ev.prevent_default();
-            Msg::RequestUpdatePassword
-        });
-
-        let onsubmit_remove_profile = self.link.callback(|ev: FocusEvent| {
-            ev.prevent_default();
-            Msg::RequestRemoveProfile
-        });
-
-        // let onclick_logout = self.link.callback(|_| Msg::Logout);
-
         html! {
             <div class="settings-page">
                 <ListErrors error=self.error.clone()/>
@@ -512,7 +382,7 @@ impl Component for Settings {
                             <div class="column is-one-quarter">
                                 { self.view_menu() }
                             </div>
-                            // <h1 class="title">{ "Your Settings" }</h1>
+                            // <h1 class="title">{ "Company Settings" }</h1>
                             <div class="column">
                                 <div class="card">
                                   <div class="card-content">
@@ -526,7 +396,7 @@ impl Component for Settings {
                                                 }
                                             }</span>
                                             <span id="tag-info-updated-rows" class="tag is-info is-light">
-                                                { format!("Updated rows: {}", self.get_result_profile.clone()) }
+                                                { format!("Updated rows: {}", self.get_result_update.clone()) }
                                             </span>
                                             <form onsubmit=onsubmit_update_profile>
                                                 { self.fieldset_profile() }
@@ -539,95 +409,11 @@ impl Component for Settings {
                                                 </button>
                                             </form>
                                         </>},
-                                        // Show interface for change favicon user
-                                        Menu::UpdataFavicon => html! {<>
-                                            <span id="tag-info-updated-favicon-user" class="tag is-info is-light">
-                                                // { format!("Updated certificates: {}", self.get_result_certificates.clone()) }
-                                                { "Update favicon" }
-                                            </span>
-                                            { self.fieldset_update_favicon() }
-                                        </>},
-                                        // Show interface for add and update Certificates
-                                        Menu::Certificates => html! {<>
-                                            <span id="tag-info-updated-certificates" class="tag is-info is-light">
-                                                // { format!("Updated certificates: {}", self.get_result_certificates.clone()) }
-                                                { "Certificates" }
-                                            </span>
-                                            { self.fieldset_certificates() }
-                                            <br/>
-                                            { self.fieldset_add_certificate() }
-                                        </>},
-                                        // Show interface for change access
-                                        Menu::Access => html! {<>
-                                            <span id="tag-info-updated-access" class="tag is-info is-light">
-                                                { format!("Updated access: {}", self.get_result_access.clone()) }
-                                            </span>
-                                            <form onsubmit=onsubmit_update_access>
-                                                { self.fieldset_access() }
-                                                <button
-                                                    id="update-access"
-                                                    class="button"
-                                                    type="submit"
-                                                    disabled=false>
-                                                    { "Update Profile" }
-                                                </button>
-                                            </form>
-
-                                            // show Tokens
-                                            // update Token
-                                            // get new Token
-                                            // remove Token
-                                            // removed all Tokens
-                                        </>},
-                                        // Show interface for change password
-                                        Menu::Password => html! {<>
-                                            <span id="tag-info-updated-pwd" class="tag is-info is-light">
-                                              { format!("Updated password: {}", self.get_result_pwd.clone()) }
-                                            </span>
-                                            <form onsubmit=onsubmit_update_password>
-                                                { self.fieldset_password() }
-                                                <button
-                                                    id="update-password"
-                                                    class="button"
-                                                    type="submit"
-                                                    disabled=false>
-                                                    { "Update Password" }
-                                                </button>
-                                            </form>
-                                        </>},
-                                        // Show interface for remove profile
-                                        Menu::RemoveProfile => html! {<>
-                                            <span id="tag-danger-remove-profile" class="tag is-danger is-light">
-                                              { "Warning: this removed all data related with profile, it cannot be canceled!" }
-                                            </span>
-                                            <br/>
-                                            <span id="tag-info-remove-profile" class="tag is-info is-light">
-                                              { format!("Profile delete: {}", self.get_result_remove_profile) }
-                                            </span>
-                                            <br/>
-                                            <form onsubmit=onsubmit_remove_profile>
-                                                { self.fieldset_remove_profile() }
-                                                <button
-                                                    id="button-remove-profile"
-                                                    class="button"
-                                                    type="submit"
-                                                    disabled=false>
-                                                    { "Delete profile data" }
-                                                </button>
-                                            </form>
-                                        </>},
                                     }}
                                 </div>
                             </div>
                         </div>
                     </div>
-                    // <hr />
-                    // <button
-                    //     id="logout-button"
-                    //     class="button"
-                    //     onclick=onclick_logout >
-                    //     { "Or click here to logout."}
-                    // </button>
                 </div>
             </div>
           </div>
@@ -635,7 +421,7 @@ impl Component for Settings {
     }
 }
 
-impl Settings {
+impl CompanySettings {
     fn view_menu(
         &self
     ) -> Html {
@@ -643,47 +429,18 @@ impl Settings {
             .callback(|_| Msg::SelectMenu(
                 Menu::Profile
             ));
-        let onclick_favicon = self.link
-            .callback(|_| Msg::SelectMenu(
-                Menu::UpdataFavicon
-            ));
-        let onclick_certificates = self.link
-            .callback(|_| Msg::SelectMenu(
-                Menu::Certificates
-            ));
-        let onclick_access = self.link
-            .callback(|_| Msg::SelectMenu(
-                Menu::Access
-            ));
-        let onclick_password = self.link
-            .callback(|_| Msg::SelectMenu(
-                Menu::Password
-            ));
-        let onclick_remove_profile = self.link
-            .callback(|_| Msg::SelectMenu(
-                Menu::RemoveProfile
-            ));
 
-        let mut active_profile = "";
-        let mut active_favicon = "";
-        let mut active_certificates = "";
-        let mut active_access = "";
-        let mut active_password = "";
-        let mut active_remove_profile = "";
-
-        match self.select_menu {
-            Menu::Profile => active_profile = "is-active",
-            Menu::UpdataFavicon => active_favicon = "is-active",
-            Menu::Certificates => active_certificates = "is-active",
-            Menu::Access => active_access = "is-active",
-            Menu::Password => active_password = "is-active",
-            Menu::RemoveProfile => active_remove_profile = "is-active",
-        }
+        let active_profile = "is-active";
+        // let mut active_profile = "";
+        //
+        // match self.select_menu {
+        //     Menu::Profile => active_profile = "is-active",
+        // }
 
         html! {
             <aside class="menu">
                 <p class="menu-label">
-                    {"User Settings"}
+                    {"Company Settings"}
                 </p>
                 <ul class="menu-list">
                     <li><a
@@ -692,399 +449,96 @@ impl Settings {
                       onclick=onclick_profile>
                         { "Profile" }
                     </a></li>
-                    <li><a
-                      id="profile"
-                      class=active_favicon
-                      onclick=onclick_favicon>
-                        { "Favicon" }
-                    </a></li>
-                    <li><a
-                      id="certificates"
-                      class=active_certificates
-                      onclick=onclick_certificates>
-                        { "Certificates" }
-                    </a></li>
-                    <li><a
-                      id="access"
-                      class=active_access
-                      onclick=onclick_access>
-                        { "Access" }
-                    </a></li>
-                    <li><a
-                      id="password"
-                      class=active_password
-                      onclick=onclick_password>
-                        { "Password" }
-                    </a></li>
-                    <li><a
-                      id="remove-profile"
-                      class=active_remove_profile
-                      onclick=onclick_remove_profile>
-                        { "Remove profile" }
-                    </a></li>
-                    // <li><a>{"Notification"}</a></li>
-                    // <li><a>{"Billing"}</a></li>
-                    // <li><a>{"Close account"}</a></li>
                 </ul>
             </aside>
-        }
-    }
-
-    fn fieldset_update_favicon(
-        &self
-    ) -> Html {
-        let callback_update_favicon = self.link.callback(|_| Msg::GetCurrentData);
-
-        html! {
-            <UpdateFaviconCard
-                company_uuid = None
-                callback=callback_update_favicon
-                />
-        }
-    }
-
-    fn fieldset_certificates(
-        &self
-    ) -> Html {
-        let mut certificates: &[UserCertificate] = &Vec::new();
-        if let Some(ref data) = self.current_data {
-            certificates = data.certificates.as_ref();
-        };
-
-        match certificates.is_empty() {
-            true => html!{
-                <div>
-                    <span id="tag-info-no-certificates" class="tag is-info is-light">
-                        // { format!("Updated certificates: {}", self.get_result_certificates.clone()) }
-                        { "You don't have Certificates" }
-                    </span>
-                </div>
-            },
-            false => {
-                html!{
-                    // <p class="card-footer-item">
-                    <>{
-                        for certificates.iter().map(|cert| {
-                            let view_cert: Certificate = cert.into();
-                            html! {
-                                <CertificateCard
-                                    certificate = view_cert
-                                    show_cert_btn = true
-                                    download_btn = false
-                                    change_btn = true
-                                    company_uuid = None
-                                    />
-                            }
-                        })
-                    }</>
-                    // </p>
-                }
-            },
-        }
-    }
-
-    fn fieldset_add_certificate(
-        &self
-    ) -> Html {
-        let user_uuid = self.current_data
-            .as_ref()
-            .map(|user| user.uuid.to_string())
-            .unwrap_or_default();
-
-        let callback_upload_cert = self.link.callback(|_| Msg::GetCurrentData);
-
-        html! {
-            <AddCertificateCard
-                user_uuid = Some(user_uuid)
-                company_uuid = None
-                callback=callback_upload_cert
-                />
-        }
-    }
-
-    fn fieldset_access(
-        &self
-    ) -> Html {
-      let onchange_type_access_id = self
-          .link
-          .callback(|ev: ChangeData| Msg::UpdateTypeAccessId(match ev {
-            ChangeData::Select(el) => el.value(),
-            _ => "1".to_string(),
-        }));
-
-        html! {
-            <fieldset class="columns">
-                // first column
-                <fieldset class="column">
-                    <fieldset class="field">
-                        <label class="label">{"Type Access"}</label>
-                        <div class="control">
-                            <div class="select">
-                              <select
-                                  id="types-access"
-                                  select={self.request_access.to_string()}
-                                  onchange=onchange_type_access_id
-                                  >
-                                { for self.types_access.iter().map(|x|
-                                    match self.current_data.as_ref().unwrap().type_access.type_access_id == x.type_access_id {
-                                        true => {
-                                            html!{
-                                                <option value={x.type_access_id.to_string()} selected=true>{&x.name}</option>
-                                            }
-                                        },
-                                        false => {
-                                            html!{
-                                                <option value={x.type_access_id.to_string()}>{&x.name}</option>
-                                            }
-                                        },
-                                    }
-                                )}
-                              </select>
-                            </div>
-                        </div>
-                    </fieldset>
-                </fieldset>
-            </fieldset>
-        }
-    }
-
-    fn fieldset_password(
-        &self
-    ) -> Html {
-        let oninput_old_password = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateOldPassword(ev.value));
-        let oninput_new_password = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateNewPassword(ev.value));
-
-        html! {
-            <fieldset class="columns">
-                // first column
-                <fieldset class="column">
-                    <fieldset class="field">
-                        <label class="label">{"Old password"}</label>
-                        <input
-                            id="old-password"
-                            class="input"
-                            type="password"
-                            placeholder="old password"
-                            value={self.request_password.old_password.to_string()}
-                            oninput=oninput_old_password />
-                    </fieldset>
-                    <fieldset class="field">
-                        <label class="label">{"New password"}</label>
-                        <input
-                            id="new-password"
-                            class="input"
-                            type="password"
-                            placeholder="new password"
-                            value={self.request_password.new_password.to_string()}
-                            oninput=oninput_new_password />
-                    </fieldset>
-                </fieldset>
-            </fieldset>
         }
     }
 
     fn fieldset_profile(
         &self
     ) -> Html {
-        let oninput_firstname = self
+        let oninput_orgname = self
             .link
-            .callback(|ev: InputData| Msg::UpdateFirstname(ev.value));
-        let oninput_lastname = self
+            .callback(|ev: InputData| Msg::UpdateOrgname(ev.value));
+        let oninput_shortname = self
             .link
-            .callback(|ev: InputData| Msg::UpdateLastname(ev.value));
-        let oninput_secondname = self
+            .callback(|ev: InputData| Msg::UpdateShortname(ev.value));
+        let oninput_inn = self
             .link
-            .callback(|ev: InputData| Msg::UpdateSecondname(ev.value));
-        let oninput_username = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateUsername(ev.value));
+            .callback(|ev: InputData| Msg::UpdateInn(ev.value));
         let oninput_email = self
             .link
             .callback(|ev: InputData| Msg::UpdateEmail(ev.value));
         let oninput_description = self
             .link
             .callback(|ev: InputData| Msg::UpdateDescription(ev.value));
-        let oninput_position = self
-            .link
-            .callback(|ev: InputData| Msg::UpdatePosition(ev.value));
         let oninput_phone = self
             .link
             .callback(|ev: InputData| Msg::UpdatePhone(ev.value));
         let oninput_address = self
             .link
             .callback(|ev: InputData| Msg::UpdateAddress(ev.value));
-        let oninput_program_id = self
+        let oninput_site_url = self
             .link
-            .callback(|ev: ChangeData| Msg::UpdateProgramId(match ev {
-              ChangeData::Select(el) => el.value(),
-              _ => "1".to_string(),
-          }));
+            .callback(|ev: InputData| Msg::UpdateSiteUrl(ev.value));
+        // let oninput_time_zone = self
+        //     .link
+        //     .callback(|ev: InputData| Msg::UpdateTimeZone(ev.value));
         let onchange_region_id = self
             .link
             .callback(|ev: ChangeData| Msg::UpdateRegionId(match ev {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
+        let onchange_company_type_id = self
+            .link
+            .callback(|ev: ChangeData| Msg::UpdateCompanyTypeId(match ev {
+              ChangeData::Select(el) => el.value(),
+              _ => "1".to_string(),
+          }));
 
-        html! {
+        html! {<>
             <fieldset class="columns">
                 // first column
                 <fieldset class="column">
                     <fieldset class="field">
-                        <label class="label">{"Firstname"}</label>
+                        <label class="label">{"Orgname"}</label>
                         <input
-                            id="firstname"
+                            id="orgname"
                             class="input"
                             type="text"
-                            placeholder="firstname"
-                            value={self.request_profile.firstname
+                            placeholder="orgname"
+                            value={self.request_company.orgname
                                 .as_ref()
                                 .map(|x| x.to_string())
                                 .unwrap_or_default()}
-                            oninput=oninput_firstname />
+                            oninput=oninput_orgname />
                     </fieldset>
                     <fieldset class="field">
-                        <label class="label">{"Lastname"}</label>
+                        <label class="label">{"Shortname"}</label>
                         <input
-                            id="lastname"
+                            id="shortname"
                             class="input"
                             type="text"
-                            placeholder="lastname"
-                            value={self.request_profile.lastname
+                            placeholder="shortname"
+                            value={self.request_company.shortname
                                 .as_ref()
                                 .map(|x| x.to_string())
                                 .unwrap_or_default()}
-                            oninput=oninput_lastname />
+                            oninput=oninput_shortname />
                     </fieldset>
                     <fieldset class="field">
-                        <label class="label">{"Secondname"}</label>
+                        <label class="label">{"Inn"}</label>
                         <input
-                            id="secondname"
+                            id="inn"
                             class="input"
                             type="text"
-                            placeholder="secondname"
-                            value={self.request_profile.secondname
+                            placeholder="inn"
+                            value={self.request_company.inn
                                 .as_ref()
                                 .map(|x| x.to_string())
                                 .unwrap_or_default()}
-                            oninput=oninput_secondname />
-                    </fieldset>
-                    <fieldset class="field">
-                        <label class="label">{"Username"}</label>
-                        <input
-                            id="username"
-                            class="input"
-                            type="text"
-                            placeholder="username"
-                            value={self.request_profile.username
-                                .as_ref()
-                                .map(|x| x.to_string())
-                                .unwrap_or_default()}
-                            oninput=oninput_username />
-                    </fieldset>
-                    <fieldset class="field">
-                        <label class="label">{"Email"}</label>
-                        <input
-                            id="email"
-                            class="input"
-                            type="email"
-                            placeholder="email"
-                            value={self.request_profile.email
-                                .as_ref()
-                                .map(|x| x.to_string())
-                                .unwrap_or_default()}
-                            oninput=oninput_email />
-                    </fieldset>
-                </fieldset>
-
-                // second column
-                <fieldset class="column">
-                    <fieldset class="field">
-                        <label class="label">{"Description"}</label>
-                        <textarea
-                            id="description"
-                            class="input"
-                            type="description"
-                            placeholder="description"
-                            value={self.request_profile.description
-                                .as_ref()
-                                .map(|x| x.to_string())
-                                .unwrap_or_default()}
-                            oninput=oninput_description />
-                    </fieldset>
-                    <fieldset class="field">
-                        <label class="label">{"Position"}</label>
-                        <input
-                            id="position"
-                            class="input"
-                            type="text"
-                            placeholder="position"
-                            value={self.request_profile.position
-                                .as_ref()
-                                .map(|x| x.to_string())
-                                .unwrap_or_default()}
-                            oninput=oninput_position />
-                    </fieldset>
-                    <fieldset class="field">
-                        <label class="label">{"Phone"}</label>
-                        <input
-                            id="phone"
-                            class="input"
-                            type="text"
-                            placeholder="phone"
-                            value={self.request_profile.phone
-                                .as_ref()
-                                .map(|x| x.to_string())
-                                .unwrap_or_default()}
-                            oninput=oninput_phone />
-                    </fieldset>
-                    <fieldset class="field">
-                        <label class="label">{"Address"}</label>
-                        <input
-                            id="address"
-                            class="input"
-                            type="text"
-                            placeholder="address"
-                            value={self.request_profile.address
-                                .as_ref()
-                                .map(|x| x.to_string())
-                                .unwrap_or_default()}
-                            oninput=oninput_address />
-                    </fieldset>
-                </fieldset>
-
-                // third column
-                <fieldset class="column">
-                    <fieldset class="field">
-                        <label class="label">{"Program"}</label>
-                        <div class="control">
-                            <div class="select">
-                              <select
-                                  id="program"
-                                  select={self.request_profile.program_id.unwrap_or_default().to_string()}
-                                  onchange=oninput_program_id
-                                  >
-                                { for self.programs.iter().map(|x|
-                                    match self.current_data.as_ref().unwrap().program.id == x.id {
-                                        true => {
-                                            html!{
-                                                <option value={x.id.to_string()} selected=true>{&x.name}</option>
-                                            }
-                                        },
-                                        false => {
-                                            html!{
-                                                <option value={x.id.to_string()}>{&x.name}</option>
-                                            }
-                                        },
-                                    }
-                                )}
-                              </select>
-                            </div>
-                        </div>
+                            oninput=oninput_inn />
                     </fieldset>
                     <fieldset class="field">
                         <label class="label">{"Region"}</label>
@@ -1092,7 +546,7 @@ impl Settings {
                             <div class="select">
                               <select
                                   id="region"
-                                  select={self.request_profile.region_id.unwrap_or_default().to_string()}
+                                  select={self.request_company.region_id.unwrap_or_default().to_string()}
                                   onchange=onchange_region_id
                                   >
                                 { for self.regions.iter().map(|x|
@@ -1114,33 +568,104 @@ impl Settings {
                         </div>
                     </fieldset>
                 </fieldset>
-            </fieldset>
-        }
-    }
 
-    fn fieldset_remove_profile(
-        &self
-    ) -> Html {
-        let oninput_user_password = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateUserPassword(ev.value));
-
-        html! {
-            <fieldset class="columns">
-                // first column
+                // second column
                 <fieldset class="column">
                     <fieldset class="field">
-                        <label class="label">{"Input your password for confirm delete profile"}</label>
+                        <label class="label">{"Email"}</label>
                         <input
-                            id="user-password"
+                            id="email"
                             class="input"
-                            type="password"
-                            placeholder="your password"
-                            value={self.request_user_password.to_string()}
-                            oninput=oninput_user_password />
+                            type="email"
+                            placeholder="email"
+                            value={self.request_company.email
+                                .as_ref()
+                                .map(|x| x.to_string())
+                                .unwrap_or_default()}
+                            oninput=oninput_email />
+                    </fieldset>
+                    <fieldset class="field">
+                        <label class="label">{"Phone"}</label>
+                        <input
+                            id="phone"
+                            class="input"
+                            type="text"
+                            placeholder="phone"
+                            value={self.request_company.phone
+                                .as_ref()
+                                .map(|x| x.to_string())
+                                .unwrap_or_default()}
+                            oninput=oninput_phone />
+                    </fieldset>
+                    <fieldset class="field">
+                        <label class="label">{"Address"}</label>
+                        <input
+                            id="address"
+                            class="input"
+                            type="text"
+                            placeholder="address"
+                            value={self.request_company.address
+                                .as_ref()
+                                .map(|x| x.to_string())
+                                .unwrap_or_default()}
+                            oninput=oninput_address />
+                    </fieldset>
+                    <fieldset class="field">
+                        <label class="label">{"Site"}</label>
+                        <input
+                            id="site_url"
+                            class="input"
+                            type="text"
+                            placeholder="site_url"
+                            value={self.request_company.site_url
+                                .as_ref()
+                                .map(|x| x.to_string())
+                                .unwrap_or_default()}
+                            oninput=oninput_site_url />
                     </fieldset>
                 </fieldset>
             </fieldset>
-        }
+            // separate fields
+            <fieldset class="field">
+                <label class="label">{"Company type"}</label>
+                <div class="control">
+                    <div class="select">
+                      <select
+                          id="company_type"
+                          select={self.request_company.company_type_id.unwrap_or_default().to_string()}
+                          onchange=onchange_company_type_id
+                          >
+                        { for self.company_types.iter().map(|x|
+                            match self.current_data.as_ref().unwrap().company_type.company_type_id == x.company_type_id {
+                                true => {
+                                    html!{
+                                        <option value={x.company_type_id.to_string()} selected=true>{&x.name}</option>
+                                    }
+                                },
+                                false => {
+                                    html!{
+                                        <option value={x.company_type_id.to_string()}>{&x.name}</option>
+                                    }
+                                },
+                            }
+                        )}
+                      </select>
+                    </div>
+                </div>
+            </fieldset>
+            <fieldset class="field">
+                <label class="label">{"Description"}</label>
+                <textarea
+                    id="description"
+                    class="input"
+                    type="description"
+                    placeholder="description"
+                    value={self.request_company.description
+                        .as_ref()
+                        .map(|x| x.to_string())
+                        .unwrap_or_default()}
+                    oninput=oninput_description />
+            </fieldset>
+        </>}
     }
 }

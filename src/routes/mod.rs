@@ -39,6 +39,8 @@ pub enum AppRoute {
     Notifications,
     #[to = "#/settings"]
     Settings,
+    #[to = "#/company/settings/{uuid}"]
+    CompanySettings(String),
     #[to = "#/company/{uuid}"]
     ShowCompany(String),
     // #[to = "#/@{username}/favorites"]

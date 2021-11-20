@@ -26,7 +26,7 @@ use crate::routes::{
     profile::Profile,
     register::Register,
     settings::Settings,
-    company::ShowCompany,
+    company::{ShowCompany, CompanySettings},
     AppRoute,
 };
 use crate::services::{is_authenticated, get_current_user};
@@ -135,6 +135,10 @@ impl Component for App {
                             AppRoute::Settings => html!{<Settings callback=callback_logout />},
                             AppRoute::CatalogUsers => html!{<CatalogUsers />},
                             AppRoute::Profile(_username) => html!{<Profile current_user=self.current_user.clone()/>},
+                            AppRoute::CompanySettings(company_uuid) => html!{<CompanySettings
+                                current_user=self.current_user.clone()
+                                company_uuid=company_uuid.to_string()
+                            />},
                             AppRoute::ShowCompany(company_uuid) => html!{<ShowCompany
                                 current_user=self.current_user.clone()
                                 company_uuid=company_uuid.to_string()
