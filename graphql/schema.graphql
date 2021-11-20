@@ -788,6 +788,7 @@ type MutationRoot {
   registerCompany(data: IptCompanyData!): SlimCompany!
   putCompanyUpdate(companyUuid: UUID!, data: IptUpdateCompanyData!): Int!
   deleteCompany(companyUuid: UUID!): SlimCompany!
+  uploadCompanyFavicon(companyUuid: UUID!, filename: String!): UploadFile!
   uploadCompanyCertificate(certData: IptCompanyCertificateData!): UploadFile!
 
   # Update company certificate description

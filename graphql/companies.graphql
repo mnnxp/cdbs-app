@@ -187,3 +187,15 @@ fragment companyFields on CompanyAndRelatedData {
   createdAt
   updatedAt
 }
+
+mutation UploadCompanyFavicon(
+  $companyUuid: String!,
+  $filenameUploadFavicon: String!
+) {
+  uploadCompanyFavicon(
+    companyUuid: $companyUuid,
+    filename: $filenameUploadFavicon
+  ) {
+    ...uploadUrlFields
+  }
+}

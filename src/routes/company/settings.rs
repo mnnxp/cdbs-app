@@ -21,7 +21,7 @@ use crate::fragments::{
     list_errors::ListErrors,
     // company_certificate::CompanyCertificateCard,
     // company_add_certificate::AddCertificateCard,
-    // upload_favicon::UpdateFaviconCard,
+    upload_favicon::UpdateFaviconCard,
 };
 // use crate::routes::AppRoute;
 use crate::services::is_authenticated;
@@ -55,7 +55,7 @@ struct GetCompanyData;
 )]
 struct CompanyUpdate;
 
-/// Get data current user
+/// Get data current company
 impl From<CompanyInfo> for CompanyUpdateInfo {
     fn from(data: CompanyInfo) -> Self {
         let CompanyInfo {
@@ -90,12 +90,12 @@ impl From<CompanyInfo> for CompanyUpdateInfo {
 }
 
 pub enum Menu {
-    Profile,
-    // UpdataFavicon,
+    Company,
+    UpdataFavicon,
     // Certificates,
     // Access,
     // Password,
-    // RemoveProfile,
+    // RemoveCompany,
 }
 
 /// Update settings of the author or logout
@@ -128,14 +128,14 @@ pub struct Props {
 
 pub enum Msg {
     SelectMenu(Menu),
-    RequestUpdateProfile,
+    RequestUpdateCompany,
     // RequestChangeAccess,
-    // RequestRemoveProfile,
+    // RequestRemoveCompany,
     ResponseError(Error),
     // GetUpdateAccessResult(String),
-    GetUpdateProfileData(String),
-    GetUpdateProfileResult(String),
-    // GetRemoveProfileResult(String),
+    GetUpdateCompanyData(String),
+    GetUpdateCompanyResult(String),
+    // GetRemoveCompanyResult(String),
     // UpdateTypeAccessId(String)
     UpdateOrgname(String),
     UpdateShortname(String),
@@ -176,7 +176,7 @@ impl Component for CompanySettings {
             get_result_update: 0,
             // get_result_access: false,
             // get_result_remove_profile: false,
-            select_menu: Menu::Profile,
+            select_menu: Menu::Company,
         }
     }
 
@@ -204,7 +204,7 @@ impl Component for CompanySettings {
                         company_uuid
                     })
                 ).await.unwrap();
-                link.send_message(Msg::GetUpdateProfileData(res.clone()));
+                link.send_message(Msg::GetUpdateCompanyData(res.clone()));
                 link.send_message(Msg::UpdateList(res));
             })
         }
@@ -218,7 +218,7 @@ impl Component for CompanySettings {
                 self.select_menu = value;
                 self.rendered(false);
             },
-            Msg::RequestUpdateProfile => {
+            Msg::RequestUpdateCompany => {
                 let company_uuid = self.company_uuid.clone();
                 let request_company = self.request_company.clone();
                 spawn_local(async move {
@@ -252,14 +252,14 @@ impl Component for CompanySettings {
                         company_uuid,
                         data_company_update
                     })).await;
-                    link.send_message(Msg::GetUpdateProfileResult(res.unwrap()));
+                    link.send_message(Msg::GetUpdateCompanyResult(res.unwrap()));
                 })
             },
             Msg::ResponseError(err) => {
                 self.error = Some(err);
                 // self.task = None;
             }
-            Msg::GetUpdateProfileData(res) => {
+            Msg::GetUpdateCompanyData(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res = data.as_object().unwrap().get("data").unwrap();
 
@@ -329,7 +329,7 @@ impl Component for CompanySettings {
                     },
                 }
             },
-            Msg::GetUpdateProfileResult(res) => {
+            Msg::GetUpdateCompanyResult(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res = data.as_object().unwrap().get("data").unwrap();
 
@@ -354,7 +354,7 @@ impl Component for CompanySettings {
                             company_uuid
                         })
                     ).await.unwrap();
-                    link.send_message(Msg::GetUpdateProfileData(res));
+                    link.send_message(Msg::GetUpdateCompanyData(res));
                 })
             },
             Msg::Ignore => {},
@@ -370,7 +370,7 @@ impl Component for CompanySettings {
     fn view(&self) -> Html {
         let onsubmit_update_profile = self.link.callback(|ev: FocusEvent| {
             ev.prevent_default();
-            Msg::RequestUpdateProfile
+            Msg::RequestUpdateCompany
         });
 
         html! {
@@ -388,7 +388,7 @@ impl Component for CompanySettings {
                                   <div class="card-content">
                                     {match self.select_menu {
                                         // Show interface for change profile data
-                                        Menu::Profile => html! {<>
+                                        Menu::Company => html! {<>
                                             <span id="tag-info-updated-date" class="tag is-info is-light">{
                                                 match &self.current_data {
                                                     Some(data) => format!("Last updated: {}", data.updated_at),
@@ -405,9 +405,17 @@ impl Component for CompanySettings {
                                                     class="button"
                                                     type="submit"
                                                     disabled=false>
-                                                    { "Update Profile" }
+                                                    { "Update Company" }
                                                 </button>
                                             </form>
+                                        </>},
+                                        // Show interface for change favicon company
+                                        Menu::UpdataFavicon => html! {<>
+                                            <span id="tag-info-updated-favicon-company" class="tag is-info is-light">
+                                                // { format!("Updated certificates: {}", self.get_result_certificates.clone()) }
+                                                { "Update favicon" }
+                                            </span>
+                                            { self.fieldset_update_favicon() }
                                         </>},
                                     }}
                                 </div>
@@ -425,17 +433,40 @@ impl CompanySettings {
     fn view_menu(
         &self
     ) -> Html {
-        let onclick_profile = self.link
+        let onclick_company = self.link
             .callback(|_| Msg::SelectMenu(
-                Menu::Profile
+                Menu::Company
             ));
+        let onclick_favicon = self.link
+            .callback(|_| Msg::SelectMenu(
+                Menu::UpdataFavicon
+            ));
+        // let onclick_certificates = self.link
+        //     .callback(|_| Msg::SelectMenu(
+        //         Menu::Certificates
+        //     ));
+        // let onclick_access = self.link
+        //     .callback(|_| Msg::SelectMenu(
+        //         Menu::Access
+        //     ));
+        // let onclick_remove_profile = self.link
+        //     .callback(|_| Msg::SelectMenu(
+        //         Menu::RemoveCompany
+        //     ));
 
-        let active_profile = "is-active";
-        // let mut active_profile = "";
-        //
-        // match self.select_menu {
-        //     Menu::Profile => active_profile = "is-active",
-        // }
+        let mut active_company = "";
+        let mut active_favicon = "";
+        // let mut active_certificates = "";
+        // let mut active_access = "";
+        // let mut active_remove_company = "";
+
+        match self.select_menu {
+            Menu::Company => active_company = "is-active",
+            Menu::UpdataFavicon => active_favicon = "is-active",
+            // Menu::Certificates => active_certificates = "is-active",
+            // Menu::Access => active_access = "is-active",
+            // Menu::RemoveCompany => active_remove_company = "is-active",
+        }
 
         html! {
             <aside class="menu">
@@ -444,11 +475,35 @@ impl CompanySettings {
                 </p>
                 <ul class="menu-list">
                     <li><a
-                      id="profile"
-                      class=active_profile
-                      onclick=onclick_profile>
-                        { "Profile" }
+                      id="company-data"
+                      class=active_company
+                      onclick=onclick_company>
+                        { "Company" }
                     </a></li>
+                    <li><a
+                      id="company-favicon"
+                      class=active_favicon
+                      onclick=onclick_favicon>
+                        { "Favicon" }
+                    </a></li>
+                    // <li><a
+                    //   id="certificates"
+                    //   class=active_certificates
+                    //   onclick=onclick_certificates>
+                    //     { "Certificates" }
+                    // </a></li>
+                    // <li><a
+                    //   id="access"
+                    //   class=active_access
+                    //   onclick=onclick_access>
+                    //     { "Access" }
+                    // </a></li>
+                    // <li><a
+                    //   id="remove-profile"
+                    //   class=active_remove_profile
+                    //   onclick=onclick_remove_profile>
+                    //     { "Remove profile" }
+                    // </a></li>
                 </ul>
             </aside>
         }
@@ -667,5 +722,18 @@ impl CompanySettings {
                     oninput=oninput_description />
             </fieldset>
         </>}
+    }
+
+    fn fieldset_update_favicon(
+        &self
+    ) -> Html {
+        let callback_update_favicon = self.link.callback(|_| Msg::GetCurrentData);
+
+        html! {
+            <UpdateFaviconCard
+                company_uuid = self.company_uuid.clone()
+                callback=callback_update_favicon
+                />
+        }
     }
 }

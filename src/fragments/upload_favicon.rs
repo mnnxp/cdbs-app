@@ -4,7 +4,6 @@ use yew::{
     html, Callback, Component, ComponentLink, Html,
     Properties, ShouldRender, ChangeData,
 };
-use yew::services::ConsoleService;
 use graphql_client::GraphQLQuery;
 // use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
@@ -30,6 +29,14 @@ type FileName = String;
     response_derives = "Debug"
 )]
 struct UploadUserFavicon;
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/companies.graphql",
+    response_derives = "Debug"
+)]
+struct UploadCompanyFavicon;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -68,6 +75,8 @@ pub struct UpdateFaviconCard {
 
 pub enum Msg {
     RequestUploadData,
+    RequestUploadUserData,
+    RequestUploadCompanyData,
     RequestUploadFile(Vec<u8>),
     ResponseUploadFile(Result<Option<String>, Error>),
     RequestUploadCompleted,
@@ -112,12 +121,33 @@ impl Component for UpdateFaviconCard {
                 // see loading button
                 self.get_result_up_data = true;
 
+                match &self.props.company_uuid {
+                    Some(_) => self.link.send_message(Msg::RequestUploadCompanyData),
+                    None => self.link.send_message(Msg::RequestUploadUserData),
+                }
+            },
+            Msg::RequestUploadUserData => {
                 if let Some(file) = &self.file {
-                    // ConsoleService::info(format!("RequestUploadData: {:?}", &self.request_update).as_ref());
+                    // debug!("RequestUploadData: {:?}", &self.request_update);
                     let filename_upload_favicon = file.name().to_string();
                     spawn_local(async move {
                         let res = make_query(UploadUserFavicon::build_query(
                             upload_user_favicon::Variables {
+                                filename_upload_favicon,
+                            }
+                        )).await;
+                        link.send_message(Msg::GetUploadData(res.unwrap()));
+                    })
+                }
+            },
+            Msg::RequestUploadCompanyData => {
+                if let Some(file) = &self.file {
+                    let company_uuid = self.props.company_uuid.as_ref().map(|u| u.clone()).unwrap();
+                    let filename_upload_favicon = file.name().to_string();
+                    spawn_local(async move {
+                        let res = make_query(UploadCompanyFavicon::build_query(
+                            upload_company_favicon::Variables {
+                                company_uuid,
                                 filename_upload_favicon,
                             }
                         )).await;
@@ -166,7 +196,10 @@ impl Component for UpdateFaviconCard {
 
                 match res_value.is_null() {
                     false => {
-                        let result: UploadFile = serde_json::from_value(res_value.get("uploadFavicon").unwrap().clone()).unwrap();
+                        let result: UploadFile = match &self.props.company_uuid {
+                            Some(_) => serde_json::from_value(res_value.get("uploadCompanyFavicon").unwrap().clone()).unwrap(),
+                            None => serde_json::from_value(res_value.get("uploadFavicon").unwrap().clone()).unwrap(),
+                        };
                         // crate::yewLog!(result);
                         self.request_upload_data = result;
 
@@ -180,7 +213,7 @@ impl Component for UpdateFaviconCard {
                             };
                             self.task_read = Some((file_name, task));
                         }
-                        ConsoleService::info(format!("file: {:?}", self.file).as_ref());
+                        debug!("file: {:?}", self.file);
                     },
                     true => {
                         link.send_message(Msg::ResponseError(get_error(&data)));
