@@ -18,7 +18,8 @@
 
 .flex-box {
   display: flex;
-  justify-content: space-around;
+  justify-content: space-evenly;
+  flex-wrap: wrap;
 }
 
 .center-media {
@@ -49,9 +50,13 @@
   border-radius: 8px;
   width: 240px;
   box-sizing: content-box;
+  margin-bottom: 26px;
   &:hover{
-    border: 2px solid #1872f0;
-    cursor: pointer;
+    // border: 2px solid #1872f0;
+    // cursor: pointer;
+    transform: translateY(-2px);
+    box-shadow: rgb(4 17 29 / 25%) 0px 0px 8px 0px;
+    transition: all 0.1s ease 0s;
   }
 }
 
