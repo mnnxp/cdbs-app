@@ -130,16 +130,21 @@ impl ListItem {
                       {"from "} <span class="id-box has-text-grey-light has-text-weight-bold">{region.region.to_string()}</span>
                     </div>
                     <div class="overflow-title has-text-weight-bold is-size-4">{shortname}</div>
-                    <div class="overflow-title has-text-weight-bold">{description}</div>
+                    <p>
+                        {match &description.len() {
+                            50.. => format!("{:.*}...", 50, description),
+                            _ => description.clone(),
+                        }}
+                    </p>
                   </p>
                 </div>
               </div>
               <div class="media-right overflow-title">
                   {format!("Updated at: {:.*}", 19, updated_at.to_string())}
                   <br/>
-                  {format!("Type: {}", company_type.name.to_string())}
-                  <br/>
                   {format!("Reg.№: {}", inn.to_string())}
+                  <br/>
+                  {format!("Type: {}", company_type.shortname.to_string())}
               </div>
               <div class="media-right flexBox " >
                 {res_btn(classes!(

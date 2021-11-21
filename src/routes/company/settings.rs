@@ -19,8 +19,8 @@ use crate::gqls::make_query;
 use crate::error::{Error, get_error};
 use crate::fragments::{
     list_errors::ListErrors,
-    // company_certificate::CompanyCertificateCard,
-    // company_add_certificate::AddCertificateCard,
+    company_certificate::CompanyCertificateCard,
+    company_add_certificate::AddCertificateCard,
     upload_favicon::UpdateFaviconCard,
 };
 // use crate::routes::AppRoute;
@@ -28,7 +28,7 @@ use crate::services::is_authenticated;
 use crate::types::{
     UUID, SlimUser, CompanyUpdateInfo, CompanyInfo, Region,
     CompanyType, TypeAccessTranslateListInfo,
-    // Certificate, CompanyCertificate,
+    Certificate, CompanyCertificate,
 };
 
 #[derive(GraphQLQuery)]
@@ -92,7 +92,7 @@ impl From<CompanyInfo> for CompanyUpdateInfo {
 pub enum Menu {
     Company,
     UpdataFavicon,
-    // Certificates,
+    Certificates,
     // Access,
     // Password,
     // RemoveCompany,
@@ -417,6 +417,16 @@ impl Component for CompanySettings {
                                             </span>
                                             { self.fieldset_update_favicon() }
                                         </>},
+                                        // Show interface for add and update Certificates
+                                        Menu::Certificates => html! {<>
+                                            <span id="tag-info-updated-certificates" class="tag is-info is-light">
+                                                // { format!("Updated certificates: {}", self.get_result_certificates.clone()) }
+                                                { "Certificates" }
+                                            </span>
+                                            { self.fieldset_certificates() }
+                                            <br/>
+                                            { self.fieldset_add_certificate() }
+                                        </>},
                                     }}
                                 </div>
                             </div>
@@ -441,10 +451,10 @@ impl CompanySettings {
             .callback(|_| Msg::SelectMenu(
                 Menu::UpdataFavicon
             ));
-        // let onclick_certificates = self.link
-        //     .callback(|_| Msg::SelectMenu(
-        //         Menu::Certificates
-        //     ));
+        let onclick_certificates = self.link
+            .callback(|_| Msg::SelectMenu(
+                Menu::Certificates
+            ));
         // let onclick_access = self.link
         //     .callback(|_| Msg::SelectMenu(
         //         Menu::Access
@@ -456,14 +466,14 @@ impl CompanySettings {
 
         let mut active_company = "";
         let mut active_favicon = "";
-        // let mut active_certificates = "";
+        let mut active_certificates = "";
         // let mut active_access = "";
         // let mut active_remove_company = "";
 
         match self.select_menu {
             Menu::Company => active_company = "is-active",
             Menu::UpdataFavicon => active_favicon = "is-active",
-            // Menu::Certificates => active_certificates = "is-active",
+            Menu::Certificates => active_certificates = "is-active",
             // Menu::Access => active_access = "is-active",
             // Menu::RemoveCompany => active_remove_company = "is-active",
         }
@@ -486,12 +496,12 @@ impl CompanySettings {
                       onclick=onclick_favicon>
                         { "Favicon" }
                     </a></li>
-                    // <li><a
-                    //   id="certificates"
-                    //   class=active_certificates
-                    //   onclick=onclick_certificates>
-                    //     { "Certificates" }
-                    // </a></li>
+                    <li><a
+                      id="certificates"
+                      class=active_certificates
+                      onclick=onclick_certificates>
+                        { "Certificates" }
+                    </a></li>
                     // <li><a
                     //   id="access"
                     //   class=active_access
@@ -733,6 +743,64 @@ impl CompanySettings {
             <UpdateFaviconCard
                 company_uuid = self.company_uuid.clone()
                 callback=callback_update_favicon
+                />
+        }
+    }
+
+    fn fieldset_certificates(
+        &self
+    ) -> Html {
+        let mut certificates: &[CompanyCertificate] = &Vec::new();
+        if let Some(ref data) = self.current_data {
+            certificates = data.company_certificates.as_ref();
+        };
+
+        match certificates.is_empty() {
+            true => html!{
+                <div>
+                    <span id="tag-info-no-certificates" class="tag is-info is-light">
+                        // { format!("Updated certificates: {}", self.get_result_certificates.clone()) }
+                        { "Company don't have Certificates" }
+                    </span>
+                </div>
+            },
+            false => {
+                html!{
+                    // <p class="card-footer-item">
+                    <>{
+                        for certificates.iter().map(|cert| {
+                            let view_cert: Certificate = cert.into();
+                            html! {
+                                <CompanyCertificateCard
+                                    company_uuid = self.company_uuid.clone()
+                                    certificate = view_cert
+                                    show_cert_btn = true
+                                    download_btn = false
+                                    change_btn = true
+                                    />
+                            }
+                        })
+                    }</>
+                    // </p>
+                }
+            },
+        }
+    }
+
+    fn fieldset_add_certificate(
+        &self
+    ) -> Html {
+        let company_uuid = self.current_data
+            .as_ref()
+            .map(|company| company.uuid.to_string())
+            .unwrap_or_default();
+
+        let callback_upload_cert = self.link.callback(|_| Msg::GetCurrentData);
+
+        html! {
+            <AddCertificateCard
+                company_uuid = company_uuid
+                callback=callback_upload_cert
                 />
         }
     }

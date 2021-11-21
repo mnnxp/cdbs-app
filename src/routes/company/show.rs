@@ -15,6 +15,7 @@ use wasm_bindgen_futures::spawn_local;
 use crate::routes::AppRoute;
 use crate::error::{get_error, Error};
 use crate::fragments::{
+    switch_icon::res_btn,
     company_certificate::CompanyCertificateCard,
     company_represent::CompanyRepresents,
     list_errors::ListErrors,
@@ -340,32 +341,28 @@ impl ShowCompany {
                 <div class="media-left">
                   <figure class="image is-48x48">
                     // <div hidden={!company_data.is_supplier} class="top-tag" >{"supplier"}</div>
-                    // <img src="https://bulma.io/images/placeholders/96x96.png" alt="Placeholder image"/>
-                    <img src={company_data.image_file.download_url.to_string()} alt="Favicon profile"/>
+                    <img src="https://bulma.io/images/placeholders/96x96.png" alt="Placeholder image"/>
+                    // <img src={company_data.image_file.download_url.to_string()} alt="Favicon profile"/>
                   </figure>
                 </div>
                 <div class="media-content">
-                    <span>{"Company"}</span>
-                    <span hidden={!company_data.is_supplier} id="company-region">
-                      {" supplier"}
-                      // <i class="fa fa-diamond" aria-hidden="true"></i>
-                      <svg width="25" height="25" viewBox="0 0 197.249 197.25" xmlns="http://www.w3.org/2000/svg">
-                      <g transform="translate(-11.136 -18.506)">
-                      <path style="fill:none;stroke:#000;stroke-width:.434;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" d="m44.396 115.725 25.955-33.866h77.2l26.287 33.346-63.596 68.922z"/>
-                      <path style="fill:none;stroke:#000;stroke-width:.434204px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" d="m43.338 116.783 129.441-.52M122.778 81.857l17.736 33.672-30.272 68.598-31.858-68.419 17.978-33.843z"/>
-                      <path d="M208.167 130.384v-26.505c-13.539-4.814-22.092-6.167-26.398-16.557v-.008c-4.321-10.423.82-17.5 6.946-30.4l-18.738-18.739c-12.801 6.085-19.952 11.276-30.4 6.946h-.008c-10.406-4.313-11.768-12.924-16.557-26.398H96.508C91.735 32.131 90.365 40.8 79.95 45.121h-.007c-10.423 4.33-17.483-.804-30.4-6.946L30.805 56.914c6.11 12.858 11.276 19.96 6.946 30.4-4.322 10.423-12.99 11.792-26.398 16.565v26.505c13.383 4.756 22.076 6.142 26.398 16.557 4.346 10.513-.935 17.762-6.946 30.4l18.738 18.746c12.81-6.093 19.96-11.276 30.4-6.946h.008c10.415 4.314 11.776 12.95 16.557 26.398h26.504c4.773-13.416 6.151-22.06 16.623-26.422h.008c10.35-4.297 17.386.828 30.326 6.979l18.739-18.747c-6.101-12.818-11.276-19.952-6.954-30.392 4.321-10.423 13.022-11.809 26.414-16.573z" style="fill:none;stroke:#000;stroke-width:.434;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"/>
-                      <ellipse style="fill:none;stroke:#000;stroke-width:.433999;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" cx="109.449" cy="115.983" rx="69.586" ry="69.587"/></g></svg>
-                    </span>
-                  <p id="title-fl" class="title is-4">{
-                      format!("{} {}",
-                        company_data.company_type.name.to_string(),
-                        company_data.orgname.to_string()
-                  )}</p>
-                  <p id="subtitle-username" class="subtitle is-6">{
-                      format!("{} {}",
-                        company_data.company_type.shortname.to_string(),
-                        company_data.shortname.to_string(),
-                  )}</p>
+                  <span>{"Company"}</span>
+                  <span hidden={!company_data.is_supplier} id="company-region">
+                    {" supplier"}
+                    // <i class="fa fa-diamond" aria-hidden="true"></i>
+                    <svg width="25" height="25" viewBox="0 0 197.249 197.25" xmlns="http://www.w3.org/2000/svg">
+                    <g transform="translate(-11.136 -18.506)">
+                    <path style="fill:none;stroke:#000;stroke-width:.434;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" d="m44.396 115.725 25.955-33.866h77.2l26.287 33.346-63.596 68.922z"/>
+                    <path style="fill:none;stroke:#000;stroke-width:.434204px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" d="m43.338 116.783 129.441-.52M122.778 81.857l17.736 33.672-30.272 68.598-31.858-68.419 17.978-33.843z"/>
+                    <path d="M208.167 130.384v-26.505c-13.539-4.814-22.092-6.167-26.398-16.557v-.008c-4.321-10.423.82-17.5 6.946-30.4l-18.738-18.739c-12.801 6.085-19.952 11.276-30.4 6.946h-.008c-10.406-4.313-11.768-12.924-16.557-26.398H96.508C91.735 32.131 90.365 40.8 79.95 45.121h-.007c-10.423 4.33-17.483-.804-30.4-6.946L30.805 56.914c6.11 12.858 11.276 19.96 6.946 30.4-4.322 10.423-12.99 11.792-26.398 16.565v26.505c13.383 4.756 22.076 6.142 26.398 16.557 4.346 10.513-.935 17.762-6.946 30.4l18.738 18.746c12.81-6.093 19.96-11.276 30.4-6.946h.008c10.415 4.314 11.776 12.95 16.557 26.398h26.504c4.773-13.416 6.151-22.06 16.623-26.422h.008c10.35-4.297 17.386.828 30.326 6.979l18.739-18.747c-6.101-12.818-11.276-19.952-6.954-30.392 4.321-10.423 13.022-11.809 26.414-16.573z" style="fill:none;stroke:#000;stroke-width:.434;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"/>
+                    <ellipse style="fill:none;stroke:#000;stroke-width:.433999;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" cx="109.449" cy="115.983" rx="69.586" ry="69.587"/></g></svg>
+                  </span>
+                  <p id="title-orgname" class="title is-4">{format!("{} ", &company_data.orgname)}</p>
+                  <p id="title-type" class="subtitle is-4">{company_data.company_type.name.clone()}</p>
+                  <p id="subtitle-shortname">
+                    <strong>{format!("{} ", &company_data.shortname)}</strong>
+                    {company_data.company_type.shortname.clone()}
+                  </p>
                 </div>
                 <div class="media-right">
                   <p class="subtitle is-6 left">
@@ -374,16 +371,16 @@ impl ShowCompany {
                       <br/>
                       {format!("Updated at {:.*}", 19, company_data.updated_at.to_string())}
                       <br/>
-                      <button class="button is-light is-fullwidth has-text-weight-bold"
-                          onclick=show_owner_profile_btn
-                          >{format!("Owner @{}", company_data.owner_user.username.to_string())}</button>
-                      <br/>
-                      <button class="button is-light is-fullwidth has-text-weight-bold"
-                          onclick=show_setting_company_btn
-                          >{"Setting company"}</button>
-                      <br/>
-                      // for self user data not show button "following"
-                      <div class="media-right flexBox " >
+                      <div class="media-right buttons flexBox" >
+                        {res_btn(classes!(
+                            String::from("fas fa-user")),
+                            show_owner_profile_btn,
+                            String::new())}
+                        {res_btn(classes!(
+                            String::from("fa fa-cog")),
+                            show_setting_company_btn,
+                            String::new())}
+                        // for self user data not show button "following"
                         { self.show_profile_followers() }
                       </div>
                   </p>
