@@ -37,7 +37,7 @@ pub struct Props {
     pub change_btn: bool,
 }
 
-/// For delete company Certificate
+/// For update company Certificate
 #[derive(Default, Clone, Debug)]
 pub struct ChangeCompanyCertData {
     company_uuid: String,
