@@ -69,8 +69,8 @@ impl ListItem {
               <div class="media-content" style="min-width: 0px;">
                 <div class="content">
                   <p>
-                  <div style="overflow-title margin-bottom:0" >
-                      <span class="title is-5 overflow-title">{name.to_string()}</span>
+                  <div style="margin-bottom:0" >
+                      <span class="title is-5">{name.to_string()}</span>
                       {" from "} <span class="id-box has-text-grey-light has-text-weight-bold">{region.region.to_string()}</span>
                     </div>
                     {format!("address: {}", address.to_string())}
@@ -107,8 +107,8 @@ impl ListItem {
               //   <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
               //   // <img src={image_file.download_url.to_string()} alt="Favicon profile"/>
               // </div>
-              <div style="overflow-title margin-bottom:0" >
-                  <span class="title is-5 overflow-title">{name.to_string()}</span>
+              <div style="margin-bottom:0" >
+                  <span class="title is-5">{name.to_string()}</span>
                   {" from "} <span class="id-box has-text-grey-light has-text-weight-bold">{region.region.to_string()}</span>
               </div>
               <div class="overflow-title">{
