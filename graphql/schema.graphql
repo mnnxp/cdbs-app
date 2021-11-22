@@ -22,6 +22,11 @@ input ChangeOwnerStandard {
   newOwnerUserUuid: UUID!
 }
 
+input ChangeTypeAccessCompany {
+  companyUuid: UUID!
+  newTypeAccessUuid: Int!
+}
+
 input ChangeTypeAccessComponent {
   componentUuid: UUID!
   newTypeAccessUuid: Int!
@@ -80,6 +85,7 @@ type CompanyAndRelatedData {
   companyType: CompanyTypeTranslateList!
   companyCertificates: [CompanyCertificateAndFile!]!
   companySpecs: [CompanySpecWithTranslation!]!
+  typeAccessId: Int!
   isSupplier: Boolean!
   isEmailVerified: Boolean!
   subscribers: Int!
@@ -787,6 +793,9 @@ type MutationRoot {
   deleteStandardFiles(data: DeleteStandardFileData!): Boolean!
   registerCompany(data: IptCompanyData!): SlimCompany!
   putCompanyUpdate(companyUuid: UUID!, data: IptUpdateCompanyData!): Int!
+
+  # Change company type access
+  changeCompanyAccess(data: ChangeTypeAccessCompany!): Boolean!
   deleteCompany(companyUuid: UUID!): SlimCompany!
   uploadCompanyFavicon(companyUuid: UUID!, filename: String!): UploadFile!
   uploadCompanyCertificate(certData: IptCompanyCertificateData!): UploadFile!
@@ -796,9 +805,7 @@ type MutationRoot {
   deleteCompanyCertificate(data: DelCompanyCertificateData!): Boolean!
   addCompanySpecs(data: IptCompanySpecData!): Int!
   deleteCompanySpecs(data: IptCompanySpecData!): Int!
-  registerCompanyRepresent(
-    data: IptCompanyRepresentData!
-  ): SlimCompanyRepresent!
+  registerCompanyRepresent(data: IptCompanyRepresentData!): Boolean!
   updateCompanyRepresent(
     companyUuid: UUID!
     companyRepresentUuid: UUID!
@@ -1054,14 +1061,6 @@ type SlimCompanyMember {
   companyUuid: UUID!
   userUuid: UUID!
   roleId: Int!
-}
-
-type SlimCompanyRepresent {
-  uuid: ID!
-  companyUuid: ID!
-  name: String!
-  address: String!
-  phone: String!
 }
 
 type SlimComponent {

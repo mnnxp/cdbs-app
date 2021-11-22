@@ -69,7 +69,7 @@ impl ListItem {
               <div class="media-content" style="min-width: 0px;">
                 <div class="content">
                   <p>
-                  <div style="margin-bottom:0" >
+                  <div style="overflow-title margin-bottom:0" >
                       <span class="title is-5 overflow-title">{name.to_string()}</span>
                       {" from "} <span class="id-box has-text-grey-light has-text-weight-bold">{region.region.to_string()}</span>
                     </div>
@@ -77,7 +77,7 @@ impl ListItem {
                   </p>
                 </div>
               </div>
-              <div class="media-right overflow-title">
+              <div class="overflow-title media-right overflow-title">
                   {format!("representation type: {}", representation_type.representation_type.to_string())}
                   <br/>
                   {format!("phone: {}", phone.to_string())}
@@ -107,7 +107,7 @@ impl ListItem {
               //   <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
               //   // <img src={image_file.download_url.to_string()} alt="Favicon profile"/>
               // </div>
-              <div style="margin-bottom:0" >
+              <div style="overflow-title margin-bottom:0" >
                   <span class="title is-5 overflow-title">{name.to_string()}</span>
                   {" from "} <span class="id-box has-text-grey-light has-text-weight-bold">{region.region.to_string()}</span>
               </div>

@@ -5,6 +5,7 @@ pub mod header;
 pub mod list_errors;
 pub mod list_pagination;
 pub mod company_represent;
+pub mod company_add_represent;
 pub mod company_certificate;
 pub mod company_add_certificate;
 pub mod user_certificate;

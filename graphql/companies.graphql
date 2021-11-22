@@ -218,6 +218,10 @@ mutation UpdateCompanyRepresent(
   )
 }
 
+mutation RegisterCompanyRepresent($iptCompanyRepresentData: IptCompanyRepresentData!){
+  registerCompanyRepresent(data: $iptCompanyRepresentData)
+}
+
 mutation DeleteCompanyRepresent(
   $companyUuid: String!,
   $companyRepresentUuid: String!

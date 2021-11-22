@@ -122,6 +122,30 @@ pub struct CompanyRepresentInfo {
     pub phone: String,
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct RegisterCompanyRepresentInfo {
+    pub company_uuid: UUID,
+    pub region_id: usize,
+    pub representation_type_id: usize,
+    pub name: String,
+    pub address: String,
+    pub phone: String,
+}
+
+impl Default for RegisterCompanyRepresentInfo {
+    fn default() -> Self {
+        Self {
+            company_uuid: String::new(),
+            region_id: 1,
+            representation_type_id: 1,
+            name: String::new(),
+            address: String::new(),
+            phone: String::new(),
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct CompanyRepresentUpdateInfo {

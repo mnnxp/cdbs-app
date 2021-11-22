@@ -23,6 +23,7 @@ use crate::fragments::{
     company_add_certificate::AddCertificateCard,
     upload_favicon::UpdateFaviconCard,
     company_represent::CompanyRepresents,
+    company_add_represent::AddCompanyRepresentCard,
 };
 // use crate::routes::AppRoute;
 use crate::services::is_authenticated;
@@ -95,7 +96,7 @@ pub enum Menu {
     UpdataFavicon,
     Certificates,
     Represent,
-    // Access,
+    Access,
     // Password,
     // RemoveCompany,
 }
@@ -105,7 +106,7 @@ pub struct CompanySettings {
     // auth: Auth,
     error: Option<Error>,
     request_company: CompanyUpdateInfo,
-    // request_access: i64,
+    request_access: i64,
     // response: Callback<Result<usize, Error>>,
     // task: Option<FetchTask>,
     // router_agent: Box<dyn Bridge<RouteAgent>>,
@@ -138,7 +139,7 @@ pub enum Msg {
     GetUpdateCompanyData(String),
     GetUpdateCompanyResult(String),
     // GetRemoveCompanyResult(String),
-    // UpdateTypeAccessId(String)
+    UpdateTypeAccessId(String),
     UpdateOrgname(String),
     UpdateShortname(String),
     UpdateInn(String),
@@ -164,7 +165,7 @@ impl Component for CompanySettings {
             // auth: Auth::new(),
             error: None,
             request_company: CompanyUpdateInfo::default(),
-            // request_access: 0,
+            request_access: 0,
             // response: link.callback(Msg::Response),
             // task: None,
             // router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
@@ -257,10 +258,42 @@ impl Component for CompanySettings {
                     link.send_message(Msg::GetUpdateCompanyResult(res.unwrap()));
                 })
             },
+            // Msg::RequestChangeAccess => {
+            //     let company_uuid = self.company_uuid.clone();
+            //     let new_type_access = self.request_access.clone();
+            //     spawn_local(async move {
+            //         let data = change_type_access_company::ChangeTypeAccessCompany{
+            //             company_uuid,
+            //             new_type_access,
+            //         };
+            //
+            //         let res = make_query(ChangeCompanyAccess::build_query(
+            //             change_company_access::Variables {
+            //                 data,
+            //             }
+            //         )).await;
+            //         link.send_message(Msg::GetUpdateAccessResult(res.unwrap()));
+            //     })
+            // },
             Msg::ResponseError(err) => {
                 self.error = Some(err);
                 // self.task = None;
-            }
+            },
+            // Msg::GetUpdateAccessResult(res) => {
+            //     let data: Value = serde_json::from_str(res.as_str()).unwrap();
+            //     let res = data.as_object().unwrap().get("data").unwrap();
+            //
+            //     match res.is_null() {
+            //         false => {
+            //             let result: bool = serde_json::from_value(res.get("setCompanyAccessComponent").unwrap().clone()).unwrap();
+            //             debug!("Change company access: {:?}", result);
+            //             self.get_result_access = result;
+            //         },
+            //         true => {
+            //             link.send_message(Msg::ResponseError(get_error(&data)));
+            //         }
+            //     }
+            // },
             Msg::GetUpdateCompanyData(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res = data.as_object().unwrap().get("data").unwrap();
@@ -277,7 +310,11 @@ impl Component for CompanySettings {
                         link.send_message(Msg::ResponseError(get_error(&data)));
                     }
                 }
-            }
+            },
+            Msg::UpdateTypeAccessId(type_access_id) => {
+                self.request_access = type_access_id.parse::<i64>().unwrap_or_default();
+                debug!("Update: {:?}", type_access_id);
+            },
             Msg::UpdateOrgname(orgname) => {
                 self.request_company.orgname = Some(orgname);
             },
@@ -435,9 +472,17 @@ impl Component for CompanySettings {
                                                 // { format!("Updated certificates: {}", self.get_result_certificates.clone()) }
                                                 { "Represents" }
                                             </span>
-                                            { self.fieldset_represents() }
+                                            { self.fieldset_add_represent() }
                                             <br/>
-                                            // { self.fieldset_add_represent() }
+                                            { self.fieldset_represents() }
+                                        </>},
+                                        // Show interface for manage Access
+                                        Menu::Access => html! {<>
+                                            <span id="tag-info-updated-represents" class="tag is-info is-light">
+                                                // { format!("Updated certificates: {}", self.get_result_certificates.clone()) }
+                                                { "Represents" }
+                                            </span>
+                                            // { self.fieldset_manage_access() }
                                         </>},
                                     }}
                                 </div>
@@ -471,10 +516,10 @@ impl CompanySettings {
             .callback(|_| Msg::SelectMenu(
                 Menu::Represent
             ));
-        // let onclick_access = self.link
-        //     .callback(|_| Msg::SelectMenu(
-        //         Menu::Access
-        //     ));
+        let onclick_access = self.link
+            .callback(|_| Msg::SelectMenu(
+                Menu::Access
+            ));
         // let onclick_remove_profile = self.link
         //     .callback(|_| Msg::SelectMenu(
         //         Menu::RemoveCompany
@@ -484,7 +529,7 @@ impl CompanySettings {
         let mut active_favicon = "";
         let mut active_certificates = "";
         let mut active_represents = "";
-        // let mut active_access = "";
+        let mut active_access = "";
         // let mut active_remove_company = "";
 
         match self.select_menu {
@@ -492,7 +537,7 @@ impl CompanySettings {
             Menu::UpdataFavicon => active_favicon = "is-active",
             Menu::Certificates => active_certificates = "is-active",
             Menu::Represent => active_represents = "is-active",
-            // Menu::Access => active_access = "is-active",
+            Menu::Access => active_access = "is-active",
             // Menu::RemoveCompany => active_remove_company = "is-active",
         }
 
@@ -526,12 +571,12 @@ impl CompanySettings {
                       onclick=onclick_represents>
                         { "Represents" }
                     </a></li>
-                    // <li><a
-                    //   id="access"
-                    //   class=active_access
-                    //   onclick=onclick_access>
-                    //     { "Access" }
-                    // </a></li>
+                    <li><a
+                      id="access"
+                      class=active_access
+                      onclick=onclick_access>
+                        { "Access" }
+                    </a></li>
                     // <li><a
                     //   id="remove-profile"
                     //   class=active_remove_profile
@@ -859,21 +904,13 @@ impl CompanySettings {
         }
     }
 
-    // fn fieldset_add_represent(
-    //     &self
-    // ) -> Html {
-    //     let company_uuid = self.current_data
-    //         .as_ref()
-    //         .map(|company| company.uuid.to_string())
-    //         .unwrap_or_default();
-    //
-    //     let callback_upload_cert = self.link.callback(|_| Msg::GetCurrentData);
-    //
-    //     html! {
-    //         <AddRepresentCard
-    //             company_uuid = company_uuid
-    //             callback=callback_upload_cert
-    //             />
-    //     }
-    // }
+    fn fieldset_add_represent(
+        &self
+    ) -> Html {
+        html! {
+            <AddCompanyRepresentCard
+                company_uuid = self.company_uuid.clone()
+                />
+        }
+    }
 }
