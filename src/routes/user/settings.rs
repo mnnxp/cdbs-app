@@ -574,7 +574,7 @@ impl Component for Settings {
                                                     class="button"
                                                     type="submit"
                                                     disabled=false>
-                                                    { "Update Profile" }
+                                                    { "Update access" }
                                                 </button>
                                             </form>
 
