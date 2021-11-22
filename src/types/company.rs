@@ -76,7 +76,7 @@ pub struct CompanySpec {
     pub company_uuid: UUID,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Default, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct SlimCompany{
   pub uuid: UUID,

@@ -14,12 +14,24 @@ mutation ChangeCompanyAccess($changeAccessCompanyData: ChangeTypeAccessCompany!)
   changeCompanyAccess(data: $changeAccessCompanyData)
 }
 
+mutation DeleteCompany($deleteCompanyUuid: String!) {
+  deleteCompany(companyUuid: $deleteCompanyUuid){
+    ...slimCompanyFields
+  }
+}
+
 mutation AddCompanyFav($companyUuid: String!) {
   addCompanyFav(companyUuid: $companyUuid)
 }
 
 mutation DeleteCompanyFav($companyUuid: String!) {
   deleteCompanyFav(companyUuid: $companyUuid)
+}
+
+fragment slimCompanyFields on SlimCompany {
+  uuid
+  shortname
+  isSupplier
 }
 
 fragment companyShortFields on ShowCompanyShort {

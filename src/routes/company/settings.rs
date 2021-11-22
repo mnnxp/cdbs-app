@@ -1,14 +1,12 @@
-// use yew::services::fetch::FetchTask;
 use yew::{
-    // agent::Bridged, Bridge,Callback,
-    html, Component, ComponentLink,
+    agent::Bridged, html, Bridge, Component, ComponentLink,
     FocusEvent, Html, InputData, ChangeData, Properties, ShouldRender,
 };
-use yew_router::service::RouteService;
-// use yew_router::{
-//     agent::RouteRequest::ChangeRoute,
-//     prelude::*
-// };
+use yew_router::{
+    service::RouteService,
+    agent::RouteRequest::ChangeRoute,
+    prelude::*
+};
 use chrono::NaiveDateTime;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
@@ -25,11 +23,11 @@ use crate::fragments::{
     company_represent::CompanyRepresents,
     company_add_represent::AddCompanyRepresentCard,
 };
-// use crate::routes::AppRoute;
+use crate::routes::AppRoute;
 use crate::services::is_authenticated;
 use crate::types::{
     UUID, SlimUser, CompanyUpdateInfo, CompanyInfo, Region,
-    CompanyType, TypeAccessTranslateListInfo,
+    CompanyType, TypeAccessTranslateListInfo, SlimCompany,
     Certificate, CompanyCertificate, CompanyRepresentInfo
 };
 
@@ -64,6 +62,14 @@ struct CompanyUpdate;
     response_derives = "Debug"
 )]
 struct ChangeCompanyAccess;
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/companies.graphql",
+    response_derives = "Debug"
+)]
+struct DeleteCompany;
 
 /// Get data current company
 impl From<CompanyInfo> for CompanyUpdateInfo {
@@ -105,19 +111,15 @@ pub enum Menu {
     Certificates,
     Represent,
     Access,
-    // Password,
-    // RemoveCompany,
+    RemoveCompany,
 }
 
 /// Update settings of the author or logout
 pub struct CompanySettings {
-    // auth: Auth,
     error: Option<Error>,
     request_company: CompanyUpdateInfo,
     request_access: i64,
-    // response: Callback<Result<usize, Error>>,
-    // task: Option<FetchTask>,
-    // router_agent: Box<dyn Bridge<RouteAgent>>,
+    router_agent: Box<dyn Bridge<RouteAgent>>,
     props: Props,
     link: ComponentLink<Self>,
     company_uuid: String,
@@ -127,7 +129,7 @@ pub struct CompanySettings {
     company_types: Vec<CompanyType>,
     get_result_update: usize,
     get_result_access: bool,
-    // get_result_remove_profile: bool,
+    get_result_remove_company: SlimCompany,
     select_menu: Menu,
 }
 
@@ -141,12 +143,12 @@ pub enum Msg {
     SelectMenu(Menu),
     RequestUpdateCompany,
     RequestChangeAccess,
-    // RequestRemoveCompany,
+    RequestRemoveCompany,
     ResponseError(Error),
     GetUpdateAccessResult(String),
     GetUpdateCompanyData(String),
     GetUpdateCompanyResult(String),
-    // GetRemoveCompanyResult(String),
+    GetRemoveCompanyResult(String),
     UpdateTypeAccessId(String),
     UpdateOrgname(String),
     UpdateShortname(String),
@@ -170,13 +172,10 @@ impl Component for CompanySettings {
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
         CompanySettings {
-            // auth: Auth::new(),
             error: None,
             request_company: CompanyUpdateInfo::default(),
             request_access: 0,
-            // response: link.callback(Msg::Response),
-            // task: None,
-            // router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
+            router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             props,
             link,
             company_uuid: String::new(),
@@ -186,7 +185,7 @@ impl Component for CompanySettings {
             company_types: Vec::new(),
             get_result_update: 0,
             get_result_access: false,
-            // get_result_remove_profile: false,
+            get_result_remove_company: SlimCompany::default(),
             select_menu: Menu::Company,
         }
     }
@@ -283,6 +282,15 @@ impl Component for CompanySettings {
                     link.send_message(Msg::GetUpdateAccessResult(res.unwrap()));
                 })
             },
+            Msg::RequestRemoveCompany => {
+                let delete_company_uuid = self.company_uuid.clone();
+                spawn_local(async move {
+                    let res = make_query(DeleteCompany::build_query(
+                        delete_company::Variables { delete_company_uuid }
+                    )).await;
+                    link.send_message(Msg::GetRemoveCompanyResult(res.unwrap()));
+                })
+            },
             Msg::ResponseError(err) => {
                 self.error = Some(err);
                 // self.task = None;
@@ -376,6 +384,28 @@ impl Component for CompanySettings {
                     },
                 }
             },
+            Msg::GetRemoveCompanyResult(res) => {
+                let data: Value = serde_json::from_str(res.as_str()).unwrap();
+                let res = data.as_object().unwrap().get("data").unwrap();
+
+                match res.is_null() {
+                    false => {
+                        let delete_company: SlimCompany =
+                            serde_json::from_value(res.get("deleteCompany").unwrap().clone()).unwrap();
+                        debug!("Delete company: {:?}", delete_company);
+                        self.get_result_remove_company = delete_company;
+                        match &self.props.current_user {
+                            Some(user) => self.router_agent.send(ChangeRoute(AppRoute::Profile(
+                                user.username.clone()
+                            ).into())),
+                            None => self.router_agent.send(ChangeRoute(AppRoute::Home.into())),
+                        }
+                    },
+                    true => {
+                        link.send_message(Msg::ResponseError(get_error(&data)));
+                    }
+                }
+            },
             Msg::GetUpdateCompanyResult(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res = data.as_object().unwrap().get("data").unwrap();
@@ -415,7 +445,7 @@ impl Component for CompanySettings {
     }
 
     fn view(&self) -> Html {
-        let onsubmit_update_profile = self.link.callback(|ev: FocusEvent| {
+        let onsubmit_update_company = self.link.callback(|ev: FocusEvent| {
             ev.prevent_default();
             Msg::RequestUpdateCompany
         });
@@ -434,7 +464,7 @@ impl Component for CompanySettings {
                                 <div class="card">
                                   <div class="card-content">
                                     {match self.select_menu {
-                                        // Show interface for change profile data
+                                        // Show interface for change company data
                                         Menu::Company => html! {<>
                                             <span id="tag-info-updated-date" class="tag is-info is-light">{
                                                 match &self.current_data {
@@ -445,8 +475,8 @@ impl Component for CompanySettings {
                                             <span id="tag-info-updated-rows" class="tag is-info is-light">
                                                 { format!("Updated rows: {}", self.get_result_update.clone()) }
                                             </span>
-                                            <form onsubmit=onsubmit_update_profile>
-                                                { self.fieldset_profile() }
+                                            <form onsubmit=onsubmit_update_company>
+                                                { self.fieldset_company() }
                                                 <button
                                                     id="update-settings"
                                                     class="button"
@@ -490,7 +520,20 @@ impl Component for CompanySettings {
                                                 // { format!("Updated certificates: {}", self.get_result_certificates.clone()) }
                                                 { "Access" }
                                             </span>
+                                            <br/>
                                             { self.fieldset_manage_access() }
+                                        </>},
+                                        // Show interface for remove company
+                                        Menu::RemoveCompany => html! {<>
+                                            <span id="tag-danger-remove-company" class="tag is-danger is-light">
+                                              { "Warning: this removed all data related with company, it cannot be canceled!" }
+                                            </span>
+                                            <br/>
+                                            <span id="tag-info-remove-company" class="tag is-info is-light">
+                                              { format!("Company delete: {}", self.get_result_remove_company.shortname) }
+                                            </span>
+                                            <br/>
+                                            { self.fieldset_remove_company() }
                                         </>},
                                     }}
                                 </div>
@@ -528,17 +571,17 @@ impl CompanySettings {
             .callback(|_| Msg::SelectMenu(
                 Menu::Access
             ));
-        // let onclick_remove_profile = self.link
-        //     .callback(|_| Msg::SelectMenu(
-        //         Menu::RemoveCompany
-        //     ));
+        let onclick_remove_company = self.link
+            .callback(|_| Msg::SelectMenu(
+                Menu::RemoveCompany
+            ));
 
         let mut active_company = "";
         let mut active_favicon = "";
         let mut active_certificates = "";
         let mut active_represents = "";
         let mut active_access = "";
-        // let mut active_remove_company = "";
+        let mut active_remove_company = "";
 
         match self.select_menu {
             Menu::Company => active_company = "is-active",
@@ -546,7 +589,7 @@ impl CompanySettings {
             Menu::Certificates => active_certificates = "is-active",
             Menu::Represent => active_represents = "is-active",
             Menu::Access => active_access = "is-active",
-            // Menu::RemoveCompany => active_remove_company = "is-active",
+            Menu::RemoveCompany => active_remove_company = "is-active",
         }
 
         html! {
@@ -585,18 +628,18 @@ impl CompanySettings {
                       onclick=onclick_access>
                         { "Access" }
                     </a></li>
-                    // <li><a
-                    //   id="remove-profile"
-                    //   class=active_remove_profile
-                    //   onclick=onclick_remove_profile>
-                    //     { "Remove profile" }
-                    // </a></li>
+                    <li><a
+                      id="remove-company"
+                      class=active_remove_company
+                      onclick=onclick_remove_company>
+                        { "Remove company" }
+                    </a></li>
                 </ul>
             </aside>
         }
     }
 
-    fn fieldset_profile(
+    fn fieldset_company(
         &self
     ) -> Html {
         let oninput_orgname = self
@@ -987,6 +1030,21 @@ impl CompanySettings {
                     </fieldset>
                 </fieldset>
             </fieldset>
+        }
+    }
+
+    fn fieldset_remove_company(
+        &self
+    ) -> Html {
+        let onclick_delete_company = self.link.callback(|_| Msg::RequestRemoveCompany);
+
+        html! {
+            <button
+                id="button-delete-company"
+                class="button"
+                onclick=onclick_delete_company>
+                { "Delete all company data" }
+            </button>
         }
     }
 }
