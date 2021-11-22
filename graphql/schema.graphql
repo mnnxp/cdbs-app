@@ -24,17 +24,17 @@ input ChangeOwnerStandard {
 
 input ChangeTypeAccessCompany {
   companyUuid: UUID!
-  newTypeAccessUuid: Int!
+  newTypeAccessId: Int!
 }
 
 input ChangeTypeAccessComponent {
   componentUuid: UUID!
-  newTypeAccessUuid: Int!
+  newTypeAccessId: Int!
 }
 
 input ChangeTypeAccessStandard {
   standardUuid: UUID!
-  newTypeAccessUuid: Int!
+  newTypeAccessId: Int!
 }
 
 # The `Char` scalar type represents a unicode char.
@@ -85,7 +85,7 @@ type CompanyAndRelatedData {
   companyType: CompanyTypeTranslateList!
   companyCertificates: [CompanyCertificateAndFile!]!
   companySpecs: [CompanySpecWithTranslation!]!
-  typeAccessId: Int!
+  typeAccess: TypeAccessTranslateList!
   isSupplier: Boolean!
   isEmailVerified: Boolean!
   subscribers: Int!

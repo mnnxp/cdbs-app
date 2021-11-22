@@ -10,6 +10,10 @@ query GetCompaniesShortList($arguments: IptCompaniesArg) {
   }
 }
 
+mutation ChangeCompanyAccess($changeAccessCompanyData: ChangeTypeAccessCompany!) {
+  changeCompanyAccess(data: $changeAccessCompanyData)
+}
+
 mutation AddCompanyFav($companyUuid: String!) {
   addCompanyFav(companyUuid: $companyUuid)
 }
@@ -55,6 +59,12 @@ fragment regionFields on RegionTranslateList {
   regionId
   langId
   region
+}
+
+fragment typeAccessFields on TypeAccessTranslateList {
+  typeAccessId
+  langId
+  name
 }
 
 fragment representTypesFields on RepresentationTypeTranslateList {
@@ -148,9 +158,7 @@ query GetCompanySettingDataOpt ($companyUuid: String!) {
   }
 
   typesAccess {
-    typeAccessId
-    langId
-    name
+    ...typeAccessFields
   }
 }
 
@@ -185,6 +193,9 @@ fragment companyFields on CompanyAndRelatedData {
   }
   companySpecs {
     ...companySpecFields
+  }
+  typeAccess {
+    ...typeAccessFields
   }
   isSupplier
   isEmailVerified

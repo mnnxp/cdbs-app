@@ -57,6 +57,14 @@ struct GetCompanyData;
 )]
 struct CompanyUpdate;
 
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/companies.graphql",
+    response_derives = "Debug"
+)]
+struct ChangeCompanyAccess;
+
 /// Get data current company
 impl From<CompanyInfo> for CompanyUpdateInfo {
     fn from(data: CompanyInfo) -> Self {
@@ -118,7 +126,7 @@ pub struct CompanySettings {
     types_access: Vec<TypeAccessTranslateListInfo>,
     company_types: Vec<CompanyType>,
     get_result_update: usize,
-    // get_result_access: bool,
+    get_result_access: bool,
     // get_result_remove_profile: bool,
     select_menu: Menu,
 }
@@ -132,10 +140,10 @@ pub struct Props {
 pub enum Msg {
     SelectMenu(Menu),
     RequestUpdateCompany,
-    // RequestChangeAccess,
+    RequestChangeAccess,
     // RequestRemoveCompany,
     ResponseError(Error),
-    // GetUpdateAccessResult(String),
+    GetUpdateAccessResult(String),
     GetUpdateCompanyData(String),
     GetUpdateCompanyResult(String),
     // GetRemoveCompanyResult(String),
@@ -177,7 +185,7 @@ impl Component for CompanySettings {
             types_access: Vec::new(),
             company_types: Vec::new(),
             get_result_update: 0,
-            // get_result_access: false,
+            get_result_access: false,
             // get_result_remove_profile: false,
             select_menu: Menu::Company,
         }
@@ -258,42 +266,42 @@ impl Component for CompanySettings {
                     link.send_message(Msg::GetUpdateCompanyResult(res.unwrap()));
                 })
             },
-            // Msg::RequestChangeAccess => {
-            //     let company_uuid = self.company_uuid.clone();
-            //     let new_type_access = self.request_access.clone();
-            //     spawn_local(async move {
-            //         let data = change_type_access_company::ChangeTypeAccessCompany{
-            //             company_uuid,
-            //             new_type_access,
-            //         };
-            //
-            //         let res = make_query(ChangeCompanyAccess::build_query(
-            //             change_company_access::Variables {
-            //                 data,
-            //             }
-            //         )).await;
-            //         link.send_message(Msg::GetUpdateAccessResult(res.unwrap()));
-            //     })
-            // },
+            Msg::RequestChangeAccess => {
+                let company_uuid = self.company_uuid.clone();
+                let new_type_access = self.request_access.clone();
+                spawn_local(async move {
+                    let change_access_company_data = change_company_access::ChangeTypeAccessCompany{
+                        companyUuid: company_uuid,
+                        newTypeAccessId: new_type_access,
+                    };
+
+                    let res = make_query(ChangeCompanyAccess::build_query(
+                        change_company_access::Variables {
+                            change_access_company_data,
+                        }
+                    )).await;
+                    link.send_message(Msg::GetUpdateAccessResult(res.unwrap()));
+                })
+            },
             Msg::ResponseError(err) => {
                 self.error = Some(err);
                 // self.task = None;
             },
-            // Msg::GetUpdateAccessResult(res) => {
-            //     let data: Value = serde_json::from_str(res.as_str()).unwrap();
-            //     let res = data.as_object().unwrap().get("data").unwrap();
-            //
-            //     match res.is_null() {
-            //         false => {
-            //             let result: bool = serde_json::from_value(res.get("setCompanyAccessComponent").unwrap().clone()).unwrap();
-            //             debug!("Change company access: {:?}", result);
-            //             self.get_result_access = result;
-            //         },
-            //         true => {
-            //             link.send_message(Msg::ResponseError(get_error(&data)));
-            //         }
-            //     }
-            // },
+            Msg::GetUpdateAccessResult(res) => {
+                let data: Value = serde_json::from_str(res.as_str()).unwrap();
+                let res = data.as_object().unwrap().get("data").unwrap();
+
+                match res.is_null() {
+                    false => {
+                        let result: bool = serde_json::from_value(res.get("changeCompanyAccess").unwrap().clone()).unwrap();
+                        debug!("Change company access: {:?}", result);
+                        self.get_result_access = result;
+                    },
+                    true => {
+                        link.send_message(Msg::ResponseError(get_error(&data)));
+                    }
+                }
+            },
             Msg::GetUpdateCompanyData(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res = data.as_object().unwrap().get("data").unwrap();
@@ -480,9 +488,9 @@ impl Component for CompanySettings {
                                         Menu::Access => html! {<>
                                             <span id="tag-info-updated-represents" class="tag is-info is-light">
                                                 // { format!("Updated certificates: {}", self.get_result_certificates.clone()) }
-                                                { "Represents" }
+                                                { "Access" }
                                             </span>
-                                            // { self.fieldset_manage_access() }
+                                            { self.fieldset_manage_access() }
                                         </>},
                                     }}
                                 </div>
@@ -911,6 +919,74 @@ impl CompanySettings {
             <AddCompanyRepresentCard
                 company_uuid = self.company_uuid.clone()
                 />
+        }
+    }
+
+    fn fieldset_manage_access(
+        &self
+    ) -> Html {
+        let onsubmit_update_access = self.link.callback(|ev: FocusEvent| {
+                ev.prevent_default();
+                Msg::RequestChangeAccess
+            });
+
+        html! {
+            <form onsubmit=onsubmit_update_access>
+                { self.fieldset_access() }
+                <button
+                    id="update-access"
+                    class="button"
+                    type="submit"
+                    disabled=false>
+                    { "Update access" }
+                </button>
+            </form>
+        }
+    }
+
+    fn fieldset_access(
+        &self
+    ) -> Html {
+        let onchange_type_access_id = self
+            .link
+            .callback(|ev: ChangeData| Msg::UpdateTypeAccessId(match ev {
+              ChangeData::Select(el) => el.value(),
+              _ => "1".to_string(),
+          }));
+
+        html! {
+            <fieldset class="columns">
+                // first column
+                <fieldset class="column">
+                    <fieldset class="field">
+                        <label class="label">{"Type Access"}</label>
+                        <div class="control">
+                            <div class="select">
+                              <select
+                                  id="types-access"
+                                  select={self.request_access.to_string()}
+                                  onchange=onchange_type_access_id
+                                  >
+                                { for self.types_access.iter().map(|x|
+                                    match self.current_data.as_ref().unwrap().type_access.type_access_id == x.type_access_id {
+                                        true => {
+                                            html!{
+                                                <option value={x.type_access_id.to_string()} selected=true>{&x.name}</option>
+                                            }
+                                        },
+                                        false => {
+                                            html!{
+                                                <option value={x.type_access_id.to_string()}>{&x.name}</option>
+                                            }
+                                        },
+                                    }
+                                )}
+                              </select>
+                            </div>
+                        </div>
+                    </fieldset>
+                </fieldset>
+            </fieldset>
         }
     }
 }
