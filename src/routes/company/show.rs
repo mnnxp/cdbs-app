@@ -29,7 +29,7 @@ use crate::services::{
 };
 use crate::types::{
     UUID, CompanyInfo, Certificate, SlimUser,
-    ComponentsQueryArg, StandardsQueryArg, CompanyRepresent
+    ComponentsQueryArg, StandardsQueryArg, CompanyRepresentInfo
     // CompanyCertificate, Program, Region, ShowUserShort,
 };
 
@@ -587,7 +587,7 @@ impl ShowCompany {
 
     fn view_represents(
         &self,
-        company_represents: &[CompanyRepresent],
+        company_represents: &[CompanyRepresentInfo],
     ) -> Html {
         html! {
             <CompanyRepresents

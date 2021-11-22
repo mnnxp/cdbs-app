@@ -22,13 +22,14 @@ use crate::fragments::{
     company_certificate::CompanyCertificateCard,
     company_add_certificate::AddCertificateCard,
     upload_favicon::UpdateFaviconCard,
+    company_represent::CompanyRepresents,
 };
 // use crate::routes::AppRoute;
 use crate::services::is_authenticated;
 use crate::types::{
     UUID, SlimUser, CompanyUpdateInfo, CompanyInfo, Region,
     CompanyType, TypeAccessTranslateListInfo,
-    Certificate, CompanyCertificate,
+    Certificate, CompanyCertificate, CompanyRepresentInfo
 };
 
 #[derive(GraphQLQuery)]
@@ -93,6 +94,7 @@ pub enum Menu {
     Company,
     UpdataFavicon,
     Certificates,
+    Represent,
     // Access,
     // Password,
     // RemoveCompany,
@@ -427,6 +429,16 @@ impl Component for CompanySettings {
                                             <br/>
                                             { self.fieldset_add_certificate() }
                                         </>},
+                                        // Show interface for add and update Represents
+                                        Menu::Represent => html! {<>
+                                            <span id="tag-info-updated-represents" class="tag is-info is-light">
+                                                // { format!("Updated certificates: {}", self.get_result_certificates.clone()) }
+                                                { "Represents" }
+                                            </span>
+                                            { self.fieldset_represents() }
+                                            <br/>
+                                            // { self.fieldset_add_represent() }
+                                        </>},
                                     }}
                                 </div>
                             </div>
@@ -455,6 +467,10 @@ impl CompanySettings {
             .callback(|_| Msg::SelectMenu(
                 Menu::Certificates
             ));
+        let onclick_represents = self.link
+            .callback(|_| Msg::SelectMenu(
+                Menu::Represent
+            ));
         // let onclick_access = self.link
         //     .callback(|_| Msg::SelectMenu(
         //         Menu::Access
@@ -467,6 +483,7 @@ impl CompanySettings {
         let mut active_company = "";
         let mut active_favicon = "";
         let mut active_certificates = "";
+        let mut active_represents = "";
         // let mut active_access = "";
         // let mut active_remove_company = "";
 
@@ -474,6 +491,7 @@ impl CompanySettings {
             Menu::Company => active_company = "is-active",
             Menu::UpdataFavicon => active_favicon = "is-active",
             Menu::Certificates => active_certificates = "is-active",
+            Menu::Represent => active_represents = "is-active",
             // Menu::Access => active_access = "is-active",
             // Menu::RemoveCompany => active_remove_company = "is-active",
         }
@@ -501,6 +519,12 @@ impl CompanySettings {
                       class=active_certificates
                       onclick=onclick_certificates>
                         { "Certificates" }
+                    </a></li>
+                    <li><a
+                      id="Represents"
+                      class=active_represents
+                      onclick=onclick_represents>
+                        { "Represents" }
                     </a></li>
                     // <li><a
                     //   id="access"
@@ -804,4 +828,52 @@ impl CompanySettings {
                 />
         }
     }
+
+    fn fieldset_represents(
+        &self
+    ) -> Html {
+        let mut represents: &[CompanyRepresentInfo] = &Vec::new();
+        if let Some(ref data) = self.current_data {
+            represents = data.company_represents.as_ref();
+        };
+        // debug!("first: {:?}", represents);
+
+        match represents.is_empty() {
+            true => html!{
+                <div>
+                    <span id="tag-info-no-represents" class="tag is-info is-light">
+                        // { format!("Updated represents: {}", self.get_result_represents.clone()) }
+                        { "Company don't have Represents" }
+                    </span>
+                </div>
+            },
+            false => {
+                // debug!("false: {:?}", represents);
+                html! {
+                    <CompanyRepresents
+                        show_manage_btn = true
+                        list = represents.to_vec()
+                        />
+                }
+            },
+        }
+    }
+
+    // fn fieldset_add_represent(
+    //     &self
+    // ) -> Html {
+    //     let company_uuid = self.current_data
+    //         .as_ref()
+    //         .map(|company| company.uuid.to_string())
+    //         .unwrap_or_default();
+    //
+    //     let callback_upload_cert = self.link.callback(|_| Msg::GetCurrentData);
+    //
+    //     html! {
+    //         <AddRepresentCard
+    //             company_uuid = company_uuid
+    //             callback=callback_upload_cert
+    //             />
+    //     }
+    // }
 }

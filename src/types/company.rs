@@ -21,7 +21,7 @@ pub struct CompanyInfo {
     pub owner_user: ShowUserShort,
     pub image_file: DownloadFile,
     pub region: Region,
-    pub company_represents: Vec<CompanyRepresent>,
+    pub company_represents: Vec<CompanyRepresentInfo>,
     pub company_type: CompanyType,
     // show certificates company
     pub company_certificates: Vec<CompanyCertificate>,
@@ -112,7 +112,7 @@ impl CompaniesQueryArg {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct CompanyRepresent {
+pub struct CompanyRepresentInfo {
     pub uuid: UUID,
     pub company_uuid: UUID,
     pub region: Region,
@@ -120,6 +120,16 @@ pub struct CompanyRepresent {
     pub name: String,
     pub address: String,
     pub phone: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Default, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct CompanyRepresentUpdateInfo {
+    pub region_id: Option<i64>,
+    pub representation_type_id: Option<i64>,
+    pub name: Option<String>,
+    pub address: Option<String>,
+    pub phone: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

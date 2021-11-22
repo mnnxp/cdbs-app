@@ -807,7 +807,7 @@ type MutationRoot {
   deleteCompanyRepresent(
     companyUuid: UUID!
     companyRepresentUuid: UUID!
-  ): SlimCompanyRepresent!
+  ): Boolean!
   addCompanyMember(data: IptCompanyMemberData!): SlimCompanyMember!
 
   # Change access role for member
@@ -914,6 +914,7 @@ type QueryRoot {
   companyMembers(companyUuid: UUID!): [CompanyMemberAndRelatedData!]!
   companyRoles(companyUuid: UUID!): [RoleMemberAndRelatedData!]!
   companyTypes: [CompanyTypeTranslateList!]!
+  companyRepresentTypes: [RepresentationTypeTranslateList!]!
   keywords(keywordId: [Int!], limit: Int, offset: Int): [Keyword!]!
   languages(langId: [Int!], limit: Int, offset: Int): [Language!]!
   licenses(licenseId: [Int!], limit: Int, offset: Int): [License!]!

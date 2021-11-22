@@ -57,6 +57,12 @@ fragment regionFields on RegionTranslateList {
   region
 }
 
+fragment representTypesFields on RepresentationTypeTranslateList {
+  representationType
+  langId
+  representationTypeId
+}
+
 fragment companyCertificateFields on CompanyCertificateAndFile {
   companyUuid
   file {
@@ -197,5 +203,37 @@ mutation UploadCompanyFavicon(
     filename: $filenameUploadFavicon
   ) {
     ...uploadUrlFields
+  }
+}
+
+mutation UpdateCompanyRepresent(
+  $companyUuid: String!,
+  $companyRepresentUuid: String!,
+  $data: IptUpdateCompanyRepresentData!
+){
+  updateCompanyRepresent(
+    companyUuid: $companyUuid,
+    companyRepresentUuid: $companyRepresentUuid,
+    data: $data
+  )
+}
+
+mutation DeleteCompanyRepresent(
+  $companyUuid: String!,
+  $companyRepresentUuid: String!
+){
+  deleteCompanyRepresent(
+    companyUuid: $companyUuid,
+    companyRepresentUuid: $companyRepresentUuid,
+  )
+}
+
+query GetRepresentDataOpt {
+  regions {
+    ...regionFields
+  }
+
+  companyRepresentTypes {
+   ...representTypesFields
   }
 }

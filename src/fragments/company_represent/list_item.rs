@@ -1,20 +1,15 @@
 use yew::prelude::*;
-// use yew_router::prelude::*;
-use crate::types::CompanyRepresent;
+use crate::types::CompanyRepresentInfo;
 
-pub enum Msg {
-    Ignore,
-}
+pub enum Msg {}
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
-    pub data: CompanyRepresent,
+    pub data: CompanyRepresentInfo,
     pub show_list: bool,
 }
 
 pub struct ListItem {
-    // router_agent: Box<dyn Bridge<RouteAgent>>,
-    // link: ComponentLink<Self>,
     props: Props
 }
 
@@ -23,18 +18,11 @@ impl Component for ListItem {
     type Properties = Props;
 
     fn create(props: Self::Properties, _link: ComponentLink<Self>) -> Self {
-        Self {
-            // router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
-            // link,
-            props,
-        }
+        Self {props}
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        match msg {
-            Msg::Ignore => {},
-        }
-        true
+    fn update(&mut self, _msg: Self::Message) -> ShouldRender {
+        false
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
@@ -57,7 +45,7 @@ impl Component for ListItem {
 
 impl ListItem {
     fn showing_in_list(&self) -> Html {
-        let CompanyRepresent {
+        let CompanyRepresentInfo {
             // uuid,
             // company_uuid,
             region,
@@ -100,7 +88,7 @@ impl ListItem {
     }
 
     fn showing_in_box(&self) -> Html {
-        let CompanyRepresent {
+        let CompanyRepresentInfo {
             // uuid,
             // company_uuid,
             region,
