@@ -26,7 +26,7 @@ impl Component for ListItem {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.show_list != props.show_list {
+        if self.props.show_list != props.show_list || self.props.data.uuid != props.data.uuid {
             self.props.show_list = props.show_list;
             self.props.data = props.data;
             true
@@ -101,7 +101,7 @@ impl ListItem {
 
         html! {
           <div class="boxItem" >
-            <div class="innerBox flex-box" >
+            <div class="innerBox" >
               // <div class="imgBox" >
               //   // <div class="top-tag" hidden={!is_supplier} >{"supplier"}</div>
               //   <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />

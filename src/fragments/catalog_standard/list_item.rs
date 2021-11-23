@@ -55,7 +55,7 @@ impl Component for ListItem {
         // Should only return "true" if new properties are different to
         // previously received properties.
         // This standard has no properties so we will always return "false".
-        if self.props.show_list != props.show_list || self.props.data.is_followed != props.data.is_followed {
+        if self.props.show_list != props.show_list || self.props.data.is_followed != props.data.is_followed || self.props.data.uuid != props.data.uuid {
             self.props.show_list = props.show_list;
             self.props.data = props.data;
             true
@@ -183,7 +183,7 @@ impl ListItem {
 
         html! {
           <div class="boxItem" >
-            <div class="innerBox flex-box" >
+            <div class="innerBox" >
               <div class="imgBox" >
                 <div class="top-tag" >{standard_status.name.to_string()}</div>
                 <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />

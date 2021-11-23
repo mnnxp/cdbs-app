@@ -55,7 +55,7 @@ impl Component for ListItem {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.show_list != props.show_list {
+        if self.props.show_list != props.show_list || self.props.data.uuid != props.data.uuid {
             self.props.show_list = props.show_list;
             self.username = props.data.username.to_string();
             self.props.data = props.data;
@@ -150,7 +150,7 @@ impl ListItem {
 
         html! {
           <div class="boxItem" >
-            <div class="innerBox flex-box" >
+            <div class="innerBox" >
               <div class="imgBox" >
                 <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
                 // <img src={image_file.download_url.to_string()} alt="Favicon profile"/>

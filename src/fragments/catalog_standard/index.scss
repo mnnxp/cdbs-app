@@ -18,8 +18,9 @@
 
 .flex-box {
   display: flex;
-  justify-content: space-evenly;
+  justify-content: space-between;
   flex-wrap: wrap;
+  padding: 0 6%;
 }
 
 .center-media {
