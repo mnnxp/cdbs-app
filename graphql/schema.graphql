@@ -928,8 +928,18 @@ type QueryRoot {
   params(paramId: [Int!], limit: Int, offset: Int): [ParamTranslateList!]!
   programs(programId: [Int!], limit: Int, offset: Int): [Program!]!
   regions(regionId: [Int!], limit: Int, offset: Int): [RegionTranslateList!]!
-  specs(specId: [Int!], limit: Int, offset: Int): [SpecTranslateList!]!
-  specPath(specId: Int!, splitChar: Char): String!
+  specs(
+    specIds: [Int!]
+    specsLevels: [Int!]
+    limit: Int
+    offset: Int
+  ): [SpecTranslateList!]!
+  specsPaths(
+    specIds: [Int!]
+    splitChar: Char
+    limit: Int
+    offset: Int
+  ): [SpecPath!]!
 
   # Presigned URL for download file from storage
   presignedUrl(fileUuid: UUID!): DownloadFile!
@@ -1096,6 +1106,11 @@ type SlimUser {
   uuid: ID!
   username: String!
   programId: Int!
+}
+
+type SpecPath {
+  specId: Int!
+  path: String!
 }
 
 type SpecTranslateList {
