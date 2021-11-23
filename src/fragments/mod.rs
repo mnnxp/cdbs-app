@@ -8,6 +8,7 @@ pub mod company_represent;
 pub mod company_add_represent;
 pub mod company_certificate;
 pub mod company_add_certificate;
+pub mod spec;
 pub mod user_certificate;
 pub mod user_add_certificate;
 pub mod upload_favicon;

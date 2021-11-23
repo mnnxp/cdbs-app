@@ -21,6 +21,7 @@ use crate::fragments::{
     list_errors::ListErrors,
     catalog_component::CatalogComponents,
     catalog_standard::CatalogStandards,
+    spec::SpecsTags,
 };
 use crate::gqls::make_query;
 use crate::services::{
@@ -62,6 +63,7 @@ pub struct ShowCompany {
     error: Option<Error>,
     profile: Option<CompanyInfo>,
     current_company_uuid: UUID,
+    current_user_owner: bool,
     // task: Option<FetchTask>,
     router_agent: Box<dyn Bridge<RouteAgent>>,
     props: Props,
@@ -108,6 +110,7 @@ impl Component for ShowCompany {
             error: None,
             profile: None,
             current_company_uuid: String::new(),
+            current_user_owner: false,
             // task: None,
             router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             props,
@@ -231,6 +234,9 @@ impl Component for ShowCompany {
                         self.subscribers = company_data.subscribers.to_owned();
                         self.is_followed = company_data.is_followed.to_owned();
                         self.current_company_uuid = company_data.uuid.to_owned();
+                        if let Some(user) = &self.props.current_user {
+                            self.current_user_owner = company_data.owner_user.uuid == user.uuid;
+                        }
                         self.profile = Some(company_data);
                     }
                     true => {
@@ -333,8 +339,8 @@ impl Component for ShowCompany {
 
 impl ShowCompany {
     fn view_card(&self) -> Html {
-        let show_owner_profile_btn = self.link.callback(|_| Msg::OpenOwnerCompany);
-        let show_setting_company_btn = self.link.callback(|_| Msg::OpenSettingCompany);
+        let onclick_owner_profile_btn = self.link.callback(|_| Msg::OpenOwnerCompany);
+        let onclick_setting_company_btn = self.link.callback(|_| Msg::OpenSettingCompany);
 
         match &self.profile {
             Some(company_data) => html! {<>
@@ -374,12 +380,15 @@ impl ShowCompany {
                       <div class="media-right buttons flexBox" >
                         {res_btn(classes!(
                             String::from("fas fa-user")),
-                            show_owner_profile_btn,
+                            onclick_owner_profile_btn,
                             String::new())}
-                        {res_btn(classes!(
-                            String::from("fa fa-cog")),
-                            show_setting_company_btn,
-                            String::new())}
+                        {match &self.current_user_owner {
+                            true => {res_btn(classes!(
+                                String::from("fa fa-cog")),
+                                onclick_setting_company_btn,
+                                String::new())},
+                            false => html!{},
+                        }}
                         // for self user data not show button "following"
                         { self.show_profile_followers() }
                       </div>
@@ -521,11 +530,16 @@ impl ShowCompany {
                     </div>
                     <br/>
                     <span>{"company specs: "}</span>
-                    <div id="specs" class="tags">
-                        {for company_data.company_specs.iter().map(|spec| {
-                            html! {<div class="tag is-light">{&spec.spec.spec}</div>}
-                        })}
-                    </div>
+                    <SpecsTags
+                          show_delete_btn = self.current_user_owner.clone()
+                          company_uuid = company_data.uuid.clone()
+                          specs = company_data.company_specs.clone()
+                        />
+                    // <div id="specs" class="tags">
+                    //     {for company_data.company_specs.iter().map(|spec| {
+                    //         html! {<div class="tag is-light">{&spec.spec.spec}</div>}
+                    //     })}
+                    // </div>
                     <br/>
                 </div>
                 <div class="column">
