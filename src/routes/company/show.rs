@@ -562,7 +562,7 @@ impl ShowCompany {
             <div>
                 <span>{"company specs: "}</span>
                 <SpecsTags
-                      show_delete_btn = self.current_user_owner.clone()
+                      show_delete_btn = false
                       company_uuid = company_data.uuid.clone()
                       specs = company_data.company_specs.clone()
                     />

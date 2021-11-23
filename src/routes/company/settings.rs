@@ -22,6 +22,7 @@ use crate::fragments::{
     upload_favicon::UpdateFaviconCard,
     company_represent::CompanyRepresents,
     company_add_represent::AddCompanyRepresentCard,
+    spec::SpecsTags,
 };
 use crate::routes::AppRoute;
 use crate::services::is_authenticated;
@@ -110,6 +111,7 @@ pub enum Menu {
     UpdataFavicon,
     Certificates,
     Represent,
+    Spec,
     Access,
     RemoveCompany,
 }
@@ -514,6 +516,16 @@ impl Component for CompanySettings {
                                             <br/>
                                             { self.fieldset_represents() }
                                         </>},
+                                        // Show interface for add and update company Specs
+                                        Menu::Spec => html! {<>
+                                            <span id="tag-info-updated-represents" class="tag is-info is-light">
+                                                // { format!("Updated certificates: {}", self.get_result_certificates.clone()) }
+                                                { "Specs" }
+                                            </span>
+                                            { self.fieldset_add_specs() }
+                                            <br/>
+                                            { self.fieldset_specs() }
+                                        </>},
                                         // Show interface for manage Access
                                         Menu::Access => html! {<>
                                             <span id="tag-info-updated-represents" class="tag is-info is-light">
@@ -567,6 +579,10 @@ impl CompanySettings {
             .callback(|_| Msg::SelectMenu(
                 Menu::Represent
             ));
+        let onclick_specs = self.link
+            .callback(|_| Msg::SelectMenu(
+                Menu::Spec
+            ));
         let onclick_access = self.link
             .callback(|_| Msg::SelectMenu(
                 Menu::Access
@@ -580,6 +596,7 @@ impl CompanySettings {
         let mut active_favicon = "";
         let mut active_certificates = "";
         let mut active_represents = "";
+        let mut active_specs = "";
         let mut active_access = "";
         let mut active_remove_company = "";
 
@@ -588,6 +605,7 @@ impl CompanySettings {
             Menu::UpdataFavicon => active_favicon = "is-active",
             Menu::Certificates => active_certificates = "is-active",
             Menu::Represent => active_represents = "is-active",
+            Menu::Spec => active_specs = "is-active",
             Menu::Access => active_access = "is-active",
             Menu::RemoveCompany => active_remove_company = "is-active",
         }
@@ -617,10 +635,16 @@ impl CompanySettings {
                         { "Certificates" }
                     </a></li>
                     <li><a
-                      id="Represents"
+                      id="represents"
                       class=active_represents
                       onclick=onclick_represents>
                         { "Represents" }
+                    </a></li>
+                    <li><a
+                      id="specs"
+                      class=active_specs
+                      onclick=onclick_specs>
+                        { "Specs" }
                     </a></li>
                     <li><a
                       id="access"
@@ -1045,6 +1069,32 @@ impl CompanySettings {
                 onclick=onclick_delete_company>
                 { "Delete all company data" }
             </button>
+        }
+    }
+
+    fn fieldset_add_specs(
+        &self
+    ) -> Html {
+        html! {
+            <div>
+
+            </div>
+        }
+    }
+
+    fn fieldset_specs(
+        &self
+    ) -> Html {
+        match &self.current_data {
+            Some(company) => html! {<div>
+                <span>{"company specs: "}</span>
+                <SpecsTags
+                      show_delete_btn = true
+                      company_uuid = company.uuid.clone()
+                      specs = company.company_specs.clone()
+                    />
+            </div>},
+            None => html!{},
         }
     }
 }
