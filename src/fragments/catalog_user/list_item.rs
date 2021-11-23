@@ -150,7 +150,7 @@ impl ListItem {
 
         html! {
           <div class="boxItem" >
-            <div class="innerBox" >
+            <div class="innerBox flex-box" >
               <div class="imgBox" >
                 <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
                 // <img src={image_file.download_url.to_string()} alt="Favicon profile"/>

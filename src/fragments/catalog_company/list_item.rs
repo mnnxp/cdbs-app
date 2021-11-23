@@ -191,7 +191,7 @@ impl ListItem {
 
         html! {
           <div class="boxItem" >
-            <div class="innerBox" >
+            <div class="innerBox flex-box" >
               <div class="imgBox" >
                 <div class="top-tag" hidden={!is_supplier} >{"supplier"}</div>
                 <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
