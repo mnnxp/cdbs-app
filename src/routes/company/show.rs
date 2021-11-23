@@ -522,25 +522,12 @@ impl ShowCompany {
         &self,
         company_data: &CompanyInfo,
     ) -> Html {
-        html! {
+        html! {<>
             <div class="columns">
                 <div class="column">
                     <div id="description" class="content">
                       { format!("{}", &company_data.description) }
                     </div>
-                    <br/>
-                    <span>{"company specs: "}</span>
-                    <SpecsTags
-                          show_delete_btn = self.current_user_owner.clone()
-                          company_uuid = company_data.uuid.clone()
-                          specs = company_data.company_specs.clone()
-                        />
-                    // <div id="specs" class="tags">
-                    //     {for company_data.company_specs.iter().map(|spec| {
-                    //         html! {<div class="tag is-light">{&spec.spec.spec}</div>}
-                    //     })}
-                    // </div>
-                    <br/>
                 </div>
                 <div class="column">
                     <span id="company-email">
@@ -572,7 +559,15 @@ impl ShowCompany {
                     </span>
                 </div>
             </div>
-        }
+            <div>
+                <span>{"company specs: "}</span>
+                <SpecsTags
+                      show_delete_btn = self.current_user_owner.clone()
+                      company_uuid = company_data.uuid.clone()
+                      specs = company_data.company_specs.clone()
+                    />
+            </div>
+        </>}
     }
 
     fn view_certificates(
