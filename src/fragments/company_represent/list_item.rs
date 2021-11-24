@@ -1,8 +1,6 @@
 use yew::prelude::*;
 use crate::types::CompanyRepresentInfo;
 
-pub enum Msg {}
-
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
     pub data: CompanyRepresentInfo,
@@ -14,7 +12,7 @@ pub struct ListItem {
 }
 
 impl Component for ListItem {
-    type Message = Msg;
+    type Message = ();
     type Properties = Props;
 
     fn create(props: Self::Properties, _link: ComponentLink<Self>) -> Self {
