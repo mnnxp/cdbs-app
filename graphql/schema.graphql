@@ -496,6 +496,29 @@ input IptRoleMemberData {
   name: String!
 }
 
+input IptSearchSpecArg {
+  text: String!
+  splitChar: Char
+  depthLevel: Int
+  limit: Int
+  offset: Int
+}
+
+input IptSpecArg {
+  specIds: [Int!]
+  specsLevels: [Int!]
+  limit: Int
+  offset: Int
+}
+
+input IptSpecPathArg {
+  specIds: [Int!]
+  splitChar: Char
+  depthLevel: Int
+  limit: Int
+  offset: Int
+}
+
 input IptStandardData {
   parentStandardUuid: UUID
   classifier: String!
@@ -928,18 +951,9 @@ type QueryRoot {
   params(paramId: [Int!], limit: Int, offset: Int): [ParamTranslateList!]!
   programs(programId: [Int!], limit: Int, offset: Int): [Program!]!
   regions(regionId: [Int!], limit: Int, offset: Int): [RegionTranslateList!]!
-  specs(
-    specIds: [Int!]
-    specsLevels: [Int!]
-    limit: Int
-    offset: Int
-  ): [SpecTranslateList!]!
-  specsPaths(
-    specIds: [Int!]
-    splitChar: Char
-    limit: Int
-    offset: Int
-  ): [SpecPath!]!
+  specs(arg: IptSpecArg): [SpecTranslateList!]!
+  specsPaths(arg: IptSpecPathArg): [SpecPath!]!
+  searchSpecs(arg: IptSearchSpecArg!): [SpecPath!]!
 
   # Presigned URL for download file from storage
   presignedUrl(fileUuid: UUID!): DownloadFile!
@@ -1110,6 +1124,7 @@ type SlimUser {
 
 type SpecPath {
   specId: Int!
+  langId: Int!
   path: String!
 }
 
