@@ -1,7 +1,7 @@
 use yew::services::fetch::FetchTask;
 use yew::services::reader::{File, FileData, ReaderService, ReaderTask};
 use yew::{
-    html, Callback, Component, ComponentLink, Html,
+    html, Callback, Component, ComponentLink, Html, InputData,
     Properties, ShouldRender, ChangeData,
 };
 use graphql_client::GraphQLQuery;
@@ -15,8 +15,8 @@ use crate::fragments::list_errors::ListErrors;
 use crate::error::{Error, get_error};
 use crate::services::{PutUploadFile, UploadData};
 use crate::types::{
-    // UUID, Favicon,
-    UploadFile
+    UUID, UploadFile,
+    // Certificate,
 };
 
 type FileName = String;
@@ -25,18 +25,10 @@ type FileName = String;
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/user.graphql",
-    response_derives = "Debug"
-)]
-struct UploadUserFavicon;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
     query_path = "./graphql/companies.graphql",
     response_derives = "Debug"
 )]
-struct UploadCompanyFavicon;
+struct UploadCompanyCertificate;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -50,12 +42,20 @@ struct ConfirmUploadCompleted;
 #[derive(PartialEq, Clone, Debug, Properties)]
 pub struct Props {
     pub callback: Callback<String>,
-    pub company_uuid: Option<String>,
+    pub company_uuid: String,
 }
 
-/// For viewing favicon data on page
+/// For upload company Certificate
+#[derive(Default, Clone, Debug)]
+pub struct NewCompanyCertData {
+    company_uuid: String,
+    filename: String,
+    description: String,
+}
+
+/// For viewing certificate data on page
 #[derive(Debug)]
-pub struct UpdateFaviconCard {
+pub struct AddCertificateCard {
     error: Option<Error>,
     request_upload_data: UploadFile,
     request_upload_file: Callback<Result<Option<String>, Error>>,
@@ -70,18 +70,20 @@ pub struct UpdateFaviconCard {
     get_result_up_completed: usize,
     put_upload_file: PutUploadFile,
     file: Option<File>,
+    // filename: String,
+    // file_data: Vec<u8>,
+    description: String,
     dis_upload_btn: bool,
 }
 
 pub enum Msg {
     RequestUploadData,
-    RequestUploadUserData,
-    RequestUploadCompanyData,
     RequestUploadFile(Vec<u8>),
     ResponseUploadFile(Result<Option<String>, Error>),
     RequestUploadCompleted,
     ResponseError(Error),
     UpdateFile(Option<File>),
+    UpdateDescription(String),
     GetUploadData(String),
     GetUploadFile(Option<String>),
     GetUploadCompleted(String),
@@ -89,7 +91,7 @@ pub enum Msg {
     Ignore,
 }
 
-impl Component for UpdateFaviconCard {
+impl Component for AddCertificateCard {
     type Message = Msg;
     type Properties = Props;
 
@@ -108,7 +110,10 @@ impl Component for UpdateFaviconCard {
             get_result_up_file: false,
             get_result_up_completed: 0,
             put_upload_file: PutUploadFile::new(),
+            // filename: String::new(),
+            // file_data: Vec::new(),
             file: None,
+            description: String::new(),
             dis_upload_btn: true,
         }
     }
@@ -121,34 +126,27 @@ impl Component for UpdateFaviconCard {
                 // see loading button
                 self.get_result_up_data = true;
 
-                match &self.props.company_uuid {
-                    Some(_) => self.link.send_message(Msg::RequestUploadCompanyData),
-                    None => self.link.send_message(Msg::RequestUploadUserData),
-                }
-            },
-            Msg::RequestUploadUserData => {
                 if let Some(file) = &self.file {
                     // debug!("RequestUploadData: {:?}", &self.request_update);
-                    let filename_upload_favicon = file.name().to_string();
+                    let request_update = NewCompanyCertData {
+                        company_uuid: self.props.company_uuid.clone(),
+                        filename: file.name().to_string(),
+                        description: self.description.clone(),
+                    };
                     spawn_local(async move {
-                        let res = make_query(UploadUserFavicon::build_query(
-                            upload_user_favicon::Variables {
-                                filename_upload_favicon,
-                            }
-                        )).await;
-                        link.send_message(Msg::GetUploadData(res.unwrap()));
-                    })
-                }
-            },
-            Msg::RequestUploadCompanyData => {
-                if let Some(file) = &self.file {
-                    let company_uuid = self.props.company_uuid.as_ref().map(|u| u.clone()).unwrap();
-                    let filename_upload_favicon = file.name().to_string();
-                    spawn_local(async move {
-                        let res = make_query(UploadCompanyFavicon::build_query(
-                            upload_company_favicon::Variables {
-                                company_uuid,
-                                filename_upload_favicon,
+                        let NewCompanyCertData {
+                            company_uuid,
+                            filename,
+                            description,
+                        } = request_update;
+                        let cert_data = upload_company_certificate::IptCompanyCertificateData {
+                            companyUuid: company_uuid,
+                            filename,
+                            description,
+                        };
+                        let res = make_query(UploadCompanyCertificate::build_query(
+                            upload_company_certificate::Variables {
+                                cert_data,
                             }
                         )).await;
                         link.send_message(Msg::GetUploadData(res.unwrap()));
@@ -190,16 +188,17 @@ impl Component for UpdateFaviconCard {
                 }
                 self.file = op_file.clone();
             },
+            Msg::UpdateDescription(new_description) => {
+                debug!("new_description: {}", new_description);
+                self.description = new_description;
+            },
             Msg::GetUploadData(res) => {
                 let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
 
                 match res_value.is_null() {
                     false => {
-                        let result: UploadFile = match &self.props.company_uuid {
-                            Some(_) => serde_json::from_value(res_value.get("uploadCompanyFavicon").unwrap().clone()).unwrap(),
-                            None => serde_json::from_value(res_value.get("uploadFavicon").unwrap().clone()).unwrap(),
-                        };
+                        let result: UploadFile = serde_json::from_value(res_value.get("uploadCompanyCertificate").unwrap().clone()).unwrap();
                         // crate::yewLog!(result);
                         self.request_upload_data = result;
 
@@ -242,6 +241,7 @@ impl Component for UpdateFaviconCard {
             },
             Msg::ClearFileBoxed => {
                 self.file = None;
+                self.description = String::new();
                 self.dis_upload_btn = true;
             },
             Msg::Ignore => {},
@@ -259,7 +259,6 @@ impl Component for UpdateFaviconCard {
         html! {
             <div class="card">
               <ListErrors error=self.error.clone()/>
-              <label class="label">{"Upload new favicon:"}</label>
               <div class="columns">
                 {match self.get_result_up_completed > 0 {
                     true => html! {
@@ -269,6 +268,9 @@ impl Component for UpdateFaviconCard {
                     },
                     false => html! {
                         <div class="column">
+                          <label class="label">{"Upload new certificate:"}</label>
+                          { self.show_input_description() }
+                          <br/>
                           { self.show_frame_upload_file() }
                           <br/>
                           { self.show_btn_clear() }
@@ -282,11 +284,11 @@ impl Component for UpdateFaviconCard {
     }
 }
 
-impl UpdateFaviconCard {
+impl AddCertificateCard {
     fn show_frame_upload_file(
         &self,
     ) -> Html {
-        let onchange_favicon_file = self.link.callback(move |value| {
+        let onchange_cert_file = self.link.callback(move |value| {
             if let ChangeData::Files(files) = value {
                 Msg::UpdateFile(files.get(0))
             } else {
@@ -297,16 +299,16 @@ impl UpdateFaviconCard {
         html! {<>
             <div class="file is-large is-boxed has-name">
               <label
-                for="favicon-file-input"
+                for="cert-file-input"
                 class="file-label"
                 style="width: 100%; text-align: center"
               >
                 <input
-                    id="favicon-file-input"
+                    id="cert-file-input"
                     class="file-input"
                     type="file"
-                    accept="image/*"
-                    onchange={onchange_favicon_file} />
+                    accept="image/*,.pdf"
+                    onchange={onchange_cert_file} />
                 <span class="file-cta">
                   <span class="file-icon">
                     <i class="fas fa-upload"></i>
@@ -316,7 +318,7 @@ impl UpdateFaviconCard {
               </label>
             </div>
             <p>
-                {"Upload new favicon, recommended upload file format image"}
+                {"Upload new certificate, recommended upload file format image"}
             </p>
             <output id="select-file">{
                 format!(" {}", self.file.as_ref()
@@ -326,10 +328,30 @@ impl UpdateFaviconCard {
         </>}
     }
 
+    fn show_input_description(
+        &self,
+    ) -> Html {
+        let oninput_cert_description = self
+            .link
+            .callback(|ev: InputData| Msg::UpdateDescription(ev.value));
+
+        html! {<>
+            <label class="label">{"Description"}</label>
+
+            <input
+                id={ "new-cert-description" }
+                class="input"
+                type="text"
+                placeholder="certificate description"
+                value={ self.description.to_string() }
+                oninput=oninput_cert_description />
+        </>}
+    }
+
     fn show_btn_upload(
         &self,
     ) -> Html {
-        let onclick_upload_favicon = self
+        let onclick_upload_cert = self
             .link
             .callback(|_| Msg::RequestUploadData);
 
@@ -347,9 +369,9 @@ impl UpdateFaviconCard {
         }
 
         html! {
-            <a id="btn-new-favicon-upload"
+            <a id="btn-new-cert-upload"
                   class={class_btn}
-                  onclick=onclick_upload_favicon
+                  onclick=onclick_upload_cert
                   disabled={self.dis_upload_btn} >
                 { "Upload" }
             </a>
@@ -364,7 +386,7 @@ impl UpdateFaviconCard {
             .callback(|_| Msg::ClearFileBoxed);
 
         html! {
-            <a id="btn-new-favicon-clear"
+            <a id="btn-new-cert-clear"
                   // class="button is-danger"
                   class="button"
                   onclick=onclick_clear_boxed
@@ -383,7 +405,7 @@ impl UpdateFaviconCard {
                 <p>{ "Success" }</p>
               </div>
               <div class="message-body">
-                { "This favicon upload!" }
+                { "This certificate upload!" }
               </div>
             </article>
         }

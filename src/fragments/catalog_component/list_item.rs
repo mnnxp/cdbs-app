@@ -55,7 +55,7 @@ impl Component for ListItem {
         // Should only return "true" if new properties are different to
         // previously received properties.
         // This component has no properties so we will always return "false".
-        if self.props.show_list != props.show_list || self.props.data.is_followed != props.data.is_followed {
+        if self.props.show_list != props.show_list || self.props.data.is_followed != props.data.is_followed || self.props.data.uuid != props.data.uuid {
             self.props.show_list = props.show_list;
             self.props.data = props.data;
             true

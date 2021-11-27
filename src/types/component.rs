@@ -54,4 +54,11 @@ impl ComponentsQueryArg {
             ..Default::default()
         }
     }
+
+    pub fn set_company_uuid(company_uuid: &UUID) -> Self {
+        Self {
+            company_uuid: Some(company_uuid.to_owned()),
+            ..Default::default()
+        }
+    }
 }

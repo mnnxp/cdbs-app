@@ -4,7 +4,6 @@ use yew::{
     html, Callback, Component, ComponentLink, Html, InputData,
     Properties, ShouldRender, ChangeData,
 };
-use yew::services::ConsoleService;
 use graphql_client::GraphQLQuery;
 // use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
@@ -43,8 +42,7 @@ struct ConfirmUploadCompleted;
 #[derive(PartialEq, Clone, Debug, Properties)]
 pub struct Props {
     pub callback: Callback<String>,
-    pub user_uuid: Option<String>,
-    pub company_uuid: Option<String>,
+    pub user_uuid: String,
 }
 
 /// For upload user Certificate
@@ -128,7 +126,7 @@ impl Component for AddCertificateCard {
                 self.get_result_up_data = true;
 
                 if let Some(file) = &self.file {
-                    // ConsoleService::info(format!("RequestUploadData: {:?}", &self.request_update).as_ref());
+                    // debug!("RequestUploadData: {:?}", &self.request_update);
                     let request_update = NewUserCertData {
                         filename: file.name().to_string(),
                         description: self.description.to_string(),
@@ -187,7 +185,7 @@ impl Component for AddCertificateCard {
                 self.file = op_file.clone();
             },
             Msg::UpdateDescription(new_description) => {
-                ConsoleService::info(format!("new_description: {}", new_description).as_ref());
+                debug!("new_description: {}", new_description);
                 self.description = new_description;
             },
             Msg::GetUploadData(res) => {
@@ -210,7 +208,7 @@ impl Component for AddCertificateCard {
                             };
                             self.task_read = Some((file_name, task));
                         }
-                        ConsoleService::info(format!("file: {:?}", self.file).as_ref());
+                        debug!("file: {:?}", self.file);
                     },
                     true => {
                         link.send_message(Msg::ResponseError(get_error(&data)));

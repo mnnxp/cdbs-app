@@ -22,14 +22,19 @@ input ChangeOwnerStandard {
   newOwnerUserUuid: UUID!
 }
 
+input ChangeTypeAccessCompany {
+  companyUuid: UUID!
+  newTypeAccessId: Int!
+}
+
 input ChangeTypeAccessComponent {
   componentUuid: UUID!
-  newTypeAccessUuid: Int!
+  newTypeAccessId: Int!
 }
 
 input ChangeTypeAccessStandard {
   standardUuid: UUID!
-  newTypeAccessUuid: Int!
+  newTypeAccessId: Int!
 }
 
 # The `Char` scalar type represents a unicode char.
@@ -80,12 +85,11 @@ type CompanyAndRelatedData {
   companyType: CompanyTypeTranslateList!
   companyCertificates: [CompanyCertificateAndFile!]!
   companySpecs: [CompanySpecWithTranslation!]!
+  typeAccess: TypeAccessTranslateList!
   isSupplier: Boolean!
   isEmailVerified: Boolean!
   subscribers: Int!
   isFollowed: Boolean!
-  isEnabled: Boolean!
-  isDelete: Boolean!
   createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!
 }
@@ -358,6 +362,7 @@ input IptCompanyData {
   timeZone: String!
   regionId: Int!
   companyTypeId: Int!
+  typeAccessId: Int!
 }
 
 input IptCompanyMemberData {
@@ -490,6 +495,29 @@ input IptRoleMemberData {
   companyUuid: UUID!
   langId: Int!
   name: String!
+}
+
+input IptSearchSpecArg {
+  text: String!
+  splitChar: Char
+  depthLevel: Int
+  limit: Int
+  offset: Int
+}
+
+input IptSpecArg {
+  specIds: [Int!]
+  specsLevels: [Int!]
+  limit: Int
+  offset: Int
+}
+
+input IptSpecPathArg {
+  specIds: [Int!]
+  splitChar: Char
+  depthLevel: Int
+  limit: Int
+  offset: Int
 }
 
 input IptStandardData {
@@ -789,7 +817,11 @@ type MutationRoot {
   deleteStandardFiles(data: DeleteStandardFileData!): Boolean!
   registerCompany(data: IptCompanyData!): SlimCompany!
   putCompanyUpdate(companyUuid: UUID!, data: IptUpdateCompanyData!): Int!
+
+  # Change company type access
+  changeCompanyAccess(data: ChangeTypeAccessCompany!): Boolean!
   deleteCompany(companyUuid: UUID!): SlimCompany!
+  uploadCompanyFavicon(companyUuid: UUID!, filename: String!): UploadFile!
   uploadCompanyCertificate(certData: IptCompanyCertificateData!): UploadFile!
 
   # Update company certificate description
@@ -797,9 +829,7 @@ type MutationRoot {
   deleteCompanyCertificate(data: DelCompanyCertificateData!): Boolean!
   addCompanySpecs(data: IptCompanySpecData!): Int!
   deleteCompanySpecs(data: IptCompanySpecData!): Int!
-  registerCompanyRepresent(
-    data: IptCompanyRepresentData!
-  ): SlimCompanyRepresent!
+  registerCompanyRepresent(data: IptCompanyRepresentData!): Boolean!
   updateCompanyRepresent(
     companyUuid: UUID!
     companyRepresentUuid: UUID!
@@ -808,7 +838,7 @@ type MutationRoot {
   deleteCompanyRepresent(
     companyUuid: UUID!
     companyRepresentUuid: UUID!
-  ): SlimCompanyRepresent!
+  ): Boolean!
   addCompanyMember(data: IptCompanyMemberData!): SlimCompanyMember!
 
   # Change access role for member
@@ -914,14 +944,17 @@ type QueryRoot {
   ): [CompanyRepresentAndRelatedData!]!
   companyMembers(companyUuid: UUID!): [CompanyMemberAndRelatedData!]!
   companyRoles(companyUuid: UUID!): [RoleMemberAndRelatedData!]!
+  companyTypes: [CompanyTypeTranslateList!]!
+  companyRepresentTypes: [RepresentationTypeTranslateList!]!
   keywords(keywordId: [Int!], limit: Int, offset: Int): [Keyword!]!
   languages(langId: [Int!], limit: Int, offset: Int): [Language!]!
   licenses(licenseId: [Int!], limit: Int, offset: Int): [License!]!
   params(paramId: [Int!], limit: Int, offset: Int): [ParamTranslateList!]!
   programs(programId: [Int!], limit: Int, offset: Int): [Program!]!
   regions(regionId: [Int!], limit: Int, offset: Int): [RegionTranslateList!]!
-  specs(specId: [Int!], limit: Int, offset: Int): [SpecTranslateList!]!
-  specPath(specId: Int!, splitChar: Char): String!
+  specs(arg: IptSpecArg): [SpecTranslateList!]!
+  specsPaths(arg: IptSpecPathArg): [SpecPath!]!
+  searchSpecs(arg: IptSearchSpecArg!): [SpecPath!]!
 
   # Presigned URL for download file from storage
   presignedUrl(fileUuid: UUID!): DownloadFile!
@@ -1055,14 +1088,6 @@ type SlimCompanyMember {
   roleId: Int!
 }
 
-type SlimCompanyRepresent {
-  uuid: ID!
-  companyUuid: ID!
-  name: String!
-  address: String!
-  phone: String!
-}
-
 type SlimComponent {
   uuid: ID!
   name: String!
@@ -1098,6 +1123,12 @@ type SlimUser {
   programId: Int!
 }
 
+type SpecPath {
+  specId: Int!
+  langId: Int!
+  path: String!
+}
+
 type SpecTranslateList {
   specId: Int!
   langId: Int!
@@ -1119,7 +1150,6 @@ type StandardAndRelatedData {
   typeAccessId: Int!
   standardStatus: StandardStatusTranslateList!
   region: RegionTranslateList!
-  isDelete: Boolean!
   createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!
   standardFiles: [ShowFileForDownload!]!

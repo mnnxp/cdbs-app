@@ -1,6 +1,7 @@
 //! Error type for error handling
 
 use crate::types::ErrorInfo;
+use crate::services::{set_token, set_logged_user};
 use thiserror::Error as ThisError;
 use serde_json::Value;
 use yew::services::ConsoleService;
@@ -49,6 +50,12 @@ pub(crate) fn get_error(data: &Value) -> Error {
         serde_json::from_value(val_err.get(0).unwrap().get("message").unwrap().clone()).unwrap();
 
     ConsoleService::info(format!("Err message: {:?}", err_message).as_ref());
+
+    // clean storage if the token has expired
+    if err_message == "Unauthorized" {
+        set_token(None);
+        set_logged_user(None);
+    }
 
     Error::BadRequest(err_message)
 }

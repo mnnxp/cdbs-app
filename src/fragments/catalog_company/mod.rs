@@ -212,7 +212,7 @@ impl Component for CatalogCompanies {
                 <div class="level-left ">
                 {match &self.props.show_create_btn {
                     true => html! {
-                        <RouterAnchor<AppRoute> route=AppRoute::CreateTender >
+                        <RouterAnchor<AppRoute> route=AppRoute::CreateCompany >
                           <button class="button is-info" >{"Create"}</button>
                         </RouterAnchor<AppRoute>>
                     },

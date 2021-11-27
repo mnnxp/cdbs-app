@@ -1,6 +1,22 @@
+query GetCompanyData($companyUuid: UUID) {
+  company(companyUuid: $companyUuid) {
+    ...companyFields
+  }
+}
+
 query GetCompaniesShortList($arguments: IptCompaniesArg) {
   companies(arguments: $arguments) {
     ...companyShortFields
+  }
+}
+
+mutation ChangeCompanyAccess($changeAccessCompanyData: ChangeTypeAccessCompany!) {
+  changeCompanyAccess(data: $changeAccessCompanyData)
+}
+
+mutation DeleteCompany($deleteCompanyUuid: String!) {
+  deleteCompany(companyUuid: $deleteCompanyUuid){
+    ...slimCompanyFields
   }
 }
 
@@ -12,6 +28,12 @@ mutation DeleteCompanyFav($companyUuid: String!) {
   deleteCompanyFav(companyUuid: $companyUuid)
 }
 
+fragment slimCompanyFields on SlimCompany {
+  uuid
+  shortname
+  isSupplier
+}
+
 fragment companyShortFields on ShowCompanyShort {
   uuid
   shortname
@@ -21,9 +43,7 @@ fragment companyShortFields on ShowCompanyShort {
     ...downloadFileFields
   }
   region {
-    regionId
-    langId
-    region
+    ...regionFields
   }
   companyType {
     ...companyTypeFields
@@ -45,4 +65,230 @@ fragment downloadFileFields on DownloadFile {
   filename
   filesize
   downloadUrl
+}
+
+fragment regionFields on RegionTranslateList {
+  regionId
+  langId
+  region
+}
+
+fragment typeAccessFields on TypeAccessTranslateList {
+  typeAccessId
+  langId
+  name
+}
+
+fragment representTypesFields on RepresentationTypeTranslateList {
+  representationType
+  langId
+  representationTypeId
+}
+
+fragment companyCertificateFields on CompanyCertificateAndFile {
+  companyUuid
+  file {
+    ...downloadFileFields
+  }
+  description
+}
+
+fragment companySpecFields on CompanySpecWithTranslation {
+  companyUuid
+  spec {
+    specId
+    langId
+    spec
+  }
+}
+
+fragment companyRepresentFields on CompanyRepresentAndRelatedData {
+  uuid
+  companyUuid
+  region {
+    ...regionFields
+  }
+  representationType {
+    ...representationTypeFields
+  }
+  name
+  address
+  phone
+}
+
+fragment representationTypeFields on RepresentationTypeTranslateList {
+  representationTypeId
+  langId
+  representationType
+}
+
+fragment showUserShortFields on ShowUserShort {
+  uuid
+  firstname
+  lastname
+  username
+  imageFile {
+    ...downloadFileFields
+  }
+}
+
+mutation UploadCompanyCertificate($certData: IptCompanyCertificateData!) {
+  uploadCompanyCertificate(certData: $certData) {
+    ...uploadUrlFields
+  }
+}
+
+fragment uploadUrlFields on UploadFile {
+  fileUuid
+  filename
+  uploadUrl
+}
+
+mutation UpdateCompanyCertificate($updateCompanyCertData: IptUpdateCompanyCertificateData!) {
+  updateCompanyCertificate(data: $updateCompanyCertData)
+}
+
+mutation DeleteCompanyCertificate($delCompanyCertData: DelCompanyCertificateData!) {
+  deleteCompanyCertificate(data: $delCompanyCertData)
+}
+
+mutation CompanyUpdate($companyUuid: String!, $dataCompanyUpdate: IptUpdateCompanyData!) {
+  putCompanyUpdate(companyUuid: $companyUuid, data: $dataCompanyUpdate)
+}
+
+query GetCompanySettingDataOpt ($companyUuid: String!) {
+  company(companyUuid: $companyUuid) {
+    ...companyFields
+  }
+
+  companyTypes {
+    ...companyTypeFields
+  }
+
+  regions {
+    ...regionFields
+  }
+
+  typesAccess {
+    ...typeAccessFields
+  }
+}
+
+mutation RegisterCompany($ipt_company_data: IptCompanyData!) {
+  registerCompany(data: $ipt_company_data) {
+    ...slimCompanyFields
+  }
+}
+
+query GetCreateCompanyDataOpt {
+  companyTypes {
+    ...companyTypeFields
+  }
+
+  regions {
+    ...regionFields
+  }
+
+  typesAccess {
+    ...typeAccessFields
+  }
+}
+
+fragment companyFields on CompanyAndRelatedData {
+  uuid
+  orgname
+  shortname
+  inn
+  phone
+  email
+  description
+  address
+  siteUrl
+  timeZone
+  ownerUser {
+    ...showUserShortFields
+  }
+  imageFile {
+    ...downloadFileFields
+  }
+  region {
+    ...regionFields
+  }
+  companyRepresents {
+    ...companyRepresentFields
+  }
+  companyType {
+    ...companyTypeFields
+  }
+  companyCertificates {
+    ...companyCertificateFields
+  }
+  companySpecs {
+    ...companySpecFields
+  }
+  typeAccess {
+    ...typeAccessFields
+  }
+  isSupplier
+  isEmailVerified
+  subscribers
+  isFollowed
+  createdAt
+  updatedAt
+}
+
+mutation UploadCompanyFavicon(
+  $companyUuid: String!,
+  $filenameUploadFavicon: String!
+) {
+  uploadCompanyFavicon(
+    companyUuid: $companyUuid,
+    filename: $filenameUploadFavicon
+  ) {
+    ...uploadUrlFields
+  }
+}
+
+mutation UpdateCompanyRepresent(
+  $companyUuid: String!,
+  $companyRepresentUuid: String!,
+  $data: IptUpdateCompanyRepresentData!
+){
+  updateCompanyRepresent(
+    companyUuid: $companyUuid,
+    companyRepresentUuid: $companyRepresentUuid,
+    data: $data
+  )
+}
+
+mutation AddCompanySpecs($iptCompanySpecData: IptCompanySpecData!){
+  addCompanySpecs(data: $iptCompanySpecData)
+}
+
+mutation DeleteCompanySpecs($iptCompanySpecData: IptCompanySpecData!){
+  deleteCompanySpecs(data: $iptCompanySpecData)
+}
+
+mutation RegisterCompanyRepresent($iptCompanyRepresentData: IptCompanyRepresentData!){
+  registerCompanyRepresent(data: $iptCompanyRepresentData)
+}
+
+mutation DeleteCompanyRepresent(
+  $companyUuid: String!,
+  $companyRepresentUuid: String!
+){
+  deleteCompanyRepresent(
+    companyUuid: $companyUuid,
+    companyRepresentUuid: $companyRepresentUuid,
+  )
+}
+
+query GetRepresentDataOpt {
+  regions {
+    ...regionFields
+  }
+
+  companyRepresentTypes {
+   ...representTypesFields
+  }
 }
