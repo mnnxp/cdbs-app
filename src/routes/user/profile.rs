@@ -768,7 +768,7 @@ impl Profile {
     ) -> Html {
         html! {
             <CatalogComponents
-                show_create_btn = false
+                show_create_btn = self.self_profile.is_some()
                 arguments = ComponentsQueryArg::set_favorite(user_uuid)
             />
         }
@@ -780,7 +780,7 @@ impl Profile {
     ) -> Html {
         html! {
             <CatalogComponents
-                show_create_btn = false
+                show_create_btn = self.self_profile.is_some()
                 arguments = ComponentsQueryArg::set_user_uuid(user_uuid)
             />
         }
@@ -792,7 +792,7 @@ impl Profile {
     ) -> Html {
         html! {
             <CatalogCompanies
-                show_create_btn = false
+                show_create_btn = self.self_profile.is_some()
                 arguments = CompaniesQueryArg::set_favorite(user_uuid)
             />
         }
@@ -804,7 +804,7 @@ impl Profile {
     ) -> Html {
         html! {
             <CatalogCompanies
-                show_create_btn = false
+                show_create_btn = self.self_profile.is_some()
                 arguments = CompaniesQueryArg::set_user_uuid(user_uuid)
             />
         }

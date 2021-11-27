@@ -362,6 +362,7 @@ input IptCompanyData {
   timeZone: String!
   regionId: Int!
   companyTypeId: Int!
+  typeAccessId: Int!
 }
 
 input IptCompanyMemberData {

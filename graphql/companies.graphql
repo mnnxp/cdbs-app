@@ -174,6 +174,26 @@ query GetCompanySettingDataOpt ($companyUuid: String!) {
   }
 }
 
+mutation RegisterCompany($ipt_company_data: IptCompanyData!) {
+  registerCompany(data: $ipt_company_data) {
+    ...slimCompanyFields
+  }
+}
+
+query GetCreateCompanyDataOpt {
+  companyTypes {
+    ...companyTypeFields
+  }
+
+  regions {
+    ...regionFields
+  }
+
+  typesAccess {
+    ...typeAccessFields
+  }
+}
+
 fragment companyFields on CompanyAndRelatedData {
   uuid
   orgname

@@ -37,6 +37,34 @@ pub struct CompanyInfo {
     pub updated_at: NaiveDateTime,
 }
 
+#[derive(Serialize, Deserialize, Clone, Default, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct CompanyCreateInfo {
+    pub orgname: String,
+    pub shortname: String,
+    pub inn: String,
+    pub phone: String,
+    pub email: String,
+    pub description: String,
+    pub address: String,
+    pub site_url: String,
+    pub time_zone: String,
+    pub region_id: i64,
+    pub company_type_id: i64,
+    pub type_access_id: i64,
+}
+
+impl CompanyCreateInfo {
+    pub fn new() -> Self {
+        Self {
+            region_id: 1,
+            company_type_id: 1,
+            type_access_id: 1,
+            ..Default::default()
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct ShowCompanyShort{
