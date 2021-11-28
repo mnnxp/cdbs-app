@@ -25,6 +25,12 @@ pub struct Spec {
     pub spec: String,
 }
 
+#[derive(Serialize, Deserialize, Clone, Default, Debug)]
+pub struct Keyword {
+    pub id: i32,
+    pub keyword: String,
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Certificate {

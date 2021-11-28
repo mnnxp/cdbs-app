@@ -1,10 +1,16 @@
 use yew::prelude::*;
+use yew_router::{
+    agent::RouteRequest::ChangeRoute,
+    prelude::*,
+};
+use crate::routes::AppRoute;
 use crate::fragments::switch_icon::res_btn;
 use crate::types::ShowStandardShort;
 
 pub enum Msg {
-    AddOne,
-    TriggerFav
+    OpenStandard,
+    TriggerFav,
+    Ignore,
 }
 
 #[derive(Clone, Debug, Properties)]
@@ -17,10 +23,8 @@ pub struct Props {
 }
 
 pub struct ListItem {
-    // `ComponentLink` is like a reference to a standard.
-    // It can be used to send messages to the standard
+    router_agent: Box<dyn Bridge<RouteAgent>>,
     link: ComponentLink<Self>,
-    value: i64,
     props: Props
 }
 
@@ -29,24 +33,29 @@ impl Component for ListItem {
     type Properties = Props;
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        Self { link, value: 0, props }
+        Self {
+            router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
+            link,
+            props,
+        }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
-            Msg::AddOne => {
-                self.value += 1;
-                // the value has changed so we need to
-                // re-render for it to appear on the page
-                crate::yewLog!(self.value);
-            }
+            Msg::OpenStandard => {
+                // Redirect to profile page
+                self.router_agent.send(ChangeRoute(AppRoute::ShowStandard(
+                    self.props.data.uuid.to_string()
+                ).into()));
+            },
             Msg::TriggerFav => {
                 if !self.props.data.is_followed {
                     self.props.add_fav.emit("".to_string());
                 } else {
                     self.props.del_fav.emit("".to_string());
                 }
-            }
+            },
+            Msg::Ignore => {},
         }
         true
     }
@@ -89,6 +98,7 @@ impl ListItem {
             ..
         } = &self.props.data;
 
+        let show_standard_btn = self.link.callback(|_| Msg::OpenStandard);
         let trigger_fab_btn = self.link.callback(|_| Msg::TriggerFav);
 
         let mut class_res_btn = vec!["fa-bookmark"];
@@ -128,8 +138,8 @@ impl ListItem {
                     <div class="has-text-weight-bold is-size-4">{name}</div>
                     <div class="overflow-title has-text-weight-bold">{
                         format!("design by: {} {}",
-                            owner_company.company_type.shortname.to_string(),
-                            owner_company.shortname.to_string()
+                            owner_company.shortname.to_string(),
+                            owner_company.company_type.shortname.to_string()
                     )}</div>
                   </p>
                 </div>
@@ -142,7 +152,10 @@ impl ListItem {
                   // {format!("Reg.№: {}", inn.to_string())}
               </div>
               <div class="media-right flexBox " >
-                {res_btn(classes!(String::from("fas fa-file")), self.link.callback(|_| Msg::AddOne ), "".to_string())}
+              {res_btn(classes!(
+                  String::from("fas fa-file")),
+                  show_standard_btn,
+                  String::new())}
                 {res_btn(
                     classes!(class_res_btn),
                     trigger_fab_btn,
@@ -166,6 +179,7 @@ impl ListItem {
             ..
         } = self.props.data.clone();
 
+        let show_standard_btn = self.link.callback(|_| Msg::OpenStandard);
         let trigger_fab_btn = self.link.callback(|_| Msg::TriggerFav);
 
         let mut class_res_btn = vec![];
@@ -208,7 +222,9 @@ impl ListItem {
                 owner_company.shortname.to_string()
               )}</div>
               <div class="btnBox">
-                <button class="button is-light is-fullwidth has-text-weight-bold">{"Show standard"}</button>
+                <button class="button is-light is-fullwidth has-text-weight-bold"
+                    onclick=show_standard_btn
+                  >{"Show standard"}</button>
                 <div style="margin-left: 8px;">
                 {res_btn(
                     classes!(class_res_btn),

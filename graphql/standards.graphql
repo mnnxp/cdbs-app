@@ -1,3 +1,49 @@
+query GetStandardData($standardUuid: UUID!) {
+  standard(standardUuid: $standardUuid) {
+    uuid
+    parentStandardUuid
+    classifier
+    name
+    description
+    specifiedTolerance
+    technicalCommittee
+    publicationAt
+    imageFile {
+      ...downloadFileFields
+    }
+    ownerUser {
+      ...showUserShortFields
+    }
+    ownerCompany {
+      ...showCompanyShortFields
+    }
+    typeAccessId
+    standardStatus {
+      ...standardStatusFields
+    }
+    region {
+      ...regionFields
+    }
+    standardFiles {
+      ...showFileForDownloadFields
+    }
+    standardSpecs {
+      spec {
+        ...specTranslateListFields
+      }
+      standardUuid
+    }
+    standardKeywords {
+      id
+      keyword
+    }
+    subscribers
+    isFollowed
+    createdAt
+    updatedAt
+  }
+}
+
 query GetStandardsShortList($arguments: IptStandardsArg) {
   standards(arguments: $arguments) {
     uuid
@@ -40,9 +86,7 @@ fragment companyShortFields on ShowCompanyShort {
     ...downloadFileFields
   }
   region {
-    regionId
-    langId
-    region
+    ...regionFields
   }
   companyType {
     ...companyTypeFields
@@ -64,4 +108,63 @@ fragment downloadFileFields on DownloadFile {
   filename
   filesize
   downloadUrl
+}
+
+fragment showUserShortFields on ShowUserShort {
+  uuid
+  firstname
+  lastname
+  username
+  imageFile {
+    ...downloadFileFields
+  }
+}
+
+fragment showCompanyShortFields on ShowCompanyShort {
+  uuid
+  shortname
+  inn
+  description
+  imageFile {
+    ...downloadFileFields
+  }
+  region {
+    ...regionFields
+  }
+  companyType {
+    ...companyTypeFields
+  }
+  isSupplier
+  isFollowed
+  updatedAt
+}
+
+fragment regionFields on RegionTranslateList {
+  regionId
+  langId
+  region
+}
+
+fragment specTranslateListFields on SpecTranslateList {
+  specId
+  langId
+  spec
+}
+
+fragment showFileForDownloadFields on ShowFileForDownload {
+  uuid
+  parentFileUuid
+  download {
+    ...downloadFileFields
+  }
+  ownerUser {
+    ...showUserShortFields
+  }
+  contentType
+  program {
+    id
+    name
+  }
+  createdAt
+  updatedAt
 }

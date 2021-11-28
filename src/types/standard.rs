@@ -1,7 +1,39 @@
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
-use super::company::ShowCompanyShort;
+use super::{
+    ShowUserShort, ShowCompanyShort, Region,
+    ShowFileForDownload, DownloadFile, Spec, Keyword
+};
 use super::UUID;
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct StandardInfo {
+    pub uuid: UUID,
+    pub parent_standard_uuid: UUID,
+    pub classifier: String,
+    pub name: String,
+    pub description: String,
+    pub specified_tolerance: String,
+    pub technical_committee: String,
+    pub publication_at: NaiveDateTime,
+    pub image_file: DownloadFile,
+    pub owner_user: ShowUserShort,
+    pub owner_company: ShowCompanyShort,
+    pub type_access_id: usize,
+    pub standard_status: StandardStatus,
+    pub region: Region,
+    pub created_at: NaiveDateTime,
+    pub updated_at: NaiveDateTime,
+    // related data
+    pub standard_files: Vec<ShowFileForDownload>, // <-- documentation files, etc.
+    pub standard_specs: Vec<Spec>,
+    pub standard_keywords: Vec<Keyword>,
+    // count users to folloded the standard
+    pub subscribers: usize,
+    // for display the checkbox "favorites"
+    pub is_followed: bool,
+}
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -13,7 +45,7 @@ pub struct ShowStandardShort {
     pub specified_tolerance: String,
     pub publication_at: NaiveDateTime,
     pub owner_company: ShowCompanyShort,
-    pub standard_status: StandardStatusTranslateList,
+    pub standard_status: StandardStatus,
     pub updated_at: NaiveDateTime,
     // for display the checkbox "favorites"
     pub is_followed: bool,
@@ -21,7 +53,7 @@ pub struct ShowStandardShort {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct StandardStatusTranslateList{
+pub struct StandardStatus{
   pub standard_status_id: i64,
   pub lang_id: i64,
   pub name: String,
@@ -45,7 +77,7 @@ impl StandardsQueryArg {
             ..Default::default()
         }
     }
-    
+
     pub fn set_favorite() -> Self {
         Self {
             favorite: Some(true),
