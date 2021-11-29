@@ -743,7 +743,7 @@ impl Profile {
             false => {
                 html! {
                     // <p class="card-footer-item">
-                    <footer class="card-footer">{
+                    <footer class="card-footer is-flex is-flex-wrap-wrap">{
                         for certificates.iter().map(|cert| {
                             let view_cert: Certificate = cert.into();
                             html! {
