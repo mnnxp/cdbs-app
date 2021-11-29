@@ -146,7 +146,7 @@ type ComponentAndRelatedData {
   updatedAt: NaiveDateTime!
   licenses: [License!]!
   componentParams: [ComponentParamWithTranslation!]!
-  files: [ShowFileForDownload!]!
+  files: [ShowFileRelatedData!]!
   componentSpecs: [ComponentSpecWithTranslation!]!
   componentKeywords: [Keyword!]!
   componentModifications: [ComponentModificationAndRelatedData!]!
@@ -309,7 +309,7 @@ type Extension {
 
 type FileOfFileset {
   filesetUuid: UUID!
-  file: ShowFileForDownload!
+  file: ShowFileRelatedData!
 }
 
 type FilesetProgram {
@@ -396,7 +396,7 @@ input IptComponentData {
 }
 
 input IptComponentFileData {
-  filename: [String!]!
+  filenames: [String!]!
   componentUuid: UUID!
 }
 
@@ -453,13 +453,13 @@ input IptKeywordData {
 }
 
 input IptModificationFileData {
-  filename: [String!]!
+  filenames: [String!]!
   modificationUuid: UUID!
 }
 
 input IptModificationFileFromFilesetData {
   filesetUuid: UUID!
-  filename: [String!]!
+  filenames: [String!]!
 }
 
 input IptModificationParamData {
@@ -535,7 +535,7 @@ input IptStandardData {
 }
 
 input IptStandardFilesData {
-  filename: [String!]!
+  filenames: [String!]!
   standardUuid: UUID!
 }
 
@@ -1013,16 +1013,17 @@ type ShowComponentShort {
   isBase: Boolean!
   updatedAt: NaiveDateTime!
   licenses: [License!]!
-  files: [ShowFileForDownload!]!
+  files: [ShowFileRelatedData!]!
   componentSuppliers: [ComponentSupplierRelatedData!]!
 }
 
-type ShowFileForDownload {
+type ShowFileRelatedData {
   uuid: UUID!
+  filename: String!
   parentFileUuid: UUID!
-  download: DownloadFile!
   ownerUser: ShowUserShort!
   contentType: String!
+  filesize: Int!
   program: Program!
   createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!
@@ -1152,7 +1153,7 @@ type StandardAndRelatedData {
   region: RegionTranslateList!
   createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!
-  standardFiles: [ShowFileForDownload!]!
+  standardFiles: [ShowFileRelatedData!]!
   standardSpecs: [StandardSpecWithTranslation!]!
   standardKeywords: [Keyword!]!
   subscribers: Int!

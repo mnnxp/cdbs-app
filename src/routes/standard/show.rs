@@ -27,7 +27,7 @@ use crate::services::{
 };
 use crate::types::{
     UUID, StandardInfo, SlimUser, // ShowUserShort, ShowCompanyShort,
-    // ShowFileForDownload, DownloadFile, Spec, Keyword, Region,
+    // ShowFileInfo, DownloadFile, Spec, Keyword, Region,
 };
 
 // #[derive(GraphQLQuery)]

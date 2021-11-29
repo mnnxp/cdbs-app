@@ -2,7 +2,7 @@ use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use super::{
     ShowUserShort, ShowCompanyShort, Region,
-    ShowFileForDownload, DownloadFile, Spec, Keyword
+    ShowFileInfo, DownloadFile, Spec, Keyword
 };
 use super::UUID;
 
@@ -26,7 +26,7 @@ pub struct StandardInfo {
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
     // related data
-    pub standard_files: Vec<ShowFileForDownload>, // <-- documentation files, etc.
+    pub standard_files: Vec<ShowFileInfo>, // <-- documentation files, etc.
     pub standard_specs: Vec<Spec>,
     pub standard_keywords: Vec<Keyword>,
     // count users to folloded the standard

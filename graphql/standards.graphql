@@ -25,7 +25,7 @@ query GetStandardData($standardUuid: UUID!) {
       ...regionFields
     }
     standardFiles {
-      ...showFileForDownloadFields
+      ...showFileRelatedDataFields
     }
     standardSpecs {
       spec {
@@ -151,16 +151,15 @@ fragment specTranslateListFields on SpecTranslateList {
   spec
 }
 
-fragment showFileForDownloadFields on ShowFileForDownload {
+fragment showFileRelatedDataFields on ShowFileRelatedData {
   uuid
+  filename
   parentFileUuid
-  download {
-    ...downloadFileFields
-  }
   ownerUser {
     ...showUserShortFields
   }
   contentType
+  filesize
   program {
     id
     name
