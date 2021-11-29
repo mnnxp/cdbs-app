@@ -131,6 +131,7 @@ impl ListItem {
                       {"classifier "} <span class="id-box has-text-grey-light has-text-weight-bold">{
                           classifier
                       }</span>
+                      <br/>
                       {" specified tolerance "} <span class="id-box has-text-grey-light has-text-weight-bold">{
                           specified_tolerance
                       }</span>
@@ -138,8 +139,8 @@ impl ListItem {
                     <div class="has-text-weight-bold is-size-4">{name}</div>
                     <div class="overflow-title has-text-weight-bold">{
                         format!("design by: {} {}",
-                            owner_company.shortname.to_string(),
-                            owner_company.company_type.shortname.to_string()
+                            &owner_company.shortname,
+                            &owner_company.company_type.shortname
                     )}</div>
                   </p>
                 </div>
@@ -218,8 +219,8 @@ impl ListItem {
               </div>
               <div class="has-text-weight-bold is-size-4">{name}</div>
               <div class="overflow-title has-text-weight-bold">{format!("design by: {} {}",
-                owner_company.company_type.shortname.to_string(),
-                owner_company.shortname.to_string()
+                &owner_company.shortname,
+                &owner_company.company_type.shortname
               )}</div>
               <div class="btnBox">
                 <button class="button is-light is-fullwidth has-text-weight-bold"

@@ -1,9 +1,7 @@
 use chrono::NaiveDateTime;
 // use web_sys::MouseEvent;
 use yew::prelude::*;
-use yew::{ //Callback,
-    Component, ComponentLink, Html, Properties, ShouldRender, html
-};
+use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
 use yew_router::{
     service::RouteService,
     agent::RouteRequest::ChangeRoute,
@@ -76,6 +74,7 @@ pub struct ShowStandard {
     link: ComponentLink<Self>,
     subscribers: usize,
     is_followed: bool,
+    show_full_description: bool,
 }
 
 #[derive(Properties, Clone)]
@@ -91,6 +90,7 @@ pub enum Msg {
     UnFollow,
     DelFollow(String),
     GetStandardData(String),
+    ShowDescription,
     OpenCompanyOwnerStandard,
     OpenSettingStandard,
     Ignore,
@@ -112,6 +112,7 @@ impl Component for ShowStandard {
             link,
             subscribers: 0,
             is_followed: false,
+            show_full_description: false,
         }
     }
 
@@ -225,18 +226,23 @@ impl Component for ShowStandard {
                             serde_json::from_value(res_value.get("standard").unwrap().clone()).unwrap();
                         debug!("Standard data: {:?}", standard_data);
 
-                        self.subscribers = standard_data.subscribers.to_owned();
-                        self.is_followed = standard_data.is_followed.to_owned();
-                        self.current_standard_uuid = standard_data.uuid.to_owned();
+                        self.subscribers = standard_data.subscribers;
+                        self.is_followed = standard_data.is_followed;
+                        self.current_standard_uuid = standard_data.uuid.clone();
                         if let Some(user) = &self.props.current_user {
                             self.current_user_owner = standard_data.owner_user.uuid == user.uuid;
                         }
+                        // description length check for show
+                        self.show_full_description = standard_data.description.len() < 250;
                         self.standard = Some(standard_data);
                     }
                     true => {
                         self.error = Some(get_error(&data));
                     }
                 }
+            }
+            Msg::ShowDescription => {
+                self.show_full_description = !self.show_full_description;
             }
             Msg::OpenCompanyOwnerStandard => {
                 if let Some(standard_data) = &self.standard {
@@ -265,13 +271,70 @@ impl Component for ShowStandard {
     }
 
     fn view(&self) -> Html {
+        let show_description_btn = self.link
+            .callback(|_| Msg::ShowDescription);
+
         match &self.standard {
-            Some(_standard_data) => html! {
+            Some(standard_data) => html! {
                 <div class="standard-page">
                     <ListErrors error=self.error.clone()/>
                     <div class="container page">
                         <div class="row">
                             <div class="card">
+                              <div class="columns">
+                                <div class="column is-one-quarter">
+                                  <img class="imgBox" src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
+                                </div>
+                                <div class="column">
+                                  {"classifier "} <span class="id-box has-text-grey-light has-text-weight-bold">{
+                                      standard_data.classifier.to_string()
+                                  }</span>
+                                  // <h1>{"Standard"}</h1>
+                                  <div class="has-text-weight-bold is-size-4">{
+                                      standard_data.name.clone()
+                                  }</div>
+                                  <div class="standard-description">{
+                                      match self.show_full_description {
+                                          true => html!{<>
+                                            {standard_data.description.clone()}
+                                            {match standard_data.description.len() {
+                                                250.. => html!{<>
+                                                  <br/>
+                                                  <button class="button is-white"
+                                                      onclick=show_description_btn
+                                                    >{"See less"}</button>
+                                                </>},
+                                                _ => html!{},
+                                            }}
+                                          </>},
+                                          false => html!{<>
+                                            {format!("{:.*}", 200, standard_data.description)}
+                                            <br/>
+                                            <button class="button is-white"
+                                                onclick=show_description_btn
+                                              >{"See more"}</button>
+                                          </>},
+                                      }
+                                  }</div>
+                                  // <span class="id-box has-text-grey-light has-text-weight-bold">{"design by "} </span>
+                                  // {format!("{} {}",
+                                  //   &standard_data.owner_company.shortname,
+                                  //   &standard_data.owner_company.company_type.shortname
+                                  // )}
+                                </div>
+                              </div>
+                            </div>
+                            <div class="columns">
+                              <div class="column">
+                                <div class="card">
+                                  <h2>{"Data"}</h2>
+                                </div>
+                              </div>
+                              <div class="column">
+                                <div class="card">
+                                  <h2>{"Files"}</h2>
+                                </div>
+                              </div>
                             </div>
                         </div>
                     </div>

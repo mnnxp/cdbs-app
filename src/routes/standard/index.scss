@@ -10,3 +10,15 @@
   }
   margin-bottom: 80px;
 }
+
+.imgBox {
+  width: 240px;
+  height: 240px;
+  display: inline-flex;
+  position: relative;
+}
+
+.imgBox > img {
+  height: 100%;
+  width: 100%;
+}
