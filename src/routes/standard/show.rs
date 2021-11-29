@@ -18,6 +18,7 @@ use crate::fragments::{
     // switch_icon::res_btn,
     list_errors::ListErrors,
     // catalog_component::CatalogComponents,
+    file::FilesCard,
     // spec::SpecsTags,
 };
 use crate::gqls::make_query;
@@ -331,9 +332,11 @@ impl Component for ShowStandard {
                                 </div>
                               </div>
                               <div class="column">
-                                <div class="card">
-                                  <h2>{"Files"}</h2>
-                                </div>
+                                <h2>{"Files"}</h2>
+                                <FilesCard
+                                    show_delete_btn = false
+                                    files = standard_data.standard_files.clone()
+                                  />
                               </div>
                             </div>
                         </div>
