@@ -71,6 +71,14 @@ mutation DeleteStandardFav($standardUuid: String!) {
   deleteStandardFav(standardUuid: $standardUuid)
 }
 
+mutation DeleteStandardSpecs($iptStandardSpecsData: IptStandardSpecsData!){
+  deleteStandardSpecs(data: $iptStandardSpecsData)
+}
+
+mutation DeleteStandardKeywords($iptStandardKeywordsData: IptStandardKeywordsData!){
+  deleteStandardKeywords(data: $iptStandardKeywordsData)
+}
+
 fragment standardStatusFields on StandardStatusTranslateList {
   standardStatusId
   langId

@@ -20,14 +20,14 @@ pub struct Program {
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Spec {
-    pub spec_id: i32,
-    pub lang_id: i32,
+    pub spec_id: usize,
+    pub lang_id: usize,
     pub spec: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]
 pub struct Keyword {
-    pub id: i32,
+    pub id: usize,
     pub keyword: String,
 }
 

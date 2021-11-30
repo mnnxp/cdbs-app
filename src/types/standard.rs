@@ -27,7 +27,7 @@ pub struct StandardInfo {
     pub updated_at: NaiveDateTime,
     // related data
     pub standard_files: Vec<ShowFileInfo>, // <-- documentation files, etc.
-    pub standard_specs: Vec<Spec>,
+    pub standard_specs: Vec<StandardSpec>,
     pub standard_keywords: Vec<Keyword>,
     // count users to folloded the standard
     pub subscribers: usize,
@@ -57,6 +57,13 @@ pub struct StandardStatus{
   pub standard_status_id: i64,
   pub lang_id: i64,
   pub name: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct StandardSpec {
+    pub spec: Spec,
+    pub standard_uuid: UUID,
 }
 
 // for arguments users query

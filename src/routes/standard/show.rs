@@ -15,11 +15,12 @@ use wasm_bindgen_futures::spawn_local;
 use crate::routes::AppRoute;
 use crate::error::{get_error, Error};
 use crate::fragments::{
-    // switch_icon::res_btn,
+    switch_icon::res_btn,
     list_errors::ListErrors,
     // catalog_component::CatalogComponents,
     file::FilesCard,
-    // spec::SpecsTags,
+    standard_spec::SpecsTags,
+    standard_keyword::KeywordsTags,
 };
 use crate::gqls::make_query;
 use crate::services::{
@@ -27,7 +28,7 @@ use crate::services::{
     // get_logged_user
 };
 use crate::types::{
-    UUID, StandardInfo, SlimUser, // ShowUserShort, ShowCompanyShort,
+    UUID, StandardInfo, SlimUser, // ShowUserShort, ShowStandardShort,
     // ShowFileInfo, DownloadFile, Spec, Keyword, Region,
 };
 
@@ -92,7 +93,7 @@ pub enum Msg {
     DelFollow(String),
     GetStandardData(String),
     ShowDescription,
-    OpenCompanyOwnerStandard,
+    OpenStandardOwnerStandard,
     OpenSettingStandard,
     Ignore,
 }
@@ -245,7 +246,7 @@ impl Component for ShowStandard {
             Msg::ShowDescription => {
                 self.show_full_description = !self.show_full_description;
             }
-            Msg::OpenCompanyOwnerStandard => {
+            Msg::OpenStandardOwnerStandard => {
                 if let Some(standard_data) = &self.standard {
                     // Redirect to owner standard page
                     self.router_agent.send(ChangeRoute(AppRoute::Profile(
@@ -272,9 +273,6 @@ impl Component for ShowStandard {
     }
 
     fn view(&self) -> Html {
-        let show_description_btn = self.link
-            .callback(|_| Msg::ShowDescription);
-
         match &self.standard {
             Some(standard_data) => html! {
                 <div class="standard-page">
@@ -282,63 +280,15 @@ impl Component for ShowStandard {
                     <div class="container page">
                         <div class="row">
                             <div class="card">
-                              <div class="columns">
-                                <div class="column is-one-quarter">
-                                  <img class="imgBox" src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
-                                </div>
-                                <div class="column">
-                                  {"classifier "} <span class="id-box has-text-grey-light has-text-weight-bold">{
-                                      standard_data.classifier.to_string()
-                                  }</span>
-                                  // <h1>{"Standard"}</h1>
-                                  <div class="has-text-weight-bold is-size-4">{
-                                      standard_data.name.clone()
-                                  }</div>
-                                  <div class="standard-description">{
-                                      match self.show_full_description {
-                                          true => html!{<>
-                                            {standard_data.description.clone()}
-                                            {match standard_data.description.len() {
-                                                250.. => html!{<>
-                                                  <br/>
-                                                  <button class="button is-white"
-                                                      onclick=show_description_btn
-                                                    >{"See less"}</button>
-                                                </>},
-                                                _ => html!{},
-                                            }}
-                                          </>},
-                                          false => html!{<>
-                                            {format!("{:.*}", 200, standard_data.description)}
-                                            <br/>
-                                            <button class="button is-white"
-                                                onclick=show_description_btn
-                                              >{"See more"}</button>
-                                          </>},
-                                      }
-                                  }</div>
-                                  // <span class="id-box has-text-grey-light has-text-weight-bold">{"design by "} </span>
-                                  // {format!("{} {}",
-                                  //   &standard_data.owner_company.shortname,
-                                  //   &standard_data.owner_company.company_type.shortname
-                                  // )}
-                                </div>
-                              </div>
+                              {self.show_main_card(standard_data)}
                             </div>
                             <div class="columns">
-                              <div class="column">
-                                <div class="card">
-                                  <h2>{"Data"}</h2>
-                                </div>
-                              </div>
-                              <div class="column">
-                                <h2>{"Files"}</h2>
-                                <FilesCard
-                                    show_delete_btn = false
-                                    files = standard_data.standard_files.clone()
-                                  />
-                              </div>
+                              {self.show_standard_params(standard_data)}
+                              {self.show_standard_files(standard_data)}
                             </div>
+                            {self.show_standard_specs(standard_data)}
+                            <br/>
+                            {self.show_standard_keywords(standard_data)}
                         </div>
                     </div>
                 </div>
@@ -351,4 +301,205 @@ impl Component for ShowStandard {
     }
 }
 
-impl ShowStandard {}
+impl ShowStandard {
+    fn show_main_card(
+        &self,
+        standard_data: &StandardInfo,
+    ) -> Html {
+        let show_description_btn = self.link
+            .callback(|_| Msg::ShowDescription);
+
+        html!{
+            <div class="columns">
+              <div class="column is-one-quarter">
+                <img class="imgBox" src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
+              </div>
+              <div class="column">
+                {"classifier "} <span class="id-box has-text-grey-light has-text-weight-bold">{
+                    standard_data.classifier.clone()
+                }</span>
+                // <h1>{"Standard"}</h1>
+                <div class="media">
+                    <div class="is-size-4">{
+                        standard_data.name.clone()
+                    }</div>
+                    <div class="buttons flexBox">
+                        {self.show_setting_btn()}
+                        {self.show_followers_btn()}
+                        {self.show_share_btn()}
+                    </div>
+                </div>
+                <div class="standard-description">{
+                    match self.show_full_description {
+                        true => html!{<>
+                          {standard_data.description.clone()}
+                          {match standard_data.description.len() {
+                              250.. => html!{<>
+                                <br/>
+                                <button class="button is-white"
+                                    onclick=show_description_btn
+                                  >{"See less"}</button>
+                              </>},
+                              _ => html!{},
+                          }}
+                        </>},
+                        false => html!{<>
+                          {format!("{:.*}", 200, standard_data.description)}
+                          <br/>
+                          <button class="button is-white"
+                              onclick=show_description_btn
+                            >{"See more"}</button>
+                        </>},
+                    }
+                }</div>
+                // <span class="id-box has-text-grey-light has-text-weight-bold">{"design by "} </span>
+                // {format!("{} {}",
+                //   &standard_data.owner_standard.shortname,
+                //   &standard_data.owner_standard.standard_type.shortname
+                // )}
+              </div>
+            </div>
+        }
+    }
+
+    fn show_standard_params(
+        &self,
+        standard_data: &StandardInfo,
+    ) -> Html {
+        html!{
+            <div class="column">
+              <h2>{"Сharacteristics"}</h2>
+              <div class="card">
+                <table class="table is-fullwidth">
+                    <tbody>
+                      <tr>
+                        <td>{"classifier"}</td>
+                        <td>{standard_data.classifier.clone()}</td>
+                      </tr>
+                      <tr>
+                        <td>{"specified_tolerance"}</td>
+                        <td>{standard_data.specified_tolerance.clone()}</td>
+                      </tr>
+                      <tr>
+                        <td>{"technical_committee"}</td>
+                        <td>{standard_data.technical_committee.clone()}</td>
+                      </tr>
+                      <tr>
+                        <td>{"publication_at"}</td>
+                        <td>{format!("{:.*}", 10, standard_data.publication_at.to_string())}</td>
+                      </tr>
+                      <tr>
+                        <td>{"standard_status"}</td>
+                        <td>{standard_data.standard_status.name.clone()}</td>
+                      </tr>
+                      <tr>
+                        <td>{"region"}</td>
+                        <td>{standard_data.region.region.clone()}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+              </div>
+            </div>
+        }
+    }
+
+    fn show_standard_files(
+        &self,
+        standard_data: &StandardInfo,
+    ) -> Html {
+        html!{
+            <div class="column">
+              <h2>{"Files"}</h2>
+              <FilesCard
+                  show_delete_btn = false
+                  files = standard_data.standard_files.clone()
+                />
+            </div>
+        }
+    }
+
+    fn show_standard_specs(
+        &self,
+        standard_data: &StandardInfo,
+    ) -> Html {
+        html!{<>
+              <h2>{"Specs"}</h2>
+              <div class="card">
+                <SpecsTags
+                    show_delete_btn = false
+                    standard_uuid = standard_data.uuid.clone()
+                    specs = standard_data.standard_specs.clone()
+                  />
+              </div>
+        </>}
+    }
+
+    fn show_standard_keywords(
+        &self,
+        standard_data: &StandardInfo,
+    ) -> Html {
+        html!{<>
+              <h2>{"Keywords"}</h2>
+              <div class="card">
+                <KeywordsTags
+                    show_delete_btn = false
+                    standard_uuid = standard_data.uuid.clone()
+                    keywords = standard_data.standard_keywords.clone()
+                  />
+              </div>
+        </>}
+    }
+
+    fn show_followers_btn(&self) -> Html {
+        let class_fav = match self.is_followed {
+            true => "fas fa-bookmark",
+            false => "far fa-bookmark",
+        };
+
+        let onclick_following = match self.is_followed {
+            true => self.link.callback(|_| Msg::UnFollow),
+            false => self.link.callback(|_| Msg::Follow),
+        };
+
+        html! {<>
+            <div class="media-right flexBox" >
+              <button
+                  id="following-button"
+                  class="button"
+                  onclick=onclick_following >
+                <span class="icon is-small">
+                  <i class={class_fav}></i>
+                </span>
+              </button>
+            </div>
+            { format!(" {}", &self.subscribers) }
+        </>}
+    }
+
+    fn show_share_btn(&self) -> Html {
+        html! {
+            <div class="media-right flexBox" >
+              <button
+                  id="share-button"
+                  class="button" >
+                <span class="icon is-small">
+                  <i class="far fa-share"></i>
+                </span>
+              </button>
+            </div>
+        }
+    }
+
+    fn show_setting_btn(&self) -> Html {
+        let onclick_setting_standard_btn = self.link
+            .callback(|_| Msg::OpenSettingStandard);
+
+        match &self.current_user_owner {
+            true => {res_btn(classes!(
+                String::from("fa fa-cog")),
+                onclick_setting_standard_btn,
+                String::new())},
+            false => html!{},
+        }
+    }
+}
