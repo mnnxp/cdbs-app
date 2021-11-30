@@ -8,7 +8,7 @@ pub mod company_represent;
 pub mod company_add_represent;
 pub mod company_certificate;
 pub mod company_add_certificate;
-pub mod file;
+pub mod standard_file;
 pub mod spec;
 pub mod standard_spec;
 pub mod standard_keyword;

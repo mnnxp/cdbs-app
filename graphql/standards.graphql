@@ -63,6 +63,16 @@ query GetStandardsShortList($arguments: IptStandardsArg) {
   }
 }
 
+query StandardFiles($iptStandardFilesArg: IptStandardFilesArg!) {
+  standardFiles(arg: $iptStandardFilesArg){
+    ...downloadFileFields
+  }
+}
+
+mutation DeleteStandardFile($deleteStandardFileData: DeleteStandardFileData!) {
+  deleteStandardFile(arg: $deleteStandardFileData)
+}
+
 mutation AddStandardFav($standardUuid: String!) {
   addStandardFav(standardUuid: $standardUuid)
 }

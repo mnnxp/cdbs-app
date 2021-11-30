@@ -18,7 +18,7 @@ use crate::fragments::{
     switch_icon::res_btn,
     list_errors::ListErrors,
     // catalog_component::CatalogComponents,
-    file::FilesCard,
+    standard_file::FilesCard,
     standard_spec::SpecsTags,
     standard_keyword::KeywordsTags,
 };
@@ -411,7 +411,9 @@ impl ShowStandard {
             <div class="column">
               <h2>{"Files"}</h2>
               <FilesCard
+                  show_download_btn = true
                   show_delete_btn = false
+                  standard_uuid = standard_data.uuid.clone()
                   files = standard_data.standard_files.clone()
                 />
             </div>

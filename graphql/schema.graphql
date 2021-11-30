@@ -534,6 +534,11 @@ input IptStandardData {
   regionId: Int!
 }
 
+input IptStandardFilesArg {
+  standardUuid: UUID!
+  filesUuids: [UUID!]
+}
+
 input IptStandardFilesData {
   filenames: [String!]!
   standardUuid: UUID!
@@ -813,8 +818,7 @@ type MutationRoot {
   addStandardKeywords(data: IptStandardKeywordsData!): Int!
   deleteStandardKeywords(data: IptStandardKeywordsData!): Int!
   uploadStandardFiles(data: IptStandardFilesData!): [UploadFile!]!
-  standardFiles(standardUuid: UUID!): [DownloadFile!]!
-  deleteStandardFiles(data: DeleteStandardFileData!): Boolean!
+  deleteStandardFile(arg: DeleteStandardFileData!): Boolean!
   registerCompany(data: IptCompanyData!): SlimCompany!
   putCompanyUpdate(companyUuid: UUID!, data: IptUpdateCompanyData!): Int!
 
@@ -930,6 +934,7 @@ type QueryRoot {
   ): [FileOfFileset!]!
   standards(arguments: IptStandardsArg): [ShowStandardShort!]!
   standard(standardUuid: UUID!): StandardAndRelatedData!
+  standardFiles(arg: IptStandardFilesArg!): [DownloadFile!]!
   getCompaniesListAccessStandard(
     standardUuid: UUID!
   ): [CompanyAccessStandardAndRelatedData!]!
