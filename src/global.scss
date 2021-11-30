@@ -1,0 +1,12 @@
+@import "./fragments/catalog_component/index.scss";
+@import "./fragments/catalog_user/index.scss";
+@import "./fragments/catalog_company/index.scss";
+@import "./fragments/catalog_standard/index.scss";
+@import "./fragments/search_spec/index.scss";
+@import "./routes/tender/index.scss";
+
+
+.flex_warp {
+  display: flex;
+  flex-wrap: wrap;
+}
