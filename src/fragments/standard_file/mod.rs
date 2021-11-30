@@ -6,11 +6,13 @@ use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
 // use log::debug;
 // use crate::error::{get_error, Error};
 use crate::services::is_authenticated;
-use crate::types::ShowFileInfo;
+use crate::types::{UUID, ShowFileInfo};
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
+    pub show_download_btn: bool,
     pub show_delete_btn: bool,
+    pub standard_uuid: UUID,
     pub files: Vec<ShowFileInfo>,
 }
 
@@ -22,7 +24,6 @@ pub struct FilesCard {
 
 #[derive(Clone)]
 pub enum Msg {
-    // GetFileData(String),
     ShowFullList,
     Ignore,
 }
@@ -71,12 +72,16 @@ impl Component for FilesCard {
                     match (index >= 4, self.show_full_files) {
                         // show full list
                         (_, true) => html! {<FileItem
+                          show_download_btn = self.props.show_download_btn.clone()
                           show_delete_btn = self.props.show_delete_btn.clone()
+                          standard_uuid = self.props.standard_uuid.clone()
                           file = file.clone()
                         />},
                         // show full list or first 4 items
                         (false, false) => html! {<FileItem
+                          show_download_btn = self.props.show_download_btn.clone()
                           show_delete_btn = self.props.show_delete_btn.clone()
+                          standard_uuid = self.props.standard_uuid.clone()
                           file = file.clone()
                         />},
                         _ => html!{},
