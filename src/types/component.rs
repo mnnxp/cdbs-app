@@ -42,7 +42,7 @@ pub struct ComponentsQueryArg {
 impl ComponentsQueryArg {
     pub fn set_user_uuid(user_uuid: &UUID) -> Self {
         Self {
-            user_uuid: Some(user_uuid.to_owned()),
+            user_uuid: Some(user_uuid.clone()),
             ..Default::default()
         }
     }
@@ -57,7 +57,14 @@ impl ComponentsQueryArg {
 
     pub fn set_company_uuid(company_uuid: &UUID) -> Self {
         Self {
-            company_uuid: Some(company_uuid.to_owned()),
+            company_uuid: Some(company_uuid.clone()),
+            ..Default::default()
+        }
+    }
+
+    pub fn set_standard_uuid(standard_uuid: &UUID) -> Self {
+        Self {
+            standard_uuid: Some(standard_uuid.clone()),
             ..Default::default()
         }
     }

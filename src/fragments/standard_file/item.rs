@@ -181,7 +181,7 @@ impl FileItem {
             true => html!{
                 <button class="button is-white is-small" onclick=onclick_download_btn >
                   <span class="icon" >
-                    <i class="fa fa-download" aria-hidden="true"></i>
+                    <i class="fas fa-cloud-download-alt" aria-hidden="true"></i>
                   </span>
                 </button>
             },

@@ -17,7 +17,7 @@ use crate::error::{get_error, Error};
 use crate::fragments::{
     switch_icon::res_btn,
     list_errors::ListErrors,
-    // catalog_component::CatalogComponents,
+    catalog_component::CatalogComponents,
     standard_file::FilesCard,
     standard_spec::SpecsTags,
     standard_keyword::KeywordsTags,
@@ -28,8 +28,7 @@ use crate::services::{
     // get_logged_user
 };
 use crate::types::{
-    UUID, StandardInfo, SlimUser, // ShowUserShort, ShowStandardShort,
-    // ShowFileInfo, DownloadFile, Spec, Keyword, Region,
+    UUID, StandardInfo, SlimUser, DownloadFile, ComponentsQueryArg,
 };
 
 // #[derive(GraphQLQuery)]
@@ -47,6 +46,14 @@ use crate::types::{
     response_derives = "Debug"
 )]
 struct GetStandardData;
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/standards.graphql",
+    response_derives = "Debug"
+)]
+struct StandardFiles;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -77,6 +84,7 @@ pub struct ShowStandard {
     subscribers: usize,
     is_followed: bool,
     show_full_description: bool,
+    show_related_components: bool,
 }
 
 #[derive(Properties, Clone)]
@@ -87,14 +95,18 @@ pub struct Props {
 
 #[derive(Clone)]
 pub enum Msg {
+    RequestDownloadFiles,
     Follow,
     AddFollow(String),
     UnFollow,
     DelFollow(String),
+    ResponseError(Error),
+    GetDownloadFilesResult(String),
     GetStandardData(String),
     ShowDescription,
-    OpenStandardOwnerStandard,
-    OpenSettingStandard,
+    ShowComponentsList,
+    OpenStandardOwner,
+    OpenStandardSetting,
     Ignore,
 }
 
@@ -115,6 +127,7 @@ impl Component for ShowStandard {
             subscribers: 0,
             is_followed: false,
             show_full_description: false,
+            show_related_components: false,
         }
     }
 
@@ -149,11 +162,25 @@ impl Component for ShowStandard {
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        // let link = self.link.clone();
+        let link = self.link.clone();
 
         match msg {
+            Msg::RequestDownloadFiles => {
+                let standard_uuid = self.props.standard_uuid.clone();
+                spawn_local(async move {
+                    let ipt_standard_files_arg = standard_files::IptStandardFilesArg{
+                        filesUuids: None,
+                        standardUuid: standard_uuid,
+                    };
+                    let res = make_query(StandardFiles::build_query(
+                        standard_files::Variables {
+                            ipt_standard_files_arg,
+                        }
+                    )).await;
+                    link.send_message(Msg::GetDownloadFilesResult(res.unwrap()));
+                })
+            }
             Msg::Follow => {
-                let link = self.link.clone();
                 let standard_uuid_string = self.standard.as_ref().unwrap().uuid.to_string();
 
                 spawn_local(async move {
@@ -185,7 +212,6 @@ impl Component for ShowStandard {
                 }
             }
             Msg::UnFollow => {
-                let link = self.link.clone();
                 let standard_uuid_string = self.standard.as_ref().unwrap().uuid.to_string();
 
                 spawn_local(async move {
@@ -218,6 +244,23 @@ impl Component for ShowStandard {
                     }
                 }
             }
+            Msg::ResponseError(err) => {
+                self.error = Some(err);
+            }
+            Msg::GetDownloadFilesResult(res) => {
+                let data: Value = serde_json::from_str(res.as_str()).unwrap();
+                let res = data.as_object().unwrap().get("data").unwrap();
+
+                match res.is_null() {
+                    false => {
+                        let result: Vec<DownloadFile> = serde_json::from_value(res.get("standardFiles").unwrap().clone()).unwrap();
+                        debug!("standardFiles: {:?}", result);
+                    },
+                    true => {
+                        link.send_message(Msg::ResponseError(get_error(&data)));
+                    },
+                }
+            }
             Msg::GetStandardData(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
@@ -246,7 +289,10 @@ impl Component for ShowStandard {
             Msg::ShowDescription => {
                 self.show_full_description = !self.show_full_description;
             }
-            Msg::OpenStandardOwnerStandard => {
+            Msg::ShowComponentsList => {
+                self.show_related_components = !self.show_related_components;
+            }
+            Msg::OpenStandardOwner => {
                 if let Some(standard_data) = &self.standard {
                     // Redirect to owner standard page
                     self.router_agent.send(ChangeRoute(AppRoute::Profile(
@@ -254,11 +300,11 @@ impl Component for ShowStandard {
                     ).into()));
                 }
             }
-            Msg::OpenSettingStandard => {
+            Msg::OpenStandardSetting => {
                 // if let Some(standard_data) = &self.standard {
                 //     // Redirect to owner standard page
                 //     self.router_agent.send(ChangeRoute(AppRoute::StandardSettings(
-                //         standard_data.uuid.to_string()
+                //         standard_data.uuid.clone()
                 //     ).into()));
                 // }
             }
@@ -282,13 +328,18 @@ impl Component for ShowStandard {
                             <div class="card">
                               {self.show_main_card(standard_data)}
                             </div>
-                            <div class="columns">
-                              {self.show_standard_params(standard_data)}
-                              {self.show_standard_files(standard_data)}
-                            </div>
-                            {self.show_standard_specs(standard_data)}
-                            <br/>
-                            {self.show_standard_keywords(standard_data)}
+                            {match &self.show_related_components {
+                                true => {self.show_related_components(&standard_data.uuid)},
+                                false => html!{<>
+                                    <div class="columns">
+                                      {self.show_standard_params(standard_data)}
+                                      {self.show_standard_files(standard_data)}
+                                    </div>
+                                    {self.show_standard_specs(standard_data)}
+                                    <br/>
+                                    {self.show_standard_keywords(standard_data)}
+                                </>},
+                            }}
                         </div>
                     </div>
                 </div>
@@ -319,15 +370,15 @@ impl ShowStandard {
                     standard_data.classifier.clone()
                 }</span>
                 // <h1>{"Standard"}</h1>
-                <div class="media">
-                    <div class="is-size-4">{
-                        standard_data.name.clone()
-                    }</div>
-                    <div class="buttons flexBox">
-                        {self.show_setting_btn()}
-                        {self.show_followers_btn()}
-                        {self.show_share_btn()}
-                    </div>
+                <div class="has-text-weight-bold is-size-4">{
+                    standard_data.name.clone()
+                }</div>
+                <div class="buttons flexBox">
+                    {self.show_related_components_btn()}
+                    {self.show_download_btn()}
+                    {self.show_setting_btn()}
+                    {self.show_followers_btn()}
+                    {self.show_share_btn()}
                 </div>
                 <div class="standard-description">{
                     match self.show_full_description {
@@ -492,9 +543,57 @@ impl ShowStandard {
         }
     }
 
+    fn show_related_components_btn(&self) -> Html {
+        let onclick_related_components_btn = self.link
+            .callback(|_| Msg::ShowComponentsList);
+
+        let text_btn = match &self.show_related_components {
+            true => "Hide components",
+            false => "See components",
+        };
+
+        html!{
+            <button class="button is-info is-light"
+                onclick=onclick_related_components_btn >
+              <span class="has-text-black">{text_btn}</span>
+            </button>
+        }
+    }
+
+    fn show_related_components(
+        &self,
+        standard_uuid: &UUID,
+    ) -> Html {
+        html!{<>
+            <br/>
+            <h2>{"Components"}</h2>
+            <div class="card">
+              <CatalogComponents
+                  show_create_btn = false
+                  arguments = ComponentsQueryArg::set_standard_uuid(standard_uuid)
+                />
+            </div>
+        </>}
+    }
+
+    fn show_download_btn(&self) -> Html {
+        let onclick_download_standard_btn = self.link
+            .callback(|_| Msg::RequestDownloadFiles);
+
+        match &self.current_user_owner {
+            true => html!{
+                <button class="button is-info"
+                    onclick=onclick_download_standard_btn >
+                  <span class="has-text-weight-bold">{"Download"}</span>
+                </button>
+            },
+            false => html!{},
+        }
+    }
+
     fn show_setting_btn(&self) -> Html {
         let onclick_setting_standard_btn = self.link
-            .callback(|_| Msg::OpenSettingStandard);
+            .callback(|_| Msg::OpenStandardSetting);
 
         match &self.current_user_owner {
             true => {res_btn(classes!(
