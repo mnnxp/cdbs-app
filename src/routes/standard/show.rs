@@ -295,8 +295,8 @@ impl Component for ShowStandard {
             Msg::OpenStandardOwner => {
                 if let Some(standard_data) = &self.standard {
                     // Redirect to owner standard page
-                    self.router_agent.send(ChangeRoute(AppRoute::Profile(
-                        standard_data.owner_user.username.to_string()
+                    self.router_agent.send(ChangeRoute(AppRoute::ShowCompany(
+                        standard_data.owner_company.uuid.to_string()
                     ).into()));
                 }
             }
@@ -357,6 +357,9 @@ impl ShowStandard {
         &self,
         standard_data: &StandardInfo,
     ) -> Html {
+        let onclick_open_owner_company = self.link
+            .callback(|_| Msg::OpenStandardOwner);
+
         let show_description_btn = self.link
             .callback(|_| Msg::ShowDescription);
 
@@ -366,9 +369,12 @@ impl ShowStandard {
                 <img class="imgBox" src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
               </div>
               <div class="column">
-                {"classifier "} <span class="id-box has-text-grey-light has-text-weight-bold">{
-                    standard_data.classifier.clone()
-                }</span>
+                {"uploaded from "}<a class="id-box has-text-grey-light has-text-weight-bold"
+                      onclick={onclick_open_owner_company}
+                    >{format!("{} {}",
+                    &standard_data.owner_company.shortname,
+                    &standard_data.owner_company.company_type.shortname
+                )}</a>
                 // <h1>{"Standard"}</h1>
                 <div class="has-text-weight-bold is-size-4">{
                     standard_data.name.clone()
@@ -403,11 +409,6 @@ impl ShowStandard {
                         </>},
                     }
                 }</div>
-                // <span class="id-box has-text-grey-light has-text-weight-bold">{"design by "} </span>
-                // {format!("{} {}",
-                //   &standard_data.owner_standard.shortname,
-                //   &standard_data.owner_standard.standard_type.shortname
-                // )}
               </div>
             </div>
         }
