@@ -75,41 +75,6 @@ struct ChangeTypeAccessUser;
 )]
 struct DeleteUserData;
 
-/// Get data current user
-impl From<SelfUserInfo> for UserUpdateInfo {
-    fn from(data: SelfUserInfo) -> Self {
-        let SelfUserInfo {
-            firstname,
-            lastname,
-            secondname,
-            username,
-            email,
-            description,
-            position,
-            phone,
-            address,
-            region,
-            program,
-            ..
-        } = data;
-
-        Self {
-            firstname: Some(firstname),
-            lastname: Some(lastname),
-            secondname: Some(secondname),
-            username: Some(username),
-            email: Some(email),
-            description: Some(description),
-            position: Some(position),
-            phone: Some(phone),
-            time_zone: None,
-            address: Some(address),
-            region_id: Some(region.region_id as i64),
-            program_id: Some(program.id as i64),
-        }
-    }
-}
-
 pub enum Menu {
     Profile,
     UpdataFavicon,

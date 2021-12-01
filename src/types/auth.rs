@@ -71,28 +71,3 @@ impl fmt::Display for UserToken {
       write!(f, "{}", self.bearer)
   }
 }
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct SlimUser {
-    pub uuid: String,
-    pub program_id: i32,
-    pub username: String,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, Default)]
-#[serde(rename_all = "camelCase")]
-pub struct UserUpdateInfo {
-    pub email: Option<String>,
-    pub firstname: Option<String>,
-    pub lastname: Option<String>,
-    pub secondname: Option<String>,
-    pub username: Option<String>,
-    pub phone: Option<String>,
-    pub description: Option<String>,
-    pub address: Option<String>,
-    pub position: Option<String>,
-    pub time_zone: Option<String>,
-    pub region_id: Option<i64>,
-    pub program_id: Option<i64>,
-}

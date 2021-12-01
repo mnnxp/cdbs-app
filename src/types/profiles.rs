@@ -68,6 +68,66 @@ pub struct ShowUserShort {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
+pub struct SlimUser {
+    pub uuid: String,
+    pub program_id: i32,
+    pub username: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct UserUpdateInfo {
+    pub email: Option<String>,
+    pub firstname: Option<String>,
+    pub lastname: Option<String>,
+    pub secondname: Option<String>,
+    pub username: Option<String>,
+    pub phone: Option<String>,
+    pub description: Option<String>,
+    pub address: Option<String>,
+    pub position: Option<String>,
+    pub time_zone: Option<String>,
+    pub region_id: Option<i64>,
+    pub program_id: Option<i64>,
+}
+
+/// Get data current user
+impl From<SelfUserInfo> for UserUpdateInfo {
+    fn from(data: SelfUserInfo) -> Self {
+        let SelfUserInfo {
+            firstname,
+            lastname,
+            secondname,
+            username,
+            email,
+            description,
+            position,
+            phone,
+            address,
+            region,
+            program,
+            ..
+        } = data;
+
+        Self {
+            firstname: Some(firstname),
+            lastname: Some(lastname),
+            secondname: Some(secondname),
+            username: Some(username),
+            email: Some(email),
+            description: Some(description),
+            position: Some(position),
+            phone: Some(phone),
+            time_zone: None,
+            address: Some(address),
+            region_id: Some(region.region_id as i64),
+            program_id: Some(program.id as i64),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct UserCertificate {
     pub user_uuid: UUID,
     pub file: DownloadFile,
