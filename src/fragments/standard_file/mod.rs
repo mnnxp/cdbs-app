@@ -69,7 +69,7 @@ impl Component for FilesCard {
         html! {
             <div id="files" class="card">
                 {for self.props.files.iter().enumerate().map(|(index, file)| {
-                    match (index >= 4, self.show_full_files) {
+                    match (index >= 3, self.show_full_files) {
                         // show full list
                         (_, true) => html! {<FileItem
                           show_download_btn = self.props.show_download_btn.clone()
@@ -101,7 +101,7 @@ impl FilesCard {
         match self.show_full_files {
             true => html!{<>
               {match self.props.files.len() {
-                  4.. => html!{<>
+                  3.. => html!{<>
                     <button class="button is-white"
                         onclick=show_full_files_btn
                       >{"See less"}</button>
