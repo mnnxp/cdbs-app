@@ -499,7 +499,7 @@ input IptRoleMemberData {
 
 input IptSearchSpecArg {
   text: String!
-  splitChar: Char
+  splitChar: String
   depthLevel: Int
   limit: Int
   offset: Int
@@ -514,7 +514,7 @@ input IptSpecArg {
 
 input IptSpecPathArg {
   specIds: [Int!]
-  splitChar: Char
+  splitChar: String
   depthLevel: Int
   limit: Int
   offset: Int
