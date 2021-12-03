@@ -1,7 +1,7 @@
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use super::file::DownloadFile;
-use super::relate::{Region, Program, TypeAccessTranslateListInfo};
+use super::relate::{Region, Program, TypeAccessInfo};
 use super::UUID;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -21,7 +21,7 @@ pub struct SelfUserInfo {
     pub image_file: DownloadFile, // obj
     pub region: Region, // obj
     pub program: Program, // obj
-    pub type_access: TypeAccessTranslateListInfo, // obj
+    pub type_access: TypeAccessInfo, // obj
     pub is_email_verified: bool,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
@@ -91,7 +91,6 @@ pub struct UserUpdateInfo {
     pub program_id: Option<i64>,
 }
 
-/// Get data current user
 impl From<SelfUserInfo> for UserUpdateInfo {
     fn from(data: SelfUserInfo) -> Self {
         let SelfUserInfo {

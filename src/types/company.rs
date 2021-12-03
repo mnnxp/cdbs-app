@@ -2,7 +2,7 @@ use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use super::profiles::ShowUserShort;
 use super::file::DownloadFile;
-use super::relate::{Region, Spec, TypeAccessTranslateListInfo};
+use super::relate::{Region, Spec, TypeAccessInfo};
 use super::UUID;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -26,7 +26,7 @@ pub struct CompanyInfo {
     // show certificates company
     pub company_certificates: Vec<CompanyCertificate>,
     pub company_specs: Vec<CompanySpec>,
-    pub type_access: TypeAccessTranslateListInfo,
+    pub type_access: TypeAccessInfo,
     pub is_supplier: bool,
     pub is_email_verified: bool,
     // count users to folloded the company
@@ -119,6 +119,7 @@ pub struct CompaniesQueryArg {
     pub companies_uuids:  Option<Vec<UUID>>,
     pub user_uuid:  Option<UUID>,
     pub favorite: Option<bool>,
+    pub supplier: Option<bool>,
     pub limit: Option<i64>,
     pub offset: Option<i64>,
 }

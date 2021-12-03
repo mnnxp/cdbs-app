@@ -23,7 +23,7 @@ use crate::routes::AppRoute;
 use crate::services::{is_authenticated, set_logged_user, get_current_user};
 use crate::types::{
     UUID, UserUpdateInfo, SelfUserInfo, Program, Region,
-    UpdatePasswordInfo, TypeAccessTranslateListInfo,
+    UpdatePasswordInfo, TypeAccessInfo,
     Certificate, UserCertificate,
 };
 
@@ -100,7 +100,7 @@ pub struct Settings {
     current_data: Option<SelfUserInfo>,
     programs: Vec<Program>,
     regions: Vec<Region>,
-    types_access: Vec<TypeAccessTranslateListInfo>,
+    types_access: Vec<TypeAccessInfo>,
     get_result_profile: usize,
     get_result_access: bool,
     get_result_pwd: bool,

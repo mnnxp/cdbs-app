@@ -28,7 +28,7 @@ use crate::routes::AppRoute;
 use crate::services::is_authenticated;
 use crate::types::{
     UUID, SlimUser, CompanyUpdateInfo, CompanyInfo, Region,
-    CompanyType, TypeAccessTranslateListInfo, SlimCompany,
+    CompanyType, TypeAccessInfo, SlimCompany,
     Certificate, CompanyCertificate, CompanyRepresentInfo
 };
 
@@ -127,7 +127,7 @@ pub struct CompanySettings {
     company_uuid: String,
     current_data: Option<CompanyInfo>,
     regions: Vec<Region>,
-    types_access: Vec<TypeAccessTranslateListInfo>,
+    types_access: Vec<TypeAccessInfo>,
     company_types: Vec<CompanyType>,
     get_result_update: usize,
     get_result_access: bool,

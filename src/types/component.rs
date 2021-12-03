@@ -1,7 +1,7 @@
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 // use super::file::{ShowFileInfo, DownloadFile};
-// use super::relate::{Region, Program, TypeAccessTranslateListInfo};
+// use super::relate::{Region, Program, TypeAccessInfo};
 use super::company::SlimCompany;
 use super::UUID;
 

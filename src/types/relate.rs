@@ -73,7 +73,7 @@ impl From<&super::CompanyCertificate> for Certificate {
 
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct TypeAccessTranslateListInfo {
+pub struct TypeAccessInfo {
     pub lang_id: usize,
     pub name: String,
     pub type_access_id: usize,
