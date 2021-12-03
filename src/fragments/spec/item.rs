@@ -118,7 +118,7 @@ impl Component for SpecTagItem {
 impl SpecTagItem {
     fn show_spec(&self) -> Html {
         let onclick_delete_spec = self.link.callback(|_| Msg::RequestDeleteSpec);
-        let show_btn = self.props.show_delete_btn;
+        let show_btn = !self.props.show_delete_btn;
         debug!("show_btn: {:?}", show_btn);
 
         html! {

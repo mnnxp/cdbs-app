@@ -9,7 +9,7 @@ use yew::{
     agent::Bridged, html, Bridge, ChangeData, Component, ComponentLink, FocusEvent, Html,
     InputData, Properties, ShouldRender,
 };
-use yew::{classes, web_sys::Element, NodeRef};
+use yew::{classes, NodeRef};
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*, service::RouteService};
 
 use crate::error::{get_error, Error};
