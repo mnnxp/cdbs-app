@@ -1,10 +1,9 @@
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use super::{
-    ShowUserShort, ShowCompanyShort, Region,
-    ShowFileInfo, DownloadFile, Spec, Keyword
+    UUID, ShowUserShort, ShowCompanyShort, Region, TypeAccessInfo,
+    ShowFileInfo, DownloadFile, Spec, Keyword,
 };
-use super::UUID;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -20,7 +19,7 @@ pub struct StandardInfo {
     pub image_file: DownloadFile,
     pub owner_user: ShowUserShort,
     pub owner_company: ShowCompanyShort,
-    pub type_access_id: usize,
+    pub type_access: TypeAccessInfo,
     pub standard_status: StandardStatus,
     pub region: Region,
     pub created_at: NaiveDateTime,
@@ -54,8 +53,8 @@ pub struct ShowStandardShort {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct StandardStatus{
-  pub standard_status_id: i64,
-  pub lang_id: i64,
+  pub standard_status_id: usize,
+  pub lang_id: usize,
   pub name: String,
 }
 
@@ -64,6 +63,115 @@ pub struct StandardStatus{
 pub struct StandardSpec {
     pub spec: Spec,
     pub standard_uuid: UUID,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct StandardUpdatePreData {
+    pub classifier: String,
+    pub name: String,
+    pub description: String,
+    pub specified_tolerance: String,
+    pub technical_committee: String,
+    pub publication_at: Option<NaiveDateTime>,
+    pub company_uuid: UUID,
+    pub standard_status_id: usize,
+    pub region_id: usize,
+}
+
+impl From<StandardInfo> for StandardUpdatePreData {
+    fn from(data: StandardInfo) -> Self {
+        Self {
+            classifier: data.classifier,
+            name: data.name,
+            description: data.description,
+            specified_tolerance: data.specified_tolerance,
+            technical_committee: data.technical_committee,
+            publication_at: Some(data.publication_at),
+            company_uuid: data.owner_company.uuid,
+            standard_status_id: data.standard_status.standard_status_id,
+            region_id: data.region.region_id,
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct StandardUpdateData {
+    pub classifier: Option<String>,
+    pub name: Option<String>,
+    pub description: Option<String>,
+    pub specified_tolerance: Option<String>,
+    pub technical_committee: Option<String>,
+    pub publication_at: Option<NaiveDateTime>,
+    pub company_uuid: Option<UUID>,
+    pub standard_status_id: Option<i64>,
+    pub region_id: Option<i64>,
+}
+
+impl From<&StandardUpdatePreData> for StandardUpdateData {
+    fn from(new_data: &StandardUpdatePreData) -> Self {
+        Self {
+            classifier: Some(new_data.classifier.clone()),
+            name: Some(new_data.name.clone()),
+            description: Some(new_data.description.clone()),
+            specified_tolerance: Some(new_data.specified_tolerance.clone()),
+            technical_committee: Some(new_data.technical_committee.clone()),
+            publication_at: new_data.publication_at.clone(),
+            company_uuid: Some(new_data.company_uuid.clone()),
+            standard_status_id: Some(new_data.standard_status_id as i64),
+            region_id: Some(new_data.region_id as i64),
+        }
+    }
+}
+
+impl From<(&StandardInfo, &StandardUpdatePreData)> for StandardUpdateData {
+    /// Update only if the data is different from the old data
+    fn from(data: (&StandardInfo, &StandardUpdatePreData)) -> Self {
+        let (old_data, new_data) = data;
+        let publication_at: Option<NaiveDateTime> = new_data.publication_at.as_ref().map(|new_dt| {
+            match &old_data.publication_at == new_dt {
+                true => None,
+                false => new_data.publication_at,
+            }
+        }).unwrap_or_default();
+
+        Self {
+            classifier: match old_data.classifier == new_data.classifier {
+                true => None,
+                false => Some(new_data.classifier.clone()),
+            },
+            name: match old_data.name == new_data.name {
+                true => None,
+                false => Some(new_data.name.clone()),
+            },
+            description: match old_data.description == new_data.description {
+                true => None,
+                false => Some(new_data.description.clone()),
+            },
+            specified_tolerance: match old_data.specified_tolerance == new_data.specified_tolerance {
+                true => None,
+                false => Some(new_data.specified_tolerance.clone()),
+            },
+            technical_committee: match old_data.technical_committee == new_data.technical_committee {
+                true => None,
+                false => Some(new_data.technical_committee.clone()),
+            },
+            publication_at,
+            company_uuid: match old_data.owner_company.uuid == new_data.company_uuid {
+                true => None,
+                false => Some(new_data.company_uuid.clone()),
+            },
+            standard_status_id: match old_data.standard_status.standard_status_id == new_data.standard_status_id {
+                true => None,
+                false => Some(new_data.standard_status_id as i64),
+            },
+            region_id: match old_data.region.region_id == new_data.region_id {
+                true => None,
+                false => Some(new_data.region_id as i64),
+            },
+        }
+    }
 }
 
 // for arguments users query

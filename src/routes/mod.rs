@@ -46,6 +46,8 @@ pub enum AppRoute {
     CreateCompany,
     #[to = "#/company/{uuid}"]
     ShowCompany(String),
+    #[to = "#/standard/settings/{uuid}"]
+    StandardSettings(String),
     #[to = "#/standard/{uuid}"]
     ShowStandard(String),
     // #[to = "#/@{username}/favorites"]

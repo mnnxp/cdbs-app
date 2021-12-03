@@ -14,7 +14,7 @@ use crate::fragments::list_errors::ListErrors;
 use crate::gqls::make_query;
 use crate::routes::AppRoute;
 use crate::types::{
-    RegisterInfo, SlimUser, Region, Program
+    UUID, RegisterInfo, SlimUser, Region, Program
 };
 
 /// Register page

@@ -1,46 +1,31 @@
 query GetStandardData($standardUuid: UUID!) {
   standard(standardUuid: $standardUuid) {
-    uuid
-    parentStandardUuid
-    classifier
-    name
-    description
-    specifiedTolerance
-    technicalCommittee
-    publicationAt
-    imageFile {
-      ...downloadFileFields
-    }
-    ownerUser {
-      ...showUserShortFields
-    }
-    ownerCompany {
-      ...showCompanyShortFields
-    }
-    typeAccessId
-    standardStatus {
-      ...standardStatusFields
-    }
-    region {
-      ...regionFields
-    }
-    standardFiles {
-      ...showFileRelatedDataFields
-    }
-    standardSpecs {
-      spec {
-        ...specTranslateListFields
-      }
-      standardUuid
-    }
-    standardKeywords {
-      id
-      keyword
-    }
-    subscribers
-    isFollowed
-    createdAt
-    updatedAt
+    ...standardAndRelatedDataFields
+  }
+}
+
+query GetUpdateStandardDataOpt($standardUuid: UUID!, $userUuid: UUID!) {
+  standard(standardUuid: $standardUuid) {
+    ...standardAndRelatedDataFields
+  }
+
+  companies(arguments: {
+    userUuid: $userUuid
+    supplier: true
+  }) {
+    ...companyShortFields
+  }
+
+  standardStatuses{
+    ...standardStatusFields
+  }
+
+  regions{
+    ...regionFields
+  }
+
+  typesAccess {
+    ...typeAccessFields
   }
 }
 
@@ -67,6 +52,10 @@ query StandardFiles($iptStandardFilesArg: IptStandardFilesArg!) {
   standardFiles(arg: $iptStandardFilesArg){
     ...downloadFileFields
   }
+}
+
+mutation PutStandardUpdate($standardUuid: UUID!, $iptUpdateStandardData: IptUpdateStandardData!) {
+  putStandardUpdate(standardUuid: $standardUuid, data: $iptUpdateStandardData)
 }
 
 mutation DeleteStandardFile($deleteStandardFileData: DeleteStandardFileData!) {
@@ -169,6 +158,12 @@ fragment specTranslateListFields on SpecTranslateList {
   spec
 }
 
+fragment typeAccessFields on TypeAccessTranslateList {
+  typeAccessId
+  langId
+  name
+}
+
 fragment showFileRelatedDataFields on ShowFileRelatedData {
   uuid
   filename
@@ -182,6 +177,52 @@ fragment showFileRelatedDataFields on ShowFileRelatedData {
     id
     name
   }
+  createdAt
+  updatedAt
+}
+
+fragment standardAndRelatedDataFields on StandardAndRelatedData {
+  uuid
+  parentStandardUuid
+  classifier
+  name
+  description
+  specifiedTolerance
+  technicalCommittee
+  publicationAt
+  imageFile {
+    ...downloadFileFields
+  }
+  ownerUser {
+    ...showUserShortFields
+  }
+  ownerCompany {
+    ...showCompanyShortFields
+  }
+  typeAccess {
+    ...typeAccessFields
+  }
+  standardStatus {
+    ...standardStatusFields
+  }
+  region {
+    ...regionFields
+  }
+  standardFiles {
+    ...showFileRelatedDataFields
+  }
+  standardSpecs {
+    spec {
+      ...specTranslateListFields
+    }
+    standardUuid
+  }
+  standardKeywords {
+    id
+    keyword
+  }
+  subscribers
+  isFollowed
   createdAt
   updatedAt
 }

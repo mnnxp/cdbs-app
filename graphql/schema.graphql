@@ -328,6 +328,7 @@ input IptCompaniesArg {
   companiesUuids: [UUID!]
   userUuid: UUID
   favorite: Boolean
+  supplier: Boolean
   limit: Int
   offset: Int
 }
@@ -941,6 +942,7 @@ type QueryRoot {
   getUsersListAccessStandard(
     standardUuid: UUID!
   ): [UserAccessStandardAndRelatedData!]!
+  standardStatuses(filter: [Int!]): [StandardStatusTranslateList!]!
   companies(arguments: IptCompaniesArg): [ShowCompanyShort!]!
   company(companyUuid: UUID!): CompanyAndRelatedData!
   companyRepresents(
@@ -1114,7 +1116,7 @@ type SlimComponentModification {
 }
 
 type SlimStandard {
-  uuid: ID!
+  uuid: UUID!
   classifier: String!
   name: String!
   specifiedTolerance: String!
@@ -1124,7 +1126,7 @@ type SlimStandard {
 }
 
 type SlimUser {
-  uuid: ID!
+  uuid: UUID!
   username: String!
   programId: Int!
 }
@@ -1153,7 +1155,7 @@ type StandardAndRelatedData {
   imageFile: DownloadFile!
   ownerUser: ShowUserShort!
   ownerCompany: ShowCompanyShort!
-  typeAccessId: Int!
+  typeAccess: TypeAccessTranslateList!
   standardStatus: StandardStatusTranslateList!
   region: RegionTranslateList!
   createdAt: NaiveDateTime!

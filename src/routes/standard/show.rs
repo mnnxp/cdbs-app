@@ -301,12 +301,12 @@ impl Component for ShowStandard {
                 }
             }
             Msg::OpenStandardSetting => {
-                // if let Some(standard_data) = &self.standard {
-                //     // Redirect to owner standard page
-                //     self.router_agent.send(ChangeRoute(AppRoute::StandardSettings(
-                //         standard_data.uuid.clone()
-                //     ).into()));
-                // }
+                if let Some(standard_data) = &self.standard {
+                    // Redirect to page for change and update standard
+                    self.router_agent.send(ChangeRoute(AppRoute::StandardSettings(
+                        standard_data.uuid.clone()
+                    ).into()));
+                }
             }
             Msg::Ignore => {}
         }
