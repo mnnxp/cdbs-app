@@ -107,6 +107,7 @@ pub enum Msg {
     UpdateStandardStatusId(String),
     UpdateRegionId(String),
     ResponseError(Error),
+    ClearError,
     Ignore,
 }
 
@@ -308,6 +309,7 @@ impl Component for StandardSettings {
             Msg::ResponseError(err) => {
                 self.error = Some(err);
             },
+            Msg::ClearError => self.error = None,
             Msg::Ignore => {},
         }
         true
@@ -319,6 +321,9 @@ impl Component for StandardSettings {
     }
 
     fn view(&self) -> Html {
+        let onclick_clear_error = self.link
+            .callback(|_| Msg::ClearError);
+
         let onclick_open_standard = self.link
             .callback(|_| Msg::OpenStandard);
         let onclick_save_changes = self.link
@@ -338,7 +343,7 @@ impl Component for StandardSettings {
                                 </button>
                             </div>
                             <div class="media-content">
-                                <ListErrors error=self.error.clone()/>
+                                <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
                                 // {"Update standard data"}
                                 {match self.get_result_standard_data > 0 {
                                     true => html!{

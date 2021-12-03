@@ -1,4 +1,4 @@
-use yew::{html, Component, ComponentLink, Html, Properties, ShouldRender};
+use yew::{html, Callback, Component, ComponentLink, Html, Properties, ShouldRender};
 
 use crate::error::Error;
 
@@ -10,6 +10,7 @@ pub struct ListErrors {
 #[derive(Properties, Clone)]
 pub struct Props {
     pub error: Option<Error>,
+    pub clear_error: Option<Callback<()>>,
 }
 
 pub enum Msg {
@@ -29,7 +30,12 @@ impl Component for ListErrors {
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
-            Msg::CloseError => self.props.error = None,
+            Msg::CloseError => {
+                self.props.error = None;
+                if let Some(clear) = &self.props.clear_error {
+                    clear.emit(());
+                };
+            },
         }
         true
     }
