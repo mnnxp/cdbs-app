@@ -43,12 +43,6 @@ pub struct ChangeUserCertData {
     description: String,
 }
 
-/// For delete user Certificate
-#[derive(Default, Clone, Debug)]
-pub struct DeleteUserCertData {
-    file_uuid: String,
-}
-
 /// For viewing certificate data on page
 #[derive(Debug)]
 pub struct CertificateCard {

@@ -45,13 +45,6 @@ pub struct ChangeCompanyCertData {
     description: String,
 }
 
-/// For delete company Certificate
-#[derive(Default, Clone, Debug)]
-pub struct DeleteCompanyCertData {
-    company_uuid: String,
-    file_uuid: String,
-}
-
 /// For viewing certificate data on page
 #[derive(Debug)]
 pub struct CompanyCertificateCard {
@@ -83,7 +76,6 @@ impl Component for CompanyCertificateCard {
         Self {
             error: None,
             request_update: props.certificate.description.to_string(),
-            // request_delete: DeleteCompanyCertData::default(),
             props,
             link,
             get_result_update: false,

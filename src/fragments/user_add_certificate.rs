@@ -58,8 +58,8 @@ pub struct AddCertificateCard {
     error: Option<Error>,
     request_upload_data: UploadFile,
     request_upload_file: Callback<Result<Option<String>, Error>>,
-    request_upload_completed: String,
-    response_upload_file: Option<Result<String, Error>>,
+    // request_upload_completed: String,
+    // response_upload_file: Option<Result<String, Error>>,
     task_read: Option<(FileName, ReaderTask)>,
     task: Option<FetchTask>,
     props: Props,
@@ -99,8 +99,8 @@ impl Component for AddCertificateCard {
             error: None,
             request_upload_data: UploadFile::default(),
             request_upload_file: link.callback(Msg::ResponseUploadFile),
-            request_upload_completed: String::new(),
-            response_upload_file: None,
+            // request_upload_completed: String::new(),
+            // response_upload_file: None,
             task_read: None,
             task: None,
             props,
@@ -227,8 +227,8 @@ impl Component for AddCertificateCard {
                 match res_value.is_null() {
                     false => {
                         let result: usize = serde_json::from_value(res_value.get("uploadCompleted").unwrap().clone()).unwrap();
-                        crate::yewLog!(result);
                         self.get_result_up_completed = result;
+                        self.props.callback.emit("".to_string());
                     },
                     true => {
                         link.send_message(Msg::ResponseError(get_error(&data)));
