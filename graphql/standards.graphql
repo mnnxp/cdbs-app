@@ -58,6 +58,10 @@ mutation PutStandardUpdate($standardUuid: UUID!, $iptUpdateStandardData: IptUpda
   putStandardUpdate(standardUuid: $standardUuid, data: $iptUpdateStandardData)
 }
 
+mutation ChangeStandardAccess($changeTypeAccessStandard: ChangeTypeAccessStandard!) {
+  changeStandardAccess(data: $changeTypeAccessStandard)
+}
+
 mutation DeleteStandardFile($deleteStandardFileData: DeleteStandardFileData!) {
   deleteStandardFile(arg: $deleteStandardFileData)
 }

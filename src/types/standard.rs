@@ -125,55 +125,6 @@ impl From<&StandardUpdatePreData> for StandardUpdateData {
     }
 }
 
-impl From<(&StandardInfo, &StandardUpdatePreData)> for StandardUpdateData {
-    /// Update only if the data is different from the old data
-    fn from(data: (&StandardInfo, &StandardUpdatePreData)) -> Self {
-        let (old_data, new_data) = data;
-        let publication_at: Option<NaiveDateTime> = new_data.publication_at.as_ref().map(|new_dt| {
-            match &old_data.publication_at == new_dt {
-                true => None,
-                false => new_data.publication_at,
-            }
-        }).unwrap_or_default();
-
-        Self {
-            classifier: match old_data.classifier == new_data.classifier {
-                true => None,
-                false => Some(new_data.classifier.clone()),
-            },
-            name: match old_data.name == new_data.name {
-                true => None,
-                false => Some(new_data.name.clone()),
-            },
-            description: match old_data.description == new_data.description {
-                true => None,
-                false => Some(new_data.description.clone()),
-            },
-            specified_tolerance: match old_data.specified_tolerance == new_data.specified_tolerance {
-                true => None,
-                false => Some(new_data.specified_tolerance.clone()),
-            },
-            technical_committee: match old_data.technical_committee == new_data.technical_committee {
-                true => None,
-                false => Some(new_data.technical_committee.clone()),
-            },
-            publication_at,
-            company_uuid: match old_data.owner_company.uuid == new_data.company_uuid {
-                true => None,
-                false => Some(new_data.company_uuid.clone()),
-            },
-            standard_status_id: match old_data.standard_status.standard_status_id == new_data.standard_status_id {
-                true => None,
-                false => Some(new_data.standard_status_id as i64),
-            },
-            region_id: match old_data.region.region_id == new_data.region_id {
-                true => None,
-                false => Some(new_data.region_id as i64),
-            },
-        }
-    }
-}
-
 // for arguments users query
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]
 #[serde(rename_all = "camelCase")]

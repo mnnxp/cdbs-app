@@ -48,6 +48,14 @@ struct GetUpdateStandardDataOpt;
 )]
 struct PutStandardUpdate;
 
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/standards.graphql",
+    response_derives = "Debug"
+)]
+struct ChangeStandardAccess;
+
 /// Standard with relate data
 pub struct StandardSettings {
     error: Option<Error>,
@@ -64,12 +72,12 @@ pub struct StandardSettings {
     standard_statuses: Vec<StandardStatus>,
     regions: Vec<Region>,
     types_access: Vec<TypeAccessInfo>,
-    edit_standard_data: bool,
-    edit_standard_files: bool,
-    edit_standard_specs: bool,
-    edit_standard_keywords: bool,
+    update_standard: bool,
+    update_standard_access: bool,
+    upload_standard_files: bool,
     disable_save_changes_btn: bool,
     get_result_standard_data: usize,
+    get_result_access: bool,
 }
 
 #[derive(Properties, Clone)]
@@ -81,21 +89,21 @@ pub struct Props {
 #[derive(Clone)]
 pub enum Msg {
     OpenStandard,
+    RequestManager,
     RequestUpdateStandardData,
+    RequestChangeAccess,
     // RequestUpdateStandardFiles,
     // RequestUpdateStandardSpecs,
     // RequestUpdateStandardKeywords,
     GetStandardData(String),
     GetListOpt(String),
     GetUpdateStandardResult(String),
+    GetUpdateAccessResult(String),
     // GetUpdateStandardFiles(String),
     // GetUpdateStandardSpecs(String),
     // GetUpdateStandardKeywords(String),
     // GetRemoveStandardResult(String),
-    EditStandardData,
     EditFiles,
-    EditSpecs,
-    EditKeywords,
     UpdateTypeAccessId(String),
     UpdateClassifier(String),
     UpdateName(String),
@@ -131,12 +139,12 @@ impl Component for StandardSettings {
             standard_statuses: Vec::new(),
             regions: Vec::new(),
             types_access: Vec::new(),
-            edit_standard_data: false,
-            edit_standard_files: false,
-            edit_standard_specs: false,
-            edit_standard_keywords: false,
-            disable_save_changes_btn: false,
+            update_standard: false,
+            update_standard_access: false,
+            upload_standard_files: false,
+            disable_save_changes_btn: true,
             get_result_standard_data: 0,
+            get_result_access: false,
         }
     }
 
@@ -186,13 +194,24 @@ impl Component for StandardSettings {
                     self.current_standard_uuid.clone()
                 ).into()));
             },
+            Msg::RequestManager => {
+                if self.update_standard {
+                    self.link.send_message(Msg::RequestUpdateStandardData)
+                }
+                if self.update_standard_access {
+                    self.link.send_message(Msg::RequestChangeAccess)
+                }
+
+                self.update_standard = false;
+                self.update_standard_access = false;
+                // self.upload_standard_files = false;
+                self.disable_save_changes_btn = true;
+                self.get_result_standard_data = 0;
+                self.get_result_access = false;
+            },
             Msg::RequestUpdateStandardData => {
                 let standard_uuid = self.current_standard_uuid.clone();
-                let request_standard: StandardUpdateData = match (&self.current_standard, self.get_result_standard_data > 0) {
-                    (_, true) => (&self.request_standard).into(), // if current standard data not actual
-                    (Some(standard_data), _) => (standard_data, &self.request_standard).into(),
-                    _ => StandardUpdateData::default(),
-                };
+                let request_standard: StandardUpdateData = (&self.request_standard).into();
 
                 spawn_local(async move {
                     let StandardUpdateData {
@@ -222,6 +241,22 @@ impl Component for StandardSettings {
                         ipt_update_standard_data
                     })).await;
                     link.send_message(Msg::GetUpdateStandardResult(res.unwrap()));
+                })
+            },
+            Msg::RequestChangeAccess => {
+                let standard_uuid = self.current_standard_uuid.clone();
+                let new_type_access_id = self.request_access.clone();
+                spawn_local(async move {
+                    let change_type_access_standard = change_standard_access::ChangeTypeAccessStandard{
+                        standardUuid: standard_uuid,
+                        newTypeAccessId: new_type_access_id,
+                    };
+                    let res = make_query(ChangeStandardAccess::build_query(
+                        change_standard_access::Variables {
+                            change_type_access_standard,
+                        }
+                    )).await;
+                    link.send_message(Msg::GetUpdateAccessResult(res.unwrap()));
                 })
             },
             Msg::GetStandardData(res) => {
@@ -277,19 +312,53 @@ impl Component for StandardSettings {
                     true => self.error = Some(get_error(&data)),
                 }
             },
-            Msg::EditStandardData => self.edit_standard_data = !self.edit_standard_data,
-            Msg::EditFiles => self.edit_standard_files = !self.edit_standard_files,
-            Msg::EditSpecs => self.edit_standard_specs = !self.edit_standard_specs,
-            Msg::EditKeywords => self.edit_standard_keywords = !self.edit_standard_keywords,
+            Msg::GetUpdateAccessResult(res) => {
+                let data: Value = serde_json::from_str(res.as_str()).unwrap();
+                let res_value = data.as_object().unwrap().get("data").unwrap();
+
+                match res_value.is_null() {
+                    false => {
+                        let result: bool =
+                            serde_json::from_value(res_value.get("changeStandardAccess").unwrap().clone()).unwrap();
+                        debug!("Standard change access: {:?}", result);
+                        self.update_standard_access = false;
+                        self.get_result_access = result;
+                    },
+                    true => self.error = Some(get_error(&data)),
+                }
+            },
+            Msg::EditFiles => self.upload_standard_files = !self.upload_standard_files,
             Msg::UpdateTypeAccessId(data) => {
-                self.request_access = data.parse::<i64>().unwrap_or_default()
+                self.request_access = data.parse::<i64>().unwrap_or_default();
+                self.update_standard_access = true;
+                self.disable_save_changes_btn = false;
             },
             // items request update main standard data
-            Msg::UpdateClassifier(data) => self.request_standard.classifier = data,
-            Msg::UpdateName(data) => self.request_standard.name = data,
-            Msg::UpdateDescription(data) => self.request_standard.description = data,
-            Msg::UpdateSpecifiedTolerance(data) => self.request_standard.specified_tolerance = data,
-            Msg::UpdateTechnicalCommittee(data) => self.request_standard.technical_committee = data,
+            Msg::UpdateClassifier(data) => {
+                self.request_standard.classifier = data;
+                self.update_standard = true;
+                self.disable_save_changes_btn = false;
+            },
+            Msg::UpdateName(data) => {
+                self.request_standard.name = data;
+                self.update_standard = true;
+                self.disable_save_changes_btn = false;
+            },
+            Msg::UpdateDescription(data) => {
+                self.request_standard.description = data;
+                self.update_standard = true;
+                self.disable_save_changes_btn = false;
+            },
+            Msg::UpdateSpecifiedTolerance(data) => {
+                self.request_standard.specified_tolerance = data;
+                self.update_standard = true;
+                self.disable_save_changes_btn = false;
+            },
+            Msg::UpdateTechnicalCommittee(data) => {
+                self.request_standard.technical_committee = data;
+                self.update_standard = true;
+                self.disable_save_changes_btn = false;
+            },
             Msg::UpdatePublicationAt(data) => {
                 let date = NaiveDateTime::parse_from_str(&format!("{} 00:00:00", data), "%Y-%m-%d %H:%M:%S");
                 debug!("new date: {:?}", date);
@@ -299,13 +368,23 @@ impl Component for StandardSettings {
                         Some(cs) => Some(cs.publication_at),
                         None => self.request_standard.publication_at,
                     },
-                }
+                };
+                self.update_standard = true;
+                self.disable_save_changes_btn = false;
             },
-            Msg::UpdateCompanyUuid(data) => self.request_standard.company_uuid = data,
+            Msg::UpdateCompanyUuid(data) => {
+                self.request_standard.company_uuid = data;
+                self.update_standard = true;
+                self.disable_save_changes_btn = false;
+            },
             Msg::UpdateStandardStatusId(data) => {
-                 self.request_standard.standard_status_id = data.parse::<usize>().unwrap_or_default();
+                self.request_standard.standard_status_id = data.parse::<usize>().unwrap_or_default();
+                self.update_standard = true;
+                self.disable_save_changes_btn = false;
             },
-            Msg::UpdateRegionId(data) => self.request_standard.region_id = data.parse::<usize>().unwrap_or_default(),
+            Msg::UpdateRegionId(data) => {
+                self.request_standard.region_id = data.parse::<usize>().unwrap_or_default();
+            },
             Msg::ResponseError(err) => {
                 self.error = Some(err);
             },
@@ -324,48 +403,13 @@ impl Component for StandardSettings {
         let onclick_clear_error = self.link
             .callback(|_| Msg::ClearError);
 
-        let onclick_open_standard = self.link
-            .callback(|_| Msg::OpenStandard);
-        let onclick_save_changes = self.link
-            .callback(|_| Msg::RequestUpdateStandardData);
-
         html! {
             <div class="standard-page">
                 <div class="container page">
                     <div class="row">
-                        <div class="media">
-                            <div class="media-left">
-                                <button
-                                    id="open-standard"
-                                    class="button"
-                                    onclick={onclick_open_standard} >
-                                    {"Open standard"}
-                                </button>
-                            </div>
-                            <div class="media-content">
-                                <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
-                                // {"Update standard data"}
-                                {match self.get_result_standard_data > 0 {
-                                    true => html!{
-                                        <div class="notification">
-                                          // <button class="delete"></button>
-                                          {"Update standard data "}<strong>{self.get_result_standard_data}</strong>
-                                        </div>
-                                        // format!("Update standard data {:?}", self.get_result_standard_data)
-                                    },
-                                    false => html!{},
-                                }}
-                            </div>
-                            <div class="media-right">
-                                <button
-                                    id="update-data"
-                                    class="button"
-                                    onclick={onclick_save_changes}
-                                    disabled={self.disable_save_changes_btn} >
-                                    {"Save changes"}
-                                </button>
-                            </div>
-                        </div>
+                        <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
+                        // <br/>
+                        {self.show_manage_btn()}
                         <br/>
                         <div class="card">
                           {self.show_main_card()}
@@ -379,6 +423,7 @@ impl Component for StandardSettings {
                                 {self.show_standard_specs(standard_data)}
                                 <br/>
                                 {self.show_standard_keywords(standard_data)}
+                                <br/>
                             </>},
                             None => html!{},
                         }}
@@ -665,5 +710,41 @@ impl StandardSettings {
                   />
               </div>
         </>}
+    }
+
+    fn show_manage_btn(&self) -> Html {
+        let onclick_open_standard = self.link
+            .callback(|_| Msg::OpenStandard);
+        let onclick_save_changes = self.link
+            .callback(|_| Msg::RequestManager);
+
+        html!{
+            <div class="media">
+                <div class="media-left">
+                    <button
+                        id="open-standard"
+                        class="button"
+                        onclick={onclick_open_standard} >
+                        {"Cancel"}
+                    </button>
+                </div>
+                <div class="media-content">
+                    {if self.get_result_standard_data > 0 || self.get_result_access {
+                        html!{"Data updated"}
+                    } else {
+                        html!{}
+                    }}
+                </div>
+                <div class="media-right">
+                    <button
+                        id="update-data"
+                        class="button"
+                        onclick={onclick_save_changes}
+                        disabled={self.disable_save_changes_btn} >
+                        {"Update"}
+                    </button>
+                </div>
+            </div>
+        }
     }
 }
