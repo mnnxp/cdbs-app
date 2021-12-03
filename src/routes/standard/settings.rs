@@ -53,6 +53,7 @@ pub struct StandardSettings {
     error: Option<Error>,
     current_standard: Option<StandardInfo>,
     request_standard: StandardUpdatePreData,
+    request_access: i64,
     current_standard_uuid: UUID,
     // current_user_uuid: UUID,
     // task: Option<FetchTask>,
@@ -95,6 +96,7 @@ pub enum Msg {
     EditFiles,
     EditSpecs,
     EditKeywords,
+    UpdateTypeAccessId(String),
     UpdateClassifier(String),
     UpdateName(String),
     UpdateDescription(String),
@@ -117,6 +119,7 @@ impl Component for StandardSettings {
             error: None,
             current_standard: None,
             request_standard: StandardUpdatePreData::default(),
+            request_access: 0,
             current_standard_uuid: String::new(),
             // current_user_uuid: String::new(),
             // task: None,
@@ -277,7 +280,10 @@ impl Component for StandardSettings {
             Msg::EditFiles => self.edit_standard_files = !self.edit_standard_files,
             Msg::EditSpecs => self.edit_standard_specs = !self.edit_standard_specs,
             Msg::EditKeywords => self.edit_standard_keywords = !self.edit_standard_keywords,
-            // items for request update standard data
+            Msg::UpdateTypeAccessId(data) => {
+                self.request_access = data.parse::<i64>().unwrap_or_default()
+            },
+            // items request update main standard data
             Msg::UpdateClassifier(data) => self.request_standard.classifier = data,
             Msg::UpdateName(data) => self.request_standard.name = data,
             Msg::UpdateDescription(data) => self.request_standard.description = data,
@@ -320,7 +326,6 @@ impl Component for StandardSettings {
 
         html! {
             <div class="standard-page">
-                <ListErrors error=self.error.clone()/>
                 <div class="container page">
                     <div class="row">
                         <div class="media">
@@ -333,9 +338,16 @@ impl Component for StandardSettings {
                                 </button>
                             </div>
                             <div class="media-content">
+                                <ListErrors error=self.error.clone()/>
                                 // {"Update standard data"}
                                 {match self.get_result_standard_data > 0 {
-                                    true => html!{format!("Update standard data {:?}", self.get_result_standard_data)},
+                                    true => html!{
+                                        <div class="notification">
+                                          // <button class="delete"></button>
+                                          {"Update standard data "}<strong>{self.get_result_standard_data}</strong>
+                                        </div>
+                                        // format!("Update standard data {:?}", self.get_result_standard_data)
+                                    },
                                     false => html!{},
                                 }}
                             </div>
@@ -381,6 +393,12 @@ impl StandardSettings {
               _ => "".to_string(),
           }));
 
+        let onchange_change_type_access = self.link
+            .callback(|ev: ChangeData| Msg::UpdateTypeAccessId(match ev {
+              ChangeData::Select(el) => el.value(),
+              _ => "1".to_string(),
+          }));
+
         let oninput_name = self
             .link
             .callback(|ev: InputData| Msg::UpdateName(ev.value));
@@ -402,7 +420,7 @@ impl StandardSettings {
                           id="cert-file-input"
                           class="file-input"
                           type="file"
-                          accept="image/*,application/vnd*,application/rtf,text/*"
+                          accept="image/*,application/vnd*,application/rtf,text/*,.pdf"
                           // onchange={onchange_cert_file}
                           />
                       <span class="file-cta">
@@ -416,20 +434,41 @@ impl StandardSettings {
               </div>
               <div class="column">
                 <div class="control">
-                    <label class="label">{"Owner company "}</label>
-                    <div class="select">
-                      <select
-                          id="set-owner-company"
-                          select={self.request_standard.company_uuid.clone()}
-                          onchange=onchange_change_owner_company
-                          >
-                        { for self.supplier_list.iter().map(|x|
-                            match self.request_standard.company_uuid == x.uuid {
-                                true => html!{ <option value={x.uuid.to_string()} selected=true>{&x.shortname}</option> },
-                                false => html!{ <option value={x.uuid.to_string()}>{&x.shortname}</option> },
-                            }
-                        )}
-                      </select>
+                    <div class="media">
+                        <div class="media-content">
+                            <label class="label">{"Owner company "}</label>
+                            <div class="select">
+                              <select
+                                  id="set-owner-company"
+                                  select={self.request_standard.company_uuid.clone()}
+                                  onchange=onchange_change_owner_company
+                                >
+                              { for self.supplier_list.iter().map(|x|
+                                  match self.request_standard.company_uuid == x.uuid {
+                                      true => html!{ <option value={x.uuid.to_string()} selected=true>{&x.shortname}</option> },
+                                      false => html!{ <option value={x.uuid.to_string()}>{&x.shortname}</option> },
+                                  }
+                              )}
+                              </select>
+                            </div>
+                        </div>
+                        <div class="media-right" style="margin-right: 1rem">
+                            <label class="label">{"Type access "}</label>
+                            <div class="select">
+                              <select
+                                  id="set-type-access"
+                                  select={self.request_standard.company_uuid.clone()}
+                                  onchange=onchange_change_type_access
+                                >
+                              { for self.types_access.iter().map(|x|
+                                  match self.current_standard.as_ref().map(|s| s.type_access.type_access_id).unwrap_or_default() == x.type_access_id {
+                                      true => html!{ <option value={x.type_access_id.to_string()} selected=true>{&x.name}</option> },
+                                      false => html!{ <option value={x.type_access_id.to_string()}>{&x.name}</option> },
+                                  }
+                              )}
+                              </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <label class="label">{"Name"}</label>

@@ -369,12 +369,21 @@ impl ShowStandard {
                 <img class="imgBox" src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
               </div>
               <div class="column">
-                {"uploaded from "}<a class="id-box has-text-grey-light has-text-weight-bold"
-                      onclick={onclick_open_owner_company}
-                    >{format!("{} {}",
-                    &standard_data.owner_company.shortname,
-                    &standard_data.owner_company.company_type.shortname
-                )}</a>
+                <div class="media">
+                    <div class="media-content">
+                        {"uploaded from "}<a class="id-box has-text-grey-light has-text-weight-bold"
+                              onclick={onclick_open_owner_company}
+                            >{format!("{} {}",
+                            &standard_data.owner_company.shortname,
+                            &standard_data.owner_company.company_type.shortname
+                        )}</a>
+                    </div>
+                    <div class="media-right" style="margin-right: 1rem">
+                        {"type access "}<span class="id-box has-text-grey-light has-text-weight-bold">{
+                            standard_data.type_access.name.clone()
+                        }</span>
+                    </div>
+                </div>
                 // <h1>{"Standard"}</h1>
                 <div class="has-text-weight-bold is-size-4">{
                     standard_data.name.clone()
