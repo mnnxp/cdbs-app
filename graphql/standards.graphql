@@ -58,6 +58,18 @@ mutation PutStandardUpdate($standardUuid: UUID!, $iptUpdateStandardData: IptUpda
   putStandardUpdate(standardUuid: $standardUuid, data: $iptUpdateStandardData)
 }
 
+mutation UploadStandardFiles($iptStandardFilesData: IptStandardFilesData!) {
+  uploadStandardFiles(data: $iptStandardFilesData){
+    ...uploadUrlFields
+  }
+}
+
+fragment uploadUrlFields on UploadFile {
+  fileUuid
+  filename
+  uploadUrl
+}
+
 mutation ChangeStandardAccess($changeTypeAccessStandard: ChangeTypeAccessStandard!) {
   changeStandardAccess(data: $changeTypeAccessStandard)
 }
