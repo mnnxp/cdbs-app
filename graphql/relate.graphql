@@ -13,3 +13,7 @@ fragment typesAccessTransListFileds on TypeAccessTranslateList {
 mutation ConfirmUploadCompleted($fileUuids: [String!]!) {
   uploadCompleted(fileUuids: $fileUuids)
 }
+
+mutation DeleteFile($fileUuid: String!) {
+  deleteFile(fileUuid: $fileUuid)
+}

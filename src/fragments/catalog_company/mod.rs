@@ -112,6 +112,7 @@ impl Component for CatalogCompanies {
                         companiesUuids: arg.companies_uuids.clone(),
                         userUuid: arg.user_uuid.to_owned(),
                         favorite: arg.favorite,
+                        supplier: arg.supplier,
                         limit: arg.limit,
                         offset: arg.offset,
                     }),

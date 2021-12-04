@@ -5,6 +5,7 @@ pub mod user;
 pub mod tender;
 pub mod component;
 pub mod company;
+pub mod standard;
 
 pub use user::{
     login,
@@ -45,6 +46,10 @@ pub enum AppRoute {
     CreateCompany,
     #[to = "#/company/{uuid}"]
     ShowCompany(String),
+    #[to = "#/standard/settings/{uuid}"]
+    StandardSettings(String),
+    #[to = "#/standard/{uuid}"]
+    ShowStandard(String),
     // #[to = "#/@{username}/favorites"]
     // ProfileFavorites(String),
     #[to = "#/users"]

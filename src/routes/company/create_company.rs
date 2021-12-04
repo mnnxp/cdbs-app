@@ -18,7 +18,7 @@ use crate::routes::AppRoute;
 use crate::services::is_authenticated;
 use crate::types::{
     SlimUser, CompanyCreateInfo, Region,
-    CompanyType, TypeAccessTranslateListInfo, SlimCompany,
+    CompanyType, TypeAccessInfo, SlimCompany,
 };
 
 #[derive(GraphQLQuery)]
@@ -46,7 +46,7 @@ pub struct CreateCompany {
     link: ComponentLink<Self>,
     regions: Vec<Region>,
     company_types: Vec<CompanyType>,
-    types_access: Vec<TypeAccessTranslateListInfo>,
+    types_access: Vec<TypeAccessInfo>,
 }
 
 #[derive(Properties, Clone)]

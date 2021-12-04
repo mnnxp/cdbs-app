@@ -5,12 +5,13 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct ShowFileForDownload {
+pub struct ShowFileInfo {
     pub uuid: String,
+    pub filename: String,
     pub parent_file_uuid: String,
-    pub download: DownloadFile,
     pub owner_user: ShowUserShort,
     pub content_type: String,
+    pub filesize: usize,
     pub program: Program,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,

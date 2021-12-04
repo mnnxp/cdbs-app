@@ -20,8 +20,8 @@ pub struct Program {
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Spec {
-    pub spec_id: i32,
-    pub lang_id: i32,
+    pub spec_id: usize,
+    pub lang_id: usize,
     pub spec: String,
 }
 
@@ -31,6 +31,12 @@ pub struct SearchSpec {
     pub spec_id: i32,
     pub lang_id: i32,
     pub path: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct Keyword {
+    pub id: usize,
+    pub keyword: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -75,7 +81,7 @@ impl From<&super::CompanyCertificate> for Certificate {
 
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct TypeAccessTranslateListInfo {
+pub struct TypeAccessInfo {
     pub lang_id: usize,
     pub name: String,
     pub type_access_id: usize,

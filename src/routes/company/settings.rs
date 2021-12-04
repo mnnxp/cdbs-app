@@ -23,9 +23,9 @@ use crate::gqls::make_query;
 use crate::routes::AppRoute;
 use crate::services::is_authenticated;
 use crate::types::{
-    Certificate, CompanyCertificate, CompanyInfo, CompanyRepresentInfo, CompanyType,
-    CompanyUpdateInfo, Region, SearchSpec, SlimCompany, SlimUser, Spec,
-    TypeAccessTranslateListInfo, UUID,
+    UUID, SlimUser, CompanyUpdateInfo, CompanyInfo, Region,
+    CompanyType, TypeAccessInfo, SlimCompany,
+    Certificate, CompanyCertificate, CompanyRepresentInfo
 };
 
 #[derive(GraphQLQuery)]
@@ -147,7 +147,7 @@ pub struct CompanySettings {
     company_uuid: String,
     current_data: Option<CompanyInfo>,
     regions: Vec<Region>,
-    types_access: Vec<TypeAccessTranslateListInfo>,
+    types_access: Vec<TypeAccessInfo>,
     company_types: Vec<CompanyType>,
     get_result_update: usize,
     get_result_access: bool,

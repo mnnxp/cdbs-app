@@ -146,7 +146,7 @@ type ComponentAndRelatedData {
   updatedAt: NaiveDateTime!
   licenses: [License!]!
   componentParams: [ComponentParamWithTranslation!]!
-  files: [ShowFileForDownload!]!
+  files: [ShowFileRelatedData!]!
   componentSpecs: [ComponentSpecWithTranslation!]!
   componentKeywords: [Keyword!]!
   componentModifications: [ComponentModificationAndRelatedData!]!
@@ -309,7 +309,7 @@ type Extension {
 
 type FileOfFileset {
   filesetUuid: UUID!
-  file: ShowFileForDownload!
+  file: ShowFileRelatedData!
 }
 
 type FilesetProgram {
@@ -328,6 +328,7 @@ input IptCompaniesArg {
   companiesUuids: [UUID!]
   userUuid: UUID
   favorite: Boolean
+  supplier: Boolean
   limit: Int
   offset: Int
 }
@@ -396,7 +397,7 @@ input IptComponentData {
 }
 
 input IptComponentFileData {
-  filename: [String!]!
+  filenames: [String!]!
   componentUuid: UUID!
 }
 
@@ -453,13 +454,13 @@ input IptKeywordData {
 }
 
 input IptModificationFileData {
-  filename: [String!]!
+  filenames: [String!]!
   modificationUuid: UUID!
 }
 
 input IptModificationFileFromFilesetData {
   filesetUuid: UUID!
-  filename: [String!]!
+  filenames: [String!]!
 }
 
 input IptModificationParamData {
@@ -534,8 +535,13 @@ input IptStandardData {
   regionId: Int!
 }
 
+input IptStandardFilesArg {
+  standardUuid: UUID!
+  filesUuids: [UUID!]
+}
+
 input IptStandardFilesData {
-  filename: [String!]!
+  filenames: [String!]!
   standardUuid: UUID!
 }
 
@@ -813,8 +819,7 @@ type MutationRoot {
   addStandardKeywords(data: IptStandardKeywordsData!): Int!
   deleteStandardKeywords(data: IptStandardKeywordsData!): Int!
   uploadStandardFiles(data: IptStandardFilesData!): [UploadFile!]!
-  standardFiles(standardUuid: UUID!): [DownloadFile!]!
-  deleteStandardFiles(data: DeleteStandardFileData!): Boolean!
+  deleteStandardFile(arg: DeleteStandardFileData!): Boolean!
   registerCompany(data: IptCompanyData!): SlimCompany!
   putCompanyUpdate(companyUuid: UUID!, data: IptUpdateCompanyData!): Int!
 
@@ -930,12 +935,14 @@ type QueryRoot {
   ): [FileOfFileset!]!
   standards(arguments: IptStandardsArg): [ShowStandardShort!]!
   standard(standardUuid: UUID!): StandardAndRelatedData!
+  standardFiles(arg: IptStandardFilesArg!): [DownloadFile!]!
   getCompaniesListAccessStandard(
     standardUuid: UUID!
   ): [CompanyAccessStandardAndRelatedData!]!
   getUsersListAccessStandard(
     standardUuid: UUID!
   ): [UserAccessStandardAndRelatedData!]!
+  standardStatuses(filter: [Int!]): [StandardStatusTranslateList!]!
   companies(arguments: IptCompaniesArg): [ShowCompanyShort!]!
   company(companyUuid: UUID!): CompanyAndRelatedData!
   companyRepresents(
@@ -1013,16 +1020,17 @@ type ShowComponentShort {
   isBase: Boolean!
   updatedAt: NaiveDateTime!
   licenses: [License!]!
-  files: [ShowFileForDownload!]!
+  files: [ShowFileRelatedData!]!
   componentSuppliers: [ComponentSupplierRelatedData!]!
 }
 
-type ShowFileForDownload {
+type ShowFileRelatedData {
   uuid: UUID!
+  filename: String!
   parentFileUuid: UUID!
-  download: DownloadFile!
   ownerUser: ShowUserShort!
   contentType: String!
+  filesize: Int!
   program: Program!
   createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!
@@ -1108,7 +1116,7 @@ type SlimComponentModification {
 }
 
 type SlimStandard {
-  uuid: ID!
+  uuid: UUID!
   classifier: String!
   name: String!
   specifiedTolerance: String!
@@ -1118,7 +1126,7 @@ type SlimStandard {
 }
 
 type SlimUser {
-  uuid: ID!
+  uuid: UUID!
   username: String!
   programId: Int!
 }
@@ -1147,12 +1155,12 @@ type StandardAndRelatedData {
   imageFile: DownloadFile!
   ownerUser: ShowUserShort!
   ownerCompany: ShowCompanyShort!
-  typeAccessId: Int!
+  typeAccess: TypeAccessTranslateList!
   standardStatus: StandardStatusTranslateList!
   region: RegionTranslateList!
   createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!
-  standardFiles: [ShowFileForDownload!]!
+  standardFiles: [ShowFileRelatedData!]!
   standardSpecs: [StandardSpecWithTranslation!]!
   standardKeywords: [Keyword!]!
   subscribers: Int!

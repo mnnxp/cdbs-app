@@ -1,27 +1,42 @@
-use yew::{html, Component, ComponentLink, Html, Properties, ShouldRender};
+use yew::{html, Callback, Component, ComponentLink, Html, Properties, ShouldRender};
 
 use crate::error::Error;
 
 pub struct ListErrors {
+    link: ComponentLink<Self>,
     props: Props,
 }
 
 #[derive(Properties, Clone)]
 pub struct Props {
     pub error: Option<Error>,
+    pub clear_error: Option<Callback<()>>,
 }
 
-pub enum Msg {}
+pub enum Msg {
+    CloseError
+}
 
 impl Component for ListErrors {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, _: ComponentLink<Self>) -> Self {
-        ListErrors { props }
+    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+        ListErrors {
+            link,
+            props
+        }
     }
 
-    fn update(&mut self, _msg: Self::Message) -> ShouldRender {
+    fn update(&mut self, msg: Self::Message) -> ShouldRender {
+        match msg {
+            Msg::CloseError => {
+                self.props.error = None;
+                if let Some(clear) = &self.props.clear_error {
+                    clear.emit(());
+                };
+            },
+        }
         true
     }
 
@@ -31,40 +46,35 @@ impl Component for ListErrors {
     }
 
     fn view(&self) -> Html {
-        if let Some(error) = &self.props.error {
-            html! {
-                <ul class="error-messages">
-                    {
-                        match error {
-                            Error::UnprocessableEntity(error_info) => {
-                                html! {
-                                    <>
-                                    {for error_info.errors.iter().map(|(key, value)| {
-                                        html! {
-                                            <div class=vec!("notification", "is-danger")>
-                                            { key }
-                                            {for value.iter().map(|e| {
-                                                html! {
-                                                    <>{" "} {e}</>
-                                                }
-                                            })}
-                                            </div>
-                                        }
-                                    })}
-                                    </>
-                                }
-                            }
-                            _ => {
-                                html! {
-                                    <div class=vec!("notification", "is-danger")>
-                                        {error}
-                                    </div>
-                                }
-                            }
+        let onclick_close_error = self.link.callback(|_| Msg::CloseError);
 
-                        }
+        if let Some(error) = &self.props.error {
+            match error {
+                Error::UnprocessableEntity(error_info) => {
+                    html! {<div class=vec!("notification", "is-danger")>
+                        <button class="delete" onclick=onclick_close_error/>
+                        <table class="table is-fullwidth">
+                            <tbody>
+                                {for error_info.errors.iter().map(|(key, value)| {
+                                    html! {<tr>
+                                        { key }
+                                        {for value.iter().map(|e| {
+                                            html! {<>{" "} {e}</>}
+                                        })}
+                                    </tr>}
+                                })}
+                            </tbody>
+                        </table>
+                    </div>}
+                }
+                _ => {
+                    html! {
+                        <div class=vec!("notification", "is-danger")>
+                            <button class="delete" onclick=onclick_close_error/>
+                            {error}
+                        </div>
                     }
-                </ul>
+                }
             }
         } else {
             html! {}

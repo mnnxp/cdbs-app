@@ -377,7 +377,7 @@ impl ShowCompany {
                       <br/>
                       {format!("Updated at {:.*}", 19, company_data.updated_at.to_string())}
                       <br/>
-                      <div class="media-right buttons flexBox" >
+                      <div class="buttons flexBox" >
                         {res_btn(classes!(
                             String::from("fas fa-user")),
                             onclick_owner_profile_btn,

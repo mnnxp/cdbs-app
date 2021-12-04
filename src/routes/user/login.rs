@@ -11,7 +11,7 @@ use crate::fragments::list_errors::ListErrors;
 use crate::error::Error;
 use crate::routes::AppRoute;
 use crate::services::{set_token, Auth, get_token, set_logged_user};
-use crate::types::{LoginInfo, LoginInfoWrapper, SlimUser, UserToken};
+use crate::types::{UUID, LoginInfo, LoginInfoWrapper, SlimUser, UserToken};
 use crate::gqls::make_query;
 use wasm_bindgen_futures::spawn_local;
 use std::sync::{Arc,Mutex};
