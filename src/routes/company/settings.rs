@@ -24,7 +24,7 @@ use crate::routes::AppRoute;
 use crate::services::is_authenticated;
 use crate::types::{
     UUID, SlimUser, CompanyUpdateInfo, CompanyInfo, Region,
-    CompanyType, TypeAccessInfo, SlimCompany,
+    CompanyType, TypeAccessInfo, SlimCompany, SearchSpec, Spec,
     Certificate, CompanyCertificate, CompanyRepresentInfo
 };
 
@@ -119,8 +119,8 @@ impl From<SearchSpec> for Spec {
         } = data;
 
         Self {
-            spec_id,
-            lang_id,
+            spec_id: spec_id as usize,
+            lang_id: lang_id as usize,
             spec: path,
         }
     }
