@@ -1,6 +1,8 @@
 mod item;
+mod search_spec;
 
 pub use item::SpecTagItem;
+pub use search_spec::SearchSpecsTags;
 
 use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
 // use log::debug;

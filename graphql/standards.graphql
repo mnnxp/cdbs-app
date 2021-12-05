@@ -64,6 +64,14 @@ mutation UploadStandardFiles($iptStandardFilesData: IptStandardFilesData!) {
   }
 }
 
+mutation AddStandardSpecs($iptStandardSpecsData: IptStandardSpecsData!) {
+  addStandardSpecs(data: $iptStandardSpecsData)
+}
+
+mutation DeleteStandardSpecs($iptStandardSpecsData: IptStandardSpecsData!){
+  deleteStandardSpecs(data: $iptStandardSpecsData)
+}
+
 fragment uploadUrlFields on UploadFile {
   fileUuid
   filename
@@ -84,10 +92,6 @@ mutation AddStandardFav($standardUuid: String!) {
 
 mutation DeleteStandardFav($standardUuid: String!) {
   deleteStandardFav(standardUuid: $standardUuid)
-}
-
-mutation DeleteStandardSpecs($iptStandardSpecsData: IptStandardSpecsData!){
-  deleteStandardSpecs(data: $iptStandardSpecsData)
 }
 
 mutation DeleteStandardKeywords($iptStandardKeywordsData: IptStandardKeywordsData!){

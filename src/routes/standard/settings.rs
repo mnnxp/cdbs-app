@@ -21,7 +21,7 @@ use crate::fragments::{
     list_errors::ListErrors,
     // catalog_component::CatalogComponents,
     standard_file::FilesCard,
-    standard_spec::SpecsTags,
+    standard_spec::SearchSpecsTags,
     standard_keyword::KeywordsTags,
 };
 use crate::gqls::make_query;
@@ -839,14 +839,13 @@ impl StandardSettings {
         standard_data: &StandardInfo,
     ) -> Html {
         html!{<>
-              <h2>{"Specs"}</h2>
-              <div class="card">
-                <SpecsTags
-                    show_delete_btn = false
-                    standard_uuid = standard_data.uuid.clone()
-                    specs = standard_data.standard_specs.clone()
-                  />
-              </div>
+            <h2>{"Specs"}</h2>
+            <div class="card">
+              <SearchSpecsTags
+                  standard_specs = standard_data.standard_specs.clone()
+                  standard_uuid = standard_data.uuid.clone()
+                />
+            </div>
         </>}
     }
 

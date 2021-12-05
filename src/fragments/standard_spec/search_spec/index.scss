@@ -1,0 +1,11 @@
+.search_res_box {
+  // background: red;
+  background: transparent;
+  .delete {
+    transition: all 0.3s ease;
+  }
+  .to_add {
+    background: green;
+    transform: rotate(45deg);
+  }
+}
