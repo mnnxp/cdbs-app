@@ -145,10 +145,6 @@ impl Component for SpecTagItem {
         html! {<>
             <ListErrors error=self.error.clone()/>
             {self.show_spec()}
-            // {match self.is_added {
-            //     true => html! {},
-            //     false => self.show_spec(),
-            // }}
         </>}
     }
 }
@@ -157,26 +153,18 @@ impl SpecTagItem {
     fn show_spec(&self) -> Html {
         let onclick_delete_spec = self.link.callback(|_| Msg::RequestDeleteSpec);
         let onclick_add_spec = self.link.callback(|_| Msg::RequestAddSpec);
-        // let show_btn = self.props.show_delete_btn;
-        // debug!("show_btn: {:?}", show_btn);
 
-        html! {
-            <div class="tag is-light">
+        match self.is_added {
+            true => html!{<div class="tag is-light">
                 {self.props.spec.spec.clone()}
-                <div>
-                  <button class=classes!("delete","is-small", if self.is_added {
-                      ""
-                  } else {
-                    "to_add"
-                  })
-                  onclick={if self.is_added {
-                    onclick_delete_spec
-                  } else {
-                    onclick_add_spec
-                  }}
-                  />
-                </div>
-            </div>
+                <button class="delete is-small"
+                    onclick={onclick_delete_spec}
+                />
+            </div>},
+            false => html!{<div class="tag is-light is-info button"
+                onclick={onclick_add_spec} >
+                {self.props.spec.spec.clone()}
+            </div>},
         }
     }
 }
