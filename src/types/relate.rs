@@ -33,6 +33,22 @@ pub struct SearchSpec {
     pub path: String,
 }
 
+impl From<&SearchSpec> for Spec {
+    fn from(data: &SearchSpec) -> Self {
+        let SearchSpec {
+            spec_id,
+            path,
+            lang_id,
+        } = data;
+
+        Self {
+            spec_id: *spec_id as usize,
+            lang_id: *lang_id as usize,
+            spec: path.clone(),
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Keyword {
     pub id: usize,

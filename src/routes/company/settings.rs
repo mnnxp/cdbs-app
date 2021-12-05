@@ -110,22 +110,6 @@ impl From<CompanyInfo> for CompanyUpdateInfo {
     }
 }
 
-impl From<SearchSpec> for Spec {
-    fn from(data: SearchSpec) -> Self {
-        let SearchSpec {
-            spec_id,
-            path,
-            lang_id,
-        } = data;
-
-        Self {
-            spec_id: spec_id as usize,
-            lang_id: lang_id as usize,
-            spec: path,
-        }
-    }
-}
-
 pub enum Menu {
     Company,
     UpdataFavicon,
@@ -1154,7 +1138,7 @@ impl CompanySettings {
         let specs = self
             .search_specs
             .iter()
-            .map(|x| Spec::from(x.clone()))
+            .map(|x| Spec::from(x))
             .collect::<Vec<Spec>>();
         html! {
           <div hidden=!show_ipt>
