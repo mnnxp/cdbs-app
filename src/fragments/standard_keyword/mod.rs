@@ -6,7 +6,7 @@ pub use item::KeywordTagItem;
 pub use add::AddKeywordsTags;
 pub use add_item::AddKeywordTagItem;
 
-use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
+use yew::{Callback, Component, ComponentLink, Html, Properties, ShouldRender, html};
 // use log::debug;
 // use crate::error::{get_error, Error};
 use crate::types::{UUID, Keyword};
@@ -16,6 +16,7 @@ pub struct Props {
     pub show_delete_btn: bool,
     pub standard_uuid: UUID,
     pub keywords: Vec<Keyword>,
+    pub delete_keyword: Option<Callback<Keyword>>,
 }
 
 pub struct KeywordsTags {
@@ -53,6 +54,7 @@ impl Component for KeywordsTags {
                         show_delete_btn = self.props.show_delete_btn.clone()
                         standard_uuid = self.props.standard_uuid.clone()
                         keyword = keyword.clone()
+                        delete_keyword = self.props.delete_keyword.clone()
                         />}
                 })}
             </div>

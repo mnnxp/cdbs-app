@@ -56,7 +56,8 @@ pub enum Msg {
     GetAddKeywordsResult(String),
     GetStandardKeywordsResult(String),
     HideNotification,
-    DeleteKeywords(usize),
+    DeleteCurrentKeywords(usize),
+    DeleteNewKeywords(String),
     ResponseError(Error),
     ClearError,
     // Ignore,
@@ -171,7 +172,6 @@ impl Component for AddKeywordsTags {
                 }
             },
             Msg::RequestAddKeywords => {
-                // self.new_keywords = Vec::new();
                 let standard_uuid = self.props.standard_uuid.clone();
                 let mut keywords: Vec<String> = Vec::new();
                 let count_keywords = self.add_keywords.iter().map(|value| {
@@ -180,6 +180,7 @@ impl Component for AddKeywordsTags {
                     }
                 }).count();
                 debug!("Keywords: {:?}", count_keywords);
+                self.add_keywords = Vec::new();
                 spawn_local(async move {
                     let ipt_standard_keywords_names = add_standard_keywords_by_names::IptStandardKeywordsNames{
                         standardUuid: standard_uuid,
@@ -212,19 +213,36 @@ impl Component for AddKeywordsTags {
                 }
             },
             Msg::HideNotification => self.bad_keyword = false,
-            Msg::DeleteKeywords(keyword_id) => {
-                debug!("self.add_keywords before: {:?}", self.add_keywords);
-                // self.add_keywords.retain(|k| k != &keyword);
-                let mut keywords: Vec<Keyword> = Vec::new();
-                for k in self.add_keywords.iter() {
+            Msg::DeleteCurrentKeywords(keyword_id) => {
+                let mut props_keywords: Vec<Keyword> = Vec::new();
+                for k in self.props.standard_keywords.iter() {
                     if k.id == keyword_id {
-                        keywords.push(Keyword::default());
+                        props_keywords.push(Keyword::default());
                     } else {
-                        keywords.push(k.clone());
+                        props_keywords.push(k.clone());
                     }
                 };
-                self.add_keywords = keywords;
-                debug!("self.add_keywords after: {:?}", self.add_keywords);
+                self.props.standard_keywords = props_keywords;
+            },
+            Msg::DeleteNewKeywords(keyword) => {
+                // debug!("self.new_keywords before delete: {:?}", self.new_keywords);
+                // self.new_keywords.retain(|k| k != &keyword);
+                let mut new_keywords_empty = true;
+                let mut new_keywords: Vec<Keyword> = Vec::new();
+                for k in self.new_keywords.iter() {
+                    if k.keyword == keyword {
+                        new_keywords.push(Keyword::default());
+                    } else {
+                        new_keywords.push(k.clone());
+                        new_keywords_empty = false;
+                    }
+                };
+                if new_keywords_empty {
+                    self.new_keywords = Vec::new();
+                } else {
+                    self.new_keywords = new_keywords;
+                }
+                debug!("self.new_keywords after delete: {:?}", self.new_keywords);
             },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::ClearError => self.error = None,
@@ -255,8 +273,10 @@ impl AddKeywordsTags {
             .callback(|ev: InputData| Msg::ParseKeywords(ev.value));
         let onclick_hide_notification = self.link
             .callback(|_| Msg::HideNotification);
-        // let onclick_delete_keyword = self.link
-        //     .callback(|value: usize| Msg::DeleteKeywords(value));
+        let onclick_del_new_keyword = self.link
+            .callback(|value: Keyword| Msg::DeleteNewKeywords(value.keyword));
+        let onclick_del_old_keyword = self.link
+            .callback(|value: Keyword| Msg::DeleteCurrentKeywords(value.id));
 
         html! {<>
             <div class="panel-block">
@@ -286,6 +306,7 @@ impl AddKeywordsTags {
                          standard_uuid = self.props.standard_uuid.clone()
                          keyword = keyword.clone()
                          style_tag = Some("is-success".to_string())
+                         delete_keyword = Some(onclick_del_new_keyword.clone())
                         />}
                       }
                   })}
@@ -296,6 +317,7 @@ impl AddKeywordsTags {
                   show_delete_btn = true
                   standard_uuid = self.props.standard_uuid.clone()
                   keywords = self.props.standard_keywords.clone()
+                  delete_keyword = Some(onclick_del_old_keyword.clone())
                  />
            </div>
         </>}
