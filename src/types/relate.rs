@@ -49,7 +49,7 @@ impl From<&SearchSpec> for Spec {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Default, Debug)]
 pub struct Keyword {
     pub id: usize,
     pub keyword: String,

@@ -2,14 +2,11 @@ mod item;
 pub use item::SpecTagItem;
 
 use yew::{
-    agent::Bridged, html, Bridge, ChangeData, Component, ComponentLink, FocusEvent,
+    classes, NodeRef, html, Component, ComponentLink,
     InputData, Properties, ShouldRender, Html,
 };
 use yew::services::timeout::{TimeoutService, TimeoutTask};
-use yew::{classes, NodeRef};
-use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*, service::RouteService};
 use log::debug;
-use chrono::NaiveDateTime;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use std::time::Duration;
@@ -162,8 +159,8 @@ impl Component for SearchSpecsTags {
 impl SearchSpecsTags {
     fn fieldset_manage_specs(&self) -> Html {
         let ipt_ref = self.ipt_ref.clone();
-    let onclick_added_spec = self.link
-        .callback(|value: usize| Msg::AddedSpec(value));
+        let onclick_added_spec = self.link
+            .callback(|value: usize| Msg::AddedSpec(value));
 
         html! {<>
             <div class="panel-block">

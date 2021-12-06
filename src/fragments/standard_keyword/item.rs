@@ -25,6 +25,7 @@ pub struct Props {
     pub show_delete_btn: bool,
     pub standard_uuid: UUID,
     pub keyword: Keyword,
+    pub style_tag: Option<String>,
 }
 
 pub struct KeywordTagItem {
@@ -118,19 +119,19 @@ impl KeywordTagItem {
             .link
             .callback(|_| Msg::RequestDeleteKeyword);
 
-        match &self.props.show_delete_btn {
-            true => html! {
-                <div class="tag is-light">
-                    {self.props.keyword.keyword.clone()}
-                    <button class="delete is-small"
-                        onclick=onclick_delete_keyword/>
-                </div>
-            },
-            false => html! {
-                <div class="tag is-light">
-                    {self.props.keyword.keyword.clone()}
-                </div>
-            },
-        }
+        let style_tag = match &self.props.style_tag {
+            Some(style) => format!("tag is-light {}", style),
+            None => "tag is-light".to_string(),
+        };
+
+        html!{<div class="control">
+          <div class="tags has-addons">
+            <span class={style_tag}>{self.props.keyword.keyword.clone()}</span>
+            {match &self.props.show_delete_btn {
+                true => html! {<a class="tag is-delete is-small is-light" onclick={onclick_delete_keyword} />},
+                false => html! {},
+            }}
+          </div>
+        </div>}
     }
 }

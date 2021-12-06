@@ -2,7 +2,7 @@ use graphql_client::GraphQLQuery;
 use log::debug;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
-use yew::{classes, html, Callback, Component, ComponentLink, Html, Properties, ShouldRender};
+use yew::{html, Callback, Component, ComponentLink, Html, Properties, ShouldRender};
 
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
@@ -45,7 +45,7 @@ pub enum Msg {
     ResponseError(Error),
     GetSpecResult(String, String),
     RequestAddSpec,
-    Ignore,
+    // Ignore,
 }
 
 impl Component for SpecTagItem {
@@ -128,15 +128,13 @@ impl Component for SpecTagItem {
                     }
                 }
             }
-            Msg::Ignore => {
-                self.is_added = !self.is_added;
-            }
+            // Msg::Ignore => {}
         }
         true
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        debug!("change: {:?}, {:?}", props, self.props);
+        // debug!("change: {:?}, {:?}", props, self.props);
         self.props = props;
         true
     }

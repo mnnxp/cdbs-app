@@ -22,7 +22,7 @@ use crate::fragments::{
     // catalog_component::CatalogComponents,
     standard_file::FilesCard,
     standard_spec::SearchSpecsTags,
-    standard_keyword::KeywordsTags,
+    standard_keyword::AddKeywordsTags,
 };
 use crate::gqls::make_query;
 use crate::services::{
@@ -856,10 +856,9 @@ impl StandardSettings {
         html!{<>
               <h2>{"Keywords"}</h2>
               <div class="card">
-                <KeywordsTags
-                    show_delete_btn = false
+                <AddKeywordsTags
+                    standard_keywords = standard_data.standard_keywords.clone()
                     standard_uuid = standard_data.uuid.clone()
-                    keywords = standard_data.standard_keywords.clone()
                   />
               </div>
         </>}

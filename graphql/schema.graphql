@@ -550,6 +550,11 @@ input IptStandardKeywordsData {
   keywordIds: [Int!]!
 }
 
+input IptStandardKeywordsNames {
+  standardUuid: UUID!
+  keywords: [String!]!
+}
+
 input IptStandardSpecsData {
   standardUuid: UUID!
   specIds: [Int!]!
@@ -817,6 +822,7 @@ type MutationRoot {
   addStandardSpecs(data: IptStandardSpecsData!): Int!
   deleteStandardSpecs(data: IptStandardSpecsData!): Int!
   addStandardKeywords(data: IptStandardKeywordsData!): Int!
+  addStandardKeywordsByNames(data: IptStandardKeywordsNames!): Int!
   deleteStandardKeywords(data: IptStandardKeywordsData!): Int!
   uploadStandardFiles(data: IptStandardFilesData!): [UploadFile!]!
   deleteStandardFile(arg: DeleteStandardFileData!): Boolean!

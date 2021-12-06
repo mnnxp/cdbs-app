@@ -1,6 +1,10 @@
 mod item;
+mod add;
+mod add_item;
 
 pub use item::KeywordTagItem;
+pub use add::AddKeywordsTags;
+pub use add_item::AddKeywordTagItem;
 
 use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
 // use log::debug;
@@ -43,7 +47,7 @@ impl Component for KeywordsTags {
 
     fn view(&self) -> Html {
         html! {
-            <div id="keywords" class="tags">
+            <div id="keywords" class="field is-grouped is-grouped-multiline">
                 {for self.props.keywords.iter().map(|keyword| {
                     html! {<KeywordTagItem
                         show_delete_btn = self.props.show_delete_btn.clone()

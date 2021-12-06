@@ -72,6 +72,23 @@ mutation DeleteStandardSpecs($iptStandardSpecsData: IptStandardSpecsData!){
   deleteStandardSpecs(data: $iptStandardSpecsData)
 }
 
+query GetStandardKeywords($standardUuid: String!) {
+  standard(standardUuid: $standardUuid) {
+    standardKeywords {
+      id
+      keyword
+    }
+  }
+}
+
+mutation AddStandardKeywordsByNames($iptStandardKeywordsNames: IptStandardKeywordsNames!) {
+  addStandardKeywordsByNames(data: $iptStandardKeywordsNames)
+}
+
+mutation DeleteStandardKeywords($iptStandardKeywordsData: IptStandardKeywordsData!){
+  deleteStandardKeywords(data: $iptStandardKeywordsData)
+}
+
 fragment uploadUrlFields on UploadFile {
   fileUuid
   filename
@@ -92,10 +109,6 @@ mutation AddStandardFav($standardUuid: String!) {
 
 mutation DeleteStandardFav($standardUuid: String!) {
   deleteStandardFav(standardUuid: $standardUuid)
-}
-
-mutation DeleteStandardKeywords($iptStandardKeywordsData: IptStandardKeywordsData!){
-  deleteStandardKeywords(data: $iptStandardKeywordsData)
 }
 
 fragment standardStatusFields on StandardStatusTranslateList {
