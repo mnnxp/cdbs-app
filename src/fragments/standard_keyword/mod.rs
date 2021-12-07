@@ -1,10 +1,8 @@
 mod item;
 mod add;
-mod add_item;
 
 pub use item::KeywordTagItem;
 pub use add::AddKeywordsTags;
-pub use add_item::AddKeywordTagItem;
 
 use yew::{Callback, Component, ComponentLink, Html, Properties, ShouldRender, html};
 // use log::debug;

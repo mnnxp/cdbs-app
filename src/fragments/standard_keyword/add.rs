@@ -236,7 +236,7 @@ impl Component for AddKeywordsTags {
                         new_keywords.push(k.clone());
                         new_keywords_empty = false;
                     }
-                };
+                }
                 if new_keywords_empty {
                     self.new_keywords = Vec::new();
                 } else {
