@@ -1,6 +1,3 @@
-mod item;
-pub use item::SpecTagItem;
-
 use yew::{
     classes, NodeRef, html, Component, ComponentLink,
     InputData, Properties, ShouldRender, Html,
@@ -13,7 +10,7 @@ use std::time::Duration;
 use wasm_bindgen_futures::spawn_local;
 use crate::gqls::make_query;
 // use crate::error::{get_error, Error};
-// use crate::fragments::standard_spec::{SpecsTags, SearchSpecsTags};
+use crate::fragments::standard_spec::{SpecsTags, SpecTagItem};
 use crate::types::{Spec, SearchSpec, UUID};
 
 #[derive(GraphQLQuery)]
@@ -37,7 +34,8 @@ pub struct SearchSpecsTags {
     ipt_ref: NodeRef,
     specs_search_loading: bool,
     search_specs: Vec<SearchSpec>,
-    specs: Vec<Spec>,
+    found_specs: Vec<Spec>,
+    added_specs: Vec<Spec>,
 }
 
 pub enum Msg {
@@ -45,6 +43,8 @@ pub enum Msg {
     AddedSpec(usize),
     SetIptTimer(String),
     GetSearchRes(String),
+    DeleteNewSpec(usize),
+    DeleteCurrentSpec(usize),
     Ignore,
 }
 
@@ -60,7 +60,8 @@ impl Component for SearchSpecsTags {
             ipt_ref: NodeRef::default(),
             specs_search_loading: false,
             search_specs: Vec::new(),
-            specs: Vec::new(),
+            found_specs: Vec::new(),
+            added_specs: Vec::new(),
         }
     }
 
@@ -71,21 +72,40 @@ impl Component for SearchSpecsTags {
 
         match msg {
             Msg::ParseSpecs => {
-                self.specs = Vec::new(); // clear old result
+                self.found_specs = Vec::new(); // clear old result
                 for spec in &self.search_specs {
-                    self.specs.push(Spec::from(spec));
+                    if !self.props.standard_specs.iter().any(|x| &x.spec_id == &spec.spec_id) &&
+                        !self.added_specs.iter().any(|y| &y.spec_id == &spec.spec_id) {
+                        self.found_specs.push(Spec::from(spec));
+                    }
                 }
-                debug!("ParseSpecs {:?}", self.specs);
-            }
+                debug!("ParseSpecs {:?}", self.found_specs);
+            },
             Msg::AddedSpec(spec_id) => {
-                for spec in &self.search_specs {
-                    if spec.spec_id == spec_id as i32 {
-                        self.props.standard_specs.push(spec.into());
+                for search_specs in &self.search_specs {
+                    if search_specs.spec_id == spec_id {
+                        self.added_specs.push(search_specs.into());
                         break;
                     }
                 }
-                debug!("AddedSpec {:?}", self.props.standard_specs);
-            }
+                let mut found_specs_empty = true;
+                let mut found_specs: Vec<Spec> = Vec::new();
+                for spec in &self.found_specs {
+                    if spec.spec_id == spec_id {
+                        found_specs.push(Spec::default());
+                    } else {
+                        found_specs.push(spec.clone());
+                        found_specs_empty = false;
+                    }
+                }
+                if found_specs_empty {
+                    self.found_specs = Vec::new();
+                } else {
+                    self.found_specs = found_specs;
+                }
+                debug!("found_specs {:?}", self.found_specs);
+                debug!("AddedSpec {:?}", self.added_specs);
+            },
             Msg::SetIptTimer(val) => {
                 debug!("ipt_val: {:?}", val);
                 if val.is_empty() {
@@ -120,22 +140,52 @@ impl Component for SearchSpecsTags {
                         Msg::Ignore
                     }),
                 ));
-            }
+            },
             Msg::GetSearchRes(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res = data.as_object().unwrap().get("data").unwrap();
                 let search_specs: Vec<SearchSpec> =
                     serde_json::from_value(res.get("searchSpecs").unwrap().clone()).unwrap();
                 // debug!(
-                //     "specs res:{:?} {:?}",
+                //     "found_specs res:{:?} {:?}",
                 //     search_specs.iter().map(|x| Spec::from(x.clone())).collect::<Vec<Spec>>(),
                 //     Spec::from(search_specs[0].clone())
                 // );
                 self.specs_search_loading = false;
                 self.search_specs = search_specs;
                 link.send_message(Msg::ParseSpecs);
-            }
-            Msg::Ignore => {}
+            },
+            Msg::DeleteNewSpec(spec_id) => {
+                // debug!("self.found_specs before delete: {:?}", self.found_specs);
+                let mut added_specs_empty = true;
+                let mut added_specs: Vec<Spec> = Vec::new();
+                for spec in &self.added_specs {
+                    if spec.spec_id == spec_id {
+                        added_specs.push(Spec::default());
+                    } else {
+                        added_specs.push(spec.clone());
+                        added_specs_empty = false;
+                    }
+                }
+                if added_specs_empty {
+                    self.added_specs = Vec::new();
+                } else {
+                    self.added_specs = added_specs;
+                }
+                debug!("self.added_specs after delete: {:?}", self.added_specs);
+            },
+            Msg::DeleteCurrentSpec(spec_id) => {
+                let mut props_specs: Vec<Spec> = Vec::new();
+                for spec in self.props.standard_specs.iter() {
+                    if spec.spec_id == spec_id {
+                        props_specs.push(Spec::default());
+                    } else {
+                        props_specs.push(spec.clone());
+                    }
+                }
+                self.props.standard_specs = props_specs;
+            },
+            Msg::Ignore => {},
         }
 
         true
@@ -158,6 +208,10 @@ impl SearchSpecsTags {
         let ipt_ref = self.ipt_ref.clone();
         let onclick_added_spec = self.link
             .callback(|value: usize| Msg::AddedSpec(value));
+        let onclick_del_new_spec = self.link
+            .callback(|value: usize| Msg::DeleteNewSpec(value));
+        let onclick_del_old_spec = self.link
+            .callback(|value: usize| Msg::DeleteCurrentSpec(value));
 
         html! {<>
             <div class="panel-block">
@@ -178,31 +232,45 @@ impl SearchSpecsTags {
               </p>
             </div>
             <div class="panel-block">
-                <div id="search-specs" class="tags search_res_box">
-                    {for self.specs.iter().map(|spec| {
-                        if self.props.standard_specs.iter().any(|x| &x.spec_id == &spec.spec_id) {
+                <div id="new-specs" class="field is-grouped is-grouped-multiline">
+                    {for self.found_specs.iter().map(|spec| {
+                        if spec.spec.is_empty() {
                             html!{}
                         } else {
                             html! {<SpecTagItem
+                                show_manage_btn = true
                                 standard_uuid = self.props.standard_uuid.clone()
                                 spec = spec.clone()
                                 is_added = false
+                                style_tag = "is-success".to_string()
                                 added_spec = Some(onclick_added_spec.clone())
-                                />}
-                        }
+                                // delete_spec = None
+                                />
+                    }}})}
+                </div>
+            </div>
+            <div class="panel-block">
+                <div id="add-specs" class="field is-grouped is-grouped-multiline">
+                    {for self.added_specs.iter().map(|st_spec| {
+                        html! {<SpecTagItem
+                            show_manage_btn = true
+                            standard_uuid = self.props.standard_uuid.clone()
+                            spec = st_spec.clone()
+                            is_added = true
+                            style_tag = "is-info".to_string()
+                            // added_spec = None
+                            delete_spec = Some(onclick_del_new_spec.clone())
+                            />}
                     })}
                 </div>
             </div>
             <div class="panel-block">
-                <div id="standard-specs" class="tags search_res_box">
-                    {for self.props.standard_specs.iter().map(|st_spec| {
-                        html! {<SpecTagItem
-                            standard_uuid = self.props.standard_uuid.clone()
-                            spec = st_spec.clone()
-                            is_added = self.props.standard_specs.iter().any(|x| &x.spec_id == &st_spec.spec_id)
-                            />}
-                    })}
-                </div>
+                <SpecsTags
+                    show_manage_btn = true
+                    standard_uuid = self.props.standard_uuid.clone()
+                    specs = self.props.standard_specs.clone()
+                    delete_spec = Some(onclick_del_old_spec.clone())
+                    />
             </div>
         </>}
     }

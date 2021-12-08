@@ -28,8 +28,8 @@ pub struct Spec {
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct SearchSpec {
-    pub spec_id: i32,
-    pub lang_id: i32,
+    pub spec_id: usize,
+    pub lang_id: usize,
     pub path: String,
 }
 
@@ -42,8 +42,8 @@ impl From<&SearchSpec> for Spec {
         } = data;
 
         Self {
-            spec_id: *spec_id as usize,
-            lang_id: *lang_id as usize,
+            spec_id: *spec_id, // as usize,
+            lang_id: *lang_id, // as usize,
             spec: path.clone(),
         }
     }
