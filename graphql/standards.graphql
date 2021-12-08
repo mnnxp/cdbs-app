@@ -72,12 +72,10 @@ mutation DeleteStandardSpecs($iptStandardSpecsData: IptStandardSpecsData!){
   deleteStandardSpecs(data: $iptStandardSpecsData)
 }
 
-query GetStandardKeywords($standardUuid: String!) {
-  standard(standardUuid: $standardUuid) {
-    standardKeywords {
-      id
-      keyword
-    }
+query GetStandardKeywords($iptStandardKeywordsArg: IptStandardKeywordsArg!) {
+  standardKeywords(arg: $iptStandardKeywordsArg) {
+    id
+    keyword
   }
 }
 

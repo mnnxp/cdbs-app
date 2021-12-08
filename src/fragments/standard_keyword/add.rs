@@ -127,9 +127,14 @@ impl Component for AddKeywordsTags {
             Msg::RequestGetStandardKeywords => {
                 let standard_uuid = self.props.standard_uuid.clone();
                 spawn_local(async move {
+                    let ipt_standard_keywords_arg = get_standard_keywords::IptStandardKeywordsArg{
+                        standardUuid: standard_uuid,
+                        limit: None,
+                        offset: None,
+                    };
                     let res = make_query(GetStandardKeywords::build_query(
                         get_standard_keywords::Variables {
-                            standard_uuid
+                            ipt_standard_keywords_arg
                         }
                     )).await;
                     link.send_message(Msg::GetStandardKeywordsResult(res.unwrap()));
@@ -142,7 +147,7 @@ impl Component for AddKeywordsTags {
                 match res_value.is_null() {
                     false => {
                         let result: Vec<Keyword> = serde_json::from_value(
-                            res_value.get("standard").unwrap().get("standardKeywords").unwrap().clone()
+                            res_value.get("standardKeywords").unwrap().clone()
                         ).unwrap();
                         debug!("GetStandardKeywords before: {:?}", result);
                         if self.props.standard_keywords.is_empty() {
