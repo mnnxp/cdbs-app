@@ -1,5 +1,5 @@
 use yew::{
-    html, Component, ComponentLink, InputData,
+    html, Component, ComponentLink, InputData, KeyboardEvent,
     Html, Properties, ShouldRender,
 };
 use log::debug;
@@ -50,7 +50,9 @@ pub struct AddKeywordsTags {
 }
 
 pub enum Msg {
-    ParseKeywords(String),
+    GetString(String),
+    PressKeyEnter,
+    ParseKeywords,
     RequestAddKeywords,
     RequestGetStandardKeywords,
     GetAddKeywordsResult(String),
@@ -60,7 +62,7 @@ pub enum Msg {
     DeleteNewKeywords(String),
     ResponseError(Error),
     ClearError,
-    // Ignore,
+    Ignore,
 }
 
 impl Component for AddKeywordsTags {
@@ -88,13 +90,21 @@ impl Component for AddKeywordsTags {
         let link = self.link.clone();
 
         match msg {
-            Msg::ParseKeywords(keyword) => {
+            Msg::GetString(keyword) => {
                 self.ipt_keyword = keyword.clone();
-                if self.ipt_keyword.len() > 9 {
-                    self.bad_keyword = true;
-                } else {
-                    self.bad_keyword = false;
+                self.bad_keyword = self.ipt_keyword.len() > 9;
+                if !self.ipt_keyword.is_empty() {
+                    link.send_message(Msg::ParseKeywords)
                 }
+            },
+            Msg::PressKeyEnter => {
+                // debug!("PressKeyEnter: {:?}", self.ipt_keyword);
+                self.ipt_keyword += ",";
+                link.send_message(Msg::ParseKeywords)
+            },
+            Msg::ParseKeywords => {
+                // debug!("ParseKeywords: {:?}", self.ipt_keyword);
+                let keyword = self.ipt_keyword.clone();
                 match keyword.find(|c| (c == ' ') || (c == ',')) {
                     None => (),
                     Some(1) => {
@@ -109,7 +119,7 @@ impl Component for AddKeywordsTags {
                         link.send_message(Msg::RequestAddKeywords)
                     },
                     Some(_) => {
-                        let keywords = keyword.split(|c| c == ' ' || c == ',').map(|k| {
+                        for k in keyword.split(|c| c == ' ' || c == ',') {
                             if k.len() < 11 {
                                 self.add_keywords.push(Keyword {
                                     id: self.ipt_index,
@@ -118,8 +128,8 @@ impl Component for AddKeywordsTags {
                                 self.ipt_keyword = String::new();
                                 self.ipt_index += 1;
                             }
-                        }).count();
-                        debug!("Keywords: {:?}", keywords);
+                        };
+                        debug!("Keywords: {:?}", self.add_keywords.len());
                         link.send_message(Msg::RequestAddKeywords)
                     },
                 }
@@ -179,25 +189,27 @@ impl Component for AddKeywordsTags {
             Msg::RequestAddKeywords => {
                 let standard_uuid = self.props.standard_uuid.clone();
                 let mut keywords: Vec<String> = Vec::new();
-                let count_keywords = self.add_keywords.iter().map(|value| {
+                for value in self.add_keywords.iter() {
                     if !value.keyword.is_empty() {
                         keywords.push(value.keyword.clone())
                     }
-                }).count();
-                debug!("Keywords: {:?}", count_keywords);
+                }
+                debug!("Keywords: {:?}", keywords);
                 self.add_keywords = Vec::new();
-                spawn_local(async move {
-                    let ipt_standard_keywords_names = add_standard_keywords_by_names::IptStandardKeywordsNames{
-                        standardUuid: standard_uuid,
-                        keywords,
-                    };
-                    let res = make_query(AddStandardKeywordsByNames::build_query(
-                        add_standard_keywords_by_names::Variables {
-                            ipt_standard_keywords_names
-                        }
-                    )).await;
-                    link.send_message(Msg::GetAddKeywordsResult(res.unwrap()));
-                })
+                if keywords.len() > 0 {
+                    spawn_local(async move {
+                        let ipt_standard_keywords_names = add_standard_keywords_by_names::IptStandardKeywordsNames{
+                            standardUuid: standard_uuid,
+                            keywords,
+                        };
+                        let res = make_query(AddStandardKeywordsByNames::build_query(
+                            add_standard_keywords_by_names::Variables {
+                                ipt_standard_keywords_names
+                            }
+                        )).await;
+                        link.send_message(Msg::GetAddKeywordsResult(res.unwrap()));
+                    })
+                }
             },
             Msg::GetAddKeywordsResult(res) => {
                 let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
@@ -226,7 +238,7 @@ impl Component for AddKeywordsTags {
                     } else {
                         props_keywords.push(k.clone());
                     }
-                };
+                }
                 self.props.standard_keywords = props_keywords;
             },
             Msg::DeleteNewKeywords(keyword) => {
@@ -251,7 +263,7 @@ impl Component for AddKeywordsTags {
             },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::ClearError => self.error = None,
-            // Msg::Ignore => {},
+            Msg::Ignore => {},
         }
         true
     }
@@ -275,7 +287,15 @@ impl Component for AddKeywordsTags {
 impl AddKeywordsTags {
     fn add_standard_keyword(&self) -> Html {
         let oninput_parse_keyword = self.link
-            .callback(|ev: InputData| Msg::ParseKeywords(ev.value));
+            .callback(|ev: InputData| Msg::GetString(ev.value));
+        let onkeypress_parse_keyword = self.link
+            .callback(|ev: KeyboardEvent| {
+                debug!("ev.key(): {:?}, ev.key(): {:?}", ev.key_code(), ev.key());
+                match ev.key_code() {
+                    13 => Msg::PressKeyEnter,
+                    _ => Msg::Ignore,
+                }
+            });
         let onclick_hide_notification = self.link
             .callback(|_| Msg::HideNotification);
         let onclick_del_new_keyword = self.link
@@ -287,6 +307,7 @@ impl AddKeywordsTags {
             <div class="panel-block">
                 <input
                     oninput=oninput_parse_keyword
+                    onkeypress=onkeypress_parse_keyword
                     class="input"
                     type="text"
                     value={self.ipt_keyword.clone()}
