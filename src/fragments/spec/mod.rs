@@ -5,13 +5,13 @@ pub use item::SpecTagItem;
 use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
 // use log::debug;
 // use crate::error::{get_error, Error};
-use crate::types::{UUID, CompanySpec};
+use crate::types::{UUID, Spec};
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
     pub show_delete_btn: bool,
     pub company_uuid: UUID,
-    pub specs: Vec<CompanySpec>,
+    pub specs: Vec<Spec>,
 }
 
 pub struct SpecsTags {

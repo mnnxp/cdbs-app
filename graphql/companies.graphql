@@ -93,13 +93,10 @@ fragment companyCertificateFields on CompanyCertificateAndFile {
   description
 }
 
-fragment companySpecFields on CompanySpecWithTranslation {
-  companyUuid
-  spec {
-    specId
-    langId
-    spec
-  }
+fragment specFields on SpecTranslateList {
+  specId
+  langId
+  spec
 }
 
 fragment companyRepresentFields on CompanyRepresentAndRelatedData {
@@ -224,7 +221,7 @@ fragment companyFields on CompanyAndRelatedData {
     ...companyCertificateFields
   }
   companySpecs {
-    ...companySpecFields
+    ...specFields
   }
   typeAccess {
     ...typeAccessFields

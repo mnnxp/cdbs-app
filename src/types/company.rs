@@ -25,7 +25,7 @@ pub struct CompanyInfo {
     pub company_type: CompanyType,
     // show certificates company
     pub company_certificates: Vec<CompanyCertificate>,
-    pub company_specs: Vec<CompanySpec>,
+    pub company_specs: Vec<Spec>,
     pub type_access: TypeAccessInfo,
     pub is_supplier: bool,
     pub is_email_verified: bool,
@@ -95,13 +95,6 @@ pub struct CompanyCertificate {
     pub company_uuid: UUID,
     pub file: DownloadFile,
     pub description: String,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct CompanySpec {
-    pub spec: Spec,
-    pub company_uuid: UUID,
 }
 
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]

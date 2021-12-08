@@ -185,7 +185,7 @@ fragment regionFields on RegionTranslateList {
   region
 }
 
-fragment specTranslateListFields on SpecTranslateList {
+fragment specFields on SpecTranslateList {
   specId
   langId
   spec
@@ -245,10 +245,7 @@ fragment standardAndRelatedDataFields on StandardAndRelatedData {
     ...showFileRelatedDataFields
   }
   standardSpecs {
-    spec {
-      ...specTranslateListFields
-    }
-    standardUuid
+    ...specFields
   }
   standardKeywords {
     id

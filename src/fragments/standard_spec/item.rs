@@ -10,7 +10,7 @@ use wasm_bindgen_futures::spawn_local;
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
 use crate::gqls::make_query;
-use crate::types::{UUID, StandardSpec};
+use crate::types::{UUID, Spec};
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -24,7 +24,7 @@ struct DeleteStandardSpecs;
 pub struct Props {
     pub show_delete_btn: bool,
     pub standard_uuid: UUID,
-    pub spec: StandardSpec,
+    pub spec: Spec,
 }
 
 pub struct SpecTagItem {
@@ -59,7 +59,7 @@ impl Component for SpecTagItem {
         match msg {
             Msg::RequestDeleteSpec => {
                 let standard_uuid = self.props.standard_uuid.clone();
-                let spec_id = self.props.spec.spec.spec_id as i64;
+                let spec_id = self.props.spec.spec_id as i64;
                 spawn_local(async move {
                     let ipt_standard_specs_data = delete_standard_specs::IptStandardSpecsData{
                         standardUuid: standard_uuid,
@@ -121,14 +121,14 @@ impl SpecTagItem {
         match &self.props.show_delete_btn {
             true => html! {
                 <div class="tag is-light">
-                    {self.props.spec.spec.spec.clone()}
+                    {self.props.spec.spec.clone()}
                     <button class="delete is-small"
                         onclick=onclick_delete_spec/>
                 </div>
             },
             false => html! {
                 <div class="tag is-light">
-                    {self.props.spec.spec.spec.clone()}
+                    {self.props.spec.spec.clone()}
                 </div>
             },
         }

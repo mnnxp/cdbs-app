@@ -7,13 +7,13 @@ pub use search_spec::SearchSpecsTags;
 use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
 // use log::debug;
 // use crate::error::{get_error, Error};
-use crate::types::{UUID, StandardSpec};
+use crate::types::{UUID, Spec};
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
     pub show_delete_btn: bool,
     pub standard_uuid: UUID,
-    pub specs: Vec<StandardSpec>,
+    pub specs: Vec<Spec>,
 }
 
 pub struct SpecsTags {

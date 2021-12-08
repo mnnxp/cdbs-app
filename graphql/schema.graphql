@@ -84,7 +84,7 @@ type CompanyAndRelatedData {
   companyRepresents: [CompanyRepresentAndRelatedData!]!
   companyType: CompanyTypeTranslateList!
   companyCertificates: [CompanyCertificateAndFile!]!
-  companySpecs: [CompanySpecWithTranslation!]!
+  companySpecs: [SpecTranslateList!]!
   typeAccess: TypeAccessTranslateList!
   isSupplier: Boolean!
   isEmailVerified: Boolean!
@@ -119,11 +119,6 @@ type CompanyRepresentAndRelatedData {
   phone: String!
 }
 
-type CompanySpecWithTranslation {
-  spec: SpecTranslateList!
-  companyUuid: UUID!
-}
-
 type CompanyTypeTranslateList {
   companyTypeId: Int!
   langId: Int!
@@ -147,7 +142,7 @@ type ComponentAndRelatedData {
   licenses: [License!]!
   componentParams: [ComponentParamWithTranslation!]!
   files: [ShowFileRelatedData!]!
-  componentSpecs: [ComponentSpecWithTranslation!]!
+  componentSpecs: [SpecTranslateList!]!
   componentKeywords: [Keyword!]!
   componentModifications: [ComponentModificationAndRelatedData!]!
   componentSuppliers: [ComponentSupplierRelatedData!]!
@@ -170,11 +165,6 @@ type ComponentParamWithTranslation {
   componentUuid: UUID!
   param: ParamTranslateList!
   value: String!
-}
-
-type ComponentSpecWithTranslation {
-  spec: SpecTranslateList!
-  componentUuid: UUID!
 }
 
 type ComponentSupplierRelatedData {
@@ -381,9 +371,22 @@ input IptCompanyRepresentData {
   phone: String!
 }
 
+input IptCompanyRepresentsArg {
+  companyUuid: UUID
+  representsUuids: [UUID!]
+  limit: Int
+  offset: Int
+}
+
 input IptCompanySpecData {
   companyUuid: UUID!
   specIds: [Int!]!
+}
+
+input IptCompanySpecsArg {
+  companyUuid: UUID!
+  limit: Int
+  offset: Int
 }
 
 input IptComponentData {
@@ -427,6 +430,12 @@ input IptComponentParamData {
 input IptComponentSpecData {
   componentUuid: UUID!
   specIds: [Int!]!
+}
+
+input IptComponentSpecsArg {
+  componentUuid: UUID!
+  limit: Int
+  offset: Int
 }
 
 input IptComponentsArg {
@@ -545,6 +554,12 @@ input IptStandardFilesData {
   standardUuid: UUID!
 }
 
+input IptStandardKeywordsArg {
+  standardUuid: UUID!
+  limit: Int
+  offset: Int
+}
+
 input IptStandardKeywordsData {
   standardUuid: UUID!
   keywordIds: [Int!]!
@@ -553,6 +568,12 @@ input IptStandardKeywordsData {
 input IptStandardKeywordsNames {
   standardUuid: UUID!
   keywords: [String!]!
+}
+
+input IptStandardSpecsArg {
+  standardUuid: UUID!
+  limit: Int
+  offset: Int
 }
 
 input IptStandardSpecsData {
@@ -926,6 +947,7 @@ type QueryRoot {
     componentUuid: UUID!
   ): [UserAccessComponentAndRelatedData!]!
   componentFiles(componentUuid: UUID!): [DownloadFile!]!
+  componentSpecs(arg: IptComponentSpecsArg!): [SpecTranslateList!]!
   componentModificationFiles(modificationUuid: UUID!): [DownloadFile!]!
   componentModificationFilesets(
     modificationUuid: UUID!
@@ -942,6 +964,8 @@ type QueryRoot {
   standards(arguments: IptStandardsArg): [ShowStandardShort!]!
   standard(standardUuid: UUID!): StandardAndRelatedData!
   standardFiles(arg: IptStandardFilesArg!): [DownloadFile!]!
+  standardSpecs(arg: IptStandardSpecsArg!): [SpecTranslateList!]!
+  standardKeywords(arg: IptStandardKeywordsArg!): [Keyword!]!
   getCompaniesListAccessStandard(
     standardUuid: UUID!
   ): [CompanyAccessStandardAndRelatedData!]!
@@ -952,12 +976,12 @@ type QueryRoot {
   companies(arguments: IptCompaniesArg): [ShowCompanyShort!]!
   company(companyUuid: UUID!): CompanyAndRelatedData!
   companyRepresents(
-    companyUuid: UUID
-    representsUuids: [UUID!]
+    arg: IptCompanyRepresentsArg!
   ): [CompanyRepresentAndRelatedData!]!
   companyMembers(companyUuid: UUID!): [CompanyMemberAndRelatedData!]!
   companyRoles(companyUuid: UUID!): [RoleMemberAndRelatedData!]!
   companyTypes: [CompanyTypeTranslateList!]!
+  companySpecs(arg: IptCompanySpecsArg!): [SpecTranslateList!]!
   companyRepresentTypes: [RepresentationTypeTranslateList!]!
   keywords(keywordId: [Int!], limit: Int, offset: Int): [Keyword!]!
   languages(langId: [Int!], limit: Int, offset: Int): [Language!]!
@@ -1091,7 +1115,7 @@ type ShowUserShort {
 }
 
 type SlimCompany {
-  uuid: ID!
+  uuid: UUID!
   shortname: String!
   isSupplier: Boolean!
 }
@@ -1103,7 +1127,7 @@ type SlimCompanyMember {
 }
 
 type SlimComponent {
-  uuid: ID!
+  uuid: UUID!
   name: String!
   description: String!
   typeAccessId: Int!
@@ -1167,15 +1191,10 @@ type StandardAndRelatedData {
   createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!
   standardFiles: [ShowFileRelatedData!]!
-  standardSpecs: [StandardSpecWithTranslation!]!
+  standardSpecs: [SpecTranslateList!]!
   standardKeywords: [Keyword!]!
   subscribers: Int!
   isFollowed: Boolean!
-}
-
-type StandardSpecWithTranslation {
-  spec: SpecTranslateList!
-  standardUuid: UUID!
 }
 
 type StandardStatusTranslateList {

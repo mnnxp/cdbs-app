@@ -14,7 +14,7 @@ use wasm_bindgen_futures::spawn_local;
 use crate::gqls::make_query;
 // use crate::error::{get_error, Error};
 // use crate::fragments::standard_spec::{SpecsTags, SearchSpecsTags};
-use crate::types::{StandardSpec, Spec, SearchSpec, UUID};
+use crate::types::{Spec, SearchSpec, UUID};
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -26,7 +26,7 @@ struct SearchSpecs;
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
-    pub standard_specs: Vec<StandardSpec>,
+    pub standard_specs: Vec<Spec>,
     pub standard_uuid: UUID,
 }
 
@@ -80,10 +80,7 @@ impl Component for SearchSpecsTags {
             Msg::AddedSpec(spec_id) => {
                 for spec in &self.search_specs {
                     if spec.spec_id == spec_id as i32 {
-                        self.props.standard_specs.push(StandardSpec{
-                            spec: spec.into(),
-                            standard_uuid: self.props.standard_uuid.clone()
-                        });
+                        self.props.standard_specs.push(spec.into());
                         break;
                     }
                 }
@@ -183,7 +180,7 @@ impl SearchSpecsTags {
             <div class="panel-block">
                 <div id="search-specs" class="tags search_res_box">
                     {for self.specs.iter().map(|spec| {
-                        if self.props.standard_specs.iter().any(|x| &x.spec.spec_id == &spec.spec_id) {
+                        if self.props.standard_specs.iter().any(|x| &x.spec_id == &spec.spec_id) {
                             html!{}
                         } else {
                             html! {<SpecTagItem
@@ -201,8 +198,8 @@ impl SearchSpecsTags {
                     {for self.props.standard_specs.iter().map(|st_spec| {
                         html! {<SpecTagItem
                             standard_uuid = self.props.standard_uuid.clone()
-                            spec = st_spec.spec.clone()
-                            is_added = self.props.standard_specs.iter().any(|x| &x.spec.spec_id == &st_spec.spec.spec_id)
+                            spec = st_spec.clone()
+                            is_added = self.props.standard_specs.iter().any(|x| &x.spec_id == &st_spec.spec_id)
                             />}
                     })}
                 </div>

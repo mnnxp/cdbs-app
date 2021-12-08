@@ -17,7 +17,7 @@ use crate::fragments::list_errors::ListErrors;
 use crate::routes::AppRoute;
 use crate::services::is_authenticated;
 use crate::types::{
-    SlimUser, CompanyCreateInfo, Region,
+    UUID, SlimUser, CompanyCreateInfo, Region,
     CompanyType, TypeAccessInfo, SlimCompany,
 };
 
