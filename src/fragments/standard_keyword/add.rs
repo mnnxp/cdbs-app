@@ -58,8 +58,8 @@ pub enum Msg {
     GetAddKeywordsResult(String),
     GetStandardKeywordsResult(String),
     HideNotification,
-    DeleteCurrentKeywords(usize),
-    DeleteNewKeywords(String),
+    DeleteCurrentKeyword(usize),
+    DeleteNewKeyword(String),
     ResponseError(Error),
     ClearError,
     Ignore,
@@ -230,7 +230,7 @@ impl Component for AddKeywordsTags {
                 }
             },
             Msg::HideNotification => self.bad_keyword = false,
-            Msg::DeleteCurrentKeywords(keyword_id) => {
+            Msg::DeleteCurrentKeyword(keyword_id) => {
                 let mut props_keywords: Vec<Keyword> = Vec::new();
                 for k in self.props.standard_keywords.iter() {
                     if k.id == keyword_id {
@@ -241,12 +241,12 @@ impl Component for AddKeywordsTags {
                 }
                 self.props.standard_keywords = props_keywords;
             },
-            Msg::DeleteNewKeywords(keyword) => {
+            Msg::DeleteNewKeyword(keyword) => {
                 // debug!("self.new_keywords before delete: {:?}", self.new_keywords);
                 // self.new_keywords.retain(|k| k != &keyword);
                 let mut new_keywords_empty = true;
                 let mut new_keywords: Vec<Keyword> = Vec::new();
-                for k in self.new_keywords.iter() {
+                for k in &self.new_keywords {
                     if k.keyword == keyword {
                         new_keywords.push(Keyword::default());
                     } else {
@@ -299,9 +299,9 @@ impl AddKeywordsTags {
         let onclick_hide_notification = self.link
             .callback(|_| Msg::HideNotification);
         let onclick_del_new_keyword = self.link
-            .callback(|value: Keyword| Msg::DeleteNewKeywords(value.keyword));
+            .callback(|value: Keyword| Msg::DeleteNewKeyword(value.keyword));
         let onclick_del_old_keyword = self.link
-            .callback(|value: Keyword| Msg::DeleteCurrentKeywords(value.id));
+            .callback(|value: Keyword| Msg::DeleteCurrentKeyword(value.id));
 
         html! {<>
             <div class="panel-block">
