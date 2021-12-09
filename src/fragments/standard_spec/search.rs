@@ -76,17 +76,17 @@ impl Component for SearchSpecsTags {
                 let count_old_found = self.found_specs.len();
                 let mut temp_found: Vec<Spec> = Vec::new();
                 temp_found.resize(count_old_found, Spec::default());
-                debug!("temp_found: {:?}", temp_found);
+                // debug!("temp_found: {:?}", temp_found);
                 // self.found_specs = Vec::new(); // clear old result
-                debug!("self.props.standard_specs: {:?}", self.props.standard_specs);
+                // debug!("self.props.standard_specs: {:?}", self.props.standard_specs);
                 for spec in &self.props.standard_specs {
                     del_specs_ids.push(spec.spec_id);
                 }
-                debug!("self.added_specs: {:?}", self.added_specs);
+                // debug!("self.added_specs: {:?}", self.added_specs);
                 for spec in &self.added_specs {
                     del_specs_ids.push(spec.spec_id);
                 }
-                debug!("del_specs_ids: {:?}", del_specs_ids);
+                // debug!("del_specs_ids: {:?}", del_specs_ids);
                 for spec in &self.search_specs {
                     let mut flag: bool = true;
                     for del in &del_specs_ids {
