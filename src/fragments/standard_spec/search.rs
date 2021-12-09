@@ -72,27 +72,51 @@ impl Component for SearchSpecsTags {
 
         match msg {
             Msg::ParseSpecs => {
-                self.found_specs = Vec::new(); // clear old result
+                let mut del_specs_ids: Vec<usize> = Vec::new(); // collect ids for remove
+                let count_old_found = self.found_specs.len();
+                let mut temp_found: Vec<Spec> = Vec::new();
+                temp_found.resize(count_old_found, Spec::default());
+                debug!("temp_found: {:?}", temp_found);
+                // self.found_specs = Vec::new(); // clear old result
+                debug!("self.props.standard_specs: {:?}", self.props.standard_specs);
+                for spec in &self.props.standard_specs {
+                    del_specs_ids.push(spec.spec_id);
+                }
+                debug!("self.added_specs: {:?}", self.added_specs);
+                for spec in &self.added_specs {
+                    del_specs_ids.push(spec.spec_id);
+                }
+                debug!("del_specs_ids: {:?}", del_specs_ids);
                 for spec in &self.search_specs {
-                    if !self.props.standard_specs.iter().any(|x| &x.spec_id == &spec.spec_id) &&
-                        !self.added_specs.iter().any(|y| &y.spec_id == &spec.spec_id) {
-                        self.found_specs.push(Spec::from(spec));
+                    let mut flag: bool = true;
+                    for del in &del_specs_ids {
+                        if &spec.spec_id != del {
+                            debug!("true &spec.spec_id != del: {:?}, {:?}", &spec.spec_id, del);
+                        } else {
+                            flag = false;
+                            debug!("&spec != del: {:?}, {:?}", spec, del);
+                            break;
+                        }
                     }
+                    if flag {
+                        debug!("true: {:?}", spec);
+                        temp_found.push(Spec::from(spec));
+                    }
+                }
+                if temp_found.len() == count_old_found {
+                    self.found_specs = Vec::new();
+                } else {
+                    self.found_specs = temp_found;
                 }
                 debug!("ParseSpecs {:?}", self.found_specs);
             },
             Msg::AddedSpec(spec_id) => {
-                for search_specs in &self.search_specs {
-                    if search_specs.spec_id == spec_id {
-                        self.added_specs.push(search_specs.into());
-                        break;
-                    }
-                }
                 let mut found_specs_empty = true;
                 let mut found_specs: Vec<Spec> = Vec::new();
                 for spec in &self.found_specs {
                     if spec.spec_id == spec_id {
                         found_specs.push(Spec::default());
+                        self.added_specs.push(spec.clone());
                     } else {
                         found_specs.push(spec.clone());
                         found_specs_empty = false;
@@ -103,7 +127,7 @@ impl Component for SearchSpecsTags {
                 } else {
                     self.found_specs = found_specs;
                 }
-                debug!("found_specs {:?}", self.found_specs);
+                debug!("FoundSpecs {:?}", self.found_specs);
                 debug!("AddedSpec {:?}", self.added_specs);
             },
             Msg::SetIptTimer(val) => {
@@ -162,6 +186,8 @@ impl Component for SearchSpecsTags {
                 for spec in &self.added_specs {
                     if spec.spec_id == spec_id {
                         added_specs.push(Spec::default());
+                        // return spec to found specs list
+                        self.found_specs.push(spec.clone());
                     } else {
                         added_specs.push(spec.clone());
                         added_specs_empty = false;
