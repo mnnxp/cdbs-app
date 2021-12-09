@@ -50,6 +50,7 @@ impl Component for SpecsTags {
                 {for self.props.specs.iter().map(|spec| {
                     html! {<SpecTagItem
                         show_manage_btn = self.props.show_manage_btn
+                        active_info_btn = true
                         standard_uuid = self.props.standard_uuid.clone()
                         spec = spec.clone()
                         is_added = true

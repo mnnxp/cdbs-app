@@ -24,7 +24,7 @@ use crate::routes::AppRoute;
 use crate::services::is_authenticated;
 use crate::types::{
     UUID, SlimUser, CompanyUpdateInfo, CompanyInfo, Region,
-    CompanyType, TypeAccessInfo, SlimCompany, SearchSpec, Spec,
+    CompanyType, TypeAccessInfo, SlimCompany, SpecPathInfo, Spec,
     Certificate, CompanyCertificate, CompanyRepresentInfo
 };
 
@@ -141,7 +141,7 @@ pub struct CompanySettings {
     ipt_timer: Option<TimeoutTask>,
     ipt_ref: NodeRef,
     specs_search_loading: bool,
-    search_specs: Vec<SearchSpec>,
+    search_specs: Vec<SpecPathInfo>,
 }
 
 #[derive(Properties, Clone)]
@@ -510,7 +510,7 @@ impl Component for CompanySettings {
             Msg::GetSearchRes(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res = data.as_object().unwrap().get("data").unwrap();
-                let search_specs: Vec<SearchSpec> =
+                let search_specs: Vec<SpecPathInfo> =
                     serde_json::from_value(res.get("searchSpecs").unwrap().clone()).unwrap();
                 // debug!(
                 //     "specs res:{:?} {:?}",

@@ -11,7 +11,7 @@ use wasm_bindgen_futures::spawn_local;
 use crate::gqls::make_query;
 // use crate::error::{get_error, Error};
 use crate::fragments::standard_spec::{SpecsTags, SpecTagItem};
-use crate::types::{Spec, SearchSpec, UUID};
+use crate::types::{Spec, SpecPathInfo, UUID};
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -33,7 +33,7 @@ pub struct SearchSpecsTags {
     ipt_timer: Option<TimeoutTask>,
     ipt_ref: NodeRef,
     specs_search_loading: bool,
-    search_specs: Vec<SearchSpec>,
+    search_specs: Vec<SpecPathInfo>,
     found_specs: Vec<Spec>,
     added_specs: Vec<Spec>,
 }
@@ -159,7 +159,7 @@ impl Component for SearchSpecsTags {
             Msg::GetSearchRes(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res = data.as_object().unwrap().get("data").unwrap();
-                let search_specs: Vec<SearchSpec> =
+                let search_specs: Vec<SpecPathInfo> =
                     serde_json::from_value(res.get("searchSpecs").unwrap().clone()).unwrap();
                 // debug!(
                 //     "found_specs res:{:?} {:?}",
@@ -256,6 +256,7 @@ impl SearchSpecsTags {
                         } else {
                             html! {<SpecTagItem
                                 show_manage_btn = true
+                                active_info_btn = false
                                 standard_uuid = self.props.standard_uuid.clone()
                                 spec = spec.clone()
                                 is_added = false
@@ -271,6 +272,7 @@ impl SearchSpecsTags {
                     {for self.added_specs.iter().map(|st_spec| {
                         html! {<SpecTagItem
                             show_manage_btn = true
+                            active_info_btn = false
                             standard_uuid = self.props.standard_uuid.clone()
                             spec = st_spec.clone()
                             is_added = true

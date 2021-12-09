@@ -1,7 +1,17 @@
 query SearchSpecs($arg: IptSearchSpecArg) {
   searchSpecs(arg: $arg) {
-    specId
-    langId
-    path
+    ...specPathFields
   }
+}
+
+query GetSpecsPaths($iptSpecPathArg: IptSpecPathArg) {
+  specsPaths(arg: $iptSpecPathArg) {
+    ...specPathFields
+  }
+}
+
+fragment specPathFields on SpecPath {
+  specId
+  langId
+  path
 }

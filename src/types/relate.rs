@@ -27,15 +27,15 @@ pub struct Spec {
 
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct SearchSpec {
+pub struct SpecPathInfo {
     pub spec_id: usize,
     pub lang_id: usize,
     pub path: String,
 }
 
-impl From<&SearchSpec> for Spec {
-    fn from(data: &SearchSpec) -> Self {
-        let SearchSpec {
+impl From<&SpecPathInfo> for Spec {
+    fn from(data: &SpecPathInfo) -> Self {
+        let SpecPathInfo {
             spec_id,
             path,
             lang_id,
