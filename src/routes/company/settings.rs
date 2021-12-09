@@ -24,7 +24,7 @@ use crate::routes::AppRoute;
 use crate::services::is_authenticated;
 use crate::types::{
     UUID, SlimUser, CompanyUpdateInfo, CompanyInfo, Region,
-    CompanyType, TypeAccessInfo, SlimCompany, SearchSpec, Spec,
+    CompanyType, TypeAccessInfo, SlimCompany, SpecPathInfo, Spec,
     Certificate, CompanyCertificate, CompanyRepresentInfo
 };
 
@@ -110,22 +110,6 @@ impl From<CompanyInfo> for CompanyUpdateInfo {
     }
 }
 
-impl From<SearchSpec> for Spec {
-    fn from(data: SearchSpec) -> Self {
-        let SearchSpec {
-            spec_id,
-            path,
-            lang_id,
-        } = data;
-
-        Self {
-            spec_id: spec_id as usize,
-            lang_id: lang_id as usize,
-            spec: path,
-        }
-    }
-}
-
 pub enum Menu {
     Company,
     UpdataFavicon,
@@ -157,7 +141,7 @@ pub struct CompanySettings {
     ipt_timer: Option<TimeoutTask>,
     ipt_ref: NodeRef,
     specs_search_loading: bool,
-    search_specs: Vec<SearchSpec>,
+    search_specs: Vec<SpecPathInfo>,
 }
 
 #[derive(Properties, Clone)]
@@ -526,7 +510,7 @@ impl Component for CompanySettings {
             Msg::GetSearchRes(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res = data.as_object().unwrap().get("data").unwrap();
-                let search_specs: Vec<SearchSpec> =
+                let search_specs: Vec<SpecPathInfo> =
                     serde_json::from_value(res.get("searchSpecs").unwrap().clone()).unwrap();
                 // debug!(
                 //     "specs res:{:?} {:?}",
@@ -1154,7 +1138,7 @@ impl CompanySettings {
         let specs = self
             .search_specs
             .iter()
-            .map(|x| Spec::from(x.clone()))
+            .map(|x| Spec::from(x))
             .collect::<Vec<Spec>>();
         html! {
           <div hidden=!show_ipt>

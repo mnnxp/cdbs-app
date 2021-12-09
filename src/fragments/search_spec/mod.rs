@@ -5,12 +5,12 @@ pub use item::SpecTagItem;
 use log::debug;
 use yew::{html, Component, ComponentLink, Html, Properties, ShouldRender};
 // use crate::error::{get_error, Error};
-use crate::types::{CompanySpec, Spec, UUID};
+use crate::types::{Spec, UUID};
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
     // pub show_delete_btn: bool,
-    pub company_specs: Vec<CompanySpec>,
+    pub company_specs: Vec<Spec>,
     pub company_uuid: UUID,
     pub specs: Vec<Spec>,
     // pub is_added: bool,
@@ -46,7 +46,7 @@ impl Component for SearchSpecsTags {
                         // show_delete_btn = self.props.show_delete_btn.clone()
                         company_uuid = self.props.company_uuid.clone()
                         spec = spec.clone()
-                        is_added = self.props.company_specs.iter().any(|x| x.spec.spec_id == spec.clone().spec_id)
+                        is_added = self.props.company_specs.iter().any(|x| x.spec_id == spec.clone().spec_id)
                         />}
                 })}
             </div>

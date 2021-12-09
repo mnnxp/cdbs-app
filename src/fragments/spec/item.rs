@@ -7,7 +7,7 @@ use yew::{html, Component, ComponentLink, Html, Properties, ShouldRender};
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
 use crate::gqls::make_query;
-use crate::types::{CompanySpec, UUID};
+use crate::types::{Spec, UUID};
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -21,7 +21,7 @@ struct DeleteCompanySpecs;
 pub struct Props {
     pub show_delete_btn: bool,
     pub company_uuid: UUID,
-    pub spec: CompanySpec,
+    pub spec: Spec,
 }
 
 pub struct SpecTagItem {
@@ -55,7 +55,7 @@ impl Component for SpecTagItem {
         match msg {
             Msg::RequestDeleteSpec => {
                 let company_uuid = self.props.company_uuid.clone();
-                let spec_id = self.props.spec.spec.spec_id as i64;
+                let spec_id = self.props.spec.spec_id as i64;
                 spawn_local(async move {
                     let ipt_company_spec_data = delete_company_specs::IptCompanySpecData {
                         companyUuid: company_uuid,
@@ -123,7 +123,7 @@ impl SpecTagItem {
 
         html! {
             <div class="tag is-light">
-                {self.props.spec.spec.spec.clone()}
+                {self.props.spec.spec.clone()}
                 <div hidden=show_btn>
                   <button class="delete is-small" onclick=onclick_delete_spec/>
                 </div>

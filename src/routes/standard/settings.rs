@@ -21,8 +21,8 @@ use crate::fragments::{
     list_errors::ListErrors,
     // catalog_component::CatalogComponents,
     standard_file::FilesCard,
-    standard_spec::SpecsTags,
-    standard_keyword::KeywordsTags,
+    standard_spec::SearchSpecsTags,
+    standard_keyword::AddKeywordsTags,
 };
 use crate::gqls::make_query;
 use crate::services::{
@@ -150,6 +150,7 @@ pub enum Msg {
     UpdateRegionId(String),
     UpdateFiles(FileList),
     ResponseError(Error),
+    ClearFilesBoxed,
     ClearError,
     Ignore,
 }
@@ -554,6 +555,11 @@ impl Component for StandardSettings {
             Msg::ResponseError(err) => {
                 self.error = Some(err);
             },
+            Msg::ClearFilesBoxed => {
+                self.files = Vec::new();
+                self.files_index = 0;
+                self.upload_standard_files = false;
+            },
             Msg::ClearError => self.error = None,
             Msg::Ignore => {},
         }
@@ -627,6 +633,8 @@ impl StandardSettings {
             <div class="columns">
               <div class="column is-one-quarter">
                   {self.show_frame_upload_files()}
+                  <br/>
+                  {self.show_btn_clear()}
               </div>
               <div class="column">
                 <div class="control">
@@ -831,14 +839,13 @@ impl StandardSettings {
         standard_data: &StandardInfo,
     ) -> Html {
         html!{<>
-              <h2>{"Specs"}</h2>
-              <div class="card">
-                <SpecsTags
-                    show_delete_btn = false
-                    standard_uuid = standard_data.uuid.clone()
-                    specs = standard_data.standard_specs.clone()
-                  />
-              </div>
+            <h2>{"Specs"}</h2>
+            <div class="card">
+              <SearchSpecsTags
+                  standard_specs = standard_data.standard_specs.clone()
+                  standard_uuid = standard_data.uuid.clone()
+                />
+            </div>
         </>}
     }
 
@@ -849,10 +856,9 @@ impl StandardSettings {
         html!{<>
               <h2>{"Keywords"}</h2>
               <div class="card">
-                <KeywordsTags
-                    show_delete_btn = false
+                <AddKeywordsTags
+                    standard_keywords = standard_data.standard_keywords.clone()
                     standard_uuid = standard_data.uuid.clone()
-                    keywords = standard_data.standard_keywords.clone()
                   />
               </div>
         </>}
@@ -909,7 +915,7 @@ impl StandardSettings {
                   <input id="standard-file-input"
                   class="file-input"
                   type="file"
-                  accept="image/*,application/vnd*,application/rtf,text/*,.pdf"
+                  // accept="image/*,application/vnd*,application/rtf,text/*,.pdf"
                   onchange={onchange_upload_files}
                   multiple=true />
                 <span class="file-cta">
@@ -931,18 +937,25 @@ impl StandardSettings {
                         </span>
                     })}
                 }}
-                    // <table class="table is-fullwidth">
-                    //   <tbody>
-                    //     {for self.files.iter().map(|f| html!{
-                    //         <tr><td>{f.name().clone()}</td></tr>
-                    //     })}
-                    //   </tbody>
-                    // </table>
-                    // {for self.files.iter().map(|f| html!{
-                    //     {f.name().clone()}
-                    // })}
               </label>
             </div>
         </>}
+    }
+
+    fn show_btn_clear(&self) -> Html {
+        let onclick_clear_boxed = self.link
+            .callback(|_| Msg::ClearFilesBoxed);
+
+        match self.disable_save_changes_btn {
+            true => html! {},
+            false => html! {
+                <a id="clear-frame-upload-files"
+                      class="button"
+                      onclick=onclick_clear_boxed
+                      disabled={self.files.is_empty()} >
+                    { "Clear select files" }
+                </a>
+            },
+        }
     }
 }

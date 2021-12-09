@@ -145,10 +145,12 @@ impl Component for FileItem {
     fn view(&self) -> Html {
         html! {<>
             <ListErrors error=self.error.clone()/>
-            {self.show_full_info_file()}
             {match self.get_result_delete {
                 true => html! {},
-                false => self.show_file(),
+                false => html!{<>
+                    {self.show_full_info_file()}
+                    {self.show_file()}
+                </>},
             }}
         </>}
     }

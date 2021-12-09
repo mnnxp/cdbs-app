@@ -64,6 +64,29 @@ mutation UploadStandardFiles($iptStandardFilesData: IptStandardFilesData!) {
   }
 }
 
+mutation AddStandardSpecs($iptStandardSpecsData: IptStandardSpecsData!) {
+  addStandardSpecs(data: $iptStandardSpecsData)
+}
+
+mutation DeleteStandardSpecs($iptStandardSpecsData: IptStandardSpecsData!){
+  deleteStandardSpecs(data: $iptStandardSpecsData)
+}
+
+query GetStandardKeywords($iptStandardKeywordsArg: IptStandardKeywordsArg!) {
+  standardKeywords(arg: $iptStandardKeywordsArg) {
+    id
+    keyword
+  }
+}
+
+mutation AddStandardKeywordsByNames($iptStandardKeywordsNames: IptStandardKeywordsNames!) {
+  addStandardKeywordsByNames(data: $iptStandardKeywordsNames)
+}
+
+mutation DeleteStandardKeywords($iptStandardKeywordsData: IptStandardKeywordsData!){
+  deleteStandardKeywords(data: $iptStandardKeywordsData)
+}
+
 fragment uploadUrlFields on UploadFile {
   fileUuid
   filename
@@ -84,14 +107,6 @@ mutation AddStandardFav($standardUuid: String!) {
 
 mutation DeleteStandardFav($standardUuid: String!) {
   deleteStandardFav(standardUuid: $standardUuid)
-}
-
-mutation DeleteStandardSpecs($iptStandardSpecsData: IptStandardSpecsData!){
-  deleteStandardSpecs(data: $iptStandardSpecsData)
-}
-
-mutation DeleteStandardKeywords($iptStandardKeywordsData: IptStandardKeywordsData!){
-  deleteStandardKeywords(data: $iptStandardKeywordsData)
 }
 
 fragment standardStatusFields on StandardStatusTranslateList {
@@ -168,7 +183,7 @@ fragment regionFields on RegionTranslateList {
   region
 }
 
-fragment specTranslateListFields on SpecTranslateList {
+fragment specFields on SpecTranslateList {
   specId
   langId
   spec
@@ -228,10 +243,7 @@ fragment standardAndRelatedDataFields on StandardAndRelatedData {
     ...showFileRelatedDataFields
   }
   standardSpecs {
-    spec {
-      ...specTranslateListFields
-    }
-    standardUuid
+    ...specFields
   }
   standardKeywords {
     id

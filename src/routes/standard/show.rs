@@ -489,7 +489,7 @@ impl ShowStandard {
               <h2>{"Specs"}</h2>
               <div class="card">
                 <SpecsTags
-                    show_delete_btn = false
+                    show_manage_btn = false
                     standard_uuid = standard_data.uuid.clone()
                     specs = standard_data.standard_specs.clone()
                   />
