@@ -36,10 +36,12 @@ impl Component for SpecsTags {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.show_manage_btn == props.show_manage_btn {
+        if self.props.standard_uuid == props.standard_uuid &&
+            self.props.show_manage_btn == props.show_manage_btn &&
+                self.props.specs.len() == props.specs.len() {
             false
         } else {
-            self.props.show_manage_btn = props.show_manage_btn;
+            self.props = props;
             true
         }
     }

@@ -42,7 +42,6 @@ struct DeleteStandardFav;
 
 
 pub enum Msg {
-    AddOne,
     SwitchShowType,
     UpdateList(String),
     AddFav(UUID),
@@ -60,7 +59,6 @@ pub struct CatalogStandards {
     error: Option<Error>,
     link: ComponentLink<Self>,
     props: Props,
-    value: i64,
     show_type: ListState,
     list: Vec<ShowStandardShort>
 }
@@ -80,7 +78,6 @@ impl Component for CatalogStandards {
             error: None,
             link,
             props,
-            value: 0,
             show_type: ListState::List,
             list: Vec::new()
         }
@@ -95,11 +92,6 @@ impl Component for CatalogStandards {
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         let link = self.link.clone();
         match msg {
-            Msg::AddOne => {
-                self.value += 1;
-                // the value has changed so we need to
-                // re-render for it to appear on the page
-            },
             Msg::SwitchShowType => {
                 match self.show_type {
                     ListState::Box => self.show_type = ListState::List,
@@ -200,7 +192,7 @@ impl Component for CatalogStandards {
                 <div class="level-left ">
                 {match &self.props.show_create_btn {
                     true => html! {
-                        <RouterAnchor<AppRoute> route=AppRoute::CreateTender >
+                        <RouterAnchor<AppRoute> route=AppRoute::CreateStandard >
                           <button class="button is-info" >{"Create"}</button>
                         </RouterAnchor<AppRoute>>
                     },

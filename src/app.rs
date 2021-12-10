@@ -27,7 +27,7 @@ use crate::routes::{
     register::Register,
     settings::Settings,
     company::{ShowCompany, CompanySettings, CreateCompany},
-    standard::{ShowStandard, StandardSettings},
+    standard::{ShowStandard, StandardSettings, CreateStandard},
     AppRoute,
 };
 use crate::services::{is_authenticated, get_current_user};
@@ -153,6 +153,7 @@ impl Component for App {
                                 current_user=self.current_user.clone()
                                 standard_uuid=standard_uuid.to_string()
                                 />},
+                            AppRoute::CreateStandard => html!{<CreateStandard />},
                             AppRoute::Tenders => html!{<Tenders />},
                             AppRoute::CatalogComponents => html!{<CatalogComponents show_create_btn = true />},
                             AppRoute::CreateTender => html!{<CreateTender />},

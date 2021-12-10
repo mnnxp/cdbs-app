@@ -5,7 +5,6 @@ pub use item::FileItem;
 use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
 // use log::debug;
 // use crate::error::{get_error, Error};
-use crate::services::is_authenticated;
 use crate::types::{UUID, ShowFileInfo};
 
 #[derive(Clone, Debug, Properties)]
@@ -40,13 +39,6 @@ impl Component for FilesCard {
         }
     }
 
-    fn rendered(&mut self, first_render: bool) {
-        if first_render && is_authenticated() {
-            // files count check for show
-            self.show_full_files = self.props.files.len() < 5;
-        }
-    }
-
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         // let link = self.link.clone();
         match msg {
@@ -57,10 +49,13 @@ impl Component for FilesCard {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.show_delete_btn == props.show_delete_btn {
+        if self.props.standard_uuid == props.standard_uuid &&
+            self.props.show_download_btn == props.show_download_btn &&
+                self.props.show_delete_btn == props.show_delete_btn &&
+                    self.props.files.len() == props.files.len() {
             false
         } else {
-            self.props.show_delete_btn = props.show_delete_btn;
+            self.props = props;
             true
         }
     }
@@ -98,22 +93,26 @@ impl FilesCard {
         let show_full_files_btn = self.link
             .callback(|_| Msg::ShowFullList);
 
-        match self.show_full_files {
-            true => html!{<>
-              {match self.props.files.len() {
-                  3.. => html!{<>
-                    <button class="button is-white"
-                        onclick=show_full_files_btn
-                      >{"See less"}</button>
-                  </>},
-                  _ => html!{},
-              }}
-            </>},
-            false => html!{<>
-              <button class="button is-white"
-                  onclick=show_full_files_btn
-                >{"See more"}</button>
-            </>},
+        if self.props.files.is_empty() {
+            html!{<span>{"Files not found"}</span>}
+        } else {
+            match self.show_full_files {
+                true => html!{<>
+                  {match self.props.files.len() {
+                      3.. => html!{<>
+                        <button class="button is-white"
+                            onclick=show_full_files_btn
+                          >{"See less"}</button>
+                      </>},
+                      _ => html!{},
+                  }}
+                </>},
+                false => html!{<>
+                  <button class="button is-white"
+                      onclick=show_full_files_btn
+                    >{"See more"}</button>
+                </>},
+            }
         }
     }
 }

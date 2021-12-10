@@ -313,7 +313,10 @@ impl Component for ShowCompany {
                                             self.view_components(&company_data.uuid)
                                         },
                                         CompanyTab::Standards => {
-                                            self.view_standards(&company_data.uuid)
+                                            self.view_standards(
+                                                &company_data.uuid,
+                                                &company_data.is_supplier,
+                                            )
                                             // unimplemented!()
                                         },
                                         // CompanyTab::Members => {
@@ -621,10 +624,11 @@ impl ShowCompany {
     fn view_standards(
         &self,
         company_uuid: &UUID,
+        is_supplier: &bool,
     ) -> Html {
         html! {
             <CatalogStandards
-                show_create_btn = false
+                show_create_btn = is_supplier.clone()
                 arguments = StandardsQueryArg::set_company_uuid(company_uuid)
             />
         }
