@@ -36,10 +36,11 @@ impl Component for KeywordsTags {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.show_delete_btn == props.show_delete_btn {
+        if self.props.standard_uuid == props.standard_uuid &&
+                self.props.keywords.len() == props.keywords.len() {
             false
         } else {
-            self.props.show_delete_btn = props.show_delete_btn;
+            self.props = props;
             true
         }
     }

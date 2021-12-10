@@ -204,6 +204,13 @@ impl Component for StandardSettings {
         let not_matches_standard_uuid = target_standard_uuid != self.current_standard_uuid;
         // debug!("self.current_standard_uuid {:#?}", self.current_standard_uuid);
 
+        if not_matches_standard_uuid {
+            // clear old data
+            self.current_standard = None;
+            self.current_standard_uuid = String::new();
+            self.request_standard = StandardUpdatePreData::default();
+        }
+
         let link = self.link.clone();
 
         // debug!("get_self {:?}", get_self);
@@ -583,9 +590,7 @@ impl Component for StandardSettings {
                         // <br/>
                         {self.show_manage_btn()}
                         <br/>
-                        <div class="card">
-                          {self.show_main_card()}
-                        </div>
+                        {self.show_main_card()}
                         {match &self.current_standard {
                             Some(standard_data) => html!{<>
                                 <div class="columns">
@@ -629,14 +634,8 @@ impl StandardSettings {
             .link
             .callback(|ev: InputData| Msg::UpdateDescription(ev.value));
 
-        html!{
-            <div class="columns">
-              <div class="column is-one-quarter">
-                  {self.show_frame_upload_files()}
-                  <br/>
-                  {self.show_btn_clear()}
-              </div>
-              <div class="column">
+        html!{<div class="card">
+            <div class="column">
                 <div class="control">
                     <div class="media">
                         <div class="media-content">
@@ -692,9 +691,8 @@ impl StandardSettings {
                     placeholder="standard description"
                     value={self.request_standard.description.clone()}
                     oninput=oninput_description />
-              </div>
             </div>
-        }
+        </div>}
     }
 
     fn show_standard_params(&self) -> Html {
@@ -824,6 +822,7 @@ impl StandardSettings {
         html!{
             <div class="column">
               <h2>{"Files"}</h2>
+              {self.show_frame_upload_files()}
               <FilesCard
                   show_download_btn = false
                   show_delete_btn = true
@@ -853,6 +852,7 @@ impl StandardSettings {
         &self,
         standard_data: &StandardInfo,
     ) -> Html {
+        // debug!("Keywords: {:?}", &standard_data.uuid);
         html!{<>
               <h2>{"Keywords"}</h2>
               <div class="card">
@@ -939,6 +939,7 @@ impl StandardSettings {
                 }}
               </label>
             </div>
+            {self.show_btn_clear()}
         </>}
     }
 
