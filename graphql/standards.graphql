@@ -83,6 +83,10 @@ mutation PutStandardUpdate($standardUuid: UUID!, $iptUpdateStandardData: IptUpda
   putStandardUpdate(standardUuid: $standardUuid, data: $iptUpdateStandardData)
 }
 
+mutation DeleteStandard($standardUuid: UUID!) {
+  deleteStandard(standardUuid: $standardUuid)
+}
+
 mutation UploadStandardFiles($iptStandardFilesData: IptStandardFilesData!) {
   uploadStandardFiles(data: $iptStandardFilesData){
     ...uploadUrlFields

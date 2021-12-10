@@ -58,6 +58,14 @@ struct PutStandardUpdate;
     query_path = "./graphql/standards.graphql",
     response_derives = "Debug"
 )]
+struct DeleteStandard;
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/standards.graphql",
+    response_derives = "Debug"
+)]
 struct ChangeStandardAccess;
 
 #[derive(GraphQLQuery)]
@@ -100,6 +108,9 @@ pub struct StandardSettings {
     put_upload_file: PutUploadFile,
     files: Vec<File>,
     files_index: u32,
+    disable_delete_standard_btn: bool,
+    confirm_delete_standard: String,
+    hide_delete_modal: bool,
     disable_save_changes_btn: bool,
     get_result_standard_data: usize,
     get_result_access: bool,
@@ -120,23 +131,19 @@ pub enum Msg {
     RequestManager,
     RequestUpdateStandardData,
     RequestChangeAccess,
+    RequestDeleteStandard,
     RequestUploadStandardFiles,
     RequestUploadFile(Vec<u8>),
     ResponseUploadFile(Result<Option<String>, Error>),
     RequestUploadCompleted,
-    // RequestUpdateStandardSpecs,
-    // RequestUpdateStandardKeywords,
     GetStandardData(String),
     GetListOpt(String),
     GetUpdateStandardResult(String),
     GetUpdateAccessResult(String),
-    // GetUpdateStandardFiles(String),
-    // GetUpdateStandardSpecs(String),
-    // GetUpdateStandardKeywords(String),
-    // GetRemoveStandardResult(String),
     GetUploadData(String),
     GetUploadFile(Option<String>),
     GetUploadCompleted(String),
+    GetDeleteStandard(String),
     EditFiles,
     UpdateTypeAccessId(String),
     UpdateClassifier(String),
@@ -149,7 +156,9 @@ pub enum Msg {
     UpdateStandardStatusId(String),
     UpdateRegionId(String),
     UpdateFiles(FileList),
+    UpdateConfirmDelete(String),
     ResponseError(Error),
+    ChangeHideDeleteStandard,
     ClearFilesBoxed,
     ClearError,
     Ignore,
@@ -183,6 +192,9 @@ impl Component for StandardSettings {
             put_upload_file: PutUploadFile::new(),
             files: Vec::new(),
             files_index: 0,
+            disable_delete_standard_btn: true,
+            confirm_delete_standard: String::new(),
+            hide_delete_modal: true,
             disable_save_changes_btn: true,
             get_result_standard_data: 0,
             get_result_access: false,
@@ -241,9 +253,9 @@ impl Component for StandardSettings {
         match msg {
             Msg::OpenStandard => {
                 // Redirect to standard page
-                self.router_agent.send(ChangeRoute(AppRoute::ShowStandard(
-                    self.current_standard_uuid.clone()
-                ).into()));
+                self.router_agent.send(ChangeRoute(
+                    AppRoute::ShowStandard(self.current_standard_uuid.clone()).into()
+                ));
             },
             Msg::RequestManager => {
                 if self.update_standard {
@@ -307,11 +319,18 @@ impl Component for StandardSettings {
                         newTypeAccessId: new_type_access_id,
                     };
                     let res = make_query(ChangeStandardAccess::build_query(
-                        change_standard_access::Variables {
-                            change_type_access_standard,
-                        }
+                        change_standard_access::Variables { change_type_access_standard }
                     )).await;
                     link.send_message(Msg::GetUpdateAccessResult(res.unwrap()));
+                })
+            },
+            Msg::RequestDeleteStandard => {
+                let standard_uuid = self.current_standard_uuid.clone();
+                spawn_local(async move {
+                    let res = make_query(DeleteStandard::build_query(
+                        delete_standard::Variables { standard_uuid }
+                    )).await;
+                    link.send_message(Msg::GetDeleteStandard(res.unwrap()));
                 })
             },
             Msg::RequestUploadStandardFiles => {
@@ -386,9 +405,7 @@ impl Component for StandardSettings {
                         }
                         debug!("file: {:#?}", self.files);
                     },
-                    true => {
-                        link.send_message(Msg::ResponseError(get_error(&data)));
-                    }
+                    true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }
             },
             Msg::ResponseUploadFile(Ok(res)) => {
@@ -486,9 +503,27 @@ impl Component for StandardSettings {
                         debug!("uploadCompleted: {:?}", result);
                         self.get_result_up_completed = result;
                     },
-                    true => {
-                        link.send_message(Msg::ResponseError(get_error(&data)));
-                    }
+                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                }
+            },
+            Msg::GetDeleteStandard(res) => {
+                let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
+                let res_value = data.as_object().unwrap().get("data").unwrap();
+
+                match res_value.is_null() {
+                    false => {
+                        let result: UUID = serde_json::from_value(res_value.get("deleteStandard").unwrap().clone()).unwrap();
+                        debug!("deleteStandard: {:?}", result);
+                        if self.current_standard_uuid == result {
+                            match &self.current_standard {
+                                Some(company) => self.router_agent.send(ChangeRoute(
+                                    AppRoute::ShowCompany(company.owner_company.uuid.clone()).into()
+                                )),
+                                None => self.router_agent.send(ChangeRoute(AppRoute::Home.into())),
+                            }
+                        }
+                    },
+                    true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }
             },
             Msg::EditFiles => self.upload_standard_files = !self.upload_standard_files,
@@ -559,9 +594,12 @@ impl Component for StandardSettings {
                 }
                 self.files_index = 0;
             },
-            Msg::ResponseError(err) => {
-                self.error = Some(err);
+            Msg::UpdateConfirmDelete(data) => {
+                self.disable_delete_standard_btn = self.current_standard_uuid != data;
+                self.confirm_delete_standard = data;
             },
+            Msg::ResponseError(err) => self.error = Some(err),
+            Msg::ChangeHideDeleteStandard => self.hide_delete_modal = !self.hide_delete_modal,
             Msg::ClearFilesBoxed => {
                 self.files = Vec::new();
                 self.files_index = 0;
@@ -626,12 +664,10 @@ impl StandardSettings {
               _ => "1".to_string(),
           }));
 
-        let oninput_name = self
-            .link
+        let oninput_name = self.link
             .callback(|ev: InputData| Msg::UpdateName(ev.value));
 
-        let oninput_description = self
-            .link
+        let oninput_description = self.link
             .callback(|ev: InputData| Msg::UpdateDescription(ev.value));
 
         html!{<div class="card">
@@ -867,6 +903,8 @@ impl StandardSettings {
     fn show_manage_btn(&self) -> Html {
         let onclick_open_standard = self.link
             .callback(|_| Msg::OpenStandard);
+        let onclick_show_delete_modal = self.link
+            .callback(|_| Msg::ChangeHideDeleteStandard);
         let onclick_save_changes = self.link
             .callback(|_| Msg::RequestManager);
 
@@ -888,6 +926,13 @@ impl StandardSettings {
                     }}
                 </div>
                 <div class="media-right">
+                    {self.modal_delete_standard()}
+                    <button
+                        id="delete-standard"
+                        class="button is-danger"
+                        onclick={onclick_show_delete_modal} >
+                        {"Delete"}
+                    </button>
                     <button
                         id="update-data"
                         class="button"
@@ -896,6 +941,59 @@ impl StandardSettings {
                         {"Update"}
                     </button>
                 </div>
+            </div>
+        }
+    }
+
+    fn modal_delete_standard(&self) -> Html {
+        let onclick_hide_modal = self.link
+            .callback(|_| Msg::ChangeHideDeleteStandard);
+        let oninput_delete_standard = self.link
+            .callback(|ev: InputData| Msg::UpdateConfirmDelete(ev.value));
+        let onclick_delete_standard = self.link
+            .callback(|_| Msg::RequestDeleteStandard);
+
+        let class_modal = match &self.hide_delete_modal {
+            true => "modal",
+            false => "modal is-active",
+        };
+
+        html!{
+            <div class=class_modal>
+              <div class="modal-background" onclick=onclick_hide_modal.clone() />
+                <div class="modal-content">
+                  <div class="card">
+                    <header class="modal-card-head">
+                      <p class="modal-card-title">{"Delete standard"}</p>
+                      <button class="delete" aria-label="close" onclick=onclick_hide_modal.clone() />
+                    </header>
+                    <section class="modal-card-body">
+                        <p class="is-size-6">
+                            {"For confirm deleted all data this "}
+                            <span class="has-text-danger-dark">{self.request_standard.name.clone()}</span>
+                            {" standard enter this uuid:"}
+                            <br/>
+                            <span class="has-text-weight-bold is-size-6">{self.current_standard_uuid.clone()}</span>
+                        </p>
+                        <br/>
+                         <input
+                           id="delete-standard"
+                           class="input"
+                           type="text"
+                           placeholder="standard uuid"
+                           value={self.confirm_delete_standard.clone()}
+                           oninput=oninput_delete_standard />
+                    </section>
+                    <footer class="modal-card-foot">
+                        <button
+                            id="delete-standard"
+                            class="button is-danger"
+                            disabled={self.disable_delete_standard_btn}
+                            onclick={onclick_delete_standard} >{"Yes, delete"}</button>
+                        <button class="button" onclick=onclick_hide_modal.clone()>{"Cancel"}</button>
+                    </footer>
+                </div>
+              </div>
             </div>
         }
     }
