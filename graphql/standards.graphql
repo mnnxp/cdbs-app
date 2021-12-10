@@ -1,3 +1,28 @@
+mutation RegisterStandard($iptStandardData: IptStandardData!) {
+  registerStandard(arg: $iptStandardData)
+}
+
+query GetStandardDataOpt($userUuid: UUID!) {
+  companies(arguments: {
+    userUuid: $userUuid
+    supplier: true
+  }) {
+    ...companyShortFields
+  }
+
+  standardStatuses{
+    ...standardStatusFields
+  }
+
+  regions{
+    ...regionFields
+  }
+
+  typesAccess {
+    ...typeAccessFields
+  }
+}
+
 query GetStandardData($standardUuid: UUID!) {
   standard(standardUuid: $standardUuid) {
     ...standardAndRelatedDataFields

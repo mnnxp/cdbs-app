@@ -36,6 +36,40 @@ pub struct StandardInfo {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
+pub struct StandardCreateData {
+    pub parent_standard_uuid: Option<UUID>,
+    pub classifier: String,
+    pub name: String,
+    pub description: String,
+    pub specified_tolerance: String,
+    pub technical_committee: String,
+    pub publication_at: NaiveDateTime,
+    pub company_uuid: UUID,
+    pub type_access_id: usize,
+    pub standard_status_id: usize,
+    pub region_id: usize,
+}
+
+impl StandardCreateData {
+    pub fn new() -> Self {
+        Self{
+            parent_standard_uuid: None,
+            classifier: String::default(),
+            name: String::default(),
+            description: String::default(),
+            specified_tolerance: String::default(),
+            technical_committee: String::default(),
+            publication_at: NaiveDateTime::from_timestamp(1_000_000_000, 0),
+            company_uuid: String::default(),
+            type_access_id: 1,
+            standard_status_id: 1,
+            region_id: 1,
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct ShowStandardShort {
     pub uuid: UUID,
     pub classifier: String,

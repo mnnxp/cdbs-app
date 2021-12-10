@@ -827,7 +827,7 @@ type MutationRoot {
     data: IptModificationFileFromFilesetData!
   ): [UploadFile!]!
   deleteFilesFromFileset(data: DelModificationFileFromFilesetData!): Boolean!
-  registerStandard(data: IptStandardData!): SlimStandard!
+  registerStandard(arg: IptStandardData!): UUID!
 
   # Transfer component ownership to another user
   transferStandardOwnership(data: ChangeOwnerStandard!): Boolean!
@@ -835,7 +835,7 @@ type MutationRoot {
   # Change standard type access
   changeStandardAccess(data: ChangeTypeAccessStandard!): Boolean!
   putStandardUpdate(standardUuid: UUID!, data: IptUpdateStandardData!): Int!
-  deleteStandard(standardUuid: UUID!): SlimStandard!
+  deleteStandard(standardUuid: UUID!): UUID!
   setCompanyAccessStandard(data: IptCompanyAccessStandardData!): Boolean!
   deleteCompanyAccessStandard(data: DelCompanyAccessStandardData!): Boolean!
   setUserAccessStandard(data: IptUserAccessStandardData!): Boolean!
@@ -1143,16 +1143,6 @@ type SlimComponentModification {
   modificationName: String!
   description: String!
   updatedAt: NaiveDateTime!
-}
-
-type SlimStandard {
-  uuid: UUID!
-  classifier: String!
-  name: String!
-  specifiedTolerance: String!
-  technicalCommittee: String!
-  publicationAt: NaiveDateTime!
-  standardStatusId: Int!
 }
 
 type SlimUser {
