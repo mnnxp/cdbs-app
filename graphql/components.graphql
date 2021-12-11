@@ -53,6 +53,22 @@ mutation DeleteComponentFile($deleteComponentFileData: DelComponentFileData!) {
   deleteComponentFile(arg: $deleteComponentFileData)
 }
 
+mutation AddComponentKeywordsByNames($iptComponentKeywordsNames: IptComponentKeywordsNames!) {
+  addComponentKeywordsByNames(data: $iptComponentKeywordsNames)
+}
+
+mutation DeleteComponentKeywords($iptComponentKeywordsData: IptComponentKeywordsData!){
+  deleteComponentKeywords(data: $iptComponentKeywordsData)
+}
+
+mutation AddComponentSpecs($iptComponentSpecsData: IptComponentSpecsData!) {
+  addComponentSpecs(data: $iptComponentSpecsData)
+}
+
+mutation DeleteComponentSpecs($iptComponentSpecsData: IptComponentSpecsData!){
+  deleteComponentSpecs(data: $iptComponentSpecsData)
+}
+
 fragment componentSuppliers on ComponentSupplierRelatedData {
   supplier {
     ...supplierFields

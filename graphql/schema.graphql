@@ -409,9 +409,14 @@ input IptComponentFilesArg {
   filesUuids: [UUID!]
 }
 
-input IptComponentKeywordData {
+input IptComponentKeywordsData {
   componentUuid: UUID!
   keywordIds: [Int!]!
+}
+
+input IptComponentKeywordsNames {
+  componentUuid: UUID!
+  keywords: [String!]!
 }
 
 input IptComponentLicenseData {
@@ -432,15 +437,15 @@ input IptComponentParamData {
   params: [IptParamData!]!
 }
 
-input IptComponentSpecData {
-  componentUuid: UUID!
-  specIds: [Int!]!
-}
-
 input IptComponentSpecsArg {
   componentUuid: UUID!
   limit: Int
   offset: Int
+}
+
+input IptComponentSpecsData {
+  componentUuid: UUID!
+  specIds: [Int!]!
 }
 
 input IptComponentsArg {
@@ -803,10 +808,11 @@ type MutationRoot {
   deleteComponentParams(data: DelComponentParamData!): Int!
   addComponentLicense(data: IptComponentLicenseData!): Boolean!
   deleteComponentLicense(data: IptComponentLicenseData!): Int!
-  addComponentSpecs(data: IptComponentSpecData!): Int!
-  deleteComponentSpecs(data: IptComponentSpecData!): Int!
-  addComponentKeywords(data: IptComponentKeywordData!): Int!
-  deleteComponentKeywords(data: IptComponentKeywordData!): Int!
+  addComponentSpecs(data: IptComponentSpecsData!): Int!
+  deleteComponentSpecs(data: IptComponentSpecsData!): Int!
+  addComponentKeywords(data: IptComponentKeywordsData!): Int!
+  addComponentKeywordsByNames(data: IptComponentKeywordsNames!): Int!
+  deleteComponentKeywords(data: IptComponentKeywordsData!): Int!
   uploadComponentFiles(data: IptComponentFileData!): [UploadFile!]!
   deleteComponentFile(arg: DelComponentFileData!): Boolean!
   deleteSuppliersComponent(data: DelSuppliersComponentData!): Int!

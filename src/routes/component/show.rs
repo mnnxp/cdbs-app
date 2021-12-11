@@ -19,8 +19,8 @@ use crate::fragments::{
     list_errors::ListErrors,
     // catalog_standard::CatalogStandards,
     component_file::FilesCard,
-    // component_spec::SpecsTags,
-    // component_keyword::KeywordsTags,
+    component_spec::SpecsTags,
+    component_keyword::KeywordsTags,
 };
 use crate::gqls::make_query;
 use crate::services::{
@@ -333,9 +333,9 @@ impl Component for ShowComponent {
                               {self.show_component_params(component_data)}
                               {self.show_component_files(component_data)}
                             </div>
-                            // {self.show_component_specs(component_data)}
-                            // <br/>
-                            // {self.show_component_keywords(component_data)}
+                            {self.show_component_specs(component_data)}
+                            <br/>
+                            {self.show_component_keywords(component_data)}
                         </div>
                     </div>
                 </div>
@@ -468,5 +468,37 @@ impl ShowComponent {
                 />
             </div>
         }
+    }
+
+    fn show_component_specs(
+        &self,
+        component_data: &ComponentInfo,
+    ) -> Html {
+        html!{<>
+              <h2>{"Specs"}</h2>
+              <div class="card">
+                <SpecsTags
+                    show_manage_btn = false
+                    component_uuid = component_data.uuid.clone()
+                    specs = component_data.component_specs.clone()
+                  />
+              </div>
+        </>}
+    }
+
+    fn show_component_keywords(
+        &self,
+        component_data: &ComponentInfo,
+    ) -> Html {
+        html!{<>
+              <h2>{"Keywords"}</h2>
+              <div class="card">
+                <KeywordsTags
+                    show_delete_btn = false
+                    component_uuid = component_data.uuid.clone()
+                    keywords = component_data.component_keywords.clone()
+                  />
+              </div>
+        </>}
     }
 }
