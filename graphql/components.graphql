@@ -1,9 +1,17 @@
+query GetComponentData($componentUuid: UUID!) {
+  component(componentUuid: $componentUuid) {
+    ...componentAndRelatedDataFields
+  }
+}
+
 query GetComponentsShortList($arguments: IptComponentsArg) {
   components(arguments: $arguments) {
     uuid
     name
     description
-    typeAccessId
+    typeAccess {
+      ...typeAccessFields
+    }
     isFollowed
     isBase
     updatedAt
@@ -18,7 +26,9 @@ query GetList {
     uuid
     name
     description
-    typeAccessId
+    typeAccess {
+      ...typeAccessFields
+    }
     isFollowed
     isBase
     updatedAt
@@ -27,13 +37,13 @@ query GetList {
 
 fragment componentSuppliers on ComponentSupplierRelatedData {
   supplier {
-    ...supplier
+    ...supplierFields
   }
   componentUuid
   description
 }
 
-fragment supplier on SlimCompany {
+fragment supplierFields on SlimCompany {
   uuid
   shortname
   isSupplier
@@ -45,4 +55,236 @@ mutation AddComponentFav($componentUuid: String!) {
 
 mutation DeleteComponentFav($componentUuid: String!) {
   deleteComponentFav(componentUuid: $componentUuid)
+}
+
+fragment componentAndRelatedDataFields on ComponentAndRelatedData {
+  uuid
+  parentComponentUuid
+  name
+  description
+  ownerUser {
+    ...showUserShortFields
+  }
+  typeAccess {
+    ...typeAccessFields
+  }
+  componentType {
+    ...componentTypeFields
+  }
+  actualStatus {
+    ...actualStatusFields
+  }
+  isBase
+  subscribers
+  isFollowed
+  updatedAt
+  licenses {
+    ...licenseFields
+  }
+  componentParams {
+    ...componentParamFields
+  }
+  files {
+    ...showFileRelatedDataFields
+  }
+  componentSpecs {
+    ...specFields
+  }
+  componentKeywords {
+    ...keywordFields
+  }
+  componentModifications {
+    ...componentModificationFields
+  }
+  componentSuppliers {
+    ...componentSupplierFields
+  }
+  componentStandards {
+    ...showStandardShortFields
+  }
+}
+
+fragment showUserShortFields on ShowUserShort {
+  uuid
+  firstname
+  lastname
+  username
+  imageFile {
+    ...downloadFileFields
+  }
+}
+
+fragment downloadFileFields on DownloadFile {
+  uuid
+  filename
+  filesize
+  downloadUrl
+}
+
+fragment componentTypeFields on ComponentTypeTranslateList {
+  componentTypeId
+  langId
+  componentType
+}
+
+fragment actualStatusFields on ActualStatusTranslateList {
+  actualStatusId
+  langId
+  name
+}
+
+fragment licenseFields on License {
+  id
+  name
+  keyword
+  publicationAt
+}
+
+fragment componentParamFields on ComponentParamWithTranslation {
+  componentUuid
+  param {
+    ...paramFields
+  }
+  value
+}
+
+fragment showFileRelatedDataFields on ShowFileRelatedData {
+  uuid
+  filename
+  parentFileUuid
+  ownerUser {
+    ...showUserShortFields
+  }
+  contentType
+  filesize
+  program {
+    ...programFields
+  }
+  createdAt
+  updatedAt
+}
+
+fragment specFields on SpecTranslateList {
+  specId
+  langId
+  spec
+}
+
+fragment keywordFields on Keyword {
+  id
+  keyword
+}
+
+fragment programFields on Program {
+  id
+  name
+}
+
+fragment typeAccessFields on TypeAccessTranslateList {
+  typeAccessId
+  langId
+  name
+}
+
+fragment componentModificationFields on ComponentModificationAndRelatedData {
+  uuid
+  componentUuid
+  parentModificationUuid
+  modificationName
+  description
+  actualStatus {
+    ...actualStatusFields
+  }
+  updatedAt
+  filesetsForProgram {
+    ...filesetProgramRelatedDataFields
+  }
+  modificationParams {
+    ...modificationParamFields
+  }
+}
+
+fragment filesetProgramRelatedDataFields on FilesetProgramRelatedData {
+  uuid
+  modificationUuid
+  program {
+    ...programFields
+  }
+}
+
+fragment componentSupplierFields on ComponentSupplierRelatedData {
+  supplier {
+    ...supplierFields
+  }
+  componentUuid
+  description
+}
+
+fragment showStandardShortFields on ShowStandardShort {
+  uuid
+  classifier
+  name
+  description
+  specifiedTolerance
+  publicationAt
+  ownerCompany {
+    ...companyShortFields
+  }
+  standardStatus {
+    ...standardStatusFields
+  }
+  updatedAt
+  isFollowed
+}
+
+fragment companyShortFields on ShowCompanyShort {
+  uuid
+  shortname
+  inn
+  description
+  imageFile {
+    ...downloadFileFields
+  }
+  region {
+    ...regionFields
+  }
+  companyType {
+    ...companyTypeFields
+  }
+  isSupplier
+  isFollowed
+  updatedAt
+}
+
+fragment companyTypeFields on CompanyTypeTranslateList {
+  companyTypeId
+  langId
+  name
+  shortname
+}
+
+fragment regionFields on RegionTranslateList {
+  regionId
+  langId
+  region
+}
+
+fragment standardStatusFields on StandardStatusTranslateList {
+  standardStatusId
+  langId
+  name
+}
+
+fragment modificationParamFields on ModificationParamWithTranslation {
+  modificationUuid
+  param {
+    ...paramFields
+  }
+  value
+}
+
+fragment paramFields on ParamTranslateList {
+  paramId
+  langId
+  paramname
 }

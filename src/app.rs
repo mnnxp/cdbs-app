@@ -16,7 +16,6 @@ use crate::fragments::{
 };
 use crate::routes::{
     // article::Article,
-    // component::CatalogComponents,
     tender::{Tenders, CreateTender},
     // editor::Editor,
     fix_fragment_routes,
@@ -26,6 +25,7 @@ use crate::routes::{
     profile::Profile,
     register::Register,
     settings::Settings,
+    component::ShowComponent,
     company::{ShowCompany, CompanySettings, CreateCompany},
     standard::{ShowStandard, StandardSettings, CreateStandard},
     AppRoute,
@@ -156,6 +156,10 @@ impl Component for App {
                             AppRoute::CreateStandard => html!{<CreateStandard />},
                             AppRoute::Tenders => html!{<Tenders />},
                             AppRoute::CatalogComponents => html!{<CatalogComponents show_create_btn = true />},
+                            AppRoute::ShowComponent(component_uuid) => html!{<ShowComponent
+                                current_user=self.current_user.clone()
+                                component_uuid=component_uuid.to_string()
+                                />},
                             AppRoute::CreateTender => html!{<CreateTender />},
                         }
                     } else {

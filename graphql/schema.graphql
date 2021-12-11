@@ -132,7 +132,7 @@ type ComponentAndRelatedData {
   name: String!
   description: String!
   ownerUser: ShowUserShort!
-  typeAccessId: Int!
+  typeAccess: TypeAccessTranslateList!
   componentType: ComponentTypeTranslateList!
   actualStatus: ActualStatusTranslateList!
   isBase: Boolean!
@@ -781,7 +781,7 @@ type MutationRoot {
   readNotifications(notificationsIds: [Int!]!): Int!
   deleteNotifications(notificationsIds: [Int!]!): Int!
   logout: String!
-  registerComponent(data: IptComponentData!): SlimComponent!
+  registerComponent(data: IptComponentData!): UUID!
 
   # Transfer component ownership to another user
   transferComponentOwnership(data: ChangeOwnerComponent!): Boolean!
@@ -789,7 +789,7 @@ type MutationRoot {
   # Change component type access
   changeComponentAccess(data: ChangeTypeAccessComponent!): Boolean!
   putComponentUpdate(componentUuid: UUID!, data: IptUpdateComponentData!): Int!
-  deleteComponent(componentUuid: UUID!): SlimComponent!
+  deleteComponent(componentUuid: UUID!): UUID!
   setCompanyAccessComponent(data: IptCompanyAccessComponentData!): Boolean!
   deleteCompanyAccessComponent(data: DelCompanyAccessComponentData!): Boolean!
   setUserAccessComponent(data: IptUserAccessComponentData!): Boolean!
@@ -807,16 +807,12 @@ type MutationRoot {
   deleteSuppliersComponent(data: DelSuppliersComponentData!): Int!
   addStandardToComponent(data: IptStandardToComponentData!): Boolean!
   deleteStandardsComponent(data: DelStandardToComponentData!): Int!
-  registerComponentModification(
-    data: IptComponentModificationData!
-  ): SlimComponentModification!
+  registerComponentModification(data: IptComponentModificationData!): UUID!
   putComponentModificationUpdate(
     componentModificationUuid: UUID!
     data: IptUpdateComponentModificationData!
   ): Int!
-  deleteComponentModification(
-    data: DelComponentModificationData!
-  ): SlimComponentModification!
+  deleteComponentModification(data: DelComponentModificationData!): UUID!
   putModificationParams(data: IptModificationParamData!): Int!
   deleteModificationParams(data: DelModificationParamData!): Int!
   uploadModificationFiles(data: IptModificationFileData!): [UploadFile!]!
@@ -1043,7 +1039,7 @@ type ShowComponentShort {
   name: String!
   description: String!
   ownerUser: ShowUserShort!
-  typeAccessId: Int!
+  typeAccess: TypeAccessTranslateList!
   componentType: ComponentTypeTranslateList!
   actualStatus: ActualStatusTranslateList!
   isFollowed: Boolean!
@@ -1124,25 +1120,6 @@ type SlimCompanyMember {
   companyUuid: UUID!
   userUuid: UUID!
   roleId: Int!
-}
-
-type SlimComponent {
-  uuid: UUID!
-  name: String!
-  description: String!
-  typeAccessId: Int!
-  componentTypeId: Int!
-  actualStatusId: Int!
-  isBase: Boolean!
-  updatedAt: NaiveDateTime!
-}
-
-type SlimComponentModification {
-  uuid: ID!
-  componentUuid: ID!
-  modificationName: String!
-  description: String!
-  updatedAt: NaiveDateTime!
 }
 
 type SlimUser {

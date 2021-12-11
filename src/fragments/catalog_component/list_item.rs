@@ -1,26 +1,29 @@
 use yew::prelude::*;
+use yew_router::{
+    agent::RouteRequest::ChangeRoute,
+    prelude::*,
+};
+use crate::routes::AppRoute;
 use crate::fragments::switch_icon::res_btn;
 use crate::types::ShowComponentShort;
 
 pub enum Msg {
-    AddOne,
-    TriggerFav
+    OpenComponent,
+    TriggerFav,
+    Ignore,
 }
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
     pub data: ShowComponentShort,
     pub show_list: bool,
-    // pub triggerFav: Callback<MouseEvent>,
     pub add_fav: Callback<String>,
     pub del_fav : Callback<String>,
 }
 
 pub struct ListItem {
-    // `ComponentLink` is like a reference to a component.
-    // It can be used to send messages to the component
+    router_agent: Box<dyn Bridge<RouteAgent>>,
     link: ComponentLink<Self>,
-    value: i64,
     props: Props
 }
 
@@ -29,32 +32,35 @@ impl Component for ListItem {
     type Properties = Props;
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        Self { link, value: 0, props }
+        Self {
+            router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
+            link,
+            props,
+        }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
-            Msg::AddOne => {
-                self.value += 1;
-                // the value has changed so we need to
-                // re-render for it to appear on the page
-                crate::yewLog!(self.value);
-            }
+            Msg::OpenComponent => {
+                // Redirect to profile page
+                self.router_agent.send(ChangeRoute(AppRoute::ShowComponent(
+                    self.props.data.uuid.to_string()
+                ).into()));
+                // debug!("OpenComponent");
+            },
             Msg::TriggerFav => {
                 if !self.props.data.is_followed {
                     self.props.add_fav.emit("".to_string());
                 } else {
                     self.props.del_fav.emit("".to_string());
                 }
-            }
+            },
+            Msg::Ignore => (),
         }
         true
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        // Should only return "true" if new properties are different to
-        // previously received properties.
-        // This component has no properties so we will always return "false".
         if self.props.show_list != props.show_list || self.props.data.is_followed != props.data.is_followed || self.props.data.uuid != props.data.uuid {
             self.props.show_list = props.show_list;
             self.props.data = props.data;
@@ -65,12 +71,9 @@ impl Component for ListItem {
     }
 
     fn view(&self) -> Html {
-      // let clickEvent = self.link.ca;
-      // let Props { add_fav, del_fav, .. } = self.props.clone();
-
       match self.props.show_list {
-        true => { self.showing_in_list() },
-        false => { self.showing_in_box() },
+        true => self.showing_in_list(),
+        false => self.showing_in_box(),
       }
     }
 }
@@ -85,6 +88,9 @@ impl ListItem {
             ..
         } = &self.props.data;
 
+        let onclick_open_component = self.link
+            .callback(|_| Msg::OpenComponent);
+
         let trigger_fab_btn = self.link.callback(|_| Msg::TriggerFav);
 
         let mut class_res_btn = vec!["fa-bookmark"];
@@ -94,9 +100,7 @@ impl ListItem {
                 class_res_btn.push("fas");
                 class_color_btn = "color: #3298DD;";
             },
-            false => {
-                class_res_btn.push("far");
-            },
+            false => class_res_btn.push("far"),
         }
 
         html! {
@@ -120,23 +124,14 @@ impl ListItem {
                 </div>
               </div>
               <div class="media-right flexBox " >
-                {res_btn(classes!(String::from("fas fa-cloud-download-alt")), self.link.callback(|_| Msg::AddOne ), "".to_string())}
-                // <SwitchIcon callback={BtnItem{class: String::from("fas fa-cloud-download-alt"),clickEvent:self.link.callback(|_| Msg::AddOne )}} />
-                // <button class="button  is-info">
-                //   <span class="icon is-small">
-                //     <i class="fas fa-cloud-download-alt"></i>
-                //   </span>
-                // </button>
+                {res_btn(classes!(String::from("fas fa-cloud-download-alt")),
+                    onclick_open_component,
+                    "".to_string())}
                 {res_btn(
                     classes!(class_res_btn),
                     trigger_fab_btn,
                     class_color_btn.to_string()
                 )}
-                // <button class="button">
-                //   <span class="icon is-small">
-                //     <i class="fas fa-bookmark"></i>
-                //   </span>
-                // </button>
               </div>
             </article>
           </div>
@@ -150,8 +145,11 @@ impl ListItem {
             name,
             ..
         } = self.props.data.clone();
+        let onclick_open_component = self.link
+            .callback(|_| Msg::OpenComponent);
 
-        let trigger_fab_btn = self.link.callback(|_| Msg::TriggerFav);
+        let trigger_fab_btn = self.link
+            .callback(|_| Msg::TriggerFav);
 
         let mut class_res_btn = vec![];
         let mut class_color_btn = "";
@@ -160,9 +158,7 @@ impl ListItem {
                 class_res_btn.push("fas");
                 class_color_btn = "color: #3298DD;";
             },
-            false => {
-                class_res_btn.push("far");
-            },
+            false => class_res_btn.push("far"),
         }
         class_res_btn.push("fa-bookmark");
 
@@ -178,7 +174,10 @@ impl ListItem {
               </div>
               <div class="overflow-title has-text-weight-bold	is-size-4" >{name}</div>
                 <div class="btnBox">
-                  <button class="button is-light is-fullwidth has-text-weight-bold">{"Download"}</button>
+                  <button class="button is-light is-fullwidth has-text-weight-bold"
+                        onclick={onclick_open_component} >
+                    {"Open"}
+                  </button>
                   <div style="margin-left: 8px;">
                   {res_btn(
                       classes!(class_res_btn),

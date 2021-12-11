@@ -42,7 +42,6 @@ struct DeleteComponentFav;
 
 
 pub enum Msg {
-    AddOne,
     SwitchShowType,
     UpdateList(String),
     AddFav(UUID),
@@ -60,7 +59,6 @@ pub struct CatalogComponents {
     error: Option<Error>,
     link: ComponentLink<Self>,
     props: Props,
-    value: i64,
     show_type: ListState,
     list: Vec<ShowComponentShort>
 }
@@ -80,7 +78,6 @@ impl Component for CatalogComponents {
             error: None,
             link,
             props,
-            value: 0,
             show_type: ListState::List,
             list: Vec::new()
         }
@@ -95,11 +92,6 @@ impl Component for CatalogComponents {
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         let link = self.link.clone();
         match msg {
-            Msg::AddOne => {
-                self.value += 1;
-                // the value has changed so we need to
-                // re-render for it to appear on the page
-            },
             Msg::SwitchShowType => {
                 match self.show_type {
                     ListState::Box => self.show_type = ListState::List,
