@@ -86,15 +86,15 @@ pub struct Param{
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct ComponentModificationInfo{
-  uuid: UUID,
-  component_uuid: UUID,
-  parent_modification_uuid: UUID,
-  modification_name: String,
-  description: String,
-  actual_status: ActualStatus,
-  updated_at: NaiveDateTime,
-  filesets_for_program: Vec<FilesetProgramInfo>,
-  modification_params: Vec<ModificationParam>,
+  pub uuid: UUID,
+  pub component_uuid: UUID,
+  pub parent_modification_uuid: UUID,
+  pub modification_name: String,
+  pub description: String,
+  pub actual_status: ActualStatus,
+  pub updated_at: NaiveDateTime,
+  pub filesets_for_program: Vec<FilesetProgramInfo>,
+  pub modification_params: Vec<ModificationParam>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

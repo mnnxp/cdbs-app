@@ -106,8 +106,8 @@ pub struct TypeAccessInfo {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct LicenseInfo {
-    id: usize,
-    name: String,
-    keyword: String,
-    publication_at: NaiveDateTime,
+    pub id: usize,
+    pub name: String,
+    pub keyword: String,
+    pub publication_at: NaiveDateTime,
 }

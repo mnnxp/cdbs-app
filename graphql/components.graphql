@@ -35,6 +35,24 @@ query GetList {
   }
 }
 
+query ComponentFiles($iptComponentFilesArg: IptComponentFilesArg!) {
+  componentFiles(arg: $iptComponentFilesArg){
+    ...downloadFileFields
+  }
+}
+
+mutation AddComponentFav($componentUuid: String!) {
+  addComponentFav(componentUuid: $componentUuid)
+}
+
+mutation DeleteComponentFav($componentUuid: String!) {
+  deleteComponentFav(componentUuid: $componentUuid)
+}
+
+mutation DeleteComponentFile($deleteComponentFileData: DelComponentFileData!) {
+  deleteComponentFile(arg: $deleteComponentFileData)
+}
+
 fragment componentSuppliers on ComponentSupplierRelatedData {
   supplier {
     ...supplierFields
@@ -47,14 +65,6 @@ fragment supplierFields on SlimCompany {
   uuid
   shortname
   isSupplier
-}
-
-mutation AddComponentFav($componentUuid: String!) {
-  addComponentFav(componentUuid: $componentUuid)
-}
-
-mutation DeleteComponentFav($componentUuid: String!) {
-  deleteComponentFav(componentUuid: $componentUuid)
 }
 
 fragment componentAndRelatedDataFields on ComponentAndRelatedData {

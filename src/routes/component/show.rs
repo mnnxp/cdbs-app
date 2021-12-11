@@ -18,7 +18,7 @@ use crate::fragments::{
     // switch_icon::res_btn,
     list_errors::ListErrors,
     // catalog_standard::CatalogStandards,
-    // component_file::FilesCard,
+    component_file::FilesCard,
     // component_spec::SpecsTags,
     // component_keyword::KeywordsTags,
 };
@@ -329,19 +329,13 @@ impl Component for ShowComponent {
                             <div class="card">
                               {self.show_main_card(component_data)}
                             </div>
-                            // {match &self.show_related_standards {
-                            //     // true => {self.show_related_standards(&component_data.uuid)},
-                            //     true => html!{},
-                            //     false => html!{<>
-                            //         <div class="columns">
-                            //           {self.show_component_params(component_data)}
-                            //           {self.show_component_files(component_data)}
-                            //         </div>
-                            //         {self.show_component_specs(component_data)}
-                            //         <br/>
-                            //         {self.show_component_keywords(component_data)}
-                            //     </>},
-                            // }}
+                            <div class="columns">
+                              {self.show_component_params(component_data)}
+                              {self.show_component_files(component_data)}
+                            </div>
+                            // {self.show_component_specs(component_data)}
+                            // <br/>
+                            // {self.show_component_keywords(component_data)}
                         </div>
                     </div>
                 </div>
@@ -359,8 +353,8 @@ impl ShowComponent {
         &self,
         component_data: &ComponentInfo,
     ) -> Html {
-        // let onclick_open_owner_company = self.link
-        //     .callback(|_| Msg::OpenComponentOwner);
+        let onclick_open_owner_company = self.link
+            .callback(|_| Msg::OpenComponentOwner);
 
         let show_description_btn = self.link
             .callback(|_| Msg::ShowDescription);
@@ -374,12 +368,10 @@ impl ShowComponent {
                 <div class="media">
                     <div class="media-content">
                         {"uploaded from "}
-                        // {"uploaded from "}<a class="id-box has-text-grey-light has-text-weight-bold"
-                        //       onclick={onclick_open_owner_company}
-                        //     >{format!("{} {}",
-                        //     &component_data.owner_company.shortname,
-                        //     &component_data.owner_company.company_type.shortname
-                        // )}</a>
+                        <a class="id-box has-text-grey-light has-text-weight-bold"
+                            onclick={onclick_open_owner_company} >
+                          {format!("@{}",&component_data.owner_user.username)}
+                        </a>
                     </div>
                     <div class="media-right" style="margin-right: 1rem">
                         {"type access "}<span class="id-box has-text-grey-light has-text-weight-bold">{
@@ -406,8 +398,9 @@ impl ShowComponent {
                               250.. => html!{<>
                                 <br/>
                                 <button class="button is-white"
-                                    onclick=show_description_btn
-                                  >{"See less"}</button>
+                                    onclick=show_description_btn >
+                                  {"See less"}
+                                </button>
                               </>},
                               _ => html!{},
                           }}
@@ -416,12 +409,63 @@ impl ShowComponent {
                           {format!("{:.*}", 200, component_data.description)}
                           <br/>
                           <button class="button is-white"
-                              onclick=show_description_btn
-                            >{"See more"}</button>
+                              onclick=show_description_btn >
+                            {"See more"}
+                          </button>
                         </>},
                     }
                 }</div>
               </div>
+            </div>
+        }
+    }
+
+    fn show_component_params(
+        &self,
+        component_data: &ComponentInfo,
+    ) -> Html {
+        html!{
+            <div class="column">
+              <h2>{"Characteristic"}</h2>
+              <div class="card">
+                <table class="table is-fullwidth">
+                    <tbody>
+                      <tr>
+                        <td>{"classifier"}</td>
+                        <td>{component_data.actual_status.name.clone()}</td>
+                      </tr>
+                      <tr>
+                        <td>{"specified_tolerance"}</td>
+                        <td>{component_data.component_type.component_type.clone()}</td>
+                      </tr>
+                      <tr>
+                        <td>{"technical_committee"}</td>
+                        <td>{for component_data.licenses.iter().map(|x| html!{<td>{x.name.clone()}</td>})}</td>
+                      </tr>
+                      <tr>
+                        <td>{"updated_at"}</td>
+                        <td>{format!("{:.*}", 10, component_data.updated_at.to_string())}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+              </div>
+            </div>
+        }
+    }
+
+    fn show_component_files(
+        &self,
+        component_data: &ComponentInfo,
+    ) -> Html {
+        html!{
+            <div class="column">
+              <h2>{"Files"}</h2>
+              <FilesCard
+                  show_download_btn = true
+                  show_delete_btn = false
+                  component_uuid = component_data.uuid.clone()
+                  files = component_data.files.clone()
+                />
             </div>
         }
     }
