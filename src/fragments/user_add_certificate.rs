@@ -1,23 +1,20 @@
+use graphql_client::GraphQLQuery;
 use yew::services::fetch::FetchTask;
 use yew::services::reader::{File, FileData, ReaderService, ReaderTask};
 use yew::{
-    html, Callback, Component, ComponentLink, Html, InputData,
-    Properties, ShouldRender, ChangeData,
+    html, Callback, ChangeData, Component, ComponentLink, DragEvent, Html, InputData, Properties,
+    ShouldRender,
 };
-use graphql_client::GraphQLQuery;
 // use serde_json::Value;
-use wasm_bindgen_futures::spawn_local;
 use log::debug;
+use wasm_bindgen_futures::spawn_local;
 
 use crate::gqls::make_query;
 
+use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
-use crate::error::{Error, get_error};
 use crate::services::{PutUploadFile, UploadData};
-use crate::types::{
-    // UUID, Certificate,
-    UploadFile
-};
+use crate::types::UploadFile;
 
 type FileName = String;
 // type Chunks = bool;
@@ -37,7 +34,6 @@ struct UploadUserCertificate;
     response_derives = "Debug"
 )]
 struct ConfirmUploadCompleted;
-
 
 #[derive(PartialEq, Clone, Debug, Properties)]
 pub struct Props {
@@ -141,106 +137,114 @@ impl Component for AddCertificateCard {
                             description,
                         };
                         let res = make_query(UploadUserCertificate::build_query(
-                            upload_user_certificate::Variables {
-                                cert_data,
-                            }
-                        )).await;
+                            upload_user_certificate::Variables { cert_data },
+                        ))
+                        .await;
                         link.send_message(Msg::GetUploadData(res.unwrap()));
                     })
                 }
-            },
+            }
             Msg::RequestUploadFile(data) => {
                 let request = UploadData {
                     upload_url: self.request_upload_data.upload_url.to_string(),
                     file_data: data,
                 };
-                self.task = Some(self.put_upload_file.put_file(request, self.request_upload_file.clone()));
-            },
-            Msg::ResponseUploadFile(Ok(res)) => {
-                link.send_message(Msg::GetUploadFile(res))
-            },
+                self.task = Some(
+                    self.put_upload_file
+                        .put_file(request, self.request_upload_file.clone()),
+                );
+            }
+            Msg::ResponseUploadFile(Ok(res)) => link.send_message(Msg::GetUploadFile(res)),
             Msg::ResponseUploadFile(Err(err)) => {
                 self.error = Some(err);
                 self.task = None;
                 self.task_read = None;
-            },
+            }
             Msg::RequestUploadCompleted => {
                 let file_uuids = vec![self.request_upload_data.file_uuid.clone()];
                 spawn_local(async move {
-                    let res = make_query(ConfirmUploadCompleted::build_query(confirm_upload_completed::Variables {
-                        file_uuids,
-                    })).await.unwrap();
+                    let res = make_query(ConfirmUploadCompleted::build_query(
+                        confirm_upload_completed::Variables { file_uuids },
+                    ))
+                    .await
+                    .unwrap();
                     crate::yewLog!(res);
                     link.send_message(Msg::GetUploadCompleted(res));
                 });
-            },
+            }
             Msg::ResponseError(err) => {
                 self.error = Some(err);
-            },
+            }
             Msg::UpdateFile(op_file) => {
                 if op_file.is_some() {
                     // enable bnt if file selected
                     self.dis_upload_btn = false;
                 }
                 self.file = op_file.clone();
-            },
+            }
             Msg::UpdateDescription(new_description) => {
                 debug!("new_description: {}", new_description);
                 self.description = new_description;
-            },
+            }
             Msg::GetUploadData(res) => {
                 let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
 
                 match res_value.is_null() {
                     false => {
-                        let result: UploadFile = serde_json::from_value(res_value.get("uploadUserCertificate").unwrap().clone()).unwrap();
+                        let result: UploadFile = serde_json::from_value(
+                            res_value.get("uploadUserCertificate").unwrap().clone(),
+                        )
+                        .unwrap();
                         // crate::yewLog!(result);
                         self.request_upload_data = result;
 
                         if let Some(file) = self.file.clone() {
                             let file_name = file.name().clone();
                             let task = {
-                                let callback = self
-                                    .link
-                                    .callback(move |data: FileData| Msg::RequestUploadFile(data.content));
+                                let callback = self.link.callback(move |data: FileData| {
+                                    Msg::RequestUploadFile(data.content)
+                                });
                                 ReaderService::read_file(file, callback).unwrap()
                             };
                             self.task_read = Some((file_name, task));
                         }
                         debug!("file: {:?}", self.file);
-                    },
+                    }
                     true => {
                         link.send_message(Msg::ResponseError(get_error(&data)));
                     }
                 }
-            },
+            }
             Msg::GetUploadFile(res) => {
                 debug!("res: {:?}", res);
                 self.get_result_up_file = true;
                 link.send_message(Msg::RequestUploadCompleted)
-            },
+            }
             Msg::GetUploadCompleted(res) => {
                 let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
 
                 match res_value.is_null() {
                     false => {
-                        let result: usize = serde_json::from_value(res_value.get("uploadCompleted").unwrap().clone()).unwrap();
+                        let result: usize = serde_json::from_value(
+                            res_value.get("uploadCompleted").unwrap().clone(),
+                        )
+                        .unwrap();
                         self.get_result_up_completed = result;
                         self.props.callback.emit("".to_string());
-                    },
+                    }
                     true => {
                         link.send_message(Msg::ResponseError(get_error(&data)));
                     }
                 }
-            },
+            }
             Msg::ClearFileBoxed => {
                 self.file = None;
                 self.description = String::new();
                 self.dis_upload_btn = true;
-            },
-            Msg::Ignore => {},
+            }
+            Msg::Ignore => {}
         }
 
         true
@@ -281,15 +285,27 @@ impl Component for AddCertificateCard {
 }
 
 impl AddCertificateCard {
-    fn show_frame_upload_file(
-        &self,
-    ) -> Html {
+    fn show_frame_upload_file(&self) -> Html {
         let onchange_cert_file = self.link.callback(move |value| {
             if let ChangeData::Files(files) = value {
                 Msg::UpdateFile(files.get(0))
             } else {
                 Msg::Ignore
             }
+        });
+
+        let ondrop_cert_file = self.link.callback(move |value: DragEvent| {
+            value.prevent_default();
+            if let Some(files) = value.data_transfer().unwrap().files() {
+                Msg::UpdateFile(files.get(0))
+            } else {
+                Msg::Ignore
+            }
+        });
+
+        let ondragover_cert_file = self.link.callback(move |value: DragEvent| {
+            value.prevent_default();
+            Msg::Ignore
         });
 
         html! {<>
@@ -305,7 +321,7 @@ impl AddCertificateCard {
                     type="file"
                     accept="image/*,.pdf"
                     onchange={onchange_cert_file} />
-                <span class="file-cta">
+                <span class="file-cta" ondrop=ondrop_cert_file ondragover=ondragover_cert_file >
                   <span class="file-icon">
                     <i class="fas fa-upload"></i>
                   </span>
@@ -324,9 +340,7 @@ impl AddCertificateCard {
         </>}
     }
 
-    fn show_input_description(
-        &self,
-    ) -> Html {
+    fn show_input_description(&self) -> Html {
         let oninput_cert_description = self
             .link
             .callback(|ev: InputData| Msg::UpdateDescription(ev.value));
@@ -344,12 +358,8 @@ impl AddCertificateCard {
         </>}
     }
 
-    fn show_btn_upload(
-        &self,
-    ) -> Html {
-        let onclick_upload_cert = self
-            .link
-            .callback(|_| Msg::RequestUploadData);
+    fn show_btn_upload(&self) -> Html {
+        let onclick_upload_cert = self.link.callback(|_| Msg::RequestUploadData);
 
         let mut class_btn = "button";
 
@@ -374,12 +384,8 @@ impl AddCertificateCard {
         }
     }
 
-    fn show_btn_clear(
-        &self,
-    ) -> Html {
-        let onclick_clear_boxed = self
-            .link
-            .callback(|_| Msg::ClearFileBoxed);
+    fn show_btn_clear(&self) -> Html {
+        let onclick_clear_boxed = self.link.callback(|_| Msg::ClearFileBoxed);
 
         html! {
             <a id="btn-new-cert-clear"
@@ -392,9 +398,7 @@ impl AddCertificateCard {
         }
     }
 
-    fn show_success_upload(
-        &self,
-    ) -> Html {
+    fn show_success_upload(&self) -> Html {
         html! {
             <article class="message is-success">
               <div class="message-header">
