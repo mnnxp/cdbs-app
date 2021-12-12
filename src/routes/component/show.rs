@@ -19,6 +19,7 @@ use crate::fragments::{
     list_errors::ListErrors,
     // catalog_standard::CatalogStandards,
     component_file::FilesCard,
+    component_modification::ModificationsTable,
     component_spec::SpecsTags,
     component_keyword::KeywordsTags,
 };
@@ -329,6 +330,9 @@ impl Component for ShowComponent {
                             <div class="card">
                               {self.show_main_card(component_data)}
                             </div>
+                            <br/>
+                            {self.show_modifications_table(component_data)}
+                            <br/>
                             <div class="columns">
                               {self.show_component_params(component_data)}
                               {self.show_component_files(component_data)}
@@ -420,6 +424,20 @@ impl ShowComponent {
         }
     }
 
+    fn show_modifications_table(
+        &self,
+        component_data: &ComponentInfo,
+    ) -> Html {
+        html!{<>
+            <h2>{"Modification"}</h2>
+            <ModificationsTable
+                show_manage_btn = false
+                modifications = component_data.component_modifications.clone()
+                delete_modification = None
+              />
+        </>}
+    }
+
     fn show_component_params(
         &self,
         component_data: &ComponentInfo,
@@ -431,11 +449,11 @@ impl ShowComponent {
                 <table class="table is-fullwidth">
                     <tbody>
                       <tr>
-                        <td>{"classifier"}</td>
+                        <td>{"actual_status"}</td>
                         <td>{component_data.actual_status.name.clone()}</td>
                       </tr>
                       <tr>
-                        <td>{"specified_tolerance"}</td>
+                        <td>{"component_type"}</td>
                         <td>{component_data.component_type.component_type.clone()}</td>
                       </tr>
                       <tr>

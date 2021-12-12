@@ -426,7 +426,7 @@ input IptComponentLicenseData {
 
 input IptComponentModificationData {
   componentUuid: UUID!
-  parentModificationUuid: UUID!
+  parentModificationUuid: UUID
   modificationName: String!
   description: String!
   actualStatusId: Int!

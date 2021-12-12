@@ -13,6 +13,7 @@ pub mod spec;
 pub mod standard_spec;
 pub mod standard_keyword;
 pub mod component_file;
+pub mod component_modification;
 pub mod component_keyword;
 pub mod component_spec;
 pub mod user_certificate;
