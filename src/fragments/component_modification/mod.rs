@@ -113,7 +113,7 @@ impl Component for ModificationsTable {
     fn view(&self) -> Html {
         html! {<div class="card">
             <div class="table-container">
-              <table class="table is-fullwidth">
+              <table class="table is-fullwidth is-striped">
                 <ModificationTableHeads
                   component_uuid = self.component_uuid.clone()
                   params = self.collect_heads.clone()

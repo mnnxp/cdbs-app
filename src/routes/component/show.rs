@@ -458,12 +458,18 @@ impl ShowComponent {
                       </tr>
                       <tr>
                         <td>{"technical_committee"}</td>
-                        <td>{for component_data.licenses.iter().map(|x| html!{<td>{x.name.clone()}</td>})}</td>
+                        <td>{for component_data.licenses.iter().map(|x| html!{format!("{}; ", x.name)})}</td>
                       </tr>
                       <tr>
                         <td>{"updated_at"}</td>
                         <td>{format!("{:.*}", 10, component_data.updated_at.to_string())}</td>
                       </tr>
+                      {for component_data.component_params.iter().map(|component_param| {
+                        html!{<tr>
+                            <td>{component_param.param.paramname.clone()}</td>
+                            <td>{component_param.value.clone()}</td>
+                        </tr>}
+                      })}
                     </tbody>
                   </table>
               </div>
