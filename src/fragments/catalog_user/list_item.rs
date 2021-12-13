@@ -21,14 +21,14 @@ pub struct Props {
     pub show_list: bool,
 }
 
-pub struct ListItem {
+pub struct ListItemUser {
     router_agent: Box<dyn Bridge<RouteAgent>>,
     link: ComponentLink<Self>,
     username: String,
     props: Props,
 }
 
-impl Component for ListItem {
+impl Component for ListItemUser {
     type Message = Msg;
     type Properties = Props;
 
@@ -73,7 +73,7 @@ impl Component for ListItem {
     }
 }
 
-impl ListItem {
+impl ListItemUser {
     fn open_profile_page(
         &self,
         small_button: bool,

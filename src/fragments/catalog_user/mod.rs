@@ -1,6 +1,6 @@
 mod list_item;
 
-use list_item::ListItem;
+pub use list_item::ListItemUser;
 use yew::prelude::*;
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
@@ -198,7 +198,7 @@ impl CatalogUsers {
         show_comp: &ShowUserShort,
     ) -> Html {
         html! {
-            <ListItem data={show_comp.clone()}
+            <ListItemUser data={show_comp.clone()}
                 show_list={self.show_type == ListState::List}
                 />
         }
