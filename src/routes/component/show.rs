@@ -17,6 +17,7 @@ use crate::error::{get_error, Error};
 use crate::fragments::{
     // switch_icon::res_btn,
     list_errors::ListErrors,
+    catalog_user::ListItemUser,
     // catalog_standard::CatalogStandards,
     component_file::FilesCard,
     component_modification::ModificationsTable,
@@ -24,13 +25,9 @@ use crate::fragments::{
     component_keyword::KeywordsTags,
 };
 use crate::gqls::make_query;
-use crate::services::{
-    is_authenticated,
-    // get_logged_user
-};
+use crate::services::is_authenticated;
 use crate::types::{
     UUID, ComponentInfo, SlimUser, DownloadFile,
-    // ComponentsQueryArg,
 };
 
 // #[derive(GraphQLQuery)]
@@ -83,9 +80,12 @@ pub struct ShowComponent {
     // router_agent: Box<dyn Bridge<RouteAgent>>,
     props: Props,
     link: ComponentLink<Self>,
+    select_tabs_card: SelectTabsCard,
     subscribers: usize,
     is_followed: bool,
     show_full_description: bool,
+    show_full_characteristic: bool,
+    open_owner_user_info: bool,
     show_related_standards: bool,
 }
 
@@ -93,6 +93,12 @@ pub struct ShowComponent {
 pub struct Props {
     pub current_user: Option<SlimUser>,
     pub component_uuid: UUID,
+}
+
+enum SelectTabsCard {
+    Files,
+    Standards,
+    Suppliers,
 }
 
 #[derive(Clone)]
@@ -106,9 +112,13 @@ pub enum Msg {
     GetDownloadFilesResult(String),
     GetComponentData(String),
     ShowDescription,
+    ShowCharacteristic,
     ShowStandardsList,
-    OpenComponentOwner,
+    ShowOwnerUserCard,
     OpenComponentSetting,
+    ActiveCardFiles,
+    ActiveCardStandards,
+    ActiveCardSupplier,
     Ignore,
 }
 
@@ -126,9 +136,12 @@ impl Component for ShowComponent {
             // router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             props,
             link,
+            select_tabs_card: SelectTabsCard::Files,
             subscribers: 0,
             is_followed: false,
             show_full_description: false,
+            show_full_characteristic: false,
+            open_owner_user_info: false,
             show_related_standards: false,
         }
     }
@@ -150,8 +163,11 @@ impl Component for ShowComponent {
         // debug!("get_self {:?}", get_self);
 
         if (first_render || not_matches_component_uuid) && is_authenticated() {
+            self.error = None;
+            self.component = None;
             // update current_component_uuid for checking change component in route
             self.current_component_uuid = target_component_uuid.to_string();
+            self.current_user_owner = false;
 
             spawn_local(async move {
                 let res = make_query(GetComponentData::build_query(get_component_data::Variables {
@@ -208,9 +224,7 @@ impl Component for ShowComponent {
                             self.is_followed = true;
                         }
                     }
-                    true => {
-                        self.error = Some(get_error(&data));
-                    }
+                    true => self.error = Some(get_error(&data)),
                 }
             }
             Msg::UnFollow => {
@@ -241,9 +255,7 @@ impl Component for ShowComponent {
                             self.is_followed = false;
                         }
                     }
-                    true => {
-                        self.error = Some(get_error(&data));
-                    }
+                    true => self.error = Some(get_error(&data)),
                 }
             }
             Msg::ResponseError(err) => {
@@ -279,29 +291,18 @@ impl Component for ShowComponent {
                         if let Some(user) = &self.props.current_user {
                             self.current_user_owner = component_data.owner_user.uuid == user.uuid;
                         }
-                        // description length check for show
+                        // length check for show btn more/less
                         self.show_full_description = component_data.description.len() < 250;
+                        self.show_full_characteristic = component_data.component_params.len() < 4;
                         self.component = Some(component_data);
                     }
-                    true => {
-                        self.error = Some(get_error(&data));
-                    }
+                    true => self.error = Some(get_error(&data)),
                 }
             }
-            Msg::ShowDescription => {
-                self.show_full_description = !self.show_full_description;
-            }
-            Msg::ShowStandardsList => {
-                self.show_related_standards = !self.show_related_standards;
-            }
-            Msg::OpenComponentOwner => {
-                // if let Some(component_data) = &self.component {
-                //     // Redirect to owner component page
-                //     self.router_agent.send(ChangeRoute(AppRoute::ShowCompany(
-                //         component_data.owner_company.uuid.to_string()
-                //     ).into()));
-                // }
-            }
+            Msg::ShowDescription => self.show_full_description = !self.show_full_description,
+            Msg::ShowCharacteristic => self.show_full_characteristic = !self.show_full_characteristic,
+            Msg::ShowStandardsList => self.show_related_standards = !self.show_related_standards,
+            Msg::ShowOwnerUserCard => self.open_owner_user_info = !self.open_owner_user_info,
             Msg::OpenComponentSetting => {
                 // if let Some(component_data) = &self.component {
                 //     // Redirect to page for change and update component
@@ -310,6 +311,9 @@ impl Component for ShowComponent {
                 //     ).into()));
                 // }
             }
+            Msg::ActiveCardFiles => self.select_tabs_card = SelectTabsCard::Files,
+            Msg::ActiveCardStandards => self.select_tabs_card = SelectTabsCard::Standards,
+            Msg::ActiveCardSupplier => self.select_tabs_card = SelectTabsCard::Suppliers,
             Msg::Ignore => {}
         }
         true
@@ -327,16 +331,17 @@ impl Component for ShowComponent {
                     <ListErrors error=self.error.clone()/>
                     <div class="container page">
                         <div class="row">
+                            // modals cards
+                            {self.show_modal_owner_user(component_data)}
+
                             <div class="card">
                               {self.show_main_card(component_data)}
                             </div>
                             <br/>
                             {self.show_modifications_table(component_data)}
                             <br/>
-                            <div class="columns">
-                              {self.show_component_params(component_data)}
-                              {self.show_component_files(component_data)}
-                            </div>
+                            {self.show_cards(component_data)}
+                            <br/>
                             {self.show_component_specs(component_data)}
                             <br/>
                             {self.show_component_keywords(component_data)}
@@ -358,7 +363,7 @@ impl ShowComponent {
         component_data: &ComponentInfo,
     ) -> Html {
         let onclick_open_owner_company = self.link
-            .callback(|_| Msg::OpenComponentOwner);
+            .callback(|_| Msg::ShowOwnerUserCard);
 
         let show_description_btn = self.link
             .callback(|_| Msg::ShowDescription);
@@ -464,16 +469,94 @@ impl ShowComponent {
                         <td>{"updated_at"}</td>
                         <td>{format!("{:.*}", 10, component_data.updated_at.to_string())}</td>
                       </tr>
-                      {for component_data.component_params.iter().map(|component_param| {
-                        html!{<tr>
-                            <td>{component_param.param.paramname.clone()}</td>
-                            <td>{component_param.value.clone()}</td>
-                        </tr>}
+                      {for component_data.component_params.iter().enumerate().map(|(index, component_param)| {
+                          match (index >= 3, self.show_full_characteristic) {
+                              // show full list
+                              (_, true) => html!{<tr>
+                                  <td>{component_param.param.paramname.clone()}</td>
+                                  <td>{component_param.value.clone()}</td>
+                              </tr>},
+                              // show full list or first 4 items
+                              (false, false) => html!{<tr>
+                                  <td>{component_param.param.paramname.clone()}</td>
+                                  <td>{component_param.value.clone()}</td>
+                              </tr>},
+                              _ => html!{},
+                          }
                       })}
+                      {match component_data.component_params.len() {
+                          // 0 => html!{<span>{"Files not found"}</span>},
+                          0..=3 => html!{},
+                          _ => self.show_see_characteristic_btn(),
+                      }}
                     </tbody>
                   </table>
               </div>
             </div>
+        }
+    }
+
+    fn show_see_characteristic_btn(&self) -> Html {
+        let show_full_characteristic_btn = self.link
+            .callback(|_| Msg::ShowCharacteristic);
+
+        match self.show_full_characteristic {
+            true => html!{<>
+              <button class="button is-white"
+                  onclick=show_full_characteristic_btn
+                >{"See less"}</button>
+            </>},
+            false => html!{<>
+              <button class="button is-white"
+                  onclick=show_full_characteristic_btn
+                >{"See more"}</button>
+            </>},
+        }
+    }
+
+    fn show_cards(
+        &self,
+        component_data: &ComponentInfo,
+    ) -> Html {
+        let count_rows =
+            component_data.files.len() +
+            component_data.component_standards.len() +
+            component_data.component_suppliers.len();
+
+        match count_rows {
+            0..=5 => html!{
+                <div class="columns">
+                {self.show_component_params(component_data)}
+                <div class="column">
+                    <h2>{"Files"}</h2>
+                    {self.show_component_files(component_data)}
+                    <br/>
+                    <h2>{"Standards"}</h2>
+                    {self.show_component_standards(component_data)}
+                    <br/>
+                    {self.show_component_suppliers(component_data)}
+                </div>
+            </div>},
+            _ => html!{<>
+                <div class="columns">
+                    {self.show_component_params(component_data)}
+                    <div class="column">
+                        <h2>{"Files"}</h2>
+                        {self.show_component_files(component_data)}
+                    </div>
+                </div>
+                <br/>
+                <div class="columns">
+                    <div class="column">
+                        <h2>{"Standards"}</h2>
+                        {self.show_component_standards(component_data)}
+                    </div>
+                    <div class="column">
+                        {self.show_component_suppliers(component_data)}
+                    </div>
+                </div>
+                <br/>
+            </>},
         }
     }
 
@@ -482,15 +565,12 @@ impl ShowComponent {
         component_data: &ComponentInfo,
     ) -> Html {
         html!{
-            <div class="column">
-              <h2>{"Files"}</h2>
               <FilesCard
                   show_download_btn = true
                   show_delete_btn = false
                   component_uuid = component_data.uuid.clone()
                   files = component_data.files.clone()
                 />
-            </div>
         }
     }
 
@@ -524,5 +604,100 @@ impl ShowComponent {
                   />
               </div>
         </>}
+    }
+
+    fn show_component_suppliers(
+        &self,
+        component_data: &ComponentInfo,
+    ) -> Html {
+        match component_data.is_base {
+            true => html!{<>
+                <h2>{"Supplier"}</h2>
+                <div class="card">
+                  <table class="table is-fullwidth">
+                    <tbody>
+                       <th>{"Company shortname"}</th>
+                       <th>{"Description"}</th>
+                       {for component_data.component_suppliers.iter().map(|data| {
+                         match &data.supplier.is_supplier {
+                            true => html!{<tr>
+                                <td>{data.supplier.shortname.clone()}</td>
+                                <td>{data.description.clone()}</td>
+                            </tr>},
+                            false => html!{},
+                        }})}
+                    </tbody>
+                  </table>
+                </div>
+                <br/>
+            </>},
+            false => match component_data.component_suppliers.first() {
+                Some(data) => html!{<>
+                    <h2>{"Main supplier"}</h2>
+                    <div class="card">
+                      <table class="table is-fullwidth">
+                        <tbody>
+                          <th>{"Company"}</th>
+                          <th>{"Description"}</th>
+                          <tr>
+                            <td>{data.supplier.shortname.clone()}</td>
+                            <td>{data.description.clone()}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    <br/>
+                </>},
+                None => html!{},
+            },
+        }
+    }
+
+    fn show_component_standards(
+        &self,
+        component_data: &ComponentInfo,
+    ) -> Html {
+        html!{<div class="card">
+          <table class="table is-fullwidth">
+            <tbody>
+               <th>{"Classifier"}</th>
+               <th>{"Specified tolerance"}</th>
+               <th>{"Standard status"}</th>
+               {for component_data.component_standards.iter().map(|data| {
+                   html!{<tr>
+                       <td>{data.classifier.clone()}</td>
+                       <td>{data.specified_tolerance.clone()}</td>
+                       <td>{data.standard_status.name.clone()}</td>
+                   </tr>}
+               })}
+            </tbody>
+          </table>
+        </div>}
+    }
+
+    fn show_modal_owner_user(
+        &self,
+        component_data: &ComponentInfo,
+    ) -> Html {
+        let onclick_owner_user_info = self.link
+            .callback(|_| Msg::ShowOwnerUserCard);
+
+        let class_modal = match &self.open_owner_user_info {
+            true => "modal is-active",
+            false => "modal",
+        };
+
+        html!{<div class=class_modal>
+          <div class="modal-background" onclick=onclick_owner_user_info.clone() />
+          <div class="modal-content">
+              <div class="card">
+                <ListItemUser
+                    data = component_data.owner_user.clone()
+                    show_list = true
+                  />
+              </div>
+          </div>
+          <button class="modal-close is-large" aria-label="close" onclick=onclick_owner_user_info />
+        </div>}
     }
 }
