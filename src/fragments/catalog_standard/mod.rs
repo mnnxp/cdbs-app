@@ -1,6 +1,6 @@
 mod list_item;
 
-use list_item::ListItem;
+pub use list_item::ListItemStandard;
 use yew::prelude::*;
 use yew_router::prelude::*;
 use wasm_bindgen_futures::spawn_local;
@@ -24,29 +24,10 @@ use crate::types::{
 )]
 struct GetStandardsShortList;
 
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/standards.graphql",
-    response_derives = "Debug"
-)]
-struct AddStandardFav;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/standards.graphql",
-    response_derives = "Debug"
-)]
-struct DeleteStandardFav;
-
-
 pub enum Msg {
     SwitchShowType,
     UpdateList(String),
-    AddFav(UUID),
-    DelFav(UUID),
-    GetList
+    GetList,
 }
 
 #[derive(PartialEq, Eq)]
@@ -132,29 +113,9 @@ impl Component for CatalogStandards {
 
                       self.list = result;
                   },
-                  true => {
-                      self.error = Some(get_error(&data));
-                  },
+                  true => self.error = Some(get_error(&data)),
               }
           },
-          Msg::AddFav(standard_uuid) => {
-              spawn_local(async move {
-                  make_query(AddStandardFav::build_query(add_standard_fav::Variables{
-                    standard_uuid
-                  })).await.unwrap();
-                  // debug!("AddFav res: {:?}", res);
-                  link.send_message(Msg::GetList);
-              });
-          },
-          Msg::DelFav(standard_uuid) => {
-              spawn_local(async move {
-                  make_query(DeleteStandardFav::build_query(delete_standard_fav::Variables{
-                    standard_uuid
-                  })).await.unwrap();
-                  // debug!("DelFav res: {:?}", res);
-                  link.send_message(Msg::GetList);
-              });
-          }
         }
         true
     }
@@ -226,24 +187,8 @@ impl CatalogStandards {
         &self,
         show_standard: &ShowStandardShort,
     ) -> Html {
-        let target_uuid_add = show_standard.uuid.clone();
-        let target_uuid_del = show_standard.uuid.clone();
-
-        let onclick_add_fav = self.link.callback(move |_|
-                Msg::AddFav(target_uuid_add.clone())
-            );
-
-        let onclick_del_fav = self.link.callback(move |_|
-                Msg::DelFav(target_uuid_del.clone())
-            );
-
-        html! {
-            <ListItem data={show_standard.clone()}
-                show_list={self.show_type == ListState::List}
-                // triggerFav={triggerFav}
-                add_fav={onclick_add_fav}
-                del_fav={onclick_del_fav}
-                />
-        }
+        html! {<ListItemStandard data={show_standard.clone()}
+            show_list={self.show_type == ListState::List}
+        />}
     }
 }

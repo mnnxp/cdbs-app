@@ -1,6 +1,4 @@
 use chrono::NaiveDateTime;
-// use web_sys::MouseEvent;
-// use yew::prelude::*;
 use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
 use yew_router::{
     service::RouteService,
@@ -18,7 +16,7 @@ use crate::fragments::{
     // switch_icon::res_btn,
     list_errors::ListErrors,
     catalog_user::ListItemUser,
-    // catalog_standard::CatalogStandards,
+    component::ComponentStandardItem,
     component_file::FilesCard,
     component_modification::ModificationsTable,
     component_spec::SpecsTags,
@@ -80,12 +78,12 @@ pub struct ShowComponent {
     // router_agent: Box<dyn Bridge<RouteAgent>>,
     props: Props,
     link: ComponentLink<Self>,
-    select_tabs_card: SelectTabsCard,
     subscribers: usize,
     is_followed: bool,
     show_full_description: bool,
     show_full_characteristic: bool,
     open_owner_user_info: bool,
+    open_standard_info: bool,
     show_related_standards: bool,
 }
 
@@ -93,12 +91,6 @@ pub struct ShowComponent {
 pub struct Props {
     pub current_user: Option<SlimUser>,
     pub component_uuid: UUID,
-}
-
-enum SelectTabsCard {
-    Files,
-    Standards,
-    Suppliers,
 }
 
 #[derive(Clone)]
@@ -115,10 +107,8 @@ pub enum Msg {
     ShowCharacteristic,
     ShowStandardsList,
     ShowOwnerUserCard,
+    ShowStandardCard,
     OpenComponentSetting,
-    ActiveCardFiles,
-    ActiveCardStandards,
-    ActiveCardSupplier,
     Ignore,
 }
 
@@ -136,12 +126,12 @@ impl Component for ShowComponent {
             // router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             props,
             link,
-            select_tabs_card: SelectTabsCard::Files,
             subscribers: 0,
             is_followed: false,
             show_full_description: false,
             show_full_characteristic: false,
             open_owner_user_info: false,
+            open_standard_info: false,
             show_related_standards: false,
         }
     }
@@ -303,6 +293,7 @@ impl Component for ShowComponent {
             Msg::ShowCharacteristic => self.show_full_characteristic = !self.show_full_characteristic,
             Msg::ShowStandardsList => self.show_related_standards = !self.show_related_standards,
             Msg::ShowOwnerUserCard => self.open_owner_user_info = !self.open_owner_user_info,
+            Msg::ShowStandardCard => self.open_standard_info = !self.open_standard_info,
             Msg::OpenComponentSetting => {
                 // if let Some(component_data) = &self.component {
                 //     // Redirect to page for change and update component
@@ -311,9 +302,6 @@ impl Component for ShowComponent {
                 //     ).into()));
                 // }
             }
-            Msg::ActiveCardFiles => self.select_tabs_card = SelectTabsCard::Files,
-            Msg::ActiveCardStandards => self.select_tabs_card = SelectTabsCard::Standards,
-            Msg::ActiveCardSupplier => self.select_tabs_card = SelectTabsCard::Suppliers,
             Msg::Ignore => {}
         }
         true
@@ -341,7 +329,6 @@ impl Component for ShowComponent {
                             {self.show_modifications_table(component_data)}
                             <br/>
                             {self.show_cards(component_data)}
-                            <br/>
                             {self.show_component_specs(component_data)}
                             <br/>
                             {self.show_component_keywords(component_data)}
@@ -545,7 +532,6 @@ impl ShowComponent {
                         {self.show_component_files(component_data)}
                     </div>
                 </div>
-                <br/>
                 <div class="columns">
                     <div class="column">
                         <h2>{"Standards"}</h2>
@@ -555,7 +541,6 @@ impl ShowComponent {
                         {self.show_component_suppliers(component_data)}
                     </div>
                 </div>
-                <br/>
             </>},
         }
     }
@@ -629,7 +614,6 @@ impl ShowComponent {
                     </tbody>
                   </table>
                 </div>
-                <br/>
             </>},
             false => match component_data.component_suppliers.first() {
                 Some(data) => html!{<>
@@ -646,7 +630,6 @@ impl ShowComponent {
                         </tbody>
                       </table>
                     </div>
-                    <br/>
                 </>},
                 None => html!{},
             },
@@ -662,13 +645,11 @@ impl ShowComponent {
             <tbody>
                <th>{"Classifier"}</th>
                <th>{"Specified tolerance"}</th>
-               <th>{"Standard status"}</th>
+               <th>{"Action"}</th>
                {for component_data.component_standards.iter().map(|data| {
-                   html!{<tr>
-                       <td>{data.classifier.clone()}</td>
-                       <td>{data.specified_tolerance.clone()}</td>
-                       <td>{data.standard_status.name.clone()}</td>
-                   </tr>}
+                   html!{<ComponentStandardItem
+                       standard_data = data.clone()
+                     />}
                })}
             </tbody>
           </table>

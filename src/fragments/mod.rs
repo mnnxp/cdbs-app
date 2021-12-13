@@ -1,5 +1,7 @@
 //! Components used by route pages
 
+pub mod component;
+
 pub mod footer;
 pub mod header;
 pub mod list_errors;
