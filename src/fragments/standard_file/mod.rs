@@ -82,7 +82,11 @@ impl Component for FilesCard {
                         _ => html!{},
                     }
                 })}
-                {self.show_see_btn()}
+                {match self.props.files.len() {
+                    0 => html!{<span>{"Files not found"}</span>},
+                    0..=3 => html!{},
+                    _ => self.show_see_btn(),
+                }}
             </div>
         }
     }
@@ -93,26 +97,17 @@ impl FilesCard {
         let show_full_files_btn = self.link
             .callback(|_| Msg::ShowFullList);
 
-        if self.props.files.is_empty() {
-            html!{<span>{"Files not found"}</span>}
-        } else {
-            match self.show_full_files {
-                true => html!{<>
-                  {match self.props.files.len() {
-                      3.. => html!{<>
-                        <button class="button is-white"
-                            onclick=show_full_files_btn
-                          >{"See less"}</button>
-                      </>},
-                      _ => html!{},
-                  }}
-                </>},
-                false => html!{<>
-                  <button class="button is-white"
-                      onclick=show_full_files_btn
-                    >{"See more"}</button>
-                </>},
-            }
+        match self.show_full_files {
+            true => html!{<>
+              <button class="button is-white"
+                  onclick=show_full_files_btn
+                >{"See less"}</button>
+            </>},
+            false => html!{<>
+              <button class="button is-white"
+                  onclick=show_full_files_btn
+                >{"See more"}</button>
+            </>},
         }
     }
 }

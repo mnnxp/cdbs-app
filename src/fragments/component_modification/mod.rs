@@ -45,7 +45,20 @@ impl Component for ModificationsTable {
     }
 
     fn rendered(&mut self, first_render: bool) {
-        if first_render {
+        let props_component_uuid = match self.props.modifications.first().map(|x| x.component_uuid.clone()) {
+            Some(component_uuid) => component_uuid,
+            None => String::new(),
+        };
+
+        debug!("component_uuid modification data {:?}", props_component_uuid);
+
+        if first_render || self.component_uuid != props_component_uuid {
+            debug!("Clear modification data");
+            self.component_uuid = String::new();
+            self.collect_heads.clear();
+            self.collect_items.clear();
+            self.collect_columns.clear();
+
             self.link.send_message(Msg::ParseParams);
         }
     }
