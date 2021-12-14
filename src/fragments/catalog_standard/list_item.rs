@@ -130,8 +130,9 @@ impl Component for ListItemStandard {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.show_list != props.show_list || self.props.data.is_followed != props.data.is_followed || self.props.data.uuid != props.data.uuid {
+        if self.props.show_list != props.show_list || self.props.data.uuid != props.data.uuid {
             self.props.show_list = props.show_list;
+            self.is_followed = props.data.is_followed;
             self.props.data = props.data;
             true
         } else {
@@ -155,6 +156,7 @@ impl ListItemStandard {
         let ShowStandardShort {
             classifier,
             name,
+            description,
             specified_tolerance,
             publication_at,
             owner_company,
@@ -181,56 +183,66 @@ impl ListItemStandard {
 
         html! {
           <div class="box itemBox">
-            <article class="media center-media">
-              <div class="media-left">
-                <figure class="image is-96x96">
-                  // <div hidden={!is_supplier} class="top-tag" >{"supplier"}</div>
-                  <div class="top-tag" >{standard_status.name.to_string()}</div>
-                  <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
-                  // <img src={owner_company.image_file.download_url.to_string()} alt="Favicon profile"/>
-                </figure>
-              </div>
-              <div class="media-content" style="min-width: 0px;">
-                <div class="content">
-                  <p>
-                    <div style="margin-bottom:0" >
-                      {"classifier "} <span class="id-box has-text-grey-light has-text-weight-bold">{
-                          classifier
-                      }</span>
-                      <br/>
-                      {" specified tolerance "} <span class="id-box has-text-grey-light has-text-weight-bold">{
-                          specified_tolerance
-                      }</span>
+              <article class="media center-media">
+                  <div class="media-left">
+                    <figure class="image is-96x96">
+                      <div class="top-tag" >{standard_status.name.to_string()}</div>
+                      <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
+                      // <img src={owner_company.image_file.download_url.to_string()} alt="Favicon profile"/>
+                    </figure>
+                  </div>
+                  <div class="media-content">
+                    <div class="columns is-gapless" style="margin-bottom:0">
+                      <div class="column">
+                          {"classifier "} <span class="id-box has-text-grey-light has-text-weight-bold">{
+                              classifier
+                          }</span>
+                      </div>
+                      <div class="column">
+                          {" specified tolerance "} <span class="id-box has-text-grey-light has-text-weight-bold">{
+                              specified_tolerance
+                          }</span>
+                      </div>
                     </div>
-                    <div class="has-text-weight-bold is-size-4">{name}</div>
-                    <div class="overflow-title has-text-weight-bold">{
-                        format!("design by: {} {}",
-                            &owner_company.shortname,
-                            &owner_company.company_type.shortname
-                    )}</div>
-                  </p>
-                </div>
-              </div>
-              <div class="media-right overflow-title">
-                  {format!("publication: {:.*}", 10, publication_at.to_string())}
-                  <br/>
-                  {format!("updated: {:.*}", 10, updated_at.to_string())}
-                  // <br/>
-                  // {format!("Reg.№: {}", inn.to_string())}
-              </div>
-              <div class="media-right flexBox " >
-              {res_btn(classes!(
-                  String::from("fas fa-file")),
-                  show_standard_btn,
-                  String::new())}
-                {res_btn(
-                    classes!(class_res_btn),
-                    trigger_fab_btn,
-                    class_color_btn.to_string()
-                )}
-              </div>
-            </article>
-          </div>
+                    <div class="columns" style="margin-bottom:0">
+                        <div class="column">
+                            <div class="has-text-weight-bold is-size-4">{name}</div>
+                            <div class="overflow-title">
+                                {match &description.len() {
+                                    0..=50 => description.clone(),
+                                    _ => format!("{:.*}...", 50, description),
+                                }}
+                            </div>
+                            <div class="overflow-title">{"design by: "}<span class="has-text-weight-bold">{
+                                format!("{} {}",
+                                    &owner_company.shortname,
+                                    &owner_company.company_type.shortname
+                            )}</span></div>
+                        </div>
+                        <div class="column is-one-quarter flexBox" >
+                          {res_btn(classes!(
+                            String::from("fas fa-file")),
+                            show_standard_btn,
+                            String::new()
+                          )}
+                          {res_btn(
+                            classes!(class_res_btn),
+                            trigger_fab_btn,
+                            class_color_btn.to_string()
+                          )}
+                        </div>
+                    </div>
+                    <div class="columns is-gapless" style="margin-bottom:0">
+                        <div class="column">
+                          {format!("publication: {:.*}", 10, publication_at.to_string())}
+                        </div>
+                        <div class="column">
+                          {format!("updated: {:.*}", 10, updated_at.to_string())}
+                        </div>
+                    </div>
+                  </div>
+              </article>
+            </div>
         }
     }
 
@@ -275,19 +287,13 @@ impl ListItemStandard {
                     classifier
                 }</span>
                 <br/>
-                // {"specified tolerance "} <span class="id-box has-text-grey-light has-text-weight-bold">{
-                //     specified_tolerance
-                // }</span>
-                // <br/>
-                // {"published "} <span class="id-box has-text-grey-light has-text-weight-bold">{
-                //     {format!("{:.*}", 10, publication_at.to_string())}
-                // }</span>
               </div>
               <div class="has-text-weight-bold is-size-4">{name}</div>
-              <div class="overflow-title has-text-weight-bold">{format!("design by: {} {}",
-                &owner_company.shortname,
-                &owner_company.company_type.shortname
-              )}</div>
+              <div class="overflow-title">{"design by: "}<span class="has-text-weight-bold">{
+                  format!("{} {}",
+                      &owner_company.shortname,
+                      &owner_company.company_type.shortname
+              )}</span></div>
               <div class="btnBox">
                 <button class="button is-light is-fullwidth has-text-weight-bold"
                     onclick=show_standard_btn
