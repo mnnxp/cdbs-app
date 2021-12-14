@@ -3,13 +3,41 @@ use yew_router::{
     agent::RouteRequest::ChangeRoute,
     prelude::*,
 };
+use wasm_bindgen_futures::spawn_local;
+use graphql_client::GraphQLQuery;
+use serde_json::Value;
+use log::debug;
+use crate::gqls::make_query;
+use crate::error::{Error, get_error};
 use crate::routes::AppRoute;
-use crate::fragments::switch_icon::res_btn;
-use crate::types::ShowCompanyShort;
+use crate::fragments::{
+    list_errors::ListErrors,
+    switch_icon::res_btn,
+};
+use crate::types::{UUID, ShowCompanyShort};
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/companies.graphql",
+    response_derives = "Debug"
+)]
+struct AddCompanyFav;
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/companies.graphql",
+    response_derives = "Debug"
+)]
+struct DeleteCompanyFav;
 
 pub enum Msg {
     OpenCompany,
     TriggerFav,
+    AddFav,
+    DelFav,
+    GetFavResult(String),
     Ignore,
 }
 
@@ -17,29 +45,43 @@ pub enum Msg {
 pub struct Props {
     pub data: ShowCompanyShort,
     pub show_list: bool,
-    pub add_fav: Callback<String>,
-    pub del_fav : Callback<String>,
 }
 
-pub struct ListItem {
+pub struct ListItemCompany {
+    error: Option<Error>,
     router_agent: Box<dyn Bridge<RouteAgent>>,
     link: ComponentLink<Self>,
-    props: Props
+    props: Props,
+    company_uuid: UUID,
+    is_followed: bool,
 }
 
-impl Component for ListItem {
+impl Component for ListItemCompany {
     type Message = Msg;
     type Properties = Props;
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+        let is_followed = props.data.is_followed;
         Self {
+            error: None,
             router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             link,
             props,
+            company_uuid: String::new(),
+            is_followed,
+        }
+    }
+
+    fn rendered(&mut self, first_render: bool) {
+        if first_render || self.company_uuid != self.props.data.uuid {
+            self.company_uuid = self.props.data.uuid.clone();
+            self.is_followed = self.props.data.is_followed;
         }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
+        let link = self.link.clone();
+
         match msg {
             Msg::OpenCompany => {
                 // Redirect to profile page
@@ -48,10 +90,47 @@ impl Component for ListItem {
                 ).into()));
             },
             Msg::TriggerFav => {
-                if !self.props.data.is_followed {
-                    self.props.add_fav.emit("".to_string());
-                } else {
-                    self.props.del_fav.emit("".to_string());
+                match &self.is_followed {
+                    true => link.send_message(Msg::DelFav),
+                    false => link.send_message(Msg::AddFav),
+                }
+            },
+            Msg::AddFav => {
+                let company_uuid = self.props.data.uuid.clone();
+                spawn_local(async move {
+                    let res = make_query(AddCompanyFav::build_query(add_company_fav::Variables{
+                      company_uuid
+                    })).await;
+                    link.send_message(Msg::GetFavResult(res.unwrap()));
+                });
+            },
+            Msg::DelFav => {
+                let company_uuid = self.props.data.uuid.clone();
+                spawn_local(async move {
+                    let res = make_query(DeleteCompanyFav::build_query(delete_company_fav::Variables{
+                      company_uuid
+                    })).await;
+                    link.send_message(Msg::GetFavResult(res.unwrap()));
+                });
+            },
+            Msg::GetFavResult(res) => {
+                let data: Value = serde_json::from_str(res.as_str()).unwrap();
+                let res_value = data.as_object().unwrap().get("data").unwrap();
+
+                debug!("res value: {:#?}", res_value);
+
+                match res_value.is_null() {
+                    false => {
+                        let result: bool = match &self.is_followed {
+                            true => serde_json::from_value(res_value.get("deleteCompanyFav").unwrap().clone()).unwrap(),
+                            false => serde_json::from_value(res_value.get("addCompanyFav").unwrap().clone()).unwrap(),
+                        };
+                        debug!("Fav result: {:?}", result);
+                        if result {
+                            self.is_followed = !self.is_followed;
+                        }
+                    },
+                    true => self.error = Some(get_error(&data)),
                 }
             },
             Msg::Ignore => {},
@@ -60,11 +139,11 @@ impl Component for ListItem {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        // Should only return "true" if new properties are different to
-        // previously received properties.
-        // This company has no properties so we will always return "false".
-        if self.props.show_list != props.show_list || self.props.data.is_followed != props.data.is_followed || self.props.data.uuid != props.data.uuid {
+        if self.props.show_list != props.show_list ||
+            // self.is_followed != props.data.is_followed ||
+                self.props.data.uuid != props.data.uuid {
             self.props.show_list = props.show_list;
+            self.is_followed = props.data.is_followed;
             self.props.data = props.data;
             true
         } else {
@@ -73,17 +152,19 @@ impl Component for ListItem {
     }
 
     fn view(&self) -> Html {
-      // let clickEvent = self.link.ca;
-      // let Props { add_fav, del_fav, .. } = self.props.clone();
-
-      match self.props.show_list {
-        true => { self.showing_in_list() },
-        false => { self.showing_in_box() },
-      }
+        // debug!("&self.props.data.shortname: {}", &self.props.data.shortname);
+        // debug!("&self.props.data.is_followed: {}", &self.props.data.is_followed);
+        html!{<>
+          <ListErrors error=self.error.clone()/>
+          {match self.props.show_list {
+              true => { self.showing_in_list() },
+              false => { self.showing_in_box() },
+          }}
+        </>}
     }
 }
 
-impl ListItem {
+impl ListItemCompany {
     fn showing_in_list(&self) -> Html {
         let ShowCompanyShort {
             shortname,
@@ -93,7 +174,7 @@ impl ListItem {
             region,
             company_type,
             is_supplier,
-            is_followed,
+            // is_followed,
             updated_at,
             ..
         } = &self.props.data;
@@ -103,7 +184,7 @@ impl ListItem {
 
         let mut class_res_btn = vec!["fa-bookmark"];
         let mut class_color_btn = "";
-        match is_followed {
+        match &self.is_followed {
             true => {
                 class_res_btn.push("fas");
                 class_color_btn = "color: #3298DD;";
@@ -169,7 +250,7 @@ impl ListItem {
             region,
             company_type,
             is_supplier,
-            is_followed,
+            // is_followed,
             ..
         } = self.props.data.clone();
 
@@ -178,14 +259,12 @@ impl ListItem {
 
         let mut class_res_btn = vec![];
         let mut class_color_btn = "";
-        match is_followed {
+        match &self.is_followed {
             true => {
                 class_res_btn.push("fas");
                 class_color_btn = "color: #3298DD;";
             },
-            false => {
-                class_res_btn.push("far");
-            },
+            false => class_res_btn.push("far"),
         }
         class_res_btn.push("fa-bookmark");
 
