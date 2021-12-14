@@ -16,7 +16,7 @@ use crate::fragments::{
     // switch_icon::res_btn,
     list_errors::ListErrors,
     catalog_user::ListItemUser,
-    component::ComponentStandardItem,
+    component::{ComponentStandardItem, ComponentCompanyItem},
     component_file::FilesCard,
     component_modification::ModificationsTable,
     component_spec::SpecsTags,
@@ -595,45 +595,36 @@ impl ShowComponent {
         &self,
         component_data: &ComponentInfo,
     ) -> Html {
-        match component_data.is_base {
-            true => html!{<>
-                <h2>{"Supplier"}</h2>
-                <div class="card">
-                  <table class="table is-fullwidth">
-                    <tbody>
-                       <th>{"Company shortname"}</th>
-                       <th>{"Description"}</th>
-                       {for component_data.component_suppliers.iter().map(|data| {
-                         match &data.supplier.is_supplier {
-                            true => html!{<tr>
-                                <td>{data.supplier.shortname.clone()}</td>
-                                <td>{data.description.clone()}</td>
-                            </tr>},
-                            false => html!{},
-                        }})}
-                    </tbody>
-                  </table>
-                </div>
-            </>},
-            false => match component_data.component_suppliers.first() {
-                Some(data) => html!{<>
-                    <h2>{"Main supplier"}</h2>
-                    <div class="card">
-                      <table class="table is-fullwidth">
-                        <tbody>
-                          <th>{"Company"}</th>
-                          <th>{"Description"}</th>
-                          <tr>
-                            <td>{data.supplier.shortname.clone()}</td>
-                            <td>{data.description.clone()}</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                </>},
-                None => html!{},
-            },
-        }
+        let table_label = match component_data.is_base {
+            true => "Supplier".to_string(),
+            false => "Main supplier".to_string(),
+        };
+
+        html!{<>
+            <h2>{table_label}</h2>
+            <div class="card">
+              <table class="table is-fullwidth">
+                <tbody>
+                   <th>{"Company"}</th>
+                   <th>{"Description"}</th>
+                   <th>{"Action"}</th>
+                   {match component_data.is_base {
+                       true => html!{<>
+                           {for component_data.component_suppliers.iter().map(|data| {
+                             match &data.supplier.is_supplier {
+                                true => html!{<ComponentCompanyItem supplier_data=data.clone() />},
+                                false => html!{},
+                            }})}
+                       </>},
+                       false => match component_data.component_suppliers.first() {
+                           Some(data) => html!{<ComponentCompanyItem supplier_data=data.clone() />},
+                           None => html!{},
+                       },
+                   }}
+                </tbody>
+              </table>
+            </div>
+        </>}
     }
 
     fn show_component_standards(

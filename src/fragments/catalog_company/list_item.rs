@@ -211,10 +211,10 @@ impl ListItemCompany {
                       {"from "} <span class="id-box has-text-grey-light has-text-weight-bold">{region.region.to_string()}</span>
                     </div>
                     <div class="overflow-title has-text-weight-bold is-size-4">{shortname}</div>
-                    <p>
+                    <p class="overflow-title">
                         {match &description.len() {
-                            50.. => format!("{:.*}...", 50, description),
-                            _ => description.clone(),
+                            0..=25 => description.clone(),
+                            _ => format!("{:.*}...", 25, description),
                         }}
                     </p>
                   </p>

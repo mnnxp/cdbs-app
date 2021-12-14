@@ -1,6 +1,6 @@
 mod list_item;
 
-use list_item::ListItemCompany;
+pub use list_item::ListItemCompany;
 use yew::prelude::*;
 use yew_router::prelude::*;
 use wasm_bindgen_futures::spawn_local;
