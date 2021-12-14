@@ -196,50 +196,55 @@ impl ListItemCompany {
 
         html! {
           <div class="box itemBox">
-            <article class="media center-media">
-              <div class="media-left">
-                <figure class="image is-96x96">
-                  <div hidden={!is_supplier} class="top-tag" >{"supplier"}</div>
-                  <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
-                  // <img src={image_file.download_url.to_string()} alt="Favicon profile"/>
-                </figure>
-              </div>
-              <div class="media-content" style="min-width: 0px;">
-                <div class="content">
-                  <p>
-                    <div style="margin-bottom:0" >
-                      {"from "} <span class="id-box has-text-grey-light has-text-weight-bold">{region.region.to_string()}</span>
+              <article class="media center-media">
+                  <div class="media-left">
+                    <figure class="image is-96x96">
+                        <div hidden={!is_supplier} class="top-tag" >{"supplier"}</div>
+                        <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
+                        // <img src={image_file.download_url.to_string()} alt="Favicon profile"/>
+                    </figure>
+                  </div>
+                  <div class="media-content">
+                    <div class="columns is-gapless" style="margin-bottom:0">
+                      <div class="column">
+                          {"from "} <span class="id-box has-text-grey-light has-text-weight-bold">{region.region.to_string()}</span>
+                      </div>
                     </div>
-                    <div class="overflow-title has-text-weight-bold is-size-4">{shortname}</div>
-                    <p class="overflow-title">
-                        {match &description.len() {
-                            0..=25 => description.clone(),
-                            _ => format!("{:.*}...", 25, description),
-                        }}
-                    </p>
-                  </p>
-                </div>
-              </div>
-              <div class="media-right overflow-title">
-                  {format!("Updated at: {:.*}", 19, updated_at.to_string())}
-                  <br/>
-                  {format!("Reg.№: {}", inn.to_string())}
-                  <br/>
-                  {format!("Type: {}", company_type.shortname.to_string())}
-              </div>
-              <div class="media-right flexBox " >
-                {res_btn(classes!(
-                    String::from("fas fa-building")),
-                    show_company_btn,
-                    String::new())}
-                {res_btn(
-                    classes!(class_res_btn),
-                    trigger_fab_btn,
-                    class_color_btn.to_string()
-                )}
-              </div>
-            </article>
-          </div>
+                    <div class="columns" style="margin-bottom:0">
+                        <div class="column">
+                            <div class="overflow-title has-text-weight-bold">{
+                                format!("{} {}", &shortname, &company_type.shortname
+                            )}</div>
+                            <p class="overflow-title">
+                                {match &description.len() {
+                                    0..=25 => description.clone(),
+                                    _ => format!("{:.*}...", 25, description),
+                                }}
+                            </p>
+                        </div>
+                        <div class="column is-one-quarter flexBox" >
+                            {res_btn(classes!(
+                                String::from("fas fa-building")),
+                                show_company_btn,
+                                String::new())}
+                            {res_btn(
+                                classes!(class_res_btn),
+                                trigger_fab_btn,
+                                class_color_btn.to_string()
+                            )}
+                        </div>
+                    </div>
+                    <div class="columns" style="margin-bottom:0">
+                        <div class="column">
+                        {format!("Reg.№: {}", inn.to_string())}
+                        </div>
+                        <div class="column">
+                          {format!("Updated at: {:.*}", 10, updated_at.to_string())}
+                        </div>
+                    </div>
+                  </div>
+              </article>
+            </div>
         }
     }
 
