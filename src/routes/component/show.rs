@@ -27,7 +27,8 @@ use crate::fragments::{
 use crate::gqls::make_query;
 use crate::services::is_authenticated;
 use crate::types::{
-    UUID, ComponentInfo, SlimUser, DownloadFile,
+    UUID, ComponentInfo, SlimUser,
+    DownloadFile, ComponentModificationInfo,
 };
 
 // #[derive(GraphQLQuery)]
@@ -89,6 +90,7 @@ pub struct ShowComponent {
     show_full_description: bool,
     show_full_characteristic: bool,
     open_owner_user_info: bool,
+    open_modification_card: bool,
     open_standard_info: bool,
     show_related_standards: bool,
 }
@@ -116,6 +118,7 @@ pub enum Msg {
     ShowStandardsList,
     ShowOwnerUserCard,
     ShowStandardCard,
+    ShowModificationCard,
     OpenComponentSetting,
     Ignore,
 }
@@ -143,6 +146,7 @@ impl Component for ShowComponent {
             show_full_description: false,
             show_full_characteristic: false,
             open_owner_user_info: false,
+            open_modification_card: false,
             open_standard_info: false,
             show_related_standards: false,
         }
@@ -191,15 +195,23 @@ impl Component for ShowComponent {
         match msg {
             Msg::RequestDownloadFiles => {
                 debug!("Select modification: {:?}", self.select_component_modification);
-                debug!("Select fileset: {:?}", self.select_fileset_program);
+                match self.select_fileset_program.len() {
+                    36 => debug!("Select fileset: {:?}", self.select_fileset_program),
+                    _ => debug!("Bad select fileset: {:?}", self.select_fileset_program),
+                }
             },
             Msg::SelectFileset(fileset_uuid) => self.select_fileset_program = fileset_uuid,
             Msg::SelectModification(modification_uuid) => {
-                self.current_filesets_program = self.modification_filesets.get(&modification_uuid)
-                    .map(|f| f.clone()).unwrap_or_default();
-                self.select_component_modification = modification_uuid;
-                self.select_fileset_program = self.current_filesets_program.first()
-                    .map(|(_mod_uuid, fileset_uuid)| fileset_uuid.clone()).unwrap_or_default();
+                match self.select_component_modification == modification_uuid {
+                    true => link.send_message(Msg::ShowModificationCard),
+                    false => {
+                        self.current_filesets_program = self.modification_filesets.get(&modification_uuid)
+                            .map(|f| f.clone()).unwrap_or_default();
+                        self.select_component_modification = modification_uuid;
+                        self.select_fileset_program = self.current_filesets_program.first()
+                            .map(|(_mod_uuid, fileset_uuid)| fileset_uuid.clone()).unwrap_or_default();
+                    },
+                }
             },
             Msg::Follow => {
                 let component_uuid_string = self.component.as_ref().unwrap().uuid.to_string();
@@ -295,7 +307,8 @@ impl Component for ShowComponent {
                         // length check for show btn more/less
                         self.show_full_description = component_data.description.len() < 250;
                         self.show_full_characteristic = component_data.component_params.len() < 4;
-                        self.select_component_modification = component_data.component_modifications.first().map(|m| m.uuid.clone()).unwrap_or_default();
+                        self.select_component_modification = component_data.component_modifications.first()
+                            .map(|m| m.uuid.clone()).unwrap_or_default();
                         self.select_fileset_program = component_data.component_modifications.first().map(|m|
                             m.filesets_for_program.first().map(|f| f.uuid.clone()).unwrap_or_default()
                         ).unwrap_or_default();
@@ -323,6 +336,7 @@ impl Component for ShowComponent {
             Msg::ShowStandardsList => self.show_related_standards = !self.show_related_standards,
             Msg::ShowOwnerUserCard => self.open_owner_user_info = !self.open_owner_user_info,
             Msg::ShowStandardCard => self.open_standard_info = !self.open_standard_info,
+            Msg::ShowModificationCard => self.open_modification_card = !self.open_modification_card,
             Msg::OpenComponentSetting => {
                 // if let Some(component_data) = &self.component {
                 //     // Redirect to page for change and update component
@@ -350,6 +364,10 @@ impl Component for ShowComponent {
                         <div class="row">
                             // modals cards
                             {self.show_modal_owner_user(component_data)}
+                            {match self.open_modification_card {
+                                true => self.show_modal_modification_card(component_data),
+                                false => html!{},
+                            }}
 
                             <div class="card">
                               {self.show_main_card(component_data)}
@@ -703,6 +721,60 @@ impl ShowComponent {
           </div>
           <button class="modal-close is-large" aria-label="close" onclick=onclick_owner_user_info />
         </div>}
+    }
+
+    fn show_modal_modification_card(
+        &self,
+        component_data: &ComponentInfo,
+    ) -> Html {
+        let onclick_modification_card = self.link
+            .callback(|_| Msg::ShowModificationCard);
+
+        let class_modal = match &self.open_modification_card {
+            true => "modal is-active",
+            false => "modal",
+        };
+
+        let modification_data: Option<&ComponentModificationInfo> = component_data.component_modifications.iter()
+            .find(|x| x.uuid == self.select_component_modification);
+
+        match modification_data {
+            Some(mod_data) => html!{<div class=class_modal>
+              <div class="modal-background" onclick=onclick_modification_card.clone() />
+              <div class="modal-content">
+                  <div class="card">
+                    <div class="box itemBox">
+                      <article class="media center-media">
+                          <div class="media-content">
+                            <div class="columns" style="margin-bottom:0">
+                                <div class="column">
+                                    <p class="overflow-title">{"Modification name"}</p>
+                                    <div class="overflow-title has-text-weight-bold">
+                                        {mod_data.modification_name.clone()}
+                                    </div>
+                                    <p class="overflow-title">{"Description"}</p>
+                                    <p class="overflow-title">
+                                        {mod_data.description.clone()}
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="columns" style="margin-bottom:0">
+                                <div class="column">
+                                  {format!("Actual status: {:?}", &mod_data.actual_status.name)}
+                                </div>
+                                <div class="column">
+                                  {format!("Updated at: {:.*}", 10, mod_data.updated_at.to_string())}
+                                </div>
+                            </div>
+                          </div>
+                      </article>
+                    </div>
+                  </div>
+              </div>
+              <button class="modal-close is-large" aria-label="close" onclick=onclick_modification_card />
+            </div>},
+            None => html!{},
+        }
     }
 
     fn show_download_block(&self) -> Html {
