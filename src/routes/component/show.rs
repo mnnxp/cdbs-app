@@ -1,4 +1,6 @@
+use std::collections::HashMap;
 use chrono::NaiveDateTime;
+use yew::prelude::*;
 use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
 use yew_router::{
     service::RouteService,
@@ -13,7 +15,7 @@ use wasm_bindgen_futures::spawn_local;
 // use crate::routes::AppRoute;
 use crate::error::{get_error, Error};
 use crate::fragments::{
-    // switch_icon::res_btn,
+    switch_icon::res_btn,
     list_errors::ListErrors,
     catalog_user::ListItemUser,
     component::{ComponentStandardItem, ComponentCompanyItem},
@@ -80,6 +82,10 @@ pub struct ShowComponent {
     link: ComponentLink<Self>,
     subscribers: usize,
     is_followed: bool,
+    select_component_modification: UUID,
+    modification_filesets: HashMap<UUID, Vec<(UUID, String)>>,
+    select_fileset_program: UUID,
+    current_filesets_program: Vec<(UUID, String)>,
     show_full_description: bool,
     show_full_characteristic: bool,
     open_owner_user_info: bool,
@@ -96,6 +102,8 @@ pub struct Props {
 #[derive(Clone)]
 pub enum Msg {
     RequestDownloadFiles,
+    SelectFileset(UUID),
+    SelectModification(UUID),
     Follow,
     AddFollow(String),
     UnFollow,
@@ -128,6 +136,10 @@ impl Component for ShowComponent {
             link,
             subscribers: 0,
             is_followed: false,
+            select_component_modification: String::new(),
+            modification_filesets: HashMap::new(),
+            select_fileset_program: String::new(),
+            current_filesets_program: Vec::new(),
             show_full_description: false,
             show_full_characteristic: false,
             open_owner_user_info: false,
@@ -158,6 +170,10 @@ impl Component for ShowComponent {
             // update current_component_uuid for checking change component in route
             self.current_component_uuid = target_component_uuid.to_string();
             self.current_user_owner = false;
+            self.select_component_modification = String::new();
+            self.modification_filesets = HashMap::new();
+            self.select_fileset_program = String::new();
+            self.current_filesets_program = Vec::new();
 
             spawn_local(async move {
                 let res = make_query(GetComponentData::build_query(get_component_data::Variables {
@@ -174,20 +190,17 @@ impl Component for ShowComponent {
 
         match msg {
             Msg::RequestDownloadFiles => {
-                // let component_uuid = self.props.component_uuid.clone();
-                // spawn_local(async move {
-                //     let ipt_component_files_arg = component_files::IptComponentFilesArg{
-                //         filesUuids: None,
-                //         componentUuid: component_uuid,
-                //     };
-                //     let res = make_query(ComponentFiles::build_query(
-                //         component_files::Variables {
-                //             ipt_component_files_arg,
-                //         }
-                //     )).await;
-                //     link.send_message(Msg::GetDownloadFilesResult(res.unwrap()));
-                // })
-            }
+                debug!("Select modification: {:?}", self.select_component_modification);
+                debug!("Select fileset: {:?}", self.select_fileset_program);
+            },
+            Msg::SelectFileset(fileset_uuid) => self.select_fileset_program = fileset_uuid,
+            Msg::SelectModification(modification_uuid) => {
+                self.current_filesets_program = self.modification_filesets.get(&modification_uuid)
+                    .map(|f| f.clone()).unwrap_or_default();
+                self.select_component_modification = modification_uuid;
+                self.select_fileset_program = self.current_filesets_program.first()
+                    .map(|(_mod_uuid, fileset_uuid)| fileset_uuid.clone()).unwrap_or_default();
+            },
             Msg::Follow => {
                 let component_uuid_string = self.component.as_ref().unwrap().uuid.to_string();
 
@@ -198,7 +211,7 @@ impl Component for ShowComponent {
 
                     link.send_message(Msg::AddFollow(res.clone()));
                 })
-            }
+            },
             Msg::AddFollow(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
@@ -216,7 +229,7 @@ impl Component for ShowComponent {
                     }
                     true => self.error = Some(get_error(&data)),
                 }
-            }
+            },
             Msg::UnFollow => {
                 let component_uuid = self.component.as_ref().unwrap().uuid.to_string();
 
@@ -229,7 +242,7 @@ impl Component for ShowComponent {
 
                     link.send_message(Msg::DelFollow(res.clone()));
                 })
-            }
+            },
             Msg::DelFollow(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
@@ -247,10 +260,8 @@ impl Component for ShowComponent {
                     }
                     true => self.error = Some(get_error(&data)),
                 }
-            }
-            Msg::ResponseError(err) => {
-                self.error = Some(err);
-            }
+            },
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetDownloadFilesResult(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res = data.as_object().unwrap().get("data").unwrap();
@@ -264,7 +275,7 @@ impl Component for ShowComponent {
                         link.send_message(Msg::ResponseError(get_error(&data)));
                     },
                 }
-            }
+            },
             Msg::GetComponentData(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
@@ -284,11 +295,29 @@ impl Component for ShowComponent {
                         // length check for show btn more/less
                         self.show_full_description = component_data.description.len() < 250;
                         self.show_full_characteristic = component_data.component_params.len() < 4;
+                        self.select_component_modification = component_data.component_modifications.first().map(|m| m.uuid.clone()).unwrap_or_default();
+                        self.select_fileset_program = component_data.component_modifications.first().map(|m|
+                            m.filesets_for_program.first().map(|f| f.uuid.clone()).unwrap_or_default()
+                        ).unwrap_or_default();
+                        for component_modification in &component_data.component_modifications {
+                            let mut fileset_data: Vec<(UUID, String)> = Vec::new();
+                            for fileset in &component_modification.filesets_for_program {
+                                fileset_data.push((fileset.uuid.clone(), fileset.program.name.clone()));
+                            }
+                            self.modification_filesets.insert(
+                                component_modification.uuid.clone(),
+                                fileset_data.clone()
+                            );
+                        }
+                        self.current_filesets_program = self.modification_filesets
+                            .get(&self.select_component_modification)
+                            .map(|f| f.clone()).unwrap_or_default();
+
                         self.component = Some(component_data);
                     }
                     true => self.error = Some(get_error(&data)),
                 }
-            }
+            },
             Msg::ShowDescription => self.show_full_description = !self.show_full_description,
             Msg::ShowCharacteristic => self.show_full_characteristic = !self.show_full_characteristic,
             Msg::ShowStandardsList => self.show_related_standards = !self.show_related_standards,
@@ -301,8 +330,8 @@ impl Component for ShowComponent {
                 //         component_data.uuid.clone()
                 //     ).into()));
                 // }
-            }
-            Msg::Ignore => {}
+            },
+            Msg::Ignore => {},
         }
         true
     }
@@ -380,11 +409,10 @@ impl ShowComponent {
                     component_data.name.clone()
                 }</div>
                 <div class="buttons flexBox">
-                    // {self.show_related_standards_btn()}
-                    // {self.show_download_btn()}
-                    // {self.show_setting_btn()}
-                    // {self.show_followers_btn()}
-                    // {self.show_share_btn()}
+                    {self.show_download_block()}
+                    {self.show_setting_btn()}
+                    {self.show_followers_btn()}
+                    {self.show_share_btn()}
                 </div>
                 <div class="component-description">{
                     match self.show_full_description {
@@ -420,12 +448,16 @@ impl ShowComponent {
         &self,
         component_data: &ComponentInfo,
     ) -> Html {
+        let onclick_select_modification = self.link
+            .callback(|value: UUID| Msg::SelectModification(value));
+
         html!{<>
             <h2>{"Modification"}</h2>
             <ModificationsTable
                 show_manage_btn = false
                 modifications = component_data.component_modifications.clone()
-                delete_modification = None
+                select_modification = self.select_component_modification.clone()
+                callback_select_modification = onclick_select_modification.clone()
               />
         </>}
     }
@@ -671,5 +703,90 @@ impl ShowComponent {
           </div>
           <button class="modal-close is-large" aria-label="close" onclick=onclick_owner_user_info />
         </div>}
+    }
+
+    fn show_download_block(&self) -> Html {
+        let onchange_select_fileset_btn = self.link
+            .callback(|ev: ChangeData| Msg::SelectFileset(match ev {
+              ChangeData::Select(el) => el.value(),
+              _ => "".to_string(),
+          }));
+        let onclick_download_fileset_btn = self.link
+            .callback(|_| Msg::RequestDownloadFiles);
+
+        html!{<div style="margin-right: .5rem">
+            <div class="select" style="margin-right: .5rem">
+              <select
+                  id="region_id"
+                  select={self.select_fileset_program.clone()}
+                  onchange=onchange_select_fileset_btn
+                >
+                  {for self.current_filesets_program.iter().map(|(fileset_uuid, program_name)|
+                      match &self.select_fileset_program == fileset_uuid {
+                        true => html!{<option value={fileset_uuid.clone()} selected=true>{program_name}</option>},
+                        false => html!{<option value={fileset_uuid.clone()}>{program_name}</option>},
+                      }
+                  )}
+                  // <option>{"CADWolf"}</option>
+                  // <option>{"AutoCAD"}</option>
+              </select>
+            </div>
+            <button class="button is-info"
+                onclick=onclick_download_fileset_btn >
+              <span class="has-text-weight-bold">{"Download"}</span>
+            </button>
+        </div>}
+    }
+
+    fn show_setting_btn(&self) -> Html {
+        let onclick_setting_standard_btn = self.link
+            .callback(|_| Msg::OpenComponentSetting);
+
+        match &self.current_user_owner {
+            true => {res_btn(classes!(String::from("fa fa-cog")),
+                onclick_setting_standard_btn,
+                String::new())},
+            false => html!{},
+        }
+    }
+
+    fn show_followers_btn(&self) -> Html {
+        let class_fav = match self.is_followed {
+            true => "fas fa-bookmark",
+            false => "far fa-bookmark",
+        };
+
+        let onclick_following = match self.is_followed {
+            true => self.link.callback(|_| Msg::UnFollow),
+            false => self.link.callback(|_| Msg::Follow),
+        };
+
+        html! {<>
+            <div class="media-right flexBox" >
+              <button
+                  id="following-button"
+                  class="button"
+                  onclick=onclick_following >
+                <span class="icon is-small">
+                  <i class={class_fav}></i>
+                </span>
+              </button>
+            </div>
+            { format!(" {}", &self.subscribers) }
+        </>}
+    }
+
+    fn show_share_btn(&self) -> Html {
+        html! {
+            <div class="media-right flexBox" >
+              <button
+                  id="share-button"
+                  class="button" >
+                <span class="icon is-small">
+                  <i class="far fa-share"></i>
+                </span>
+              </button>
+            </div>
+        }
     }
 }

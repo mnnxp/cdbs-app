@@ -13,7 +13,8 @@ use crate::types::{UUID, ComponentModificationInfo, Param};
 pub struct Props {
     pub show_manage_btn: bool,
     pub modifications: Vec<ComponentModificationInfo>,
-    pub delete_modification: Option<Callback<UUID>>,
+    pub select_modification: UUID,
+    pub callback_select_modification: Option<Callback<UUID>>,
 }
 
 pub struct ModificationsTable {
@@ -21,7 +22,7 @@ pub struct ModificationsTable {
     link: ComponentLink<Self>,
     component_uuid: UUID,
     collect_heads: Vec<Param>,
-    collect_items: Vec<HashMap<usize, String>>,
+    collect_items: Vec<(UUID, HashMap<usize, String>)>,
     collect_columns: HashMap<usize, String>,
 }
 
@@ -80,8 +81,7 @@ impl Component for ModificationsTable {
 
                     self.collect_columns.clear();
                     self.collect_columns.insert(
-                        0, // for test
-                        modification.modification_name.clone(),
+                        0, modification.modification_name.clone(),
                     );
                     for modification_param in &modification.modification_params {
                         let mut flag = true;
@@ -104,7 +104,10 @@ impl Component for ModificationsTable {
                         debug!("collect_heads: {:?}", collect_heads);
                     }
                     debug!("collect_columns: {:?}", self.collect_columns);
-                    self.collect_items.push(self.collect_columns.clone());
+                    self.collect_items.push((
+                        modification.uuid.clone(),
+                        self.collect_columns.clone()
+                    ));
                 }
                 debug!("collect_items: {:?}", self.collect_items);
                 self.collect_heads = collect_heads;
@@ -115,6 +118,7 @@ impl Component for ModificationsTable {
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
         if self.props.show_manage_btn == props.show_manage_btn &&
+              self.props.select_modification == props.select_modification &&
                 self.props.modifications.len() == props.modifications.len() {
             false
         } else {
@@ -132,11 +136,13 @@ impl Component for ModificationsTable {
                   params = self.collect_heads.clone()
                 />
 
-                {for self.collect_items.iter().map(|item| {
+                {for self.collect_items.iter().map(|(modification_uuid, item)| {
                   html! {<ModificationTableItem
-                      component_uuid = self.component_uuid.clone()
+                      modification_uuid = modification_uuid.clone()
                       collect_heads = self.collect_heads.clone()
                       collect_item = item.clone()
+                      select_item = &self.props.select_modification == modification_uuid
+                      callback_select_modification = self.props.callback_select_modification.clone()
                       />}
                  })}
               </table>
