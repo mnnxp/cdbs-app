@@ -81,7 +81,17 @@ impl ModificationTableItem {
         html!{<tr class={class_style}>
             {match self.props.collect_item.get(&0) {
                 Some(value) => html!{<td>
-                    <a onclick={onclick_select_modification}>{value.clone()}</a>
+                    <a onclick={onclick_select_modification}>
+                        {match &self.props.select_item {
+                            true => html!{<>
+                                <span>{"click for "}</span>
+                                <span class="icon">
+                                  <i class="fab fa-info"></i>
+                                </span>
+                            </>},
+                            false => html!{value.clone()},
+                        }}
+                    </a>
                 </td>},
                 None => html!{<td></td>},
             }}
