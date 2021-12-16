@@ -20,7 +20,7 @@ use crate::fragments::{
     catalog_user::ListItemUser,
     component::{ComponentStandardItem, ComponentCompanyItem},
     component_file::FilesCard,
-    component_modification::ModificationsTable,
+    component_modification::{ModificationsTable, FilesOfFilesetCard},
     component_spec::SpecsTags,
     component_keyword::KeywordsTags,
 };
@@ -31,14 +31,6 @@ use crate::types::{
     DownloadFile, ComponentModificationInfo,
 };
 
-// #[derive(GraphQLQuery)]
-// #[graphql(
-//     schema_path = "./graphql/schema.graphql",
-//     query_path = "./graphql/components.graphql",
-//     response_derives = "Debug"
-// )]
-// struct GetComponentDataOpt;
-
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "./graphql/schema.graphql",
@@ -46,14 +38,6 @@ use crate::types::{
     response_derives = "Debug"
 )]
 struct GetComponentData;
-
-// #[derive(GraphQLQuery)]
-// #[graphql(
-//     schema_path = "./graphql/schema.graphql",
-//     query_path = "./graphql/components.graphql",
-//     response_derives = "Debug"
-// )]
-// struct ComponentFiles;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -91,6 +75,7 @@ pub struct ShowComponent {
     show_full_characteristic: bool,
     open_owner_user_info: bool,
     open_modification_card: bool,
+    open_fileset_files_card: bool,
     open_standard_info: bool,
     show_related_standards: bool,
 }
@@ -119,6 +104,7 @@ pub enum Msg {
     ShowOwnerUserCard,
     ShowStandardCard,
     ShowModificationCard,
+    ShowFilesetFilesList,
     OpenComponentSetting,
     Ignore,
 }
@@ -147,6 +133,7 @@ impl Component for ShowComponent {
             show_full_characteristic: false,
             open_owner_user_info: false,
             open_modification_card: false,
+            open_fileset_files_card: false,
             open_standard_info: false,
             show_related_standards: false,
         }
@@ -209,7 +196,11 @@ impl Component for ShowComponent {
                             .map(|f| f.clone()).unwrap_or_default();
                         self.select_component_modification = modification_uuid;
                         self.select_fileset_program = self.current_filesets_program.first()
-                            .map(|(_mod_uuid, fileset_uuid)| fileset_uuid.clone()).unwrap_or_default();
+                            .map(|(fileset_uuid, program_name)| {
+                                debug!("mod fileset_uuid: {:?}", fileset_uuid);
+                                debug!("mod program_name: {:?}", program_name);
+                                fileset_uuid.clone()
+                            }).unwrap_or_default();
                     },
                 }
             },
@@ -337,6 +328,7 @@ impl Component for ShowComponent {
             Msg::ShowOwnerUserCard => self.open_owner_user_info = !self.open_owner_user_info,
             Msg::ShowStandardCard => self.open_standard_info = !self.open_standard_info,
             Msg::ShowModificationCard => self.open_modification_card = !self.open_modification_card,
+            Msg::ShowFilesetFilesList => self.open_fileset_files_card = !self.open_fileset_files_card,
             Msg::OpenComponentSetting => {
                 // if let Some(component_data) = &self.component {
                 //     // Redirect to page for change and update component
@@ -372,6 +364,8 @@ impl Component for ShowComponent {
                             <div class="card">
                               {self.show_main_card(component_data)}
                             </div>
+                            <br/>
+                            {self.show_fileset_files_card()}
                             <br/>
                             {self.show_modifications_table(component_data)}
                             <br/>
@@ -760,7 +754,7 @@ impl ShowComponent {
                             </div>
                             <div class="columns" style="margin-bottom:0">
                                 <div class="column">
-                                  {format!("Actual status: {:?}", &mod_data.actual_status.name)}
+                                  {format!("Actual status: {}", &mod_data.actual_status.name)}
                                 </div>
                                 <div class="column">
                                   {format!("Updated at: {:.*}", 10, mod_data.updated_at.to_string())}
@@ -777,37 +771,63 @@ impl ShowComponent {
         }
     }
 
+    fn show_fileset_files_card(&self) -> Html {
+        match (self.select_fileset_program.len(), &self.open_fileset_files_card) {
+            (36, true) => html!{<>
+                <h2>{"Files of select fileset"}</h2>
+                <FilesOfFilesetCard
+                    show_manage_btn = false
+                    fileset_uuid = self.select_fileset_program.clone()
+                />
+            </>},
+            _ => html!{},
+        }
+    }
+
     fn show_download_block(&self) -> Html {
         let onchange_select_fileset_btn = self.link
             .callback(|ev: ChangeData| Msg::SelectFileset(match ev {
               ChangeData::Select(el) => el.value(),
               _ => "".to_string(),
           }));
+        let onclick_open_fileset_files_list_btn = self.link
+            .callback(|_| Msg::ShowFilesetFilesList);
         let onclick_download_fileset_btn = self.link
             .callback(|_| Msg::RequestDownloadFiles);
 
-        html!{<div style="margin-right: .5rem">
-            <div class="select" style="margin-right: .5rem">
-              <select
-                  id="region_id"
-                  select={self.select_fileset_program.clone()}
-                  onchange=onchange_select_fileset_btn
-                >
-                  {for self.current_filesets_program.iter().map(|(fileset_uuid, program_name)|
-                      match &self.select_fileset_program == fileset_uuid {
-                        true => html!{<option value={fileset_uuid.clone()} selected=true>{program_name}</option>},
-                        false => html!{<option value={fileset_uuid.clone()}>{program_name}</option>},
-                      }
-                  )}
-                  // <option>{"CADWolf"}</option>
-                  // <option>{"AutoCAD"}</option>
-              </select>
-            </div>
-            <button class="button is-info"
-                onclick=onclick_download_fileset_btn >
-              <span class="has-text-weight-bold">{"Download"}</span>
-            </button>
-        </div>}
+        let class_btn = match self.open_fileset_files_card {
+            true => "button is-light is-active",
+            false => "button",
+        };
+
+        match self.select_fileset_program.len() {
+            36 => html!{<div style="margin-right: .5rem">
+                <div class="select" style="margin-right: .5rem">
+                  <select
+                        id="region_id"
+                        select={self.select_fileset_program.clone()}
+                        onchange=onchange_select_fileset_btn >
+                      {for self.current_filesets_program.iter().map(|(fileset_uuid, program_name)|
+                          match &self.select_fileset_program == fileset_uuid {
+                            true => html!{<option value={fileset_uuid.clone()} selected=true>{program_name}</option>},
+                            false => html!{<option value={fileset_uuid.clone()}>{program_name}</option>},
+                          }
+                      )}
+                      // <option>{"CADWolf"}</option>
+                      // <option>{"AutoCAD"}</option>
+                  </select>
+                </div>
+                <button class={class_btn}
+                    onclick = onclick_open_fileset_files_list_btn >
+                    <span class="icon is-small"><i class="fa fa-list"></i></span>
+                </button>
+                <button class="button is-info"
+                    onclick=onclick_download_fileset_btn >
+                  <span class="has-text-weight-bold">{"Download"}</span>
+                </button>
+            </div>},
+            _ => html!{},
+        }
     }
 
     fn show_setting_btn(&self) -> Html {

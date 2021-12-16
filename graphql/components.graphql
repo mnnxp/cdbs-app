@@ -69,6 +69,18 @@ mutation DeleteComponentSpecs($iptComponentSpecsData: IptComponentSpecsData!){
   deleteComponentSpecs(data: $iptComponentSpecsData)
 }
 
+query ComModFilesOfFileset($iptFileOfFilesetArg: IptFileOfFilesetArg!) {
+  componentModificationFilesOfFileset(arg: $iptFileOfFilesetArg){
+    ...showFileRelatedDataFields
+  }
+}
+
+query ComModFilesetFiles($iptFileOfFilesetArg: IptFileOfFilesetArg!) {
+  componentModificationFilesetFiles(arg: $iptFileOfFilesetArg){
+    ...downloadFileFields
+  }
+}
+
 fragment componentSuppliers on ComponentSupplierRelatedData {
   supplier {
     ...supplierFields

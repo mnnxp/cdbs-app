@@ -297,17 +297,6 @@ type Extension {
   programId: Int!
 }
 
-type FileOfFileset {
-  filesetUuid: UUID!
-  file: ShowFileRelatedData!
-}
-
-type FilesetProgram {
-  uuid: ID!
-  modificationUuid: ID!
-  programId: Int!
-}
-
 type FilesetProgramRelatedData {
   uuid: UUID!
   modificationUuid: UUID!
@@ -461,6 +450,20 @@ input IptComponentsArg {
 input IptExtensionData {
   extension: String!
   programId: Int!
+}
+
+input IptFileOfFilesetArg {
+  filesetUuid: UUID!
+  fileUuids: [UUID!]
+  limit: Int
+  offset: Int
+}
+
+input IptFilesetProgramArg {
+  modificationUuid: UUID!
+  programIds: [Int!]
+  limit: Int
+  offset: Int
 }
 
 input IptFilesetProgramData {
@@ -828,7 +831,7 @@ type MutationRoot {
   deleteModificationParams(data: DelModificationParamData!): Int!
   uploadModificationFiles(data: IptModificationFileData!): [UploadFile!]!
   deleteModificationFile(arg: DelModificationFileData!): Boolean!
-  registerModificationFileset(data: IptFilesetProgramData!): FilesetProgram!
+  registerModificationFileset(arg: IptFilesetProgramData!): UUID!
   deleteModificationFileset(data: DelFilesetProgramData!): Boolean!
   uploadFilesToFileset(
     data: IptModificationFileFromFilesetData!
@@ -957,17 +960,12 @@ type QueryRoot {
   componentSpecs(arg: IptComponentSpecsArg!): [SpecTranslateList!]!
   componentModificationFiles(modificationUuid: UUID!): [DownloadFile!]!
   componentModificationFilesets(
-    modificationUuid: UUID!
-    programId: [Int!]
-    limit: Int
-    offset: Int
+    arg: IptFilesetProgramArg!
   ): [FilesetProgramRelatedData!]!
   componentModificationFilesOfFileset(
-    filesetUuid: UUID!
-    fileUuids: [UUID!]
-    limit: Int
-    offset: Int
-  ): [FileOfFileset!]!
+    arg: IptFileOfFilesetArg!
+  ): [ShowFileRelatedData!]!
+  componentModificationFilesetFiles(arg: IptFileOfFilesetArg!): [DownloadFile!]!
   standards(arguments: IptStandardsArg): [ShowStandardShort!]!
   standard(standardUuid: UUID!): StandardAndRelatedData!
   standardFiles(arg: IptStandardFilesArg!): [DownloadFile!]!
