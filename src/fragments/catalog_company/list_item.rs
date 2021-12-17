@@ -189,9 +189,7 @@ impl ListItemCompany {
                 class_res_btn.push("fas");
                 class_color_btn = "color: #3298DD;";
             },
-            false => {
-                class_res_btn.push("far");
-            },
+            false => class_res_btn.push("far"),
         }
 
         html! {
@@ -217,8 +215,8 @@ impl ListItemCompany {
                             )}</div>
                             <p class="overflow-title">
                                 {match &description.len() {
-                                    0..=25 => description.clone(),
-                                    _ => format!("{:.*}...", 25, description),
+                                    0..=50 => description.clone(),
+                                    _ => format!("{:.*}...", 50, description),
                                 }}
                             </p>
                         </div>
