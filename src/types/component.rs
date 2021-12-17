@@ -1,8 +1,8 @@
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use super::{
-    UUID, SlimCompany, TypeAccessInfo, ShowStandardShort, ShowFileInfo,
-    ShowUserShort, LicenseInfo, Spec, Keyword, Program
+    UUID, SlimCompany, TypeAccessInfo, ShowStandardShort, ShowUserShort,
+    ShowFileInfo, DownloadFile, LicenseInfo, Spec, Keyword, Program
 };
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -33,14 +33,19 @@ pub struct ComponentInfo {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct ShowComponentShort {
-  pub uuid : UUID,
-  pub name: String,
-  pub description: String,
-  pub type_access: TypeAccessInfo,
-  pub is_followed: bool,
-  pub is_base: bool,
-  pub updated_at: NaiveDateTime,
-  pub component_suppliers: Vec<Supplier>
+    pub uuid: UUID,
+    pub name: String,
+    pub description: String,
+    pub owner_user: ShowUserShort,
+    pub type_access: TypeAccessInfo,
+    pub component_type: ComponentType,
+    pub actual_status: ActualStatus,
+    pub is_followed: bool,
+    pub is_base: bool,
+    pub updated_at: NaiveDateTime,
+    pub licenses: Vec<LicenseInfo>,
+    pub files: Vec<DownloadFile>, // images
+    pub component_suppliers: Vec<Supplier>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

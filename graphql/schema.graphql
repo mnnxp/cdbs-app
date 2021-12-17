@@ -1055,7 +1055,7 @@ type ShowComponentShort {
   isBase: Boolean!
   updatedAt: NaiveDateTime!
   licenses: [License!]!
-  files: [ShowFileRelatedData!]!
+  files: [DownloadFile!]!
   componentSuppliers: [ComponentSupplierRelatedData!]!
 }
 

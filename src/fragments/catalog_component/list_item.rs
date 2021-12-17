@@ -81,10 +81,19 @@ impl Component for ListItem {
 impl ListItem {
     fn showing_in_list(&self) -> Html {
         let ShowComponentShort {
-            description,
-            is_base,
-            is_followed,
+            // uuid,
             name,
+            description,
+            owner_user,
+            // type_access,
+            // component_type,
+            actual_status,
+            is_followed,
+            is_base,
+            updated_at,
+            licenses,
+            // files,
+            component_suppliers,
             ..
         } = &self.props.data;
 
@@ -109,30 +118,76 @@ impl ListItem {
               <div class="media-left">
                 <figure class="image is-96x96">
                   <div hidden={!is_base} class="top-tag" >{"standard"}</div>
+                  // {match files.first() {
+                  //     Some(f) => html!{<img src={f.download_url.clone()} alt="Image" />},
+                  //     None => html!{<img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />},
+                  // }}
                   <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
                 </figure>
               </div>
-              <div class="media-content" style="min-width: 0px;">
-                <div class="content">
-                  <p>
-                    <div style="margin-bottom:0" >
-                      {"manufactured by "} <span class="id-box has-text-grey-light has-text-weight-bold">{"Alphametall"}</span>
+              <div class="media-content">
+                <div class="columns is-gapless" style="margin-bottom:0">
+                    <div class="column">
+                        {match component_suppliers.first() {
+                            Some(x) => html!{<>
+                                {"supplier "}
+                                <span class="id-box has-text-grey-light has-text-weight-bold">
+                                  {x.supplier.shortname.clone()}
+                                </span>
+                            </>},
+                            None => html!{<>
+                                {"uploaded from "}
+                                <span class="id-box has-text-grey-light has-text-weight-bold">
+                                  {format!("@{}",&owner_user.username)}
+                                </span>
+                            </>},
+                        }}
                     </div>
-                    <div class="overflow-title has-text-weight-bold	is-size-4" >{name}</div>
-                    <div>{description}</div>
-                  </p>
+                    <div class="column">
+                        {"actual status "}<span class="id-box has-text-grey-light has-text-weight-bold">{
+                            actual_status.name.clone()
+                        }</span>
+                    </div>
+                  </div>
+                  <div class="columns" style="margin-bottom:0">
+                      <div class="column">
+                          <div class="overflow-title has-text-weight-bold is-size-4">{name}</div>
+                          <div class="overflow-title">
+                            {match &description.len() {
+                                0..=50 => description.clone(),
+                                _ => format!("{:.*}...", 50, description),
+                            }}
+                          </div>
+                      </div>
+                      <div class="column is-one-quarter flexBox" >
+                          {res_btn(classes!(String::from("fas fa-cloud-download-alt")),
+                              onclick_open_component,
+                              "".to_string())}
+                          {res_btn(
+                              classes!(class_res_btn),
+                              trigger_fab_btn,
+                              class_color_btn.to_string()
+                          )}
+                      </div>
+                  </div>
+                  <div class="columns" style="margin-bottom:0">
+                      <div class="column">
+                        // {format!("Component type: {}", component_type.component_type.to_string())}
+                        {match licenses.first() {
+                            Some(l) => html!{format!("License: {}", &l.name)},
+                            None => html!{},
+                        }}
+                        // <div class="tags">
+                        //   {for licenses.iter().map(|x| html!{
+                        //       <span class="tag is-info is-light">{x.name.clone()}</span>
+                        //   })}
+                        // </div>
+                      </div>
+                      <div class="column">
+                        {format!("Updated at: {:.*}", 10, updated_at.to_string())}
+                      </div>
+                  </div>
                 </div>
-              </div>
-              <div class="media-right flexBox " >
-                {res_btn(classes!(String::from("fas fa-cloud-download-alt")),
-                    onclick_open_component,
-                    "".to_string())}
-                {res_btn(
-                    classes!(class_res_btn),
-                    trigger_fab_btn,
-                    class_color_btn.to_string()
-                )}
-              </div>
             </article>
           </div>
         }
@@ -179,11 +234,11 @@ impl ListItem {
                     {"Open"}
                   </button>
                   <div style="margin-left: 8px;">
-                  {res_btn(
-                      classes!(class_res_btn),
-                      trigger_fab_btn,
-                      class_color_btn.to_string()
-                  )}
+                      {res_btn(
+                          classes!(class_res_btn),
+                          trigger_fab_btn,
+                          class_color_btn.to_string()
+                      )}
                   </div>
                 </div>
             </div>
