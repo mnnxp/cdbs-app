@@ -55,6 +55,14 @@ struct AddComponentFav;
 )]
 struct DeleteComponentFav;
 
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/components.graphql",
+    response_derives = "Debug"
+)]
+struct ComModFilesetFiles;
+
 /// Component with relate data
 pub struct ShowComponent {
     error: Option<Error>,
@@ -183,7 +191,22 @@ impl Component for ShowComponent {
             Msg::RequestDownloadFiles => {
                 debug!("Select modification: {:?}", self.select_component_modification);
                 match self.select_fileset_program.len() {
-                    36 => debug!("Select fileset: {:?}", self.select_fileset_program),
+                    36 => {
+                        debug!("Select fileset: {:?}", self.select_fileset_program);
+                        let ipt_file_of_fileset_arg = com_mod_fileset_files::IptFileOfFilesetArg{
+                            filesetUuid: self.select_fileset_program.clone(),
+                            fileUuids: None,
+                            limit: None,
+                            offset: None,
+                        };
+                        spawn_local(async move {
+                            let res = make_query(ComModFilesetFiles::build_query(com_mod_fileset_files::Variables {
+                                ipt_file_of_fileset_arg
+                            })).await.unwrap();
+
+                            link.send_message(Msg::GetDownloadFilesResult(res.clone()));
+                        })
+                    },
                     _ => debug!("Bad select fileset: {:?}", self.select_fileset_program),
                 }
             },
@@ -271,8 +294,8 @@ impl Component for ShowComponent {
 
                 match res.is_null() {
                     false => {
-                        let result: Vec<DownloadFile> = serde_json::from_value(res.get("componentFiles").unwrap().clone()).unwrap();
-                        debug!("componentFiles: {:?}", result);
+                        let result: Vec<DownloadFile> = serde_json::from_value(res.get("componentModificationFilesetFiles").unwrap().clone()).unwrap();
+                        debug!("componentModificationFilesetFiles: {:?}", result);
                     },
                     true => {
                         link.send_message(Msg::ResponseError(get_error(&data)));
@@ -805,7 +828,6 @@ impl ShowComponent {
                 <div class="select" style="margin-right: .5rem">
                   <select
                         id="region_id"
-                        select={self.select_fileset_program.clone()}
                         onchange=onchange_select_fileset_btn >
                       {for self.current_filesets_program.iter().map(|(fileset_uuid, program_name)|
                           match &self.select_fileset_program == fileset_uuid {

@@ -1,17 +1,12 @@
-// use yew::prelude::*;
 use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
-// use yew_router::service::RouteService;
-use log::debug;
+// use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 use chrono::NaiveDateTime;
 
 use crate::error::{get_error, Error};
-use crate::fragments::{
-    // switch_icon::res_btn,
-    list_errors::ListErrors,
-};
+use crate::fragments::list_errors::ListErrors;
 use crate::gqls::make_query;
 use crate::types::{UUID, ShowFileInfo};
 use super::fileset_item::FileOfFilesetItem;
@@ -93,7 +88,7 @@ impl Component for FilesOfFilesetCard {
                     false => {
                         let result: Vec<ShowFileInfo> = serde_json::from_value(
                             res.get("componentModificationFilesOfFileset").unwrap().clone()).unwrap();
-                        debug!("componentModificationFilesOfFileset: {:?}", result);
+                        // debug!("componentModificationFilesOfFileset: {:?}", result);
                         self.files_data = result;
                     },
                     true => link.send_message(Msg::ResponseError(get_error(&data))),
