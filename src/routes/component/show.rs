@@ -809,7 +809,7 @@ impl ShowComponent {
         let onchange_select_fileset_btn = self.link
             .callback(|ev: ChangeData| Msg::SelectFileset(match ev {
               ChangeData::Select(el) => el.value(),
-              _ => "".to_string(),
+              _ => String::new(),
           }));
         let onclick_open_fileset_files_list_btn = self.link
             .callback(|_| Msg::ShowFilesetFilesList);

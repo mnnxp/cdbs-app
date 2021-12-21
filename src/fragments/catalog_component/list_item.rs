@@ -50,9 +50,9 @@ impl Component for ListItem {
             },
             Msg::TriggerFav => {
                 if !self.props.data.is_followed {
-                    self.props.add_fav.emit("".to_string());
+                    self.props.add_fav.emit(String::new());
                 } else {
-                    self.props.del_fav.emit("".to_string());
+                    self.props.del_fav.emit(String::new());
                 }
             },
             Msg::Ignore => (),
@@ -160,9 +160,9 @@ impl ListItem {
                           </div>
                       </div>
                       <div class="column is-one-quarter flexBox" >
-                          {res_btn(classes!(String::from("fas fa-cloud-download-alt")),
+                          {res_btn(classes!(String::from("fas fa-file")),
                               onclick_open_component,
-                              "".to_string())}
+                              String::new())}
                           {res_btn(
                               classes!(class_res_btn),
                               trigger_fab_btn,

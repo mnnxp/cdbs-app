@@ -18,7 +18,7 @@ use crate::routes::AppRoute;
 use crate::services::is_authenticated;
 use crate::types::{
     UUID, SlimUser, CompanyCreateInfo, Region,
-    CompanyType, TypeAccessInfo, SlimCompany,
+    CompanyType, TypeAccessInfo,
 };
 
 #[derive(GraphQLQuery)]
@@ -145,20 +145,17 @@ impl Component for CreateCompany {
                     link.send_message(Msg::GetCreateCompanyResult(res.unwrap()));
                 })
             },
-            Msg::ResponseError(err) => {
-                self.error = Some(err);
-                // self.task = None;
-            },
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetCreateCompanyResult(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res = data.as_object().unwrap().get("data").unwrap();
 
                 match res.is_null() {
                     false => {
-                        let company_data: SlimCompany = serde_json::from_value(res.get("registerCompany").unwrap().clone()).unwrap();
-                        debug!("Company data: {:?}", company_data);
+                        let company_uuid: UUID = serde_json::from_value(res.get("registerCompany").unwrap().clone()).unwrap();
+                        debug!("Company uuid: {:?}", company_uuid);
                         self.router_agent.send(ChangeRoute(AppRoute::ShowCompany(
-                            company_data.uuid.clone()
+                            company_uuid.clone()
                         ).into()))
                     },
                     true => {

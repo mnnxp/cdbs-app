@@ -225,7 +225,7 @@ impl Component for AddCertificateCard {
                     false => {
                         let result: usize = serde_json::from_value(res_value.get("uploadCompleted").unwrap().clone()).unwrap();
                         self.get_result_up_completed = result;
-                        self.props.callback.emit("".to_string());
+                        self.props.callback.emit(String::new());
                     },
                     true => {
                         link.send_message(Msg::ResponseError(get_error(&data)));

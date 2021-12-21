@@ -87,7 +87,7 @@ impl ListItemUser {
                 {res_btn(
                     classes!(String::from("fas  fa-user-o")),
                     onclick_open_profile,
-                    "".to_string()
+                    String::new()
                 )}
             },
             false => html! {

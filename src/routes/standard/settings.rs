@@ -661,7 +661,7 @@ impl StandardSettings {
         let onchange_change_owner_company = self.link
             .callback(|ev: ChangeData| Msg::UpdateCompanyUuid(match ev {
               ChangeData::Select(el) => el.value(),
-              _ => "".to_string(),
+              _ => String::new(),
           }));
 
         let onchange_change_type_access = self.link
