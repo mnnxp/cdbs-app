@@ -14,10 +14,7 @@ use crate::gqls::make_query;
 use crate::fragments::list_errors::ListErrors;
 use crate::error::{Error, get_error};
 use crate::services::{PutUploadFile, UploadData};
-use crate::types::{
-    // UUID, Favicon,
-    UploadFile
-};
+use crate::types::{UUID, UploadFile};
 
 type FileName = String;
 // type Chunks = bool;
@@ -143,15 +140,15 @@ impl Component for UpdateFaviconCard {
             Msg::RequestUploadCompanyData => {
                 if let Some(file) = &self.file {
                     let company_uuid = self.props.company_uuid.as_ref().map(|u| u.clone()).unwrap();
-                    let filename_upload_favicon = file.name().to_string();
+                    let filename_upload_favicon = file.name().clone();
                     spawn_local(async move {
                         let res = make_query(UploadCompanyFavicon::build_query(
                             upload_company_favicon::Variables {
                                 company_uuid,
                                 filename_upload_favicon,
                             }
-                        )).await;
-                        link.send_message(Msg::GetUploadData(res.unwrap()));
+                        )).await.unwrap();
+                        link.send_message(Msg::GetUploadData(res));
                     })
                 }
             },

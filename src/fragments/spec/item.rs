@@ -61,13 +61,10 @@ impl Component for SpecTagItem {
                         companyUuid: company_uuid,
                         specIds: vec![spec_id],
                     };
-                    let res = make_query(DeleteCompanySpecs::build_query(
-                        delete_company_specs::Variables {
-                            ipt_company_spec_data,
-                        },
-                    ))
-                    .await;
-                    link.send_message(Msg::GetDeleteSpecResult(res.unwrap()));
+                    let res = make_query(DeleteCompanySpecs::build_query(delete_company_specs::Variables {
+                        ipt_company_spec_data,
+                    })).await.unwrap();
+                    link.send_message(Msg::GetDeleteSpecResult(res));
                 })
             }
             Msg::ResponseError(err) => {
@@ -79,15 +76,13 @@ impl Component for SpecTagItem {
 
                 match res.is_null() {
                     false => {
-                        let result: usize =
-                            serde_json::from_value(res.get("deleteCompanySpecs").unwrap().clone())
-                                .unwrap();
+                        let result: usize = serde_json::from_value(
+                            res.get("deleteCompanySpecs").unwrap().clone()
+                        ).unwrap();
                         debug!("deleteCompanySpecs: {:?}", result);
                         self.get_result_delete = result > 0;
                     }
-                    true => {
-                        link.send_message(Msg::ResponseError(get_error(&data)));
-                    }
+                    true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }
             }
         }

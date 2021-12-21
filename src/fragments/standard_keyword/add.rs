@@ -142,12 +142,10 @@ impl Component for AddKeywordsTags {
                         limit: None,
                         offset: None,
                     };
-                    let res = make_query(GetStandardKeywords::build_query(
-                        get_standard_keywords::Variables {
-                            ipt_standard_keywords_arg
-                        }
-                    )).await;
-                    link.send_message(Msg::GetStandardKeywordsResult(res.unwrap()));
+                    let res = make_query(GetStandardKeywords::build_query(get_standard_keywords::Variables {
+                        ipt_standard_keywords_arg
+                    })).await.unwrap();
+                    link.send_message(Msg::GetStandardKeywordsResult(res));
                 })
             },
             Msg::GetStandardKeywordsResult(res) => {
@@ -202,12 +200,10 @@ impl Component for AddKeywordsTags {
                             standardUuid: standard_uuid,
                             keywords,
                         };
-                        let res = make_query(AddStandardKeywordsByNames::build_query(
-                            add_standard_keywords_by_names::Variables {
-                                ipt_standard_keywords_names
-                            }
-                        )).await;
-                        link.send_message(Msg::GetAddKeywordsResult(res.unwrap()));
+                        let res = make_query(AddStandardKeywordsByNames::build_query(add_standard_keywords_by_names::Variables {
+                            ipt_standard_keywords_names
+                        })).await.unwrap();
+                        link.send_message(Msg::GetAddKeywordsResult(res));
                     })
                 }
             },

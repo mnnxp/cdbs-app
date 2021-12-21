@@ -94,19 +94,17 @@ impl Component for SpecTagItem {
             Msg::RequestSpecInfo => {
                 let spec_id = self.props.spec.spec_id as i64;
                 spawn_local(async move {
-                    let arg = get_specs_paths::IptSpecPathArg{
+                    let arguments = get_specs_paths::IptSpecPathArg{
                         specIds: Some(vec![spec_id]),
                         splitChar: None,
                         depthLevel: None,
                         limit: None,
                         offset: None,
                     };
-                    let res = make_query(GetSpecsPaths::build_query(
-                        get_specs_paths::Variables {
-                            ipt_spec_path_arg: Some(arg),
-                        }
-                    )).await;
-                    link.send_message(Msg::GetSpecInfoResult(res.unwrap()));
+                    let res = make_query(GetSpecsPaths::build_query(get_specs_paths::Variables {
+                        ipt_spec_path_arg: Some(arguments),
+                    })).await.unwrap();
+                    link.send_message(Msg::GetSpecInfoResult(res));
                 })
             },
             Msg::RequestDeleteSpec => {
@@ -117,12 +115,10 @@ impl Component for SpecTagItem {
                         componentUuid: component_uuid,
                         specIds: vec![spec_id],
                     };
-                    let res = make_query(DeleteComponentSpecs::build_query(
-                        delete_component_specs::Variables {
-                            ipt_component_specs_data,
-                        }
-                    )).await;
-                    link.send_message(Msg::GetDeleteSpecResult(res.unwrap()));
+                    let res = make_query(DeleteComponentSpecs::build_query(delete_component_specs::Variables {
+                        ipt_component_specs_data
+                    })).await.unwrap();
+                    link.send_message(Msg::GetDeleteSpecResult(res));
                 })
             },
             Msg::RequestAddSpec => {
@@ -133,17 +129,13 @@ impl Component for SpecTagItem {
                         componentUuid: component_uuid,
                         specIds: vec![spec_id],
                     };
-                    let res =
-                        make_query(AddComponentSpecs::build_query(add_component_specs::Variables {
-                            ipt_component_specs_data,
-                        }))
-                        .await;
-                    link.send_message(Msg::GetAddedSpecResult(res.unwrap()));
+                    let res = make_query(AddComponentSpecs::build_query(add_component_specs::Variables {
+                        ipt_component_specs_data
+                    })).await.unwrap();
+                    link.send_message(Msg::GetAddedSpecResult(res));
                 })
             },
-            Msg::ResponseError(err) => {
-                self.error = Some(err);
-            },
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetSpecInfoResult(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res = data.as_object().unwrap().get("data").unwrap();

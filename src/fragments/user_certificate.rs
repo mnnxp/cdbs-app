@@ -98,30 +98,26 @@ impl Component for CertificateCard {
                         file_uuid,
                         description,
                     } = request_update;
-                    let update_user_cert_data = update_user_certificate::IptUpdateUserCertificateData {
+                    let ipt_update_user_certificate_data = update_user_certificate::IptUpdateUserCertificateData {
                         fileUuid: file_uuid,
                         description,
                     };
-                    let res = make_query(UpdateUserCertificate::build_query(
-                        update_user_certificate::Variables {
-                            update_user_cert_data,
-                        }
-                    )).await;
-                    link.send_message(Msg::GetUpdateResult(res.unwrap()));
+                    let res = make_query(UpdateUserCertificate::build_query(update_user_certificate::Variables {
+                        ipt_update_user_certificate_data
+                    })).await.unwrap();
+                    link.send_message(Msg::GetUpdateResult(res));
                 })
             },
             Msg::RequestDeleteCert => {
                 let file_uuid = self.props.certificate.file.uuid.clone();
                 spawn_local(async move {
-                    let del_user_cert_data = delete_user_certificate::DelUserCertificateData{
+                    let del_user_certificate_data = delete_user_certificate::DelUserCertificateData{
                         fileUuid: file_uuid,
                     };
-                    let res = make_query(DeleteUserCertificate::build_query(
-                        delete_user_certificate::Variables {
-                            del_user_cert_data,
-                        }
-                    )).await;
-                    link.send_message(Msg::GetDeleteCertResult(res.unwrap()));
+                    let res = make_query(DeleteUserCertificate::build_query(delete_user_certificate::Variables {
+                        del_user_certificate_data
+                    })).await.unwrap();
+                    link.send_message(Msg::GetDeleteCertResult(res));
                 })
             },
             Msg::ResponseError(err) => {

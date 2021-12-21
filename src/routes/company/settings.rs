@@ -228,11 +228,9 @@ impl Component for CompanySettings {
 
         if first_render && is_authenticated() && !company_uuid.is_empty() {
             spawn_local(async move {
-                let res = make_query(GetCompanySettingDataOpt::build_query(
-                    get_company_setting_data_opt::Variables { company_uuid },
-                ))
-                .await
-                .unwrap();
+                let res = make_query(GetCompanySettingDataOpt::build_query(get_company_setting_data_opt::Variables{
+                    company_uuid
+                })).await.unwrap();
                 link.send_message(Msg::GetUpdateCompanyData(res.clone()));
                 link.send_message(Msg::UpdateList(res));
             })
@@ -264,7 +262,7 @@ impl Component for CompanySettings {
                         region_id,
                         company_type_id,
                     } = request_company;
-                    let data_company_update = company_update::IptUpdateCompanyData {
+                    let ipt_update_company_data = company_update::IptUpdateCompanyData {
                         orgname,
                         shortname,
                         inn,
@@ -279,29 +277,24 @@ impl Component for CompanySettings {
                     };
                     let res = make_query(CompanyUpdate::build_query(company_update::Variables {
                         company_uuid,
-                        data_company_update,
-                    }))
-                    .await;
-                    link.send_message(Msg::GetUpdateCompanyResult(res.unwrap()));
+                        ipt_update_company_data,
+                    })).await.unwrap();
+                    link.send_message(Msg::GetUpdateCompanyResult(res));
                 })
             }
             Msg::RequestChangeAccess => {
                 let company_uuid = self.company_uuid.clone();
                 let new_type_access = self.request_access.clone();
                 spawn_local(async move {
-                    let change_access_company_data =
-                        change_company_access::ChangeTypeAccessCompany {
-                            companyUuid: company_uuid,
-                            newTypeAccessId: new_type_access,
-                        };
+                    let change_type_access_company = change_company_access::ChangeTypeAccessCompany {
+                        companyUuid: company_uuid,
+                        newTypeAccessId: new_type_access,
+                    };
 
-                    let res = make_query(ChangeCompanyAccess::build_query(
-                        change_company_access::Variables {
-                            change_access_company_data,
-                        },
-                    ))
-                    .await;
-                    link.send_message(Msg::GetUpdateAccessResult(res.unwrap()));
+                    let res = make_query(ChangeCompanyAccess::build_query(change_company_access::Variables{
+                        change_type_access_company
+                    })).await.unwrap();
+                    link.send_message(Msg::GetUpdateAccessResult(res));
                 })
             }
             Msg::RequestRemoveCompany => {
@@ -456,20 +449,15 @@ impl Component for CompanySettings {
                 }
             }
             Msg::GetCurrentData => {
-                let company_uuid = Some(self.company_uuid.clone());
+                let company_uuid = self.company_uuid.clone();
                 spawn_local(async move {
-                    let res =
-                        make_query(GetCompanyData::build_query(get_company_data::Variables {
-                            company_uuid,
-                        }))
-                        .await
-                        .unwrap();
+                    let res = make_query(GetCompanyData::build_query(get_company_data::Variables {
+                        company_uuid,
+                    })).await.unwrap();
                     link.send_message(Msg::GetUpdateCompanyData(res));
                 })
             }
-            Msg::EditSpecs(mode) => {
-                self.edit_specs = mode;
-            }
+            Msg::EditSpecs(mode) => self.edit_specs = mode,
             Msg::SetIptTimer(val) => {
                 debug!("ipt_val: {:?}", val.clone());
                 if val.is_empty() {
@@ -485,19 +473,16 @@ impl Component for CompanySettings {
                         let ipt_val = val.clone();
                         let res_link = link.clone();
                         spawn_local(async move {
-                            let arg = Some(search_specs::IptSearchSpecArg {
+                            let ipt_search_spec_arg = search_specs::IptSearchSpecArg {
                                 text: ipt_val.clone(),
                                 splitChar: None,
                                 depthLevel: None,
                                 limit: None,
                                 offset: None,
-                            });
-                            let res =
-                                make_query(SearchSpecs::build_query(search_specs::Variables {
-                                    arg,
-                                }))
-                                .await
-                                .unwrap();
+                            };
+                            let res = make_query(SearchSpecs::build_query(search_specs::Variables{
+                                ipt_search_spec_arg
+                            })).await.unwrap();
                             res_link.send_message(Msg::GetSearchRes(res));
                         });
                         debug!("time up: {:?}", val.clone());

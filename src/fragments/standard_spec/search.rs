@@ -136,19 +136,16 @@ impl Component for SearchSpecsTags {
                         let ipt_val = val.clone();
                         let res_link = link.clone();
                         spawn_local(async move {
-                            let arg = Some(search_specs::IptSearchSpecArg {
+                            let ipt_search_spec_arg = search_specs::IptSearchSpecArg {
                                 text: ipt_val.clone(),
                                 splitChar: None,
                                 depthLevel: None,
                                 limit: None,
                                 offset: None,
-                            });
-                            let res =
-                                make_query(SearchSpecs::build_query(search_specs::Variables {
-                                    arg,
-                                }))
-                                .await
-                                .unwrap();
+                            };
+                            let res = make_query(SearchSpecs::build_query(search_specs::Variables {
+                                ipt_search_spec_arg
+                            })).await.unwrap();
                             res_link.send_message(Msg::GetSearchRes(res));
                         });
                         debug!("time up: {:?}", val.clone());

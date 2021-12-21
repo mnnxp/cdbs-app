@@ -14,7 +14,7 @@ use crate::fragments::{
     list_errors::ListErrors,
     switch_icon::res_btn,
 };
-use crate::types::ShowStandardShort;
+use crate::types::{UUID, ShowStandardShort};
 
 #[derive(GraphQLQuery)]
 #[graphql(

@@ -99,7 +99,7 @@ impl Component for CatalogUsers {
                 }
             },
             Msg::GetList => {
-                let arguments = match &self.props.arguments {
+                let ipt_users_arg = match &self.props.arguments {
                     Some(ref arg) => Some(get_users_short_list::IptUsersArg {
                         usersUuids: arg.users_uuids.clone(),
                         subscribers: arg.subscribers,
@@ -111,7 +111,7 @@ impl Component for CatalogUsers {
                 };
                 spawn_local(async move {
                     let res = make_query(GetUsersShortList::build_query(get_users_short_list::Variables {
-                        arguments
+                        ipt_users_arg
                     })).await.unwrap();
                     debug!("users query: {}", res);
                     link.send_message(Msg::UpdateList(res));

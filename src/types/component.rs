@@ -19,6 +19,7 @@ pub struct ComponentInfo {
   pub is_base: bool,
   pub subscribers: usize,
   pub is_followed: bool,
+  pub created_at: NaiveDateTime,
   pub updated_at: NaiveDateTime,
   pub licenses: Vec<LicenseInfo>,
   pub component_params: Vec<ComponentParam>,

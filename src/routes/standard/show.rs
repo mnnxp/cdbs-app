@@ -156,7 +156,7 @@ impl Component for ShowStandard {
                     standard_uuid: target_standard_uuid,
                 })).await.unwrap();
 
-                link.send_message(Msg::GetStandardData(res.clone()));
+                link.send_message(Msg::GetStandardData(res));
             })
         }
     }
@@ -172,12 +172,10 @@ impl Component for ShowStandard {
                         filesUuids: None,
                         standardUuid: standard_uuid,
                     };
-                    let res = make_query(StandardFiles::build_query(
-                        standard_files::Variables {
-                            ipt_standard_files_arg,
-                        }
-                    )).await;
-                    link.send_message(Msg::GetDownloadFilesResult(res.unwrap()));
+                    let res = make_query(StandardFiles::build_query(standard_files::Variables{
+                        ipt_standard_files_arg
+                    })).await.unwrap();
+                    link.send_message(Msg::GetDownloadFilesResult(res));
                 })
             }
             Msg::Follow => {
@@ -188,7 +186,7 @@ impl Component for ShowStandard {
                         standard_uuid: standard_uuid_string,
                     })).await.unwrap();
 
-                    link.send_message(Msg::AddFollow(res.clone()));
+                    link.send_message(Msg::AddFollow(res));
                 })
             }
             Msg::AddFollow(res) => {
@@ -215,13 +213,11 @@ impl Component for ShowStandard {
                 let standard_uuid_string = self.standard.as_ref().unwrap().uuid.to_string();
 
                 spawn_local(async move {
-                    let res = make_query(DeleteStandardFav::build_query(delete_standard_fav::Variables {
+                    let res = make_query(DeleteStandardFav::build_query(delete_standard_fav::Variables{
                         standard_uuid: standard_uuid_string,
-                    }))
-                    .await
-                    .unwrap();
+                    })).await.unwrap();
 
-                    link.send_message(Msg::DelFollow(res.clone()));
+                    link.send_message(Msg::DelFollow(res));
                 })
             }
             Msg::DelFollow(res) => {

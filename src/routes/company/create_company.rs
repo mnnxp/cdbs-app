@@ -96,9 +96,9 @@ impl Component for CreateCompany {
 
         if first_render && is_authenticated() {
             spawn_local(async move {
-                let res = make_query(
-                    GetCreateCompanyDataOpt::build_query(get_create_company_data_opt::Variables)
-                ).await.unwrap();
+                let res = make_query(GetCreateCompanyDataOpt::build_query(
+                    get_create_company_data_opt::Variables
+                )).await.unwrap();
                 link.send_message(Msg::UpdateList(res));
             })
         }

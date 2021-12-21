@@ -14,10 +14,7 @@ use crate::gqls::make_query;
 use crate::fragments::list_errors::ListErrors;
 use crate::error::{Error, get_error};
 use crate::services::{PutUploadFile, UploadData};
-use crate::types::{
-    // UUID, Certificate,
-    UploadFile
-};
+use crate::types::{UUID, UploadFile};
 
 type FileName = String;
 // type Chunks = bool;
@@ -170,7 +167,7 @@ impl Component for AddCertificateCard {
                     let res = make_query(ConfirmUploadCompleted::build_query(confirm_upload_completed::Variables {
                         file_uuids,
                     })).await.unwrap();
-                    crate::yewLog!(res);
+                    debug!("ConfirmUploadCompleted: {:?}", res);
                     link.send_message(Msg::GetUploadCompleted(res));
                 });
             },

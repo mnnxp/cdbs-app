@@ -99,7 +99,7 @@ impl Component for CatalogComponents {
                 }
             },
             Msg::GetList => {
-                let arguments = match &self.props.arguments {
+                let ipt_components_arg = match &self.props.arguments {
                     Some(ref arg) => Some(get_components_short_list::IptComponentsArg {
                         componentsUuids: arg.components_uuids.clone(),
                         companyUuid: arg.company_uuid.to_owned(),
@@ -114,7 +114,7 @@ impl Component for CatalogComponents {
                 spawn_local(async move {
                     let res = make_query(GetComponentsShortList::build_query(
                         get_components_short_list::Variables {
-                            arguments
+                            ipt_components_arg
                     })).await.unwrap();
                     debug!("GetList res: {:?}", res);
                     link.send_message(Msg::UpdateList(res));

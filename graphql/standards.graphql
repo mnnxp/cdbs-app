@@ -1,12 +1,9 @@
 mutation RegisterStandard($iptStandardData: IptStandardData!) {
-  registerStandard(arg: $iptStandardData)
+  registerStandard(args: $iptStandardData)
 }
 
-query GetStandardDataOpt($userUuid: UUID!) {
-  companies(arguments: {
-    userUuid: $userUuid
-    supplier: true
-  }) {
+query GetStandardDataOpt($iptCompaniesArg: IptCompaniesArg!) {
+  companies(args: $iptCompaniesArg) {
     ...companyShortFields
   }
 
@@ -29,15 +26,12 @@ query GetStandardData($standardUuid: UUID!) {
   }
 }
 
-query GetUpdateStandardDataOpt($standardUuid: UUID!, $userUuid: UUID!) {
+query GetUpdateStandardDataOpt($standardUuid: UUID!, $iptCompaniesArg: IptCompaniesArg!) {
   standard(standardUuid: $standardUuid) {
     ...standardAndRelatedDataFields
   }
 
-  companies(arguments: {
-    userUuid: $userUuid
-    supplier: true
-  }) {
+  companies(args: $iptCompaniesArg) {
     ...companyShortFields
   }
 
@@ -54,8 +48,8 @@ query GetUpdateStandardDataOpt($standardUuid: UUID!, $userUuid: UUID!) {
   }
 }
 
-query GetStandardsShortList($arguments: IptStandardsArg) {
-  standards(arguments: $arguments) {
+query GetStandardsShortList($iptStandardsArg: IptStandardsArg) {
+  standards(args: $iptStandardsArg) {
     uuid
     classifier
     name
@@ -74,13 +68,13 @@ query GetStandardsShortList($arguments: IptStandardsArg) {
 }
 
 query StandardFiles($iptStandardFilesArg: IptStandardFilesArg!) {
-  standardFiles(arg: $iptStandardFilesArg){
+  standardFiles(args: $iptStandardFilesArg){
     ...downloadFileFields
   }
 }
 
 mutation PutStandardUpdate($standardUuid: UUID!, $iptUpdateStandardData: IptUpdateStandardData!) {
-  putStandardUpdate(standardUuid: $standardUuid, data: $iptUpdateStandardData)
+  putStandardUpdate(standardUuid: $standardUuid, args: $iptUpdateStandardData)
 }
 
 mutation DeleteStandard($standardUuid: UUID!) {
@@ -88,32 +82,32 @@ mutation DeleteStandard($standardUuid: UUID!) {
 }
 
 mutation UploadStandardFiles($iptStandardFilesData: IptStandardFilesData!) {
-  uploadStandardFiles(data: $iptStandardFilesData){
+  uploadStandardFiles(args: $iptStandardFilesData){
     ...uploadUrlFields
   }
 }
 
 mutation AddStandardSpecs($iptStandardSpecsData: IptStandardSpecsData!) {
-  addStandardSpecs(data: $iptStandardSpecsData)
+  addStandardSpecs(args: $iptStandardSpecsData)
 }
 
 mutation DeleteStandardSpecs($iptStandardSpecsData: IptStandardSpecsData!){
-  deleteStandardSpecs(data: $iptStandardSpecsData)
+  deleteStandardSpecs(args: $iptStandardSpecsData)
 }
 
 query GetStandardKeywords($iptStandardKeywordsArg: IptStandardKeywordsArg!) {
-  standardKeywords(arg: $iptStandardKeywordsArg) {
+  standardKeywords(args: $iptStandardKeywordsArg) {
     id
     keyword
   }
 }
 
 mutation AddStandardKeywordsByNames($iptStandardKeywordsNames: IptStandardKeywordsNames!) {
-  addStandardKeywordsByNames(data: $iptStandardKeywordsNames)
+  addStandardKeywordsByNames(args: $iptStandardKeywordsNames)
 }
 
 mutation DeleteStandardKeywords($iptStandardKeywordsData: IptStandardKeywordsData!){
-  deleteStandardKeywords(data: $iptStandardKeywordsData)
+  deleteStandardKeywords(args: $iptStandardKeywordsData)
 }
 
 fragment uploadUrlFields on UploadFile {
@@ -123,18 +117,18 @@ fragment uploadUrlFields on UploadFile {
 }
 
 mutation ChangeStandardAccess($changeTypeAccessStandard: ChangeTypeAccessStandard!) {
-  changeStandardAccess(data: $changeTypeAccessStandard)
+  changeStandardAccess(args: $changeTypeAccessStandard)
 }
 
 mutation DeleteStandardFile($deleteStandardFileData: DeleteStandardFileData!) {
-  deleteStandardFile(arg: $deleteStandardFileData)
+  deleteStandardFile(args: $deleteStandardFileData)
 }
 
-mutation AddStandardFav($standardUuid: String!) {
+mutation AddStandardFav($standardUuid: UUID!) {
   addStandardFav(standardUuid: $standardUuid)
 }
 
-mutation DeleteStandardFav($standardUuid: String!) {
+mutation DeleteStandardFav($standardUuid: UUID!) {
   deleteStandardFav(standardUuid: $standardUuid)
 }
 

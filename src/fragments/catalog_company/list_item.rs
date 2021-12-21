@@ -100,8 +100,8 @@ impl Component for ListItemCompany {
                 spawn_local(async move {
                     let res = make_query(AddCompanyFav::build_query(add_company_fav::Variables{
                       company_uuid
-                    })).await;
-                    link.send_message(Msg::GetFavResult(res.unwrap()));
+                    })).await.unwrap();
+                    link.send_message(Msg::GetFavResult(res));
                 });
             },
             Msg::DelFav => {
@@ -109,8 +109,8 @@ impl Component for ListItemCompany {
                 spawn_local(async move {
                     let res = make_query(DeleteCompanyFav::build_query(delete_company_fav::Variables{
                       company_uuid
-                    })).await;
-                    link.send_message(Msg::GetFavResult(res.unwrap()));
+                    })).await.unwrap();
+                    link.send_message(Msg::GetFavResult(res));
                 });
             },
             Msg::GetFavResult(res) => {

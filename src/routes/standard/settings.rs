@@ -236,13 +236,21 @@ impl Component for StandardSettings {
             };
 
             spawn_local(async move {
+                let ipt_companies_arg = get_update_standard_data_opt::IptCompaniesArg{
+                    companiesUuids: None,
+                    userUuid: Some(user_uuid),
+                    favorite: None,
+                    supplier: Some(true),
+                    limit: None,
+                    offset: None,
+                };
                 let res = make_query(GetUpdateStandardDataOpt::build_query(get_update_standard_data_opt::Variables {
                     standard_uuid: target_standard_uuid,
-                    user_uuid,
+                    ipt_companies_arg,
                 })).await.unwrap();
 
                 link.send_message(Msg::GetStandardData(res.clone()));
-                link.send_message(Msg::GetListOpt(res.clone()));
+                link.send_message(Msg::GetListOpt(res));
             })
         }
     }
@@ -306,8 +314,8 @@ impl Component for StandardSettings {
                     let res = make_query(PutStandardUpdate::build_query(put_standard_update::Variables {
                         standard_uuid,
                         ipt_update_standard_data
-                    })).await;
-                    link.send_message(Msg::GetUpdateStandardResult(res.unwrap()));
+                    })).await.unwrap();
+                    link.send_message(Msg::GetUpdateStandardResult(res));
                 })
             },
             Msg::RequestChangeAccess => {
@@ -318,10 +326,10 @@ impl Component for StandardSettings {
                         standardUuid: standard_uuid,
                         newTypeAccessId: new_type_access_id,
                     };
-                    let res = make_query(ChangeStandardAccess::build_query(
-                        change_standard_access::Variables { change_type_access_standard }
-                    )).await;
-                    link.send_message(Msg::GetUpdateAccessResult(res.unwrap()));
+                    let res = make_query(ChangeStandardAccess::build_query(change_standard_access::Variables {
+                        change_type_access_standard
+                    })).await.unwrap();
+                    link.send_message(Msg::GetUpdateAccessResult(res));
                 })
             },
             Msg::RequestDeleteStandard => {
@@ -329,8 +337,8 @@ impl Component for StandardSettings {
                 spawn_local(async move {
                     let res = make_query(DeleteStandard::build_query(
                         delete_standard::Variables { standard_uuid }
-                    )).await;
-                    link.send_message(Msg::GetDeleteStandard(res.unwrap()));
+                    )).await.unwrap();
+                    link.send_message(Msg::GetDeleteStandard(res));
                 })
             },
             Msg::RequestUploadStandardFiles => {
@@ -348,12 +356,10 @@ impl Component for StandardSettings {
                             filenames,
                             standardUuid: standard_uuid,
                         };
-                        let res = make_query(UploadStandardFiles::build_query(
-                            upload_standard_files::Variables {
-                                ipt_standard_files_data
-                            }
-                        )).await;
-                        link.send_message(Msg::GetUploadData(res.unwrap()));
+                        let res = make_query(UploadStandardFiles::build_query(upload_standard_files::Variables{
+                            ipt_standard_files_data
+                        })).await.unwrap();
+                        link.send_message(Msg::GetUploadData(res));
                     })
                 }
             },

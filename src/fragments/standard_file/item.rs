@@ -75,12 +75,10 @@ impl Component for FileItem {
                         filesUuids: Some(vec![file_uuid]),
                         standardUuid: standard_uuid,
                     };
-                    let res = make_query(StandardFiles::build_query(
-                        standard_files::Variables {
-                            ipt_standard_files_arg,
-                        }
-                    )).await;
-                    link.send_message(Msg::GetDownloadFileResult(res.unwrap()));
+                    let res = make_query(StandardFiles::build_query(standard_files::Variables {
+                        ipt_standard_files_arg
+                    })).await.unwrap();
+                    link.send_message(Msg::GetDownloadFileResult(res));
                 })
             },
             Msg::RequestDeleteFile => {
@@ -91,17 +89,13 @@ impl Component for FileItem {
                         fileUuid: file_uuid,
                         standardUuid: standard_uuid,
                     };
-                    let res = make_query(DeleteStandardFile::build_query(
-                        delete_standard_file::Variables {
-                            delete_standard_file_data,
-                        }
-                    )).await;
-                    link.send_message(Msg::GetDeleteFileResult(res.unwrap()));
+                    let res = make_query(DeleteStandardFile::build_query(delete_standard_file::Variables {
+                        delete_standard_file_data
+                    })).await.unwrap();
+                    link.send_message(Msg::GetDeleteFileResult(res));
                 })
             },
-            Msg::ResponseError(err) => {
-                self.error = Some(err);
-            },
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetDownloadFileResult(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res = data.as_object().unwrap().get("data").unwrap();
@@ -111,9 +105,7 @@ impl Component for FileItem {
                         let result: Vec<DownloadFile> = serde_json::from_value(res.get("standardFiles").unwrap().clone()).unwrap();
                         debug!("standardFiles: {:?}", result);
                     },
-                    true => {
-                        link.send_message(Msg::ResponseError(get_error(&data)));
-                    },
+                    true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }
             },
             Msg::GetDeleteFileResult(res) => {
@@ -126,9 +118,7 @@ impl Component for FileItem {
                         debug!("deleteFile: {:?}", result);
                         self.get_result_delete = result;
                     },
-                    true => {
-                        link.send_message(Msg::ResponseError(get_error(&data)));
-                    },
+                    true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }
             },
             Msg::ClickFileInfo => {

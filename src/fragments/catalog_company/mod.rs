@@ -80,7 +80,7 @@ impl Component for CatalogCompanies {
                 }
             },
             Msg::GetList => {
-                let arguments = match &self.props.arguments {
+                let ipt_companies_arg = match &self.props.arguments {
                     Some(ref arg) => Some(get_companies_short_list::IptCompaniesArg {
                         companiesUuids: arg.companies_uuids.clone(),
                         userUuid: arg.user_uuid.to_owned(),
@@ -94,7 +94,7 @@ impl Component for CatalogCompanies {
                 spawn_local(async move {
                     let res = make_query(GetCompaniesShortList::build_query(
                         get_companies_short_list::Variables {
-                            arguments
+                            ipt_companies_arg
                     })).await.unwrap();
                     debug!("GetList res: {:?}", res);
                     link.send_message(Msg::UpdateList(res));

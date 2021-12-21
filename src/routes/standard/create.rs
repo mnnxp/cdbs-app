@@ -111,11 +111,19 @@ impl Component for CreateStandard {
             };
 
             spawn_local(async move {
+                let ipt_companies_arg = get_standard_data_opt::IptCompaniesArg{
+                    companiesUuids: None,
+                    userUuid: Some(user_uuid),
+                    favorite: None,
+                    supplier: Some(true),
+                    limit: None,
+                    offset: None,
+                };
                 let res = make_query(GetStandardDataOpt::build_query(get_standard_data_opt::Variables {
-                    user_uuid,
+                    ipt_companies_arg
                 })).await.unwrap();
 
-                link.send_message(Msg::GetListOpt(res.clone()));
+                link.send_message(Msg::GetListOpt(res));
             })
         }
     }
@@ -194,8 +202,8 @@ impl Component for CreateStandard {
                     };
                     let res = make_query(RegisterStandard::build_query(register_standard::Variables {
                         ipt_standard_data
-                    })).await;
-                    link.send_message(Msg::GetCreateStandardResult(res.unwrap()));
+                    })).await.unwrap();
+                    link.send_message(Msg::GetCreateStandardResult(res));
                 })
             },
             Msg::GetListOpt(res) => {

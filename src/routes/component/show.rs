@@ -175,11 +175,11 @@ impl Component for ShowComponent {
             self.current_filesets_program = Vec::new();
 
             spawn_local(async move {
-                let res = make_query(GetComponentData::build_query(get_component_data::Variables {
+                let res = make_query(GetComponentData::build_query(get_component_data::Variables{
                     component_uuid: target_component_uuid,
                 })).await.unwrap();
 
-                link.send_message(Msg::GetComponentData(res.clone()));
+                link.send_message(Msg::GetComponentData(res));
             })
         }
     }
@@ -204,7 +204,7 @@ impl Component for ShowComponent {
                                 ipt_file_of_fileset_arg
                             })).await.unwrap();
 
-                            link.send_message(Msg::GetDownloadFilesResult(res.clone()));
+                            link.send_message(Msg::GetDownloadFilesResult(res));
                         })
                     },
                     _ => debug!("Bad select fileset: {:?}", self.select_fileset_program),
@@ -228,14 +228,14 @@ impl Component for ShowComponent {
                 }
             },
             Msg::Follow => {
-                let component_uuid_string = self.component.as_ref().unwrap().uuid.to_string();
+                let component_uuid = self.component.as_ref().unwrap().uuid.clone();
 
                 spawn_local(async move {
                     let res = make_query(AddComponentFav::build_query(add_component_fav::Variables {
-                        component_uuid: component_uuid_string,
+                        component_uuid,
                     })).await.unwrap();
 
-                    link.send_message(Msg::AddFollow(res.clone()));
+                    link.send_message(Msg::AddFollow(res));
                 })
             },
             Msg::AddFollow(res) => {
@@ -262,11 +262,9 @@ impl Component for ShowComponent {
                 spawn_local(async move {
                     let res = make_query(DeleteComponentFav::build_query(delete_component_fav::Variables {
                         component_uuid,
-                    }))
-                    .await
-                    .unwrap();
+                    })).await.unwrap();
 
-                    link.send_message(Msg::DelFollow(res.clone()));
+                    link.send_message(Msg::DelFollow(res));
                 })
             },
             Msg::DelFollow(res) => {

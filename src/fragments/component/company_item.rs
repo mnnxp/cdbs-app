@@ -2,7 +2,7 @@ use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
-use log::debug;
+// use log::debug;
 use chrono::NaiveDateTime;
 use crate::gqls::make_query;
 use crate::error::{Error, get_error};
@@ -67,7 +67,7 @@ impl Component for ComponentCompanyItem {
                 self.open_company_info = !self.open_company_info;
             },
             Msg::RequestCompanyData => {
-                let arguments = Some(get_companies_short_list::IptCompaniesArg {
+                let ipt_companies_arg = Some(get_companies_short_list::IptCompaniesArg {
                     companiesUuids: Some(vec![self.props.supplier_data.supplier.uuid.clone()]),
                     userUuid: None,
                     favorite: None,
@@ -76,11 +76,9 @@ impl Component for ComponentCompanyItem {
                     offset: None,
                 });
                 spawn_local(async move {
-                    let res = make_query(GetCompaniesShortList::build_query(
-                        get_companies_short_list::Variables {
-                            arguments
+                    let res = make_query(GetCompaniesShortList::build_query(get_companies_short_list::Variables {
+                        ipt_companies_arg
                     })).await.unwrap();
-                    debug!("GetList res: {:?}", res);
                     link.send_message(Msg::GetCompanyDataResult(res));
                 });
             },

@@ -4,8 +4,8 @@ query GetComponentData($componentUuid: UUID!) {
   }
 }
 
-query GetComponentsShortList($arguments: IptComponentsArg) {
-  components(arguments: $arguments) {
+query GetComponentsShortList($iptComponentsArg: IptComponentsArg) {
+  components(args: $iptComponentsArg) {
     ...showComponentShortFields
   }
 }
@@ -25,47 +25,47 @@ query GetList {
 }
 
 query ComponentFiles($iptComponentFilesArg: IptComponentFilesArg!) {
-  componentFiles(arg: $iptComponentFilesArg){
+  componentFiles(args: $iptComponentFilesArg){
     ...downloadFileFields
   }
 }
 
-mutation AddComponentFav($componentUuid: String!) {
+mutation AddComponentFav($componentUuid: UUID!) {
   addComponentFav(componentUuid: $componentUuid)
 }
 
-mutation DeleteComponentFav($componentUuid: String!) {
+mutation DeleteComponentFav($componentUuid: UUID!) {
   deleteComponentFav(componentUuid: $componentUuid)
 }
 
 mutation DeleteComponentFile($deleteComponentFileData: DelComponentFileData!) {
-  deleteComponentFile(arg: $deleteComponentFileData)
+  deleteComponentFile(args: $deleteComponentFileData)
 }
 
 mutation AddComponentKeywordsByNames($iptComponentKeywordsNames: IptComponentKeywordsNames!) {
-  addComponentKeywordsByNames(data: $iptComponentKeywordsNames)
+  addComponentKeywordsByNames(args: $iptComponentKeywordsNames)
 }
 
 mutation DeleteComponentKeywords($iptComponentKeywordsData: IptComponentKeywordsData!){
-  deleteComponentKeywords(data: $iptComponentKeywordsData)
+  deleteComponentKeywords(args: $iptComponentKeywordsData)
 }
 
 mutation AddComponentSpecs($iptComponentSpecsData: IptComponentSpecsData!) {
-  addComponentSpecs(data: $iptComponentSpecsData)
+  addComponentSpecs(args: $iptComponentSpecsData)
 }
 
 mutation DeleteComponentSpecs($iptComponentSpecsData: IptComponentSpecsData!){
-  deleteComponentSpecs(data: $iptComponentSpecsData)
+  deleteComponentSpecs(args: $iptComponentSpecsData)
 }
 
 query ComModFilesOfFileset($iptFileOfFilesetArg: IptFileOfFilesetArg!) {
-  componentModificationFilesOfFileset(arg: $iptFileOfFilesetArg){
+  componentModificationFilesOfFileset(args: $iptFileOfFilesetArg){
     ...showFileRelatedDataFields
   }
 }
 
 query ComModFilesetFiles($iptFileOfFilesetArg: IptFileOfFilesetArg!) {
-  componentModificationFilesetFiles(arg: $iptFileOfFilesetArg){
+  componentModificationFilesetFiles(args: $iptFileOfFilesetArg){
     ...downloadFileFields
   }
 }
@@ -104,6 +104,7 @@ fragment componentAndRelatedDataFields on ComponentAndRelatedData {
   isBase
   subscribers
   isFollowed
+  createdAt
   updatedAt
   licenses {
     ...licenseFields
@@ -222,6 +223,7 @@ fragment componentModificationFields on ComponentModificationAndRelatedData {
   actualStatus {
     ...actualStatusFields
   }
+  createdAt
   updatedAt
   filesetsForProgram {
     ...filesetProgramRelatedDataFields

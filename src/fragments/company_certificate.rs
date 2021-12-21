@@ -101,14 +101,14 @@ impl Component for CompanyCertificateCard {
                         file_uuid,
                         description,
                     } = request_update;
-                    let update_company_cert_data = update_company_certificate::IptUpdateCompanyCertificateData {
+                    let ipt_update_company_certificate_data = update_company_certificate::IptUpdateCompanyCertificateData {
                         companyUuid: company_uuid,
                         fileUuid: file_uuid,
                         description,
                     };
                     let res = make_query(UpdateCompanyCertificate::build_query(
                         update_company_certificate::Variables {
-                            update_company_cert_data,
+                            ipt_update_company_certificate_data,
                         }
                     )).await;
                     link.send_message(Msg::GetUpdateResult(res.unwrap()));
@@ -118,16 +118,14 @@ impl Component for CompanyCertificateCard {
                 let company_uuid = self.props.company_uuid.clone();
                 let file_uuid = self.props.certificate.file.uuid.clone();
                 spawn_local(async move {
-                    let del_company_cert_data = delete_company_certificate::DelCompanyCertificateData{
+                    let del_company_certificate_data = delete_company_certificate::DelCompanyCertificateData{
                         companyUuid: company_uuid,
                         fileUuid: file_uuid,
                     };
-                    let res = make_query(DeleteCompanyCertificate::build_query(
-                        delete_company_certificate::Variables {
-                            del_company_cert_data,
-                        }
-                    )).await;
-                    link.send_message(Msg::GetDeleteCertResult(res.unwrap()));
+                    let res = make_query(DeleteCompanyCertificate::build_query(delete_company_certificate::Variables {
+                        del_company_certificate_data
+                    })).await.unwrap();
+                    link.send_message(Msg::GetDeleteCertResult(res));
                 })
             },
             Msg::ResponseError(err) => {

@@ -109,13 +109,11 @@ impl Component for Notifications {
 
         if first_render && is_authenticated() {
             spawn_local(async move {
-                let res = make_query(
-                    GetNotifications::build_query(get_notifications::Variables {
-                        select_notifications_ids: None,
-                        notifications_limit: None,
-                        notifications_offset: None,
-                    })
-                ).await.unwrap();
+                let res = make_query(GetNotifications::build_query(
+                    get_notifications::Variables {
+                        ipt_notification_arg: None
+                    }
+                )).await.unwrap();
                 link.send_message(Msg::GetAllNotification(res));
             })
         }
@@ -132,22 +130,18 @@ impl Component for Notifications {
             Msg::RequestReadNotification => {
                 let read_notifications_ids = self.read_notification.clone();
                 spawn_local(async move {
-                    let res = make_query(
-                        SetReadNotifications::build_query(set_read_notifications::Variables {
-                            read_notifications_ids
-                        })
-                    ).await.unwrap();
+                    let res = make_query(SetReadNotifications::build_query(set_read_notifications::Variables{
+                        read_notifications_ids
+                    })).await.unwrap();
                     link.send_message(Msg::GetReadNotification(res));
                 })
             },
             Msg::RequestRemoveNotification => {
                 let delete_notifications_ids = self.delete_notification.clone();
                 spawn_local(async move {
-                    let res = make_query(
-                        DeleteNotifications::build_query(delete_notifications::Variables {
-                            delete_notifications_ids
-                        })
-                    ).await.unwrap();
+                    let res = make_query(DeleteNotifications::build_query(delete_notifications::Variables{
+                        delete_notifications_ids
+                    })).await.unwrap();
                     link.send_message(Msg::GetRemoveNotification(res));
                 })
             },

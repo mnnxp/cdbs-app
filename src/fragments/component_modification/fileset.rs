@@ -76,7 +76,7 @@ impl Component for FilesOfFilesetCard {
                         ipt_file_of_fileset_arg
                     })).await.unwrap();
 
-                    link.send_message(Msg::GetFilesOfFilesetResult(res.clone()));
+                    link.send_message(Msg::GetFilesOfFilesetResult(res));
                 })
             },
             Msg::ResponseError(err) => self.error = Some(err),

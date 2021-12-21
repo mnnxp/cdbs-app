@@ -65,9 +65,9 @@ pub async fn get_current_user(
     match get_logged_user() {
         Some(x) => Ok(x),
         None => {
-            let req = make_query(
-                GetMySelf::build_query(get_my_self::Variables)
-            ).await.unwrap();
+            let req = make_query(GetMySelf::build_query(
+                get_my_self::Variables
+            )).await.unwrap();
 
             let data: Value = serde_json::from_str(req.as_str()).unwrap();
 
@@ -84,10 +84,7 @@ pub async fn get_current_user(
                     // *current_user = Ok(slim_user);
                     Ok(slim_user)
                 },
-                true => {
-                    // *current_user = Err(get_error(&data));
-                    Err(get_error(&data))
-                },
+                true => Err(get_error(&data)),
             }
         },
     }
@@ -100,10 +97,7 @@ pub async fn logout() -> String {
     let res = data.as_object().unwrap().get("data").unwrap();
 
     match res.is_null() {
-        false => {
-            let goodbye: String = serde_json::from_value(res.get("logout").unwrap().clone()).unwrap();
-            goodbye
-        },
+        false => serde_json::from_value(res.get("logout").unwrap().clone()).unwrap(),
         true => {
             debug!("fail logout: {:?}", res);
             String::from("fail logout")

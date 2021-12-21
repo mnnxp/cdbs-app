@@ -80,7 +80,7 @@ impl Component for CatalogStandards {
                 }
             },
             Msg::GetList => {
-                let arguments = match &self.props.arguments {
+                let ipt_standards_arg = match &self.props.arguments {
                     Some(ref arg) => Some(get_standards_short_list::IptStandardsArg {
                         standardsUuids: arg.standards_uuids.clone(),
                         companyUuid: arg.company_uuid.to_owned(),
@@ -91,11 +91,9 @@ impl Component for CatalogStandards {
                     None => None,
                 };
                 spawn_local(async move {
-                    let res = make_query(GetStandardsShortList::build_query(
-                        get_standards_short_list::Variables {
-                            arguments
+                    let res = make_query(GetStandardsShortList::build_query(get_standards_short_list::Variables {
+                        ipt_standards_arg
                     })).await.unwrap();
-                    debug!("GetList res: {:?}", res);
                     link.send_message(Msg::UpdateList(res));
                 });
             },

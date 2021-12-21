@@ -67,12 +67,10 @@ impl Component for KeywordTagItem {
                         standardUuid: standard_uuid,
                         keywordIds: vec![keyword_id],
                     };
-                    let res = make_query(DeleteStandardKeywords::build_query(
-                        delete_standard_keywords::Variables {
-                            ipt_standard_keywords_data,
-                        }
-                    )).await;
-                    link.send_message(Msg::GetDeleteKeywordResult(res.unwrap()));
+                    let res = make_query(DeleteStandardKeywords::build_query(delete_standard_keywords::Variables {
+                        ipt_standard_keywords_data,
+                    })).await.unwrap();
+                    link.send_message(Msg::GetDeleteKeywordResult(res));
                 })
             },
             Msg::ResponseError(err) => {
