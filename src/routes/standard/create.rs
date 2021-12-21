@@ -251,21 +251,16 @@ impl Component for CreateStandard {
                 }
             },
             // items request create main standard data
-            Msg::UpdateClassifier(data) => {
-                self.request_standard.classifier = data;
-            },
-            Msg::UpdateName(data) => {
-                self.request_standard.name = data;
-            },
-            Msg::UpdateDescription(data) => {
-                self.request_standard.description = data;
-            },
-            Msg::UpdateSpecifiedTolerance(data) => {
-                self.request_standard.specified_tolerance = data;
-            },
-            Msg::UpdateTechnicalCommittee(data) => {
-                self.request_standard.technical_committee = data;
-            },
+            Msg::UpdateClassifier(data) =>
+                self.request_standard.classifier = data,
+            Msg::UpdateName(data) =>
+                self.request_standard.name = data,
+            Msg::UpdateDescription(data) =>
+                self.request_standard.description = data,
+            Msg::UpdateSpecifiedTolerance(data) =>
+                self.request_standard.specified_tolerance = data,
+            Msg::UpdateTechnicalCommittee(data) =>
+                self.request_standard.technical_committee = data,
             Msg::UpdatePublicationAt(data) => {
                 let date = NaiveDateTime::parse_from_str(&format!("{} 00:00:00", data), "%Y-%m-%d %H:%M:%S");
                 debug!("new date: {:?}", date);
@@ -273,18 +268,14 @@ impl Component for CreateStandard {
                     self.request_standard.publication_at = dt;
                 }
             },
-            Msg::UpdateTypeAccessId(data) => {
-                self.request_standard.type_access_id = data.parse::<usize>().unwrap_or_default();
-            },
-            Msg::UpdateCompanyUuid(data) => {
-                self.request_standard.company_uuid = data;
-            },
-            Msg::UpdateStandardStatusId(data) => {
-                self.request_standard.standard_status_id = data.parse::<usize>().unwrap_or_default();
-            },
-            Msg::UpdateRegionId(data) => {
-                self.request_standard.region_id = data.parse::<usize>().unwrap_or_default();
-            },
+            Msg::UpdateTypeAccessId(data) =>
+                self.request_standard.type_access_id = data.parse::<usize>().unwrap_or_default(),
+            Msg::UpdateCompanyUuid(data) =>
+                self.request_standard.company_uuid = data,
+            Msg::UpdateStandardStatusId(data) =>
+                self.request_standard.standard_status_id = data.parse::<usize>().unwrap_or_default(),
+            Msg::UpdateRegionId(data) =>
+                self.request_standard.region_id = data.parse::<usize>().unwrap_or_default(),
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::ClearError => self.error = None,
             Msg::Ignore => {},
