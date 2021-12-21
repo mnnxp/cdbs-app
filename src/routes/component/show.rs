@@ -570,44 +570,24 @@ impl ShowComponent {
         &self,
         component_data: &ComponentInfo,
     ) -> Html {
-        let count_rows =
-            component_data.files.len() +
-            component_data.component_standards.len() +
-            component_data.component_suppliers.len();
-
-        match count_rows {
-            0..=5 => html!{
-                <div class="columns">
+        html!{<>
+            <div class="columns">
                 {self.show_component_params(component_data)}
                 <div class="column">
                     <h2>{"Files"}</h2>
                     {self.show_component_files(component_data)}
-                    <br/>
+                </div>
+            </div>
+            <div class="columns">
+                <div class="column">
                     <h2>{"Standards"}</h2>
                     {self.show_component_standards(component_data)}
-                    <br/>
+                </div>
+                <div class="column">
                     {self.show_component_suppliers(component_data)}
                 </div>
-            </div>},
-            _ => html!{<>
-                <div class="columns">
-                    {self.show_component_params(component_data)}
-                    <div class="column">
-                        <h2>{"Files"}</h2>
-                        {self.show_component_files(component_data)}
-                    </div>
-                </div>
-                <div class="columns">
-                    <div class="column">
-                        <h2>{"Standards"}</h2>
-                        {self.show_component_standards(component_data)}
-                    </div>
-                    <div class="column">
-                        {self.show_component_suppliers(component_data)}
-                    </div>
-                </div>
-            </>},
-        }
+            </div>
+        </>}
     }
 
     fn show_component_files(
