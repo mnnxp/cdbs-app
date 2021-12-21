@@ -185,21 +185,21 @@ impl Component for Profile {
             spawn_local(async move {
                 match get_self {
                     true => {
-                        let res =
-                            make_query(GetSelfDataOpt::build_query(get_self_data_opt::Variables))
-                                .await
-                                .unwrap();
+                        let res = make_query(GetSelfDataOpt::build_query(
+                            get_self_data_opt::Variables
+                        )).await.unwrap();
 
                         link.send_message(Msg::GetSelfData(res.clone()));
                         link.send_message(Msg::UpdateList(res));
                     }
                     false => {
-                        let res =
-                            make_query(GetUserDataOpt::build_query(get_user_data_opt::Variables {
-                                username: Some(target_username),
-                            }))
-                            .await
-                            .unwrap();
+                        let ipt_get_user_arg = get_user_data_opt::IptGetUserArg{
+                            userUuid: None,
+                            username: Some(target_username)
+                        };
+                        let res = make_query(GetUserDataOpt::build_query(get_user_data_opt::Variables{
+                            ipt_get_user_arg
+                        })).await.unwrap();
 
                         link.send_message(Msg::GetUserData(res.clone()));
                         link.send_message(Msg::UpdateList(res));
@@ -215,16 +215,14 @@ impl Component for Profile {
         match msg {
             Msg::Follow => {
                 let link = self.link.clone();
-                let user_uuid_string = self.profile.as_ref().unwrap().uuid.to_string();
+                let user_uuid = self.profile.as_ref().unwrap().uuid.clone();
 
                 spawn_local(async move {
                     let res = make_query(AddUserFav::build_query(add_user_fav::Variables {
-                        user_uuid: user_uuid_string,
-                    }))
-                    .await
-                    .unwrap();
+                        user_uuid,
+                    })).await.unwrap();
 
-                    link.send_message(Msg::AddFollow(res.clone()));
+                    link.send_message(Msg::AddFollow(res));
                 })
             }
             Msg::AddFollow(res) => {
@@ -233,9 +231,9 @@ impl Component for Profile {
 
                 match res_value.is_null() {
                     false => {
-                        let result: bool =
-                            serde_json::from_value(res_value.get("addUserFav").unwrap().clone())
-                                .unwrap();
+                        let result: bool = serde_json::from_value(
+                            res_value.get("addUserFav").unwrap().clone()
+                        ).unwrap();
 
                         if result {
                             self.subscribers += 1;
@@ -249,11 +247,11 @@ impl Component for Profile {
             }
             Msg::UnFollow => {
                 let link = self.link.clone();
-                let user_uuid_string = self.profile.as_ref().unwrap().uuid.to_string();
+                let user_uuid = self.profile.as_ref().unwrap().uuid.clone();
 
                 spawn_local(async move {
                     let res = make_query(DeleteUserFav::build_query(delete_user_fav::Variables {
-                        user_uuid: user_uuid_string,
+                        user_uuid,
                     }))
                     .await
                     .unwrap();

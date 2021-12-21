@@ -104,9 +104,9 @@ impl Component for ChangeItem {
             };
 
             spawn_local(async move {
-                let res = make_query(
-                    GetRepresentDataOpt::build_query(get_represent_data_opt::Variables)
-                ).await.unwrap();
+                let res = make_query(GetRepresentDataOpt::build_query(
+                    get_represent_data_opt::Variables
+                )).await.unwrap();
                 link.send_message(Msg::UpdateList(res));
             })
         }
@@ -129,7 +129,7 @@ impl Component for ChangeItem {
                         address,
                         phone,
                     } = request_update;
-                    let data = update_company_represent::IptUpdateCompanyRepresentData {
+                    let ipt_update_company_represent_data = update_company_represent::IptUpdateCompanyRepresentData {
                         regionId: region_id,
                         representationTypeId: representation_type_id,
                         name,
@@ -140,7 +140,7 @@ impl Component for ChangeItem {
                         update_company_represent::Variables {
                             company_uuid,
                             company_represent_uuid,
-                            data,
+                            ipt_update_company_represent_data,
                         }
                     )).await;
                     link.send_message(Msg::GetUpdateResult(res.unwrap()));

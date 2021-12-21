@@ -14,7 +14,7 @@ use crate::gqls::make_query;
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
 use crate::services::{PutUploadFile, UploadData};
-use crate::types::UploadFile;
+use crate::types::{UUID, UploadFile};
 
 type FileName = String;
 // type Chunks = bool;
@@ -163,12 +163,10 @@ impl Component for AddCertificateCard {
             Msg::RequestUploadCompleted => {
                 let file_uuids = vec![self.request_upload_data.file_uuid.clone()];
                 spawn_local(async move {
-                    let res = make_query(ConfirmUploadCompleted::build_query(
-                        confirm_upload_completed::Variables { file_uuids },
-                    ))
-                    .await
-                    .unwrap();
-                    crate::yewLog!(res);
+                    let res = make_query(ConfirmUploadCompleted::build_query(confirm_upload_completed::Variables {
+                        file_uuids,
+                    })).await.unwrap();
+                    debug!("ConfirmUploadCompleted: {:?}", res);
                     link.send_message(Msg::GetUploadCompleted(res));
                 });
             }
@@ -232,8 +230,8 @@ impl Component for AddCertificateCard {
                         )
                         .unwrap();
                         self.get_result_up_completed = result;
-                        self.props.callback.emit("".to_string());
-                    }
+                        self.props.callback.emit(String::new());
+                    },
                     true => {
                         link.send_message(Msg::ResponseError(get_error(&data)));
                     }

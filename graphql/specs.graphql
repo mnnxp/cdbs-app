@@ -1,11 +1,11 @@
-query SearchSpecs($arg: IptSearchSpecArg) {
-  searchSpecs(arg: $arg) {
+query SearchSpecs($iptSearchSpecArg: IptSearchSpecArg!) {
+  searchSpecs(args: $iptSearchSpecArg) {
     ...specPathFields
   }
 }
 
 query GetSpecsPaths($iptSpecPathArg: IptSpecPathArg) {
-  specsPaths(arg: $iptSpecPathArg) {
+  specsPaths(args: $iptSpecPathArg) {
     ...specPathFields
   }
 }

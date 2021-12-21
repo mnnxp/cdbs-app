@@ -1,37 +1,29 @@
-query GetCompanyData($companyUuid: UUID) {
+query GetCompanyData($companyUuid: UUID!) {
   company(companyUuid: $companyUuid) {
     ...companyFields
   }
 }
 
-query GetCompaniesShortList($arguments: IptCompaniesArg) {
-  companies(arguments: $arguments) {
+query GetCompaniesShortList($iptCompaniesArg: IptCompaniesArg) {
+  companies(args: $iptCompaniesArg) {
     ...companyShortFields
   }
 }
 
-mutation ChangeCompanyAccess($changeAccessCompanyData: ChangeTypeAccessCompany!) {
-  changeCompanyAccess(data: $changeAccessCompanyData)
+mutation ChangeCompanyAccess($changeTypeAccessCompany: ChangeTypeAccessCompany!) {
+  changeCompanyAccess(args: $changeTypeAccessCompany)
 }
 
-mutation DeleteCompany($deleteCompanyUuid: String!) {
-  deleteCompany(companyUuid: $deleteCompanyUuid){
-    ...slimCompanyFields
-  }
+mutation DeleteCompany($deleteCompanyUuid: UUID!) {
+  deleteCompany(companyUuid: $deleteCompanyUuid)
 }
 
-mutation AddCompanyFav($companyUuid: String!) {
+mutation AddCompanyFav($companyUuid: UUID!) {
   addCompanyFav(companyUuid: $companyUuid)
 }
 
-mutation DeleteCompanyFav($companyUuid: String!) {
+mutation DeleteCompanyFav($companyUuid: UUID!) {
   deleteCompanyFav(companyUuid: $companyUuid)
-}
-
-fragment slimCompanyFields on SlimCompany {
-  uuid
-  shortname
-  isSupplier
 }
 
 fragment companyShortFields on ShowCompanyShort {
@@ -141,19 +133,19 @@ fragment uploadUrlFields on UploadFile {
   uploadUrl
 }
 
-mutation UpdateCompanyCertificate($updateCompanyCertData: IptUpdateCompanyCertificateData!) {
-  updateCompanyCertificate(data: $updateCompanyCertData)
+mutation UpdateCompanyCertificate($iptUpdateCompanyCertificateData: IptUpdateCompanyCertificateData!) {
+  updateCompanyCertificate(args: $iptUpdateCompanyCertificateData)
 }
 
-mutation DeleteCompanyCertificate($delCompanyCertData: DelCompanyCertificateData!) {
-  deleteCompanyCertificate(data: $delCompanyCertData)
+mutation DeleteCompanyCertificate($delCompanyCertificateData: DelCompanyCertificateData!) {
+  deleteCompanyCertificate(args: $delCompanyCertificateData)
 }
 
-mutation CompanyUpdate($companyUuid: String!, $dataCompanyUpdate: IptUpdateCompanyData!) {
-  putCompanyUpdate(companyUuid: $companyUuid, data: $dataCompanyUpdate)
+mutation CompanyUpdate($companyUuid: UUID!, $iptUpdateCompanyData: IptUpdateCompanyData!) {
+  putCompanyUpdate(companyUuid: $companyUuid, args: $iptUpdateCompanyData)
 }
 
-query GetCompanySettingDataOpt ($companyUuid: String!) {
+query GetCompanySettingDataOpt ($companyUuid: UUID!) {
   company(companyUuid: $companyUuid) {
     ...companyFields
   }
@@ -171,10 +163,8 @@ query GetCompanySettingDataOpt ($companyUuid: String!) {
   }
 }
 
-mutation RegisterCompany($ipt_company_data: IptCompanyData!) {
-  registerCompany(data: $ipt_company_data) {
-    ...slimCompanyFields
-  }
+mutation RegisterCompany($iptCompanyData: IptCompanyData!) {
+  registerCompany(args: $iptCompanyData)
 }
 
 query GetCreateCompanyDataOpt {
@@ -235,7 +225,7 @@ fragment companyFields on CompanyAndRelatedData {
 }
 
 mutation UploadCompanyFavicon(
-  $companyUuid: String!,
+  $companyUuid: UUID!,
   $filenameUploadFavicon: String!
 ) {
   uploadCompanyFavicon(
@@ -247,32 +237,32 @@ mutation UploadCompanyFavicon(
 }
 
 mutation UpdateCompanyRepresent(
-  $companyUuid: String!,
-  $companyRepresentUuid: String!,
-  $data: IptUpdateCompanyRepresentData!
+  $companyUuid: UUID!,
+  $companyRepresentUuid: UUID!,
+  $iptUpdateCompanyRepresentData: IptUpdateCompanyRepresentData!
 ){
   updateCompanyRepresent(
     companyUuid: $companyUuid,
     companyRepresentUuid: $companyRepresentUuid,
-    data: $data
+    args: $iptUpdateCompanyRepresentData
   )
 }
 
 mutation AddCompanySpecs($iptCompanySpecData: IptCompanySpecData!){
-  addCompanySpecs(data: $iptCompanySpecData)
+  addCompanySpecs(args: $iptCompanySpecData)
 }
 
 mutation DeleteCompanySpecs($iptCompanySpecData: IptCompanySpecData!){
-  deleteCompanySpecs(data: $iptCompanySpecData)
+  deleteCompanySpecs(args: $iptCompanySpecData)
 }
 
 mutation RegisterCompanyRepresent($iptCompanyRepresentData: IptCompanyRepresentData!){
-  registerCompanyRepresent(data: $iptCompanyRepresentData)
+  registerCompanyRepresent(args: $iptCompanyRepresentData)
 }
 
 mutation DeleteCompanyRepresent(
-  $companyUuid: String!,
-  $companyRepresentUuid: String!
+  $companyUuid: UUID!,
+  $companyRepresentUuid: UUID!
 ){
   deleteCompanyRepresent(
     companyUuid: $companyUuid,

@@ -12,24 +12,24 @@ use crate::types::{UUID, ShowFileInfo, DownloadFile};
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/standards.graphql",
+    query_path = "./graphql/components.graphql",
     response_derives = "Debug"
 )]
-struct StandardFiles;
+struct ComponentFiles;
 
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/standards.graphql",
+    query_path = "./graphql/components.graphql",
     response_derives = "Debug"
 )]
-struct DeleteStandardFile;
+struct DeleteComponentFile;
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
     pub show_download_btn: bool,
     pub show_delete_btn: bool,
-    pub standard_uuid: UUID,
+    pub component_uuid: UUID,
     pub file: ShowFileInfo,
 }
 
@@ -68,29 +68,31 @@ impl Component for FileItem {
 
         match msg {
             Msg::RequestDownloadFile => {
-                let standard_uuid = self.props.standard_uuid.clone();
+                let component_uuid = self.props.component_uuid.clone();
                 let file_uuid = self.props.file.uuid.clone();
                 spawn_local(async move {
-                    let ipt_standard_files_arg = standard_files::IptStandardFilesArg{
+                    let ipt_component_files_arg = component_files::IptComponentFilesArg{
                         filesUuids: Some(vec![file_uuid]),
-                        standardUuid: standard_uuid,
+                        componentUuid: component_uuid,
                     };
-                    let res = make_query(StandardFiles::build_query(standard_files::Variables {
-                        ipt_standard_files_arg
-                    })).await.unwrap();
-                    link.send_message(Msg::GetDownloadFileResult(res));
+                    let res = make_query(ComponentFiles::build_query(
+                        component_files::Variables {
+                            ipt_component_files_arg,
+                        }
+                    )).await;
+                    link.send_message(Msg::GetDownloadFileResult(res.unwrap()));
                 })
             },
             Msg::RequestDeleteFile => {
-                let standard_uuid = self.props.standard_uuid.clone();
+                let component_uuid = self.props.component_uuid.clone();
                 let file_uuid = self.props.file.uuid.clone();
                 spawn_local(async move {
-                    let delete_standard_file_data = delete_standard_file::DeleteStandardFileData{
+                    let delete_component_file_data = delete_component_file::DelComponentFileData{
                         fileUuid: file_uuid,
-                        standardUuid: standard_uuid,
+                        componentUuid: component_uuid,
                     };
-                    let res = make_query(DeleteStandardFile::build_query(delete_standard_file::Variables {
-                        delete_standard_file_data
+                    let res = make_query(DeleteComponentFile::build_query(delete_component_file::Variables {
+                        delete_component_file_data
                     })).await.unwrap();
                     link.send_message(Msg::GetDeleteFileResult(res));
                 })
@@ -102,8 +104,8 @@ impl Component for FileItem {
 
                 match res.is_null() {
                     false => {
-                        let result: Vec<DownloadFile> = serde_json::from_value(res.get("standardFiles").unwrap().clone()).unwrap();
-                        debug!("standardFiles: {:?}", result);
+                        let result: Vec<DownloadFile> = serde_json::from_value(res.get("componentFiles").unwrap().clone()).unwrap();
+                        debug!("componentFiles: {:?}", result);
                     },
                     true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }
@@ -114,7 +116,7 @@ impl Component for FileItem {
 
                 match res.is_null() {
                     false => {
-                        let result: bool = serde_json::from_value(res.get("deleteStandardFile").unwrap().clone()).unwrap();
+                        let result: bool = serde_json::from_value(res.get("deleteComponentFile").unwrap().clone()).unwrap();
                         debug!("deleteFile: {:?}", result);
                         self.get_result_delete = result;
                     },

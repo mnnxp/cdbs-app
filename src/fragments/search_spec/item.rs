@@ -73,16 +73,10 @@ impl Component for SpecTagItem {
                         companyUuid: company_uuid,
                         specIds: vec![spec_id],
                     };
-                    let res = make_query(DeleteCompanySpecs::build_query(
-                        delete_company_specs::Variables {
-                            ipt_company_spec_data,
-                        },
-                    ))
-                    .await;
-                    link.send_message(Msg::GetSpecResult(
-                        res.unwrap(),
-                        "deleteCompanySpecs".to_string(),
-                    ));
+                    let res = make_query(DeleteCompanySpecs::build_query(delete_company_specs::Variables {
+                        ipt_company_spec_data,
+                    })).await.unwrap();
+                    link.send_message(Msg::GetSpecResult(res, "deleteCompanySpecs".to_string()));
                 })
             }
             Msg::RequestAddSpec => {
@@ -93,15 +87,10 @@ impl Component for SpecTagItem {
                         companyUuid: company_uuid,
                         specIds: vec![spec_id],
                     };
-                    let res =
-                        make_query(AddCompanySpecs::build_query(add_company_specs::Variables {
-                            ipt_company_spec_data,
-                        }))
-                        .await;
-                    link.send_message(Msg::GetSpecResult(
-                        res.unwrap(),
-                        "addCompanySpecs".to_string(),
-                    ));
+                    let res = make_query(AddCompanySpecs::build_query(add_company_specs::Variables {
+                        ipt_company_spec_data,
+                    })).await.unwrap();
+                    link.send_message(Msg::GetSpecResult(res, "addCompanySpecs".to_string()));
                 })
             }
             Msg::ResponseError(err) => {
@@ -120,9 +109,7 @@ impl Component for SpecTagItem {
                         // self.is_added = result > 0;
                         self.is_added = !self.is_added;
                     }
-                    true => {
-                        link.send_message(Msg::ResponseError(get_error(&data)));
-                    }
+                    true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }
             }
             Msg::Ignore => {

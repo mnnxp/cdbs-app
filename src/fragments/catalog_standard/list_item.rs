@@ -3,13 +3,41 @@ use yew_router::{
     agent::RouteRequest::ChangeRoute,
     prelude::*,
 };
+use wasm_bindgen_futures::spawn_local;
+use graphql_client::GraphQLQuery;
+use serde_json::Value;
+use log::debug;
+use crate::gqls::make_query;
+use crate::error::{Error, get_error};
 use crate::routes::AppRoute;
-use crate::fragments::switch_icon::res_btn;
-use crate::types::ShowStandardShort;
+use crate::fragments::{
+    list_errors::ListErrors,
+    switch_icon::res_btn,
+};
+use crate::types::{UUID, ShowStandardShort};
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/standards.graphql",
+    response_derives = "Debug"
+)]
+struct AddStandardFav;
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/standards.graphql",
+    response_derives = "Debug"
+)]
+struct DeleteStandardFav;
 
 pub enum Msg {
     OpenStandard,
     TriggerFav,
+    AddFav,
+    DelFav,
+    GetFavResult(String),
     Ignore,
 }
 
@@ -17,30 +45,34 @@ pub enum Msg {
 pub struct Props {
     pub data: ShowStandardShort,
     pub show_list: bool,
-    // pub triggerFav: Callback<MouseEvent>,
-    pub add_fav: Callback<String>,
-    pub del_fav : Callback<String>,
 }
 
-pub struct ListItem {
+pub struct ListItemStandard {
+    error: Option<Error>,
     router_agent: Box<dyn Bridge<RouteAgent>>,
     link: ComponentLink<Self>,
-    props: Props
+    props: Props,
+    is_followed: bool,
 }
 
-impl Component for ListItem {
+impl Component for ListItemStandard {
     type Message = Msg;
     type Properties = Props;
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+        let is_followed = props.data.is_followed;
         Self {
+            error: None,
             router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             link,
             props,
+            is_followed,
         }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
+        let link = self.link.clone();
+
         match msg {
             Msg::OpenStandard => {
                 // Redirect to profile page
@@ -49,10 +81,47 @@ impl Component for ListItem {
                 ).into()));
             },
             Msg::TriggerFav => {
-                if !self.props.data.is_followed {
-                    self.props.add_fav.emit("".to_string());
-                } else {
-                    self.props.del_fav.emit("".to_string());
+                match &self.is_followed {
+                    true => link.send_message(Msg::DelFav),
+                    false => link.send_message(Msg::AddFav),
+                }
+            },
+            Msg::AddFav => {
+                let standard_uuid = self.props.data.uuid.clone();
+                spawn_local(async move {
+                    let res = make_query(AddStandardFav::build_query(add_standard_fav::Variables{
+                        standard_uuid
+                    })).await;
+                    link.send_message(Msg::GetFavResult(res.unwrap()));
+                });
+            },
+            Msg::DelFav => {
+                let standard_uuid = self.props.data.uuid.clone();
+                spawn_local(async move {
+                    let res = make_query(DeleteStandardFav::build_query(delete_standard_fav::Variables{
+                      standard_uuid
+                    })).await;
+                    link.send_message(Msg::GetFavResult(res.unwrap()));
+                });
+            },
+            Msg::GetFavResult(res) => {
+                let data: Value = serde_json::from_str(res.as_str()).unwrap();
+                let res_value = data.as_object().unwrap().get("data").unwrap();
+
+                debug!("res value: {:#?}", res_value);
+
+                match res_value.is_null() {
+                    false => {
+                        let result: bool = match &self.is_followed {
+                            true => serde_json::from_value(res_value.get("deleteStandardFav").unwrap().clone()).unwrap(),
+                            false => serde_json::from_value(res_value.get("addStandardFav").unwrap().clone()).unwrap(),
+                        };
+                        debug!("Fav result: {:?}", result);
+                        if result {
+                            self.is_followed = !self.is_followed;
+                        }
+                    },
+                    true => self.error = Some(get_error(&data)),
                 }
             },
             Msg::Ignore => {},
@@ -61,11 +130,9 @@ impl Component for ListItem {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        // Should only return "true" if new properties are different to
-        // previously received properties.
-        // This standard has no properties so we will always return "false".
-        if self.props.show_list != props.show_list || self.props.data.is_followed != props.data.is_followed || self.props.data.uuid != props.data.uuid {
+        if self.props.show_list != props.show_list || self.props.data.uuid != props.data.uuid {
             self.props.show_list = props.show_list;
+            self.is_followed = props.data.is_followed;
             self.props.data = props.data;
             true
         } else {
@@ -74,27 +141,28 @@ impl Component for ListItem {
     }
 
     fn view(&self) -> Html {
-      // let clickEvent = self.link.ca;
-      // let Props { add_fav, del_fav, .. } = self.props.clone();
-
-      match self.props.show_list {
-        true => { self.showing_in_list() },
-        false => { self.showing_in_box() },
-      }
+      html!{<>
+        <ListErrors error=self.error.clone()/>
+        {match self.props.show_list {
+            true => { self.showing_in_list() },
+            false => { self.showing_in_box() },
+        }}
+      </>}
     }
 }
 
-impl ListItem {
+impl ListItemStandard {
     fn showing_in_list(&self) -> Html {
         let ShowStandardShort {
             classifier,
             name,
+            description,
             specified_tolerance,
             publication_at,
             owner_company,
             standard_status,
             updated_at,
-            is_followed,
+            // is_followed,
             ..
         } = &self.props.data;
 
@@ -103,7 +171,7 @@ impl ListItem {
 
         let mut class_res_btn = vec!["fa-bookmark"];
         let mut class_color_btn = "";
-        match is_followed {
+        match &self.is_followed {
             true => {
                 class_res_btn.push("fas");
                 class_color_btn = "color: #3298DD;";
@@ -115,56 +183,66 @@ impl ListItem {
 
         html! {
           <div class="box itemBox">
-            <article class="media center-media">
-              <div class="media-left">
-                <figure class="image is-96x96">
-                  // <div hidden={!is_supplier} class="top-tag" >{"supplier"}</div>
-                  <div class="top-tag" >{standard_status.name.to_string()}</div>
-                  <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
-                  // <img src={owner_company.image_file.download_url.to_string()} alt="Favicon profile"/>
-                </figure>
-              </div>
-              <div class="media-content" style="min-width: 0px;">
-                <div class="content">
-                  <p>
-                    <div style="margin-bottom:0" >
-                      {"classifier "} <span class="id-box has-text-grey-light has-text-weight-bold">{
-                          classifier
-                      }</span>
-                      <br/>
-                      {" specified tolerance "} <span class="id-box has-text-grey-light has-text-weight-bold">{
-                          specified_tolerance
-                      }</span>
+              <article class="media center-media">
+                  <div class="media-left">
+                    <figure class="image is-96x96">
+                      <div class="top-tag" >{standard_status.name.to_string()}</div>
+                      <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
+                      // <img src={owner_company.image_file.download_url.to_string()} alt="Favicon profile"/>
+                    </figure>
+                  </div>
+                  <div class="media-content">
+                    <div class="columns is-gapless" style="margin-bottom:0">
+                      <div class="column">
+                          {"classifier "} <span class="id-box has-text-grey-light has-text-weight-bold">{
+                              classifier
+                          }</span>
+                      </div>
+                      <div class="column">
+                          {" specified tolerance "} <span class="id-box has-text-grey-light has-text-weight-bold">{
+                              specified_tolerance
+                          }</span>
+                      </div>
                     </div>
-                    <div class="has-text-weight-bold is-size-4">{name}</div>
-                    <div class="overflow-title has-text-weight-bold">{
-                        format!("design by: {} {}",
-                            &owner_company.shortname,
-                            &owner_company.company_type.shortname
-                    )}</div>
-                  </p>
-                </div>
-              </div>
-              <div class="media-right overflow-title">
-                  {format!("publication: {:.*}", 10, publication_at.to_string())}
-                  <br/>
-                  {format!("updated: {:.*}", 10, updated_at.to_string())}
-                  // <br/>
-                  // {format!("Reg.№: {}", inn.to_string())}
-              </div>
-              <div class="media-right flexBox " >
-              {res_btn(classes!(
-                  String::from("fas fa-file")),
-                  show_standard_btn,
-                  String::new())}
-                {res_btn(
-                    classes!(class_res_btn),
-                    trigger_fab_btn,
-                    class_color_btn.to_string()
-                )}
-              </div>
-            </article>
-          </div>
+                    <div class="columns" style="margin-bottom:0">
+                        <div class="column">
+                            <div class="has-text-weight-bold is-size-4">{name}</div>
+                            <div class="overflow-title">
+                                {match &description.len() {
+                                    0..=50 => description.clone(),
+                                    _ => format!("{:.*}...", 50, description),
+                                }}
+                            </div>
+                            <div class="overflow-title">{"design by: "}<span class="has-text-weight-bold">{
+                                format!("{} {}",
+                                    &owner_company.shortname,
+                                    &owner_company.company_type.shortname
+                            )}</span></div>
+                        </div>
+                        <div class="column is-one-quarter flexBox" >
+                          {res_btn(classes!(
+                            String::from("fas fa-file")),
+                            show_standard_btn,
+                            String::new()
+                          )}
+                          {res_btn(
+                            classes!(class_res_btn),
+                            trigger_fab_btn,
+                            class_color_btn.to_string()
+                          )}
+                        </div>
+                    </div>
+                    <div class="columns is-gapless" style="margin-bottom:0">
+                        <div class="column">
+                          {format!("publication: {:.*}", 10, publication_at.to_string())}
+                        </div>
+                        <div class="column">
+                          {format!("updated: {:.*}", 10, updated_at.to_string())}
+                        </div>
+                    </div>
+                  </div>
+              </article>
+            </div>
         }
     }
 
@@ -176,7 +254,7 @@ impl ListItem {
             // publication_at,
             owner_company,
             standard_status,
-            is_followed,
+            // is_followed,
             ..
         } = self.props.data.clone();
 
@@ -185,7 +263,7 @@ impl ListItem {
 
         let mut class_res_btn = vec![];
         let mut class_color_btn = "";
-        match is_followed {
+        match &self.is_followed {
             true => {
                 class_res_btn.push("fas");
                 class_color_btn = "color: #3298DD;";
@@ -209,19 +287,13 @@ impl ListItem {
                     classifier
                 }</span>
                 <br/>
-                // {"specified tolerance "} <span class="id-box has-text-grey-light has-text-weight-bold">{
-                //     specified_tolerance
-                // }</span>
-                // <br/>
-                // {"published "} <span class="id-box has-text-grey-light has-text-weight-bold">{
-                //     {format!("{:.*}", 10, publication_at.to_string())}
-                // }</span>
               </div>
               <div class="has-text-weight-bold is-size-4">{name}</div>
-              <div class="overflow-title has-text-weight-bold">{format!("design by: {} {}",
-                &owner_company.shortname,
-                &owner_company.company_type.shortname
-              )}</div>
+              <div class="overflow-title">{"design by: "}<span class="has-text-weight-bold">{
+                  format!("{} {}",
+                      &owner_company.shortname,
+                      &owner_company.company_type.shortname
+              )}</span></div>
               <div class="btnBox">
                 <button class="button is-light is-fullwidth has-text-weight-bold"
                     onclick=show_standard_btn

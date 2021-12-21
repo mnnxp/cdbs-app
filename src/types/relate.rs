@@ -1,6 +1,6 @@
 use crate::types::file::DownloadFile;
 
-// use chrono::NaiveDateTime;
+use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]
@@ -101,4 +101,13 @@ pub struct TypeAccessInfo {
     pub lang_id: usize,
     pub name: String,
     pub type_access_id: usize,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct LicenseInfo {
+    pub id: usize,
+    pub name: String,
+    pub keyword: String,
+    pub publication_at: NaiveDateTime,
 }

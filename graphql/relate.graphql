@@ -1,5 +1,5 @@
-query GetTypesAccess($typeAccessIds: [Int!]) {
-  typesAccess(typeAccessIds: $typeAccessIds) {
+query GetTypesAccess($iptTypeAccessArg: IptTypeAccessArg) {
+  typesAccess(args: $iptTypeAccessArg) {
     ...typesAccessTransListFileds
   }
 }
@@ -14,6 +14,6 @@ mutation ConfirmUploadCompleted($fileUuids: [String!]!) {
   uploadCompleted(fileUuids: $fileUuids)
 }
 
-mutation DeleteFile($fileUuid: String!) {
+mutation DeleteFile($fileUuid: UUID!) {
   deleteFile(fileUuid: $fileUuid)
 }

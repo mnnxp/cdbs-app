@@ -11,8 +11,8 @@ query RegisterOpt {
   }
 }
 
-mutation RegUser($data: IptUserData!) {
-  registerUser(data: $data) {
+mutation RegUser($iptUserData: IptUserData!) {
+  registerUser(args: $iptUserData) {
     uuid
     username
     programId

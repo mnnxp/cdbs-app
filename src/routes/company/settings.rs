@@ -24,7 +24,7 @@ use crate::routes::AppRoute;
 use crate::services::is_authenticated;
 use crate::types::{
     UUID, SlimUser, CompanyUpdateInfo, CompanyInfo, Region,
-    CompanyType, TypeAccessInfo, SlimCompany, SpecPathInfo, Spec,
+    CompanyType, TypeAccessInfo, SpecPathInfo, Spec,
     Certificate, CompanyCertificate, CompanyRepresentInfo
 };
 
@@ -135,7 +135,7 @@ pub struct CompanySettings {
     company_types: Vec<CompanyType>,
     get_result_update: usize,
     get_result_access: bool,
-    get_result_remove_company: SlimCompany,
+    get_result_remove_company: bool,
     select_menu: Menu,
     edit_specs: bool,
     ipt_timer: Option<TimeoutTask>,
@@ -199,7 +199,7 @@ impl Component for CompanySettings {
             company_types: Vec::new(),
             get_result_update: 0,
             get_result_access: false,
-            get_result_remove_company: SlimCompany::default(),
+            get_result_remove_company: false,
             select_menu: Menu::Company,
             edit_specs: false,
             ipt_timer: None,
@@ -228,11 +228,9 @@ impl Component for CompanySettings {
 
         if first_render && is_authenticated() && !company_uuid.is_empty() {
             spawn_local(async move {
-                let res = make_query(GetCompanySettingDataOpt::build_query(
-                    get_company_setting_data_opt::Variables { company_uuid },
-                ))
-                .await
-                .unwrap();
+                let res = make_query(GetCompanySettingDataOpt::build_query(get_company_setting_data_opt::Variables{
+                    company_uuid
+                })).await.unwrap();
                 link.send_message(Msg::GetUpdateCompanyData(res.clone()));
                 link.send_message(Msg::UpdateList(res));
             })
@@ -264,7 +262,7 @@ impl Component for CompanySettings {
                         region_id,
                         company_type_id,
                     } = request_company;
-                    let data_company_update = company_update::IptUpdateCompanyData {
+                    let ipt_update_company_data = company_update::IptUpdateCompanyData {
                         orgname,
                         shortname,
                         inn,
@@ -279,29 +277,24 @@ impl Component for CompanySettings {
                     };
                     let res = make_query(CompanyUpdate::build_query(company_update::Variables {
                         company_uuid,
-                        data_company_update,
-                    }))
-                    .await;
-                    link.send_message(Msg::GetUpdateCompanyResult(res.unwrap()));
+                        ipt_update_company_data,
+                    })).await.unwrap();
+                    link.send_message(Msg::GetUpdateCompanyResult(res));
                 })
             }
             Msg::RequestChangeAccess => {
                 let company_uuid = self.company_uuid.clone();
                 let new_type_access = self.request_access.clone();
                 spawn_local(async move {
-                    let change_access_company_data =
-                        change_company_access::ChangeTypeAccessCompany {
-                            companyUuid: company_uuid,
-                            newTypeAccessId: new_type_access,
-                        };
+                    let change_type_access_company = change_company_access::ChangeTypeAccessCompany {
+                        companyUuid: company_uuid,
+                        newTypeAccessId: new_type_access,
+                    };
 
-                    let res = make_query(ChangeCompanyAccess::build_query(
-                        change_company_access::Variables {
-                            change_access_company_data,
-                        },
-                    ))
-                    .await;
-                    link.send_message(Msg::GetUpdateAccessResult(res.unwrap()));
+                    let res = make_query(ChangeCompanyAccess::build_query(change_company_access::Variables{
+                        change_type_access_company
+                    })).await.unwrap();
+                    link.send_message(Msg::GetUpdateAccessResult(res));
                 })
             }
             Msg::RequestRemoveCompany => {
@@ -309,9 +302,8 @@ impl Component for CompanySettings {
                 spawn_local(async move {
                     let res = make_query(DeleteCompany::build_query(delete_company::Variables {
                         delete_company_uuid,
-                    }))
-                    .await;
-                    link.send_message(Msg::GetRemoveCompanyResult(res.unwrap()));
+                    })).await.unwrap();
+                    link.send_message(Msg::GetRemoveCompanyResult(res));
                 })
             }
             Msg::ResponseError(err) => {
@@ -324,15 +316,13 @@ impl Component for CompanySettings {
 
                 match res.is_null() {
                     false => {
-                        let result: bool =
-                            serde_json::from_value(res.get("changeCompanyAccess").unwrap().clone())
-                                .unwrap();
+                        let result: bool = serde_json::from_value(
+                            res.get("changeCompanyAccess").unwrap().clone()
+                        ).unwrap();
                         debug!("Change company access: {:?}", result);
                         self.get_result_access = result;
                     }
-                    true => {
-                        link.send_message(Msg::ResponseError(get_error(&data)));
-                    }
+                    true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }
             }
             Msg::GetUpdateCompanyData(res) => {
@@ -348,42 +338,22 @@ impl Component for CompanySettings {
                         self.request_company = company_data.into();
                         self.rendered(false);
                     }
-                    true => {
-                        link.send_message(Msg::ResponseError(get_error(&data)));
-                    }
+                    true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }
             }
             Msg::UpdateTypeAccessId(type_access_id) => {
                 self.request_access = type_access_id.parse::<i64>().unwrap_or_default();
                 debug!("Update: {:?}", type_access_id);
             }
-            Msg::UpdateOrgname(orgname) => {
-                self.request_company.orgname = Some(orgname);
-            }
-            Msg::UpdateShortname(shortname) => {
-                self.request_company.shortname = Some(shortname);
-            }
-            Msg::UpdateInn(inn) => {
-                self.request_company.inn = Some(inn);
-            }
-            Msg::UpdateEmail(email) => {
-                self.request_company.email = Some(email);
-            }
-            Msg::UpdatePhone(phone) => {
-                self.request_company.phone = Some(phone);
-            }
-            Msg::UpdateDescription(description) => {
-                self.request_company.description = Some(description);
-            }
-            Msg::UpdateAddress(address) => {
-                self.request_company.address = Some(address);
-            }
-            Msg::UpdateSiteUrl(site_url) => {
-                self.request_company.site_url = Some(site_url);
-            }
-            Msg::UpdateTimeZone(time_zone) => {
-                self.request_company.time_zone = Some(time_zone);
-            }
+            Msg::UpdateOrgname(orgname) => self.request_company.orgname = Some(orgname),
+            Msg::UpdateShortname(shortname) => self.request_company.shortname = Some(shortname),
+            Msg::UpdateInn(inn) => self.request_company.inn = Some(inn),
+            Msg::UpdateEmail(email) => self.request_company.email = Some(email),
+            Msg::UpdatePhone(phone) => self.request_company.phone = Some(phone),
+            Msg::UpdateDescription(description) => self.request_company.description = Some(description),
+            Msg::UpdateAddress(address) => self.request_company.address = Some(address),
+            Msg::UpdateSiteUrl(site_url) => self.request_company.site_url = Some(site_url),
+            Msg::UpdateTimeZone(time_zone) => self.request_company.time_zone = Some(time_zone),
             Msg::UpdateRegionId(region_id) => {
                 self.request_company.region_id = Some(region_id.parse::<i64>().unwrap_or_default());
                 debug!("Update: {:?}", region_id);
@@ -420,9 +390,9 @@ impl Component for CompanySettings {
 
                 match res.is_null() {
                     false => {
-                        let delete_company: SlimCompany =
-                            serde_json::from_value(res.get("deleteCompany").unwrap().clone())
-                                .unwrap();
+                        let delete_company: bool = serde_json::from_value(
+                            res.get("deleteCompany").unwrap().clone()
+                        ).unwrap();
                         debug!("Delete company: {:?}", delete_company);
                         self.get_result_remove_company = delete_company;
                         match &self.props.current_user {
@@ -456,20 +426,15 @@ impl Component for CompanySettings {
                 }
             }
             Msg::GetCurrentData => {
-                let company_uuid = Some(self.company_uuid.clone());
+                let company_uuid = self.company_uuid.clone();
                 spawn_local(async move {
-                    let res =
-                        make_query(GetCompanyData::build_query(get_company_data::Variables {
-                            company_uuid,
-                        }))
-                        .await
-                        .unwrap();
+                    let res = make_query(GetCompanyData::build_query(get_company_data::Variables {
+                        company_uuid,
+                    })).await.unwrap();
                     link.send_message(Msg::GetUpdateCompanyData(res));
                 })
             }
-            Msg::EditSpecs(mode) => {
-                self.edit_specs = mode;
-            }
+            Msg::EditSpecs(mode) => self.edit_specs = mode,
             Msg::SetIptTimer(val) => {
                 debug!("ipt_val: {:?}", val.clone());
                 if val.is_empty() {
@@ -485,19 +450,16 @@ impl Component for CompanySettings {
                         let ipt_val = val.clone();
                         let res_link = link.clone();
                         spawn_local(async move {
-                            let arg = Some(search_specs::IptSearchSpecArg {
+                            let ipt_search_spec_arg = search_specs::IptSearchSpecArg {
                                 text: ipt_val.clone(),
                                 splitChar: None,
                                 depthLevel: None,
                                 limit: None,
                                 offset: None,
-                            });
-                            let res =
-                                make_query(SearchSpecs::build_query(search_specs::Variables {
-                                    arg,
-                                }))
-                                .await
-                                .unwrap();
+                            };
+                            let res = make_query(SearchSpecs::build_query(search_specs::Variables{
+                                ipt_search_spec_arg
+                            })).await.unwrap();
                             res_link.send_message(Msg::GetSearchRes(res));
                         });
                         debug!("time up: {:?}", val.clone());
@@ -643,7 +605,7 @@ impl Component for CompanySettings {
                                             </span>
                                             <br/>
                                             <span id="tag-info-remove-company" class="tag is-info is-light">
-                                              { format!("Company delete: {}", self.get_result_remove_company.shortname) }
+                                              { format!("Company delete: {}", self.get_result_remove_company) }
                                             </span>
                                             <br/>
                                             { self.fieldset_remove_company() }

@@ -92,8 +92,10 @@ impl Component for Register {
         let link = self.link.clone();
         if first_render {
             spawn_local(async move {
-                let res = make_query(RegisterOpt::build_query(register_opt::Variables)).await;
-                link.send_message(Msg::UpdateList(res.unwrap()))
+                let res = make_query(RegisterOpt::build_query(
+                    register_opt::Variables
+                )).await.unwrap();
+                link.send_message(Msg::UpdateList(res))
             });
         }
     }
@@ -119,7 +121,7 @@ impl Component for Register {
                         region_id,
                         program_id,
                     } = request;
-                    let data = reg_user::IptUserData {
+                    let ipt_user_data = reg_user::IptUserData {
                         email,
                         username,
                         password,
@@ -129,14 +131,16 @@ impl Component for Register {
                         phone: Some(phone),
                         description: Some(description),
                         address: Some(address),
-                        timeZone: Some(time_zone.to_string()),
+                        timeZone: Some(time_zone.clone()),
                         position: Some(position),
                         regionId: Some(region_id.into()),
                         programId: Some(program_id.into()),
                         typeAccessId: Some(1), // todo!(make change in future)
                     };
-                    let res = make_query(RegUser::build_query(reg_user::Variables { data })).await;
-                    link.send_message(Msg::GetRegister(res.unwrap()));
+                    let res = make_query(RegUser::build_query(reg_user::Variables {
+                        ipt_user_data
+                    })).await.unwrap();
+                    link.send_message(Msg::GetRegister(res));
                 })
             }
             // Msg::Response(Ok(slim_user)) => {

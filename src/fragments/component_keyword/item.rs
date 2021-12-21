@@ -15,15 +15,15 @@ use crate::types::{UUID, Keyword};
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/standards.graphql",
+    query_path = "./graphql/components.graphql",
     response_derives = "Debug"
 )]
-struct DeleteStandardKeywords;
+struct DeleteComponentKeywords;
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
     pub show_delete_btn: bool,
-    pub standard_uuid: UUID,
+    pub component_uuid: UUID,
     pub keyword: Keyword,
     pub style_tag: Option<String>,
     pub delete_keyword: Option<Callback<Keyword>>,
@@ -60,17 +60,19 @@ impl Component for KeywordTagItem {
 
         match msg {
             Msg::RequestDeleteKeyword => {
-                let standard_uuid = self.props.standard_uuid.clone();
+                let component_uuid = self.props.component_uuid.clone();
                 let keyword_id = self.props.keyword.id as i64;
                 spawn_local(async move {
-                    let ipt_standard_keywords_data = delete_standard_keywords::IptStandardKeywordsData{
-                        standardUuid: standard_uuid,
+                    let ipt_component_keywords_data = delete_component_keywords::IptComponentKeywordsData{
+                        componentUuid: component_uuid,
                         keywordIds: vec![keyword_id],
                     };
-                    let res = make_query(DeleteStandardKeywords::build_query(delete_standard_keywords::Variables {
-                        ipt_standard_keywords_data,
-                    })).await.unwrap();
-                    link.send_message(Msg::GetDeleteKeywordResult(res));
+                    let res = make_query(DeleteComponentKeywords::build_query(
+                        delete_component_keywords::Variables {
+                            ipt_component_keywords_data,
+                        }
+                    )).await;
+                    link.send_message(Msg::GetDeleteKeywordResult(res.unwrap()));
                 })
             },
             Msg::ResponseError(err) => {
@@ -82,8 +84,8 @@ impl Component for KeywordTagItem {
 
                 match res.is_null() {
                     false => {
-                        let result: usize = serde_json::from_value(res.get("deleteStandardKeywords").unwrap().clone()).unwrap();
-                        debug!("deleteStandardKeywords: {:?}", result);
+                        let result: usize = serde_json::from_value(res.get("deleteComponentKeywords").unwrap().clone()).unwrap();
+                        debug!("deleteComponentKeywords: {:?}", result);
                         match &self.props.delete_keyword {
                             Some(delete_keyword) => {
                                 if result > 0 {

@@ -23,24 +23,24 @@ struct GetSpecsPaths;
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/standards.graphql",
+    query_path = "./graphql/components.graphql",
     response_derives = "Debug"
 )]
-struct AddStandardSpecs;
+struct AddComponentSpecs;
 
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/standards.graphql",
+    query_path = "./graphql/components.graphql",
     response_derives = "Debug"
 )]
-struct DeleteStandardSpecs;
+struct DeleteComponentSpecs;
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
     pub show_manage_btn: bool,
     pub active_info_btn: bool,
-    pub standard_uuid: UUID,
+    pub component_uuid: UUID,
     pub spec: Spec,
     pub is_added: bool,
     pub style_tag: Option<String>,
@@ -102,39 +102,37 @@ impl Component for SpecTagItem {
                         offset: None,
                     };
                     let res = make_query(GetSpecsPaths::build_query(get_specs_paths::Variables {
-                        ipt_spec_path_arg: Some(arguments)
+                        ipt_spec_path_arg: Some(arguments),
                     })).await.unwrap();
                     link.send_message(Msg::GetSpecInfoResult(res));
                 })
             },
             Msg::RequestDeleteSpec => {
-                let standard_uuid = self.props.standard_uuid.clone();
+                let component_uuid = self.props.component_uuid.clone();
                 let spec_id = self.props.spec.spec_id as i64;
                 spawn_local(async move {
-                    let ipt_standard_specs_data = delete_standard_specs::IptStandardSpecsData{
-                        standardUuid: standard_uuid,
+                    let ipt_component_specs_data = delete_component_specs::IptComponentSpecsData{
+                        componentUuid: component_uuid,
                         specIds: vec![spec_id],
                     };
-                    let res = make_query(DeleteStandardSpecs::build_query(delete_standard_specs::Variables {
-                        ipt_standard_specs_data
+                    let res = make_query(DeleteComponentSpecs::build_query(delete_component_specs::Variables {
+                        ipt_component_specs_data
                     })).await.unwrap();
                     link.send_message(Msg::GetDeleteSpecResult(res));
                 })
             },
             Msg::RequestAddSpec => {
-                let standard_uuid = self.props.standard_uuid.clone();
+                let component_uuid = self.props.component_uuid.clone();
                 let spec_id = self.props.spec.spec_id as i64;
                 spawn_local(async move {
-                    let ipt_standard_specs_data = add_standard_specs::IptStandardSpecsData {
-                        standardUuid: standard_uuid,
+                    let ipt_component_specs_data = add_component_specs::IptComponentSpecsData {
+                        componentUuid: component_uuid,
                         specIds: vec![spec_id],
                     };
-                    let res =
-                        make_query(AddStandardSpecs::build_query(add_standard_specs::Variables {
-                            ipt_standard_specs_data,
-                        }))
-                        .await;
-                    link.send_message(Msg::GetAddedSpecResult(res.unwrap()));
+                    let res = make_query(AddComponentSpecs::build_query(add_component_specs::Variables {
+                        ipt_component_specs_data
+                    })).await.unwrap();
+                    link.send_message(Msg::GetAddedSpecResult(res));
                 })
             },
             Msg::ResponseError(err) => self.error = Some(err),
@@ -160,8 +158,8 @@ impl Component for SpecTagItem {
 
                 match res.is_null() {
                     false => {
-                        let result: usize = serde_json::from_value(res.get("addStandardSpecs").unwrap().clone()).unwrap();
-                        debug!("addStandardSpecs: {:?}", result);
+                        let result: usize = serde_json::from_value(res.get("addComponentSpecs").unwrap().clone()).unwrap();
+                        debug!("addComponentSpecs: {:?}", result);
                         // self.get_result_delete = result > 0;
                         match &self.props.added_spec {
                             Some(added_spec) => {
@@ -183,8 +181,8 @@ impl Component for SpecTagItem {
 
                 match res.is_null() {
                     false => {
-                        let result: usize = serde_json::from_value(res.get("deleteStandardSpecs").unwrap().clone()).unwrap();
-                        debug!("deleteStandardSpecs: {:?}", result);
+                        let result: usize = serde_json::from_value(res.get("deleteComponentSpecs").unwrap().clone()).unwrap();
+                        debug!("deleteComponentSpecs: {:?}", result);
                         // self.get_result_delete = result > 0;
                         match &self.props.delete_spec {
                             Some(delete_spec) => {

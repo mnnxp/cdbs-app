@@ -1,5 +1,7 @@
 //! Components used by route pages
 
+pub mod component;
+
 pub mod footer;
 pub mod header;
 pub mod list_errors;
@@ -12,6 +14,10 @@ pub mod standard_file;
 pub mod spec;
 pub mod standard_spec;
 pub mod standard_keyword;
+pub mod component_file;
+pub mod component_modification;
+pub mod component_keyword;
+pub mod component_spec;
 pub mod user_certificate;
 pub mod user_add_certificate;
 pub mod upload_favicon;

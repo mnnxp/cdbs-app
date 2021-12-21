@@ -179,9 +179,9 @@ impl Component for Settings {
         let link = self.link.clone();
         if first_render && is_authenticated() {
             spawn_local(async move {
-                let res = make_query(
-                    GetSettingDataOpt::build_query(get_setting_data_opt::Variables)
-                ).await.unwrap();
+                let res = make_query(GetSettingDataOpt::build_query(
+                    get_setting_data_opt::Variables
+                )).await.unwrap();
                 link.send_message(Msg::GetUpdateProfileData(res.clone()));
                 link.send_message(Msg::UpdateList(res));
             })
@@ -213,7 +213,7 @@ impl Component for Settings {
                         region_id,
                         program_id,
                     } = request_profile;
-                    let data_user_update = user_update::IptUpdateUserData {
+                    let ipt_update_user_data = user_update::IptUpdateUserData {
                         email,
                         firstname,
                         lastname,
@@ -228,20 +228,18 @@ impl Component for Settings {
                         programId: program_id,
                     };
                     let res = make_query(UserUpdate::build_query(user_update::Variables {
-                        data_user_update
-                    })).await;
-                    link.send_message(Msg::GetUpdateProfileResult(res.unwrap()));
+                        ipt_update_user_data
+                    })).await.unwrap();
+                    link.send_message(Msg::GetUpdateProfileResult(res));
                 })
             },
             Msg::RequestChangeAccess => {
                 let new_type_access = self.request_access.clone();
                 spawn_local(async move {
-                    let res = make_query(ChangeTypeAccessUser::build_query(
-                        change_type_access_user::Variables {
-                            new_type_access,
-                        }
-                    )).await;
-                    link.send_message(Msg::GetUpdateAccessResult(res.unwrap()));
+                    let res = make_query(ChangeTypeAccessUser::build_query(change_type_access_user::Variables{
+                        new_type_access,
+                    })).await.unwrap();
+                    link.send_message(Msg::GetUpdateAccessResult(res));
                 })
             },
             Msg::UpdateTypeAccessId(type_access_id) => {
@@ -270,14 +268,14 @@ impl Component for Settings {
                         old_password,
                         new_password,
                     } = request_password;
-                    let data_update_pwd = put_update_password::IptUpdatePassword {
+                    let ipt_update_password = put_update_password::IptUpdatePassword {
                         oldPassword: old_password,
                         newPassword: new_password,
                     };
-                    let res = make_query(PutUpdatePassword::build_query(
-                        put_update_password::Variables { data_update_pwd })
-                    ).await;
-                    link.send_message(Msg::GetUpdatePwdResult(res.unwrap()));
+                    let res = make_query(PutUpdatePassword::build_query(put_update_password::Variables{
+                        ipt_update_password
+                    })).await.unwrap();
+                    link.send_message(Msg::GetUpdatePwdResult(res));
                 })
             },
             Msg::UpdateOldPassword(old_password) => {
@@ -404,19 +402,19 @@ impl Component for Settings {
             },
             Msg::GetCurrentData => {
                 spawn_local(async move {
-                    let res = make_query(
-                        GetSelfData::build_query(get_self_data::Variables)
-                    ).await.unwrap();
+                    let res = make_query(GetSelfData::build_query(
+                        get_self_data::Variables
+                    )).await.unwrap();
                     link.send_message(Msg::GetUpdateProfileData(res));
                 })
             },
             Msg::RequestRemoveProfile => {
                 let user_password = self.request_user_password.clone();
                 spawn_local(async move {
-                    let res = make_query(DeleteUserData::build_query(
-                        delete_user_data::Variables { user_password })
-                    ).await;
-                    link.send_message(Msg::GetRemoveProfileResult(res.unwrap()));
+                    let res = make_query(DeleteUserData::build_query(delete_user_data::Variables{
+                        user_password
+                    })).await.unwrap();
+                    link.send_message(Msg::GetRemoveProfileResult(res));
                 })
             },
             Msg::UpdateUserPassword(user_password) => {

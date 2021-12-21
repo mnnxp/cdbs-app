@@ -11,7 +11,7 @@ use crate::types::{UUID, ShowFileInfo};
 pub struct Props {
     pub show_download_btn: bool,
     pub show_delete_btn: bool,
-    pub standard_uuid: UUID,
+    pub component_uuid: UUID,
     pub files: Vec<ShowFileInfo>,
 }
 
@@ -49,7 +49,7 @@ impl Component for FilesCard {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.standard_uuid == props.standard_uuid &&
+        if self.props.component_uuid == props.component_uuid &&
             self.props.show_download_btn == props.show_download_btn &&
                 self.props.show_delete_btn == props.show_delete_btn &&
                     self.props.files.len() == props.files.len() {
@@ -69,14 +69,14 @@ impl Component for FilesCard {
                         (_, true) => html! {<FileItem
                           show_download_btn = self.props.show_download_btn.clone()
                           show_delete_btn = self.props.show_delete_btn.clone()
-                          standard_uuid = self.props.standard_uuid.clone()
+                          component_uuid = self.props.component_uuid.clone()
                           file = file.clone()
                         />},
                         // show full list or first 4 items
                         (false, false) => html! {<FileItem
                           show_download_btn = self.props.show_download_btn.clone()
                           show_delete_btn = self.props.show_delete_btn.clone()
-                          standard_uuid = self.props.standard_uuid.clone()
+                          component_uuid = self.props.component_uuid.clone()
                           file = file.clone()
                         />},
                         _ => html!{},

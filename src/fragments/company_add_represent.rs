@@ -80,9 +80,9 @@ impl Component for AddCompanyRepresentCard {
 
         if first_render && is_authenticated() {
             spawn_local(async move {
-                let res = make_query(
-                    GetRepresentDataOpt::build_query(get_represent_data_opt::Variables)
-                ).await.unwrap();
+                let res = make_query(GetRepresentDataOpt::build_query(
+                    get_represent_data_opt::Variables
+                )).await.unwrap();
                 link.send_message(Msg::UpdateList(res));
             })
         }
@@ -119,18 +119,13 @@ impl Component for AddCompanyRepresentCard {
                         address,
                         phone,
                     };
-                    let res = make_query(RegisterCompanyRepresent::build_query(
-                        register_company_represent::Variables {
-                            ipt_company_represent_data,
-                        }
-                    )).await;
-                    link.send_message(Msg::GetRegisterResult(res.unwrap()));
+                    let res = make_query(RegisterCompanyRepresent::build_query(register_company_represent::Variables {
+                        ipt_company_represent_data
+                    })).await.unwrap();
+                    link.send_message(Msg::GetRegisterResult(res));
                 })
             },
-            Msg::ResponseError(err) => {
-                self.error = Some(err);
-                // self.task = None;
-            },
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetRegisterResult(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
@@ -141,9 +136,7 @@ impl Component for AddCompanyRepresentCard {
                         debug!("Register company represent: {:?}", result);
                         self.get_result_register = result;
                     },
-                    true => {
-                        link.send_message(Msg::ResponseError(get_error(&data)));
-                    }
+                    true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }
             },
             Msg::UpdateRegionId(region_id) => {
@@ -172,9 +165,7 @@ impl Component for AddCompanyRepresentCard {
                         self.represent_types =
                             serde_json::from_value(res_value.get("companyRepresentTypes").unwrap().clone()).unwrap();
                     },
-                    true => {
-                        self.error = Some(get_error(&data));
-                    },
+                    true => self.error = Some(get_error(&data)),
                 }
             },
         }

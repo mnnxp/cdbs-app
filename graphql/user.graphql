@@ -54,18 +54,18 @@ query GetSettingDataOpt {
   }
 }
 
-query GetUsersShortList($arguments: IptUsersArg) {
-  users(arguments: $arguments) {
+query GetUsersShortList($iptUsersArg: IptUsersArg) {
+  users(args: $iptUsersArg) {
     ...showUserShortFields
   }
 }
 
-mutation UserUpdate($dataUserUpdate: IptUpdateUserData!) {
-  putUserUpdate(data: $dataUserUpdate)
+mutation UserUpdate($iptUpdateUserData: IptUpdateUserData!) {
+  putUserUpdate(args: $iptUpdateUserData)
 }
 
-mutation PutUpdatePassword($dataUpdatePwd: IptUpdatePassword!) {
-  putUpdatePassword(data: $dataUpdatePwd)
+mutation PutUpdatePassword($iptUpdatePassword: IptUpdatePassword!) {
+  putUpdatePassword(args: $iptUpdatePassword)
 }
 
 mutation ChangeTypeAccessUser($newTypeAccess: Int!) {
@@ -132,14 +132,14 @@ fragment selfUserFields on UserAndRelatedData {
 }
 
 
-query GetUserData($userUuid: String, $username: String) {
-  user (userUuid: $userUuid, username: $username) {
+query GetUserData($iptGetUserArg: IptGetUserArg!) {
+  user(args: $iptGetUserArg) {
     ...userFields
   }
 }
 
-query GetUserDataOpt ($username: String) {
-  user (username: $username) {
+query GetUserDataOpt ($iptGetUserArg: IptGetUserArg!) {
+  user(args: $iptGetUserArg) {
     ...userFields
   }
 
@@ -195,11 +195,11 @@ fragment userFields on ShowUserAndRelatedData {
   isFollowed
 }
 
-mutation AddUserFav($userUuid: String!) {
+mutation AddUserFav($userUuid: UUID!) {
   addUserFav(userUuid: $userUuid)
 }
 
-mutation DeleteUserFav($userUuid: String!) {
+mutation DeleteUserFav($userUuid: UUID!) {
   deleteUserFav(userUuid: $userUuid)
 }
 
@@ -215,28 +215,20 @@ fragment uploadUrlFields on UploadFile {
   uploadUrl
 }
 
-mutation UpdateUserCertificate($updateUserCertData: IptUpdateUserCertificateData!) {
-  updateUserCertificate(data: $updateUserCertData)
+mutation UpdateUserCertificate($iptUpdateUserCertificateData: IptUpdateUserCertificateData!) {
+  updateUserCertificate(args: $iptUpdateUserCertificateData)
 }
 
-mutation DeleteUserCertificate($delUserCertData: DelUserCertificateData!) {
-  deleteUserCertificate(data: $delUserCertData)
+mutation DeleteUserCertificate($delUserCertificateData: DelUserCertificateData!) {
+  deleteUserCertificate(args: $delUserCertificateData)
 }
 
 mutation DeleteUserData($UserPassword: String!) {
   deleteUserData(password: $UserPassword)
 }
 
-query GetNotifications(
-  $selectNotificationsIds: [Int!],
-  $notificationsLimit: Int,
-  $notificationsOffset: Int,
-) {
-  notifications(
-    selectIds: $selectNotificationsIds,
-    limit: $notificationsLimit,
-    offset: $notificationsOffset,
-  ) {
+query GetNotifications($iptNotificationArg: IptNotificationArg) {
+  notifications(args: $iptNotificationArg) {
     ...notificationsFields
   }
 }

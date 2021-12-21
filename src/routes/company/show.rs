@@ -139,11 +139,11 @@ impl Component for ShowCompany {
 
         if (first_render || not_matches_company_uuid) && is_authenticated() {
             // update current_company_uuid for checking change profile in route
-            self.current_company_uuid = target_company_uuid.to_string();
+            self.current_company_uuid = target_company_uuid.clone();
 
             spawn_local(async move {
                 let res = make_query(GetCompanyData::build_query(get_company_data::Variables {
-                    company_uuid: Some(target_company_uuid),
+                    company_uuid: target_company_uuid,
                 })).await.unwrap();
 
                 link.send_message(Msg::GetCompanyData(res.clone()));
@@ -157,11 +157,11 @@ impl Component for ShowCompany {
         match msg {
             Msg::Follow => {
                 let link = self.link.clone();
-                let company_uuid_string = self.profile.as_ref().unwrap().uuid.to_string();
+                let company_uuid = self.profile.as_ref().unwrap().uuid.clone();
 
                 spawn_local(async move {
-                    let res = make_query(AddCompanyFav::build_query(add_company_fav::Variables {
-                        company_uuid: company_uuid_string,
+                    let res = make_query(AddCompanyFav::build_query(add_company_fav::Variables{
+                        company_uuid
                     })).await.unwrap();
 
                     link.send_message(Msg::AddFollow(res.clone()));
@@ -182,23 +182,19 @@ impl Component for ShowCompany {
                             self.is_followed = true;
                         }
                     }
-                    true => {
-                        self.error = Some(get_error(&data));
-                    }
+                    true => self.error = Some(get_error(&data)),
                 }
             }
             Msg::UnFollow => {
                 let link = self.link.clone();
-                let company_uuid_string = self.profile.as_ref().unwrap().uuid.to_string();
+                let company_uuid = self.profile.as_ref().unwrap().uuid.clone();
 
                 spawn_local(async move {
-                    let res = make_query(DeleteCompanyFav::build_query(delete_company_fav::Variables {
-                        company_uuid: company_uuid_string,
-                    }))
-                    .await
-                    .unwrap();
+                    let res = make_query(DeleteCompanyFav::build_query(delete_company_fav::Variables{
+                        company_uuid,
+                    })).await.unwrap();
 
-                    link.send_message(Msg::DelFollow(res.clone()));
+                    link.send_message(Msg::DelFollow(res));
                 })
             }
             Msg::DelFollow(res) => {
