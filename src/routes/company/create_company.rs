@@ -158,42 +158,22 @@ impl Component for CreateCompany {
                             company_uuid.clone()
                         ).into()))
                     },
-                    true => {
-                        link.send_message(Msg::ResponseError(get_error(&data)));
-                    }
+                    true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }
             },
             Msg::UpdateTypeAccessId(type_access_id) => {
                 self.request_company.type_access_id = type_access_id.parse::<i64>().unwrap_or_default();
                 debug!("Update: {:?}", type_access_id);
             },
-            Msg::UpdateOrgname(orgname) => {
-                self.request_company.orgname = orgname;
-            },
-            Msg::UpdateShortname(shortname) => {
-                self.request_company.shortname = shortname;
-            },
-            Msg::UpdateInn(inn) => {
-                self.request_company.inn = inn;
-            },
-            Msg::UpdateEmail(email) => {
-                self.request_company.email = email;
-            },
-            Msg::UpdatePhone(phone) => {
-                self.request_company.phone = phone;
-            },
-            Msg::UpdateDescription(description) => {
-                self.request_company.description = description;
-            },
-            Msg::UpdateAddress(address) => {
-                self.request_company.address = address;
-            },
-            Msg::UpdateSiteUrl(site_url) => {
-                self.request_company.site_url = site_url;
-            },
-            Msg::UpdateTimeZone(time_zone) => {
-                self.request_company.time_zone = time_zone;
-            },
+            Msg::UpdateOrgname(orgname) => self.request_company.orgname = orgname,
+            Msg::UpdateShortname(shortname) => self.request_company.shortname = shortname,
+            Msg::UpdateInn(inn) => self.request_company.inn = inn,
+            Msg::UpdateEmail(email) => self.request_company.email = email,
+            Msg::UpdatePhone(phone) => self.request_company.phone = phone,
+            Msg::UpdateDescription(description) => self.request_company.description = description,
+            Msg::UpdateAddress(address) => self.request_company.address = address,
+            Msg::UpdateSiteUrl(site_url) => self.request_company.site_url = site_url,
+            Msg::UpdateTimeZone(time_zone) => self.request_company.time_zone = time_zone,
             Msg::UpdateRegionId(region_id) => {
                 self.request_company.region_id = region_id.parse::<i64>().unwrap_or_default();
                 debug!("Update: {:?}", region_id);
@@ -215,9 +195,7 @@ impl Component for CreateCompany {
                         self.types_access =
                             serde_json::from_value(res_value.get("typesAccess").unwrap().clone()).unwrap();
                     },
-                    true => {
-                        self.error = Some(get_error(&data));
-                    },
+                    true => self.error = Some(get_error(&data)),
                 }
             },
             Msg::Ignore => {},
@@ -265,47 +243,35 @@ impl CreateCompany {
     fn fieldset_company(
         &self
     ) -> Html {
-        let oninput_orgname = self
-            .link
+        let oninput_orgname = self.link
             .callback(|ev: InputData| Msg::UpdateOrgname(ev.value));
-        let oninput_shortname = self
-            .link
+        let oninput_shortname = self.link
             .callback(|ev: InputData| Msg::UpdateShortname(ev.value));
-        let oninput_inn = self
-            .link
+        let oninput_inn = self.link
             .callback(|ev: InputData| Msg::UpdateInn(ev.value));
-        let oninput_email = self
-            .link
+        let oninput_email = self.link
             .callback(|ev: InputData| Msg::UpdateEmail(ev.value));
-        let oninput_description = self
-            .link
+        let oninput_description = self.link
             .callback(|ev: InputData| Msg::UpdateDescription(ev.value));
-        let oninput_phone = self
-            .link
+        let oninput_phone = self.link
             .callback(|ev: InputData| Msg::UpdatePhone(ev.value));
-        let oninput_address = self
-            .link
+        let oninput_address = self.link
             .callback(|ev: InputData| Msg::UpdateAddress(ev.value));
-        let oninput_site_url = self
-            .link
+        let oninput_site_url = self.link
             .callback(|ev: InputData| Msg::UpdateSiteUrl(ev.value));
-        // let oninput_time_zone = self
-        //     .link
+        // let oninput_time_zone = self.link
         //     .callback(|ev: InputData| Msg::UpdateTimeZone(ev.value));
-        let onchange_region_id = self
-            .link
+        let onchange_region_id = self.link
             .callback(|ev: ChangeData| Msg::UpdateRegionId(match ev {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
-        let onchange_company_type_id = self
-            .link
+        let onchange_company_type_id = self.link
             .callback(|ev: ChangeData| Msg::UpdateCompanyTypeId(match ev {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
             }));
-        let onchange_type_access_id = self
-              .link
+        let onchange_type_access_id = self.link
               .callback(|ev: ChangeData| Msg::UpdateTypeAccessId(match ev {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
@@ -356,16 +322,8 @@ impl CreateCompany {
                                   >
                                 { for self.regions.iter().map(|x|
                                     match self.request_company.region_id == x.region_id as i64 {
-                                        true => {
-                                            html!{
-                                                <option value={x.region_id.to_string()} selected=true>{&x.region}</option>
-                                            }
-                                        },
-                                        false => {
-                                            html!{
-                                                <option value={x.region_id.to_string()}>{&x.region}</option>
-                                            }
-                                        },
+                                        true => html!{<option value={x.region_id.to_string()} selected=true>{&x.region}</option>},
+                                        false => html!{<option value={x.region_id.to_string()}>{&x.region}</option>},
                                     }
                                 )}
                               </select>
@@ -430,16 +388,8 @@ impl CreateCompany {
                           >
                         { for self.company_types.iter().map(|x|
                             match self.request_company.company_type_id == x.company_type_id as i64{
-                                true => {
-                                    html!{
-                                        <option value={x.company_type_id.to_string()} selected=true>{&x.name}</option>
-                                    }
-                                },
-                                false => {
-                                    html!{
-                                        <option value={x.company_type_id.to_string()}>{&x.name}</option>
-                                    }
-                                },
+                                true => html!{<option value={x.company_type_id.to_string()} selected=true>{&x.name}</option>},
+                                false => html!{<option value={x.company_type_id.to_string()}>{&x.name}</option>},
                             }
                         )}
                       </select>
@@ -457,16 +407,8 @@ impl CreateCompany {
                           >
                         { for self.types_access.iter().map(|x|
                             match self.request_company.type_access_id == x.type_access_id as i64{
-                                true => {
-                                    html!{
-                                        <option value={x.type_access_id.to_string()} selected=true>{&x.name}</option>
-                                    }
-                                },
-                                false => {
-                                    html!{
-                                        <option value={x.type_access_id.to_string()}>{&x.name}</option>
-                                    }
-                                },
+                                true => html!{<option value={x.type_access_id.to_string()} selected=true>{&x.name}</option>},
+                                false => html!{<option value={x.type_access_id.to_string()}>{&x.name}</option>},
                             }
                         )}
                       </select>
