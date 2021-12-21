@@ -36,6 +36,8 @@ pub enum AppRoute {
     Tenders,
     #[to = "#/components"]
     CatalogComponents,
+    #[to = "#/component/create"]
+    CreateComponent,
     #[to = "#/component/{uuid}"]
     ShowComponent(String),
     #[to = "#/notifications"]

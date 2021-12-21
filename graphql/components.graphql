@@ -1,6 +1,6 @@
 query GetComponentData($componentUuid: UUID!) {
   component(componentUuid: $componentUuid) {
-    ...componentAndRelatedDataFields
+    ...componentFields
   }
 }
 
@@ -70,6 +70,24 @@ query ComModFilesetFiles($iptFileOfFilesetArg: IptFileOfFilesetArg!) {
   }
 }
 
+query GetComponentDataOpt {
+  componentTypes {
+    ...componentTypeFields
+  }
+
+  componentActualStatuses {
+    ...actualStatusFields
+  }
+
+  typesAccess {
+    ...typeAccessFields
+  }
+}
+
+mutation RegisterComponent($iptComponentData: IptComponentData!) {
+  registerComponent(args: $iptComponentData)
+}
+
 fragment componentSuppliers on ComponentSupplierRelatedData {
   supplier {
     ...supplierFields
@@ -84,7 +102,7 @@ fragment supplierFields on SlimCompany {
   isSupplier
 }
 
-fragment componentAndRelatedDataFields on ComponentAndRelatedData {
+fragment componentFields on ComponentAndRelatedData {
   uuid
   parentComponentUuid
   name

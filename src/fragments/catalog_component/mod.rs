@@ -40,7 +40,6 @@ struct AddComponentFav;
 )]
 struct DeleteComponentFav;
 
-
 pub enum Msg {
     SwitchShowType,
     UpdateList(String),
@@ -204,7 +203,7 @@ impl Component for CatalogComponents {
                 <div class="level-left ">
                 {match &self.props.show_create_btn {
                     true => html! {
-                        <RouterAnchor<AppRoute> route=AppRoute::CreateTender >
+                        <RouterAnchor<AppRoute> route=AppRoute::CreateComponent >
                           <button class="button is-info" >{"Create"}</button>
                         </RouterAnchor<AppRoute>>
                     },

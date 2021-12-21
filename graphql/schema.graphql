@@ -1019,6 +1019,8 @@ type QueryRoot {
   componentModificationFilesetFiles(
     args: IptFileOfFilesetArg!
   ): [DownloadFile!]!
+  componentTypes(filter: [Int!]): [ComponentTypeTranslateList!]!
+  componentActualStatuses(filter: [Int!]): [ActualStatusTranslateList!]!
   standards(args: IptStandardsArg): [ShowStandardShort!]!
   standard(standardUuid: UUID!): StandardAndRelatedData!
   standardFiles(args: IptStandardFilesArg!): [DownloadFile!]!

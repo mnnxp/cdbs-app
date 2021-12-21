@@ -31,6 +31,32 @@ pub struct ComponentInfo {
   pub component_standards: Vec<ShowStandardShort>,
 }
 
+#[derive(Serialize, Deserialize, Clone, Default, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct ComponentCreateData {
+    pub parent_component_uuid: Option<UUID>,
+    pub name: String,
+    pub description: String,
+    pub type_access_id: usize,
+    pub component_type_id: usize,
+    pub actual_status_id: usize,
+    pub is_base: bool,
+}
+
+impl ComponentCreateData {
+    pub fn new() -> Self {
+        Self{
+            parent_component_uuid: None,
+            name: String::default(),
+            description: String::default(),
+            type_access_id: 1,
+            component_type_id: 1,
+            actual_status_id: 1,
+            is_base: false,
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct ShowComponentShort {

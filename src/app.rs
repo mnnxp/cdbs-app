@@ -25,7 +25,7 @@ use crate::routes::{
     profile::Profile,
     register::Register,
     settings::Settings,
-    component::ShowComponent,
+    component::{ShowComponent, CreateComponent},
     company::{ShowCompany, CompanySettings, CreateCompany},
     standard::{ShowStandard, StandardSettings, CreateStandard},
     AppRoute,
@@ -160,6 +160,7 @@ impl Component for App {
                                 current_user=self.current_user.clone()
                                 component_uuid=component_uuid.to_string()
                                 />},
+                            AppRoute::CreateComponent => html!{<CreateComponent />},
                             AppRoute::CreateTender => html!{<CreateTender />},
                         }
                     } else {
