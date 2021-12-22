@@ -25,7 +25,7 @@ use crate::routes::{
     profile::Profile,
     register::Register,
     settings::Settings,
-    component::{ShowComponent, CreateComponent},
+    component::{ShowComponent, ComponentSettings, CreateComponent},
     company::{ShowCompany, CompanySettings, CreateCompany},
     standard::{ShowStandard, StandardSettings, CreateStandard},
     AppRoute,
@@ -156,6 +156,10 @@ impl Component for App {
                             AppRoute::CreateStandard => html!{<CreateStandard />},
                             AppRoute::Tenders => html!{<Tenders />},
                             AppRoute::CatalogComponents => html!{<CatalogComponents show_create_btn = true />},
+                            AppRoute::ComponentSettings(component_uuid) => html!{<ComponentSettings
+                                current_user=self.current_user.clone()
+                                component_uuid=component_uuid.to_string()
+                            />},
                             AppRoute::ShowComponent(component_uuid) => html!{<ShowComponent
                                 current_user=self.current_user.clone()
                                 component_uuid=component_uuid.to_string()

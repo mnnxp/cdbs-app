@@ -70,6 +70,28 @@ query ComModFilesetFiles($iptFileOfFilesetArg: IptFileOfFilesetArg!) {
   }
 }
 
+query GetUpdateComponentDataOpt($componentUuid: UUID!, $iptCompaniesArg: IptCompaniesArg!) {
+  component(componentUuid: $componentUuid) {
+    ...componentFields
+  }
+
+  companies(args: $iptCompaniesArg) {
+    ...companyShortFields
+  }
+
+  componentTypes {
+    ...componentTypeFields
+  }
+
+  componentActualStatuses {
+    ...actualStatusFields
+  }
+
+  typesAccess {
+    ...typeAccessFields
+  }
+}
+
 query GetComponentDataOpt {
   componentTypes {
     ...componentTypeFields
@@ -84,8 +106,33 @@ query GetComponentDataOpt {
   }
 }
 
+query GetComponentKeywords($iptComponentKeywordsArg: IptComponentKeywordsArg!) {
+  componentKeywords(args: $iptComponentKeywordsArg) {
+    id
+    keyword
+  }
+}
+
 mutation RegisterComponent($iptComponentData: IptComponentData!) {
   registerComponent(args: $iptComponentData)
+}
+
+mutation DeleteComponent($componentUuid: UUID!) {
+  deleteComponent(componentUuid: $componentUuid)
+}
+
+mutation PutComponentUpdate($componentUuid: UUID!, $iptUpdateComponentData: IptUpdateComponentData!) {
+  putComponentUpdate(componentUuid: $componentUuid, args: $iptUpdateComponentData)
+}
+
+mutation ChangeComponentAccess($changeTypeAccessComponent: ChangeTypeAccessComponent!) {
+  changeComponentAccess(args: $changeTypeAccessComponent)
+}
+
+mutation UploadComponentFiles($iptComponentFilesData: IptComponentFilesData!) {
+  uploadComponentFiles(args: $iptComponentFilesData){
+    ...uploadUrlFields
+  }
 }
 
 fragment componentSuppliers on ComponentSupplierRelatedData {
@@ -158,6 +205,12 @@ fragment showUserShortFields on ShowUserShort {
   imageFile {
     ...downloadFileFields
   }
+}
+
+fragment uploadUrlFields on UploadFile {
+  fileUuid
+  filename
+  uploadUrl
 }
 
 fragment downloadFileFields on DownloadFile {

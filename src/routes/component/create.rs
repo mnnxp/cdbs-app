@@ -183,8 +183,7 @@ impl Component for CreateComponent {
                         // Redirect to setting component page
                         if !result.is_empty() {
                             self.router_agent.send(ChangeRoute(
-                                // AppRoute::ComponentSettings(result).into()
-                                AppRoute::ShowComponent(result).into()
+                                AppRoute::ComponentSettings(result).into()
                             ));
                         }
 

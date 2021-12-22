@@ -20,9 +20,9 @@ use crate::fragments::{
     // switch_icon::res_btn,
     list_errors::ListErrors,
     // catalog_component::CatalogComponents,
-    standard_file::FilesCard,
-    standard_spec::SearchSpecsTags,
-    standard_keyword::AddKeywordsTags,
+    component_file::FilesCard,
+    component_spec::SearchSpecsTags,
+    component_keyword::AddKeywordsTags,
 };
 use crate::gqls::make_query;
 use crate::services::{
@@ -30,8 +30,8 @@ use crate::services::{
     is_authenticated, get_logged_user
 };
 use crate::types::{
-    UUID, StandardInfo, SlimUser, Region, TypeAccessInfo, UploadFile,
-    ShowCompanyShort, StandardUpdatePreData, StandardUpdateData, StandardStatus,
+    UUID, ComponentInfo, SlimUser, TypeAccessInfo, UploadFile, ActualStatus,
+    ComponentUpdatePreData, ComponentUpdateData, ComponentType, // ShowCompanyShort,
 };
 
 type FileName = String;
@@ -39,42 +39,42 @@ type FileName = String;
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/standards.graphql",
+    query_path = "./graphql/components.graphql",
     response_derives = "Debug"
 )]
-struct GetUpdateStandardDataOpt;
+struct GetUpdateComponentDataOpt;
 
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/standards.graphql",
+    query_path = "./graphql/components.graphql",
     response_derives = "Debug"
 )]
-struct PutStandardUpdate;
+struct PutComponentUpdate;
 
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/standards.graphql",
+    query_path = "./graphql/components.graphql",
     response_derives = "Debug"
 )]
-struct DeleteStandard;
+struct DeleteComponent;
 
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/standards.graphql",
+    query_path = "./graphql/components.graphql",
     response_derives = "Debug"
 )]
-struct ChangeStandardAccess;
+struct ChangeComponentAccess;
 
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/standards.graphql",
+    query_path = "./graphql/components.graphql",
     response_derives = "Debug"
 )]
-struct UploadStandardFiles;
+struct UploadComponentFiles;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -84,12 +84,12 @@ struct UploadStandardFiles;
 )]
 struct ConfirmUploadCompleted;
 
-/// Standard with relate data
-pub struct StandardSettings {
+/// Component with relate data
+pub struct ComponentSettings {
     error: Option<Error>,
-    current_standard: Option<StandardInfo>,
-    current_standard_uuid: UUID,
-    request_standard: StandardUpdatePreData,
+    current_component: Option<ComponentInfo>,
+    current_component_uuid: UUID,
+    request_component: ComponentUpdatePreData,
     request_upload_data: Vec<UploadFile>,
     request_upload_file: Callback<Result<Option<String>, Error>>,
     request_access: i64,
@@ -98,21 +98,21 @@ pub struct StandardSettings {
     task: Vec<FetchTask>,
     props: Props,
     link: ComponentLink<Self>,
-    supplier_list: Vec<ShowCompanyShort>,
-    standard_statuses: Vec<StandardStatus>,
-    regions: Vec<Region>,
+    // supplier_list: Vec<ShowCompanyShort>,
+    component_types: Vec<ComponentType>,
+    actual_statuses: Vec<ActualStatus>,
     types_access: Vec<TypeAccessInfo>,
-    update_standard: bool,
-    update_standard_access: bool,
-    upload_standard_files: bool,
+    update_component: bool,
+    update_component_access: bool,
+    upload_component_files: bool,
     put_upload_file: PutUploadFile,
     files: Vec<File>,
     files_index: u32,
-    disable_delete_standard_btn: bool,
-    confirm_delete_standard: String,
+    disable_delete_component_btn: bool,
+    confirm_delete_component: String,
     hide_delete_modal: bool,
     disable_save_changes_btn: bool,
-    get_result_standard_data: usize,
+    get_result_component_data: usize,
     get_result_access: bool,
     get_result_up_file: bool,
     get_result_up_completed: usize,
@@ -122,58 +122,53 @@ pub struct StandardSettings {
 #[derive(Properties, Clone)]
 pub struct Props {
     pub current_user: Option<SlimUser>,
-    pub standard_uuid: UUID,
+    pub component_uuid: UUID,
 }
 
 #[derive(Clone)]
 pub enum Msg {
-    OpenStandard,
+    OpenComponent,
     RequestManager,
-    RequestUpdateStandardData,
+    RequestUpdateComponentData,
     RequestChangeAccess,
-    RequestDeleteStandard,
-    RequestUploadStandardFiles,
+    RequestDeleteComponent,
+    RequestUploadComponentFiles,
     RequestUploadFile(Vec<u8>),
     ResponseUploadFile(Result<Option<String>, Error>),
     RequestUploadCompleted,
-    GetStandardData(String),
+    GetComponentData(String),
     GetListOpt(String),
-    GetUpdateStandardResult(String),
+    GetUpdateComponentResult(String),
     GetUpdateAccessResult(String),
     GetUploadData(String),
     GetUploadFile(Option<String>),
     GetUploadCompleted(String),
-    GetDeleteStandard(String),
+    GetDeleteComponent(String),
     EditFiles,
     UpdateTypeAccessId(String),
-    UpdateClassifier(String),
+    UpdateActualStatusId(String),
+    UpdateComponentTypeId(String),
     UpdateName(String),
     UpdateDescription(String),
-    UpdateSpecifiedTolerance(String),
-    UpdateTechnicalCommittee(String),
-    UpdatePublicationAt(String),
-    UpdateCompanyUuid(String),
-    UpdateStandardStatusId(String),
-    UpdateRegionId(String),
     UpdateFiles(FileList),
     UpdateConfirmDelete(String),
     ResponseError(Error),
-    ChangeHideDeleteStandard,
+    ChangeHideDeleteComponent,
     ClearFilesBoxed,
     ClearError,
     Ignore,
 }
 
-impl Component for StandardSettings {
+impl Component for ComponentSettings {
     type Message = Msg;
     type Properties = Props;
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        StandardSettings {
+        ComponentSettings {
             error: None,
-            current_standard: None,
-            current_standard_uuid: String::new(),
-            request_standard: StandardUpdatePreData::default(),
+            current_component: None,
+            current_component_uuid: String::new(),
+            request_component: ComponentUpdatePreData::default(),
             request_upload_data: Vec::new(),
             request_upload_file: link.callback(Msg::ResponseUploadFile),
             request_access: 0,
@@ -182,21 +177,21 @@ impl Component for StandardSettings {
             task: Vec::new(),
             props,
             link,
-            supplier_list: Vec::new(),
-            standard_statuses: Vec::new(),
-            regions: Vec::new(),
+            // supplier_list: Vec::new(),
+            component_types: Vec::new(),
+            actual_statuses: Vec::new(),
             types_access: Vec::new(),
-            update_standard: false,
-            update_standard_access: false,
-            upload_standard_files: false,
+            update_component: false,
+            update_component_access: false,
+            upload_component_files: false,
             put_upload_file: PutUploadFile::new(),
             files: Vec::new(),
             files_index: 0,
-            disable_delete_standard_btn: true,
-            confirm_delete_standard: String::new(),
+            disable_delete_component_btn: true,
+            confirm_delete_component: String::new(),
             hide_delete_modal: true,
             disable_save_changes_btn: true,
-            get_result_standard_data: 0,
+            get_result_component_data: 0,
             get_result_access: false,
             get_result_up_file: false,
             get_result_up_completed: 0,
@@ -205,38 +200,38 @@ impl Component for StandardSettings {
     }
 
     fn rendered(&mut self, first_render: bool) {
-        // get standard uuid for request standard data
+        // get component uuid for request component data
         let route_service: RouteService<()> = RouteService::new();
         // get target user from route
-        let target_standard_uuid = route_service
+        let target_component_uuid = route_service
             .get_fragment()
-            .trim_start_matches("#/standard/settings/")
+            .trim_start_matches("#/component/settings/")
             .to_string();
-        // get flag changing current standard in route
-        let not_matches_standard_uuid = target_standard_uuid != self.current_standard_uuid;
-        // debug!("self.current_standard_uuid {:#?}", self.current_standard_uuid);
+        // get flag changing current component in route
+        let not_matches_component_uuid = target_component_uuid != self.current_component_uuid;
+        // debug!("self.current_component_uuid {:#?}", self.current_component_uuid);
 
-        if not_matches_standard_uuid {
+        if not_matches_component_uuid {
             // clear old data
-            self.current_standard = None;
-            self.current_standard_uuid = String::new();
-            self.request_standard = StandardUpdatePreData::default();
+            self.current_component = None;
+            self.current_component_uuid = String::new();
+            self.request_component = ComponentUpdatePreData::default();
         }
 
         let link = self.link.clone();
 
         // debug!("get_self {:?}", get_self);
 
-        if (first_render || not_matches_standard_uuid) && is_authenticated() {
-            // update current_standard_uuid for checking change standard in route
-            self.current_standard_uuid = target_standard_uuid.clone();
+        if (first_render || not_matches_component_uuid) && is_authenticated() {
+            // update current_component_uuid for checking change component in route
+            self.current_component_uuid = target_component_uuid.clone();
             let user_uuid = match &self.props.current_user {
                 Some(user) => user.uuid.clone(),
                 None => get_logged_user().unwrap().uuid.clone(),
             };
 
             spawn_local(async move {
-                let ipt_companies_arg = get_update_standard_data_opt::IptCompaniesArg{
+                let ipt_companies_arg = get_update_component_data_opt::IptCompaniesArg{
                     companiesUuids: None,
                     userUuid: Some(user_uuid),
                     favorite: None,
@@ -244,12 +239,12 @@ impl Component for StandardSettings {
                     limit: None,
                     offset: None,
                 };
-                let res = make_query(GetUpdateStandardDataOpt::build_query(get_update_standard_data_opt::Variables {
-                    standard_uuid: target_standard_uuid,
+                let res = make_query(GetUpdateComponentDataOpt::build_query(get_update_component_data_opt::Variables {
+                    component_uuid: target_component_uuid,
                     ipt_companies_arg,
                 })).await.unwrap();
 
-                link.send_message(Msg::GetStandardData(res.clone()));
+                link.send_message(Msg::GetComponentData(res.clone()));
                 link.send_message(Msg::GetListOpt(res));
             })
         }
@@ -259,89 +254,81 @@ impl Component for StandardSettings {
         let link = self.link.clone();
 
         match msg {
-            Msg::OpenStandard => {
-                // Redirect to standard page
+            Msg::OpenComponent => {
+                // Redirect to component page
                 self.router_agent.send(ChangeRoute(
-                    AppRoute::ShowStandard(self.current_standard_uuid.clone()).into()
+                    AppRoute::ShowComponent(self.current_component_uuid.clone()).into()
                 ));
             },
             Msg::RequestManager => {
-                if self.update_standard {
-                    self.link.send_message(Msg::RequestUpdateStandardData)
+                if self.update_component {
+                    self.link.send_message(Msg::RequestUpdateComponentData)
                 }
-                if self.update_standard_access {
+                if self.update_component_access {
                     self.link.send_message(Msg::RequestChangeAccess)
                 }
 
-                if self.upload_standard_files && !self.files.is_empty() {
-                    self.link.send_message(Msg::RequestUploadStandardFiles);
+                if self.upload_component_files && !self.files.is_empty() {
+                    self.link.send_message(Msg::RequestUploadComponentFiles);
                 }
 
-                self.update_standard = false;
-                self.update_standard_access = false;
-                self.upload_standard_files = false;
+                self.update_component = false;
+                self.update_component_access = false;
+                self.upload_component_files = false;
                 self.disable_save_changes_btn = true;
-                self.get_result_standard_data = 0;
+                self.get_result_component_data = 0;
                 self.get_result_access = false;
             },
-            Msg::RequestUpdateStandardData => {
-                let standard_uuid = self.current_standard_uuid.clone();
-                let request_standard: StandardUpdateData = (&self.request_standard).into();
+            Msg::RequestUpdateComponentData => {
+                let component_uuid = self.current_component_uuid.clone();
+                let request_component: ComponentUpdateData = (&self.request_component).into();
 
                 spawn_local(async move {
-                    let StandardUpdateData {
-                        classifier,
+                    let ComponentUpdateData {
+                        parent_component_uuid,
                         name,
                         description,
-                        specified_tolerance,
-                        technical_committee,
-                        publication_at,
-                        company_uuid,
-                        standard_status_id,
-                        region_id,
-                    } = request_standard;
-                    let ipt_update_standard_data = put_standard_update::IptUpdateStandardData {
-                        classifier,
+                        component_type_id,
+                        actual_status_id,
+                    } = request_component;
+                    let ipt_update_component_data = put_component_update::IptUpdateComponentData {
+                        parentComponentUuid: parent_component_uuid,
                         name,
                         description,
-                        specifiedTolerance: specified_tolerance,
-                        technicalCommittee: technical_committee,
-                        publicationAt: publication_at,
-                        companyUuid: company_uuid,
-                        standardStatusId: standard_status_id,
-                        regionId: region_id,
+                        componentTypeId: component_type_id,
+                        actualStatusId: actual_status_id,
                     };
-                    let res = make_query(PutStandardUpdate::build_query(put_standard_update::Variables {
-                        standard_uuid,
-                        ipt_update_standard_data
+                    let res = make_query(PutComponentUpdate::build_query(put_component_update::Variables {
+                        component_uuid,
+                        ipt_update_component_data
                     })).await.unwrap();
-                    link.send_message(Msg::GetUpdateStandardResult(res));
+                    link.send_message(Msg::GetUpdateComponentResult(res));
                 })
             },
             Msg::RequestChangeAccess => {
-                let standard_uuid = self.current_standard_uuid.clone();
+                let component_uuid = self.current_component_uuid.clone();
                 let new_type_access_id = self.request_access.clone();
                 spawn_local(async move {
-                    let change_type_access_standard = change_standard_access::ChangeTypeAccessStandard{
-                        standardUuid: standard_uuid,
+                    let change_type_access_component = change_component_access::ChangeTypeAccessComponent{
+                        componentUuid: component_uuid,
                         newTypeAccessId: new_type_access_id,
                     };
-                    let res = make_query(ChangeStandardAccess::build_query(change_standard_access::Variables {
-                        change_type_access_standard
+                    let res = make_query(ChangeComponentAccess::build_query(change_component_access::Variables {
+                        change_type_access_component
                     })).await.unwrap();
                     link.send_message(Msg::GetUpdateAccessResult(res));
                 })
             },
-            Msg::RequestDeleteStandard => {
-                let standard_uuid = self.current_standard_uuid.clone();
+            Msg::RequestDeleteComponent => {
+                let component_uuid = self.current_component_uuid.clone();
                 spawn_local(async move {
-                    let res = make_query(DeleteStandard::build_query(
-                        delete_standard::Variables { standard_uuid }
+                    let res = make_query(DeleteComponent::build_query(
+                        delete_component::Variables { component_uuid }
                     )).await.unwrap();
-                    link.send_message(Msg::GetDeleteStandard(res));
+                    link.send_message(Msg::GetDeleteComponent(res));
                 })
             },
-            Msg::RequestUploadStandardFiles => {
+            Msg::RequestUploadComponentFiles => {
                 // see loading button
                 self.get_result_upload_files = true;
 
@@ -349,15 +336,15 @@ impl Component for StandardSettings {
                     let mut filenames: Vec<String> = Vec::new();
                     for file in &self.files {filenames.push(file.name().clone());}
                     debug!("filenames: {:?}", filenames);
-                    let standard_uuid = self.current_standard_uuid.clone();
+                    let component_uuid = self.current_component_uuid.clone();
 
                     spawn_local(async move {
-                        let ipt_standard_files_data = upload_standard_files::IptStandardFilesData{
+                        let ipt_component_files_data = upload_component_files::IptComponentFilesData{
                             filenames,
-                            standardUuid: standard_uuid,
+                            componentUuid: component_uuid,
                         };
-                        let res = make_query(UploadStandardFiles::build_query(upload_standard_files::Variables{
-                            ipt_standard_files_data
+                        let res = make_query(UploadComponentFiles::build_query(upload_component_files::Variables{
+                            ipt_component_files_data
                         })).await.unwrap();
                         link.send_message(Msg::GetUploadData(res));
                     })
@@ -393,8 +380,8 @@ impl Component for StandardSettings {
 
                 match res_value.is_null() {
                     false => {
-                        let result: Vec<UploadFile> = serde_json::from_value(res_value.get("uploadStandardFiles").unwrap().clone()).unwrap();
-                        debug!("uploadStandardFiles {:?}", result);
+                        let result: Vec<UploadFile> = serde_json::from_value(res_value.get("uploadComponentFiles").unwrap().clone()).unwrap();
+                        debug!("uploadComponentFiles {:?}", result);
                         self.request_upload_data = result;
 
                         if !self.files.is_empty() {
@@ -422,19 +409,19 @@ impl Component for StandardSettings {
                 self.task = Vec::new();
                 self.task_read = Vec::new();
             },
-            Msg::GetStandardData(res) => {
+            Msg::GetComponentData(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
 
                 match res_value.is_null() {
                     false => {
-                        let standard_data: StandardInfo =
-                            serde_json::from_value(res_value.get("standard").unwrap().clone()).unwrap();
-                        debug!("Standard data: {:?}", standard_data);
+                        let component_data: ComponentInfo =
+                            serde_json::from_value(res_value.get("component").unwrap().clone()).unwrap();
+                        debug!("Component data: {:?}", component_data);
 
-                        self.current_standard_uuid = standard_data.uuid.clone();
-                        self.current_standard = Some(standard_data.clone());
-                        self.request_standard = standard_data.into();
+                        self.current_component_uuid = component_data.uuid.clone();
+                        self.current_component = Some(component_data.clone());
+                        self.request_component = component_data.into();
                     },
                     true => self.error = Some(get_error(&data)),
                 }
@@ -445,14 +432,11 @@ impl Component for StandardSettings {
 
                 match res_value.is_null() {
                     false => {
-                        self.supplier_list = serde_json::from_value(
-                            res_value.get("companies").unwrap().clone()
+                        self.component_types = serde_json::from_value(
+                            res_value.get("componentTypes").unwrap().clone()
                         ).unwrap();
-                        self.standard_statuses = serde_json::from_value(
-                            res_value.get("standardStatuses").unwrap().clone()
-                        ).unwrap();
-                        self.regions = serde_json::from_value(
-                            res_value.get("regions").unwrap().clone()
+                        self.actual_statuses = serde_json::from_value(
+                            res_value.get("componentActualStatuses").unwrap().clone()
                         ).unwrap();
                         self.types_access = serde_json::from_value(
                             res_value.get("typesAccess").unwrap().clone()
@@ -461,16 +445,16 @@ impl Component for StandardSettings {
                     true => self.error = Some(get_error(&data)),
                 }
             },
-            Msg::GetUpdateStandardResult(res) => {
+            Msg::GetUpdateComponentResult(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
 
                 match res_value.is_null() {
                     false => {
                         let result: usize =
-                            serde_json::from_value(res_value.get("putStandardUpdate").unwrap().clone()).unwrap();
-                        debug!("Standard data: {:?}", result);
-                        self.get_result_standard_data = result;
+                            serde_json::from_value(res_value.get("putComponentUpdate").unwrap().clone()).unwrap();
+                        debug!("Component data: {:?}", result);
+                        self.get_result_component_data = result;
                     },
                     true => self.error = Some(get_error(&data)),
                 }
@@ -482,9 +466,9 @@ impl Component for StandardSettings {
                 match res_value.is_null() {
                     false => {
                         let result: bool =
-                            serde_json::from_value(res_value.get("changeStandardAccess").unwrap().clone()).unwrap();
-                        debug!("Standard change access: {:?}", result);
-                        self.update_standard_access = false;
+                            serde_json::from_value(res_value.get("changeComponentAccess").unwrap().clone()).unwrap();
+                        debug!("Component change access: {:?}", result);
+                        self.update_component_access = false;
                         self.get_result_access = result;
                     },
                     true => self.error = Some(get_error(&data)),
@@ -512,104 +496,67 @@ impl Component for StandardSettings {
                     true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }
             },
-            Msg::GetDeleteStandard(res) => {
+            Msg::GetDeleteComponent(res) => {
                 let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
 
                 match res_value.is_null() {
                     false => {
-                        let result: UUID = serde_json::from_value(res_value.get("deleteStandard").unwrap().clone()).unwrap();
-                        debug!("deleteStandard: {:?}", result);
-                        if self.current_standard_uuid == result {
-                            match &self.current_standard {
-                                Some(company) => self.router_agent.send(ChangeRoute(
-                                    AppRoute::ShowCompany(company.owner_company.uuid.clone()).into()
-                                )),
-                                None => self.router_agent.send(ChangeRoute(AppRoute::Home.into())),
-                            }
+                        let result: UUID = serde_json::from_value(res_value.get("deleteComponent").unwrap().clone()).unwrap();
+                        debug!("deleteComponent: {:?}", result);
+                        if self.current_component_uuid == result {
+                            self.router_agent.send(ChangeRoute(AppRoute::Home.into()))
                         }
                     },
                     true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }
             },
-            Msg::EditFiles => self.upload_standard_files = !self.upload_standard_files,
+            Msg::EditFiles => self.upload_component_files = !self.upload_component_files,
             Msg::UpdateTypeAccessId(data) => {
                 self.request_access = data.parse::<i64>().unwrap_or_default();
-                self.update_standard_access = true;
+                self.update_component_access = true;
                 self.disable_save_changes_btn = false;
             },
-            // items request update main standard data
-            Msg::UpdateClassifier(data) => {
-                self.request_standard.classifier = data;
-                self.update_standard = true;
+            Msg::UpdateActualStatusId(data) => {
+                self.request_component.actual_status_id = data.parse::<usize>().unwrap_or_default();
+                self.update_component = true;
+                self.disable_save_changes_btn = false;
+            },
+            Msg::UpdateComponentTypeId(data) => {
+                self.request_component.component_type_id = data.parse::<usize>().unwrap_or_default();
+                self.update_component = true;
                 self.disable_save_changes_btn = false;
             },
             Msg::UpdateName(data) => {
-                self.request_standard.name = data;
-                self.update_standard = true;
+                self.request_component.name = data;
+                self.update_component = true;
                 self.disable_save_changes_btn = false;
             },
             Msg::UpdateDescription(data) => {
-                self.request_standard.description = data;
-                self.update_standard = true;
+                self.request_component.description = data;
+                self.update_component = true;
                 self.disable_save_changes_btn = false;
-            },
-            Msg::UpdateSpecifiedTolerance(data) => {
-                self.request_standard.specified_tolerance = data;
-                self.update_standard = true;
-                self.disable_save_changes_btn = false;
-            },
-            Msg::UpdateTechnicalCommittee(data) => {
-                self.request_standard.technical_committee = data;
-                self.update_standard = true;
-                self.disable_save_changes_btn = false;
-            },
-            Msg::UpdatePublicationAt(data) => {
-                let date = NaiveDateTime::parse_from_str(&format!("{} 00:00:00", data), "%Y-%m-%d %H:%M:%S");
-                debug!("new date: {:?}", date);
-                self.request_standard.publication_at = match date {
-                    Ok(dt) => Some(dt),
-                    Err(_) => match &self.current_standard {
-                        Some(cs) => Some(cs.publication_at),
-                        None => self.request_standard.publication_at,
-                    },
-                };
-                self.update_standard = true;
-                self.disable_save_changes_btn = false;
-            },
-            Msg::UpdateCompanyUuid(data) => {
-                self.request_standard.company_uuid = data;
-                self.update_standard = true;
-                self.disable_save_changes_btn = false;
-            },
-            Msg::UpdateStandardStatusId(data) => {
-                self.request_standard.standard_status_id = data.parse::<usize>().unwrap_or_default();
-                self.update_standard = true;
-                self.disable_save_changes_btn = false;
-            },
-            Msg::UpdateRegionId(data) => {
-                self.request_standard.region_id = data.parse::<usize>().unwrap_or_default();
             },
             Msg::UpdateFiles(files) => {
                 while let Some(file) = files.get(self.files_index) {
                     debug!("self.files_index: {:?}", self.files_index);
                     self.files_index += 1;
-                    self.upload_standard_files = true;
+                    self.upload_component_files = true;
                     self.disable_save_changes_btn = false;
                     self.files.push(file.clone());
                 }
                 self.files_index = 0;
             },
             Msg::UpdateConfirmDelete(data) => {
-                self.disable_delete_standard_btn = self.current_standard_uuid != data;
-                self.confirm_delete_standard = data;
+                self.disable_delete_component_btn = self.current_component_uuid != data;
+                self.confirm_delete_component = data;
             },
             Msg::ResponseError(err) => self.error = Some(err),
-            Msg::ChangeHideDeleteStandard => self.hide_delete_modal = !self.hide_delete_modal,
+            Msg::ChangeHideDeleteComponent => self.hide_delete_modal = !self.hide_delete_modal,
             Msg::ClearFilesBoxed => {
                 self.files = Vec::new();
                 self.files_index = 0;
-                self.upload_standard_files = false;
+                self.upload_component_files = false;
             },
             Msg::ClearError => self.error = None,
             Msg::Ignore => {},
@@ -627,7 +574,7 @@ impl Component for StandardSettings {
             .callback(|_| Msg::ClearError);
 
         html! {
-            <div class="standard-page">
+            <div class="component-page">
                 <div class="container page">
                     <div class="row">
                         <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
@@ -635,15 +582,15 @@ impl Component for StandardSettings {
                         {self.show_manage_btn()}
                         <br/>
                         {self.show_main_card()}
-                        {match &self.current_standard {
-                            Some(standard_data) => html!{<>
+                        {match &self.current_component {
+                            Some(component_data) => html!{<>
                                 <div class="columns">
-                                  {self.show_standard_params()}
-                                  {self.show_standard_files(standard_data)}
+                                  {self.show_component_params()}
+                                  {self.show_component_files(component_data)}
                                 </div>
-                                {self.show_standard_specs(standard_data)}
+                                {self.show_component_specs(component_data)}
                                 <br/>
-                                {self.show_standard_keywords(standard_data)}
+                                {self.show_component_keywords(component_data)}
                                 <br/>
                             </>},
                             None => html!{},
@@ -655,15 +602,8 @@ impl Component for StandardSettings {
     }
 }
 
-impl StandardSettings {
+impl ComponentSettings {
     fn show_main_card(&self) -> Html {
-        // let default_company_uuid = self.current_standard.as_ref().map(|x| x.owner_company.uuid.clone()).unwrap_or_default();
-        let onchange_change_owner_company = self.link
-            .callback(|ev: ChangeData| Msg::UpdateCompanyUuid(match ev {
-              ChangeData::Select(el) => el.value(),
-              _ => String::new(),
-          }));
-
         let onchange_change_type_access = self.link
             .callback(|ev: ChangeData| Msg::UpdateTypeAccessId(match ev {
               ChangeData::Select(el) => el.value(),
@@ -678,24 +618,9 @@ impl StandardSettings {
 
         html!{<div class="card">
             <div class="column">
-                <div class="control">
+                <div class="column">
                     <div class="media">
                         <div class="media-content">
-                            <label class="label">{"Owner company "}</label>
-                            <div class="select">
-                              <select
-                                  id="set-owner-company"
-                                  select={self.request_standard.company_uuid.clone()}
-                                  onchange=onchange_change_owner_company
-                                >
-                              { for self.supplier_list.iter().map(|x|
-                                  match self.request_standard.company_uuid == x.uuid {
-                                      true => html!{ <option value={x.uuid.to_string()} selected=true>{&x.shortname}</option> },
-                                      false => html!{ <option value={x.uuid.to_string()}>{&x.shortname}</option> },
-                                  }
-                              )}
-                              </select>
-                            </div>
                         </div>
                         <div class="media-right" style="margin-right: 1rem">
                             <label class="label">{"Type access "}</label>
@@ -706,7 +631,7 @@ impl StandardSettings {
                                   onchange=onchange_change_type_access
                                 >
                               { for self.types_access.iter().map(|x|
-                                  match self.current_standard.as_ref().map(|s| s.type_access.type_access_id).unwrap_or_default() == x.type_access_id {
+                                  match self.current_component.as_ref().map(|c| c.type_access.type_access_id).unwrap_or_default() == x.type_access_id {
                                       true => html!{ <option value={x.type_access_id.to_string()} selected=true>{&x.name}</option> },
                                       false => html!{ <option value={x.type_access_id.to_string()}>{&x.name}</option> },
                                   }
@@ -716,48 +641,38 @@ impl StandardSettings {
                         </div>
                     </div>
                 </div>
-                <label class="label">{"Name"}</label>
-                <input
-                    id="update-name"
-                    class="input"
-                    type="text"
-                    placeholder="standard name"
-                    value={self.request_standard.name.clone()}
-                    oninput=oninput_name />
-                <label class="label">{"Description"}</label>
-                <textarea
-                    id="update-description"
-                    class="textarea"
-                    // rows="10"
-                    type="text"
-                    placeholder="standard description"
-                    value={self.request_standard.description.clone()}
-                    oninput=oninput_description />
+                <div class="column" style="margin-right: 1rem">
+                    <label class="label">{"Name"}</label>
+                    <input
+                        id="update-name"
+                        class="input"
+                        type="text"
+                        placeholder="component name"
+                        value={self.request_component.name.clone()}
+                        oninput=oninput_name />
+                    <label class="label">{"Description"}</label>
+                    <textarea
+                        id="update-description"
+                        class="textarea"
+                        // rows="10"
+                        type="text"
+                        placeholder="component description"
+                        value={self.request_component.description.clone()}
+                        oninput=oninput_description />
+                </div>
             </div>
         </div>}
     }
 
-    fn show_standard_params(&self) -> Html {
-        let oninput_classifier = self.link
-            .callback(|ev: InputData| Msg::UpdateClassifier(ev.value));
-
-        let oninput_specified_tolerance = self.link
-            .callback(|ev: InputData| Msg::UpdateSpecifiedTolerance(ev.value));
-
-        let oninput_technical_committee = self.link
-            .callback(|ev: InputData| Msg::UpdateTechnicalCommittee(ev.value));
-
-        let oninput_publication_at = self.link
-            .callback(|ev: InputData| Msg::UpdatePublicationAt(ev.value));
-
-        let onchange_standard_status_id = self.link
-            .callback(|ev: ChangeData| Msg::UpdateStandardStatusId(match ev {
+    fn show_component_params(&self) -> Html {
+        let onchange_actual_status_id = self.link
+            .callback(|ev: ChangeData| Msg::UpdateActualStatusId(match ev {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
 
-        let onchange_region_id = self.link
-            .callback(|ev: ChangeData| Msg::UpdateRegionId(match ev {
+        let onchange_change_component_type = self.link
+            .callback(|ev: ChangeData| Msg::UpdateComponentTypeId(match ev {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
@@ -769,86 +684,38 @@ impl StandardSettings {
                 <table class="table is-fullwidth">
                     <tbody>
                       <tr>
-                        <td>{"classifier"}</td>
-                        <td><input
-                            id="update-classifier"
-                            class="input"
-                            type="text"
-                            placeholder="standard classifier"
-                            value={self.request_standard.classifier.clone()}
-                            oninput=oninput_classifier /></td>
-                      </tr>
-                      <tr>
-                        <td>{"specified_tolerance"}</td>
-                        // <td>{self.request_standard.specified_tolerance.as_ref().map(|x| x.clone()).unwrap_or_default()}</td>
-                        <td><input
-                            id="update-specified-tolerance"
-                            class="input"
-                            type="text"
-                            placeholder="standard specified_tolerance"
-                            value={self.request_standard.specified_tolerance.clone()}
-                            oninput=oninput_specified_tolerance /></td>
-                      </tr>
-                      <tr>
-                        <td>{"technical_committee"}</td>
-                        <td><input
-                            id="update-technical-committee"
-                            class="input"
-                            type="text"
-                            placeholder="standard technical_committee"
-                            value={self.request_standard.technical_committee.clone()}
-                            oninput=oninput_technical_committee /></td>
-                      </tr>
-                      <tr>
-                        <td>{"publication_at"}</td>
-                        <td><input
-                            id="update-publication-at"
-                            class="input"
-                            type="date"
-                            placeholder="standard publication_at"
-                            value={self.request_standard.publication_at
-                                .as_ref()
-                                .map(|x| format!("{:.*}", 10, x.to_string()))
-                                .unwrap_or_default()}
-                            oninput=oninput_publication_at
-                            /></td>
-                      </tr>
-                      <tr>
-                        <td>{"standard_status"}</td>
-                        <td><div class="control">
-                            <div class="select">
-                              <select
-                                  id="standard-status-id"
-                                  select={self.request_standard.standard_status_id.to_string()}
-                                  onchange=onchange_standard_status_id
-                                  >
-                                { for self.standard_statuses.iter().map(|x|
-                                    match self.request_standard.standard_status_id == x.standard_status_id {
-                                        true => html!{<option value={x.standard_status_id.to_string()} selected=true>{&x.name}</option>},
-                                        false => html!{<option value={x.standard_status_id.to_string()}>{&x.name}</option>},
-                                    }
-                                )}
-                              </select>
-                            </div>
+                        <td>{"Actual status"}</td>
+                        <td><div class="select">
+                            <select
+                                id="component-actual-status"
+                                select={self.request_component.actual_status_id.to_string()}
+                                onchange=onchange_actual_status_id
+                                >
+                              { for self.actual_statuses.iter().map(|x|
+                                  match self.request_component.actual_status_id == x.actual_status_id {
+                                      true => html!{<option value={x.actual_status_id.to_string()} selected=true>{&x.name}</option>},
+                                      false => html!{<option value={x.actual_status_id.to_string()}>{&x.name}</option>},
+                                  }
+                              )}
+                            </select>
                         </div></td>
                       </tr>
                       <tr>
-                        <td>{"region"}</td>
+                        <td>{"Component type"}</td>
                         <td><div class="select">
-                              <select
-                                  id="region"
-                                  select={self.request_standard.region_id.to_string()}
-                                  onchange=onchange_region_id
-                                  >
-                                { for self.regions.iter().map(|x|
-                                    match self.request_standard.region_id == x.region_id {
-                                        true => html!{<option value={x.region_id.to_string()} selected=true>{&x.region}</option>},
-                                        false => html!{<option value={x.region_id.to_string()}>{&x.region}</option>},
-                                    }
-                                )}
-                              </select>
-                            </div>
-                        </td>
+                          <select
+                              id="set-component-type"
+                              select={self.request_component.component_type_id.to_string()}
+                              onchange=onchange_change_component_type
+                            >
+                          { for self.component_types.iter().map(|x|
+                              match self.request_component.component_type_id == x.component_type_id {
+                                  true => html!{ <option value={x.component_type_id.to_string()} selected=true>{&x.component_type}</option> },
+                                  false => html!{ <option value={x.component_type_id.to_string()}>{&x.component_type}</option> },
+                              }
+                          )}
+                          </select>
+                        </div></td>
                       </tr>
                     </tbody>
                   </table>
@@ -857,9 +724,9 @@ impl StandardSettings {
         }
     }
 
-    fn show_standard_files(
+    fn show_component_files(
         &self,
-        standard_data: &StandardInfo,
+        component_data: &ComponentInfo,
     ) -> Html {
         html!{
             <div class="column">
@@ -868,49 +735,49 @@ impl StandardSettings {
               <FilesCard
                   show_download_btn = false
                   show_delete_btn = true
-                  standard_uuid = standard_data.uuid.clone()
-                  files = standard_data.standard_files.clone()
+                  component_uuid = component_data.uuid.clone()
+                  files = component_data.files.clone()
                 />
             </div>
         }
     }
 
-    fn show_standard_specs(
+    fn show_component_specs(
         &self,
-        standard_data: &StandardInfo,
+        component_data: &ComponentInfo,
     ) -> Html {
         html!{<>
             <h2>{"Specs"}</h2>
             <div class="card">
               <SearchSpecsTags
-                  standard_specs = standard_data.standard_specs.clone()
-                  standard_uuid = standard_data.uuid.clone()
+                  component_specs = component_data.component_specs.clone()
+                  component_uuid = component_data.uuid.clone()
                 />
             </div>
         </>}
     }
 
-    fn show_standard_keywords(
+    fn show_component_keywords(
         &self,
-        standard_data: &StandardInfo,
+        component_data: &ComponentInfo,
     ) -> Html {
-        // debug!("Keywords: {:?}", &standard_data.uuid);
+        // debug!("Keywords: {:?}", &component_data.uuid);
         html!{<>
               <h2>{"Keywords"}</h2>
               <div class="card">
                 <AddKeywordsTags
-                    standard_keywords = standard_data.standard_keywords.clone()
-                    standard_uuid = standard_data.uuid.clone()
+                    component_keywords = component_data.component_keywords.clone()
+                    component_uuid = component_data.uuid.clone()
                   />
               </div>
         </>}
     }
 
     fn show_manage_btn(&self) -> Html {
-        let onclick_open_standard = self.link
-            .callback(|_| Msg::OpenStandard);
+        let onclick_open_component = self.link
+            .callback(|_| Msg::OpenComponent);
         let onclick_show_delete_modal = self.link
-            .callback(|_| Msg::ChangeHideDeleteStandard);
+            .callback(|_| Msg::ChangeHideDeleteComponent);
         let onclick_save_changes = self.link
             .callback(|_| Msg::RequestManager);
 
@@ -918,23 +785,23 @@ impl StandardSettings {
             <div class="media">
                 <div class="media-left">
                     <button
-                        id="open-standard"
+                        id="open-component"
                         class="button"
-                        onclick={onclick_open_standard} >
+                        onclick={onclick_open_component} >
                         {"Cancel"}
                     </button>
                 </div>
                 <div class="media-content">
-                    {if self.get_result_standard_data > 0 || self.get_result_access {
+                    {if self.get_result_component_data > 0 || self.get_result_access {
                         html!{"Data updated"}
                     } else {
                         html!{}
                     }}
                 </div>
                 <div class="media-right">
-                    {self.modal_delete_standard()}
+                    {self.modal_delete_component()}
                     <button
-                        id="delete-standard"
+                        id="delete-component"
                         class="button is-danger"
                         onclick={onclick_show_delete_modal} >
                         {"Delete"}
@@ -951,13 +818,13 @@ impl StandardSettings {
         }
     }
 
-    fn modal_delete_standard(&self) -> Html {
+    fn modal_delete_component(&self) -> Html {
         let onclick_hide_modal = self.link
-            .callback(|_| Msg::ChangeHideDeleteStandard);
-        let oninput_delete_standard = self.link
+            .callback(|_| Msg::ChangeHideDeleteComponent);
+        let oninput_delete_component = self.link
             .callback(|ev: InputData| Msg::UpdateConfirmDelete(ev.value));
-        let onclick_delete_standard = self.link
-            .callback(|_| Msg::RequestDeleteStandard);
+        let onclick_delete_component = self.link
+            .callback(|_| Msg::RequestDeleteComponent);
 
         let class_modal = match &self.hide_delete_modal {
             true => "modal",
@@ -970,32 +837,32 @@ impl StandardSettings {
                 <div class="modal-content">
                   <div class="card">
                     <header class="modal-card-head">
-                      <p class="modal-card-title">{"Delete standard"}</p>
+                      <p class="modal-card-title">{"Delete component"}</p>
                       <button class="delete" aria-label="close" onclick=onclick_hide_modal.clone() />
                     </header>
                     <section class="modal-card-body">
                         <p class="is-size-6">
                             {"For confirm deleted all data this "}
-                            <span class="has-text-danger-dark">{self.request_standard.name.clone()}</span>
-                            {" standard enter this uuid:"}
+                            <span class="has-text-danger-dark">{self.request_component.name.clone()}</span>
+                            {" component enter this uuid:"}
                             <br/>
-                            <span class="has-text-weight-bold is-size-6">{self.current_standard_uuid.clone()}</span>
+                            <span class="has-text-weight-bold is-size-6">{self.current_component_uuid.clone()}</span>
                         </p>
                         <br/>
                          <input
-                           id="delete-standard"
+                           id="delete-component"
                            class="input"
                            type="text"
-                           placeholder="standard uuid"
-                           value={self.confirm_delete_standard.clone()}
-                           oninput=oninput_delete_standard />
+                           placeholder="component uuid"
+                           value={self.confirm_delete_component.clone()}
+                           oninput=oninput_delete_component />
                     </section>
                     <footer class="modal-card-foot">
                         <button
-                            id="delete-standard"
+                            id="delete-component"
                             class="button is-danger"
-                            disabled={self.disable_delete_standard_btn}
-                            onclick={onclick_delete_standard} >{"Yes, delete"}</button>
+                            disabled={self.disable_delete_component_btn}
+                            onclick={onclick_delete_component} >{"Yes, delete"}</button>
                         <button class="button" onclick=onclick_hide_modal.clone()>{"Cancel"}</button>
                     </footer>
                 </div>
@@ -1016,7 +883,7 @@ impl StandardSettings {
         html!{<>
             <div class="file has-name is-boxed">
                 <label class="file-label">
-                  <input id="standard-file-input"
+                  <input id="component-file-input"
                   class="file-input"
                   type="file"
                   // accept="image/*,application/vnd*,application/rtf,text/*,.pdf"

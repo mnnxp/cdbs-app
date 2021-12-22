@@ -390,14 +390,20 @@ input IptComponentData {
   isBase: Boolean!
 }
 
-input IptComponentFileData {
+input IptComponentFilesArg {
+  componentUuid: UUID!
+  filesUuids: [UUID!]
+}
+
+input IptComponentFilesData {
   filenames: [String!]!
   componentUuid: UUID!
 }
 
-input IptComponentFilesArg {
+input IptComponentKeywordsArg {
   componentUuid: UUID!
-  filesUuids: [UUID!]
+  limit: Int
+  offset: Int
 }
 
 input IptComponentKeywordsData {
@@ -871,7 +877,7 @@ type MutationRoot {
   addComponentKeywords(args: IptComponentKeywordsData!): Int!
   addComponentKeywordsByNames(args: IptComponentKeywordsNames!): Int!
   deleteComponentKeywords(args: IptComponentKeywordsData!): Int!
-  uploadComponentFiles(args: IptComponentFileData!): [UploadFile!]!
+  uploadComponentFiles(args: IptComponentFilesData!): [UploadFile!]!
   deleteComponentFile(args: DelComponentFileData!): Boolean!
   deleteSuppliersComponent(args: DelSuppliersComponentData!): Int!
   addStandardToComponent(args: IptStandardToComponentData!): Boolean!
@@ -1001,6 +1007,7 @@ type QueryRoot {
   notifications(args: IptNotificationArg): [ShowNotification!]!
   components(args: IptComponentsArg): [ShowComponentShort!]!
   component(componentUuid: UUID!): ComponentAndRelatedData!
+  componentKeywords(args: IptComponentKeywordsArg!): [Keyword!]!
   getCompaniesListAccessComponent(
     componentUuid: UUID!
   ): [CompanyAccessComponentAndRelatedData!]!

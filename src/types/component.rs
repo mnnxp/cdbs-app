@@ -75,6 +75,50 @@ pub struct ShowComponentShort {
     pub component_suppliers: Vec<Supplier>,
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct ComponentUpdatePreData {
+    pub parent_component_uuid: UUID,
+    pub name: String,
+    pub description: String,
+    pub component_type_id: usize,
+    pub actual_status_id: usize,
+}
+
+impl From<ComponentInfo> for ComponentUpdatePreData {
+    fn from(data: ComponentInfo) -> Self {
+        Self {
+            parent_component_uuid: data.parent_component_uuid,
+            name: data.name,
+            description: data.description,
+            component_type_id: data.component_type.component_type_id,
+            actual_status_id: data.actual_status.actual_status_id,
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct ComponentUpdateData {
+    pub parent_component_uuid: Option<UUID>,
+    pub name: Option<String>,
+    pub description: Option<String>,
+    pub component_type_id: Option<i64>,
+    pub actual_status_id: Option<i64>,
+}
+
+impl From<&ComponentUpdatePreData> for ComponentUpdateData {
+    fn from(new_data: &ComponentUpdatePreData) -> Self {
+        Self {
+            parent_component_uuid: Some(new_data.parent_component_uuid.clone()),
+            name: Some(new_data.name.clone()),
+            description: Some(new_data.description.clone()),
+            component_type_id: Some(new_data.component_type_id  as i64),
+            actual_status_id: Some(new_data.actual_status_id as i64),
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Supplier{

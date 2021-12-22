@@ -4,15 +4,15 @@ use yew::prelude::*;
 use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
 use yew_router::{
     service::RouteService,
-    // agent::RouteRequest::ChangeRoute,
-    // prelude::*,
+    agent::RouteRequest::ChangeRoute,
+    prelude::*,
 };
 use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
-// use crate::routes::AppRoute;
+use crate::routes::AppRoute;
 use crate::error::{get_error, Error};
 use crate::fragments::{
     switch_icon::res_btn,
@@ -70,7 +70,7 @@ pub struct ShowComponent {
     current_component_uuid: UUID,
     current_user_owner: bool,
     // task: Option<FetchTask>,
-    // router_agent: Box<dyn Bridge<RouteAgent>>,
+    router_agent: Box<dyn Bridge<RouteAgent>>,
     props: Props,
     link: ComponentLink<Self>,
     subscribers: usize,
@@ -128,7 +128,7 @@ impl Component for ShowComponent {
             current_component_uuid: String::new(),
             current_user_owner: false,
             // task: None,
-            // router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
+            router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             props,
             link,
             subscribers: 0,
@@ -351,12 +351,12 @@ impl Component for ShowComponent {
             Msg::ShowModificationCard => self.open_modification_card = !self.open_modification_card,
             Msg::ShowFilesetFilesList => self.open_fileset_files_card = !self.open_fileset_files_card,
             Msg::OpenComponentSetting => {
-                // if let Some(component_data) = &self.component {
-                //     // Redirect to page for change and update component
-                //     self.router_agent.send(ChangeRoute(AppRoute::ComponentSettings(
-                //         component_data.uuid.clone()
-                //     ).into()));
-                // }
+                if let Some(component_data) = &self.component {
+                    // Redirect to page for change and update component
+                    self.router_agent.send(ChangeRoute(AppRoute::ComponentSettings(
+                        component_data.uuid.clone()
+                    ).into()));
+                }
             },
             Msg::Ignore => {},
         }
