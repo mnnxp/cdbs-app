@@ -684,7 +684,10 @@ impl ShowComponent {
                <th>{"Action"}</th>
                {for component_data.component_standards.iter().map(|data| {
                    html!{<ComponentStandardItem
+                       show_delete_btn = false
+                       component_uuid = self.current_component_uuid.clone()
                        standard_data = data.clone()
+                       delete_standard = None
                      />}
                })}
             </tbody>

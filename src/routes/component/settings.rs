@@ -20,6 +20,7 @@ use crate::fragments::{
     // switch_icon::res_btn,
     list_errors::ListErrors,
     // catalog_component::CatalogComponents,
+    component::ComponentStandardsCard,
     component_file::FilesCard,
     component_spec::SearchSpecsTags,
     component_keyword::AddKeywordsTags,
@@ -31,7 +32,7 @@ use crate::services::{
 };
 use crate::types::{
     UUID, ComponentInfo, SlimUser, TypeAccessInfo, UploadFile, ActualStatus,
-    ComponentUpdatePreData, ComponentUpdateData, ComponentType, // ShowCompanyShort,
+    ComponentUpdatePreData, ComponentUpdateData, ComponentType, ShowCompanyShort,
 };
 
 type FileName = String;
@@ -74,6 +75,14 @@ struct ChangeComponentAccess;
     query_path = "./graphql/components.graphql",
     response_derives = "Debug"
 )]
+struct SetCompanyOwnerSupplier;
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/components.graphql",
+    response_derives = "Debug"
+)]
 struct UploadComponentFiles;
 
 #[derive(GraphQLQuery)]
@@ -89,21 +98,24 @@ pub struct ComponentSettings {
     error: Option<Error>,
     current_component: Option<ComponentInfo>,
     current_component_uuid: UUID,
+    current_component_is_base: bool,
     request_component: ComponentUpdatePreData,
     request_upload_data: Vec<UploadFile>,
     request_upload_file: Callback<Result<Option<String>, Error>>,
+    request_set_supplier_uuid: UUID,
     request_access: i64,
     router_agent: Box<dyn Bridge<RouteAgent>>,
     task_read: Vec<(FileName, ReaderTask)>,
     task: Vec<FetchTask>,
     props: Props,
     link: ComponentLink<Self>,
-    // supplier_list: Vec<ShowCompanyShort>,
+    supplier_list: Vec<ShowCompanyShort>,
     component_types: Vec<ComponentType>,
     actual_statuses: Vec<ActualStatus>,
     types_access: Vec<TypeAccessInfo>,
     update_component: bool,
     update_component_access: bool,
+    update_component_supplier: bool,
     upload_component_files: bool,
     put_upload_file: PutUploadFile,
     files: Vec<File>,
@@ -111,9 +123,11 @@ pub struct ComponentSettings {
     disable_delete_component_btn: bool,
     confirm_delete_component: String,
     hide_delete_modal: bool,
+    hide_set_supplier_modal: bool,
     disable_save_changes_btn: bool,
     get_result_component_data: usize,
     get_result_access: bool,
+    get_result_supplier: bool,
     get_result_up_file: bool,
     get_result_up_completed: usize,
     get_result_upload_files: bool,
@@ -131,6 +145,7 @@ pub enum Msg {
     RequestManager,
     RequestUpdateComponentData,
     RequestChangeAccess,
+    RequestChangeOwnerSupplier,
     RequestDeleteComponent,
     RequestUploadComponentFiles,
     RequestUploadFile(Vec<u8>),
@@ -140,6 +155,7 @@ pub enum Msg {
     GetListOpt(String),
     GetUpdateComponentResult(String),
     GetUpdateAccessResult(String),
+    GetUpdateOwnerSupplierResult(String),
     GetUploadData(String),
     GetUploadFile(Option<String>),
     GetUploadCompleted(String),
@@ -154,6 +170,7 @@ pub enum Msg {
     UpdateConfirmDelete(String),
     ResponseError(Error),
     ChangeHideDeleteComponent,
+    ChangeHideSetSupplier,
     ClearFilesBoxed,
     ClearError,
     Ignore,
@@ -168,21 +185,24 @@ impl Component for ComponentSettings {
             error: None,
             current_component: None,
             current_component_uuid: String::new(),
+            current_component_is_base: false,
             request_component: ComponentUpdatePreData::default(),
             request_upload_data: Vec::new(),
             request_upload_file: link.callback(Msg::ResponseUploadFile),
+            request_set_supplier_uuid: String::new(),
             request_access: 0,
             router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             task_read: Vec::new(),
             task: Vec::new(),
             props,
             link,
-            // supplier_list: Vec::new(),
+            supplier_list: Vec::new(),
             component_types: Vec::new(),
             actual_statuses: Vec::new(),
             types_access: Vec::new(),
             update_component: false,
             update_component_access: false,
+            update_component_supplier: false,
             upload_component_files: false,
             put_upload_file: PutUploadFile::new(),
             files: Vec::new(),
@@ -190,9 +210,11 @@ impl Component for ComponentSettings {
             disable_delete_component_btn: true,
             confirm_delete_component: String::new(),
             hide_delete_modal: true,
+            hide_set_supplier_modal: true,
             disable_save_changes_btn: true,
             get_result_component_data: 0,
             get_result_access: false,
+            get_result_supplier: false,
             get_result_up_file: false,
             get_result_up_completed: 0,
             get_result_upload_files: false,
@@ -215,6 +237,7 @@ impl Component for ComponentSettings {
             // clear old data
             self.current_component = None;
             self.current_component_uuid = String::new();
+            self.current_component_is_base = false;
             self.request_component = ComponentUpdatePreData::default();
         }
 
@@ -264,8 +287,13 @@ impl Component for ComponentSettings {
                 if self.update_component {
                     self.link.send_message(Msg::RequestUpdateComponentData)
                 }
+
                 if self.update_component_access {
                     self.link.send_message(Msg::RequestChangeAccess)
+                }
+
+                if self.update_component_supplier {
+                    self.link.send_message(Msg::RequestChangeOwnerSupplier)
                 }
 
                 if self.upload_component_files && !self.files.is_empty() {
@@ -274,6 +302,7 @@ impl Component for ComponentSettings {
 
                 self.update_component = false;
                 self.update_component_access = false;
+                self.update_component_supplier = false;
                 self.upload_component_files = false;
                 self.disable_save_changes_btn = true;
                 self.get_result_component_data = 0;
@@ -317,6 +346,19 @@ impl Component for ComponentSettings {
                         change_type_access_component
                     })).await.unwrap();
                     link.send_message(Msg::GetUpdateAccessResult(res));
+                })
+            },
+            Msg::RequestChangeOwnerSupplier => {
+                let ipt_supplier_component_data = set_company_owner_supplier::IptSupplierComponentData{
+                    componentUuid: self.current_component_uuid.clone(),
+                    companyUuid: self.request_set_supplier_uuid.clone(),
+                    description: String::new(), // todo!(fix it in future)
+                };
+                spawn_local(async move {
+                    let res = make_query(SetCompanyOwnerSupplier::build_query(
+                        set_company_owner_supplier::Variables { ipt_supplier_component_data }
+                    )).await.unwrap();
+                    link.send_message(Msg::GetUpdateOwnerSupplierResult(res));
                 })
             },
             Msg::RequestDeleteComponent => {
@@ -420,6 +462,7 @@ impl Component for ComponentSettings {
                         debug!("Component data: {:?}", component_data);
 
                         self.current_component_uuid = component_data.uuid.clone();
+                        self.current_component_is_base = component_data.is_base;
                         self.current_component = Some(component_data.clone());
                         self.request_component = component_data.into();
                     },
@@ -432,6 +475,9 @@ impl Component for ComponentSettings {
 
                 match res_value.is_null() {
                     false => {
+                        self.supplier_list = serde_json::from_value(
+                            res_value.get("companies").unwrap().clone()
+                        ).unwrap();
                         self.component_types = serde_json::from_value(
                             res_value.get("componentTypes").unwrap().clone()
                         ).unwrap();
@@ -470,6 +516,21 @@ impl Component for ComponentSettings {
                         debug!("Component change access: {:?}", result);
                         self.update_component_access = false;
                         self.get_result_access = result;
+                    },
+                    true => self.error = Some(get_error(&data)),
+                }
+            },
+            Msg::GetUpdateOwnerSupplierResult(res) => {
+                let data: Value = serde_json::from_str(res.as_str()).unwrap();
+                let res_value = data.as_object().unwrap().get("data").unwrap();
+
+                match res_value.is_null() {
+                    false => {
+                        let result: bool =
+                            serde_json::from_value(res_value.get("setCompanyOwnerSupplier").unwrap().clone()).unwrap();
+                        debug!("Set owner supplier for component: {:?}", result);
+                        self.update_component_supplier = false;
+                        self.get_result_supplier = result;
                     },
                     true => self.error = Some(get_error(&data)),
                 }
@@ -553,6 +614,7 @@ impl Component for ComponentSettings {
             },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::ChangeHideDeleteComponent => self.hide_delete_modal = !self.hide_delete_modal,
+            Msg::ChangeHideSetSupplier => self.hide_set_supplier_modal = !self.hide_set_supplier_modal,
             Msg::ClearFilesBoxed => {
                 self.files = Vec::new();
                 self.files_index = 0;
@@ -588,6 +650,8 @@ impl Component for ComponentSettings {
                                   {self.show_component_params()}
                                   {self.show_component_files(component_data)}
                                 </div>
+                                {self.show_component_standards(component_data)}
+                                <br/>
                                 {self.show_component_specs(component_data)}
                                 <br/>
                                 {self.show_component_keywords(component_data)}
@@ -604,6 +668,9 @@ impl Component for ComponentSettings {
 
 impl ComponentSettings {
     fn show_main_card(&self) -> Html {
+        let onclick_set_supplier_modal = self.link
+            .callback(|_| Msg::ChangeHideSetSupplier);
+
         let onchange_change_type_access = self.link
             .callback(|ev: ChangeData| Msg::UpdateTypeAccessId(match ev {
               ChangeData::Select(el) => el.value(),
@@ -621,6 +688,13 @@ impl ComponentSettings {
                 <div class="column">
                     <div class="media">
                         <div class="media-content">
+                            {self.modal_set_owner_supplier()}
+                            <button
+                                id="set-supplier-component"
+                                class="button"
+                                onclick={onclick_set_supplier_modal} >
+                                {"Supplier"}
+                            </button>
                         </div>
                         <div class="media-right" style="margin-right: 1rem">
                             <label class="label">{"Type access "}</label>
@@ -740,6 +814,20 @@ impl ComponentSettings {
                 />
             </div>
         }
+    }
+
+    fn show_component_standards(
+        &self,
+        component_data: &ComponentInfo,
+    ) -> Html {
+        html!{<div class="card">
+          <ComponentStandardsCard
+              show_delete_btn = true
+              component_uuid = component_data.uuid.clone()
+              component_standards = component_data.component_standards.clone()
+              // delete_standard = Some(onclick_delete_standard.clone())
+            />
+        </div>}
     }
 
     fn show_component_specs(
@@ -928,6 +1016,65 @@ impl ComponentSettings {
                     { "Clear select files" }
                 </a>
             },
+        }
+    }
+
+    fn modal_set_owner_supplier(&self) -> Html {
+        let onclick_hide_modal = self.link
+            .callback(|_| Msg::ChangeHideSetSupplier);
+
+        let onchange_change_set_supplier = self.link
+            .callback(|ev: ChangeData| Msg::UpdateTypeAccessId(match ev {
+              ChangeData::Select(el) => el.value(),
+              _ => String::new(),
+          }));
+
+        // let oninput_supplier_description = self.link
+        //     .callback(|ev: InputData| Msg::UpdateSupplierDescription(ev.value));
+
+        let class_modal = match &self.hide_set_supplier_modal {
+            true => "modal",
+            false => "modal is-active",
+        };
+
+        html!{
+            <div class=class_modal>
+              <div class="modal-background" onclick=onclick_hide_modal.clone() />
+                <div class="modal-content">
+                  <div class="card">
+                    <header class="modal-card-head">
+                      <p class="modal-card-title">{"Set owner supplier"}</p>
+                      <button class="delete" aria-label="close" onclick=onclick_hide_modal.clone() />
+                    </header>
+                    <section class="modal-card-body">
+                        <label class="label">{"Select supplier"}</label>
+                        <div class="select">
+                          <select
+                              id="set-main-supplier"
+                              select=""
+                              onchange=onchange_change_set_supplier
+                            >
+                          { for self.supplier_list.iter().map(|x|
+                              match self.request_set_supplier_uuid == x.uuid {
+                                  true => html!{ <option value={x.uuid.to_string()} selected=true>{&x.shortname}</option> },
+                                  false => html!{ <option value={x.uuid.to_string()}>{&x.shortname}</option> },
+                              }
+                          )}
+                          </select>
+                        </div>
+                    </section>
+                    <textarea
+                        id="update-description"
+                        class="textarea"
+                        // rows="10"
+                        type="text"
+                        placeholder="description for supplier"
+                        // value={self.request_supplier_description.clone()}
+                        // oninput=oninput_supplier_description
+                        />
+                  </div>
+                </div>
+              </div>
         }
     }
 }

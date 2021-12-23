@@ -135,6 +135,14 @@ mutation UploadComponentFiles($iptComponentFilesData: IptComponentFilesData!) {
   }
 }
 
+mutation SetCompanyOwnerSupplier($iptSupplierComponentData: IptSupplierComponentData!) {
+  setCompanyOwnerSupplier(args: $iptSupplierComponentData)
+}
+
+mutation DeleteStandardsComponent($delStandardToComponentData: DelStandardToComponentData!) {
+  deleteStandardsComponent(args: $delStandardToComponentData)
+}
+
 fragment componentSuppliers on ComponentSupplierRelatedData {
   supplier {
     ...supplierFields
