@@ -58,6 +58,10 @@ mutation DeleteComponentSpecs($iptComponentSpecsData: IptComponentSpecsData!){
   deleteComponentSpecs(args: $iptComponentSpecsData)
 }
 
+mutation DeleteSuppliersComponent($delSuppliersComponentData: DelSuppliersComponentData!){
+  deleteSuppliersComponent(args: $delSuppliersComponentData)
+}
+
 query ComModFilesOfFileset($iptFileOfFilesetArg: IptFileOfFilesetArg!) {
   componentModificationFilesOfFileset(args: $iptFileOfFilesetArg){
     ...showFileRelatedDataFields

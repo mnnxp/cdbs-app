@@ -18,7 +18,7 @@ use crate::fragments::{
     switch_icon::res_btn,
     list_errors::ListErrors,
     catalog_user::ListItemUser,
-    component::{ComponentStandardItem, ComponentCompanyItem},
+    component::{ComponentStandardItem, ComponentSupplierItem},
     component_file::FilesCard,
     component_modification::{ModificationsTable, FilesOfFilesetCard},
     component_spec::SpecsTags,
@@ -657,12 +657,22 @@ impl ShowComponent {
                        true => html!{<>
                            {for component_data.component_suppliers.iter().map(|data| {
                              match &data.supplier.is_supplier {
-                                true => html!{<ComponentCompanyItem supplier_data=data.clone() />},
+                                true => html!{<ComponentSupplierItem
+                                    show_delete_btn = false
+                                    component_uuid = component_data.uuid.clone()
+                                    supplier_data = data.clone()
+                                    delete_supplier = None
+                                />},
                                 false => html!{},
                             }})}
                        </>},
                        false => match component_data.component_suppliers.first() {
-                           Some(data) => html!{<ComponentCompanyItem supplier_data=data.clone() />},
+                           Some(data) => html!{<ComponentSupplierItem
+                               show_delete_btn = false
+                               component_uuid = component_data.uuid.clone()
+                               supplier_data = data.clone()
+                               delete_supplier = None
+                           />},
                            None => html!{},
                        },
                    }}

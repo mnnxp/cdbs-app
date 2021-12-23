@@ -1,5 +1,5 @@
-mod company_item;
+mod supplier;
 mod standard;
 
-pub use company_item::*;
+pub use supplier::*;
 pub use standard::*;
