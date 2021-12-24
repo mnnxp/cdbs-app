@@ -514,7 +514,7 @@ impl ShowComponent {
                         <td>{component_data.component_type.component_type.clone()}</td>
                       </tr>
                       <tr>
-                        <td>{"technical_committee"}</td>
+                        <td>{"licenses"}</td>
                         <td>{for component_data.licenses.iter().map(|x| html!{format!("{}; ", x.name)})}</td>
                       </tr>
                       <tr>
