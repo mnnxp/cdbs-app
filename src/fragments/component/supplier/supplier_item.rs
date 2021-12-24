@@ -155,12 +155,13 @@ impl Component for ComponentSupplierItem {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        match self.props.supplier_data.supplier.uuid == props.supplier_data.supplier.uuid {
-            true => false,
-            false => {
-                self.props = props;
-                true
-            },
+        if self.props.supplier_data.supplier.uuid == props.supplier_data.supplier.uuid &&
+                self.props.supplier_data.description == props.supplier_data.description {
+            false
+        } else {
+            self.props = props;
+            self.get_result_delete = false;
+            true
         }
     }
 

@@ -4,6 +4,12 @@ query GetComponentData($componentUuid: UUID!) {
   }
 }
 
+query ComponentSuppliers($componentUuid: UUID!) {
+  componentSuppliers(componentUuid: $componentUuid) {
+    ...componentSupplierFields
+  }
+}
+
 query GetComponentsShortList($iptComponentsArg: IptComponentsArg) {
   components(args: $iptComponentsArg) {
     ...showComponentShortFields

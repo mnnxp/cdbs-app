@@ -1007,6 +1007,7 @@ type QueryRoot {
   notifications(args: IptNotificationArg): [ShowNotification!]!
   components(args: IptComponentsArg): [ShowComponentShort!]!
   component(componentUuid: UUID!): ComponentAndRelatedData!
+  componentSuppliers(componentUuid: UUID!): [ComponentSupplierRelatedData!]!
   componentKeywords(args: IptComponentKeywordsArg!): [Keyword!]!
   getCompaniesListAccessComponent(
     componentUuid: UUID!

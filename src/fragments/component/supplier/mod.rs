@@ -21,7 +21,15 @@ use crate::types::{UUID, Supplier, ShowCompanyShort};
     query_path = "./graphql/components.graphql",
     response_derives = "Debug"
 )]
+
 struct SetCompanyOwnerSupplier;
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/components.graphql",
+    response_derives = "Debug"
+)]
+struct ComponentSuppliers;
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
@@ -38,6 +46,7 @@ pub struct ComponentSuppliersCard {
     props: Props,
     link: ComponentLink<Self>,
     company_uuids: BTreeSet<UUID>,
+    component_suppliers: Vec<Supplier>,
     request_set_supplier_uuid: UUID,
     request_set_supplier_description: String,
     hide_set_supplier_modal: bool,
@@ -48,7 +57,9 @@ pub struct ComponentSuppliersCard {
 pub enum Msg {
     DeleteComponentCompany(UUID),
     RequestChangeOwnerSupplier,
+    RequestComponentSuppliers,
     GetUpdateOwnerSupplierResult(String),
+    GetComponentSuppliersResult(String),
     UpdateOwnerSupplier(String),
     UpdateSupplierDescription(String),
     ChangeHideSetSupplier,
@@ -63,18 +74,21 @@ impl Component for ComponentSuppliersCard {
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
         let mut company_uuids: BTreeSet<UUID> = BTreeSet::new();
 
-        for company in props.component_suppliers.clone() {
+        for company in props.component_suppliers.iter() {
             company_uuids.insert(company.supplier.uuid.clone());
         };
 
         let request_set_supplier_uuid =
             props.supplier_list.first().map(|s| s.uuid.clone()).unwrap_or_default();
 
+        let component_suppliers = props.component_suppliers.clone();
+
         Self {
             error: None,
             props,
             link,
             company_uuids,
+            component_suppliers,
             request_set_supplier_uuid,
             request_set_supplier_description: String::new(),
             hide_set_supplier_modal: true,
@@ -106,6 +120,15 @@ impl Component for ComponentSuppliersCard {
                     })
                 }
             },
+            Msg::RequestComponentSuppliers => {
+                let component_uuid = self.props.component_uuid.clone();
+                spawn_local(async move {
+                    let res = make_query(ComponentSuppliers::build_query(
+                        component_suppliers::Variables { component_uuid }
+                    )).await.unwrap();
+                    link.send_message(Msg::GetComponentSuppliersResult(res));
+                })
+            },
             Msg::GetUpdateOwnerSupplierResult(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
@@ -117,6 +140,25 @@ impl Component for ComponentSuppliersCard {
                         debug!("Set owner supplier for component: {:?}", result);
                         self.hide_set_supplier_modal = result;
                         // self.get_result_supplier = result;
+                        link.send_message(Msg::RequestComponentSuppliers);
+                    },
+                    true => self.error = Some(get_error(&data)),
+                }
+            },
+            Msg::GetComponentSuppliersResult(res) => {
+                let data: Value = serde_json::from_str(res.as_str()).unwrap();
+                let res_value = data.as_object().unwrap().get("data").unwrap();
+
+                match res_value.is_null() {
+                    false => {
+                        let result: Vec<Supplier> =
+                            serde_json::from_value(res_value.get("componentSuppliers").unwrap().clone()).unwrap();
+                        debug!("componentSuppliers: {:?}", result);
+                        self.component_suppliers = result;
+                        self.company_uuids = BTreeSet::new();
+                        for company in self.component_suppliers.iter() {
+                            self.company_uuids.insert(company.supplier.uuid.clone());
+                        };
                     },
                     true => self.error = Some(get_error(&data)),
                 }
@@ -137,7 +179,7 @@ impl Component for ComponentSuppliersCard {
             false
         } else {
             self.company_uuids = BTreeSet::new();
-            for company in props.component_suppliers.clone() {
+            for company in props.component_suppliers.iter() {
                 self.company_uuids.insert(company.supplier.uuid.clone());
             };
             self.request_set_supplier_uuid =
@@ -177,7 +219,7 @@ impl ComponentSuppliersCard {
                    true => html!{<th>{"Delete"}</th>},
                    false => html!{},
                }}
-               {for self.props.component_suppliers.iter().map(|data| {
+               {for self.component_suppliers.iter().map(|data| {
                    match self.company_uuids.get(&data.supplier.uuid) {
                        Some(_) => html!{<ComponentSupplierItem
                            show_delete_btn = self.props.show_delete_btn
