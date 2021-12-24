@@ -206,8 +206,12 @@ impl ComponentSuppliersCard {
         let onclick_delete_supplier = self.link
             .callback(|value: UUID| Msg::DeleteComponentCompany(value));
 
-        let onclick_set_supplier_modal = self.link
-            .callback(|_| Msg::ChangeHideSetSupplier);
+        // let onclick_set_supplier_modal = self.link.callback(|_| Msg::ChangeHideSetSupplier);
+
+        let onclick_action_btn = match self.props.is_base {
+            true => self.link.callback(|_| Msg::Ignore),
+            false => self.link.callback(|_| Msg::ChangeHideSetSupplier),
+        };
 
         html!{<div class="card">
           <table class="table is-fullwidth">
@@ -230,20 +234,21 @@ impl ComponentSuppliersCard {
                        None => html!{},
                    }
                })}
-               {match self.props.is_base {
-                   true => html!{},
-                   false => html!{<>
-                       {self.modal_set_owner_supplier()}
-                       <button
-                           id="set-supplier-component"
-                           class="button"
-                           onclick={onclick_set_supplier_modal} >
-                           {"Supplier"}
-                       </button>
-                   </>},
-               }}
             </tbody>
           </table>
+          {match self.props.is_base {
+              true => html!{},
+              false => self.modal_set_owner_supplier(),
+          }}
+          <button
+              id="set-supplier-component"
+              class="button is-fullwidth"
+              onclick={onclick_action_btn} >
+              // {"Supplier"}
+              <span class="icon" >
+                <i class="fa fa-plus" aria-hidden="true"></i>
+              </span>
+          </button>
         </div>}
     }
 
@@ -267,8 +272,6 @@ impl ComponentSuppliersCard {
             true => "modal",
             false => "modal is-active",
         };
-
-        // debug!("self.props.supplier_list: {:?}", self.props.supplier_list);
 
         html!{
             <div class=class_modal>
