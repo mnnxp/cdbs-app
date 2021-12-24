@@ -10,6 +10,14 @@ query ComponentSuppliers($componentUuid: UUID!) {
   }
 }
 
+query GetComponentStandards($componentUuid: UUID!) {
+  component(componentUuid: $componentUuid) {
+    componentStandards {
+      ...showStandardShortFields
+    }
+  }
+}
+
 query GetComponentsShortList($iptComponentsArg: IptComponentsArg) {
   components(args: $iptComponentsArg) {
     ...showComponentShortFields
@@ -139,6 +147,10 @@ mutation UploadComponentFiles($iptComponentFilesData: IptComponentFilesData!) {
   uploadComponentFiles(args: $iptComponentFilesData){
     ...uploadUrlFields
   }
+}
+
+mutation AddStandardToComponent($iptStandardToComponentData: IptStandardToComponentData!) {
+  addStandardToComponent(args: $iptStandardToComponentData)
 }
 
 mutation SetCompanyOwnerSupplier($iptSupplierComponentData: IptSupplierComponentData!) {
