@@ -64,10 +64,6 @@ mutation DeleteComponentSpecs($iptComponentSpecsData: IptComponentSpecsData!){
   deleteComponentSpecs(args: $iptComponentSpecsData)
 }
 
-mutation DeleteSuppliersComponent($delSuppliersComponentData: DelSuppliersComponentData!){
-  deleteSuppliersComponent(args: $delSuppliersComponentData)
-}
-
 query ComModFilesOfFileset($iptFileOfFilesetArg: IptFileOfFilesetArg!) {
   componentModificationFilesOfFileset(args: $iptFileOfFilesetArg){
     ...showFileRelatedDataFields
@@ -147,6 +143,14 @@ mutation UploadComponentFiles($iptComponentFilesData: IptComponentFilesData!) {
 
 mutation SetCompanyOwnerSupplier($iptSupplierComponentData: IptSupplierComponentData!) {
   setCompanyOwnerSupplier(args: $iptSupplierComponentData)
+}
+
+mutation AddComponentSupplier($iptSupplierComponentData: IptSupplierComponentData!) {
+  addComponentSupplier(args: $iptSupplierComponentData)
+}
+
+mutation DeleteSuppliersComponent($delSuppliersComponentData: DelSuppliersComponentData!){
+  deleteSuppliersComponent(args: $delSuppliersComponentData)
 }
 
 mutation DeleteStandardsComponent($delStandardToComponentData: DelStandardToComponentData!) {

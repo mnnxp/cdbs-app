@@ -637,6 +637,12 @@ impl ComponentSettings {
                 <div class="column">
                     <div class="media">
                         <div class="media-content">
+                            <a class="id-box has-text-grey-light has-text-weight-bold">
+                                {match self.current_component_is_base {
+                                    true => {"base"},
+                                    false => {"no base"},
+                                }}
+                            </a>
                         </div>
                         <div class="media-right" style="margin-right: 1rem">
                             <label class="label">{"Type access "}</label>
