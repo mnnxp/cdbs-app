@@ -473,29 +473,40 @@ impl ShowComponent {
                         </>},
                     }
                 }</div>
-                <div class="media">
-                    <div class="media-right" style="margin-left: 0rem; margin-right: 1rem;">
-                        <span style="" class="icon is-small">
-                            <i class="fa fa-balance-scale"></i>
-                        </span>
-                    </div>
-                    <div class="media-content">
-                        <div class="tags">
-                            {for component_data.licenses.iter().map(|data| html!{
-                                // format!("{}; ", data.name)
-                                <ComponentLicenseTag
-                                    show_delete_btn = false
-                                    component_uuid = self.current_component_uuid.clone()
-                                    license_data = data.clone()
-                                    delete_license = None
-                                  />
-                            })}
-                        </div>
-                    </div>
-                </div>
+                <br/>
+                {match component_data.licenses.is_empty() {
+                    true => html!{},
+                    false => self.show_component_licenses(component_data),
+                }}
               </div>
             </div>
         }
+    }
+
+    fn show_component_licenses(
+        &self,
+        component_data: &ComponentInfo,
+    ) -> Html {
+        html!{<div class="media">
+            <div class="media-right" style="margin-left: 0rem">
+                <span style="" class="icon is-small">
+                    <i class="fa fa-balance-scale"></i>
+                </span>
+            </div>
+            <div class="media-content">
+                <div class="tags">
+                    {for component_data.licenses.iter().map(|data| html!{
+                        // format!("{}; ", data.name)
+                        <ComponentLicenseTag
+                            show_delete_btn = false
+                            component_uuid = self.current_component_uuid.clone()
+                            license_data = data.clone()
+                            delete_license = None
+                          />
+                    })}
+                </div>
+            </div>
+        </div>}
     }
 
     fn show_modifications_table(

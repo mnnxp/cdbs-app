@@ -681,6 +681,7 @@ impl ComponentSettings {
                         placeholder="component description"
                         value={self.request_component.description.clone()}
                         oninput=oninput_description />
+                    <br/>
                     {match &self.current_component {
                         Some(component_data) => self.show_component_licenses(component_data),
                         None => html!{},
