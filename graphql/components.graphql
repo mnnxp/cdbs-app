@@ -26,6 +26,14 @@ query GetComponentLicenses($componentUuid: UUID!) {
   }
 }
 
+query GetComponentParams($componentUuid: UUID!) {
+  component(componentUuid: $componentUuid) {
+    componentParams {
+      ...componentParamFields
+    }
+  }
+}
+
 query GetComponentsShortList($iptComponentsArg: IptComponentsArg) {
   components(args: $iptComponentsArg) {
     ...showComponentShortFields
@@ -141,6 +149,14 @@ query GetComponentKeywords($iptComponentKeywordsArg: IptComponentKeywordsArg!) {
     id
     keyword
   }
+}
+
+mutation PutComponentParams($iptComponentParamData: IptComponentParamData!) {
+  putComponentParams(args: $iptComponentParamData)
+}
+
+mutation DeleteComponentParams($delComponentParamData: DelComponentParamData!) {
+  deleteComponentParams(args: $delComponentParamData)
 }
 
 mutation RegisterComponent($iptComponentData: IptComponentData!) {

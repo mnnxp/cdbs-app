@@ -20,7 +20,10 @@ use crate::fragments::{
     // switch_icon::res_btn,
     list_errors::ListErrors,
     // catalog_component::CatalogComponents,
-    component::{ComponentStandardsCard, ComponentSuppliersCard, ComponentLicensesTags},
+    component::{
+        ComponentStandardsCard, ComponentSuppliersCard,
+        ComponentLicensesTags, ComponentParamsTags,
+    },
     component_file::FilesCard,
     component_spec::SearchSpecsTags,
     component_keyword::AddKeywordsTags,
@@ -114,6 +117,7 @@ pub struct ComponentSettings {
     disable_delete_component_btn: bool,
     confirm_delete_component: String,
     hide_delete_modal: bool,
+    show_full_characteristics: bool,
     disable_save_changes_btn: bool,
     get_result_component_data: usize,
     get_result_access: bool,
@@ -157,6 +161,7 @@ pub enum Msg {
     UpdateConfirmDelete(String),
     ResponseError(Error),
     ChangeHideDeleteComponent,
+    ShowFullCharacteristics,
     ClearFilesBoxed,
     ClearError,
     Ignore,
@@ -195,6 +200,7 @@ impl Component for ComponentSettings {
             disable_delete_component_btn: true,
             confirm_delete_component: String::new(),
             hide_delete_modal: true,
+            show_full_characteristics: false,
             disable_save_changes_btn: true,
             get_result_component_data: 0,
             get_result_access: false,
@@ -565,6 +571,7 @@ impl Component for ComponentSettings {
             },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::ChangeHideDeleteComponent => self.hide_delete_modal = !self.hide_delete_modal,
+            Msg::ShowFullCharacteristics => self.show_full_characteristics = !self.show_full_characteristics,
             Msg::ClearFilesBoxed => {
                 self.files = Vec::new();
                 self.files_index = 0;
@@ -596,7 +603,11 @@ impl Component for ComponentSettings {
                         {match &self.current_component {
                             Some(component_data) => html!{<>
                                 <div class="columns">
-                                  {self.show_component_params()}
+                                  <div class="column">
+                                    {self.show_component_params()}
+                                    <br/>
+                                    {self.show_additional_params(component_data)}
+                                  </div>
                                   {self.show_component_files(component_data)}
                                 </div>
                                 <div class="columns">
@@ -715,8 +726,7 @@ impl ComponentSettings {
               _ => "1".to_string(),
           }));
 
-        html!{
-            <div class="column">
+        html!{<>
               <h2>{"Сharacteristics"}</h2>
               <div class="card">
                 <table class="table is-fullwidth">
@@ -758,8 +768,18 @@ impl ComponentSettings {
                     </tbody>
                   </table>
               </div>
-            </div>
-        }
+        </>}
+    }
+
+    fn show_additional_params(
+        &self,
+        component_data: &ComponentInfo,
+    ) -> Html {
+        html!{<ComponentParamsTags
+            show_manage_btn = true
+            component_uuid = self.current_component_uuid.clone()
+            component_params = component_data.component_params.clone()
+        />}
     }
 
     fn show_component_files(

@@ -1,23 +1,35 @@
 query GetTypesAccess($iptTypeAccessArg: IptTypeAccessArg) {
   typesAccess(args: $iptTypeAccessArg) {
-    ...typesAccessTransListFileds
+    ...typesAccessTransListFields
   }
+}
+
+query GetParams($iptParamArg: IptParamArg) {
+  params(args: $iptParamArg) {
+    ...paramFields
+  }
+}
+
+fragment paramFields on ParamTranslateList {
+  paramId
+  langId
+  paramname
 }
 
 query GetLicenses($iptLicenseArg: IptLicenseArg) {
   licenses(args: $iptLicenseArg) {
-    ...licenseFileds
+    ...licenseFields
   }
 }
 
-fragment licenseFileds on License {
+fragment licenseFields on License {
   id
   name
   keyword
   publicationAt
 }
 
-fragment typesAccessTransListFileds on TypeAccessTranslateList {
+fragment typesAccessTransListFields on TypeAccessTranslateList {
   typeAccessId
   langId
   name
