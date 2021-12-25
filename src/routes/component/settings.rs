@@ -20,7 +20,7 @@ use crate::fragments::{
     // switch_icon::res_btn,
     list_errors::ListErrors,
     // catalog_component::CatalogComponents,
-    component::{ComponentStandardsCard, ComponentSuppliersCard},
+    component::{ComponentStandardsCard, ComponentSuppliersCard, ComponentLicensesTags},
     component_file::FilesCard,
     component_spec::SearchSpecsTags,
     component_keyword::AddKeywordsTags,
@@ -681,9 +681,24 @@ impl ComponentSettings {
                         placeholder="component description"
                         value={self.request_component.description.clone()}
                         oninput=oninput_description />
+                    {match &self.current_component {
+                        Some(component_data) => self.show_component_licenses(component_data),
+                        None => html!{},
+                    }}
                 </div>
             </div>
         </div>}
+    }
+
+    fn show_component_licenses(
+        &self,
+        component_data: &ComponentInfo,
+    ) -> Html {
+        html!{<ComponentLicensesTags
+            show_delete_btn = true
+            component_uuid = self.current_component_uuid.clone()
+            component_licenses = component_data.licenses.clone()
+        />}
     }
 
     fn show_component_params(&self) -> Html {

@@ -4,6 +4,19 @@ query GetTypesAccess($iptTypeAccessArg: IptTypeAccessArg) {
   }
 }
 
+query GetLicenses($iptLicenseArg: IptLicenseArg) {
+  licenses(args: $iptLicenseArg) {
+    ...licenseFileds
+  }
+}
+
+fragment licenseFileds on License {
+  id
+  name
+  keyword
+  publicationAt
+}
+
 fragment typesAccessTransListFileds on TypeAccessTranslateList {
   typeAccessId
   langId

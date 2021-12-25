@@ -18,7 +18,8 @@ use crate::fragments::{
     switch_icon::res_btn,
     list_errors::ListErrors,
     catalog_user::ListItemUser,
-    component::{ComponentStandardItem, ComponentSupplierItem},
+    component::{
+        ComponentStandardItem, ComponentSupplierItem, ComponentLicenseTag},
     component_file::FilesCard,
     component_modification::{ModificationsTable, FilesOfFilesetCard},
     component_spec::SpecsTags,
@@ -472,6 +473,26 @@ impl ShowComponent {
                         </>},
                     }
                 }</div>
+                <div class="media">
+                    <div class="media-right" style="margin-left: 0rem; margin-right: 1rem;">
+                        <span style="" class="icon is-small">
+                            <i class="fa fa-balance-scale"></i>
+                        </span>
+                    </div>
+                    <div class="media-content">
+                        <div class="tags">
+                            {for component_data.licenses.iter().map(|data| html!{
+                                // format!("{}; ", data.name)
+                                <ComponentLicenseTag
+                                    show_delete_btn = false
+                                    component_uuid = self.current_component_uuid.clone()
+                                    license_data = data.clone()
+                                    delete_license = None
+                                  />
+                            })}
+                        </div>
+                    </div>
+                </div>
               </div>
             </div>
         }
@@ -501,7 +522,7 @@ impl ShowComponent {
     ) -> Html {
         html!{
             <div class="column">
-              <h2>{"Characteristic"}</h2>
+              <h2>{"Сharacteristics"}</h2>
               <div class="card">
                 <table class="table is-fullwidth">
                     <tbody>
@@ -512,10 +533,6 @@ impl ShowComponent {
                       <tr>
                         <td>{"component_type"}</td>
                         <td>{component_data.component_type.component_type.clone()}</td>
-                      </tr>
-                      <tr>
-                        <td>{"licenses"}</td>
-                        <td>{for component_data.licenses.iter().map(|x| html!{format!("{}; ", x.name)})}</td>
                       </tr>
                       <tr>
                         <td>{"updated_at"}</td>
