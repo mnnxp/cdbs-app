@@ -116,10 +116,10 @@ impl Component for ComponentLicensesTags {
                 })
             },
             Msg::RequestAddLicense => {
-                let ipt_component_license_data = Some(add_component_license::IptComponentLicenseData{
+                let ipt_component_license_data = add_component_license::IptComponentLicenseData{
                     componentUuid: self.props.component_uuid.clone(),
                     licenseId: self.request_add_license_id as i64,
-                });
+                };
                 spawn_local(async move {
                     let res = make_query(AddComponentLicense::build_query(
                         add_component_license::Variables { ipt_component_license_data }
@@ -215,8 +215,8 @@ impl Component for ComponentLicensesTags {
             false
         } else {
             self.license_ids = BTreeSet::new();
-            for licenses in props.component_licenses.iter() {
-                self.license_ids.insert(licenses.id);
+            for license in props.component_licenses.iter() {
+                self.license_ids.insert(license.id);
             };
             self.hide_add_license_modal = true;
             self.props = props;

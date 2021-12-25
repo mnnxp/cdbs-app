@@ -60,7 +60,7 @@ mutation DeleteComponentFav($componentUuid: UUID!) {
   deleteComponentFav(componentUuid: $componentUuid)
 }
 
-mutation AddComponentLicense($iptComponentLicenseData: IptComponentLicenseData) {
+mutation AddComponentLicense($iptComponentLicenseData: IptComponentLicenseData!) {
   addComponentLicense(args: $iptComponentLicenseData)
 }
 
