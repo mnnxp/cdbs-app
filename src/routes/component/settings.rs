@@ -117,7 +117,6 @@ pub struct ComponentSettings {
     disable_delete_component_btn: bool,
     confirm_delete_component: String,
     hide_delete_modal: bool,
-    show_full_characteristics: bool,
     disable_save_changes_btn: bool,
     get_result_component_data: usize,
     get_result_access: bool,
@@ -161,7 +160,6 @@ pub enum Msg {
     UpdateConfirmDelete(String),
     ResponseError(Error),
     ChangeHideDeleteComponent,
-    ShowFullCharacteristics,
     ClearFilesBoxed,
     ClearError,
     Ignore,
@@ -200,7 +198,6 @@ impl Component for ComponentSettings {
             disable_delete_component_btn: true,
             confirm_delete_component: String::new(),
             hide_delete_modal: true,
-            show_full_characteristics: false,
             disable_save_changes_btn: true,
             get_result_component_data: 0,
             get_result_access: false,
@@ -571,7 +568,6 @@ impl Component for ComponentSettings {
             },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::ChangeHideDeleteComponent => self.hide_delete_modal = !self.hide_delete_modal,
-            Msg::ShowFullCharacteristics => self.show_full_characteristics = !self.show_full_characteristics,
             Msg::ClearFilesBoxed => {
                 self.files = Vec::new();
                 self.files_index = 0;
@@ -602,12 +598,9 @@ impl Component for ComponentSettings {
                         {self.show_main_card()}
                         {match &self.current_component {
                             Some(component_data) => html!{<>
+                                <br/>
                                 <div class="columns">
-                                  <div class="column">
-                                    {self.show_component_params()}
-                                    <br/>
-                                    {self.show_additional_params(component_data)}
-                                  </div>
+                                  {self.show_additional_params(component_data)}
                                   {self.show_component_files(component_data)}
                                 </div>
                                 <div class="columns">
@@ -631,12 +624,6 @@ impl Component for ComponentSettings {
 
 impl ComponentSettings {
     fn show_main_card(&self) -> Html {
-        let onchange_change_type_access = self.link
-            .callback(|ev: ChangeData| Msg::UpdateTypeAccessId(match ev {
-              ChangeData::Select(el) => el.value(),
-              _ => "1".to_string(),
-          }));
-
         let oninput_name = self.link
             .callback(|ev: InputData| Msg::UpdateName(ev.value));
 
@@ -645,35 +632,12 @@ impl ComponentSettings {
 
         html!{<div class="card">
             <div class="column">
-                <div class="column">
-                    <div class="media">
-                        <div class="media-content">
-                            <a class="id-box has-text-grey-light has-text-weight-bold">
-                                {match self.current_component_is_base {
-                                    true => {"base"},
-                                    false => {"no base"},
-                                }}
-                            </a>
-                        </div>
-                        <div class="media-right" style="margin-right: 1rem">
-                            <label class="label">{"Type access "}</label>
-                            <div class="select">
-                              <select
-                                  id="set-type-access"
-                                  select={self.request_access.to_string()}
-                                  onchange=onchange_change_type_access
-                                >
-                              { for self.types_access.iter().map(|x|
-                                  match self.current_component.as_ref().map(|c| c.type_access.type_access_id).unwrap_or_default() == x.type_access_id {
-                                      true => html!{ <option value={x.type_access_id.to_string()} selected=true>{&x.name}</option> },
-                                      false => html!{ <option value={x.type_access_id.to_string()}>{&x.name}</option> },
-                                  }
-                              )}
-                              </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <span class="id-box has-text-grey-light has-text-weight-bold">
+                    {match self.current_component_is_base {
+                        true => {"base"},
+                        false => {"no base"},
+                    }}
+                </span>
                 <div class="column" style="margin-right: 1rem">
                     <label class="label">{"Name"}</label>
                     <input
@@ -697,6 +661,7 @@ impl ComponentSettings {
                         Some(component_data) => self.show_component_licenses(component_data),
                         None => html!{},
                     }}
+                    {self.show_component_params()}
                 </div>
             </div>
         </div>}
@@ -726,60 +691,81 @@ impl ComponentSettings {
               _ => "1".to_string(),
           }));
 
-        html!{<>
-              <h2>{"Сharacteristics"}</h2>
-              <div class="card">
-                <table class="table is-fullwidth">
-                    <tbody>
-                      <tr>
-                        <td>{"Actual status"}</td>
-                        <td><div class="select">
-                            <select
-                                id="component-actual-status"
-                                select={self.request_component.actual_status_id.to_string()}
-                                onchange=onchange_actual_status_id
-                                >
-                              { for self.actual_statuses.iter().map(|x|
-                                  match self.request_component.actual_status_id == x.actual_status_id {
-                                      true => html!{<option value={x.actual_status_id.to_string()} selected=true>{&x.name}</option>},
-                                      false => html!{<option value={x.actual_status_id.to_string()}>{&x.name}</option>},
-                                  }
-                              )}
-                            </select>
-                        </div></td>
-                      </tr>
-                      <tr>
-                        <td>{"Component type"}</td>
-                        <td><div class="select">
-                          <select
-                              id="set-component-type"
-                              select={self.request_component.component_type_id.to_string()}
-                              onchange=onchange_change_component_type
+        let onchange_change_type_access = self.link
+            .callback(|ev: ChangeData| Msg::UpdateTypeAccessId(match ev {
+              ChangeData::Select(el) => el.value(),
+              _ => "1".to_string(),
+          }));
+
+        html!{
+            <div class="columns">
+                <div class="column">
+                    <label class="label">{"Actual status"}</label>
+                    <div class="select">
+                        <select
+                            id="component-actual-status"
+                            select={self.request_component.actual_status_id.to_string()}
+                            onchange=onchange_actual_status_id
                             >
-                          { for self.component_types.iter().map(|x|
-                              match self.request_component.component_type_id == x.component_type_id {
-                                  true => html!{ <option value={x.component_type_id.to_string()} selected=true>{&x.component_type}</option> },
-                                  false => html!{ <option value={x.component_type_id.to_string()}>{&x.component_type}</option> },
+                          { for self.actual_statuses.iter().map(|x|
+                              match self.request_component.actual_status_id == x.actual_status_id {
+                                  true => html!{<option value={x.actual_status_id.to_string()} selected=true>{&x.name}</option>},
+                                  false => html!{<option value={x.actual_status_id.to_string()}>{&x.name}</option>},
                               }
                           )}
-                          </select>
-                        </div></td>
-                      </tr>
-                    </tbody>
-                  </table>
-              </div>
-        </>}
+                        </select>
+                    </div>
+                </div>
+                <div class="column">
+                    <label class="label">{"Component type"}</label>
+                    <div class="select">
+                      <select
+                          id="set-component-type"
+                          select={self.request_component.component_type_id.to_string()}
+                          onchange=onchange_change_component_type
+                        >
+                      { for self.component_types.iter().map(|x|
+                          match self.request_component.component_type_id == x.component_type_id {
+                              true => html!{ <option value={x.component_type_id.to_string()} selected=true>{&x.component_type}</option> },
+                              false => html!{ <option value={x.component_type_id.to_string()}>{&x.component_type}</option> },
+                          }
+                      )}
+                      </select>
+                    </div>
+                </div>
+                <div class="column">
+                    <label class="label">{"Type access "}</label>
+                    <div class="select">
+                      <select
+                          id="set-type-access"
+                          select={self.request_access.to_string()}
+                          onchange=onchange_change_type_access
+                        >
+                      { for self.types_access.iter().map(|x|
+                          match self.current_component.as_ref().map(|c| c.type_access.type_access_id).unwrap_or_default() == x.type_access_id {
+                              true => html!{ <option value={x.type_access_id.to_string()} selected=true>{&x.name}</option> },
+                              false => html!{ <option value={x.type_access_id.to_string()}>{&x.name}</option> },
+                          }
+                      )}
+                      </select>
+                    </div>
+                </div>
+            </div>
+        }
     }
 
     fn show_additional_params(
         &self,
         component_data: &ComponentInfo,
     ) -> Html {
-        html!{<ComponentParamsTags
-            show_manage_btn = true
-            component_uuid = self.current_component_uuid.clone()
-            component_params = component_data.component_params.clone()
-        />}
+        html!{<div class="column">
+              <h2>{"Сharacteristics"}</h2>
+              <ComponentParamsTags
+                  show_manage_btn = true
+                  component_uuid = self.current_component_uuid.clone()
+                  component_params = component_data.component_params.clone()
+              />
+        </div>}
     }
 
     fn show_component_files(

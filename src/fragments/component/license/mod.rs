@@ -243,7 +243,7 @@ impl ComponentLicensesTags {
         let onclick_action_btn = self.link
             .callback(|_| Msg::ChangeHideAddLicense);
 
-        html!{<div class="media">
+        html!{<div class="media" style="margin-bottom: 0rem">
             <div class="media-right" style="margin-left: 0rem">
                 <span style="" class="icon is-small">
                     <i class="fa fa-balance-scale"></i>
