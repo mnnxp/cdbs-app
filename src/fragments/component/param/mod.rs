@@ -353,7 +353,8 @@ impl ComponentParamsTags {
                     <button
                         id="add-param-component"
                         class="button"
-                        disabled={self.request_add_param_id == 0}
+                        disabled={self.request_add_param_id == 0 ||
+                            self.request_set_param_value.is_empty()}
                         onclick={onclick_add_param} >
                         {"Add"}
                     </button>

@@ -165,6 +165,7 @@ impl Component for ComponentParamTag {
         } else {
             self.hide_edit_param_value = true;
             self.current_param_value = props.param_data.value.clone();
+            self.request_set_param_value = props.param_data.value.clone();
             self.props = props;
             true
         }
