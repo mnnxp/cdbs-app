@@ -19,7 +19,9 @@ use crate::fragments::{
     list_errors::ListErrors,
     catalog_user::ListItemUser,
     component::{
-        ComponentStandardItem, ComponentSupplierItem, ComponentLicenseTag},
+        ComponentStandardItem, ComponentSupplierItem,
+        ComponentLicenseTag, ComponentParamTag
+    },
     component_file::FilesCard,
     component_modification::{ModificationsTable, FilesOfFilesetCard},
     component_spec::SpecsTags,
@@ -28,7 +30,7 @@ use crate::fragments::{
 use crate::gqls::make_query;
 use crate::services::is_authenticated;
 use crate::types::{
-    UUID, ComponentInfo, SlimUser,
+    UUID, ComponentInfo, SlimUser, ComponentParam,
     DownloadFile, ComponentModificationInfo,
 };
 
@@ -433,9 +435,9 @@ impl ShowComponent {
                         </a>
                     </div>
                     <div class="media-right" style="margin-right: 1rem">
-                        {"type access "}<span class="id-box has-text-grey-light has-text-weight-bold">{
-                            component_data.type_access.name.clone()
-                        }</span>
+                        {"updated at "}<span class="id-box has-text-grey-light has-text-weight-bold">
+                            {format!("{:.*}", 10, component_data.updated_at.to_string())}
+                        </span>
                     </div>
                 </div>
                 // <h1>{"Component"}</h1>
@@ -478,6 +480,7 @@ impl ShowComponent {
                     true => html!{},
                     false => self.show_component_licenses(component_data),
                 }}
+                {self.show_component_params(component_data)}
               </div>
             </div>
         }
@@ -532,40 +535,43 @@ impl ShowComponent {
         component_data: &ComponentInfo,
     ) -> Html {
         html!{
+            <div class="columns">
+                <div class="column">
+                    <label class="label">{"Actual status"}</label>
+                    {component_data.actual_status.name.clone()}
+                </div>
+                <div class="column">
+                    <label class="label">{"Component type"}</label>
+                    {component_data.component_type.component_type.clone()}
+                </div>
+                <div class="column">
+                    <label class="label">{"Type access "}</label>
+                    {component_data.type_access.name.clone()}
+                </div>
+            </div>
+        }
+    }
+
+    fn show_additional_params(
+        &self,
+        component_data: &ComponentInfo,
+    ) -> Html {
+        html!{
             <div class="column">
               <h2>{"Сharacteristics"}</h2>
               <div class="card">
                 <table class="table is-fullwidth">
                     <tbody>
-                      <tr>
-                        <td>{"actual_status"}</td>
-                        <td>{component_data.actual_status.name.clone()}</td>
-                      </tr>
-                      <tr>
-                        <td>{"component_type"}</td>
-                        <td>{component_data.component_type.component_type.clone()}</td>
-                      </tr>
-                      <tr>
-                        <td>{"updated_at"}</td>
-                        <td>{format!("{:.*}", 10, component_data.updated_at.to_string())}</td>
-                      </tr>
-                      {for component_data.component_params.iter().enumerate().map(|(index, component_param)| {
+                      {for component_data.component_params.iter().enumerate().map(|(index, data)| {
                           match (index >= 3, self.show_full_characteristics) {
                               // show full list
-                              (_, true) => html!{<tr>
-                                  <td>{component_param.param.paramname.clone()}</td>
-                                  <td>{component_param.value.clone()}</td>
-                              </tr>},
+                              (_, true) => self.show_param_item(data),
                               // show full list or first 4 items
-                              (false, false) => html!{<tr>
-                                  <td>{component_param.param.paramname.clone()}</td>
-                                  <td>{component_param.value.clone()}</td>
-                              </tr>},
+                              (false, false) => self.show_param_item(data),
                               _ => html!{},
                           }
                       })}
                       {match component_data.component_params.len() {
-                          // 0 => html!{<span>{"Files not found"}</span>},
                           0..=3 => html!{},
                           _ => self.show_see_characteristic_btn(),
                       }}
@@ -574,6 +580,18 @@ impl ShowComponent {
               </div>
             </div>
         }
+    }
+
+    fn show_param_item(
+        &self,
+        data: &ComponentParam,
+    ) -> Html {
+        html!{<ComponentParamTag
+            show_manage_btn = false
+            component_uuid = self.props.component_uuid.clone()
+            param_data = data.clone()
+            delete_param = None
+          />}
     }
 
     fn show_see_characteristic_btn(&self) -> Html {
@@ -600,7 +618,7 @@ impl ShowComponent {
     ) -> Html {
         html!{<>
             <div class="columns">
-                {self.show_component_params(component_data)}
+                {self.show_additional_params(component_data)}
                 <div class="column">
                     <h2>{"Files"}</h2>
                     {self.show_component_files(component_data)}

@@ -263,7 +263,7 @@ impl ComponentParamsTags {
                    </>},
                    false => html!{},
                }}
-               {for self.component_params.iter().map(|data| html!{
+               {for self.component_params.iter().map(|data| {
                    match self.param_ids.get(&data.param.param_id) {
                        Some(_) => html!{<ComponentParamTag
                            show_manage_btn = self.props.show_manage_btn
