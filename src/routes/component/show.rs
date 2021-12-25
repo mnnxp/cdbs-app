@@ -371,7 +371,7 @@ impl Component for ShowComponent {
 
     fn view(&self) -> Html {
         match &self.component {
-            Some(component_data) => html! {
+            Some(component_data) => html!{
                 <div class="component-page">
                     <ListErrors error=self.error.clone()/>
                     <div class="container page">
@@ -399,7 +399,7 @@ impl Component for ShowComponent {
                     </div>
                 </div>
             },
-            None => html! {<div>
+            None => html!{<div>
                 <ListErrors error=self.error.clone()/>
                 // <h1>{"Not data"}</h1>
             </div>},
@@ -883,7 +883,7 @@ impl ShowComponent {
             false => self.link.callback(|_| Msg::Follow),
         };
 
-        html! {<>
+        html!{<>
             <div class="media-right flexBox" >
               <button
                   id="following-button"
@@ -899,7 +899,7 @@ impl ShowComponent {
     }
 
     fn show_share_btn(&self) -> Html {
-        html! {
+        html!{
             <div class="media-right flexBox" >
               <button
                   id="share-button"

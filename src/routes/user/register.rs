@@ -247,7 +247,7 @@ impl Component for Register {
               _ => "1".to_string(),
           }));
 
-        html! {
+        html!{
             <div class="auth-page">
                 <h1 class="title">{ "Sign Up" }</h1>
                 <h2 class="subtitle">

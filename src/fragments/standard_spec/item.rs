@@ -262,8 +262,8 @@ impl SpecTagItem {
             </span>
             {if self.props.show_manage_btn {
                 match &self.props.is_added {
-                    true => html! {<a class="tag is-delete is-small is-light" onclick={onclick_delete_spec} />},
-                    false => html! {<a class="tag is-small is-light is-success" onclick={onclick_add_spec}>
+                    true => html!{<a class="tag is-delete is-small is-light" onclick={onclick_delete_spec} />},
+                    false => html!{<a class="tag is-small is-light is-success" onclick={onclick_add_spec}>
                         <i class="fas fa-plus" />
                     </a>},
                 }

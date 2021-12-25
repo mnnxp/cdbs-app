@@ -45,7 +45,7 @@ impl Component for Home {
     fn view(&self) -> Html {
         // let callback = self.link.callback(Msg::TagFiltered);
 
-        html! {
+        html!{
             <div class=vec!("tile", "is-ancestor", "is-vertical")>
                 <div class="tile is-child hero">
                     <div class="hero-body container pb-0">
@@ -98,7 +98,7 @@ impl Component for Home {
     }
 }
 
-// html! {
+// html!{
 //     <div class="home-page">
 //         <Banner />
 //         <div class="container page">

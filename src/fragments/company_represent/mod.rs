@@ -75,7 +75,7 @@ impl Component for CompanyRepresents {
         match &self.props.show_manage_btn {
             true => {
                 debug!("true: {:?}", self.props.list);
-                html! {
+                html!{
                     <div class="representsBox">
                       <ListErrors error=self.error.clone()/>
                       <div>
@@ -101,7 +101,7 @@ impl Component for CompanyRepresents {
                     },
                 };
 
-                html! {
+                html!{
                     <div class="representsBox" >
                       <ListErrors error=self.error.clone()/>
                       <div class="level" >
@@ -136,7 +136,7 @@ impl CompanyRepresents {
         &self,
         show_company_represent: &CompanyRepresentInfo,
     ) -> Html {
-        html! {
+        html!{
             <ListItem data={show_company_represent.clone()}
                 show_list={self.show_type == ListState::List}
                 />
@@ -147,7 +147,7 @@ impl CompanyRepresents {
         &self,
         show_company_represent: &CompanyRepresentInfo,
     ) -> Html {
-        html! {
+        html!{
             <ChangeItem data={show_company_represent.clone()} />
         }
     }

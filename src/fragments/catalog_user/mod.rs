@@ -164,7 +164,7 @@ impl Component for CatalogUsers {
             },
         };
 
-        html! {
+        html!{
             <div class="usersBox" >
               <ListErrors error=self.error.clone()/>
               <div class="level" >
@@ -197,7 +197,7 @@ impl CatalogUsers {
         &self,
         show_comp: &ShowUserShort,
     ) -> Html {
-        html! {
+        html!{
             <ListItemUser data={show_comp.clone()}
                 show_list={self.show_type == ListState::List}
                 />

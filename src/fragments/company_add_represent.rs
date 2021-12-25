@@ -178,7 +178,7 @@ impl Component for AddCompanyRepresentCard {
     }
 
     fn view(&self) -> Html {
-        html! {<>
+        html!{<>
             <ListErrors error=self.error.clone()/>
             {match &self.get_result_register {
                 true => html!{<div class="card">
@@ -229,7 +229,7 @@ impl AddCompanyRepresentCard {
             .link
             .callback(|_| Msg::RequestRegisterRepresent);
 
-        html! {<>
+        html!{<>
             // without columns
             <fieldset class="field">
                 <label class="label">{"name"}</label>

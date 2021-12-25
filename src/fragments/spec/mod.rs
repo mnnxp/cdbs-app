@@ -42,10 +42,10 @@ impl Component for SpecsTags {
     }
 
     fn view(&self) -> Html {
-        html! {
+        html!{
             <div id="specs" class="tags">
                 {for self.props.specs.iter().map(|spec| {
-                    html! {<SpecTagItem
+                    html!{<SpecTagItem
                         show_delete_btn = self.props.show_delete_btn.clone()
                         company_uuid = self.props.company_uuid.clone()
                         spec = spec.clone()

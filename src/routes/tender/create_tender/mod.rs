@@ -44,7 +44,7 @@ impl Component for CreateTender {
     }
 
     fn view(&self) -> Html {
-        html! {
+        html!{
           <div>
             <div class="is-size-6">{"Создание тендера на производство"}</div>
             <div class="is-size-3 has-text-weight-bold">

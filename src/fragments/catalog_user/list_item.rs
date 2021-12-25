@@ -83,14 +83,14 @@ impl ListItemUser {
             .callback(|_| Msg::ShowProfile);
 
         match small_button {
-            true => html! {
+            true => html!{
                 {res_btn(
                     classes!(String::from("fas  fa-user-o")),
                     onclick_open_profile,
                     String::new()
                 )}
             },
-            false => html! {
+            false => html!{
                 <button
                       class="button is-light is-fullwidth has-text-weight-bold"
                       onclick=onclick_open_profile >
@@ -109,7 +109,7 @@ impl ListItemUser {
             ..
         } = &self.props.data;
 
-        html! {
+        html!{
           <div class="box itemBox">
             <article class="media center-media">
               <div class="media-left">
@@ -148,7 +148,7 @@ impl ListItemUser {
             ..
         } = self.props.data.clone();
 
-        html! {
+        html!{
           <div class="boxItem" >
             <div class="innerBox" >
               <div class="imgBox" >

@@ -43,7 +43,7 @@ impl Component for ListPagination {
 
     fn view(&self) -> Html {
         if self.props.articles_count < ITEMS_PER_PAGE {
-            return html! {};
+            return html!{};
         }
 
         // Calculate page numbers
@@ -53,7 +53,7 @@ impl Component for ListPagination {
             pages.push(page);
         }
 
-        html! {
+        html!{
             <nav>
                 <ul class="pagination">
                 {for pages.iter().map(|page| {
@@ -65,7 +65,7 @@ impl Component for ListPagination {
                     };
                     let page = page.clone();
                     let onclick = self.link.callback(move |ev: MouseEvent| {ev.prevent_default(); Msg::PaginationChanged(page)});
-                    html! {
+                    html!{
                         <li
                             class=page_item_class
                             onclick=onclick>

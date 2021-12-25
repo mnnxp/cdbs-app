@@ -47,10 +47,10 @@ impl Component for SpecsTags {
     }
 
     fn view(&self) -> Html {
-        html! {
+        html!{
             <div id="specs" class="field is-grouped is-grouped-multiline">
                 {for self.props.specs.iter().map(|spec| {
-                    html! {<SpecTagItem
+                    html!{<SpecTagItem
                         show_manage_btn = self.props.show_manage_btn
                         active_info_btn = true
                         component_uuid = self.props.component_uuid.clone()

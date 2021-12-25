@@ -196,18 +196,18 @@ impl Component for CatalogComponents {
             },
         };
 
-        html! {
+        html!{
             <div class="componentsBox" >
               <ListErrors error=self.error.clone()/>
               <div class="level" >
                 <div class="level-left ">
                 {match &self.props.show_create_btn {
-                    true => html! {
+                    true => html!{
                         <RouterAnchor<AppRoute> route=AppRoute::CreateComponent >
                           <button class="button is-info" >{"Create"}</button>
                         </RouterAnchor<AppRoute>>
                     },
-                    false => html! {},
+                    false => html!{},
                 }}
                 </div>
                 <div class="level-right">
@@ -248,7 +248,7 @@ impl CatalogComponents {
                 Msg::DelFav(target_uuid_del.clone())
             );
 
-        html! {
+        html!{
             <ListItem data={show_comp.clone()}
                 show_list={self.show_type == ListState::List}
                 // triggerFav={triggerFav}

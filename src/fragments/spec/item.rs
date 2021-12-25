@@ -100,10 +100,10 @@ impl Component for SpecTagItem {
     }
 
     fn view(&self) -> Html {
-        html! {<>
+        html!{<>
             <ListErrors error=self.error.clone()/>
             {match self.get_result_delete {
-                true => html! {},
+                true => html!{},
                 false => self.show_spec(),
             }}
         </>}
@@ -116,7 +116,7 @@ impl SpecTagItem {
         let show_btn = !self.props.show_delete_btn;
         debug!("show_btn: {:?}", show_btn);
 
-        html! {
+        html!{
             <div class="tag is-light">
                 {self.props.spec.spec.clone()}
                 <div hidden=show_btn>

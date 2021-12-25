@@ -84,7 +84,7 @@ impl Component for MainView {
     }
 
     fn view(&self) -> Html {
-        html! {
+        html!{
             <div class="col-md-9 col-xs-12">
                 <div class="feed-toggle">
                     <ul class="nav nav-pills outline-active">
@@ -109,7 +109,7 @@ impl MainView {
                 msg.clone()
             });
 
-            html! {
+            html!{
                 <li class="nav-item">
                     <a  href=""
                         class=class
@@ -119,7 +119,7 @@ impl MainView {
                 </li>
             }
         } else {
-            html! {}
+            html!{}
         }
     }
 
@@ -130,7 +130,7 @@ impl MainView {
             msg.clone()
         });
 
-        html! {
+        html!{
             <li class="nav-item">
                 <a
                     href=""
@@ -150,7 +150,7 @@ impl MainView {
                 msg.clone()
             });
 
-            html! {
+            html!{
                 <li class="nav-item">
                     <a
                         href=""
@@ -161,7 +161,7 @@ impl MainView {
                 </li>
             }
         } else {
-            html! {}
+            html!{}
         }
     }
 }

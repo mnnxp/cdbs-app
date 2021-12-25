@@ -144,18 +144,18 @@ impl Component for CatalogStandards {
             },
         };
 
-        html! {
+        html!{
             <div class="standardsBox" >
               <ListErrors error=self.error.clone()/>
               <div class="level" >
                 <div class="level-left ">
                 {match &self.props.show_create_btn {
-                    true => html! {
+                    true => html!{
                         <RouterAnchor<AppRoute> route=AppRoute::CreateStandard >
                           <button class="button is-info" >{"Create"}</button>
                         </RouterAnchor<AppRoute>>
                     },
-                    false => html! {},
+                    false => html!{},
                 }}
                 </div>
                 <div class="level-right">
@@ -185,7 +185,7 @@ impl CatalogStandards {
         &self,
         show_standard: &ShowStandardShort,
     ) -> Html {
-        html! {<ListItemStandard data={show_standard.clone()}
+        html!{<ListItemStandard data={show_standard.clone()}
             show_list={self.show_type == ListState::List}
         />}
     }

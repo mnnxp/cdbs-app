@@ -119,7 +119,7 @@ impl Component for App {
         let callback_register = self.link.callback(Msg::Authenticated);
         let callback_logout = self.link.callback(|_| Msg::Logout);
 
-        html! {
+        html!{
             <>
                 <Header current_user=self.current_user.clone() callback=callback_logout.clone() />
                 {
@@ -169,7 +169,7 @@ impl Component for App {
                         }
                     } else {
                         // 404 when route matches no component
-                        html! { "No child component available" }
+                        html!{ "No child component available" }
                     }
                 }
                 <Footer />

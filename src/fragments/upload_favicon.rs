@@ -253,18 +253,18 @@ impl Component for UpdateFaviconCard {
     }
 
     fn view(&self) -> Html {
-        html! {
+        html!{
             <div class="card">
               <ListErrors error=self.error.clone()/>
               <label class="label">{"Upload new favicon:"}</label>
               <div class="columns">
                 {match self.get_result_up_completed > 0 {
-                    true => html! {
+                    true => html!{
                         <div class="column">
                           { self.show_success_upload() }
                         </div>
                     },
-                    false => html! {
+                    false => html!{
                         <div class="column">
                           { self.show_frame_upload_file() }
                           <br/>
@@ -291,7 +291,7 @@ impl UpdateFaviconCard {
             }
         });
 
-        html! {<>
+        html!{<>
             <div class="file is-large is-boxed has-name">
               <label
                 for="favicon-file-input"
@@ -343,7 +343,7 @@ impl UpdateFaviconCard {
             class_btn = "button";
         }
 
-        html! {
+        html!{
             <a id="btn-new-favicon-upload"
                   class={class_btn}
                   onclick=onclick_upload_favicon
@@ -360,7 +360,7 @@ impl UpdateFaviconCard {
             .link
             .callback(|_| Msg::ClearFileBoxed);
 
-        html! {
+        html!{
             <a id="btn-new-favicon-clear"
                   // class="button is-danger"
                   class="button"
@@ -374,7 +374,7 @@ impl UpdateFaviconCard {
     fn show_success_upload(
         &self,
     ) -> Html {
-        html! {
+        html!{
             <article class="message is-success">
               <div class="message-header">
                 <p>{ "Success" }</p>

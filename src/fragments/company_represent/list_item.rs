@@ -54,7 +54,7 @@ impl ListItem {
             ..
         } = &self.props.data;
 
-        html! {
+        html!{
           <div class="box itemBox">
             <article class="media center-media">
               // <div class="media-left">
@@ -97,7 +97,7 @@ impl ListItem {
             ..
         } = self.props.data.clone();
 
-        html! {
+        html!{
           <div class="boxItem" >
             <div class="innerBox" >
               // <div class="imgBox" >

@@ -217,7 +217,7 @@ impl Component for CreateComponent {
         let onclick_clear_error = self.link
             .callback(|_| Msg::ClearError);
 
-        html! {
+        html!{
             <div class="component-page">
                 <div class="container page">
                     <div class="row">

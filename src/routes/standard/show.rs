@@ -316,7 +316,7 @@ impl Component for ShowStandard {
 
     fn view(&self) -> Html {
         match &self.standard {
-            Some(standard_data) => html! {
+            Some(standard_data) => html!{
                 <div class="standard-page">
                     <ListErrors error=self.error.clone()/>
                     <div class="container page">
@@ -340,7 +340,7 @@ impl Component for ShowStandard {
                     </div>
                 </div>
             },
-            None => html! {<div>
+            None => html!{<div>
                 <ListErrors error=self.error.clone()/>
                 // <h1>{"Not data"}</h1>
             </div>},
@@ -520,7 +520,7 @@ impl ShowStandard {
             false => self.link.callback(|_| Msg::Follow),
         };
 
-        html! {<>
+        html!{<>
             <div class="media-right flexBox" >
               <button
                   id="following-button"
@@ -536,7 +536,7 @@ impl ShowStandard {
     }
 
     fn show_share_btn(&self) -> Html {
-        html! {
+        html!{
             <div class="media-right flexBox" >
               <button
                   id="share-button"

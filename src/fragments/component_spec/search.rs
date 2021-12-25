@@ -211,7 +211,7 @@ impl Component for SearchSpecsTags {
     }
 
     fn view(&self) -> Html {
-        html! {
+        html!{
             {self.fieldset_manage_specs()}
         }
     }
@@ -227,7 +227,7 @@ impl SearchSpecsTags {
         let onclick_del_old_spec = self.link
             .callback(|value: usize| Msg::DeleteCurrentSpec(value));
 
-        html! {<>
+        html!{<>
             <div class="panel-block">
               <p class=classes!(String::from("control has-icons-left"),if self.specs_search_loading {
                 String::from("is-loading")
@@ -251,7 +251,7 @@ impl SearchSpecsTags {
                         if spec.spec.is_empty() {
                             html!{}
                         } else {
-                            html! {<SpecTagItem
+                            html!{<SpecTagItem
                                 show_manage_btn = true
                                 active_info_btn = false
                                 component_uuid = self.props.component_uuid.clone()
@@ -267,7 +267,7 @@ impl SearchSpecsTags {
             <div class="panel-block">
                 <div id="add-specs" class="field is-grouped is-grouped-multiline">
                     {for self.added_specs.iter().map(|st_spec| {
-                        html! {<SpecTagItem
+                        html!{<SpecTagItem
                             show_manage_btn = true
                             active_info_btn = false
                             component_uuid = self.props.component_uuid.clone()

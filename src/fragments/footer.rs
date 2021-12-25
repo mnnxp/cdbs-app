@@ -24,7 +24,7 @@ impl Component for Footer {
     }
 
     fn view(&self) -> Html {
-        html! {
+        html!{
             <footer class="footer columns">
                 // left footer
                 <div class="column">

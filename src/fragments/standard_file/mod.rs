@@ -61,19 +61,19 @@ impl Component for FilesCard {
     }
 
     fn view(&self) -> Html {
-        html! {
+        html!{
             <div id="files" class="card">
                 {for self.props.files.iter().enumerate().map(|(index, file)| {
                     match (index >= 3, self.show_full_files) {
                         // show full list
-                        (_, true) => html! {<FileItem
+                        (_, true) => html!{<FileItem
                           show_download_btn = self.props.show_download_btn.clone()
                           show_delete_btn = self.props.show_delete_btn.clone()
                           standard_uuid = self.props.standard_uuid.clone()
                           file = file.clone()
                         />},
                         // show full list or first 4 items
-                        (false, false) => html! {<FileItem
+                        (false, false) => html!{<FileItem
                           show_download_btn = self.props.show_download_btn.clone()
                           show_delete_btn = self.props.show_delete_btn.clone()
                           standard_uuid = self.props.standard_uuid.clone()

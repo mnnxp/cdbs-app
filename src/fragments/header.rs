@@ -91,7 +91,7 @@ impl Component for Header {
 
         let onclick = self.link.callback(|_| Msg::Logout);
 
-        html! {
+        html!{
             <nav class="navbar" role="navigation" aria-label="main navigation">
                 <div class="navbar-brand">
                     <h1 class="navbar-item is-size-3">
@@ -137,7 +137,7 @@ impl Component for Header {
 
 impl Header {
     fn logged_out_view(&self) -> Html {
-        html! {
+        html!{
             <div class="buttons">
                  <RouterAnchor<AppRoute> route=AppRoute::Login classes="button">
                   { "Sign in" }
@@ -150,7 +150,7 @@ impl Header {
     }
 
     fn logged_in_view(&self, user_info: &SlimUser, logout:yew::Callback<MouseEvent> ) -> Html {
-        html! {
+        html!{
             <div class="buttons">
                  <div class="dropdown is-hoverable  is-right">
                   <div class="dropdown-trigger">

@@ -38,7 +38,7 @@ impl Component for AuthorCard {
 
     fn view(&self) -> Html {
         let Self { author } = self;
-        html! {
+        html!{
             <div class="card">
                 <div class="card-content">
                     <div class="media">

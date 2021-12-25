@@ -210,46 +210,46 @@ impl Component for CompanyCertificateCard {
                 </div>
             )
         } else {
-            html! {
+            html!{
                 <div class="card">
                     <ListErrors error=self.error.clone()/>
                     {match self.show_cert {
-                        true => html! {
+                        true => html!{
                             { self.show_certificate_on_page() }
                         },
-                        false => html! {
+                        false => html!{
                             { certificate.file.filename.to_string() }
                         },
                     }}
                     <div class="card-content">
                         {match (download_btn, change_btn) {
-                            (true, false) => html! {<>
+                            (true, false) => html!{<>
                                 { self.show_cert_description() }
                                 <br/>
                                 { self.show_btn_download() }
                             </>},
-                            (false, true) => html! {<>
+                            (false, true) => html!{<>
                                 { self.show_btn_change() }
                                 // <br/>
                                 { self.show_btn_delete() }
                             </>},
-                            (true, true) => html! {<>
+                            (true, true) => html!{<>
                                 { self.show_btn_change() }
                                 // <br/>
                                 { self.show_btn_delete() }
                                 <br/>
                                 { self.show_btn_download() }
                             </>},
-                            (false, false) => html! {<>
+                            (false, false) => html!{<>
                                 { self.show_cert_description() }
                                 <br/>
                             </>},
                         }}
                         {match show_cert_btn {
-                            true => html! {
+                            true => html!{
                                 { self.show_btn_certificate() }
                             },
-                            false => html! {},
+                            false => html!{},
                         }}
                     </div>
                 </div>
@@ -262,7 +262,7 @@ impl CompanyCertificateCard {
     fn show_certificate_on_page(
         &self,
     ) -> Html {
-        html! {<div class="card-image">
+        html!{<div class="card-image">
             <figure class="image is-4by5">
                 <img src=
                     { self.props.certificate.file.download_url.to_string() }
@@ -283,7 +283,7 @@ impl CompanyCertificateCard {
             false => "Show",
         };
 
-        html! {<a id={ format!(
+        html!{<a id={ format!(
             "btn-show-cert-{}", &self.props.certificate.file.uuid) }
             class="button"
             onclick=onclick_show_cert>
@@ -294,13 +294,13 @@ impl CompanyCertificateCard {
     fn show_cert_description(
         &self,
     ) -> Html {
-        html! { self.props.certificate.description.to_string() }
+        html!{ self.props.certificate.description.to_string() }
     }
 
     fn show_btn_download(
         &self,
     ) -> Html {
-        html! {
+        html!{
             <a id={ format!("btn-down-cert-{}", &self.props.certificate.file.uuid) }
                 class="button"
                 href={ self.props.certificate.file.download_url.to_string() }
@@ -321,14 +321,14 @@ impl CompanyCertificateCard {
             .link
             .callback(|_| Msg::RequestUpdateDescription);
 
-        html! {<>
+        html!{<>
             <label class="label">{"Description"}</label>
 
             {if self.get_result_update {
-                html! {<span id="tag-info-remove-profile" class="tag is-info is-light">
+                html!{<span id="tag-info-remove-profile" class="tag is-info is-light">
                  { "Description updated!" }
                 </span>}
-            } else { html! {} }}
+            } else { html!{} }}
 
             <input
                 id={ format!("cert-description-{}", &self.props.certificate.file.uuid) }
@@ -353,7 +353,7 @@ impl CompanyCertificateCard {
             .link
             .callback(|_| Msg::RequestDeleteCert);
 
-        html! {<a id={ format!(
+        html!{<a id={ format!(
             "btn-delete-cert-{}", &self.props.certificate.file.uuid) }
             class="button"
             onclick=onclick_delete_cert>

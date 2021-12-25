@@ -133,10 +133,10 @@ impl Component for FileItem {
     }
 
     fn view(&self) -> Html {
-        html! {<>
+        html!{<>
             <ListErrors error=self.error.clone()/>
             {match self.get_result_delete {
-                true => html! {},
+                true => html!{},
                 false => html!{<>
                     {self.show_full_info_file()}
                     {self.show_file()}

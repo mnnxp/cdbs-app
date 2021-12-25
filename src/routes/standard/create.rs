@@ -292,7 +292,7 @@ impl Component for CreateStandard {
         let onclick_clear_error = self.link
             .callback(|_| Msg::ClearError);
 
-        html! {
+        html!{
             <div class="standard-page">
                 <div class="container page">
                     <div class="row">

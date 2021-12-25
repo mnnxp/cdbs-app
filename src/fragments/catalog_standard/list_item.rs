@@ -181,7 +181,7 @@ impl ListItemStandard {
             },
         }
 
-        html! {
+        html!{
           <div class="box itemBox">
               <article class="media center-media">
                   <div class="media-left">
@@ -274,7 +274,7 @@ impl ListItemStandard {
         }
         class_res_btn.push("fa-bookmark");
 
-        html! {
+        html!{
           <div class="boxItem" >
             <div class="innerBox" >
               <div class="imgBox" >

@@ -498,7 +498,7 @@ impl Component for CompanySettings {
             Msg::RequestUpdateCompany
         });
 
-        html! {
+        html!{
             <div class="settings-page">
                 <ListErrors error=self.error.clone()/>
                 <div class="container page">
@@ -513,7 +513,7 @@ impl Component for CompanySettings {
                                   <div class="card-content">
                                     {match self.select_menu {
                                         // Show interface for change company data
-                                        Menu::Company => html! {<>
+                                        Menu::Company => html!{<>
                                             <span id="tag-info-updated-date" class="tag is-info is-light">{
                                                 match &self.current_data {
                                                     Some(data) => format!("Last updated: {}", data.updated_at),
@@ -535,7 +535,7 @@ impl Component for CompanySettings {
                                             </form>
                                         </>},
                                         // Show interface for change favicon company
-                                        Menu::UpdataFavicon => html! {<>
+                                        Menu::UpdataFavicon => html!{<>
                                             <span id="tag-info-updated-favicon-company" class="tag is-info is-light">
                                                 // { format!("Updated certificates: {}", self.get_result_certificates.clone()) }
                                                 { "Update favicon" }
@@ -543,7 +543,7 @@ impl Component for CompanySettings {
                                             { self.fieldset_update_favicon() }
                                         </>},
                                         // Show interface for add and update Certificates
-                                        Menu::Certificates => html! {<>
+                                        Menu::Certificates => html!{<>
                                             <span id="tag-info-updated-certificates" class="tag is-info is-light">
                                                 // { format!("Updated certificates: {}", self.get_result_certificates.clone()) }
                                                 { "Certificates" }
@@ -553,7 +553,7 @@ impl Component for CompanySettings {
                                             { self.fieldset_add_certificate() }
                                         </>},
                                         // Show interface for add and update Represents
-                                        Menu::Represent => html! {<>
+                                        Menu::Represent => html!{<>
                                             <span id="tag-info-updated-represents" class="tag is-info is-light">
                                                 // { format!("Updated certificates: {}", self.get_result_certificates.clone()) }
                                                 { "Represents" }
@@ -563,7 +563,7 @@ impl Component for CompanySettings {
                                             { self.fieldset_represents() }
                                         </>},
                                         // Show interface for add and update company Specs
-                                        Menu::Spec => html! {<>
+                                        Menu::Spec => html!{<>
                                             <div class="is-flex is-justify-content-space-between" >
                                                 <span id="tag-info-updated-represents" class="tag is-info is-light">
                                                 // { format!("Updated certificates: {}", self.get_result_certificates.clone()) }
@@ -571,13 +571,13 @@ impl Component for CompanySettings {
                                                 </span>
                                             {html !{
                                                 match self.edit_specs {
-                                                    true => html! {
+                                                    true => html!{
                                                         <div>
                                                           <button class="button is-success" onclick=self.link.callback(|_| Msg::EditSpecs(false))> {"back"} </button>
                                                           // <button class="button is-warning" onclick=self.link.callback(|_| Msg::EditSpecs(false))> {"cancel"} </button>
                                                         </div>
                                                     },
-                                                    false => html! {
+                                                    false => html!{
                                                         <div>
                                                             <button class="button is-info" onclick=self.link.callback(|_| Msg::EditSpecs(true)) > {"add/edit"} </button>
                                                         </div>
@@ -590,7 +590,7 @@ impl Component for CompanySettings {
                                             { self.fieldset_specs() }
                                         </>},
                                         // Show interface for manage Access
-                                        Menu::Access => html! {<>
+                                        Menu::Access => html!{<>
                                             <span id="tag-info-updated-represents" class="tag is-info is-light">
                                                 // { format!("Updated certificates: {}", self.get_result_certificates.clone()) }
                                                 { "Access" }
@@ -599,7 +599,7 @@ impl Component for CompanySettings {
                                             { self.fieldset_manage_access() }
                                         </>},
                                         // Show interface for remove company
-                                        Menu::RemoveCompany => html! {<>
+                                        Menu::RemoveCompany => html!{<>
                                             <span id="tag-danger-remove-company" class="tag is-danger is-light">
                                               { "Warning: this removed all data related with company, it cannot be canceled!" }
                                             </span>
@@ -650,7 +650,7 @@ impl CompanySettings {
             Menu::RemoveCompany => active_remove_company = "is-active",
         }
 
-        html! {
+        html!{
             <aside class="menu">
                 <p class="menu-label">
                     {"Company Settings"}
@@ -742,7 +742,7 @@ impl CompanySettings {
             })
         });
 
-        html! {<>
+        html!{<>
             <fieldset class="columns">
                 // first column
                 <fieldset class="column">
@@ -917,7 +917,7 @@ impl CompanySettings {
     fn fieldset_update_favicon(&self) -> Html {
         let callback_update_favicon = self.link.callback(|_| Msg::GetCurrentData);
 
-        html! {
+        html!{
             <UpdateFaviconCard
                 company_uuid = self.company_uuid.clone()
                 callback=callback_update_favicon
@@ -932,7 +932,7 @@ impl CompanySettings {
         };
 
         match certificates.is_empty() {
-            true => html! {
+            true => html!{
                 <div>
                     <span id="tag-info-no-certificates" class="tag is-info is-light">
                         // { format!("Updated certificates: {}", self.get_result_certificates.clone()) }
@@ -941,12 +941,12 @@ impl CompanySettings {
                 </div>
             },
             false => {
-                html! {
+                html!{
                     // <p class="card-footer-item">
                     <>{
                         for certificates.iter().map(|cert| {
                             let view_cert: Certificate = cert.into();
-                            html! {
+                            html!{
                                 <CompanyCertificateCard
                                     company_uuid = self.company_uuid.clone()
                                     certificate = view_cert
@@ -972,7 +972,7 @@ impl CompanySettings {
 
         let callback_upload_cert = self.link.callback(|_| Msg::GetCurrentData);
 
-        html! {
+        html!{
             <AddCertificateCard
                 company_uuid = company_uuid
                 callback=callback_upload_cert
@@ -988,7 +988,7 @@ impl CompanySettings {
         // debug!("first: {:?}", represents);
 
         match represents.is_empty() {
-            true => html! {
+            true => html!{
                 <div>
                     <span id="tag-info-no-represents" class="tag is-info is-light">
                         // { format!("Updated represents: {}", self.get_result_represents.clone()) }
@@ -998,7 +998,7 @@ impl CompanySettings {
             },
             false => {
                 // debug!("false: {:?}", represents);
-                html! {
+                html!{
                     <CompanyRepresents
                         show_manage_btn = true
                         list = represents.to_vec()
@@ -1009,7 +1009,7 @@ impl CompanySettings {
     }
 
     fn fieldset_add_represent(&self) -> Html {
-        html! {
+        html!{
             <AddCompanyRepresentCard
                 company_uuid = self.company_uuid.clone()
                 />
@@ -1022,7 +1022,7 @@ impl CompanySettings {
             Msg::RequestChangeAccess
         });
 
-        html! {
+        html!{
             <form onsubmit=onsubmit_update_access>
                 { self.fieldset_access() }
                 <button
@@ -1044,7 +1044,7 @@ impl CompanySettings {
             })
         });
 
-        html! {
+        html!{
             <fieldset class="columns">
                 // first column
                 <fieldset class="column">
@@ -1083,7 +1083,7 @@ impl CompanySettings {
     fn fieldset_remove_company(&self) -> Html {
         let onclick_delete_company = self.link.callback(|_| Msg::RequestRemoveCompany);
 
-        html! {
+        html!{
             <button
                 id="button-delete-company"
                 class="button"
@@ -1102,7 +1102,7 @@ impl CompanySettings {
             .iter()
             .map(|x| Spec::from(x))
             .collect::<Vec<Spec>>();
-        html! {
+        html!{
           <div hidden=!show_ipt>
             <article class=classes!(String::from("panel is-primary")) style="margin-top: 16px;">
               <p class="panel-heading">
@@ -1154,7 +1154,7 @@ impl CompanySettings {
 
     fn fieldset_specs(&self) -> Html {
         match &self.current_data {
-            Some(company) => html! {<div>
+            Some(company) => html!{<div>
                 <span>{"company specs: "}</span>
                 <SpecsTags
                   show_delete_btn = !self.edit_specs
@@ -1162,7 +1162,7 @@ impl CompanySettings {
                   specs = company.company_specs.clone()
                 />
             </div>},
-            None => html! {},
+            None => html!{},
         }
     }
 }

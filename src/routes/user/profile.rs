@@ -370,7 +370,7 @@ impl Component for Profile {
         // };
 
         match (&self.self_profile, &self.profile) {
-            (Some(self_data), _) => html! {
+            (Some(self_data), _) => html!{
                 <div class="profile-page">
                     <ListErrors error=self.error.clone()/>
                     <div class="container page">
@@ -424,7 +424,7 @@ impl Component for Profile {
                     </div>
                 </div>
             },
-            (_, Some(user_data)) => html! {
+            (_, Some(user_data)) => html!{
                 <div class="profile-page">
                     <ListErrors error=self.error.clone()/>
                     <div class="container page">
@@ -463,7 +463,7 @@ impl Component for Profile {
                                           ProfileTab::FavoriteCompanies => {
                                               self.view_favorite_companies(Some(user_data.uuid.clone()))
                                           },
-                                          _ => html! {},
+                                          _ => html!{},
                                       }}
                                   </div>
                                 </div>
@@ -473,7 +473,7 @@ impl Component for Profile {
                     </div>
                 </div>
             },
-            _ => html! {<div>
+            _ => html!{<div>
                 <ListErrors error=self.error.clone()/>
                 // <h1>{"Not data"}</h1>
             </div>},
@@ -508,7 +508,7 @@ impl Profile {
             (None, None) => UserDataCard::default(),
         };
 
-        html! {<>
+        html!{<>
             <div class="media-left">
               <figure class="image is-48x48">
                 <img src="https://bulma.io/images/placeholders/96x96.png" alt="Placeholder image"/>
@@ -538,7 +538,7 @@ impl Profile {
     }
 
     fn show_profile_followers(&self) -> Html {
-        html! {<>
+        html!{<>
             {match &self.profile {
                 Some(_) => {
                     let class_fav = match self.is_followed {
@@ -551,7 +551,7 @@ impl Profile {
                         false => self.link.callback(|_| Msg::Follow),
                     };
 
-                    html! {
+                    html!{
                         // for self user data not show button "following"
                         <div class="media-right flexBox" >
                           <button
@@ -633,12 +633,12 @@ impl Profile {
           )
         }
 
-        html! {
+        html!{
             <div class="card" style="padding: 10px;margin-right: 18px;" >
                 // <ul>
                 <aside class="menu">
                     {match &self.self_profile {
-                        Some(ref self_data) => html! {<>
+                        Some(ref self_data) => html!{<>
                             <p class="menu-label">
                               {"General"}
                             </p>
@@ -667,7 +667,7 @@ impl Profile {
                                 {li_generator(active_fav_users, onclick_fav_users, "users".to_string(), self_data.fav_users_count)}
                             </ul>
                         </>},
-                        None => html! {<>
+                        None => html!{<>
                             <p class="menu-label">
                               {"General"}
                             </p>
@@ -704,7 +704,7 @@ impl Profile {
         region: &str,
         program: &str
     ) -> Html {
-        html! {
+        html!{
             <div class="columns">
                 <div class="column">
                     <div id="description" class="content">
@@ -737,14 +737,14 @@ impl Profile {
         certificates: &[UserCertificate]
     ) -> Html {
         match certificates.is_empty() {
-            true => html! {},
+            true => html!{},
             false => {
-                html! {
+                html!{
                     // <p class="card-footer-item">
                     <footer class="card-footer is-flex is-flex-wrap-wrap">{
                         for certificates.iter().map(|cert| {
                             let view_cert: Certificate = cert.into();
-                            html! {
+                            html!{
                                 <CertificateCard
                                     certificate = view_cert
                                     show_cert_btn = true
@@ -764,7 +764,7 @@ impl Profile {
         &self,
         user_uuid: Option<UUID>,
     ) -> Html {
-        html! {
+        html!{
             <CatalogComponents
                 show_create_btn = self.self_profile.is_some()
                 arguments = ComponentsQueryArg::set_favorite(user_uuid)
@@ -776,7 +776,7 @@ impl Profile {
         &self,
         user_uuid: &UUID,
     ) -> Html {
-        html! {
+        html!{
             <CatalogComponents
                 show_create_btn = self.self_profile.is_some()
                 arguments = ComponentsQueryArg::set_user_uuid(user_uuid)
@@ -788,7 +788,7 @@ impl Profile {
         &self,
         user_uuid: Option<UUID>,
     ) -> Html {
-        html! {
+        html!{
             <CatalogCompanies
                 show_create_btn = self.self_profile.is_some()
                 arguments = CompaniesQueryArg::set_favorite(user_uuid)
@@ -800,7 +800,7 @@ impl Profile {
         &self,
         user_uuid: &UUID,
     ) -> Html {
-        html! {
+        html!{
             <CatalogCompanies
                 show_create_btn = self.self_profile.is_some()
                 arguments = CompaniesQueryArg::set_user_uuid(user_uuid)
@@ -809,7 +809,7 @@ impl Profile {
     }
 
     fn view_favorite_standards(&self) -> Html {
-        html! {
+        html!{
             <CatalogStandards
                 show_create_btn = false
                 arguments = StandardsQueryArg::set_favorite()
@@ -818,7 +818,7 @@ impl Profile {
     }
 
     fn view_favorite_users(&self) -> Html {
-        html! {
+        html!{
             <CatalogUsers
                 arguments = UsersQueryArg::set_favorite()
             />

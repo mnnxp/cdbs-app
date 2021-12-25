@@ -158,18 +158,18 @@ impl Component for CatalogCompanies {
             },
         };
 
-        html! {
+        html!{
             <div class="companiesBox" >
               <ListErrors error=self.error.clone()/>
               <div class="level" >
                 <div class="level-left ">
                 {match &self.props.show_create_btn {
-                    true => html! {
+                    true => html!{
                         <RouterAnchor<AppRoute> route=AppRoute::CreateCompany >
                           <button class="button is-info" >{"Create"}</button>
                         </RouterAnchor<AppRoute>>
                     },
-                    false => html! {},
+                    false => html!{},
                 }}
                 </div>
                 <div class="level-right">
@@ -199,7 +199,7 @@ impl CatalogCompanies {
         &self,
         show_company: &ShowCompanyShort,
     ) -> Html {
-        html! {<ListItemCompany
+        html!{<ListItemCompany
             data={show_company.clone()}
             show_list={self.show_type == ListState::List}
         />}

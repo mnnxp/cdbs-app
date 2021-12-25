@@ -42,7 +42,7 @@ impl Component for Item {
     }
 
     fn view(&self) -> Html {
-        html! {
+        html!{
           <div class="box itemBox">
             <article class="media">
               <div class="media-left">

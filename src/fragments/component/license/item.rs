@@ -122,7 +122,7 @@ impl Component for ComponentLicenseTag {
         html!{<>
             <ListErrors error=self.error.clone()/>
             {match self.get_result_delete {
-                true => html! {},
+                true => html!{},
                 false => self.show_license(),
             }}
         </>}

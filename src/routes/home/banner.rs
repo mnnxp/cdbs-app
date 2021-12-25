@@ -24,9 +24,9 @@ impl Component for Banner {
 
     fn view(&self) -> Html {
         if is_authenticated() {
-            html! {}
+            html!{}
         } else {
-            html! {
+            html!{
                 <div class="tile is-parent container">
                     <div class="tile is-parent">
                         <div class="tile is-child box">

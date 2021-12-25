@@ -214,7 +214,7 @@ impl Component for CreateCompany {
             Msg::RequestCreateCompany
         });
 
-        html! {
+        html!{
             <div class="settings-page">
                 <ListErrors error=self.error.clone()/>
                 <div class="container page">
@@ -277,7 +277,7 @@ impl CreateCompany {
               _ => "1".to_string(),
             }));
 
-        html! {<>
+        html!{<>
             <fieldset class="columns">
                 // first column
                 <fieldset class="column">

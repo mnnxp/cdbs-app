@@ -223,7 +223,7 @@ impl Component for Notifications {
     }
 
     fn view(&self) -> Html {
-        html! {
+        html!{
             <div class="settings-page">
                 <ListErrors error=self.error.clone()/>
                 <div class="container page">
@@ -323,7 +323,7 @@ impl Notifications {
             },
         }
 
-        html! {
+        html!{
             <aside class="menu">
                 <p class="menu-label">
                     {"User Notifications"}
@@ -453,12 +453,12 @@ impl Notifications {
             false => notification_class_degree.to_string(),
         };
 
-        html! {<>
+        html!{<>
             <div class="card">
                 <div class={notification_class_degree}>
                     {match is_read {
-                        true => html! {},
-                        false => html! {<button class="delete" onclick=onclick_set_read />},
+                        true => html!{},
+                        false => html!{<button class="delete" onclick=onclick_set_read />},
                     }}
                     <span class="icon">
                       <i class={notification_class_icon}> </i>

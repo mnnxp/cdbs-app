@@ -471,7 +471,7 @@ impl Component for Settings {
 
         // let onclick_logout = self.link.callback(|_| Msg::Logout);
 
-        html! {
+        html!{
             <div class="settings-page">
                 <ListErrors error=self.error.clone()/>
                 <div class="container page">
@@ -486,7 +486,7 @@ impl Component for Settings {
                                   <div class="card-content">
                                     {match self.select_menu {
                                         // Show interface for change profile data
-                                        Menu::Profile => html! {<>
+                                        Menu::Profile => html!{<>
                                             <span id="tag-info-updated-date" class="tag is-info is-light">{
                                                 match &self.current_data {
                                                     Some(data) => format!("Last updated: {}", data.updated_at),
@@ -508,7 +508,7 @@ impl Component for Settings {
                                             </form>
                                         </>},
                                         // Show interface for change favicon user
-                                        Menu::UpdataFavicon => html! {<>
+                                        Menu::UpdataFavicon => html!{<>
                                             <span id="tag-info-updated-favicon-user" class="tag is-info is-light">
                                                 // { format!("Updated certificates: {}", self.get_result_certificates.clone()) }
                                                 { "Update favicon" }
@@ -516,7 +516,7 @@ impl Component for Settings {
                                             { self.fieldset_update_favicon() }
                                         </>},
                                         // Show interface for add and update Certificates
-                                        Menu::Certificates => html! {<>
+                                        Menu::Certificates => html!{<>
                                             <span id="tag-info-updated-certificates" class="tag is-info is-light">
                                                 // { format!("Updated certificates: {}", self.get_result_certificates.clone()) }
                                                 { "Certificates" }
@@ -526,7 +526,7 @@ impl Component for Settings {
                                             { self.fieldset_add_certificate() }
                                         </>},
                                         // Show interface for change access
-                                        Menu::Access => html! {<>
+                                        Menu::Access => html!{<>
                                             <span id="tag-info-updated-access" class="tag is-info is-light">
                                                 { format!("Updated access: {}", self.get_result_access.clone()) }
                                             </span>
@@ -548,7 +548,7 @@ impl Component for Settings {
                                             // removed all Tokens
                                         </>},
                                         // Show interface for change password
-                                        Menu::Password => html! {<>
+                                        Menu::Password => html!{<>
                                             <span id="tag-info-updated-pwd" class="tag is-info is-light">
                                               { format!("Updated password: {}", self.get_result_pwd.clone()) }
                                             </span>
@@ -564,7 +564,7 @@ impl Component for Settings {
                                             </form>
                                         </>},
                                         // Show interface for remove profile
-                                        Menu::RemoveProfile => html! {<>
+                                        Menu::RemoveProfile => html!{<>
                                             <span id="tag-danger-remove-profile" class="tag is-danger is-light">
                                               { "Warning: this removed all data related with profile, it cannot be canceled!" }
                                             </span>
@@ -648,7 +648,7 @@ impl Settings {
             Menu::RemoveProfile => active_remove_profile = "is-active",
         }
 
-        html! {
+        html!{
             <aside class="menu">
                 <p class="menu-label">
                     {"User Settings"}
@@ -703,7 +703,7 @@ impl Settings {
     ) -> Html {
         let callback_update_favicon = self.link.callback(|_| Msg::GetCurrentData);
 
-        html! {
+        html!{
             <UpdateFaviconCard
                 company_uuid = None
                 callback=callback_update_favicon
@@ -734,7 +734,7 @@ impl Settings {
                     <>{
                         for certificates.iter().map(|cert| {
                             let view_cert: Certificate = cert.into();
-                            html! {
+                            html!{
                                 <CertificateCard
                                     certificate = view_cert
                                     show_cert_btn = true
@@ -760,7 +760,7 @@ impl Settings {
 
         let callback_upload_cert = self.link.callback(|_| Msg::GetCurrentData);
 
-        html! {
+        html!{
             <AddCertificateCard
                 user_uuid = user_uuid
                 callback=callback_upload_cert
@@ -778,7 +778,7 @@ impl Settings {
             _ => "1".to_string(),
         }));
 
-        html! {
+        html!{
             <fieldset class="columns">
                 // first column
                 <fieldset class="column">
@@ -824,7 +824,7 @@ impl Settings {
             .link
             .callback(|ev: InputData| Msg::UpdateNewPassword(ev.value));
 
-        html! {
+        html!{
             <fieldset class="columns">
                 // first column
                 <fieldset class="column">
@@ -896,7 +896,7 @@ impl Settings {
               _ => "1".to_string(),
           }));
 
-        html! {
+        html!{
             <fieldset class="columns">
                 // first column
                 <fieldset class="column">
@@ -1091,7 +1091,7 @@ impl Settings {
             .link
             .callback(|ev: InputData| Msg::UpdateUserPassword(ev.value));
 
-        html! {
+        html!{
             <fieldset class="columns">
                 // first column
                 <fieldset class="column">

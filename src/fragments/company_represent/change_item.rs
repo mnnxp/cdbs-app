@@ -235,7 +235,7 @@ impl Component for ChangeItem {
     }
 
     fn view(&self) -> Html {
-        html! {<>
+        html!{<>
             <ListErrors error=self.error.clone()/>
             {match &self.get_result_delete {
                 true => html!{<div class="card">
@@ -287,12 +287,12 @@ impl ChangeItem {
             .link
             .callback(|_| Msg::RequestUpdateRepresent);
 
-        html! {<>
+        html!{<>
             {if self.get_result_update > 0 {
-                html! {<span id="tag-info-update-represent" class="tag is-info is-light">
+                html!{<span id="tag-info-update-represent" class="tag is-info is-light">
                  { format!("Data updated! Change rows: {}", self.get_result_update) }
                 </span>}
-            } else { html! {} }}
+            } else { html!{} }}
 
             // without columns
             <fieldset class="field">
@@ -410,7 +410,7 @@ impl ChangeItem {
             .link
             .callback(|_| Msg::RequestDeleteRepresent);
 
-        html! {<a id={ format!(
+        html!{<a id={ format!(
             "btn-delete-represent-{}", &self.props.data.uuid) }
             class="button"
             onclick=onclick_delete_represent>

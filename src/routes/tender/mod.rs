@@ -47,7 +47,7 @@ impl Component for Tenders {
     }
 
     fn view(&self) -> Html {
-        html! {
+        html!{
             <div class="tendersBox" >
               <div class="level" >
                 <div class="level-left ">
@@ -63,7 +63,7 @@ impl Component for Tenders {
                 </div>
               </div>
               {vec![1;3].iter().map(|_| {
-                html! { <Item/> }
+                html!{ <Item/> }
               }).collect::<Html>()}
             </div>
         }

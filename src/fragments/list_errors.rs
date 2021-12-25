@@ -51,15 +51,15 @@ impl Component for ListErrors {
         if let Some(error) = &self.props.error {
             match error {
                 Error::UnprocessableEntity(error_info) => {
-                    html! {<div class=vec!("notification", "is-danger")>
+                    html!{<div class=vec!("notification", "is-danger")>
                         <button class="delete" onclick=onclick_close_error/>
                         <table class="table is-fullwidth">
                             <tbody>
                                 {for error_info.errors.iter().map(|(key, value)| {
-                                    html! {<tr>
+                                    html!{<tr>
                                         { key }
                                         {for value.iter().map(|e| {
-                                            html! {<>{" "} {e}</>}
+                                            html!{<>{" "} {e}</>}
                                         })}
                                     </tr>}
                                 })}
@@ -68,7 +68,7 @@ impl Component for ListErrors {
                     </div>}
                 }
                 _ => {
-                    html! {
+                    html!{
                         <div class=vec!("notification", "is-danger")>
                             <button class="delete" onclick=onclick_close_error/>
                             {error}
@@ -77,7 +77,7 @@ impl Component for ListErrors {
                 }
             }
         } else {
-            html! {}
+            html!{}
         }
     }
 }

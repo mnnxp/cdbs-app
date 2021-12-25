@@ -127,7 +127,7 @@ impl Component for Login {
             .link
             .callback(|ev: InputData| Msg::UpdatePassword(ev.value));
 
-        html! {
+        html!{
             <div class="auth-page">
                 // <div class="container page">
                     // <div class="row">

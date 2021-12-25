@@ -30,7 +30,7 @@ impl Component for Pagination {
     }
 
     fn view(&self) -> Html {
-        html! {
+        html!{
             <nav class="pagination is-right" role="navigation" aria-label="pagination">
                 { self.view_relnav_buttons() }
                 <ul class="pagination-list">
@@ -51,7 +51,7 @@ impl Pagination {
         let onclick = on_switch_page.reform(move |_| to_page);
         let is_current_class = if to_page == page { "is-current" } else { "" };
 
-        html! {
+        html!{
             <li>
                 <a class=vec!("pagination-link", is_current_class) aria-label=format!("Goto page {}", to_page) onclick=onclick>
                     { to_page }
@@ -68,7 +68,7 @@ impl Pagination {
             let last_link = self.render_link(pages.next_back().unwrap());
             // remove 1 for the ellipsis and 1 for the last link
             let links = pages.take(max_links - 2).map(|page| self.render_link(page));
-            html! {
+            html!{
                 <>
                     { for links }
                     <li><span class="pagination-ellipsis">{ ELLIPSIS }</span></li>
@@ -76,7 +76,7 @@ impl Pagination {
                 </>
             }
         } else {
-            html! { for pages.map(|page| self.render_link(page)) }
+            html!{ for pages.map(|page| self.render_link(page)) }
         }
     }
 
@@ -95,7 +95,7 @@ impl Pagination {
             + LINKS_PER_SIDE.checked_sub(pages_next).unwrap_or_default();
         let links_right = 2 * LINKS_PER_SIDE - links_left;
 
-        html! {
+        html!{
             <>
                 { self.render_links(1..page, pages_prev, links_left) }
                 <li>{ self.render_link(page) }</li>
@@ -111,7 +111,7 @@ impl Pagination {
             ref on_switch_page,
         } = self.props;
 
-        html! {
+        html!{
             <>
                 <a class="pagination-previous"
                     disabled=page==1

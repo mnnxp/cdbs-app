@@ -110,10 +110,10 @@ impl Component for KeywordTagItem {
     }
 
     fn view(&self) -> Html {
-        html! {<>
+        html!{<>
             <ListErrors error=self.error.clone()/>
             {match self.get_result_delete {
-                true => html! {},
+                true => html!{},
                 false => self.show_keyword(),
             }}
         </>}
@@ -137,8 +137,8 @@ impl KeywordTagItem {
           <div class="tags has-addons">
             <span class={style_tag}>{self.props.keyword.keyword.clone()}</span>
             {match &self.props.show_delete_btn {
-                true => html! {<a class="tag is-delete is-small is-light" onclick={onclick_delete_keyword} />},
-                false => html! {},
+                true => html!{<a class="tag is-delete is-small is-light" onclick={onclick_delete_keyword} />},
+                false => html!{},
             }}
           </div>
         </div>}

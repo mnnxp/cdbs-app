@@ -112,7 +112,7 @@ impl Component for FilesOfFilesetCard {
     }
 
     fn view(&self) -> Html {
-        html! {<>
+        html!{<>
             <ListErrors error=self.error.clone()/>
             <div class="card">
                 <table class="table is-fullwidth is-striped">

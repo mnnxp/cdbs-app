@@ -132,7 +132,7 @@ impl Component for ModificationsTable {
     }
 
     fn view(&self) -> Html {
-        html! {<div class="card">
+        html!{<div class="card">
             <div class="table-container">
               <table class="table is-fullwidth is-striped">
                 <ModificationTableHeads
@@ -141,7 +141,7 @@ impl Component for ModificationsTable {
                 />
 
                 {for self.collect_items.iter().map(|(modification_uuid, item)| {
-                  html! {<ModificationTableItem
+                  html!{<ModificationTableItem
                       modification_uuid = modification_uuid.clone()
                       collect_heads = self.collect_heads.clone()
                       collect_item = item.clone()

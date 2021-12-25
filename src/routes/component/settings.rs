@@ -584,7 +584,7 @@ impl Component for ComponentSettings {
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
 
-        html! {
+        html!{
             <div class="component-page">
                 <div class="container page">
                     <div class="row">
@@ -985,8 +985,8 @@ impl ComponentSettings {
             .callback(|_| Msg::ClearFilesBoxed);
 
         match self.disable_save_changes_btn {
-            true => html! {},
-            false => html! {
+            true => html!{},
+            false => html!{
                 <a id="clear-frame-upload-files"
                       class="button"
                       onclick=onclick_clear_boxed

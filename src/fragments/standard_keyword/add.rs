@@ -272,7 +272,7 @@ impl Component for AddKeywordsTags {
         let onclick_clear_error = self.link
             .callback(|_| Msg::ClearError);
 
-        html! {<>
+        html!{<>
             <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
             <br/>
             {self.add_standard_keyword()}
@@ -299,7 +299,7 @@ impl AddKeywordsTags {
         let onclick_del_old_keyword = self.link
             .callback(|value: Keyword| Msg::DeleteCurrentKeyword(value.id));
 
-        html! {<>
+        html!{<>
             <div class="panel-block">
                 <input
                     oninput=oninput_parse_keyword
@@ -323,7 +323,7 @@ impl AddKeywordsTags {
                    if keyword.keyword.is_empty() {
                       html!{}
                    } else {
-                      html! {<KeywordTagItem
+                      html!{<KeywordTagItem
                          show_delete_btn = true
                          standard_uuid = self.props.standard_uuid.clone()
                          keyword = keyword.clone()

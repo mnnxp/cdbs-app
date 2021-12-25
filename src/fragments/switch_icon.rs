@@ -43,7 +43,7 @@ use yew::{
 //     }
 
 //     fn view(&self) -> Html {
-//         html! {
+//         html!{
 //           <button class="button" onclick={self.props.callback.clickEvent.clone()} >
 //             <span class="icon is-small">
 //               <i class=classes!(self.props.callback.class.clone())></i>
@@ -54,7 +54,7 @@ use yew::{
 // }
 
 pub fn res_btn (class: Classes, onclick:Callback<MouseEvent>, span_style: String) -> Html {
-  html! {
+  html!{
     <button class="button" onclick=onclick >
       <span class="icon is-small" style=span_style >
         <i class=class></i>

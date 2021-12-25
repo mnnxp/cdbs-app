@@ -188,7 +188,7 @@ impl Component for Editor {
             }
         });
 
-        html! {
+        html!{
             <div class="editor-page">
                 <div class="container page">
                     <div class="row">
@@ -233,10 +233,10 @@ impl Component for Editor {
                                         <div class="tag-list">
                                             {
                                                 if let Some(tag_list) = &self.request.tag_list {
-                                                    html! {for tag_list.iter().map(|tag| {
+                                                    html!{for tag_list.iter().map(|tag| {
                                                         let tag_to_remove = tag.clone();
                                                         let onclick_remove = self.link.callback(move |ev| Msg::RemoveTag(tag_to_remove.to_string()));
-                                                        html! {
+                                                        html!{
                                                             <span class="tag-default tag-pill">
                                                                 <i class="ion-close-round"
                                                                     onclick=onclick_remove>
@@ -246,7 +246,7 @@ impl Component for Editor {
                                                         }
                                                     })}
                                                 } else {
-                                                    html! {}
+                                                    html!{}
                                                 }
                                             }
                                         </div>

@@ -38,7 +38,7 @@ impl Component for PostCard {
 
     fn view(&self) -> Html {
         let Self { post } = self;
-        html! {
+        html!{
             <div class="card">
                 <div class="card-image">
                     <figure class="image is-2by1">

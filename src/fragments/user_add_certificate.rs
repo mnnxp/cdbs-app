@@ -254,17 +254,17 @@ impl Component for AddCertificateCard {
     }
 
     fn view(&self) -> Html {
-        html! {
+        html!{
             <div class="card">
               <ListErrors error=self.error.clone()/>
               <div class="columns">
                 {match self.get_result_up_completed > 0 {
-                    true => html! {
+                    true => html!{
                         <div class="column">
                           { self.show_success_upload() }
                         </div>
                     },
-                    false => html! {
+                    false => html!{
                         <div class="column">
                           <label class="label">{"Upload new certificate:"}</label>
                           { self.show_input_description() }
@@ -306,7 +306,7 @@ impl AddCertificateCard {
             Msg::Ignore
         });
 
-        html! {<>
+        html!{<>
             <div class="file is-large is-boxed has-name">
               <label
                 for="cert-file-input"
@@ -343,7 +343,7 @@ impl AddCertificateCard {
             .link
             .callback(|ev: InputData| Msg::UpdateDescription(ev.value));
 
-        html! {<>
+        html!{<>
             <label class="label">{"Description"}</label>
 
             <input
@@ -372,7 +372,7 @@ impl AddCertificateCard {
             class_btn = "button";
         }
 
-        html! {
+        html!{
             <a id="btn-new-cert-upload"
                   class={class_btn}
                   onclick=onclick_upload_cert
@@ -385,7 +385,7 @@ impl AddCertificateCard {
     fn show_btn_clear(&self) -> Html {
         let onclick_clear_boxed = self.link.callback(|_| Msg::ClearFileBoxed);
 
-        html! {
+        html!{
             <a id="btn-new-cert-clear"
                   // class="button is-danger"
                   class="button"
@@ -397,7 +397,7 @@ impl AddCertificateCard {
     }
 
     fn show_success_upload(&self) -> Html {
-        html! {
+        html!{
             <article class="message is-success">
               <div class="message-header">
                 <p>{ "Success" }</p>

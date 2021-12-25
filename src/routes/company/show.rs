@@ -280,7 +280,7 @@ impl Component for ShowCompany {
         // };
 
         match &self.profile {
-            Some(company_data) => html! {
+            Some(company_data) => html!{
                 <div class="profile-page">
                     <ListErrors error=self.error.clone()/>
                     <div class="container page">
@@ -328,7 +328,7 @@ impl Component for ShowCompany {
                     </div>
                 </div>
             },
-            None => html! {<div>
+            None => html!{<div>
                 <ListErrors error=self.error.clone()/>
                 // <h1>{"Not data"}</h1>
             </div>},
@@ -342,7 +342,7 @@ impl ShowCompany {
         let onclick_setting_company_btn = self.link.callback(|_| Msg::OpenSettingCompany);
 
         match &self.profile {
-            Some(company_data) => html! {<>
+            Some(company_data) => html!{<>
                 <div class="media-left">
                   <figure class="image is-48x48">
                     // <div hidden={!company_data.is_supplier} class="top-tag" >{"supplier"}</div>
@@ -394,12 +394,12 @@ impl ShowCompany {
                   </p>
                 </div>
             </>},
-            None => html! {},
+            None => html!{},
         }
     }
 
     fn show_profile_followers(&self) -> Html {
-        html! {<>
+        html!{<>
             {match &self.profile {
                 Some(_) => {
                     let class_fav = match self.is_followed {
@@ -412,7 +412,7 @@ impl ShowCompany {
                         false => self.link.callback(|_| Msg::Follow),
                     };
 
-                    html! {
+                    html!{
                         // for self user data not show button "following"
                         <div class="media-right flexBox" >
                           <button
@@ -491,12 +491,12 @@ impl ShowCompany {
           )
         }
 
-        html! {
+        html!{
             <div class="card" style="padding: 10px;margin-right: 18px;" >
                 // <ul>
                 <aside class="menu">
                     {match &self.profile {
-                        Some(company_data) => html! {<>
+                        Some(company_data) => html!{<>
                             <p class="menu-label">
                               {"General"}
                             </p>
@@ -521,7 +521,7 @@ impl ShowCompany {
         &self,
         company_data: &CompanyInfo,
     ) -> Html {
-        html! {<>
+        html!{<>
             <div class="columns">
                 <div class="column">
                     <div id="description" class="content">
@@ -573,12 +573,12 @@ impl ShowCompany {
         &self,
         company_data: &CompanyInfo,
     ) -> Html {
-        html! {
+        html!{
             // <p class="card-footer-item">
             <footer class="card-footer">{
                 for company_data.company_certificates.iter().map(|cert| {
                     let view_cert: Certificate = cert.into();
-                    html! {
+                    html!{
                         <CompanyCertificateCard
                             company_uuid = company_data.uuid.to_string()
                             certificate = view_cert
@@ -597,7 +597,7 @@ impl ShowCompany {
         &self,
         company_represents: &[CompanyRepresentInfo],
     ) -> Html {
-        html! {
+        html!{
             <CompanyRepresents
                 show_manage_btn = false
                 list = company_represents.to_vec()
@@ -609,7 +609,7 @@ impl ShowCompany {
         &self,
         company_uuid: &UUID,
     ) -> Html {
-        html! {
+        html!{
             <CatalogComponents
                 show_create_btn = false
                 arguments = ComponentsQueryArg::set_company_uuid(company_uuid)
@@ -622,7 +622,7 @@ impl ShowCompany {
         company_uuid: &UUID,
         is_supplier: &bool,
     ) -> Html {
-        html! {
+        html!{
             <CatalogStandards
                 show_create_btn = is_supplier.clone()
                 arguments = StandardsQueryArg::set_company_uuid(company_uuid)
@@ -631,7 +631,7 @@ impl ShowCompany {
     }
 
     // fn view_members(&self) -> Html {
-    //     html! {
+    //     html!{
     //         <CatalogUsers
     //             arguments = UsersQueryArg::set_favorite()
     //         />

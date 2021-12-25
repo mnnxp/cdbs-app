@@ -46,10 +46,10 @@ impl Component for KeywordsTags {
     }
 
     fn view(&self) -> Html {
-        html! {
+        html!{
             <div id="keywords" class="field is-grouped is-grouped-multiline">
                 {for self.props.keywords.iter().map(|keyword| {
-                    html! {<KeywordTagItem
+                    html!{<KeywordTagItem
                         show_delete_btn = self.props.show_delete_btn.clone()
                         component_uuid = self.props.component_uuid.clone()
                         keyword = keyword.clone()
