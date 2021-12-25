@@ -81,7 +81,7 @@ pub struct ShowComponent {
     select_fileset_program: UUID,
     current_filesets_program: Vec<(UUID, String)>,
     show_full_description: bool,
-    show_full_characteristic: bool,
+    show_full_characteristics: bool,
     open_owner_user_info: bool,
     open_modification_card: bool,
     open_fileset_files_card: bool,
@@ -108,7 +108,7 @@ pub enum Msg {
     GetDownloadFilesResult(String),
     GetComponentData(String),
     ShowDescription,
-    ShowCharacteristic,
+    ShowFullCharacteristics,
     ShowStandardsList,
     ShowOwnerUserCard,
     ShowStandardCard,
@@ -139,7 +139,7 @@ impl Component for ShowComponent {
             select_fileset_program: String::new(),
             current_filesets_program: Vec::new(),
             show_full_description: false,
-            show_full_characteristic: false,
+            show_full_characteristics: false,
             open_owner_user_info: false,
             open_modification_card: false,
             open_fileset_files_card: false,
@@ -319,7 +319,7 @@ impl Component for ShowComponent {
                         }
                         // length check for show btn more/less
                         self.show_full_description = component_data.description.len() < 250;
-                        self.show_full_characteristic = component_data.component_params.len() < 4;
+                        self.show_full_characteristics = component_data.component_params.len() < 4;
                         self.select_component_modification = component_data.component_modifications.first()
                             .map(|m| m.uuid.clone()).unwrap_or_default();
                         self.select_fileset_program = component_data.component_modifications.first().map(|m|
@@ -345,7 +345,7 @@ impl Component for ShowComponent {
                 }
             },
             Msg::ShowDescription => self.show_full_description = !self.show_full_description,
-            Msg::ShowCharacteristic => self.show_full_characteristic = !self.show_full_characteristic,
+            Msg::ShowFullCharacteristics => self.show_full_characteristics = !self.show_full_characteristics,
             Msg::ShowStandardsList => self.show_related_standards = !self.show_related_standards,
             Msg::ShowOwnerUserCard => self.open_owner_user_info = !self.open_owner_user_info,
             Msg::ShowStandardCard => self.open_standard_info = !self.open_standard_info,
@@ -550,7 +550,7 @@ impl ShowComponent {
                         <td>{format!("{:.*}", 10, component_data.updated_at.to_string())}</td>
                       </tr>
                       {for component_data.component_params.iter().enumerate().map(|(index, component_param)| {
-                          match (index >= 3, self.show_full_characteristic) {
+                          match (index >= 3, self.show_full_characteristics) {
                               // show full list
                               (_, true) => html!{<tr>
                                   <td>{component_param.param.paramname.clone()}</td>
@@ -577,18 +577,18 @@ impl ShowComponent {
     }
 
     fn show_see_characteristic_btn(&self) -> Html {
-        let show_full_characteristic_btn = self.link
-            .callback(|_| Msg::ShowCharacteristic);
+        let show_full_characteristics_btn = self.link
+            .callback(|_| Msg::ShowFullCharacteristics);
 
-        match self.show_full_characteristic {
+        match self.show_full_characteristics {
             true => html!{<>
               <button class="button is-white"
-                  onclick=show_full_characteristic_btn
+                  onclick=show_full_characteristics_btn
                 >{"See less"}</button>
             </>},
             false => html!{<>
               <button class="button is-white"
-                  onclick=show_full_characteristic_btn
+                  onclick=show_full_characteristics_btn
                 >{"See more"}</button>
             </>},
         }
