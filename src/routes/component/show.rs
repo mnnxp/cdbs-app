@@ -449,7 +449,12 @@ impl ShowComponent {
                     {self.show_setting_btn()}
                     {self.show_followers_btn()}
                     {self.show_share_btn()}
+                    {match component_data.licenses.is_empty() {
+                        true => html!{},
+                        false => self.show_component_licenses(component_data),
+                    }}
                 </div>
+                {self.show_component_params(component_data)}
                 <div class="component-description">{
                     match self.show_full_description {
                         true => html!{<>
@@ -475,12 +480,6 @@ impl ShowComponent {
                         </>},
                     }
                 }</div>
-                <br/>
-                {match component_data.licenses.is_empty() {
-                    true => html!{},
-                    false => self.show_component_licenses(component_data),
-                }}
-                {self.show_component_params(component_data)}
               </div>
             </div>
         }
@@ -491,7 +490,7 @@ impl ShowComponent {
         component_data: &ComponentInfo,
     ) -> Html {
         html!{<div class="media">
-            <div class="media-right" style="margin-left: 0rem">
+            <div class="media-right">
                 <span style="" class="icon is-small">
                     <i class="fa fa-balance-scale"></i>
                 </span>
