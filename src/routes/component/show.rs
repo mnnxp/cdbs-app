@@ -571,6 +571,7 @@ impl ShowComponent {
                           }
                       })}
                       {match component_data.component_params.len() {
+                          0 => html!{<span>{"No additional parameters"}</span>},
                           0..=3 => html!{},
                           _ => self.show_see_characteristic_btn(),
                       }}
