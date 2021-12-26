@@ -565,7 +565,7 @@ impl ShowComponent {
                           match (index >= 3, self.show_full_characteristics) {
                               // show full list
                               (_, true) => self.show_param_item(data),
-                              // show full list or first 4 items
+                              // show full list or first 3 items
                               (false, false) => self.show_param_item(data),
                               _ => html!{},
                           }

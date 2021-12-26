@@ -72,7 +72,7 @@ impl Component for FilesCard {
                           component_uuid = self.props.component_uuid.clone()
                           file = file.clone()
                         />},
-                        // show full list or first 4 items
+                        // show full list or first 3 items
                         (false, false) => html!{<FileItem
                           show_download_btn = self.props.show_download_btn.clone()
                           show_delete_btn = self.props.show_delete_btn.clone()
