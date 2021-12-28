@@ -55,7 +55,7 @@ impl Component for FilesOfFilesetCard {
     }
 
     fn rendered(&mut self, first_render: bool) {
-        if first_render {
+        if first_render && self.fileset_uuid.len() == 36 {
             self.link.send_message(Msg::RequestFilesOfFileset);
         }
     }
@@ -106,7 +106,9 @@ impl Component for FilesOfFilesetCard {
         } else {
             self.fileset_uuid = props.fileset_uuid.clone();
             self.props = props;
-            self.link.send_message(Msg::RequestFilesOfFileset);
+            if self.fileset_uuid.len() == 36 {
+                self.link.send_message(Msg::RequestFilesOfFileset);
+            }
             true
         }
     }

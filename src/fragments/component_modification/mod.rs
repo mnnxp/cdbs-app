@@ -1,8 +1,10 @@
+mod edit;
 mod heads;
 mod item;
 mod fileset;
 mod fileset_item;
 
+pub use edit::ModificationsTableEdit;
 pub use heads::ModificationTableHeads;
 pub use item::ModificationTableItem;
 pub use fileset::FilesOfFilesetCard;
@@ -15,7 +17,6 @@ use crate::types::{UUID, ComponentModificationInfo, Param};
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
-    pub show_manage_btn: bool,
     pub modifications: Vec<ComponentModificationInfo>,
     pub select_modification: UUID,
     pub callback_select_modification: Option<Callback<UUID>>,
@@ -121,9 +122,8 @@ impl Component for ModificationsTable {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.show_manage_btn == props.show_manage_btn &&
-              self.props.select_modification == props.select_modification &&
-                self.props.modifications.len() == props.modifications.len() {
+        if self.props.select_modification == props.select_modification &&
+              self.props.modifications.len() == props.modifications.len() {
             false
         } else {
             self.props = props;
@@ -142,6 +142,7 @@ impl Component for ModificationsTable {
 
                 {for self.collect_items.iter().map(|(modification_uuid, item)| {
                   html!{<ModificationTableItem
+                      show_manage_btn = false
                       modification_uuid = modification_uuid.clone()
                       collect_heads = self.collect_heads.clone()
                       collect_item = item.clone()

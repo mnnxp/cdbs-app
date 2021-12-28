@@ -322,11 +322,15 @@ impl Component for ShowComponent {
                         // length check for show btn more/less
                         self.show_full_description = component_data.description.len() < 250;
                         self.show_full_characteristics = component_data.component_params.len() < 4;
-                        self.select_component_modification = component_data.component_modifications.first()
-                            .map(|m| m.uuid.clone()).unwrap_or_default();
-                        self.select_fileset_program = component_data.component_modifications.first().map(|m|
-                            m.filesets_for_program.first().map(|f| f.uuid.clone()).unwrap_or_default()
-                        ).unwrap_or_default();
+                        self.select_component_modification = component_data.component_modifications
+                            .first()
+                            .map(|m| m.uuid.clone())
+                            .unwrap_or_default();
+                        self.select_fileset_program = component_data.component_modifications
+                                .first()
+                                .map(|m| m.filesets_for_program.first().map(|f| f.uuid.clone())
+                                .unwrap_or_default()
+                            ).unwrap_or_default();
                         for component_modification in &component_data.component_modifications {
                             let mut fileset_data: Vec<(UUID, String)> = Vec::new();
                             for fileset in &component_modification.filesets_for_program {
@@ -339,7 +343,8 @@ impl Component for ShowComponent {
                         }
                         self.current_filesets_program = self.modification_filesets
                             .get(&self.select_component_modification)
-                            .map(|f| f.clone()).unwrap_or_default();
+                            .map(|f| f.clone())
+                            .unwrap_or_default();
 
                         self.component = Some(component_data);
                     }
@@ -519,9 +524,8 @@ impl ShowComponent {
             .callback(|value: UUID| Msg::SelectModification(value));
 
         html!{<>
-            <h2>{"Modification"}</h2>
+            <h2>{"Modifications"}</h2>
             <ModificationsTable
-                show_manage_btn = false
                 modifications = component_data.component_modifications.clone()
                 select_modification = self.select_component_modification.clone()
                 callback_select_modification = onclick_select_modification.clone()
@@ -832,15 +836,15 @@ impl ShowComponent {
     }
 
     fn show_fileset_files_card(&self) -> Html {
-        match (self.select_fileset_program.len(), &self.open_fileset_files_card) {
-            (36, true) => html!{<>
+        match &self.open_fileset_files_card {
+            true => html!{<>
                 <h2>{"Files of select fileset"}</h2>
                 <FilesOfFilesetCard
                     show_manage_btn = false
                     fileset_uuid = self.select_fileset_program.clone()
                 />
             </>},
-            _ => html!{},
+            false => html!{},
         }
     }
 
@@ -864,7 +868,7 @@ impl ShowComponent {
             36 => html!{<div style="margin-right: .5rem">
                 <div class="select" style="margin-right: .5rem">
                   <select
-                        id="region_id"
+                        id="select-fileset-program"
                         onchange=onchange_select_fileset_btn >
                       {for self.current_filesets_program.iter().map(|(fileset_uuid, program_name)|
                           match &self.select_fileset_program == fileset_uuid {

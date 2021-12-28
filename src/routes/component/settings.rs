@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use yew::services::fetch::FetchTask;
 use yew::services::reader::{File, FileData, ReaderService, ReaderTask};
 use yew::prelude::*;
@@ -24,6 +25,7 @@ use crate::fragments::{
         ComponentStandardsCard, ComponentSuppliersCard,
         ComponentLicensesTags, ComponentParamsTags,
     },
+    component_modification::{ModificationsTableEdit, FilesOfFilesetCard},
     component_file::FilesCard,
     component_spec::SearchSpecsTags,
     component_keyword::AddKeywordsTags,
@@ -36,6 +38,7 @@ use crate::services::{
 use crate::types::{
     UUID, ComponentInfo, SlimUser, TypeAccessInfo, UploadFile, ActualStatus,
     ComponentUpdatePreData, ComponentUpdateData, ComponentType, ShowCompanyShort,
+    ComponentModificationInfo
 };
 
 type FileName = String;
@@ -94,6 +97,7 @@ pub struct ComponentSettings {
     current_component: Option<ComponentInfo>,
     current_component_uuid: UUID,
     current_component_is_base: bool,
+    current_modifications: Vec<ComponentModificationInfo>,
     request_component: ComponentUpdatePreData,
     request_upload_data: Vec<UploadFile>,
     request_upload_file: Callback<Result<Option<String>, Error>>,
@@ -118,6 +122,10 @@ pub struct ComponentSettings {
     confirm_delete_component: String,
     hide_delete_modal: bool,
     disable_save_changes_btn: bool,
+    select_component_modification: UUID,
+    modification_filesets: HashMap<UUID, Vec<(UUID, String)>>,
+    select_fileset_program: UUID,
+    current_filesets_program: Vec<(UUID, String)>,
     get_result_component_data: usize,
     get_result_access: bool,
     get_result_up_file: bool,
@@ -149,7 +157,7 @@ pub enum Msg {
     GetUploadData(String),
     GetUploadFile(Option<String>),
     GetUploadCompleted(String),
-    GetDeleteComponent(String),
+    GetDeleteComponentResult(String),
     EditFiles,
     UpdateTypeAccessId(String),
     UpdateActualStatusId(String),
@@ -159,6 +167,10 @@ pub enum Msg {
     UpdateFiles(FileList),
     UpdateConfirmDelete(String),
     ResponseError(Error),
+    SelectModification(UUID),
+    RegisterNewModification(UUID),
+    DeleteModification(UUID),
+    SelectFileset(UUID),
     ChangeHideDeleteComponent,
     ClearFilesBoxed,
     ClearError,
@@ -175,6 +187,7 @@ impl Component for ComponentSettings {
             current_component: None,
             current_component_uuid: String::new(),
             current_component_is_base: false,
+            current_modifications: Vec::new(),
             request_component: ComponentUpdatePreData::default(),
             request_upload_data: Vec::new(),
             request_upload_file: link.callback(Msg::ResponseUploadFile),
@@ -199,6 +212,10 @@ impl Component for ComponentSettings {
             confirm_delete_component: String::new(),
             hide_delete_modal: true,
             disable_save_changes_btn: true,
+            select_component_modification: String::new(),
+            modification_filesets: HashMap::new(),
+            select_fileset_program: String::new(),
+            current_filesets_program: Vec::new(),
             get_result_component_data: 0,
             get_result_access: false,
             get_result_up_file: false,
@@ -224,7 +241,12 @@ impl Component for ComponentSettings {
             self.current_component = None;
             self.current_component_uuid = String::new();
             self.current_component_is_base = false;
+            self.current_modifications = Vec::new();
             self.request_component = ComponentUpdatePreData::default();
+            self.select_component_modification = String::new();
+            self.modification_filesets = HashMap::new();
+            self.select_fileset_program = String::new();
+            self.current_filesets_program = Vec::new();
         }
 
         let link = self.link.clone();
@@ -336,7 +358,7 @@ impl Component for ComponentSettings {
                     let res = make_query(DeleteComponent::build_query(
                         delete_component::Variables { component_uuid }
                     )).await.unwrap();
-                    link.send_message(Msg::GetDeleteComponent(res));
+                    link.send_message(Msg::GetDeleteComponentResult(res));
                 })
             },
             Msg::RequestUploadComponentFiles => {
@@ -433,6 +455,33 @@ impl Component for ComponentSettings {
                         self.current_component_uuid = component_data.uuid.clone();
                         self.current_component_is_base = component_data.is_base;
                         self.current_component = Some(component_data.clone());
+                        // if let Some(user) = &self.props.current_user {
+                        //     self.current_user_owner = component_data.owner_user.uuid == user.uuid;
+                        // }
+                        self.current_modifications = component_data.component_modifications.clone();
+                        self.select_component_modification = component_data.component_modifications
+                            .first()
+                            .map(|m| m.uuid.clone())
+                            .unwrap_or_default();
+                        self.select_fileset_program = component_data.component_modifications
+                                .first()
+                                .map(|m| m.filesets_for_program.first().map(|f| f.uuid.clone())
+                                .unwrap_or_default()
+                            ).unwrap_or_default();
+                        for component_modification in &component_data.component_modifications {
+                            let mut fileset_data: Vec<(UUID, String)> = Vec::new();
+                            for fileset in &component_modification.filesets_for_program {
+                                fileset_data.push((fileset.uuid.clone(), fileset.program.name.clone()));
+                            }
+                            self.modification_filesets.insert(
+                                component_modification.uuid.clone(),
+                                fileset_data.clone()
+                            );
+                        }
+                        self.current_filesets_program = self.modification_filesets
+                            .get(&self.select_component_modification)
+                            .map(|f| f.clone())
+                            .unwrap_or_default();
                         self.request_component = component_data.into();
                     },
                     true => self.error = Some(get_error(&data)),
@@ -511,7 +560,7 @@ impl Component for ComponentSettings {
                     true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }
             },
-            Msg::GetDeleteComponent(res) => {
+            Msg::GetDeleteComponentResult(res) => {
                 let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
 
@@ -567,6 +616,30 @@ impl Component for ComponentSettings {
                 self.confirm_delete_component = data;
             },
             Msg::ResponseError(err) => self.error = Some(err),
+            Msg::SelectModification(modification_uuid) => {
+                self.current_filesets_program = self.modification_filesets
+                    .get(&modification_uuid)
+                    .map(|f| f.clone())
+                    .unwrap_or_default();
+                self.select_component_modification = modification_uuid.clone();
+                self.select_fileset_program = self.current_filesets_program
+                    .first()
+                    .map(|(fileset_uuid, program_name)| {
+                        debug!("mod fileset_uuid: {:?}", fileset_uuid);
+                        debug!("mod program_name: {:?}", program_name);
+                        fileset_uuid.clone()
+                    })
+                    .unwrap_or_default();
+            },
+            Msg::RegisterNewModification(modification_uuid) => {
+                // link.send_message(Msg::RequestComponentModificationsData);
+                self.select_component_modification = modification_uuid.clone();
+            },
+            Msg::DeleteModification(_) => {
+                // link.send_message(Msg::RequestComponentModificationsData);
+                self.select_component_modification = String::new();
+            },
+            Msg::SelectFileset(fileset_uuid) => self.select_fileset_program = fileset_uuid,
             Msg::ChangeHideDeleteComponent => self.hide_delete_modal = !self.hide_delete_modal,
             Msg::ClearFilesBoxed => {
                 self.files = Vec::new();
@@ -598,6 +671,10 @@ impl Component for ComponentSettings {
                         {self.show_main_card()}
                         {match &self.current_component {
                             Some(component_data) => html!{<>
+                                <br/>
+                                {self.show_fileset_files_card()}
+                                <br/>
+                                {self.show_modifications_table()}
                                 <br/>
                                 <div class="columns">
                                   {self.show_additional_params(component_data)}
@@ -701,7 +778,7 @@ impl ComponentSettings {
             <div class="columns">
                 <div class="column">
                     <label class="label">{"Actual status"}</label>
-                    <div class="select">
+                    <div class="select is-fullwidth">
                         <select
                             id="component-actual-status"
                             select={self.request_component.actual_status_id.to_string()}
@@ -718,7 +795,7 @@ impl ComponentSettings {
                 </div>
                 <div class="column">
                     <label class="label">{"Component type"}</label>
-                    <div class="select">
+                    <div class="select is-fullwidth">
                       <select
                           id="set-component-type"
                           select={self.request_component.component_type_id.to_string()}
@@ -735,7 +812,7 @@ impl ComponentSettings {
                 </div>
                 <div class="column">
                     <label class="label">{"Type access "}</label>
-                    <div class="select">
+                    <div class="select is-fullwidth">
                       <select
                           id="set-type-access"
                           select={self.request_access.to_string()}
@@ -752,6 +829,69 @@ impl ComponentSettings {
                 </div>
             </div>
         }
+    }
+
+    fn show_modifications_table(&self) -> Html {
+        let onclick_select_modification = self.link
+            .callback(|value: UUID| Msg::SelectModification(value));
+
+        // let onclick_new_modification = self.link
+        //     .callback(|value: UUID| Msg::RegisterNewModification(value));
+
+        html!{<>
+            <h2>{"Modifications"}</h2>
+            <ModificationsTableEdit
+                current_component_uuid = self.current_component_uuid.clone()
+                modifications = self.current_modifications.clone()
+                select_modification = self.select_component_modification.clone()
+                callback_select_modification = onclick_select_modification.clone()
+                // callback_add_modification = onclick_new_modification.clone()
+              />
+        </>}
+    }
+
+    fn show_fileset_files_card(&self) -> Html {
+        let onchange_select_fileset_btn = self.link
+            .callback(|ev: ChangeData| Msg::SelectFileset(match ev {
+              ChangeData::Select(el) => el.value(),
+              _ => String::new(),
+          }));
+
+        html!{<>
+            <h2>{"Files of select fileset"}</h2>
+            <div class="columns">
+                <div class="column">
+                    <div class="select is-fullwidth" style="margin-right: .5rem">
+                      <select
+                            id="select-fileset-program"
+                            onchange=onchange_select_fileset_btn >
+                          {for self.current_filesets_program.iter().map(|(fileset_uuid, program_name)|
+                              match &self.select_fileset_program == fileset_uuid {
+                                true => html!{<option value={fileset_uuid.clone()} selected=true>{program_name}</option>},
+                                false => html!{<option value={fileset_uuid.clone()}>{program_name}</option>},
+                              }
+                          )}
+                      </select>
+                    </div>
+                </div>
+                <div class="column">
+                    <button
+                        id="add-modification-fileset"
+                        class="button is-fullwidth"
+                        // onclick={onclick_action_btn}
+                        >
+                        {"Create fileset"}
+                        // <span class="icon" >
+                        //   <i class="fa fa-plus" aria-hidden="true"></i>
+                        // </span>
+                    </button>
+                </div>
+            </div>
+            <FilesOfFilesetCard
+                show_manage_btn = true
+                fileset_uuid = self.select_fileset_program.clone()
+            />
+        </>}
     }
 
     fn show_additional_params(
@@ -970,15 +1110,10 @@ impl ComponentSettings {
                     {"Drop file here…"}
                   </span>
                 </span>
-                {if self.files.is_empty() {
-                    html!{<span class="file-name">
-                        {"No file uploaded"}
-                    </span>}
-                } else {
-                    html!{for self.files.iter().map(|f| html!{
-                        <span class="file-name">
-                            {f.name().clone()}
-                        </span>
+                {match self.files.is_empty() {
+                    true => html!{<span class="file-name">{"No file uploaded"}</span>},
+                    false => html!{for self.files.iter().map(|f| html!{
+                        <span class="file-name">{f.name().clone()}</span>
                     })}
                 }}
               </label>

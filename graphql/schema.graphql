@@ -421,6 +421,12 @@ input IptComponentLicenseData {
   licenseId: Int!
 }
 
+input IptComponentModificationArg {
+  componentUuid: UUID!
+  limit: Int
+  offset: Int
+}
+
 input IptComponentModificationData {
   componentUuid: UUID!
   parentModificationUuid: UUID
@@ -1007,6 +1013,9 @@ type QueryRoot {
   notifications(args: IptNotificationArg): [ShowNotification!]!
   components(args: IptComponentsArg): [ShowComponentShort!]!
   component(componentUuid: UUID!): ComponentAndRelatedData!
+  componentModifications(
+    args: IptComponentModificationArg!
+  ): [ComponentModificationAndRelatedData!]!
   componentSuppliers(componentUuid: UUID!): [ComponentSupplierRelatedData!]!
   componentKeywords(args: IptComponentKeywordsArg!): [Keyword!]!
   getCompaniesListAccessComponent(

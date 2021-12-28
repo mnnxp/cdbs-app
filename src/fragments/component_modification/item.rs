@@ -8,6 +8,7 @@ use crate::types::{UUID, Param};
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
+    pub show_manage_btn: bool,
     pub modification_uuid: UUID,
     pub collect_heads: Vec<Param>,
     pub collect_item: HashMap<usize, String>,
@@ -78,15 +79,25 @@ impl ModificationTableItem {
             false => "",
         };
 
+        let double_clck_text = match &self.props.show_manage_btn {
+            true => "change ",
+            false => "info ",
+        };
+
+        let double_clck_icon = match &self.props.show_manage_btn {
+            true => "fa fa-pencil",
+            false => "fab fa-info",
+        };
+
         html!{<tr class={class_style}>
             {match self.props.collect_item.get(&0) {
                 Some(value) => html!{<td>
                     <a onclick={onclick_select_modification}>
                         {match &self.props.select_item {
                             true => html!{<>
-                                <span>{"click for "}</span>
+                                <span>{double_clck_text}</span>
                                 <span class="icon">
-                                  <i class="fab fa-info"></i>
+                                  <i class={double_clck_icon}></i>
                                 </span>
                             </>},
                             false => html!{value.clone()},

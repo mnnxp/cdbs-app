@@ -44,7 +44,7 @@ impl Component for ModificationTableHeads {
 impl ModificationTableHeads {
     fn show_modification_head(&self) -> Html {
         html!{<>
-            <th>{"name modification"}</th>
+            <th>{"modification"}</th>
             {for self.props.params.iter().map(|head| {
                 html!{<th>{head.paramname.clone()}</th>}
             })}

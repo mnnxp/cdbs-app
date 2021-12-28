@@ -173,6 +173,24 @@ pub struct ComponentModificationInfo{
   pub modification_params: Vec<ModificationParam>,
 }
 
+#[derive(Serialize, Deserialize, Clone, Default, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct ModificationUpdatePreData{
+  pub modification_name: String,
+  pub description: String,
+  pub actual_status_id: usize,
+}
+
+impl ModificationUpdatePreData {
+    pub(crate) fn new() -> Self {
+        Self {
+            modification_name: String::new(),
+            description: String::new(),
+            actual_status_id: 1,
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct ModificationParam{

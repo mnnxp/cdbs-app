@@ -4,6 +4,12 @@ query GetComponentData($componentUuid: UUID!) {
   }
 }
 
+query GetComponentModifications($iptComponentModificationArg: IptComponentModificationArg!) {
+  componentModifications(args: $iptComponentModificationArg) {
+    ...componentModificationFields
+  }
+}
+
 query ComponentSuppliers($componentUuid: UUID!) {
   componentSuppliers(componentUuid: $componentUuid) {
     ...componentSupplierFields
@@ -151,6 +157,12 @@ query GetComponentKeywords($iptComponentKeywordsArg: IptComponentKeywordsArg!) {
   }
 }
 
+query ComponentActualStatuses($filterInt: [Int!]) {
+  componentActualStatuses(filter: $filterInt) {
+    ...actualStatusFields
+  }
+}
+
 mutation PutComponentParams($iptComponentParamData: IptComponentParamData!) {
   putComponentParams(args: $iptComponentParamData)
 }
@@ -169,6 +181,18 @@ mutation DeleteComponent($componentUuid: UUID!) {
 
 mutation PutComponentUpdate($componentUuid: UUID!, $iptUpdateComponentData: IptUpdateComponentData!) {
   putComponentUpdate(componentUuid: $componentUuid, args: $iptUpdateComponentData)
+}
+
+mutation RegisterComponentModification($iptComponentModificationData: IptComponentModificationData!) {
+  registerComponentModification(args: $iptComponentModificationData)
+}
+
+mutation DeleteComponentModification($delComponentModificationData: DelComponentModificationData!) {
+  deleteComponentModification(args: $delComponentModificationData)
+}
+
+mutation PutComponentModificationUpdate($modificationUuid: UUID!, $iptUpdateComponentModificationData: IptUpdateComponentModificationData!) {
+  putComponentModificationUpdate(componentModificationUuid: $modificationUuid, args: $iptUpdateComponentModificationData)
 }
 
 mutation ChangeComponentAccess($changeTypeAccessComponent: ChangeTypeAccessComponent!) {
