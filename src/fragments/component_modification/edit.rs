@@ -620,7 +620,7 @@ impl ModificationsTableEdit {
             .find(|x| x.uuid == self.set_modification_uuid);
 
         match modification_data {
-            Some(_) => html!{<div class=class_modal>
+            Some(modification_data) => html!{<div class=class_modal>
               <div class="modal-background" onclick=onclick_modification_card.clone() />
               <div class="modal-content">
                   <div class="card">
@@ -632,7 +632,7 @@ impl ModificationsTableEdit {
                                   id="add-modification-name"
                                   class="input is-fullwidth"
                                   type="text"
-                                  placeholder="modification name"
+                                  placeholder={modification_data.modification_name.clone()}
                                   value={self.request_edit_modification.modification_name.clone()}
                                   oninput=oninput_modification_name />
                               <label class="label">{"Description"}</label>
@@ -641,14 +641,14 @@ impl ModificationsTableEdit {
                                   class="textarea is-fullwidth"
                                   // rows="10"
                                   type="text"
-                                  placeholder="modification description"
+                                  placeholder={modification_data.description.clone()}
                                   value={self.request_edit_modification.description.clone()}
                                   oninput=oninput_modification_description />
                           <label class="label">{"Actual status"}</label>
                           <div class="select">
                               <select
                                   id="update-modification-actual-status"
-                                  select={self.request_edit_modification.actual_status_id.to_string()}
+                                  select={modification_data.actual_status.actual_status_id.to_string()}
                                   onchange=onchange_modification_actual_status_id
                                   >
                                 { for self.actual_statuses.iter().map(|x|
