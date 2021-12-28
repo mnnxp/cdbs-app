@@ -79,31 +79,25 @@ impl ModificationTableItem {
             false => "",
         };
 
-        let double_clck_text = match &self.props.show_manage_btn {
-            true => "change ",
-            false => "info ",
-        };
-
-        let double_clck_icon = match &self.props.show_manage_btn {
-            true => "fa fa-pencil",
-            false => "fab fa-info",
+        let (double_click_text, double_click_icon) = match &self.props.show_manage_btn {
+            true => ("edit", "fa fa-pencil"),
+            false => ("info", "fab fa-info"),
         };
 
         html!{<tr class={class_style}>
+            <td><a onclick={onclick_select_modification}>
+                {match &self.props.select_item {
+                    true => html!{<>
+                        <span class="icon">
+                          <i class={double_click_icon} aria-hidden="true"></i>
+                        </span>
+                        <span>{double_click_text}</span>
+                    </>},
+                    false => html!{"select"},
+                }}
+            </a></td>
             {match self.props.collect_item.get(&0) {
-                Some(value) => html!{<td>
-                    <a onclick={onclick_select_modification}>
-                        {match &self.props.select_item {
-                            true => html!{<>
-                                <span>{double_clck_text}</span>
-                                <span class="icon">
-                                  <i class={double_clck_icon}></i>
-                                </span>
-                            </>},
-                            false => html!{value.clone()},
-                        }}
-                    </a>
-                </td>},
+                Some(value) => html!{<td>{value.clone()}</td>},
                 None => html!{<td></td>},
             }}
             {for self.props.collect_heads.iter().map(|param| {
