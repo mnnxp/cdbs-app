@@ -274,13 +274,13 @@ impl ComponentSuppliersCard {
               false => self.modal_set_owner_supplier(),
           }}
           <button
-              id="set-supplier-component"
-              class="button is-fullwidth"
-              onclick={onclick_action_btn} >
-              // {"Supplier"}
+                id="set-supplier-component"
+                class="button is-fullwidth"
+                onclick={onclick_action_btn} >
               <span class="icon" >
-                <i class="fa fa-plus" aria-hidden="true"></i>
+                  <i class="fas fa-plus" aria-hidden="true"></i>
               </span>
+              <span>{"Add supplier for component"}</span>
           </button>
         </div>}
     }

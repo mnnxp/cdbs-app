@@ -267,13 +267,13 @@ impl ComponentStandardsCard {
           </table>
           {self.modal_add_standard()}
           <button
-              id="add-standard-component"
-              class="button is-fullwidth"
-              onclick={onclick_action_btn} >
-              // {"Supplier"}
+                id="add-standard-component"
+                class="button is-fullwidth"
+                onclick={onclick_action_btn} >
               <span class="icon" >
-                <i class="fa fa-plus" aria-hidden="true"></i>
+                  <i class="fas fa-plus" aria-hidden="true"></i>
               </span>
+              <span>{"Add standard for component"}</span>
           </button>
         </div>}
     }

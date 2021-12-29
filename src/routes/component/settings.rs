@@ -884,10 +884,10 @@ impl ComponentSettings {
                         class="button is-fullwidth"
                         // onclick={onclick_action_btn}
                         >
-                        {"Create fileset"}
-                        // <span class="icon" >
-                        //   <i class="fa fa-plus" aria-hidden="true"></i>
-                        // </span>
+                        <span class="icon" >
+                            <i class="fas fa-plus" aria-hidden="true"></i>
+                        </span>
+                        <span>{"Add fileset"}</span>
                     </button>
                 </div>
             </div>
