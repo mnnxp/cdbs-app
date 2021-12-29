@@ -598,7 +598,6 @@ impl ModificationsTableEdit {
                 </div>
               </div>
           </div>
-          // <button class="modal-close is-large" aria-label="close" onclick=onclick_add_modification_card />
         </div>}
     }
 
@@ -701,7 +700,6 @@ impl ModificationsTableEdit {
                     </div>
                   </div>
               </div>
-              // <button class="modal-close is-large" aria-label="close" onclick=onclick_modification_card />
             </div>},
             None => html!{},
         }

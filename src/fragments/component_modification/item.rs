@@ -523,7 +523,6 @@ impl ModificationTableItem {
                 </div>
               </div>
           </div>
-          // <button class="modal-close is-large" aria-label="close" onclick=onclick_new_param_card />
         </div>}
     }
 
@@ -577,7 +576,6 @@ impl ModificationTableItem {
                 </div>
               </div>
           </div>
-          // <button class="modal-close is-large" aria-label="close" onclick=onclick_add_param_card />
         </div>}
     }
 
@@ -646,7 +644,6 @@ impl ModificationTableItem {
                 </div>
               </div>
           </div>
-          // <button class="modal-close is-large" aria-label="close" onclick=onclick_edit_param_card />
         </div>}
     }
 }
