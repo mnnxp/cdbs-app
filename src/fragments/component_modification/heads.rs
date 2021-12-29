@@ -7,6 +7,7 @@ use crate::types::{UUID, Param};
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
+    pub show_new_column: bool,
     pub component_uuid: UUID,
     pub params: Vec<Param>,
 }
@@ -49,6 +50,10 @@ impl ModificationTableHeads {
             {for self.props.params.iter().map(|head| {
                 html!{<th>{head.paramname.clone()}</th>}
             })}
+            {match self.props.show_new_column {
+                true => html!{<th>{"add"}</th>},
+                false => html!{},
+            }}
         </>}
     }
 }

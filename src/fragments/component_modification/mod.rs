@@ -138,6 +138,7 @@ impl Component for ModificationsTable {
             <div class="table-container">
               <table class="table is-fullwidth is-striped">
                 <ModificationTableHeads
+                  show_new_column = false
                   component_uuid = self.component_uuid.clone()
                   params = self.collect_heads.clone()
                 />
@@ -149,6 +150,7 @@ impl Component for ModificationsTable {
                       collect_heads = self.collect_heads.clone()
                       collect_item = item.clone()
                       select_item = &self.props.select_modification == modification_uuid
+                      callback_new_modification_param = None
                       callback_select_modification = self.props.callback_select_modification.clone()
                       />}
                  })}

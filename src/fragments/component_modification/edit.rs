@@ -111,6 +111,7 @@ pub enum Msg {
     UpdateEditActualStatusId(String),
     ShowAddModificationCard,
     ShowEditModificationCard,
+    ChangeNewModificationParam,
     ChangeSelectModification(UUID),
     SelectModification,
     ChangeModificationData,
@@ -395,6 +396,10 @@ impl Component for ModificationsTableEdit {
                     link.send_message(Msg::RequestListOptData);
                 }
             },
+            Msg::ChangeNewModificationParam => {
+                debug!("Add new modification param");
+                link.send_message(Msg::RequestComponentModificationsData);
+            },
             Msg::ChangeSelectModification(modification_uuid) => {
                 match self.set_modification_uuid == modification_uuid {
                     true => link.send_message(Msg::ShowEditModificationCard),
@@ -402,8 +407,7 @@ impl Component for ModificationsTableEdit {
                         self.set_modification_uuid = modification_uuid;
                         link.send_message(Msg::SelectModification);
                     },
-                };
-
+                }
             },
             Msg::SelectModification => {
                 if let Some(select_modification) = &self.props.callback_select_modification {
@@ -461,6 +465,9 @@ impl Component for ModificationsTableEdit {
     }
 
     fn view(&self) -> Html {
+        let onclick_new_modification_param = self.link
+            .callback(|_| Msg::ChangeNewModificationParam);
+
         let onclick_select_modification = self.link
             .callback(|value: UUID| Msg::ChangeSelectModification(value));
 
@@ -471,9 +478,12 @@ impl Component for ModificationsTableEdit {
 
         html!{<div class="card">
             <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
+            {self.modal_add_modification_card()}
+            {self.modal_edit_modification_card()}
             <div class="table-container">
               <table class="table is-fullwidth is-striped">
                 <ModificationTableHeads
+                  show_new_column = true
                   component_uuid = self.component_uuid.clone()
                   params = self.collect_heads.clone()
                 />
@@ -486,30 +496,29 @@ impl Component for ModificationsTableEdit {
                             collect_heads = self.collect_heads.clone()
                             collect_item = item.clone()
                             select_item = &self.set_modification_uuid == modification_uuid
-                            callback_select_modification = onclick_select_modification.clone()
+                            callback_new_modification_param = Some(onclick_new_modification_param.clone())
+                            callback_select_modification = Some(onclick_select_modification.clone())
                         />},
                         None => html!{},
                     }
                  )}
               </table>
-              {self.show_add_modification_card()}
-              {self.show_edit_modification_card()}
-              <button
-                  id="add-component-modification"
-                  class="button is-fullwidth"
-                  onclick={onclick_add_modification_card} >
-                  <span class="icon" >
-                    <i class="fas fa-plus" aria-hidden="true"></i>
-                  </span>
-                  <span>{"Add new modification"}</span>
-              </button>
             </div>
+            <button
+            id="add-component-modification"
+            class="button is-fullwidth"
+            onclick={onclick_add_modification_card} >
+            <span class="icon" >
+            <i class="fas fa-plus" aria-hidden="true"></i>
+            </span>
+            <span>{"Add new modification"}</span>
+            </button>
         </div>}
     }
 }
 
 impl ModificationsTableEdit {
-    fn show_add_modification_card(&self) -> Html {
+    fn modal_add_modification_card(&self) -> Html {
         let oninput_name = self.link
             .callback(|ev: InputData| Msg::UpdateAddName(ev.value));
 
@@ -535,8 +544,12 @@ impl ModificationsTableEdit {
 
         html!{<div class=class_modal>
           <div class="modal-background" onclick=onclick_add_modification_card.clone() />
-          <div class="modal-content">
-              <div class="card">
+            <div class="card">
+              <div class="modal-content">
+                <header class="modal-card-head">
+                    <p class="modal-card-title">{"Create new modification"}</p>
+                    <button class="delete" aria-label="close" onclick=onclick_add_modification_card.clone() />
+                </header>
                 <div class="box itemBox">
                   <article class="media center-media">
                       <div class="media-content">
@@ -585,11 +598,11 @@ impl ModificationsTableEdit {
                 </div>
               </div>
           </div>
-          <button class="modal-close is-large" aria-label="close" onclick=onclick_add_modification_card />
+          // <button class="modal-close is-large" aria-label="close" onclick=onclick_add_modification_card />
         </div>}
     }
 
-    fn show_edit_modification_card(&self) -> Html {
+    fn modal_edit_modification_card(&self) -> Html {
         let oninput_modification_name = self.link
             .callback(|ev: InputData| Msg::UpdateEditName(ev.value));
 
@@ -622,8 +635,12 @@ impl ModificationsTableEdit {
         match modification_data {
             Some(modification_data) => html!{<div class=class_modal>
               <div class="modal-background" onclick=onclick_modification_card.clone() />
-              <div class="modal-content">
-                  <div class="card">
+                <div class="card">
+                  <div class="modal-content">
+                    <header class="modal-card-head">
+                        <p class="modal-card-title">{"Change modification data"}</p>
+                        <button class="delete" aria-label="close" onclick=onclick_modification_card />
+                    </header>
                     <div class="box itemBox">
                       <article class="media center-media">
                           <div class="media-content">
@@ -684,7 +701,7 @@ impl ModificationsTableEdit {
                     </div>
                   </div>
               </div>
-              <button class="modal-close is-large" aria-label="close" onclick=onclick_modification_card />
+              // <button class="modal-close is-large" aria-label="close" onclick=onclick_modification_card />
             </div>},
             None => html!{},
         }

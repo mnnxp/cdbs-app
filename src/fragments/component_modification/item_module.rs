@@ -53,13 +53,29 @@ impl Component for ModificationTableItemModule {
 
     fn view(&self) -> Html {
         match self.props.callback_change_param {
-            Some(_) => self.with_manage_btn(),
+            Some(_) => match self.props.param_id {
+                0 => self.show_column_for_add(),
+                _=> self.with_manage_btn(),
+            },
             None => self.without_manage_btn(),
         }
     }
 }
 
 impl ModificationTableItemModule {
+    fn show_column_for_add(&self) -> Html {
+        let onclick_new_param = self.link.callback(|_| Msg::ChangeParam);
+
+        html!{<td>
+            <a class="button is-success is-rounded is-small is-light"
+                  onclick={onclick_new_param.clone()} >
+                <span class="icon" >
+                  <i class="fa fa-plus" aria-hidden="true"></i>
+                </span>
+            </a>
+        </td>}
+    }
+
     fn with_manage_btn(&self) -> Html {
         let onclick_change_param = self.link.callback(|_| Msg::ChangeParam);
 
