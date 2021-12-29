@@ -1,42 +1,31 @@
 mod list_item;
 
-pub use list_item::ListItemUser;
+pub use list_item::ListItemCompany;
+
 use yew::prelude::*;
+use yew_router::prelude::*;
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use log::debug;
+use chrono::NaiveDateTime;
 use crate::gqls::make_query;
+use crate::routes::AppRoute;
 use crate::error::{Error, get_error};
 use crate::fragments::list_errors::ListErrors;
-use crate::types::{UUID, ShowUserShort, UsersQueryArg};
+use crate::types::{
+  UUID, ShowCompanyShort, CompaniesQueryArg
+};
 
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/user.graphql",
+    query_path = "./graphql/companies.graphql",
     response_derives = "Debug"
 )]
-struct GetUsersShortList;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/user.graphql",
-    response_derives = "Debug"
-)]
-struct AddUserFav;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/user.graphql",
-    response_derives = "Debug"
-)]
-struct DeleteUserFav;
+struct GetCompaniesShortList;
 
 pub enum Msg {
-    AddOne,
     SwitchShowType,
     UpdateList(String),
     GetList
@@ -48,21 +37,21 @@ pub enum ListState {
     Box,
 }
 
-#[derive(Properties, Clone)]
-pub struct Props {
-    pub arguments: Option<UsersQueryArg>,
-}
-
-pub struct CatalogUsers {
+pub struct CatalogCompanies {
     error: Option<Error>,
     link: ComponentLink<Self>,
     props: Props,
-    value: i64,
     show_type: ListState,
-    list: Vec<ShowUserShort>
+    list: Vec<ShowCompanyShort>
 }
 
-impl Component for CatalogUsers {
+#[derive(Properties, Clone)]
+pub struct Props {
+    pub show_create_btn: bool,
+    pub arguments: Option<CompaniesQueryArg>,
+}
+
+impl Component for CatalogCompanies {
     type Message = Msg;
     type Properties = Props;
 
@@ -71,27 +60,20 @@ impl Component for CatalogUsers {
             error: None,
             link,
             props,
-            value: 0,
             show_type: ListState::List,
             list: Vec::new()
         }
     }
 
     fn rendered(&mut self, first_render: bool) {
-        let link = self.link.clone();
         if first_render {
-            link.send_message(Msg::GetList);
+            self.link.send_message(Msg::GetList);
         }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         let link = self.link.clone();
         match msg {
-            Msg::AddOne => {
-                self.value += 1;
-                // the value has changed so we need to
-                // re-render for it to appear on the page
-            },
             Msg::SwitchShowType => {
                 match self.show_type {
                     ListState::Box => self.show_type = ListState::List,
@@ -99,21 +81,23 @@ impl Component for CatalogUsers {
                 }
             },
             Msg::GetList => {
-                let ipt_users_arg = match &self.props.arguments {
-                    Some(ref arg) => Some(get_users_short_list::IptUsersArg {
-                        usersUuids: arg.users_uuids.clone(),
-                        subscribers: arg.subscribers,
+                let ipt_companies_arg = match &self.props.arguments {
+                    Some(ref arg) => Some(get_companies_short_list::IptCompaniesArg {
+                        companiesUuids: arg.companies_uuids.clone(),
+                        userUuid: arg.user_uuid.to_owned(),
                         favorite: arg.favorite,
+                        supplier: arg.supplier,
                         limit: arg.limit,
                         offset: arg.offset,
                     }),
                     None => None,
                 };
                 spawn_local(async move {
-                    let res = make_query(GetUsersShortList::build_query(get_users_short_list::Variables {
-                        ipt_users_arg
+                    let res = make_query(GetCompaniesShortList::build_query(
+                        get_companies_short_list::Variables {
+                            ipt_companies_arg
                     })).await.unwrap();
-                    debug!("users query: {}", res);
+                    debug!("GetList res: {:?}", res);
                     link.send_message(Msg::UpdateList(res));
                 });
             },
@@ -121,35 +105,46 @@ impl Component for CatalogUsers {
               let data: Value = serde_json::from_str(res.as_str()).unwrap();
               let res_value = data.as_object().unwrap().get("data").unwrap();
 
+              // debug!("res value: {:#?}", res_value);
+
               match res_value.is_null() {
                   false => {
-                      let result: Vec<ShowUserShort> = serde_json::from_value(res_value.get("users").unwrap().clone()).unwrap();
-
-                      debug!("users list: {:?}", result);
-
+                      let result: Vec<ShowCompanyShort> = serde_json::from_value(res_value.get("companies").unwrap().clone()).unwrap();
+                      // debug!("UpdateList result: {:?}", result);
                       self.list = result;
                   },
-                  true => {
-                      self.error = Some(get_error(&data));
-                  },
+                  true => self.error = Some(get_error(&data)),
               }
-          }
+          },
         }
         true
     }
 
-    fn change(&mut self, _props: Self::Properties) -> ShouldRender {
-        // Should only return "true" if new properties are different to
-        // previously received properties.
-        // This component has no properties so we will always return "false".
-        false
+    fn change(&mut self, props: Self::Properties) -> ShouldRender {
+        let flag_change = match (&self.props.arguments, &props.arguments) {
+            (Some(self_arg), Some(arg)) => self_arg == arg,
+            (None, None) => true,
+            _ => false,
+        };
+
+        // debug!("self_arg == arg: {}", flag_change);
+
+        if self.props.show_create_btn == props.show_create_btn && flag_change {
+            // debug!("if change");
+            false
+        } else {
+            self.props.show_create_btn = props.show_create_btn;
+            self.props.arguments = props.arguments;
+            self.link.send_message(Msg::GetList);
+            // debug!("else change");
+            true
+        }
     }
 
     fn view(&self) -> Html {
         // let list = self.list.clone();
 
-        let onclick_change_view = self
-            .link
+        let onclick_change_view = self.link
             .callback(|_|Msg::SwitchShowType);
 
         let class_for_icon: &str;
@@ -165,10 +160,18 @@ impl Component for CatalogUsers {
         };
 
         html!{
-            <div class="usersBox" >
+            <div class="companiesBox" >
               <ListErrors error=self.error.clone()/>
               <div class="level" >
                 <div class="level-left ">
+                {match &self.props.show_create_btn {
+                    true => html!{
+                        <RouterAnchor<AppRoute> route=AppRoute::CreateCompany >
+                          <button class="button is-info" >{"Create"}</button>
+                        </RouterAnchor<AppRoute>>
+                    },
+                    false => html!{},
+                }}
                 </div>
                 <div class="level-right">
                   <div class="select">
@@ -192,15 +195,14 @@ impl Component for CatalogUsers {
     }
 }
 
-impl CatalogUsers {
+impl CatalogCompanies {
     fn show_card(
         &self,
-        show_comp: &ShowUserShort,
+        show_company: &ShowCompanyShort,
     ) -> Html {
-        html!{
-            <ListItemUser data={show_comp.clone()}
-                show_list={self.show_type == ListState::List}
-                />
-        }
+        html!{<ListItemCompany
+            data={show_company.clone()}
+            show_list={self.show_type == ListState::List}
+        />}
     }
 }

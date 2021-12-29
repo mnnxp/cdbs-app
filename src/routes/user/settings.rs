@@ -15,8 +15,7 @@ use crate::gqls::make_query;
 use crate::error::{Error, get_error};
 use crate::fragments::{
     list_errors::ListErrors,
-    user_certificate::CertificateCard,
-    user_add_certificate::AddCertificateCard,
+    user::{CertificateCard, AddCertificateCard},
     upload_favicon::UpdateFaviconCard,
 };
 use crate::routes::AppRoute;

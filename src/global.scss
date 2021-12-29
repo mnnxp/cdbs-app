@@ -1,10 +1,9 @@
-@import "./fragments/catalog_component/index.scss";
-@import "./fragments/catalog_user/index.scss";
-@import "./fragments/catalog_company/index.scss";
-@import "./fragments/catalog_standard/index.scss";
-@import "./fragments/search_spec/index.scss";
+@import "./fragments/component/catalog/index.scss";
+@import "./fragments/user/catalog/index.scss";
+@import "./fragments/company/catalog/index.scss";
+@import "./fragments/standard/catalog/index.scss";
+@import "./fragments/spec/search/index.scss";
 @import "./routes/tender/index.scss";
-
 
 .flex_warp {
   display: flex;

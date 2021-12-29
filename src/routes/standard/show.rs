@@ -17,10 +17,8 @@ use crate::error::{get_error, Error};
 use crate::fragments::{
     switch_icon::res_btn,
     list_errors::ListErrors,
-    catalog_component::CatalogComponents,
-    standard_file::FilesCard,
-    standard_spec::SpecsTags,
-    standard_keyword::KeywordsTags,
+    component::CatalogComponents,
+    standard::{FilesCard, SpecsTags, KeywordsTags},
 };
 use crate::gqls::make_query;
 use crate::services::{

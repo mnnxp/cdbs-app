@@ -25,10 +25,10 @@ use crate::fragments::{
         ComponentStandardsCard, ComponentSuppliersCard,
         ComponentLicensesTags, ComponentParamsTags,
     },
-    component_modification::{ModificationsTableEdit, FilesOfFilesetCard},
-    component_file::FilesCard,
-    component_spec::SearchSpecsTags,
-    component_keyword::AddKeywordsTags,
+    component::{
+        ModificationsTableEdit, FilesOfFilesetCard,
+        FilesCard, SearchSpecsTags, AddKeywordsTags
+    },
 };
 use crate::gqls::make_query;
 use crate::services::{

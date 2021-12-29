@@ -1,3 +1,7 @@
+mod item;
+
+pub use item::FileOfFilesetItem;
+
 use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
 // use log::debug;
 use graphql_client::GraphQLQuery;
@@ -9,7 +13,6 @@ use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
 use crate::gqls::make_query;
 use crate::types::{UUID, ShowFileInfo};
-use super::fileset_item::FileOfFilesetItem;
 
 #[derive(GraphQLQuery)]
 #[graphql(

@@ -11,7 +11,7 @@ use crate::error::{get_error, Error};
 use crate::gqls::make_query;
 use crate::fragments::{
     list_errors::ListErrors,
-    catalog_standard::ListItemStandard,
+    standard::ListItemStandard,
 };
 use crate::types::{UUID, ShowStandardShort};
 
@@ -65,7 +65,7 @@ impl Component for ComponentStandardItem {
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         let link = self.link.clone();
-        
+
         match msg {
             Msg::ShowStandardCard => self.open_standard_info = !self.open_standard_info,
             Msg::RequestDeleteStandard => {

@@ -45,7 +45,7 @@ pub enum Msg {
     ResponseError(Error),
     GetSpecResult(String, String),
     RequestAddSpec,
-    Ignore,
+    // Ignore,
 }
 
 impl Component for SpecTagItem {
@@ -78,7 +78,7 @@ impl Component for SpecTagItem {
                     })).await.unwrap();
                     link.send_message(Msg::GetSpecResult(res, "deleteCompanySpecs".to_string()));
                 })
-            }
+            },
             Msg::RequestAddSpec => {
                 let company_uuid = self.props.company_uuid.clone();
                 let spec_id = self.props.spec.spec_id as i64;
@@ -92,10 +92,8 @@ impl Component for SpecTagItem {
                     })).await.unwrap();
                     link.send_message(Msg::GetSpecResult(res, "addCompanySpecs".to_string()));
                 })
-            }
-            Msg::ResponseError(err) => {
-                self.error = Some(err);
-            }
+            },
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetSpecResult(res, get_type) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res = data.as_object().unwrap().get("data").unwrap();
@@ -111,10 +109,8 @@ impl Component for SpecTagItem {
                     }
                     true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }
-            }
-            Msg::Ignore => {
-                self.is_added = !self.is_added;
-            }
+            },
+            // Msg::Ignore => self.is_added = !self.is_added,
         }
         true
     }

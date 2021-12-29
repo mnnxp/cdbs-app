@@ -11,8 +11,8 @@ use crate::error::Error;
 use crate::fragments::{
     footer::Footer,
     header::Header,
-    catalog_user::CatalogUsers, // for test
-    catalog_component::CatalogComponents, // for test
+    user::CatalogUsers, // for test
+    component::CatalogComponents, // for test
 };
 use crate::routes::{
     // article::Article,

@@ -17,8 +17,8 @@ pub use user::{
 
 // for test, in future this routes be delete and use #/search
 pub use crate::fragments::{
-    catalog_user,
-    catalog_component,
+    user as other_user,
+    component as other_component
 };
 
 use yew_router::prelude::*;

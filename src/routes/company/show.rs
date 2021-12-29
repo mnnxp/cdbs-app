@@ -16,11 +16,10 @@ use crate::routes::AppRoute;
 use crate::error::{get_error, Error};
 use crate::fragments::{
     switch_icon::res_btn,
-    company_certificate::CompanyCertificateCard,
-    company_represent::CompanyRepresents,
     list_errors::ListErrors,
-    catalog_component::CatalogComponents,
-    catalog_standard::CatalogStandards,
+    company::{CompanyCertificateCard, CompanyRepresents},
+    component::CatalogComponents,
+    standard::CatalogStandards,
     spec::SpecsTags,
 };
 use crate::gqls::make_query;

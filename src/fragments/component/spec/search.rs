@@ -10,7 +10,7 @@ use std::time::Duration;
 use wasm_bindgen_futures::spawn_local;
 use crate::gqls::make_query;
 // use crate::error::{get_error, Error};
-use crate::fragments::component_spec::{SpecsTags, SpecTagItem};
+use crate::fragments::component::{SpecsTags, SpecTagItem};
 use crate::types::{Spec, SpecPathInfo, UUID};
 
 #[derive(GraphQLQuery)]

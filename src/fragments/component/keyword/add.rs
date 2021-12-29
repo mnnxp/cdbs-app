@@ -9,7 +9,7 @@ use wasm_bindgen_futures::spawn_local;
 use crate::error::{get_error, Error};
 use crate::fragments::{
     list_errors::ListErrors,
-    component_keyword::{KeywordsTags, KeywordTagItem},
+    component::{KeywordsTags, KeywordTagItem},
 };
 use crate::gqls::make_query;
 use crate::types::{UUID, Keyword};

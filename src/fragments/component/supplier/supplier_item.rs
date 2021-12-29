@@ -8,7 +8,7 @@ use crate::gqls::make_query;
 use crate::error::{Error, get_error};
 use crate::fragments::{
     list_errors::ListErrors,
-    catalog_company::ListItemCompany,
+    company::ListItemCompany,
 };
 use crate::types::{UUID, Supplier, ShowCompanyShort};
 

@@ -11,12 +11,12 @@ use wasm_bindgen_futures::spawn_local;
 
 use crate::error::{get_error, Error};
 use crate::fragments::{
-    user_certificate::CertificateCard,
+    user::CertificateCard,
     list_errors::ListErrors,
-    catalog_user::CatalogUsers,
-    catalog_component::CatalogComponents,
-    catalog_company::CatalogCompanies,
-    catalog_standard::CatalogStandards,
+    user::CatalogUsers,
+    component::CatalogComponents,
+    company::CatalogCompanies,
+    standard::CatalogStandards,
 };
 use crate::gqls::make_query;
 // use crate::routes::AppRoute;

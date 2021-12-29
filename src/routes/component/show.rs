@@ -17,15 +17,15 @@ use crate::error::{get_error, Error};
 use crate::fragments::{
     switch_icon::res_btn,
     list_errors::ListErrors,
-    catalog_user::ListItemUser,
+    user::ListItemUser,
     component::{
         ComponentStandardItem, ComponentSupplierItem,
         ComponentLicenseTag, ComponentParamTag
     },
-    component_file::FilesCard,
-    component_modification::{ModificationsTable, FilesOfFilesetCard},
-    component_spec::SpecsTags,
-    component_keyword::KeywordsTags,
+    component::{
+        ModificationsTable, FilesOfFilesetCard,
+        FilesCard, SpecsTags, KeywordsTags
+    },
 };
 use crate::gqls::make_query;
 use crate::services::is_authenticated;

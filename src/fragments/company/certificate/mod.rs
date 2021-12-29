@@ -1,3 +1,7 @@
+mod add_certificate;
+
+pub use add_certificate::AddCertificateCard;
+
 use yew::{
     html, Component, ComponentLink, Html, Properties, ShouldRender, InputData,
 };
@@ -14,38 +18,40 @@ use crate::types::{UUID, Certificate};
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/user.graphql",
+    query_path = "./graphql/companies.graphql",
     response_derives = "Debug"
 )]
-struct UpdateUserCertificate;
+struct UpdateCompanyCertificate;
 
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/user.graphql",
+    query_path = "./graphql/companies.graphql",
     response_derives = "Debug"
 )]
-struct DeleteUserCertificate;
+struct DeleteCompanyCertificate;
 
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
+    pub company_uuid: String,
     pub certificate: Certificate,
     pub show_cert_btn: bool,
     pub download_btn: bool,
     pub change_btn: bool,
 }
 
-/// For update user Certificate
+/// For update company Certificate
 #[derive(Default, Clone, Debug)]
-pub struct ChangeUserCertData {
+pub struct ChangeCompanyCertData {
+    company_uuid: String,
     file_uuid: String,
     description: String,
 }
 
 /// For viewing certificate data on page
 #[derive(Debug)]
-pub struct CertificateCard {
+pub struct CompanyCertificateCard {
     error: Option<Error>,
     request_update: String,
     props: Props,
@@ -61,12 +67,12 @@ pub enum Msg {
     ResponseError(Error),
     GetUpdateResult(String),
     GetDeleteCertResult(String),
-    Ignore,
     UpdateDescription(String),
     ShowCert,
+    Ignore,
 }
 
-impl Component for CertificateCard {
+impl Component for CompanyCertificateCard {
     type Message = Msg;
     type Properties = Props;
 
@@ -74,7 +80,6 @@ impl Component for CertificateCard {
         Self {
             error: None,
             request_update: props.certificate.description.to_string(),
-            // request_delete: DeleteUserCertData::default(),
             props,
             link,
             get_result_update: false,
@@ -88,34 +93,41 @@ impl Component for CertificateCard {
 
         match msg {
             Msg::RequestUpdateDescription => {
-                debug!("Update user cert: {:?}", &self.request_update);
-                let request_update = ChangeUserCertData{
-                    file_uuid: self.props.certificate.file.uuid.to_string(),
-                    description: self.request_update.to_string(),
+                debug!("Update company cert: {:?}", &self.request_update);
+                let request_update = ChangeCompanyCertData{
+                    company_uuid: self.props.company_uuid.clone(),
+                    file_uuid: self.props.certificate.file.uuid.clone(),
+                    description: self.request_update.clone(),
                 };
                 spawn_local(async move {
-                    let ChangeUserCertData {
+                    let ChangeCompanyCertData {
+                        company_uuid,
                         file_uuid,
                         description,
                     } = request_update;
-                    let ipt_update_user_certificate_data = update_user_certificate::IptUpdateUserCertificateData {
+                    let ipt_update_company_certificate_data = update_company_certificate::IptUpdateCompanyCertificateData {
+                        companyUuid: company_uuid,
                         fileUuid: file_uuid,
                         description,
                     };
-                    let res = make_query(UpdateUserCertificate::build_query(update_user_certificate::Variables {
-                        ipt_update_user_certificate_data
-                    })).await.unwrap();
-                    link.send_message(Msg::GetUpdateResult(res));
+                    let res = make_query(UpdateCompanyCertificate::build_query(
+                        update_company_certificate::Variables {
+                            ipt_update_company_certificate_data,
+                        }
+                    )).await;
+                    link.send_message(Msg::GetUpdateResult(res.unwrap()));
                 })
             },
             Msg::RequestDeleteCert => {
+                let company_uuid = self.props.company_uuid.clone();
                 let file_uuid = self.props.certificate.file.uuid.clone();
                 spawn_local(async move {
-                    let del_user_certificate_data = delete_user_certificate::DelUserCertificateData{
+                    let del_company_certificate_data = delete_company_certificate::DelCompanyCertificateData{
+                        companyUuid: company_uuid,
                         fileUuid: file_uuid,
                     };
-                    let res = make_query(DeleteUserCertificate::build_query(delete_user_certificate::Variables {
-                        del_user_certificate_data
+                    let res = make_query(DeleteCompanyCertificate::build_query(delete_company_certificate::Variables {
+                        del_company_certificate_data
                     })).await.unwrap();
                     link.send_message(Msg::GetDeleteCertResult(res));
                 })
@@ -129,8 +141,8 @@ impl Component for CertificateCard {
 
                 match res_value.is_null() {
                     false => {
-                        let result: bool = serde_json::from_value(res_value.get("updateUserCertificate").unwrap().clone()).unwrap();
-                        debug!("Update user cert: {:?}", result);
+                        let result: bool = serde_json::from_value(res_value.get("updateCompanyCertificate").unwrap().clone()).unwrap();
+                        debug!("Update company cert: {:?}", result);
                         self.get_result_update = result;
                     },
                     true => {
@@ -144,8 +156,8 @@ impl Component for CertificateCard {
 
                 match res_value.is_null() {
                     false => {
-                        let result: bool = serde_json::from_value(res_value.get("deleteUserCertificate").unwrap().clone()).unwrap();
-                        debug!("Update user cert: {:?}", result);
+                        let result: bool = serde_json::from_value(res_value.get("deleteCompanyCertificate").unwrap().clone()).unwrap();
+                        debug!("Delete company cert: {:?}", result);
 
                         self.get_result_delete = result;
                     },
@@ -154,7 +166,6 @@ impl Component for CertificateCard {
                     }
                 }
             },
-            Msg::Ignore => {},
             Msg::UpdateDescription(description) => {
                 // debug!("Description: {:?}", description);
                 self.request_update = description;
@@ -165,6 +176,7 @@ impl Component for CertificateCard {
                     false => self.show_cert = true,
                 }
             },
+            Msg::Ignore => {},
         }
 
         true
@@ -181,6 +193,7 @@ impl Component for CertificateCard {
             show_cert_btn,
             download_btn,
             change_btn,
+            .. //company_uuid,
         } = &self.props;
 
         if self.get_result_delete {
@@ -249,7 +262,7 @@ impl Component for CertificateCard {
     }
 }
 
-impl CertificateCard {
+impl CompanyCertificateCard {
     fn show_certificate_on_page(
         &self,
     ) -> Html {

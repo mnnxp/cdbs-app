@@ -20,9 +20,7 @@ use crate::fragments::{
     // switch_icon::res_btn,
     list_errors::ListErrors,
     // catalog_component::CatalogComponents,
-    standard_file::FilesCard,
-    standard_spec::SearchSpecsTags,
-    standard_keyword::AddKeywordsTags,
+    standard::{FilesCard, SearchSpecsTags, AddKeywordsTags},
 };
 use crate::gqls::make_query;
 use crate::services::{

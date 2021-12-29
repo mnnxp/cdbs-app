@@ -14,9 +14,9 @@ use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*, service::RouteSer
 
 use crate::error::{get_error, Error};
 use crate::fragments::{
-    company_add_certificate::AddCertificateCard, company_add_represent::AddCompanyRepresentCard,
-    company_certificate::CompanyCertificateCard, company_represent::CompanyRepresents,
-    list_errors::ListErrors, search_spec::SearchSpecsTags, spec::SpecsTags,
+    company::{AddCertificateCard, AddCompanyRepresentCard, CompanyCertificateCard, CompanyRepresents},
+    list_errors::ListErrors,
+    spec::{SpecsTags, SearchSpecsTags},
     upload_favicon::UpdateFaviconCard,
 };
 use crate::gqls::make_query;
