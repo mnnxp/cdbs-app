@@ -159,6 +159,13 @@ pub struct Param{
   pub paramname: String,
 }
 
+#[derive(Serialize, Deserialize, Clone, Default, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct ParamValue{
+  pub param_id: usize,
+  pub value: String,
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct ComponentModificationInfo{

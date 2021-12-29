@@ -3,12 +3,14 @@ mod heads;
 mod item;
 mod fileset;
 mod fileset_item;
+mod item_module;
 
 pub use edit::ModificationsTableEdit;
 pub use heads::ModificationTableHeads;
 pub use item::ModificationTableItem;
 pub use fileset::FilesOfFilesetCard;
 pub use fileset_item::FileOfFilesetItem;
+pub use item_module::ModificationTableItemModule;
 
 use std::collections::HashMap;
 use yew::{Callback, Component, ComponentLink, Html, Properties, ShouldRender, html};

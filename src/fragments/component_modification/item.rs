@@ -1,10 +1,34 @@
 use std::collections::HashMap;
 use yew::{
     html, Callback, Component, ComponentLink,
-    Html, Properties, ShouldRender,
+    Html, Properties, ShouldRender, InputData
 };
-// use log::debug;
-use crate::types::{UUID, Param};
+use log::debug;
+use graphql_client::GraphQLQuery;
+use serde_json::Value;
+use wasm_bindgen_futures::spawn_local;
+
+use super::ModificationTableItemModule;
+use crate::error::{get_error, Error};
+use crate::gqls::make_query;
+use crate::fragments::list_errors::ListErrors;
+use crate::types::{UUID, Param, ParamValue};
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/components.graphql",
+    response_derives = "Debug"
+)]
+struct PutModificationParams;
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/components.graphql",
+    response_derives = "Debug"
+)]
+struct DeleteModificationParams;
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
@@ -17,14 +41,35 @@ pub struct Props {
 }
 
 pub struct ModificationTableItem {
+    error: Option<Error>,
     props: Props,
     link: ComponentLink<Self>,
     modification_uuid: UUID,
+    collect_item: HashMap<usize, String>,
     select_item: bool,
+    request_add_param: ParamValue,
+    request_edit_param: ParamValue,
+    update_add_param: bool,
+    update_edit_param: bool,
+    open_add_param_card: bool,
+    open_edit_param_card: bool,
+    get_add_param_card: usize,
+    get_change_param_card: usize,
 }
 
 pub enum Msg {
+    RequestAddParamData,
+    RequestUpdateParamData,
+    RequestDeleteParamData,
+    GetAddParamResult(String),
+    GetUpdateParamResult(String),
+    GetDeleteParamResult(String),
     SelectModification,
+    UpdateValue(String),
+    ShowAddParamCard(usize),
+    ShowEditParamCard(usize),
+    ClearError,
+    Ignore,
 }
 
 impl Component for ModificationTableItem {
@@ -32,22 +77,181 @@ impl Component for ModificationTableItem {
     type Properties = Props;
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
         let modification_uuid = props.modification_uuid.clone();
+        let collect_item = props.collect_item.clone();
         let select_item = props.select_item;
         Self {
+            error: None,
             props,
             link,
             modification_uuid,
+            collect_item,
             select_item,
+            request_add_param: ParamValue::default(),
+            request_edit_param: ParamValue::default(),
+            update_add_param: false,
+            update_edit_param: false,
+            open_add_param_card: false,
+            open_edit_param_card: false,
+            get_add_param_card: 0,
+            get_change_param_card: 0,
         }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
+        let link = self.link.clone();
+
         match msg {
+            Msg::RequestAddParamData => {
+                debug!("RequestAddParamData: {:?}", self.request_add_param);
+                let ipt_param_data = put_modification_params::IptParamData{
+                    paramId: self.request_add_param.param_id as i64,
+                    value: self.request_add_param.value.clone(),
+                };
+                let ipt_modification_param_data = put_modification_params::IptModificationParamData{
+                    modificationUuid: self.props.modification_uuid.clone(),
+                    params: vec![ipt_param_data],
+                };
+                spawn_local(async move {
+                    let res = make_query(PutModificationParams::build_query(
+                        put_modification_params::Variables { ipt_modification_param_data }
+                    )).await.unwrap();
+                    link.send_message(Msg::GetAddParamResult(res));
+                })
+            },
+            Msg::RequestUpdateParamData => {
+                debug!("RequestUpdateParamData: {:?}", self.request_add_param);
+                let ipt_param_data = put_modification_params::IptParamData{
+                    paramId: self.request_edit_param.param_id as i64,
+                    value: self.request_edit_param.value.clone(),
+                };
+                let ipt_modification_param_data = put_modification_params::IptModificationParamData{
+                    modificationUuid: self.props.modification_uuid.clone(),
+                    params: vec![ipt_param_data],
+                };
+                spawn_local(async move {
+                    let res = make_query(PutModificationParams::build_query(
+                        put_modification_params::Variables { ipt_modification_param_data }
+                    )).await.unwrap();
+                    link.send_message(Msg::GetUpdateParamResult(res));
+                })
+            },
+            Msg::RequestDeleteParamData => {
+                debug!("RequestDeleteParamData");
+                let del_modification_param_data = delete_modification_params::DelModificationParamData{
+                    modificationUuid: self.props.modification_uuid.clone(),
+                    paramIds: vec![self.request_edit_param.param_id as i64],
+                };
+                spawn_local(async move {
+                    let res = make_query(DeleteModificationParams::build_query(
+                        delete_modification_params::Variables { del_modification_param_data }
+                    )).await.unwrap();
+                    link.send_message(Msg::GetDeleteParamResult(res));
+                })
+            },
+            Msg::GetAddParamResult(res) => {
+                debug!("GetAddParamResult: {:?}", res);let data: Value = serde_json::from_str(res.as_str()).unwrap();
+                let res_value = data.as_object().unwrap().get("data").unwrap();
+
+                match res_value.is_null() {
+                    false => {
+                        self.get_add_param_card = serde_json::from_value(
+                            res_value.get("putModificationParams").unwrap().clone()
+                        ).unwrap();
+                        debug!("putModificationParams: {:?}", self.get_add_param_card);
+                        if self.get_add_param_card > 0 {
+                            self.collect_item.insert(
+                                self.request_add_param.param_id,
+                                self.request_add_param.value.clone()
+                            );
+                            self.request_add_param = ParamValue::default();
+                            self.open_add_param_card = false;
+                        }
+                    },
+                    true => self.error = Some(get_error(&data)),
+                }
+            },
+            Msg::GetUpdateParamResult(res) => {
+                debug!("GetUpdateParamResult: {:?}", res);
+                let data: Value = serde_json::from_str(res.as_str()).unwrap();
+                let res_value = data.as_object().unwrap().get("data").unwrap();
+
+                match res_value.is_null() {
+                    false => {
+                        self.get_change_param_card = serde_json::from_value(
+                            res_value.get("putModificationParams").unwrap().clone()
+                        ).unwrap();
+                        debug!("putModificationParams: {:?}", self.get_change_param_card);
+                        if self.get_change_param_card > 0 {
+                            self.collect_item.insert(
+                                self.request_edit_param.param_id,
+                                self.request_edit_param.value.clone()
+                            );
+                            self.request_edit_param = ParamValue::default();
+                            self.open_edit_param_card = false;
+                        }
+                    },
+                    true => self.error = Some(get_error(&data)),
+                }
+            },
+            Msg::GetDeleteParamResult(res) => {
+                debug!("GetDeleteParamResult: {:?}", res);
+                let data: Value = serde_json::from_str(res.as_str()).unwrap();
+                let res_value = data.as_object().unwrap().get("data").unwrap();
+
+                match res_value.is_null() {
+                    false => {
+                        self.get_change_param_card = serde_json::from_value(
+                            res_value.get("deleteModificationParams").unwrap().clone()
+                        ).unwrap();
+                        debug!("deleteModificationParams: {:?}", self.get_change_param_card);
+                        if self.get_change_param_card > 0 {
+                            self.collect_item.remove(&self.request_edit_param.param_id);
+                            self.request_edit_param.param_id = 0;
+                            self.open_edit_param_card = false;
+                        }
+                    },
+                    true => self.error = Some(get_error(&data)),
+                }
+            },
             Msg::SelectModification => {
                 if let Some(select_modification) = &self.props.callback_select_modification {
                     select_modification.emit(self.props.modification_uuid.clone());
                 }
-            }
+            },
+            Msg::UpdateValue(data) => {
+                match self.open_add_param_card {
+                    true => {
+                        self.request_add_param.value = data;
+                        self.update_add_param = true;
+                    },
+                    false => {
+                        self.request_edit_param.value = data;
+                        self.update_edit_param = true;
+                    },
+                }
+            },
+            Msg::ShowAddParamCard(param_id) => {
+                self.open_add_param_card = !self.open_add_param_card;
+                if self.open_add_param_card {
+                    self.request_add_param.param_id = param_id;
+                    self.request_add_param.value = String::new();
+                    debug!("ShowAddParamCard {:?}", param_id);
+                    debug!("Select modification uuid {:?}", self.modification_uuid);
+                }
+            },
+            Msg::ShowEditParamCard(param_id) => {
+                self.open_edit_param_card = !self.open_edit_param_card;
+                if self.open_edit_param_card {
+                    if let Some(value) = self.collect_item.get(&param_id) {
+                        self.request_edit_param.value = value.clone();
+                    }
+                    self.request_edit_param.param_id = param_id;
+                    debug!("ShowEditParamCard {:?}", param_id);
+                    debug!("Select modification uuid {:?}", self.modification_uuid);
+                }
+            },
+            Msg::ClearError => self.error = None,
+            Msg::Ignore => {},
         }
         true
     }
@@ -58,6 +262,7 @@ impl Component for ModificationTableItem {
             false
         } else {
             self.modification_uuid = props.modification_uuid.clone();
+            self.collect_item = props.collect_item.clone();
             self.select_item = props.select_item;
             self.props = props;
             true
@@ -65,7 +270,11 @@ impl Component for ModificationTableItem {
     }
 
     fn view(&self) -> Html {
-        self.show_modification_row()
+        html!{<>
+            {self.modal_add_value()}
+            {self.modal_change_value()}
+            {self.show_modification_row()}
+        </>}
     }
 }
 
@@ -80,32 +289,190 @@ impl ModificationTableItem {
         };
 
         let (double_click_text, double_click_icon) = match &self.props.show_manage_btn {
-            true => ("edit", "fa fa-pencil"),
-            false => ("info", "fab fa-info"),
+            true => ("edit", "fas fa-pencil-ruler"),
+            false => ("info", "fas fa-info"),
         };
 
         html!{<tr class={class_style}>
             <td><a onclick={onclick_select_modification}>
                 {match &self.props.select_item {
                     true => html!{<>
-                        <span class="icon">
-                          <i class={double_click_icon} aria-hidden="true"></i>
-                        </span>
                         <span>{double_click_text}</span>
+                        <span class="icon">
+                        <i class={double_click_icon} aria-hidden="true"></i>
+                        </span>
                     </>},
-                    false => html!{"select"},
+                    false => html!{<>
+                        <span>{"select"}</span>
+                        <span class="icon is-small">
+                        <i class="far fa-hand-pointer" aria-hidden="true"></i>
+                        </span>
+                    </>},
                 }}
             </a></td>
-            {match self.props.collect_item.get(&0) {
+            {match self.collect_item.get(&0) {
                 Some(value) => html!{<td>{value.clone()}</td>},
                 None => html!{<td></td>},
             }}
-            {for self.props.collect_heads.iter().map(|param| {
-                match self.props.collect_item.get(&param.param_id) {
-                    Some(value) => html!{<td>{value.clone()}</td>},
-                    None => html!{<td></td>},
-                }
-            })}
+            {self.show_items()}
         </tr>}
+    }
+
+    fn show_items(&self) -> Html {
+        let onclick_add_param_card = self.link
+            .callback(|value: usize| Msg::ShowAddParamCard(value));
+
+        let onclick_edit_param_card = self.link
+            .callback(|value: usize| Msg::ShowEditParamCard(value));
+
+        match self.props.show_manage_btn {
+            true => html!{<>
+                {for self.props.collect_heads.iter().map(|param| {
+                    match self.collect_item.get(&param.param_id) {
+                        Some(value) => html!{<ModificationTableItemModule
+                            param_id = param.param_id
+                            value = Some(value.clone())
+                            callback_change_param = Some(onclick_edit_param_card.clone())
+                        />},
+                        None => html!{<ModificationTableItemModule
+                            param_id = param.param_id
+                            value = None
+                            callback_change_param = Some(onclick_add_param_card.clone())
+                        />},
+                    }
+                })}
+            </>},
+            false => html!{<>
+                {for self.props.collect_heads.iter().map(|param| {
+                    match self.collect_item.get(&param.param_id) {
+                        Some(value) => html!{<ModificationTableItemModule
+                            param_id = param.param_id
+                            value = Some(value.clone())
+                            callback_change_param = None
+                        />},
+                        None => html!{<ModificationTableItemModule
+                            param_id = param.param_id
+                            value = None
+                            callback_change_param = None
+                        />},
+                    }
+                })}
+            </>},
+        }
+    }
+
+    fn modal_add_value(&self) -> Html {
+        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+
+        let oninput_param_value = self.link
+            .callback(|ev: InputData| Msg::UpdateValue(ev.value));
+
+        let onclick_add_param_card = self.link
+            .callback(|_| Msg::ShowAddParamCard(0));
+
+        let onclick_param_add = self.link
+            .callback(|_| Msg::RequestAddParamData);
+
+        let class_modal = match &self.open_add_param_card {
+            true => "modal is-active",
+            false => "modal",
+        };
+
+        html!{<div class=class_modal>
+          <div class="modal-background" onclick=onclick_add_param_card.clone() />
+          <div class="modal-content">
+              <div class="card">
+                <div class="box itemBox">
+                  <article class="media center-media">
+                      <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
+                      <div class="media-content">
+                          <label class="label">{"Add value"}</label>
+                          <input
+                              id="change-modification-param-value"
+                              class="input is-fullwidth"
+                              type="text"
+                              placeholder={"input param value"}
+                              value={self.request_add_param.value.clone()}
+                              oninput=oninput_param_value />
+                      <br/>
+                      <button
+                          id="update-modification-param"
+                          class="button"
+                          disabled={!self.update_add_param}
+                          onclick={onclick_param_add} >
+                          {"Add"}
+                      </button>
+                    </div>
+                  </article>
+                </div>
+              </div>
+          </div>
+          <button class="modal-close is-large" aria-label="close" onclick=onclick_add_param_card />
+        </div>}
+    }
+
+    fn modal_change_value(&self) -> Html {
+        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+
+        let oninput_param_value = self.link
+            .callback(|ev: InputData| Msg::UpdateValue(ev.value));
+
+        let onclick_edit_param_card = self.link
+            .callback(|_| Msg::ShowEditParamCard(0));
+
+        let onclick_param_update = self.link
+            .callback(|_| Msg::RequestUpdateParamData);
+
+        let onclick_delete_param = self.link
+            .callback(|_| Msg::RequestDeleteParamData);
+
+        let class_modal = match &self.open_edit_param_card {
+            true => "modal is-active",
+            false => "modal",
+        };
+
+        html!{<div class=class_modal>
+          <div class="modal-background" onclick=onclick_edit_param_card.clone() />
+          <div class="modal-content">
+              <div class="card">
+                <div class="box itemBox">
+                  <article class="media center-media">
+                      <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
+                      <div class="media-content">
+                          <label class="label">{"Change value"}</label>
+                          <input
+                              id="change-modification-param-value"
+                              class="input is-fullwidth"
+                              type="text"
+                              placeholder={"input param value"}
+                              value={self.request_edit_param.value.clone()}
+                              oninput=oninput_param_value />
+                      <br/>
+                      <div class="columns">
+                          <div class="column">
+                              <button
+                                  id="delete-modification-param"
+                                  class="button is-danger"
+                                  onclick={onclick_delete_param} >
+                                  {"Delete"}
+                              </button>
+                          </div>
+                          <div class="column">
+                              <button
+                                  id="update-modification-param"
+                                  class="button"
+                                  disabled={!self.update_edit_param}
+                                  onclick={onclick_param_update} >
+                                  {"Update"}
+                              </button>
+                          </div>
+                      </div>
+                    </div>
+                  </article>
+                </div>
+              </div>
+          </div>
+          <button class="modal-close is-large" aria-label="close" onclick=onclick_edit_param_card />
+        </div>}
     }
 }

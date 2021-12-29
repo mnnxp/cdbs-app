@@ -498,10 +498,10 @@ impl Component for ModificationsTableEdit {
                   id="add-component-modification"
                   class="button is-fullwidth"
                   onclick={onclick_add_modification_card} >
-                  // {"Supplier"}
                   <span class="icon" >
-                    <i class="fa fa-plus" aria-hidden="true"></i>
+                    <i class="fas fa-plus" aria-hidden="true"></i>
                   </span>
+                  <span>{"Add new modification"}</span>
               </button>
             </div>
         </div>}
