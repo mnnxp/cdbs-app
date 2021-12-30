@@ -16,7 +16,7 @@ use crate::error::{Error, get_error};
 use crate::fragments::{
     list_errors::ListErrors,
     user::{CertificateCard, AddCertificateCard},
-    upload_favicon::UpdateFaviconCard,
+    user::UpdateFaviconCard,
 };
 use crate::routes::AppRoute;
 use crate::services::{is_authenticated, set_logged_user, get_current_user};

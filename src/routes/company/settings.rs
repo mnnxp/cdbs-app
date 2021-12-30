@@ -17,7 +17,7 @@ use crate::fragments::{
     company::{AddCertificateCard, AddCompanyRepresentCard, CompanyCertificateCard, CompanyRepresents},
     list_errors::ListErrors,
     spec::{SpecsTags, SearchSpecsTags},
-    upload_favicon::UpdateFaviconCard,
+    user::UpdateFaviconCard,
 };
 use crate::gqls::make_query;
 use crate::routes::AppRoute;
