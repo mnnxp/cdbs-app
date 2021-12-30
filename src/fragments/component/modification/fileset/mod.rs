@@ -1,5 +1,7 @@
+mod edit;
 mod item;
 
+pub use edit::ManageModificationFilesets;
 pub use item::FileOfFilesetItem;
 
 use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
@@ -134,8 +136,8 @@ impl Component for FilesOfFilesetCard {
                   <tfoot>
                     {for self.files_data.iter().map(|file| html!{
                         <FileOfFilesetItem
-                            show_download_btn = false
-                            show_delete_btn = false
+                            show_download_btn = self.props.show_manage_btn
+                            show_delete_btn = self.props.show_manage_btn
                             file = file.clone()
                         />
                     })}

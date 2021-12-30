@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use yew::services::fetch::FetchTask;
 use yew::services::reader::{File, FileData, ReaderService, ReaderTask};
 use yew::prelude::*;
@@ -26,8 +25,7 @@ use crate::fragments::{
         ComponentLicensesTags, ComponentParamsTags,
     },
     component::{
-        ModificationsTableEdit, FilesOfFilesetCard,
-        FilesCard, SearchSpecsTags, AddKeywordsTags
+        ModificationsTableEdit, FilesCard, SearchSpecsTags, AddKeywordsTags
     },
 };
 use crate::gqls::make_query;
@@ -91,7 +89,6 @@ struct UploadComponentFiles;
 )]
 struct ConfirmUploadCompleted;
 
-/// Component with relate data
 pub struct ComponentSettings {
     error: Option<Error>,
     current_component: Option<ComponentInfo>,
@@ -123,9 +120,6 @@ pub struct ComponentSettings {
     hide_delete_modal: bool,
     disable_save_changes_btn: bool,
     select_component_modification: UUID,
-    modification_filesets: HashMap<UUID, Vec<(UUID, String)>>,
-    select_fileset_program: UUID,
-    current_filesets_program: Vec<(UUID, String)>,
     get_result_component_data: usize,
     get_result_access: bool,
     get_result_up_file: bool,
@@ -167,10 +161,8 @@ pub enum Msg {
     UpdateFiles(FileList),
     UpdateConfirmDelete(String),
     ResponseError(Error),
-    SelectModification(UUID),
     RegisterNewModification(UUID),
     DeleteModification(UUID),
-    SelectFileset(UUID),
     ChangeHideDeleteComponent,
     ClearFilesBoxed,
     ClearError,
@@ -213,9 +205,6 @@ impl Component for ComponentSettings {
             hide_delete_modal: true,
             disable_save_changes_btn: true,
             select_component_modification: String::new(),
-            modification_filesets: HashMap::new(),
-            select_fileset_program: String::new(),
-            current_filesets_program: Vec::new(),
             get_result_component_data: 0,
             get_result_access: false,
             get_result_up_file: false,
@@ -244,9 +233,6 @@ impl Component for ComponentSettings {
             self.current_modifications = Vec::new();
             self.request_component = ComponentUpdatePreData::default();
             self.select_component_modification = String::new();
-            self.modification_filesets = HashMap::new();
-            self.select_fileset_program = String::new();
-            self.current_filesets_program = Vec::new();
         }
 
         let link = self.link.clone();
@@ -459,29 +445,6 @@ impl Component for ComponentSettings {
                         //     self.current_user_owner = component_data.owner_user.uuid == user.uuid;
                         // }
                         self.current_modifications = component_data.component_modifications.clone();
-                        self.select_component_modification = component_data.component_modifications
-                            .first()
-                            .map(|m| m.uuid.clone())
-                            .unwrap_or_default();
-                        self.select_fileset_program = component_data.component_modifications
-                                .first()
-                                .map(|m| m.filesets_for_program.first().map(|f| f.uuid.clone())
-                                .unwrap_or_default()
-                            ).unwrap_or_default();
-                        for component_modification in &component_data.component_modifications {
-                            let mut fileset_data: Vec<(UUID, String)> = Vec::new();
-                            for fileset in &component_modification.filesets_for_program {
-                                fileset_data.push((fileset.uuid.clone(), fileset.program.name.clone()));
-                            }
-                            self.modification_filesets.insert(
-                                component_modification.uuid.clone(),
-                                fileset_data.clone()
-                            );
-                        }
-                        self.current_filesets_program = self.modification_filesets
-                            .get(&self.select_component_modification)
-                            .map(|f| f.clone())
-                            .unwrap_or_default();
                         self.request_component = component_data.into();
                     },
                     true => self.error = Some(get_error(&data)),
@@ -616,21 +579,6 @@ impl Component for ComponentSettings {
                 self.confirm_delete_component = data;
             },
             Msg::ResponseError(err) => self.error = Some(err),
-            Msg::SelectModification(modification_uuid) => {
-                self.current_filesets_program = self.modification_filesets
-                    .get(&modification_uuid)
-                    .map(|f| f.clone())
-                    .unwrap_or_default();
-                self.select_component_modification = modification_uuid.clone();
-                self.select_fileset_program = self.current_filesets_program
-                    .first()
-                    .map(|(fileset_uuid, program_name)| {
-                        debug!("mod fileset_uuid: {:?}", fileset_uuid);
-                        debug!("mod program_name: {:?}", program_name);
-                        fileset_uuid.clone()
-                    })
-                    .unwrap_or_default();
-            },
             Msg::RegisterNewModification(modification_uuid) => {
                 // link.send_message(Msg::RequestComponentModificationsData);
                 self.select_component_modification = modification_uuid.clone();
@@ -639,7 +587,6 @@ impl Component for ComponentSettings {
                 // link.send_message(Msg::RequestComponentModificationsData);
                 self.select_component_modification = String::new();
             },
-            Msg::SelectFileset(fileset_uuid) => self.select_fileset_program = fileset_uuid,
             Msg::ChangeHideDeleteComponent => self.hide_delete_modal = !self.hide_delete_modal,
             Msg::ClearFilesBoxed => {
                 self.files = Vec::new();
@@ -675,8 +622,6 @@ impl Component for ComponentSettings {
                         {self.show_main_card()}
                         {match &self.current_component {
                             Some(component_data) => html!{<>
-                                <br/>
-                                {self.show_fileset_files_card()}
                                 <br/>
                                 {self.show_modifications_table()}
                                 <br/>
@@ -836,65 +781,12 @@ impl ComponentSettings {
     }
 
     fn show_modifications_table(&self) -> Html {
-        let onclick_select_modification = self.link
-            .callback(|value: UUID| Msg::SelectModification(value));
-
-        // let onclick_new_modification = self.link
-        //     .callback(|value: UUID| Msg::RegisterNewModification(value));
-
         html!{<>
             <h2>{"Modifications"}</h2>
             <ModificationsTableEdit
                 current_component_uuid = self.current_component_uuid.clone()
-                modifications = self.current_modifications.clone()
-                select_modification = self.select_component_modification.clone()
-                callback_select_modification = onclick_select_modification.clone()
-                // callback_add_modification = onclick_new_modification.clone()
+                component_modifications = self.current_modifications.clone()
               />
-        </>}
-    }
-
-    fn show_fileset_files_card(&self) -> Html {
-        let onchange_select_fileset_btn = self.link
-            .callback(|ev: ChangeData| Msg::SelectFileset(match ev {
-              ChangeData::Select(el) => el.value(),
-              _ => String::new(),
-          }));
-
-        html!{<>
-            <h2>{"Files of select fileset"}</h2>
-            <div class="columns">
-                <div class="column">
-                    <div class="select is-fullwidth" style="margin-right: .5rem">
-                      <select
-                            id="select-fileset-program"
-                            onchange=onchange_select_fileset_btn >
-                          {for self.current_filesets_program.iter().map(|(fileset_uuid, program_name)|
-                              match &self.select_fileset_program == fileset_uuid {
-                                true => html!{<option value={fileset_uuid.clone()} selected=true>{program_name}</option>},
-                                false => html!{<option value={fileset_uuid.clone()}>{program_name}</option>},
-                              }
-                          )}
-                      </select>
-                    </div>
-                </div>
-                <div class="column">
-                    <button
-                        id="add-modification-fileset"
-                        class="button is-fullwidth"
-                        // onclick={onclick_action_btn}
-                        >
-                        <span class="icon" >
-                            <i class="fas fa-plus" aria-hidden="true"></i>
-                        </span>
-                        <span>{"Add fileset"}</span>
-                    </button>
-                </div>
-            </div>
-            <FilesOfFilesetCard
-                show_manage_btn = true
-                fileset_uuid = self.select_fileset_program.clone()
-            />
         </>}
     }
 

@@ -45,7 +45,7 @@ pub struct Props {
     pub collect_heads: Vec<Param>,
     pub collect_item: HashMap<usize, String>,
     pub select_item: bool,
-    pub callback_new_modification_param: Option<Callback<()>>,
+    pub callback_new_modification_param: Option<Callback<UUID>>,
     pub callback_select_modification: Option<Callback<UUID>>,
 }
 
@@ -221,7 +221,7 @@ impl Component for ModificationTableItem {
                                     self.params_list.remove(&self.request_add_param.param_id);
                                     self.open_new_param_card = false;
                                     if let Some(rollback) = &self.props.callback_new_modification_param {
-                                        rollback.emit(());
+                                        rollback.emit(self.props.modification_uuid.clone());
                                     }
                                 },
                             }
