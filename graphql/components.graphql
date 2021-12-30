@@ -203,6 +203,10 @@ mutation PutComponentModificationUpdate($modificationUuid: UUID!, $iptUpdateComp
   putComponentModificationUpdate(componentModificationUuid: $modificationUuid, args: $iptUpdateComponentModificationData)
 }
 
+mutation RegisterModificationFileset($iptFilesetProgramData: IptFilesetProgramData!) {
+  registerModificationFileset(args: $iptFilesetProgramData)
+}
+
 mutation ChangeComponentAccess($changeTypeAccessComponent: ChangeTypeAccessComponent!) {
   changeComponentAccess(args: $changeTypeAccessComponent)
 }

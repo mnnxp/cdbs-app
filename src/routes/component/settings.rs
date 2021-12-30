@@ -436,7 +436,7 @@ impl Component for ComponentSettings {
                     false => {
                         let component_data: ComponentInfo =
                             serde_json::from_value(res_value.get("component").unwrap().clone()).unwrap();
-                        debug!("Component data: {:?}", component_data);
+                        // debug!("Component data: {:?}", component_data);
 
                         self.current_component_uuid = component_data.uuid.clone();
                         self.current_component_is_base = component_data.is_base;
@@ -480,7 +480,7 @@ impl Component for ComponentSettings {
                     false => {
                         let result: usize =
                             serde_json::from_value(res_value.get("putComponentUpdate").unwrap().clone()).unwrap();
-                        debug!("Component data: {:?}", result);
+                        // debug!("Component data: {:?}", result);
                         self.get_result_component_data = result;
                     },
                     true => self.error = Some(get_error(&data)),

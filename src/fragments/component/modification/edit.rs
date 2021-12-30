@@ -173,6 +173,7 @@ impl Component for ModificationsTableEdit {
             debug!("Clear modification data");
             self.clear_current_data();
             self.link.send_message(Msg::ParseParams);
+            self.link.send_message(Msg::ParseFilesets);
         }
     }
 
@@ -375,6 +376,7 @@ impl Component for ModificationsTableEdit {
                         debug!("Update modifications list");
                         self.clear_current_data();
                         link.send_message(Msg::ParseParams);
+                        link.send_message(Msg::ParseFilesets);
                     },
                     true => self.error = Some(get_error(&data)),
                 }
