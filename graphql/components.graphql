@@ -207,6 +207,10 @@ mutation RegisterModificationFileset($iptFilesetProgramData: IptFilesetProgramDa
   registerModificationFileset(args: $iptFilesetProgramData)
 }
 
+mutation DeleteModificationFileset($delFilesetProgramData: DelFilesetProgramData!) {
+  deleteModificationFileset(args: $delFilesetProgramData)
+}
+
 mutation ChangeComponentAccess($changeTypeAccessComponent: ChangeTypeAccessComponent!) {
   changeComponentAccess(args: $changeTypeAccessComponent)
 }

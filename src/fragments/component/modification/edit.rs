@@ -112,7 +112,7 @@ pub enum Msg {
     ShowEditModificationCard,
     ChangeNewModificationParam(UUID),
     ChangeSelectModification(UUID),
-    SelectModification,
+    UpdateSelectModification,
     ChangeModificationData,
     ClearError,
     Ignore,
@@ -429,6 +429,9 @@ impl Component for ModificationsTableEdit {
                 if self.actual_statuses.is_empty() {
                     link.send_message(Msg::RequestListOptData);
                 }
+                if self.open_edit_modification_card {
+                    link.send_message(Msg::UpdateSelectModification);
+                }
             },
             Msg::ChangeNewModificationParam(modification_uuid) => {
                 debug!("Add new modification param");
@@ -440,13 +443,11 @@ impl Component for ModificationsTableEdit {
                     true => link.send_message(Msg::ShowEditModificationCard),
                     false => {
                         self.select_modification_uuid = modification_uuid;
-                        link.send_message(Msg::SelectModification);
+                        link.send_message(Msg::ParseFilesets);
                     },
                 }
             },
-            Msg::SelectModification => {
-                link.send_message(Msg::ParseFilesets);
-
+            Msg::UpdateSelectModification => {
                 for current_modification in self.current_modifications.iter() {
                     if current_modification.uuid == self.select_modification_uuid {
                         self.request_edit_modification.modification_name = current_modification.modification_name.clone();
@@ -455,7 +456,6 @@ impl Component for ModificationsTableEdit {
                         break;
                     }
                 }
-                // debug!("current_modification: {:?}", self.select_modification_uuid);
             },
             Msg::ChangeModificationData => {
                 for modification in self.current_modifications.iter_mut() {

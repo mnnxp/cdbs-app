@@ -30,6 +30,14 @@ struct RegisterModificationFileset;
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/components.graphql",
+    response_derives = "Debug"
+)]
+struct DeleteModificationFileset;
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
     query_path = "./graphql/relate.graphql",
     response_derives = "Debug"
 )]
@@ -56,10 +64,12 @@ pub struct ManageModificationFilesets {
 pub enum Msg {
     RequestProgramsList,
     RequestNewFileset,
+    RequestDeleteFileset,
     RequestFilesOfFileset,
     ResponseError(Error),
     GetProgramsListResult(String),
     GetNewFilesetResult(String),
+    GetDeleteFilesetResult(String),
     GetFilesOfFilesetResult(String),
     SelectFileset(UUID),
     UpdateSelectProgramId(String),
@@ -127,6 +137,19 @@ impl Component for ManageModificationFilesets {
                     link.send_message(Msg::GetNewFilesetResult(res));
                 })
             },
+            Msg::RequestDeleteFileset => {
+                let del_fileset_program_data = delete_modification_fileset::DelFilesetProgramData{
+                    modificationUuid: self.props.select_modification_uuid.clone(),
+                    filesetUuid: self.select_fileset_uuid.clone(),
+                };
+                spawn_local(async move {
+                    let res = make_query(DeleteModificationFileset::build_query(
+                        delete_modification_fileset::Variables { del_fileset_program_data }
+                    )).await.unwrap();
+
+                    link.send_message(Msg::GetDeleteFilesetResult(res));
+                })
+            },
             Msg::RequestFilesOfFileset => {
                 let ipt_file_of_fileset_arg = com_mod_files_of_fileset::IptFileOfFilesetArg{
                     filesetUuid: self.select_fileset_uuid.clone(),
@@ -189,6 +212,33 @@ impl Component for ManageModificationFilesets {
                         }
 
                         self.open_add_fileset_card = false;
+                    },
+                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                }
+            },
+            Msg::GetDeleteFilesetResult(res) => {
+                let data: Value = serde_json::from_str(res.as_str()).unwrap();
+                let res = data.as_object().unwrap().get("data").unwrap();
+
+                match res.is_null() {
+                    false => {
+                        let result: bool = serde_json::from_value(
+                            res.get("deleteModificationFileset").unwrap().clone()
+                        ).unwrap();
+                        // debug!("deleteModificationFileset: {:?}", self.select_fileset_uuid);
+                        if result {
+                            let mut update_filesets: Vec<(UUID, String)> = Vec::new();
+                            for x in self.filesets_program.iter() {
+                                if x.0 != self.select_fileset_uuid {
+                                    update_filesets.push(x.clone());
+                                }
+                            }
+                            self.select_fileset_uuid = update_filesets
+                                .first()
+                                .map(|(fileset_uuid, _)| fileset_uuid.clone())
+                                .unwrap_or_default();
+                            self.filesets_program = update_filesets;
+                        }
                     },
                     true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }
@@ -272,6 +322,8 @@ impl ManageModificationFilesets {
 
         let onclick_new_fileset_card = self.link.callback(|_| Msg::ShowAddFilesetCard);
 
+        let onclick_delete_fileset_btn = self.link.callback(|_| Msg::RequestDeleteFileset);
+
         html!{<div class="columns">
             <div class="column">
                 <div class="select is-fullwidth" style="margin-right: .5rem">
@@ -288,15 +340,27 @@ impl ManageModificationFilesets {
                 </div>
             </div>
             <div class="column">
-                <button
+                <div class="buttons">
+                    <button
+                      id="delete-fileset-program"
+                      class="button is-danger"
+                      disabled={self.select_fileset_uuid.is_empty()}
+                      onclick={onclick_delete_fileset_btn} >
+                        <span class="icon" >
+                            <i class="fa fa-trash" aria-hidden="true"></i>
+                        </span>
+                        <span>{"Delete"}</span>
+                    </button>
+                    <button
                       id="add-modification-fileset"
-                      class="button is-fullwidth"
+                      class="button is-success"
                       onclick={onclick_new_fileset_card} >
-                    <span class="icon" >
-                        <i class="fas fa-plus" aria-hidden="true"></i>
-                    </span>
-                    <span>{"Add fileset"}</span>
-                </button>
+                        <span class="icon" >
+                            <i class="fas fa-plus" aria-hidden="true"></i>
+                        </span>
+                        <span>{"Add fileset"}</span>
+                    </button>
+                </div>
             </div>
         </div>}
     }
@@ -345,7 +409,7 @@ impl ManageModificationFilesets {
                       </div>
                       <br/>
                       <button
-                          id="add-component-modification"
+                          id="add-fileset-program"
                           class="button"
                           disabled={self.props.select_modification_uuid.is_empty()}
                           onclick={onclick_add_fileset_btn} >
