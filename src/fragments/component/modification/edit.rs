@@ -564,23 +564,15 @@ impl ModificationsTableEdit {
     }
 
     fn show_modification_files(&self) -> Html {
-        html!{
-            <div class="columns">
-                <div class="column">
-                  <h2>{"Modification files"}</h2>
-                  <ModificationFilesCard
-                      show_download_btn = false
-                      show_delete_btn = true
-                      modification_uuid = self.select_modification_uuid.clone()
-                      files = vec![]
-                    />
-                </div>
-                <div class="column">
-                  <h2>{"Upload modification files"}</h2>
-                  // {self.show_frame_upload_files()}
-                </div>
-            </div>
-        }
+        html!{<>
+            <h2>{"Modification files"}</h2>
+            <br/>
+            <ModificationFilesCard
+                show_download_btn = false
+                show_delete_btn = true
+                modification_uuid = self.select_modification_uuid.clone()
+              />
+        </>}
     }
 
     fn modal_add_modification_card(&self) -> Html {
@@ -788,7 +780,6 @@ impl ModificationsTableEdit {
             <br/>
             <ManageModificationFilesets
                 select_modification_uuid = self.select_modification_uuid.clone()
-                // filesets_program = self.current_filesets_program.clone()
                 filesets_program = self.modification_filesets
                     .get(&self.select_modification_uuid)
                     .map(|f| f.clone())

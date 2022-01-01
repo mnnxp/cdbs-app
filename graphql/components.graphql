@@ -66,9 +66,21 @@ query ComponentFiles($iptComponentFilesArg: IptComponentFilesArg!) {
   }
 }
 
+query ComponentFilesList($iptComponentFilesArg: IptComponentFilesArg!) {
+  componentFilesList(args: $iptComponentFilesArg){
+    ...showFileRelatedDataFields
+  }
+}
+
 query ComponentModificationFiles($iptModificationFilesArg: IptModificationFilesArg!) {
   componentModificationFiles(args: $iptModificationFilesArg){
     ...downloadFileFields
+  }
+}
+
+query ComponentModificationFilesList($iptModificationFilesArg: IptModificationFilesArg!) {
+  componentModificationFilesList(args: $iptModificationFilesArg){
+    ...showFileRelatedDataFields
   }
 }
 
@@ -215,6 +227,12 @@ mutation PutComponentModificationUpdate($modificationUuid: UUID!, $iptUpdateComp
 
 mutation RegisterModificationFileset($iptFilesetProgramData: IptFilesetProgramData!) {
   registerModificationFileset(args: $iptFilesetProgramData)
+}
+
+mutation UploadModificationFiles($iptModificationFilesData: IptModificationFilesData!) {
+  uploadModificationFiles(args: $iptModificationFilesData){
+    ...uploadUrlFields
+  }
 }
 
 mutation UploadFilesToFileset($iptModificationFileFromFilesetData: IptModificationFileFromFilesetData!) {

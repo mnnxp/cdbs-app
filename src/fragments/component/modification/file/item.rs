@@ -81,8 +81,8 @@ impl Component for ModificationFileItem {
                         component_modification_files::Variables {
                             ipt_modification_files_arg,
                         }
-                    )).await;
-                    link.send_message(Msg::GetDownloadFileResult(res.unwrap()));
+                    )).await.unwrap();
+                    link.send_message(Msg::GetDownloadFileResult(res));
                 })
             },
             Msg::RequestDeleteFile => {

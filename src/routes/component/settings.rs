@@ -36,7 +36,7 @@ use crate::services::{
 use crate::types::{
     UUID, ComponentInfo, SlimUser, TypeAccessInfo, UploadFile, ActualStatus,
     ComponentUpdatePreData, ComponentUpdateData, ComponentType, ShowCompanyShort,
-    ComponentModificationInfo
+    ComponentModificationInfo, ShowFileInfo,
 };
 
 type FileName = String;
@@ -79,6 +79,14 @@ struct ChangeComponentAccess;
     query_path = "./graphql/components.graphql",
     response_derives = "Debug"
 )]
+struct ComponentFilesList;
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/components.graphql",
+    response_derives = "Debug"
+)]
 struct UploadComponentFiles;
 
 #[derive(GraphQLQuery)]
@@ -98,6 +106,7 @@ pub struct ComponentSettings {
     request_component: ComponentUpdatePreData,
     request_upload_data: Vec<UploadFile>,
     request_upload_file: Callback<Result<Option<String>, Error>>,
+    request_upload_confirm: Vec<UUID>,
     request_access: i64,
     router_agent: Box<dyn Bridge<RouteAgent>>,
     task_read: Vec<(FileName, ReaderTask)>,
@@ -115,6 +124,7 @@ pub struct ComponentSettings {
     put_upload_file: PutUploadFile,
     files: Vec<File>,
     files_index: u32,
+    files_list: Vec<ShowFileInfo>,
     disable_delete_component_btn: bool,
     confirm_delete_component: String,
     hide_delete_modal: bool,
@@ -124,7 +134,7 @@ pub struct ComponentSettings {
     get_result_access: bool,
     get_result_up_file: bool,
     get_result_up_completed: usize,
-    get_result_upload_files: bool,
+    active_loading_files_btn: bool,
 }
 
 #[derive(Properties, Clone)]
@@ -137,6 +147,7 @@ pub struct Props {
 pub enum Msg {
     OpenComponent,
     RequestManager,
+    RequestComponentFilesList,
     RequestUpdateComponentData,
     RequestChangeAccess,
     RequestDeleteComponent,
@@ -148,9 +159,11 @@ pub enum Msg {
     GetListOpt(String),
     GetUpdateComponentResult(String),
     GetUpdateAccessResult(String),
+    GetComponentFilesListResult(String),
     GetUploadData(String),
-    GetUploadFile(Option<String>),
+    GetUploadFile,
     GetUploadCompleted(String),
+    FinishUploadFiles,
     GetDeleteComponentResult(String),
     EditFiles,
     UpdateTypeAccessId(String),
@@ -183,6 +196,7 @@ impl Component for ComponentSettings {
             request_component: ComponentUpdatePreData::default(),
             request_upload_data: Vec::new(),
             request_upload_file: link.callback(Msg::ResponseUploadFile),
+            request_upload_confirm: Vec::new(),
             request_access: 0,
             router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             task_read: Vec::new(),
@@ -200,6 +214,7 @@ impl Component for ComponentSettings {
             put_upload_file: PutUploadFile::new(),
             files: Vec::new(),
             files_index: 0,
+            files_list: Vec::new(),
             disable_delete_component_btn: true,
             confirm_delete_component: String::new(),
             hide_delete_modal: true,
@@ -209,7 +224,7 @@ impl Component for ComponentSettings {
             get_result_access: false,
             get_result_up_file: false,
             get_result_up_completed: 0,
-            get_result_upload_files: false,
+            active_loading_files_btn: false,
         }
     }
 
@@ -286,10 +301,6 @@ impl Component for ComponentSettings {
                     self.link.send_message(Msg::RequestChangeAccess)
                 }
 
-                // if self.upload_component_files && !self.files.is_empty() {
-                //     self.link.send_message(Msg::RequestUploadComponentFiles);
-                // }
-
                 self.update_component = false;
                 self.update_component_access = false;
                 self.update_component_supplier = false;
@@ -297,6 +308,21 @@ impl Component for ComponentSettings {
                 self.disable_save_changes_btn = true;
                 self.get_result_component_data = 0;
                 self.get_result_access = false;
+            },
+            Msg::RequestComponentFilesList => {
+                let component_uuid = self.props.component_uuid.clone();
+                spawn_local(async move {
+                    let ipt_component_files_arg = component_files_list::IptComponentFilesArg{
+                        filesUuids: None,
+                        componentUuid: component_uuid,
+                        limit: None,
+                        offset: None,
+                    };
+                    let res = make_query(ComponentFilesList::build_query(
+                        component_files_list::Variables { ipt_component_files_arg }
+                    )).await.unwrap();
+                    link.send_message(Msg::GetComponentFilesListResult(res));
+                })
             },
             Msg::RequestUpdateComponentData => {
                 let component_uuid = self.current_component_uuid.clone();
@@ -348,10 +374,10 @@ impl Component for ComponentSettings {
                 })
             },
             Msg::RequestUploadComponentFiles => {
-                // see loading button
-                // self.get_result_upload_files = true;
+                if !self.files.is_empty() && self.current_component_uuid.len() == 36 {
+                    // see loading button
+                    self.active_loading_files_btn = true;
 
-                if !self.files.is_empty() {
                     let mut filenames: Vec<String> = Vec::new();
                     for file in &self.files {filenames.push(file.name().clone());}
                     debug!("filenames: {:?}", filenames);
@@ -378,19 +404,31 @@ impl Component for ComponentSettings {
                     debug!("request: {:?}", request);
 
                     self.task.push(self.put_upload_file.put_file(request, self.request_upload_file.clone()));
+                    self.request_upload_confirm.push(upload_data.file_uuid.clone());
                 };
             },
             Msg::RequestUploadCompleted => {
-                if !self.request_upload_data.is_empty() {
-                    let mut file_uuids: Vec<UUID> = Vec::new();
-                    for up_data in &self.request_upload_data {file_uuids.push(up_data.file_uuid.clone());}
-                    spawn_local(async move {
-                        let res = make_query(ConfirmUploadCompleted::build_query(confirm_upload_completed::Variables {
-                            file_uuids,
-                        })).await.unwrap();
-                        debug!("ConfirmUploadCompleted: {:?}", res);
-                        link.send_message(Msg::GetUploadCompleted(res));
-                    });
+                let file_uuids = self.request_upload_confirm.to_vec();
+                spawn_local(async move {
+                    let res = make_query(ConfirmUploadCompleted::build_query(
+                        confirm_upload_completed::Variables { file_uuids }
+                    )).await.unwrap();
+                    // debug!("ConfirmUploadCompleted: {:?}", res);
+                    link.send_message(Msg::GetUploadCompleted(res));
+                });
+            },
+            Msg::GetComponentFilesListResult(res) => {
+                let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
+                let res_value = data.as_object().unwrap().get("data").unwrap();
+
+                match res_value.is_null() {
+                    false => {
+                        self.files_list = serde_json::from_value(
+                            res_value.get("componentFilesList").unwrap().clone()
+                        ).unwrap();
+                        debug!("componentFilesList {:?}", self.files_list.len());
+                    },
+                    true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }
             },
             Msg::GetUploadData(res) => {
@@ -399,9 +437,10 @@ impl Component for ComponentSettings {
 
                 match res_value.is_null() {
                     false => {
-                        let result: Vec<UploadFile> = serde_json::from_value(res_value.get("uploadComponentFiles").unwrap().clone()).unwrap();
-                        debug!("uploadComponentFiles {:?}", result);
-                        self.request_upload_data = result;
+                        self.request_upload_data = serde_json::from_value(
+                            res_value.get("uploadComponentFiles").unwrap().clone()
+                        ).unwrap();
+                        debug!("uploadComponentFiles {:?}", self.request_upload_data);
 
                         if !self.files.is_empty() {
                             for file in self.files.iter().rev() {
@@ -421,12 +460,17 @@ impl Component for ComponentSettings {
                 }
             },
             Msg::ResponseUploadFile(Ok(res)) => {
-                link.send_message(Msg::GetUploadFile(res))
+                debug!("ResponseUploadFile: {:?}", res);
+                link.send_message(Msg::GetUploadFile)
             },
             Msg::ResponseUploadFile(Err(err)) => {
                 self.error = Some(err);
                 self.task = Vec::new();
                 self.task_read = Vec::new();
+                self.files_index = 0;
+                self.request_upload_confirm = Vec::new();
+                self.get_result_up_completed = 0;
+                self.active_loading_files_btn = false;
             },
             Msg::GetComponentData(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
@@ -445,6 +489,7 @@ impl Component for ComponentSettings {
                         //     self.current_user_owner = component_data.owner_user.uuid == user.uuid;
                         // }
                         self.current_modifications = component_data.component_modifications.clone();
+                        self.files_list = component_data.files.clone();
                         self.request_component = component_data.into();
                     },
                     true => self.error = Some(get_error(&data)),
@@ -501,13 +546,13 @@ impl Component for ComponentSettings {
                     true => self.error = Some(get_error(&data)),
                 }
             },
-            Msg::GetUploadFile(res) => {
-                debug!("res: {:?}", res);
+            Msg::GetUploadFile => {
+                debug!("next: {:?}", self.files_index);
+                self.files_index -= 1;
                 if self.files_index == 0 {
                     self.get_result_up_file = true;
+                    debug!("finish: {:?}", self.request_upload_confirm.len());
                     link.send_message(Msg::RequestUploadCompleted);
-                } else {
-                    self.files_index -= 1;
                 }
             },
             Msg::GetUploadCompleted(res) => {
@@ -516,12 +561,25 @@ impl Component for ComponentSettings {
 
                 match res_value.is_null() {
                     false => {
-                        let result: usize = serde_json::from_value(res_value.get("uploadCompleted").unwrap().clone()).unwrap();
-                        debug!("uploadCompleted: {:?}", result);
-                        self.get_result_up_completed = result;
+                        self.get_result_up_completed = serde_json::from_value(
+                            res_value.get("uploadCompleted").unwrap().clone()
+                        ).unwrap();
+                        debug!("uploadCompleted: {:?}", self.get_result_up_completed);
+
+                        link.send_message(Msg::FinishUploadFiles);
                     },
                     true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }
+            },
+            Msg::FinishUploadFiles => {
+                self.files_list = Vec::new();
+                link.send_message(Msg::RequestComponentFilesList);
+                self.active_loading_files_btn = false;
+                self.task = Vec::new();
+                self.task_read = Vec::new();
+                self.request_upload_confirm = Vec::new();
+                self.files = Vec::new();
+                self.files_index = 0;
             },
             Msg::GetDeleteComponentResult(res) => {
                 let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
@@ -572,7 +630,7 @@ impl Component for ComponentSettings {
                     // self.disable_save_changes_btn = false;
                     self.files.push(file.clone());
                 }
-                self.files_index = 0;
+                // self.files_index = 0;
             },
             Msg::UpdateConfirmDelete(data) => {
                 self.disable_delete_component_btn = self.current_component_uuid != data;
@@ -623,7 +681,7 @@ impl Component for ComponentSettings {
                         {match &self.current_component {
                             Some(component_data) => html!{<>
                                 <br/>
-                                {self.show_component_files(component_data)}
+                                {self.show_component_files()}
                                 <br/>
                                 {self.show_additional_params(component_data)}
                                 <br/>
@@ -806,10 +864,7 @@ impl ComponentSettings {
         </div>}
     }
 
-    fn show_component_files(
-        &self,
-        component_data: &ComponentInfo,
-    ) -> Html {
+    fn show_component_files(&self) -> Html {
         html!{
             <div class="columns">
                 <div class="column">
@@ -817,8 +872,8 @@ impl ComponentSettings {
                   <FilesCard
                       show_download_btn = false
                       show_delete_btn = true
-                      component_uuid = component_data.uuid.clone()
-                      files = component_data.files.clone()
+                      component_uuid = self.current_component_uuid.clone()
+                      files = self.files_list.clone()
                     />
                 </div>
                 <div class="column">
@@ -1047,7 +1102,7 @@ impl ComponentSettings {
     fn show_upload_files_btn(&self) -> Html {
         let onclick_upload_files = self.link.callback(|_| Msg::RequestUploadComponentFiles);
 
-        let class_upload_btn = match self.get_result_upload_files {
+        let class_upload_btn = match self.active_loading_files_btn {
             true => "button is-loading",
             false => "button",
         };
@@ -1056,7 +1111,7 @@ impl ComponentSettings {
             <button
               id="upload-fileset-files"
               class={class_upload_btn}
-              disabled={self.files.is_empty()}
+              disabled={self.files.is_empty() || self.current_component_uuid.len() != 36}
               onclick={onclick_upload_files} >
                 // <span class="icon" >
                 //     <i class="fas fa-angle-double-up" aria-hidden="true"></i>
