@@ -9,3 +9,114 @@
   display: flex;
   flex-wrap: wrap;
 }
+
+.side-menu {
+  width: 14em;
+  height: auto;
+  font-size: 1em;
+  line-height: 2em;
+  color: #fff;
+  font-weight: 700;
+  text-transform: uppercase;
+  /* position: absolute; */
+  top: 0;
+  bottom: 0;
+  left: -10em;
+}
+.side-menu ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.side-menu ul li {
+  flex: none;
+  width: max-content;
+  display: block;
+  background-color: #333;
+  padding: 1em 1.5em;
+  position: relative;
+  transition: all ease 0.5s;
+  border-radius: 0 8px 8px 0;
+  cursor: pointer;
+}
+
+.side-menu ul li a span {
+  transition: max-width ease 0.3s, opacity ease-out 0.4s,
+    margin-right ease-in-out 0.2s;
+}
+
+/*the colors of the different columns*/
+.side-menu ul li:nth-child(1) {
+  background-color: #00aced;
+}
+.side-menu ul li:nth-child(2) {
+  background-color: #3b5998;
+}
+.side-menu ul li:nth-child(3) {
+  background-color: #00a300;
+}
+.side-menu ul li:nth-child(4) {
+  background-color: #1e7145;
+}
+.side-menu ul li:nth-child(5) {
+  background-color: #ffc40d;
+}
+.side-menu ul li:nth-child(6) {
+  background-color: #cb2027;
+}
+
+.side-menu ul li:hover {
+  background-color: #339966;
+  border-radius: 0 8px 8px 0;
+}
+
+.side-menu .active {
+  // background-color: #339966!important;
+  border-radius: 0 8px 8px 0!important;
+}
+
+.side-menu ul li a span:first-child {
+  max-width: 0;
+  max-height: 2em;
+  opacity: 0;
+  overflow: hidden;
+  margin-right: 0;
+}
+
+.side-menu .active a span {
+  opacity: 1!important;
+  overflow: hidden!important;
+  text-overflow: ellipsis!important;
+  white-space: nowrap!important;
+  max-height: 20em!important;
+  max-width: 20em!important;
+  margin-right: 10px!important;
+}
+
+.side-menu ul li:hover a span {
+  opacity: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-height: 20em;
+  max-width: 20em;
+  margin-right: 10px;
+}
+.side-menu ul li a {
+  display: inline-flex;
+  color: #fff;
+  text-decoration: none;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+.side-menu ul li span {
+  color: #f8f6ff;
+}
+.iconBox {
+  width: 1.2em;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

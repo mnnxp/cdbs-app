@@ -2,28 +2,29 @@
 use chrono::NaiveDateTime;
 use web_sys::MouseEvent;
 // use yew::services::ConsoleService;
-use yew::{Callback, Component, ComponentLink, Html, Properties, ShouldRender, html};
-use yew_router::service::RouteService;
-use log::debug;
 use graphql_client::GraphQLQuery;
+use log::debug;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
+use yew::{classes, html, Callback, Component, ComponentLink, Html, Properties, ShouldRender};
+use yew_router::service::RouteService;
 
 use crate::error::{get_error, Error};
 use crate::fragments::{
-    user::CertificateCard,
-    list_errors::ListErrors,
-    user::CatalogUsers,
-    component::CatalogComponents,
     company::CatalogCompanies,
+    component::CatalogComponents,
+    list_errors::ListErrors,
+    side_menu::{MenuItem, SideMenu},
     standard::CatalogStandards,
+    user::CatalogUsers,
+    user::CertificateCard,
 };
 use crate::gqls::make_query;
 // use crate::routes::AppRoute;
-use crate::services::{is_authenticated, get_logged_user};
+use crate::services::{get_logged_user, is_authenticated};
 use crate::types::{
-    UUID, Certificate, Program, Region, SelfUserInfo, SlimUser, UserCertificate,
-    UserInfo, UsersQueryArg, ComponentsQueryArg, CompaniesQueryArg, StandardsQueryArg,
+    Certificate, CompaniesQueryArg, ComponentsQueryArg, Program, Region, SelfUserInfo, SlimUser,
+    StandardsQueryArg, UserCertificate, UserInfo, UsersQueryArg, UUID,
 };
 
 #[derive(GraphQLQuery)]
@@ -185,21 +186,25 @@ impl Component for Profile {
             spawn_local(async move {
                 match get_self {
                     true => {
-                        let res = make_query(GetSelfDataOpt::build_query(
-                            get_self_data_opt::Variables
-                        )).await.unwrap();
+                        let res =
+                            make_query(GetSelfDataOpt::build_query(get_self_data_opt::Variables))
+                                .await
+                                .unwrap();
 
                         link.send_message(Msg::GetSelfData(res.clone()));
                         link.send_message(Msg::UpdateList(res));
                     }
                     false => {
-                        let ipt_get_user_arg = get_user_data_opt::IptGetUserArg{
+                        let ipt_get_user_arg = get_user_data_opt::IptGetUserArg {
                             userUuid: None,
-                            username: Some(target_username)
+                            username: Some(target_username),
                         };
-                        let res = make_query(GetUserDataOpt::build_query(get_user_data_opt::Variables{
-                            ipt_get_user_arg
-                        })).await.unwrap();
+                        let res =
+                            make_query(GetUserDataOpt::build_query(get_user_data_opt::Variables {
+                                ipt_get_user_arg,
+                            }))
+                            .await
+                            .unwrap();
 
                         link.send_message(Msg::GetUserData(res.clone()));
                         link.send_message(Msg::UpdateList(res));
@@ -220,7 +225,9 @@ impl Component for Profile {
                 spawn_local(async move {
                     let res = make_query(AddUserFav::build_query(add_user_fav::Variables {
                         user_uuid,
-                    })).await.unwrap();
+                    }))
+                    .await
+                    .unwrap();
 
                     link.send_message(Msg::AddFollow(res));
                 })
@@ -231,9 +238,9 @@ impl Component for Profile {
 
                 match res_value.is_null() {
                     false => {
-                        let result: bool = serde_json::from_value(
-                            res_value.get("addUserFav").unwrap().clone()
-                        ).unwrap();
+                        let result: bool =
+                            serde_json::from_value(res_value.get("addUserFav").unwrap().clone())
+                                .unwrap();
 
                         if result {
                             self.subscribers += 1;
@@ -370,7 +377,7 @@ impl Component for Profile {
         // };
 
         match (&self.self_profile, &self.profile) {
-            (Some(self_data), _) => html!{
+            (Some(self_data), _) => html! {
                 <div class="profile-page">
                     <ListErrors error=self.error.clone()/>
                     <div class="container page">
@@ -424,7 +431,7 @@ impl Component for Profile {
                     </div>
                 </div>
             },
-            (_, Some(user_data)) => html!{
+            (_, Some(user_data)) => html! {
                 <div class="profile-page">
                     <ListErrors error=self.error.clone()/>
                     <div class="container page">
@@ -473,7 +480,7 @@ impl Component for Profile {
                     </div>
                 </div>
             },
-            _ => html!{<div>
+            _ => html! {<div>
                 <ListErrors error=self.error.clone()/>
                 // <h1>{"Not data"}</h1>
             </div>},
@@ -508,7 +515,7 @@ impl Profile {
             (None, None) => UserDataCard::default(),
         };
 
-        html!{<>
+        html! {<>
             <div class="media-left">
               <figure class="image is-48x48">
                 <img src="https://bulma.io/images/placeholders/96x96.png" alt="Placeholder image"/>
@@ -538,7 +545,7 @@ impl Profile {
     }
 
     fn show_profile_followers(&self) -> Html {
-        html!{<>
+        html! {<>
             {match &self.profile {
                 Some(_) => {
                     let class_fav = match self.is_followed {
@@ -571,140 +578,136 @@ impl Profile {
         </>}
     }
 
+    fn cb_generator(&self, cb: ProfileTab) -> Callback<MouseEvent> {
+        match cb {
+            n => self.link.callback(move |_| Msg::ChangeTab(n.clone())),
+        }
+        // self.link.callback(move |_| Msg::ChangeTab(ProfileTab))
+    }
+
     fn show_profile_action(&self) -> Html {
-        let onclick_certificates = self
-            .link
-            .callback(|_| Msg::ChangeTab(ProfileTab::Certificates));
+        // let onclick_certificates = self
+        //     .link
+        //     .callback(|_| Msg::ChangeTab(ProfileTab::Certificates));
 
-        let onclick_components = self
-            .link
-            .callback(|_| Msg::ChangeTab(ProfileTab::Components));
+        // let onclick_components = self
+        //     .link
+        //     .callback(|_| Msg::ChangeTab(ProfileTab::Components));
 
-        let onclick_companies = self
-            .link
-            .callback(|_| Msg::ChangeTab(ProfileTab::Companies));
+        // let onclick_companies = self
+        //     .link
+        //     .callback(|_| Msg::ChangeTab(ProfileTab::Companies));
 
-        let onclick_fav_components = self
-            .link
-            .callback(|_| Msg::ChangeTab(ProfileTab::FavoriteComponents));
+        // let onclick_fav_components = self
+        //     .link
+        //     .callback(|_| Msg::ChangeTab(ProfileTab::FavoriteComponents));
 
-        let onclick_fav_companies = self
-            .link
-            .callback(|_| Msg::ChangeTab(ProfileTab::FavoriteCompanies));
+        // let onclick_fav_companies = self
+        //     .link
+        //     .callback(|_| Msg::ChangeTab(ProfileTab::FavoriteCompanies));
 
-        let onclick_fav_standards = self
-            .link
-            .callback(|_| Msg::ChangeTab(ProfileTab::FavoriteStandards));
+        // let onclick_fav_standards = self
+        //     .link
+        //     .callback(|_| Msg::ChangeTab(ProfileTab::FavoriteStandards));
 
-        let onclick_fav_users = self
-            .link
-            .callback(|_| Msg::ChangeTab(ProfileTab::FavoriteUsers));
+        // let onclick_fav_users = self
+        //     .link
+        //     .callback(|_| Msg::ChangeTab(ProfileTab::FavoriteUsers));
 
-        let mut active_certificates = "";
-        let mut active_components = "";
-        let mut active_companies = "";
-        let mut active_fav_components = "";
-        let mut active_fav_companies = "";
-        let mut active_fav_standards = "";
-        let mut active_fav_users = "";
 
-        match &self.profile_tab {
-            ProfileTab::Certificates => active_certificates = "is-active",
-            ProfileTab::Components => active_components = "is-active",
-            ProfileTab::Companies => active_companies = "is-active",
-            ProfileTab::FavoriteComponents => active_fav_components = "is-active",
-            ProfileTab::FavoriteCompanies => active_fav_companies = "is-active",
-            ProfileTab::FavoriteStandards => active_fav_standards = "is-active",
-            ProfileTab::FavoriteUsers => active_fav_users = "is-active",
-        }
+        let menu_arr: Vec<MenuItem> = vec![
+            MenuItem {
+                title: "Certificates".to_string(),
+                action: self.cb_generator(ProfileTab::Certificates),
+                count: if let Some(res) = self.self_profile.as_ref() {
+                    res.certificates.len()
+                } else {
+                    0
+                },
+                icon_class: classes!("fas", "fa-certificate"),
+                is_active: self.profile_tab == ProfileTab::Certificates,
+            },
+            MenuItem {
+                title: "COMPONENTS all".to_string(),
+                action: self.cb_generator(ProfileTab::Components),
+                count: if let Some(res) = self.self_profile.as_ref() {
+                    res.certificates.len()
+                } else {
+                    0
+                },
+                icon_class: classes!("fas", "fa-certificate"),
+                is_active: self.profile_tab == ProfileTab::Components,
+            },
+            MenuItem {
+                title: "COMPONENTS fav".to_string(),
+                action: self.cb_generator(ProfileTab::FavoriteComponents),
+                count: if let Some(res) = self.self_profile.as_ref() {
+                    res.certificates.len()
+                } else {
+                    0
+                },
+                icon_class: classes!("fas", "fa-certificate"),
+                is_active: self.profile_tab == ProfileTab::FavoriteComponents,
+            },
+            // company MenuItem
+            MenuItem {
+                title: "COMPANIES all".to_string(),
+                action: self.cb_generator(ProfileTab::Companies),
+                count: if let Some(res) = self.self_profile.as_ref() {
+                    res.certificates.len()
+                } else {
+                    0
+                },
+                icon_class: classes!("fas", "fa-certificate"),
+                is_active: self.profile_tab == ProfileTab::Companies,
+            },
+            // company fav MenuItem
+            MenuItem {
+                title: "COMPANIES fav".to_string(),
+                action: self.cb_generator(ProfileTab::FavoriteCompanies),
+                count: if let Some(res) = self.self_profile.as_ref() {
+                    res.certificates.len()
+                } else {
+                    0
+                },
+                icon_class: classes!("fas", "fa-certificate"),
+                is_active: self.profile_tab == ProfileTab::FavoriteCompanies,
+            },
+            // standards MenuItem
+            MenuItem {
+                title: "STANDARDS all".to_string(),
+                action: self.cb_generator(ProfileTab::FavoriteStandards),
+                count: if let Some(res) = self.self_profile.as_ref() {
+                    res.certificates.len()
+                } else {
+                    0
+                },
+                icon_class: classes!("fas", "fa-certificate"),
+                is_active: self.profile_tab == ProfileTab::FavoriteStandards,
+            },
+            // user fav MenuItem
+            MenuItem {
+                title: "USERS fav".to_string(),
+                action: self.cb_generator(ProfileTab::FavoriteUsers),
+                count: if let Some(res) = self.self_profile.as_ref() {
+                    res.certificates.len()
+                } else {
+                    0
+                },
+                icon_class: classes!("fas", "fa-certificate"),
+                is_active: self.profile_tab == ProfileTab::FavoriteUsers,
+            },
+        ];
 
-        fn li_generator(class:&'static str, onclick: Callback<MouseEvent>, info:String, number: usize) -> Html {
-          let show_tag = number==0;
-
-          html!(
-            <li>
-              <a class={class} onclick=onclick style="display: flex;justify-content: space-between;" >
-                <span>{info}</span>
-                <span hidden=show_tag>
-                  <span class="tag is-info is-small" >{number}</span>
-                </span>
-              </a>
-            </li>
-          )
-        }
-
-        html!{
-            <div class="card" style="padding: 10px;margin-right: 18px;" >
-                // <ul>
-                <aside class="menu">
-                    {match &self.self_profile {
-                        Some(ref self_data) => html!{<>
-                            <p class="menu-label">
-                              {"General"}
-                            </p>
-                            <ul class="menu-list">
-                                {li_generator(active_certificates, onclick_certificates, "Certificates".to_string(), self_data.certificates.len())}
-                            </ul>
-                            <p class="menu-label">
-                              {"Components"}
-                            </p>
-                            <ul class="menu-list">
-                                {li_generator(active_components, onclick_components, "all".to_string(), self_data.components_count)}
-                                {li_generator(active_fav_components, onclick_fav_components, "fav".to_string(), self_data.fav_components_count)}
-                            </ul>
-                            <p class="menu-label">
-                              {"Companies"}
-                            </p>
-                            <ul class="menu-list">
-                                {li_generator(active_companies, onclick_companies, "all".to_string(), self_data.companies_count)}
-                                {li_generator(active_fav_companies, onclick_fav_companies, "fav".to_string(), self_data.fav_companies_count)}
-                            </ul>
-                            <p class="menu-label">
-                              {"Other Fav"}
-                            </p>
-                            <ul class="menu-list">
-                                {li_generator(active_fav_standards, onclick_fav_standards, "standards".to_string(), self_data.fav_standards_count)}
-                                {li_generator(active_fav_users, onclick_fav_users, "users".to_string(), self_data.fav_users_count)}
-                            </ul>
-                        </>},
-                        None => html!{<>
-                            <p class="menu-label">
-                              {"General"}
-                            </p>
-                            <ul class="menu-list">
-                                {li_generator(active_certificates, onclick_certificates, "Certificates".to_string(), 0)}
-                            </ul>
-                            <p class="menu-label">
-                              {"Components"}
-                            </p>
-                            <ul class="menu-list">
-                                {li_generator(active_components, onclick_components, "all".to_string(), 0)}
-                                {li_generator(active_fav_components, onclick_fav_components, "fav".to_string(), 0)}
-                            </ul>
-                            <p class="menu-label">
-                              {"Companies"}
-                            </p>
-                            <ul class="menu-list">
-                                {li_generator(active_companies, onclick_companies, "all".to_string(), 0)}
-                                {li_generator(active_fav_companies, onclick_fav_companies, "fav".to_string(), 0)}
-                            </ul>
-                        </>},
-                    }
-                }
-                // </ul>
-                </aside>
+        html! {
+            <div style="margin-right: 18px;" >
+                <SideMenu menu_arr={menu_arr} ></SideMenu>
             </div>
         }
     }
 
-    fn view_content(
-        &self,
-        description: &str,
-        position: &str,
-        region: &str,
-        program: &str
-    ) -> Html {
-        html!{
+    fn view_content(&self, description: &str, position: &str, region: &str, program: &str) -> Html {
+        html! {
             <div class="columns">
                 <div class="column">
                     <div id="description" class="content">
@@ -732,14 +735,11 @@ impl Profile {
         }
     }
 
-    fn view_certificates(
-        &self,
-        certificates: &[UserCertificate]
-    ) -> Html {
+    fn view_certificates(&self, certificates: &[UserCertificate]) -> Html {
         match certificates.is_empty() {
-            true => html!{},
+            true => html! {},
             false => {
-                html!{
+                html! {
                     // <p class="card-footer-item">
                     <footer class="card-footer is-flex is-flex-wrap-wrap">{
                         for certificates.iter().map(|cert| {
@@ -760,11 +760,8 @@ impl Profile {
         }
     }
 
-    fn view_favorite_components(
-        &self,
-        user_uuid: Option<UUID>,
-    ) -> Html {
-        html!{
+    fn view_favorite_components(&self, user_uuid: Option<UUID>) -> Html {
+        html! {
             <CatalogComponents
                 show_create_btn = self.self_profile.is_some()
                 arguments = ComponentsQueryArg::set_favorite(user_uuid)
@@ -772,11 +769,8 @@ impl Profile {
         }
     }
 
-    fn view_components(
-        &self,
-        user_uuid: &UUID,
-    ) -> Html {
-        html!{
+    fn view_components(&self, user_uuid: &UUID) -> Html {
+        html! {
             <CatalogComponents
                 show_create_btn = self.self_profile.is_some()
                 arguments = ComponentsQueryArg::set_user_uuid(user_uuid)
@@ -784,11 +778,8 @@ impl Profile {
         }
     }
 
-    fn view_favorite_companies(
-        &self,
-        user_uuid: Option<UUID>,
-    ) -> Html {
-        html!{
+    fn view_favorite_companies(&self, user_uuid: Option<UUID>) -> Html {
+        html! {
             <CatalogCompanies
                 show_create_btn = self.self_profile.is_some()
                 arguments = CompaniesQueryArg::set_favorite(user_uuid)
@@ -796,11 +787,8 @@ impl Profile {
         }
     }
 
-    fn view_companies(
-        &self,
-        user_uuid: &UUID,
-    ) -> Html {
-        html!{
+    fn view_companies(&self, user_uuid: &UUID) -> Html {
+        html! {
             <CatalogCompanies
                 show_create_btn = self.self_profile.is_some()
                 arguments = CompaniesQueryArg::set_user_uuid(user_uuid)
@@ -809,7 +797,7 @@ impl Profile {
     }
 
     fn view_favorite_standards(&self) -> Html {
-        html!{
+        html! {
             <CatalogStandards
                 show_create_btn = false
                 arguments = StandardsQueryArg::set_favorite()
@@ -818,7 +806,7 @@ impl Profile {
     }
 
     fn view_favorite_users(&self) -> Html {
-        html!{
+        html! {
             <CatalogUsers
                 arguments = UsersQueryArg::set_favorite()
             />

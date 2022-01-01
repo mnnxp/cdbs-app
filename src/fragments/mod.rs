@@ -12,3 +12,4 @@ pub mod list_pagination;
 pub mod spec;
 pub mod upload_favicon;
 pub mod switch_icon;
+pub mod side_menu;
