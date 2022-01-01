@@ -10,6 +10,7 @@ use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
+use super::file::ModificationFilesCard;
 use super::heads::ModificationTableHeads;
 use super::item::ModificationTableItem;
 use super::fileset::ManageModificationFilesets;
@@ -502,6 +503,8 @@ impl Component for ModificationsTableEdit {
         html!{<>
             {self.show_modifications_table()}
             <br/>
+            {self.show_modification_files()}
+            <br/>
             {self.show_fileset_files_card()}
         </>}
     }
@@ -558,6 +561,26 @@ impl ModificationsTableEdit {
                 <span>{"Add new modification"}</span>
             </button>
         </div>}
+    }
+
+    fn show_modification_files(&self) -> Html {
+        html!{
+            <div class="columns">
+                <div class="column">
+                  <h2>{"Modification files"}</h2>
+                  <ModificationFilesCard
+                      show_download_btn = false
+                      show_delete_btn = true
+                      modification_uuid = self.select_modification_uuid.clone()
+                      files = vec![]
+                    />
+                </div>
+                <div class="column">
+                  <h2>{"Upload modification files"}</h2>
+                  // {self.show_frame_upload_files()}
+                </div>
+            </div>
+        }
     }
 
     fn modal_add_modification_card(&self) -> Html {
@@ -762,6 +785,7 @@ impl ModificationsTableEdit {
     fn show_fileset_files_card(&self) -> Html {
         html!{<>
             <h2>{"Modification filesets"}</h2>
+            <br/>
             <ManageModificationFilesets
                 select_modification_uuid = self.select_modification_uuid.clone()
                 // filesets_program = self.current_filesets_program.clone()

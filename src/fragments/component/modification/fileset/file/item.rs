@@ -15,7 +15,7 @@ use crate::types::{UUID, ShowFileInfo, DownloadFile};
     query_path = "./graphql/components.graphql",
     response_derives = "Debug"
 )]
-struct ComponentFiles;
+struct ComModFilesetFiles;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -23,17 +23,17 @@ struct ComponentFiles;
     query_path = "./graphql/components.graphql",
     response_derives = "Debug"
 )]
-struct DeleteComponentFile;
+struct DeleteFilesFromFileset;
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
     pub show_download_btn: bool,
     pub show_delete_btn: bool,
-    pub component_uuid: UUID,
+    pub select_fileset_uuid: UUID,
     pub file: ShowFileInfo,
 }
 
-pub struct FileItem {
+pub struct FilesetFileItem {
     error: Option<Error>,
     props: Props,
     link: ComponentLink<Self>,
@@ -50,7 +50,7 @@ pub enum Msg {
     ClickFileInfo,
 }
 
-impl Component for FileItem {
+impl Component for FilesetFileItem {
     type Message = Msg;
     type Properties = Props;
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
@@ -68,34 +68,32 @@ impl Component for FileItem {
 
         match msg {
             Msg::RequestDownloadFile => {
-                let component_uuid = self.props.component_uuid.clone();
+                let select_fileset_uuid = self.props.select_fileset_uuid.clone();
                 let file_uuid = self.props.file.uuid.clone();
                 spawn_local(async move {
-                    let ipt_component_files_arg = component_files::IptComponentFilesArg{
-                        filesUuids: Some(vec![file_uuid]),
-                        componentUuid: component_uuid,
+                    let ipt_file_of_fileset_arg = com_mod_fileset_files::IptFileOfFilesetArg{
+                        filesetUuid: select_fileset_uuid,
+                        fileUuids: Some(vec![file_uuid]),
                         limit: None,
                         offset: None,
                     };
-                    let res = make_query(ComponentFiles::build_query(
-                        component_files::Variables {
-                            ipt_component_files_arg,
-                        }
+                    let res = make_query(ComModFilesetFiles::build_query(
+                        com_mod_fileset_files::Variables { ipt_file_of_fileset_arg }
                     )).await;
                     link.send_message(Msg::GetDownloadFileResult(res.unwrap()));
                 })
             },
             Msg::RequestDeleteFile => {
-                let component_uuid = self.props.component_uuid.clone();
+                let select_fileset_uuid = self.props.select_fileset_uuid.clone();
                 let file_uuid = self.props.file.uuid.clone();
                 spawn_local(async move {
-                    let delete_component_file_data = delete_component_file::DelComponentFileData{
-                        fileUuid: file_uuid,
-                        componentUuid: component_uuid,
+                    let del_modification_file_from_fileset_data = delete_files_from_fileset::DelModificationFileFromFilesetData{
+                        filesetUuid: select_fileset_uuid,
+                        fileUuids: vec![file_uuid],
                     };
-                    let res = make_query(DeleteComponentFile::build_query(delete_component_file::Variables {
-                        delete_component_file_data
-                    })).await.unwrap();
+                    let res = make_query(DeleteFilesFromFileset::build_query(
+                        delete_files_from_fileset::Variables { del_modification_file_from_fileset_data }
+                    )).await.unwrap();
                     link.send_message(Msg::GetDeleteFileResult(res));
                 })
             },
@@ -106,8 +104,10 @@ impl Component for FileItem {
 
                 match res.is_null() {
                     false => {
-                        let result: Vec<DownloadFile> = serde_json::from_value(res.get("componentFiles").unwrap().clone()).unwrap();
-                        debug!("componentFiles: {:?}", result);
+                        let result: Vec<DownloadFile> = serde_json::from_value(
+                            res.get("componentModificationFilesetFiles").unwrap().clone()
+                        ).unwrap();
+                        debug!("componentModificationFilesetFiles: {:?}", result);
                     },
                     true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }
@@ -118,8 +118,8 @@ impl Component for FileItem {
 
                 match res.is_null() {
                     false => {
-                        let result: bool = serde_json::from_value(res.get("deleteComponentFile").unwrap().clone()).unwrap();
-                        debug!("deleteFile: {:?}", result);
+                        let result: bool = serde_json::from_value(res.get("deleteFilesFromFileset").unwrap().clone()).unwrap();
+                        debug!("deleteFilesFromFileset: {:?}", result);
                         self.get_result_delete = result;
                     },
                     true => link.send_message(Msg::ResponseError(get_error(&data))),
@@ -150,7 +150,7 @@ impl Component for FileItem {
     }
 }
 
-impl FileItem {
+impl FilesetFileItem {
     fn show_file(&self) -> Html {
         let onclick_file_info = self.link
             .callback(|_| Msg::ClickFileInfo);

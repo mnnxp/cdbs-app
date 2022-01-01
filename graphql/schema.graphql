@@ -393,6 +393,8 @@ input IptComponentData {
 input IptComponentFilesArg {
   componentUuid: UUID!
   filesUuids: [UUID!]
+  limit: Int
+  offset: Int
 }
 
 input IptComponentFilesData {
@@ -520,6 +522,13 @@ input IptModificationFileData {
 input IptModificationFileFromFilesetData {
   filesetUuid: UUID!
   filenames: [String!]!
+}
+
+input IptModificationFilesArg {
+  modificationUuid: UUID!
+  filesUuids: [UUID!]
+  limit: Int
+  offset: Int
 }
 
 input IptModificationParamData {
@@ -1026,7 +1035,7 @@ type QueryRoot {
   ): [UserAccessComponentAndRelatedData!]!
   componentFiles(args: IptComponentFilesArg!): [DownloadFile!]!
   componentSpecs(args: IptComponentSpecsArg!): [SpecTranslateList!]!
-  componentModificationFiles(modificationUuid: UUID!): [DownloadFile!]!
+  componentModificationFiles(args: IptModificationFilesArg!): [DownloadFile!]!
   componentModificationFilesets(
     args: IptFilesetProgramArg!
   ): [FilesetProgramRelatedData!]!

@@ -1,9 +1,11 @@
+mod file;
 mod edit;
 mod heads;
 mod item;
 mod fileset;
 mod item_module;
 
+pub use file::ModificationFilesCard;
 pub use edit::ModificationsTableEdit;
 pub use heads::ModificationTableHeads;
 pub use item::ModificationTableItem;

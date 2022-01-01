@@ -286,9 +286,9 @@ impl Component for ComponentSettings {
                     self.link.send_message(Msg::RequestChangeAccess)
                 }
 
-                if self.upload_component_files && !self.files.is_empty() {
-                    self.link.send_message(Msg::RequestUploadComponentFiles);
-                }
+                // if self.upload_component_files && !self.files.is_empty() {
+                //     self.link.send_message(Msg::RequestUploadComponentFiles);
+                // }
 
                 self.update_component = false;
                 self.update_component_access = false;
@@ -349,7 +349,7 @@ impl Component for ComponentSettings {
             },
             Msg::RequestUploadComponentFiles => {
                 // see loading button
-                self.get_result_upload_files = true;
+                // self.get_result_upload_files = true;
 
                 if !self.files.is_empty() {
                     let mut filenames: Vec<String> = Vec::new();
@@ -569,7 +569,7 @@ impl Component for ComponentSettings {
                     debug!("self.files_index: {:?}", self.files_index);
                     self.files_index += 1;
                     self.upload_component_files = true;
-                    self.disable_save_changes_btn = false;
+                    // self.disable_save_changes_btn = false;
                     self.files.push(file.clone());
                 }
                 self.files_index = 0;
@@ -623,12 +623,14 @@ impl Component for ComponentSettings {
                         {match &self.current_component {
                             Some(component_data) => html!{<>
                                 <br/>
+                                {self.show_component_files(component_data)}
+                                <br/>
+                                {self.show_additional_params(component_data)}
+                                <br/>
                                 {self.show_modifications_table()}
                                 <br/>
-                                <div class="columns">
-                                  {self.show_additional_params(component_data)}
-                                  {self.show_component_files(component_data)}
-                                </div>
+                                // <div class="columns">
+                                // </div>
                                 <div class="columns">
                                   {self.show_component_standards(component_data)}
                                   {self.show_component_suppliers(component_data)}
@@ -809,15 +811,20 @@ impl ComponentSettings {
         component_data: &ComponentInfo,
     ) -> Html {
         html!{
-            <div class="column">
-              <h2>{"Files"}</h2>
-              {self.show_frame_upload_files()}
-              <FilesCard
-                  show_download_btn = false
-                  show_delete_btn = true
-                  component_uuid = component_data.uuid.clone()
-                  files = component_data.files.clone()
-                />
+            <div class="columns">
+                <div class="column">
+                  <h2>{"Component files"}</h2>
+                  <FilesCard
+                      show_download_btn = false
+                      show_delete_btn = true
+                      component_uuid = component_data.uuid.clone()
+                      files = component_data.files.clone()
+                    />
+                </div>
+                <div class="column">
+                  <h2>{"Upload component files"}</h2>
+                  {self.show_frame_upload_files()}
+                </div>
             </div>
         }
     }
@@ -989,9 +996,9 @@ impl ComponentSettings {
             }
         });
 
-        html!{<>
-            <div class="file has-name is-boxed">
-                <label class="file-label">
+        html!{<div class="card">
+            <div class="file has-name is-boxed is-centered">
+                <label class="file-label" style="width: 100%">
                   <input id="component-file-input"
                   class="file-input"
                   type="file"
@@ -1000,10 +1007,10 @@ impl ComponentSettings {
                   multiple=true />
                 <span class="file-cta">
                   <span class="file-icon">
-                    <i class="fas fa-cloud-upload-alt"></i>
+                    <i class="fas fa-upload"></i>
                   </span>
                   <span class="file-label">
-                    {"Drop file here…"}
+                    {"Choose files…"}
                   </span>
                 </span>
                 {match self.files.is_empty() {
@@ -1014,24 +1021,48 @@ impl ComponentSettings {
                 }}
               </label>
             </div>
-            {self.show_btn_clear()}
-        </>}
+            <div class="buttons">
+                {self.show_clear_btn()}
+                {self.show_upload_files_btn()}
+            </div>
+        </div>}
     }
 
-    fn show_btn_clear(&self) -> Html {
-        let onclick_clear_boxed = self.link
-            .callback(|_| Msg::ClearFilesBoxed);
+    fn show_clear_btn(&self) -> Html {
+        let onclick_clear_boxed = self.link.callback(|_| Msg::ClearFilesBoxed);
 
-        match self.disable_save_changes_btn {
-            true => html!{},
-            false => html!{
-                <a id="clear-frame-upload-files"
-                      class="button"
-                      onclick=onclick_clear_boxed
-                      disabled={self.files.is_empty()} >
-                    { "Clear select files" }
-                </a>
-            },
+        html!{
+            <button id="clear-upload-fileset-files"
+              class="button"
+              onclick=onclick_clear_boxed
+              disabled={self.files.is_empty()} >
+                // <span class="icon" >
+                //     <i class="fas fa-boom" aria-hidden="true"></i>
+                // </span>
+                <span>{"Clear"}</span>
+            </button>
+        }
+    }
+
+    fn show_upload_files_btn(&self) -> Html {
+        let onclick_upload_files = self.link.callback(|_| Msg::RequestUploadComponentFiles);
+
+        let class_upload_btn = match self.get_result_upload_files {
+            true => "button is-loading",
+            false => "button",
+        };
+
+        html!{
+            <button
+              id="upload-fileset-files"
+              class={class_upload_btn}
+              disabled={self.files.is_empty()}
+              onclick={onclick_upload_files} >
+                // <span class="icon" >
+                //     <i class="fas fa-angle-double-up" aria-hidden="true"></i>
+                // </span>
+                <span>{"Upload"}</span>
+            </button>
         }
     }
 }

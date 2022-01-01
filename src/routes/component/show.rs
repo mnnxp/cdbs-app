@@ -845,7 +845,7 @@ impl ShowComponent {
                 <h2>{"Files of select fileset"}</h2>
                 <FilesOfFilesetCard
                     show_manage_btn = false
-                    fileset_uuid = self.select_fileset_program.clone()
+                    select_fileset_uuid = self.select_fileset_program.clone()
                 />
             </>},
             false => html!{},

@@ -66,6 +66,12 @@ query ComponentFiles($iptComponentFilesArg: IptComponentFilesArg!) {
   }
 }
 
+query ComponentModificationFiles($iptModificationFilesArg: IptModificationFilesArg!) {
+  componentModificationFiles(args: $iptModificationFilesArg){
+    ...downloadFileFields
+  }
+}
+
 mutation AddComponentFav($componentUuid: UUID!) {
   addComponentFav(componentUuid: $componentUuid)
 }
@@ -84,6 +90,10 @@ mutation DeleteComponentLicense($iptComponentLicenseData: IptComponentLicenseDat
 
 mutation DeleteComponentFile($deleteComponentFileData: DelComponentFileData!) {
   deleteComponentFile(args: $deleteComponentFileData)
+}
+
+mutation DeleteModificationFile($deleteModificationFileData: DelModificationFileData!) {
+  deleteModificationFile(args: $deleteModificationFileData)
 }
 
 mutation AddComponentKeywordsByNames($iptComponentKeywordsNames: IptComponentKeywordsNames!) {
@@ -205,6 +215,16 @@ mutation PutComponentModificationUpdate($modificationUuid: UUID!, $iptUpdateComp
 
 mutation RegisterModificationFileset($iptFilesetProgramData: IptFilesetProgramData!) {
   registerModificationFileset(args: $iptFilesetProgramData)
+}
+
+mutation UploadFilesToFileset($iptModificationFileFromFilesetData: IptModificationFileFromFilesetData!) {
+  uploadFilesToFileset(args: $iptModificationFileFromFilesetData){
+    ...uploadUrlFields
+  }
+}
+
+mutation DeleteFilesFromFileset($delModificationFileFromFilesetData: DelModificationFileFromFilesetData!) {
+  deleteFilesFromFileset(args: $delModificationFileFromFilesetData)
 }
 
 mutation DeleteModificationFileset($delFilesetProgramData: DelFilesetProgramData!) {

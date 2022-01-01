@@ -1,6 +1,8 @@
+mod file;
 mod edit;
 mod item;
 
+pub use file::FilesetFilesCard;
 pub use edit::ManageModificationFilesets;
 pub use item::FileOfFilesetItem;
 
@@ -27,14 +29,14 @@ struct ComModFilesOfFileset;
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
     pub show_manage_btn: bool,
-    pub fileset_uuid: UUID,
+    pub select_fileset_uuid: UUID,
 }
 
 pub struct FilesOfFilesetCard {
     error: Option<Error>,
     props: Props,
     link: ComponentLink<Self>,
-    fileset_uuid: UUID,
+    select_fileset_uuid: UUID,
     files_data: Vec<ShowFileInfo>,
 }
 
@@ -49,19 +51,13 @@ impl Component for FilesOfFilesetCard {
     type Properties = Props;
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        let fileset_uuid = props.fileset_uuid.clone();
+        let select_fileset_uuid = props.select_fileset_uuid.clone();
         Self {
             error: None,
             props,
             link,
-            fileset_uuid,
+            select_fileset_uuid,
             files_data: Vec::new(),
-        }
-    }
-
-    fn rendered(&mut self, first_render: bool) {
-        if first_render && self.fileset_uuid.len() == 36 {
-            self.link.send_message(Msg::RequestFilesOfFileset);
         }
     }
 
@@ -71,7 +67,7 @@ impl Component for FilesOfFilesetCard {
         match msg {
             Msg::RequestFilesOfFileset => {
                 let ipt_file_of_fileset_arg = com_mod_files_of_fileset::IptFileOfFilesetArg{
-                    filesetUuid: self.fileset_uuid.clone(),
+                    filesetUuid: self.select_fileset_uuid.clone(),
                     fileUuids: None,
                     limit: None,
                     offset: None,
@@ -105,15 +101,18 @@ impl Component for FilesOfFilesetCard {
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
         if self.props.show_manage_btn == props.show_manage_btn &&
-              self.props.fileset_uuid == props.fileset_uuid &&
-                self.fileset_uuid == props.fileset_uuid {
+              self.props.select_fileset_uuid == props.select_fileset_uuid &&
+                self.select_fileset_uuid == props.select_fileset_uuid {
             false
         } else {
-            self.fileset_uuid = props.fileset_uuid.clone();
+            self.select_fileset_uuid = props.select_fileset_uuid.clone();
             self.props = props;
-            if self.fileset_uuid.len() == 36 {
+
+            self.files_data = Vec::new();
+            if self.select_fileset_uuid.len() == 36 {
                 self.link.send_message(Msg::RequestFilesOfFileset);
             }
+
             true
         }
     }
@@ -121,29 +120,46 @@ impl Component for FilesOfFilesetCard {
     fn view(&self) -> Html {
         html!{<>
             <ListErrors error=self.error.clone()/>
-            <div class="card">
-                <table class="table is-fullwidth is-striped">
-                  <thead>
-                    <tr>
-                      <th>{"Filename"}</th>
-                      <th>{"Content"}</th>
-                      <th>{"Filesize"}</th>
-                      <th>{"Program"}</th>
-                      <th>{"Upload by"}</th>
-                      <th>{"Upload at"}</th>
-                    </tr>
-                  </thead>
-                  <tfoot>
-                    {for self.files_data.iter().map(|file| html!{
-                        <FileOfFilesetItem
-                            show_download_btn = self.props.show_manage_btn
-                            show_delete_btn = self.props.show_manage_btn
-                            file = file.clone()
-                        />
-                    })}
-                  </tfoot>
-                </table>
-            </div>
+            {self.show_files_card()}
         </>}
+    }
+}
+
+impl FilesOfFilesetCard {
+    // fn show_files_card(&self) -> Html {
+    //     html!{
+    //         <FilesetFilesCard
+    //             show_download_btn = !self.props.show_manage_btn
+    //             show_delete_btn = self.props.show_manage_btn
+    //             select_select_fileset_uuid = self.select_fileset_uuid.clone()
+    //             files = self.files_data.clone()
+    //         />
+    //     }
+    // }
+
+    fn show_files_card(&self) -> Html {
+        html!{<div class="card">
+            <table class="table is-fullwidth is-striped">
+              <thead>
+                <tr>
+                  <th>{"Filename"}</th>
+                  <th>{"Content"}</th>
+                  <th>{"Filesize"}</th>
+                  <th>{"Program"}</th>
+                  <th>{"Upload by"}</th>
+                  <th>{"Upload at"}</th>
+                </tr>
+              </thead>
+              <tfoot>
+                {for self.files_data.iter().map(|file| html!{
+                    <FileOfFilesetItem
+                        show_download_btn = self.props.show_manage_btn
+                        show_delete_btn = self.props.show_manage_btn
+                        file = file.clone()
+                    />
+                })}
+              </tfoot>
+            </table>
+        </div>}
     }
 }
