@@ -49,10 +49,7 @@ impl Component for FilesCard {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.component_uuid == props.component_uuid &&
-            self.props.show_download_btn == props.show_download_btn &&
-                self.props.show_delete_btn == props.show_delete_btn &&
-                    self.props.files.len() == props.files.len() {
+        if self.props.component_uuid == props.component_uuid {
             false
         } else {
             self.props = props;

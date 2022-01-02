@@ -194,10 +194,10 @@ impl Component for ModificationFilesCard {
             },
             Msg::ResponseUploadFile(Err(err)) => {
                 self.error = Some(err);
-                self.task = Vec::new();
-                self.task_read = Vec::new();
+                self.task.clear();
+                self.task_read.clear();
                 self.files_index = 0;
-                self.request_upload_confirm = Vec::new();
+                self.request_upload_confirm.clear();
                 self.get_result_up_completed = 0;
                 self.active_loading_files_btn = false;
             },
@@ -278,18 +278,18 @@ impl Component for ModificationFilesCard {
                 // self.files_index = 0;
             },
             Msg::FinishUploadFiles => {
-                self.files_list = Vec::new();
+                self.files_list.clear();
                 link.send_message(Msg::RequestModificationFilesList);
                 self.active_loading_files_btn = false;
-                self.task = Vec::new();
-                self.task_read = Vec::new();
-                self.request_upload_confirm = Vec::new();
-                self.files = Vec::new();
+                self.task.clear();
+                self.task_read.clear();
+                self.request_upload_confirm.clear();
+                self.files.clear();
                 self.files_index = 0;
             },
             Msg::ShowFullList => self.show_full_files = !self.show_full_files,
             Msg::ClearFilesBoxed => {
-                self.files = Vec::new();
+                self.files.clear();
                 self.files_index = 0;
             },
             Msg::ClearError => self.error = None,
@@ -308,7 +308,7 @@ impl Component for ModificationFilesCard {
             debug!("update modification files {:?}", props.modification_uuid);
             self.props = props;
 
-            self.files_list = Vec::new();
+            self.files_list.clear();
             if self.props.modification_uuid.len() == 36 {
                 self.link.send_message(Msg::RequestModificationFilesList);
             }

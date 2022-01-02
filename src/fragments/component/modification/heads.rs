@@ -28,8 +28,7 @@ impl Component for ModificationTableHeads {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.component_uuid == props.component_uuid &&
-          self.props.params.len() == props.params.len() {
+        if self.props.component_uuid == props.component_uuid {
             false
         } else {
             self.props = props;

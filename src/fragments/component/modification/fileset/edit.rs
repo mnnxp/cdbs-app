@@ -160,6 +160,12 @@ impl Component for ManageModificationFilesets {
         }
     }
 
+    fn rendered(&mut self, first_render: bool) {
+        if first_render && self.select_fileset_uuid.len() == 36 {
+            self.link.send_message(Msg::RequestFilesOfFileset);
+        }
+    }
+
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         let link = self.link.clone();
 
@@ -264,10 +270,10 @@ impl Component for ManageModificationFilesets {
             },
             Msg::ResponseUploadFile(Err(err)) => {
                 self.error = Some(err);
-                self.task = Vec::new();
-                self.task_read = Vec::new();
+                self.task.clear();
+                self.task_read.clear();
                 self.files_index = 0;
-                self.request_upload_confirm = Vec::new();
+                self.request_upload_confirm.clear();
                 self.get_result_up_completed = 0;
                 self.active_loading_files_btn = false;
             },
@@ -282,7 +288,7 @@ impl Component for ManageModificationFilesets {
                             res.get("programs").unwrap().clone()
                         ).unwrap();
                         // debug!("programs: {:?}", result);
-                        self.programs = Vec::new();
+                        self.programs.clear();
                         for x in result.iter() {
                             if let None = self.filesets_program.iter().find(|(_, program_name)| program_name == &x.name) {
                                 self.programs.push(x.clone());
@@ -307,6 +313,10 @@ impl Component for ManageModificationFilesets {
                             res.get("registerModificationFileset").unwrap().clone()
                         ).unwrap();
                         // debug!("registerModificationFileset: {:?}", self.select_fileset_uuid);
+
+                        if self.select_fileset_uuid.len() == 36 {
+                            self.link.send_message(Msg::RequestFilesOfFileset);
+                        }
 
                         if let Some(program) = self.programs.iter().find(|x| x.id == self.request_fileset_program_id) {
                             if let None = self.filesets_program.iter().find(|(_, p_name)| p_name == &program.name) {
@@ -424,19 +434,19 @@ impl Component for ManageModificationFilesets {
                 // self.files_index = 0;
             },
             Msg::FinishUploadFiles => {
-                self.files_list = Vec::new();
+                self.files_list.clear();
                 link.send_message(Msg::RequestFilesOfFileset);
                 self.active_loading_files_btn = false;
-                self.task = Vec::new();
-                self.task_read = Vec::new();
-                self.request_upload_confirm = Vec::new();
-                self.files = Vec::new();
+                self.task.clear();
+                self.task_read.clear();
+                self.request_upload_confirm.clear();
+                self.files.clear();
                 self.files_index = 0;
             },
             Msg::SelectFileset(fileset_uuid) => {
                 debug!("SelectFileset: {:?}", fileset_uuid);
                 self.select_fileset_uuid = fileset_uuid;
-                self.files_list = Vec::new();
+                self.files_list.clear();
                 if self.select_fileset_uuid.len() == 36 {
                     self.link.send_message(Msg::RequestFilesOfFileset);
                 }
@@ -451,7 +461,7 @@ impl Component for ManageModificationFilesets {
                 }
             },
             Msg::ClearFilesBoxed => {
-                self.files = Vec::new();
+                self.files.clear();
                 self.files_index = 0;
             },
             Msg::ClearError => self.error = None,
@@ -461,8 +471,7 @@ impl Component for ManageModificationFilesets {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.select_modification_uuid == props.select_modification_uuid &&
-              self.props.filesets_program.len() == props.filesets_program.len() {
+        if self.props.select_modification_uuid == props.select_modification_uuid {
             debug!("no change filesets: {:?}", props.filesets_program.len());
             false
         } else {
@@ -477,7 +486,7 @@ impl Component for ManageModificationFilesets {
                 })
                 .unwrap_or_default();
 
-            self.files_list = Vec::new();
+            self.files_list.clear();
             if self.select_fileset_uuid.len() == 36 {
                 self.link.send_message(Msg::RequestFilesOfFileset);
             }

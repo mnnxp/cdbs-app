@@ -245,7 +245,7 @@ impl Component for ComponentSettings {
             self.current_component = None;
             self.current_component_uuid = String::new();
             self.current_component_is_base = false;
-            self.current_modifications = Vec::new();
+            self.current_modifications.clear();
             self.request_component = ComponentUpdatePreData::default();
             self.select_component_modification = String::new();
         }
@@ -465,10 +465,10 @@ impl Component for ComponentSettings {
             },
             Msg::ResponseUploadFile(Err(err)) => {
                 self.error = Some(err);
-                self.task = Vec::new();
-                self.task_read = Vec::new();
+                self.task.clear();
+                self.task_read.clear();
                 self.files_index = 0;
-                self.request_upload_confirm = Vec::new();
+                self.request_upload_confirm.clear();
                 self.get_result_up_completed = 0;
                 self.active_loading_files_btn = false;
             },
@@ -572,13 +572,13 @@ impl Component for ComponentSettings {
                 }
             },
             Msg::FinishUploadFiles => {
-                self.files_list = Vec::new();
+                self.files_list.clear();
                 link.send_message(Msg::RequestComponentFilesList);
                 self.active_loading_files_btn = false;
-                self.task = Vec::new();
-                self.task_read = Vec::new();
-                self.request_upload_confirm = Vec::new();
-                self.files = Vec::new();
+                self.task.clear();
+                self.task_read.clear();
+                self.request_upload_confirm.clear();
+                self.files.clear();
                 self.files_index = 0;
             },
             Msg::GetDeleteComponentResult(res) => {
@@ -647,7 +647,7 @@ impl Component for ComponentSettings {
             },
             Msg::ChangeHideDeleteComponent => self.hide_delete_modal = !self.hide_delete_modal,
             Msg::ClearFilesBoxed => {
-                self.files = Vec::new();
+                self.files.clear();
                 self.files_index = 0;
                 self.upload_component_files = false;
             },

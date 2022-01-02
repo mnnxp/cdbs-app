@@ -1,9 +1,11 @@
-mod item;
+mod list_item;
+mod table_item;
 
-pub use item::FilesetFileItem;
+pub use list_item::FilesetFileItem;
+pub use table_item::FileOfFilesetItem;
 
 use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
-// use log::debug;
+use log::debug;
 // use crate::error::{get_error, Error};
 use crate::types::{UUID, ShowFileInfo};
 
@@ -18,6 +20,7 @@ pub struct Props {
 pub struct FilesetFilesCard {
     link: ComponentLink<Self>,
     props: Props,
+    // files_list: Vec<ShowFileInfo>,
     show_full_files: bool,
 }
 
@@ -32,9 +35,12 @@ impl Component for FilesetFilesCard {
     type Properties = Props;
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+        // let files_list = props.files.clone();
+
         Self {
             link,
             props,
+            // files_list,
             show_full_files: false,
         }
     }
@@ -50,17 +56,26 @@ impl Component for FilesetFilesCard {
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
         if self.props.select_fileset_uuid == props.select_fileset_uuid &&
-            self.props.show_download_btn == props.show_download_btn &&
-                self.props.show_delete_btn == props.show_delete_btn &&
-                    self.props.files.len() == props.files.len() {
+             self.props.files.first().map(|x| &x.uuid) == props.files.first().map(|x| &x.uuid) {
+            debug!("no change fileset uuid: {:?}", props.select_fileset_uuid);
             false
         } else {
+            debug!("change fileset uuid: {:?}", props.select_fileset_uuid);
+            // self.files_list = props.files.clone();
+            self.show_full_files = false;
             self.props = props;
             true
         }
     }
 
     fn view(&self) -> Html {
+        // html!{}
+        self.show_files_list()
+    }
+}
+
+impl FilesetFilesCard {
+    fn show_files_list(&self) -> Html {
         html!{
             <div id="files" class="card">
                 {for self.props.files.iter().enumerate().map(|(index, file)| {
@@ -90,9 +105,7 @@ impl Component for FilesetFilesCard {
             </div>
         }
     }
-}
 
-impl FilesetFilesCard {
     fn show_see_btn(&self) -> Html {
         let show_full_files_btn = self.link
             .callback(|_| Msg::ShowFullList);

@@ -80,7 +80,7 @@ pub struct ShowComponent {
     is_followed: bool,
     select_component_modification: UUID,
     modification_filesets: HashMap<UUID, Vec<(UUID, String)>>,
-    select_fileset_program: UUID,
+    select_fileset_uuid: UUID,
     current_filesets_program: Vec<(UUID, String)>,
     show_full_description: bool,
     show_full_characteristics: bool,
@@ -99,7 +99,7 @@ pub struct Props {
 
 #[derive(Clone)]
 pub enum Msg {
-    RequestDownloadFiles,
+    RequestDownloadFilesetFiles,
     SelectFileset(UUID),
     SelectModification(UUID),
     Follow,
@@ -107,7 +107,7 @@ pub enum Msg {
     UnFollow,
     DelFollow(String),
     ResponseError(Error),
-    GetDownloadFilesResult(String),
+    GetDownloadFilesetFilesResult(String),
     GetComponentData(String),
     ShowDescription,
     ShowFullCharacteristics,
@@ -138,7 +138,7 @@ impl Component for ShowComponent {
             is_followed: false,
             select_component_modification: String::new(),
             modification_filesets: HashMap::new(),
-            select_fileset_program: String::new(),
+            select_fileset_uuid: String::new(),
             current_filesets_program: Vec::new(),
             show_full_description: false,
             show_full_characteristics: false,
@@ -169,13 +169,16 @@ impl Component for ShowComponent {
         if (first_render || not_matches_component_uuid) && is_authenticated() {
             self.error = None;
             self.component = None;
-            // update current_component_uuid for checking change component in route
             self.current_component_uuid = target_component_uuid.to_string();
-            self.current_user_owner = false;
-            self.select_component_modification = String::new();
-            self.modification_filesets = HashMap::new();
-            self.select_fileset_program = String::new();
-            self.current_filesets_program = Vec::new();
+
+            // update current_component_uuid for checking change component in route
+            if not_matches_component_uuid {
+                self.current_user_owner = false;
+                self.select_component_modification = String::new();
+                self.modification_filesets = HashMap::new();
+                self.select_fileset_uuid = String::new();
+                self.current_filesets_program.clear();
+            }
 
             spawn_local(async move {
                 let res = make_query(GetComponentData::build_query(get_component_data::Variables{
@@ -191,42 +194,44 @@ impl Component for ShowComponent {
         let link = self.link.clone();
 
         match msg {
-            Msg::RequestDownloadFiles => {
+            Msg::RequestDownloadFilesetFiles => {
                 debug!("Select modification: {:?}", self.select_component_modification);
-                match self.select_fileset_program.len() {
-                    36 => {
-                        debug!("Select fileset: {:?}", self.select_fileset_program);
-                        let ipt_file_of_fileset_arg = com_mod_fileset_files::IptFileOfFilesetArg{
-                            filesetUuid: self.select_fileset_program.clone(),
-                            fileUuids: None,
-                            limit: None,
-                            offset: None,
-                        };
-                        spawn_local(async move {
-                            let res = make_query(ComModFilesetFiles::build_query(com_mod_fileset_files::Variables {
-                                ipt_file_of_fileset_arg
-                            })).await.unwrap();
+                debug!("Select fileset: {:?}", self.select_fileset_uuid);
+                if self.select_fileset_uuid.len() == 36 {
+                    let ipt_file_of_fileset_arg = com_mod_fileset_files::IptFileOfFilesetArg{
+                        filesetUuid: self.select_fileset_uuid.clone(),
+                        fileUuids: None,
+                        limit: None,
+                        offset: None,
+                    };
+                    spawn_local(async move {
+                        let res = make_query(ComModFilesetFiles::build_query(com_mod_fileset_files::Variables {
+                            ipt_file_of_fileset_arg
+                        })).await.unwrap();
 
-                            link.send_message(Msg::GetDownloadFilesResult(res));
-                        })
-                    },
-                    _ => debug!("Bad select fileset: {:?}", self.select_fileset_program),
+                        link.send_message(Msg::GetDownloadFilesetFilesResult(res));
+                    })
                 }
             },
-            Msg::SelectFileset(fileset_uuid) => self.select_fileset_program = fileset_uuid,
+            Msg::SelectFileset(fileset_uuid) => self.select_fileset_uuid = fileset_uuid,
             Msg::SelectModification(modification_uuid) => {
                 match self.select_component_modification == modification_uuid {
                     true => link.send_message(Msg::ShowModificationCard),
                     false => {
-                        self.current_filesets_program = self.modification_filesets.get(&modification_uuid)
-                            .map(|f| f.clone()).unwrap_or_default();
                         self.select_component_modification = modification_uuid;
-                        self.select_fileset_program = self.current_filesets_program.first()
+                        self.current_filesets_program.clear();
+                        self.current_filesets_program = self.modification_filesets
+                            .get(&self.select_component_modification)
+                            .map(|f| f.clone())
+                            .unwrap_or_default();
+                        self.select_fileset_uuid = self.current_filesets_program
+                            .first()
                             .map(|(fileset_uuid, program_name)| {
                                 debug!("mod fileset_uuid: {:?}", fileset_uuid);
                                 debug!("mod program_name: {:?}", program_name);
                                 fileset_uuid.clone()
-                            }).unwrap_or_default();
+                            })
+                            .unwrap_or_default();
                     },
                 }
             },
@@ -289,7 +294,7 @@ impl Component for ShowComponent {
                 }
             },
             Msg::ResponseError(err) => self.error = Some(err),
-            Msg::GetDownloadFilesResult(res) => {
+            Msg::GetDownloadFilesetFilesResult(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res = data.as_object().unwrap().get("data").unwrap();
 
@@ -326,7 +331,7 @@ impl Component for ShowComponent {
                             .first()
                             .map(|m| m.uuid.clone())
                             .unwrap_or_default();
-                        self.select_fileset_program = component_data.component_modifications
+                        self.select_fileset_uuid = component_data.component_modifications
                                 .first()
                                 .map(|m| m.filesets_for_program.first().map(|f| f.uuid.clone())
                                 .unwrap_or_default()
@@ -844,8 +849,8 @@ impl ShowComponent {
             true => html!{<>
                 <h2>{"Files of select fileset"}</h2>
                 <FilesOfFilesetCard
-                    show_manage_btn = false
-                    select_fileset_uuid = self.select_fileset_program.clone()
+                    show_download_btn = false
+                    select_fileset_uuid = self.select_fileset_uuid.clone()
                 />
             </>},
             false => html!{},
@@ -861,40 +866,39 @@ impl ShowComponent {
         let onclick_open_fileset_files_list_btn = self.link
             .callback(|_| Msg::ShowFilesetFilesList);
         let onclick_download_fileset_btn = self.link
-            .callback(|_| Msg::RequestDownloadFiles);
+            .callback(|_| Msg::RequestDownloadFilesetFiles);
 
         let class_btn = match self.open_fileset_files_card {
             true => "button is-light is-active",
             false => "button",
         };
 
-        match self.select_fileset_program.len() {
-            36 => html!{<div style="margin-right: .5rem">
-                <div class="select" style="margin-right: .5rem">
-                  <select
-                        id="select-fileset-program"
-                        onchange=onchange_select_fileset_btn >
-                      {for self.current_filesets_program.iter().map(|(fileset_uuid, program_name)|
-                          match &self.select_fileset_program == fileset_uuid {
-                            true => html!{<option value={fileset_uuid.clone()} selected=true>{program_name}</option>},
-                            false => html!{<option value={fileset_uuid.clone()}>{program_name}</option>},
-                          }
-                      )}
-                      // <option>{"CADWolf"}</option>
-                      // <option>{"AutoCAD"}</option>
-                  </select>
-                </div>
-                <button class={class_btn}
-                    onclick = onclick_open_fileset_files_list_btn >
-                    <span class="icon is-small"><i class="fa fa-list"></i></span>
-                </button>
-                <button class="button is-info"
-                    onclick=onclick_download_fileset_btn >
-                  <span class="has-text-weight-bold">{"Download"}</span>
-                </button>
-            </div>},
-            _ => html!{},
-        }
+        html!{<div style="margin-right: .5rem">
+            <div class="select" style="margin-right: .5rem">
+              <select
+                    id="select-fileset-program"
+                    onchange=onchange_select_fileset_btn >
+                  {for self.current_filesets_program.iter().map(|(fileset_uuid, program_name)|
+                      match &self.select_fileset_uuid == fileset_uuid {
+                        true => html!{<option value={fileset_uuid.clone()} selected=true>{program_name}</option>},
+                        false => html!{<option value={fileset_uuid.clone()}>{program_name}</option>},
+                      }
+                  )}
+                  // <option>{"CADWolf"}</option>
+                  // <option>{"AutoCAD"}</option>
+              </select>
+            </div>
+            <button class={class_btn}
+                disabled = self.select_fileset_uuid.len() != 36
+                onclick = onclick_open_fileset_files_list_btn >
+                <span class="icon is-small"><i class="fa fa-list"></i></span>
+            </button>
+            <button class="button is-info"
+                disabled = self.select_fileset_uuid.len() != 36
+                onclick=onclick_download_fileset_btn >
+              <span class="has-text-weight-bold">{"Download"}</span>
+            </button>
+        </div>}
     }
 
     fn show_setting_btn(&self) -> Html {

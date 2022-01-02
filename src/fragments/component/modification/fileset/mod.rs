@@ -1,10 +1,8 @@
 mod file;
 mod edit;
-mod item;
 
-pub use file::FilesetFilesCard;
+pub use file::{FilesetFilesCard, FileOfFilesetItem};
 pub use edit::ManageModificationFilesets;
-pub use item::FileOfFilesetItem;
 
 use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
 // use log::debug;
@@ -28,7 +26,7 @@ struct ComModFilesOfFileset;
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
-    pub show_manage_btn: bool,
+    pub show_download_btn: bool,
     pub select_fileset_uuid: UUID,
 }
 
@@ -37,13 +35,14 @@ pub struct FilesOfFilesetCard {
     props: Props,
     link: ComponentLink<Self>,
     select_fileset_uuid: UUID,
-    files_data: Vec<ShowFileInfo>,
+    files_list: Vec<ShowFileInfo>,
 }
 
 pub enum Msg {
     RequestFilesOfFileset,
     ResponseError(Error),
     GetFilesOfFilesetResult(String),
+    ClearError,
 }
 
 impl Component for FilesOfFilesetCard {
@@ -57,7 +56,13 @@ impl Component for FilesOfFilesetCard {
             props,
             link,
             select_fileset_uuid,
-            files_data: Vec::new(),
+            files_list: Vec::new(),
+        }
+    }
+
+    fn rendered(&mut self, first_render: bool) {
+        if first_render && self.select_fileset_uuid.len() == 36 {
+            self.link.send_message(Msg::RequestFilesOfFileset);
         }
     }
 
@@ -87,28 +92,27 @@ impl Component for FilesOfFilesetCard {
 
                 match res.is_null() {
                     false => {
-                        let result: Vec<ShowFileInfo> = serde_json::from_value(
-                            res.get("componentModificationFilesOfFileset").unwrap().clone()).unwrap();
+                        self.files_list = serde_json::from_value(
+                            res.get("componentModificationFilesOfFileset").unwrap().clone()
+                        ).unwrap();
                         // debug!("componentModificationFilesOfFileset: {:?}", result);
-                        self.files_data = result;
                     },
                     true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }
             },
+            Msg::ClearError => self.error = None,
         }
         true
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.show_manage_btn == props.show_manage_btn &&
-              self.props.select_fileset_uuid == props.select_fileset_uuid &&
-                self.select_fileset_uuid == props.select_fileset_uuid {
+        if self.props.select_fileset_uuid == props.select_fileset_uuid {
             false
         } else {
             self.select_fileset_uuid = props.select_fileset_uuid.clone();
             self.props = props;
 
-            self.files_data = Vec::new();
+            self.files_list.clear();
             if self.select_fileset_uuid.len() == 36 {
                 self.link.send_message(Msg::RequestFilesOfFileset);
             }
@@ -118,8 +122,10 @@ impl Component for FilesOfFilesetCard {
     }
 
     fn view(&self) -> Html {
+        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+
         html!{<>
-            <ListErrors error=self.error.clone()/>
+            <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
             {self.show_files_card()}
         </>}
     }
@@ -129,10 +135,10 @@ impl FilesOfFilesetCard {
     // fn show_files_card(&self) -> Html {
     //     html!{
     //         <FilesetFilesCard
-    //             show_download_btn = !self.props.show_manage_btn
-    //             show_delete_btn = self.props.show_manage_btn
+    //             show_download_btn = !self.props.show_download_btn
+    //             show_delete_btn = self.props.show_download_btn
     //             select_select_fileset_uuid = self.select_fileset_uuid.clone()
-    //             files = self.files_data.clone()
+    //             files = self.files_list.clone()
     //         />
     //     }
     // }
@@ -151,10 +157,9 @@ impl FilesOfFilesetCard {
                 </tr>
               </thead>
               <tfoot>
-                {for self.files_data.iter().map(|file| html!{
+                {for self.files_list.iter().map(|file| html!{
                     <FileOfFilesetItem
-                        show_download_btn = self.props.show_manage_btn
-                        show_delete_btn = self.props.show_manage_btn
+                        show_download_btn = self.props.show_download_btn
                         file = file.clone()
                     />
                 })}

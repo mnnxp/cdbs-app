@@ -62,7 +62,7 @@ impl Component for ModificationsTable {
 
         if first_render || self.component_uuid != props_component_uuid {
             debug!("Clear modification data");
-            self.component_uuid = String::new();
+            self.component_uuid = props_component_uuid;
             self.collect_heads.clear();
             self.collect_items.clear();
             self.collect_columns.clear();
@@ -76,16 +76,10 @@ impl Component for ModificationsTable {
 
         match msg {
             Msg::ParseParams => {
-                let mut first = true;
                 let mut set_heads: Vec<usize> = vec![0];
                 let mut collect_heads: Vec<Param> = Vec::new();
 
                 for modification in &self.props.modifications {
-                    if first {
-                        self.component_uuid = modification.component_uuid.clone();
-                        first = false;
-                    }
-
                     self.collect_columns.clear();
                     self.collect_columns.insert(
                         0, modification.modification_name.clone(),
@@ -124,10 +118,13 @@ impl Component for ModificationsTable {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.select_modification == props.select_modification &&
-              self.props.modifications.len() == props.modifications.len() {
+        if self.props.select_modification == props.select_modification {
             false
         } else {
+            self.component_uuid = match props.modifications.first().map(|x| x.component_uuid.clone()) {
+                Some(component_uuid) => component_uuid,
+                None => String::new(),
+            };
             self.props = props;
             true
         }
