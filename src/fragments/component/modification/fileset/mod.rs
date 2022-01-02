@@ -1,8 +1,10 @@
 mod file;
 mod edit;
+mod download_block;
 
 pub use file::{FilesetFilesCard, FileOfFilesetItem};
 pub use edit::ManageModificationFilesets;
+pub use download_block::ManageFilesOfFilesetBlock;
 
 use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
 // use log::debug;
