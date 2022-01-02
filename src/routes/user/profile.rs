@@ -91,6 +91,7 @@ pub struct Profile {
     subscribers: usize,
     is_followed: bool,
     profile_tab: ProfileTab,
+    extend_tab: Option<ProfileTab>,
 }
 
 #[derive(Properties, Clone)]
@@ -154,6 +155,7 @@ impl Component for Profile {
             subscribers: 0,
             is_followed: false,
             profile_tab: ProfileTab::Certificates,
+            extend_tab: Some(ProfileTab::Certificates),
         }
     }
 
@@ -335,7 +337,16 @@ impl Component for Profile {
                 }
             }
             Msg::ChangeTab(set_tab) => {
-                self.profile_tab = set_tab;
+                self.profile_tab = set_tab.clone();
+                if self.extend_tab.is_none() {
+                    self.extend_tab = Some(set_tab);
+                } else {
+                    if self.extend_tab.clone().unwrap() != set_tab {
+                        self.extend_tab = Some(set_tab);
+                    } else {
+                        self.extend_tab = None;
+                    }
+                }
             }
             Msg::Ignore => {}
             Msg::UpdateList(res) => {
@@ -396,7 +407,7 @@ impl Component for Profile {
                                         self_data.program.name.as_str(),
                                     ) }
                                 </div>
-                                <div style="display: flex;padding: 10px;padding-top: 20px;border-top: 5px dashed;">
+                                <div style="display: flex;padding: 10px;padding-top: 20px;border-top: 5px dashed;padding-left:0;">
                                 { self.show_profile_action() }
                                 // <hr/>
                                 <div class="card-relate-data" style="flex:1;" >
@@ -585,6 +596,18 @@ impl Profile {
         // self.link.callback(move |_| Msg::ChangeTab(ProfileTab))
     }
 
+    fn check_extend(&self, tab: ProfileTab) -> bool {
+        match tab {
+            n => {
+                if self.extend_tab.is_some() {
+                    self.extend_tab.clone().unwrap() == n.clone()
+                } else {
+                    false
+                }
+            }
+        }
+    }
+
     fn show_profile_action(&self) -> Html {
         // let onclick_certificates = self
         //     .link
@@ -614,7 +637,6 @@ impl Profile {
         //     .link
         //     .callback(|_| Msg::ChangeTab(ProfileTab::FavoriteUsers));
 
-
         let menu_arr: Vec<MenuItem> = vec![
             MenuItem {
                 title: "Certificates".to_string(),
@@ -626,6 +648,7 @@ impl Profile {
                 },
                 icon_class: classes!("fas", "fa-certificate"),
                 is_active: self.profile_tab == ProfileTab::Certificates,
+                is_extend: self.check_extend(ProfileTab::Certificates),
             },
             MenuItem {
                 title: "COMPONENTS all".to_string(),
@@ -637,6 +660,7 @@ impl Profile {
                 },
                 icon_class: classes!("fas", "fa-certificate"),
                 is_active: self.profile_tab == ProfileTab::Components,
+                is_extend: self.check_extend(ProfileTab::Components),
             },
             MenuItem {
                 title: "COMPONENTS fav".to_string(),
@@ -648,6 +672,7 @@ impl Profile {
                 },
                 icon_class: classes!("fas", "fa-certificate"),
                 is_active: self.profile_tab == ProfileTab::FavoriteComponents,
+                is_extend: self.check_extend(ProfileTab::FavoriteComponents),
             },
             // company MenuItem
             MenuItem {
@@ -660,6 +685,7 @@ impl Profile {
                 },
                 icon_class: classes!("fas", "fa-certificate"),
                 is_active: self.profile_tab == ProfileTab::Companies,
+                is_extend: self.check_extend(ProfileTab::Companies),
             },
             // company fav MenuItem
             MenuItem {
@@ -672,6 +698,7 @@ impl Profile {
                 },
                 icon_class: classes!("fas", "fa-certificate"),
                 is_active: self.profile_tab == ProfileTab::FavoriteCompanies,
+                is_extend: self.check_extend(ProfileTab::FavoriteCompanies),
             },
             // standards MenuItem
             MenuItem {
@@ -684,6 +711,7 @@ impl Profile {
                 },
                 icon_class: classes!("fas", "fa-certificate"),
                 is_active: self.profile_tab == ProfileTab::FavoriteStandards,
+                is_extend: self.check_extend(ProfileTab::FavoriteStandards),
             },
             // user fav MenuItem
             MenuItem {
@@ -696,11 +724,12 @@ impl Profile {
                 },
                 icon_class: classes!("fas", "fa-certificate"),
                 is_active: self.profile_tab == ProfileTab::FavoriteUsers,
+                is_extend: self.check_extend(ProfileTab::FavoriteUsers),
             },
         ];
 
         html! {
-            <div style="margin-right: 18px;" >
+            <div style="margin-right: 18px;z-index: 1;" >
                 <SideMenu menu_arr={menu_arr} ></SideMenu>
             </div>
         }

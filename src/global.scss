@@ -11,7 +11,9 @@
 }
 
 .side-menu {
-  width: 14em;
+  // width: 14em;
+  position: sticky;
+  width: 3em;
   height: auto;
   font-size: 1em;
   line-height: 2em;
@@ -19,7 +21,7 @@
   font-weight: 700;
   text-transform: uppercase;
   /* position: absolute; */
-  top: 0;
+  top: 20px;
   bottom: 0;
   left: -10em;
 }
@@ -34,7 +36,7 @@
   width: max-content;
   display: block;
   background-color: #333;
-  padding: 1em 1.5em;
+  padding: 0.5em 0.8em;
   position: relative;
   transition: all ease 0.5s;
   border-radius: 0 8px 8px 0;
@@ -46,24 +48,28 @@
     margin-right ease-in-out 0.2s;
 }
 
+.side-menu .active i {
+  color: black;
+}
+
 /*the colors of the different columns*/
 .side-menu ul li:nth-child(1) {
-  background-color: #00aced;
+  background-color: rgba(0, 172, 237, 0.8);
 }
 .side-menu ul li:nth-child(2) {
-  background-color: #3b5998;
+  background-color: rgba(59, 89, 152, 0.8);
 }
 .side-menu ul li:nth-child(3) {
-  background-color: #00a300;
+  background-color: rgba(0, 163, 0, 0.8);
 }
 .side-menu ul li:nth-child(4) {
-  background-color: #1e7145;
+  background-color: rgba(30, 113, 69, 0.8);
 }
 .side-menu ul li:nth-child(5) {
-  background-color: #ffc40d;
+  background-color: rgba(255, 196, 13, 0.8);
 }
 .side-menu ul li:nth-child(6) {
-  background-color: #cb2027;
+  background-color: rgba(203, 32, 39, 0.8);
 }
 
 .side-menu ul li:hover {
@@ -73,7 +79,7 @@
 
 .side-menu .active {
   // background-color: #339966!important;
-  border-radius: 0 8px 8px 0!important;
+  border-radius: 0 8px 8px 0 !important;
 }
 
 .side-menu ul li a span:first-child {
@@ -84,14 +90,14 @@
   margin-right: 0;
 }
 
-.side-menu .active a span {
-  opacity: 1!important;
-  overflow: hidden!important;
-  text-overflow: ellipsis!important;
-  white-space: nowrap!important;
-  max-height: 20em!important;
-  max-width: 20em!important;
-  margin-right: 10px!important;
+.side-menu .extend a span {
+  opacity: 1 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  max-height: 20em !important;
+  max-width: 20em !important;
+  margin-right: 10px !important;
 }
 
 .side-menu ul li:hover a span {

@@ -2,20 +2,18 @@ mod list_item;
 
 pub use list_item::ListItem;
 
-use yew::prelude::*;
-use yew_router::prelude::*;
-use wasm_bindgen_futures::spawn_local;
-use graphql_client::GraphQLQuery;
-use serde_json::Value;
-use log::debug;
-use chrono::NaiveDateTime;
+use crate::error::{get_error, Error};
+use crate::fragments::list_errors::ListErrors;
 use crate::gqls::make_query;
 use crate::routes::AppRoute;
-use crate::error::{Error, get_error};
-use crate::fragments::list_errors::ListErrors;
-use crate::types::{
-  UUID, ShowComponentShort, ComponentsQueryArg
-};
+use crate::types::{ComponentsQueryArg, ShowComponentShort, UUID};
+use chrono::NaiveDateTime;
+use graphql_client::GraphQLQuery;
+use log::debug;
+use serde_json::Value;
+use wasm_bindgen_futures::spawn_local;
+use yew::prelude::*;
+use yew_router::prelude::*;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -46,7 +44,7 @@ pub enum Msg {
     UpdateList(String),
     AddFav(UUID),
     DelFav(UUID),
-    GetList
+    GetList,
 }
 
 #[derive(PartialEq, Eq)]
@@ -60,7 +58,7 @@ pub struct CatalogComponents {
     link: ComponentLink<Self>,
     props: Props,
     show_type: ListState,
-    list: Vec<ShowComponentShort>
+    list: Vec<ShowComponentShort>,
 }
 
 #[derive(Properties, Clone)]
@@ -79,7 +77,7 @@ impl Component for CatalogComponents {
             link,
             props,
             show_type: ListState::List,
-            list: Vec::new()
+            list: Vec::new(),
         }
     }
 
@@ -92,11 +90,9 @@ impl Component for CatalogComponents {
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         let link = self.link.clone();
         match msg {
-            Msg::SwitchShowType => {
-                match self.show_type {
-                    ListState::Box => self.show_type = ListState::List,
-                    _ => self.show_type = ListState::Box,
-                }
+            Msg::SwitchShowType => match self.show_type {
+                ListState::Box => self.show_type = ListState::List,
+                _ => self.show_type = ListState::Box,
             },
             Msg::GetList => {
                 let ipt_components_arg = match &self.props.arguments {
@@ -113,46 +109,53 @@ impl Component for CatalogComponents {
                 };
                 spawn_local(async move {
                     let res = make_query(GetComponentsShortList::build_query(
-                        get_components_short_list::Variables {
-                            ipt_components_arg
-                    })).await.unwrap();
+                        get_components_short_list::Variables { ipt_components_arg },
+                    ))
+                    .await
+                    .unwrap();
                     debug!("GetList res: {:?}", res);
                     link.send_message(Msg::UpdateList(res));
                 });
-            },
+            }
             Msg::UpdateList(res) => {
-              let data: Value = serde_json::from_str(res.as_str()).unwrap();
-              let res_value = data.as_object().unwrap().get("data").unwrap();
+                let data: Value = serde_json::from_str(res.as_str()).unwrap();
+                let res_value = data.as_object().unwrap().get("data").unwrap();
 
-              match res_value.is_null() {
-                  false => {
-                      let result: Vec<ShowComponentShort> = serde_json::from_value(res_value.get("components").unwrap().clone()).unwrap();
-                      // debug!("UpdateList result: {:?}", result);
-                      self.list = result;
-                  },
-                  true => {
-                      self.error = Some(get_error(&data));
-                  },
-              }
-          },
-          Msg::AddFav(component_uuid) => {
-              spawn_local(async move {
-                  make_query(AddComponentFav::build_query(add_component_fav::Variables{
-                    component_uuid
-                  })).await.unwrap();
-                  // debug!("AddFav res: {:?}", res);
-                  link.send_message(Msg::GetList);
-              });
-          },
-          Msg::DelFav(component_uuid) => {
-              spawn_local(async move {
-                  make_query(DeleteComponentFav::build_query(delete_component_fav::Variables{
-                    component_uuid
-                  })).await.unwrap();
-                  // debug!("DelFav res: {:?}", res);
-                  link.send_message(Msg::GetList);
-              });
-          }
+                match res_value.is_null() {
+                    false => {
+                        let result: Vec<ShowComponentShort> =
+                            serde_json::from_value(res_value.get("components").unwrap().clone())
+                                .unwrap();
+                        // debug!("UpdateList result: {:?}", result);
+                        self.list = result;
+                    }
+                    true => {
+                        self.error = Some(get_error(&data));
+                    }
+                }
+            }
+            Msg::AddFav(component_uuid) => {
+                spawn_local(async move {
+                    make_query(AddComponentFav::build_query(add_component_fav::Variables {
+                        component_uuid,
+                    }))
+                    .await
+                    .unwrap();
+                    // debug!("AddFav res: {:?}", res);
+                    link.send_message(Msg::GetList);
+                });
+            }
+            Msg::DelFav(component_uuid) => {
+                spawn_local(async move {
+                    make_query(DeleteComponentFav::build_query(
+                        delete_component_fav::Variables { component_uuid },
+                    ))
+                    .await
+                    .unwrap();
+                    // debug!("DelFav res: {:?}", res);
+                    link.send_message(Msg::GetList);
+                });
+            }
         }
         true
     }
@@ -181,9 +184,7 @@ impl Component for CatalogComponents {
     fn view(&self) -> Html {
         // let list = self.list.clone();
 
-        let onclick_change_view = self
-            .link
-            .callback(|_|Msg::SwitchShowType);
+        let onclick_change_view = self.link.callback(|_| Msg::SwitchShowType);
 
         let class_for_icon: &str;
         let mut class_for_list = "";
@@ -191,27 +192,27 @@ impl Component for CatalogComponents {
             ListState::Box => {
                 class_for_icon = "fas fa-bars";
                 class_for_list = "flex-box";
-            },
+            }
             ListState::List => {
                 class_for_icon = "fas fa-th-large";
-            },
+            }
         };
 
-        html!{
+        html! {
             <div class="componentsBox" >
               <ListErrors error=self.error.clone()/>
               <div class="level" >
                 <div class="level-left ">
-                {match &self.props.show_create_btn {
-                    true => html!{
-                        <RouterAnchor<AppRoute> route=AppRoute::CreateComponent >
-                          <button class="button is-info" >{"Create"}</button>
-                        </RouterAnchor<AppRoute>>
-                    },
-                    false => html!{},
-                }}
                 </div>
                 <div class="level-right">
+                {match &self.props.show_create_btn {
+                  true => html!{
+                      <RouterAnchor<AppRoute> route=AppRoute::CreateComponent >
+                        <button class="button is-info" >{"Create"}</button>
+                      </RouterAnchor<AppRoute>>
+                  },
+                  false => html!{},
+                }}
                   <div class="select">
                     <select>
                       <option>{"Select dropdown"}</option>
@@ -234,22 +235,19 @@ impl Component for CatalogComponents {
 }
 
 impl CatalogComponents {
-    fn show_card(
-        &self,
-        show_comp: &ShowComponentShort,
-    ) -> Html {
+    fn show_card(&self, show_comp: &ShowComponentShort) -> Html {
         let target_uuid_add = show_comp.uuid.clone();
         let target_uuid_del = show_comp.uuid.clone();
 
-        let onclick_add_fav = self.link.callback(move |_|
-                Msg::AddFav(target_uuid_add.clone())
-            );
+        let onclick_add_fav = self
+            .link
+            .callback(move |_| Msg::AddFav(target_uuid_add.clone()));
 
-        let onclick_del_fav = self.link.callback(move |_|
-                Msg::DelFav(target_uuid_del.clone())
-            );
+        let onclick_del_fav = self
+            .link
+            .callback(move |_| Msg::DelFav(target_uuid_del.clone()));
 
-        html!{
+        html! {
             <ListItem data={show_comp.clone()}
                 show_list={self.show_type == ListState::List}
                 // triggerFav={triggerFav}

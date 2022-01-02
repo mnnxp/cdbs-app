@@ -22,6 +22,7 @@ pub struct MenuItem {
     pub icon_class: Classes,
     pub count: usize,
     pub is_active: bool,
+    pub is_extend: bool,
 }
 
 #[derive(Properties, Clone)]
@@ -80,11 +81,12 @@ impl SideMenu {
             icon_class,
             count,
             is_active,
+            is_extend,
         } = item.clone();
         let show_tag = count == 0;
 
         html!(
-          <li class=classes!( if is_active {"active"} else {""} ) onclick=action>
+          <li class=classes!( if is_active {"active"} else {""}, if is_extend {"extend"} else {""} ) onclick=action>
             <a>
               <span>{title}</span>
               <span hidden=show_tag>
