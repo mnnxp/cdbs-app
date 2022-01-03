@@ -6,7 +6,6 @@ use crate::types::{UUID, ShowFileInfo};
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
     pub show_download_btn: bool,
-    pub show_delete_btn: bool,
     pub file: ShowFileInfo,
 }
 

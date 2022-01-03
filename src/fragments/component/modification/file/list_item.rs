@@ -1,4 +1,4 @@
-use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
+use yew::{Component, Callback, ComponentLink, Html, Properties, ShouldRender, html};
 use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
@@ -12,28 +12,29 @@ use crate::types::{UUID, ShowFileInfo, DownloadFile};
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/standards.graphql",
+    query_path = "./graphql/components.graphql",
     response_derives = "Debug"
 )]
-struct StandardFiles;
+struct ComponentModificationFiles;
 
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/standards.graphql",
+    query_path = "./graphql/components.graphql",
     response_derives = "Debug"
 )]
-struct DeleteStandardFile;
+struct DeleteModificationFile;
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
     pub show_download_btn: bool,
     pub show_delete_btn: bool,
-    pub standard_uuid: UUID,
+    pub modification_uuid: UUID,
     pub file: ShowFileInfo,
+    pub callback_delete_file: Option<Callback<UUID>>,
 }
 
-pub struct FileItem {
+pub struct ModificationFileItem {
     error: Option<Error>,
     props: Props,
     link: ComponentLink<Self>,
@@ -48,9 +49,10 @@ pub enum Msg {
     GetDownloadFileResult(String),
     GetDeleteFileResult(String),
     ClickFileInfo,
+    ClearError,
 }
 
-impl Component for FileItem {
+impl Component for ModificationFileItem {
     type Message = Msg;
     type Properties = Props;
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
@@ -68,29 +70,33 @@ impl Component for FileItem {
 
         match msg {
             Msg::RequestDownloadFile => {
-                let standard_uuid = self.props.standard_uuid.clone();
+                let modification_uuid = self.props.modification_uuid.clone();
                 let file_uuid = self.props.file.uuid.clone();
                 spawn_local(async move {
-                    let ipt_standard_files_arg = standard_files::IptStandardFilesArg{
+                    let ipt_modification_files_arg = component_modification_files::IptModificationFilesArg{
                         filesUuids: Some(vec![file_uuid]),
-                        standardUuid: standard_uuid,
+                        modificationUuid: modification_uuid,
+                        limit: None,
+                        offset: None,
                     };
-                    let res = make_query(StandardFiles::build_query(standard_files::Variables {
-                        ipt_standard_files_arg
-                    })).await.unwrap();
+                    let res = make_query(ComponentModificationFiles::build_query(
+                        component_modification_files::Variables {
+                            ipt_modification_files_arg,
+                        }
+                    )).await.unwrap();
                     link.send_message(Msg::GetDownloadFileResult(res));
                 })
             },
             Msg::RequestDeleteFile => {
-                let standard_uuid = self.props.standard_uuid.clone();
+                let modification_uuid = self.props.modification_uuid.clone();
                 let file_uuid = self.props.file.uuid.clone();
                 spawn_local(async move {
-                    let delete_standard_file_data = delete_standard_file::DeleteStandardFileData{
+                    let delete_modification_file_data = delete_modification_file::DelModificationFileData{
                         fileUuid: file_uuid,
-                        standardUuid: standard_uuid,
+                        modificationUuid: modification_uuid,
                     };
-                    let res = make_query(DeleteStandardFile::build_query(delete_standard_file::Variables {
-                        delete_standard_file_data
+                    let res = make_query(DeleteModificationFile::build_query(delete_modification_file::Variables {
+                        delete_modification_file_data
                     })).await.unwrap();
                     link.send_message(Msg::GetDeleteFileResult(res));
                 })
@@ -102,8 +108,8 @@ impl Component for FileItem {
 
                 match res.is_null() {
                     false => {
-                        let result: Vec<DownloadFile> = serde_json::from_value(res.get("standardFiles").unwrap().clone()).unwrap();
-                        debug!("standardFiles: {:?}", result);
+                        let result: Vec<DownloadFile> = serde_json::from_value(res.get("componentModificationFiles").unwrap().clone()).unwrap();
+                        debug!("componentModificationFiles: {:?}", result);
                     },
                     true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }
@@ -114,16 +120,19 @@ impl Component for FileItem {
 
                 match res.is_null() {
                     false => {
-                        let result: bool = serde_json::from_value(res.get("deleteStandardFile").unwrap().clone()).unwrap();
-                        debug!("deleteFile: {:?}", result);
-                        self.get_result_delete = result;
+                        self.get_result_delete = serde_json::from_value(res.get("deleteModificationFile").unwrap().clone()).unwrap();
+                        debug!("deleteModificationFile: {:?}", self.get_result_delete);
+                        if self.get_result_delete {
+                            if let Some(rollback) = &self.props.callback_delete_file {
+                                rollback.emit(self.props.file.uuid.clone());
+                            }
+                        }
                     },
                     true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }
             },
-            Msg::ClickFileInfo => {
-                self.open_full_info_file = !self.open_full_info_file;
-            },
+            Msg::ClickFileInfo => self.open_full_info_file = !self.open_full_info_file,
+            Msg::ClearError => self.error = None,
         }
         true
     }
@@ -133,8 +142,10 @@ impl Component for FileItem {
     }
 
     fn view(&self) -> Html {
+        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+
         html!{<>
-            <ListErrors error=self.error.clone()/>
+            <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
             {match self.get_result_delete {
                 true => html!{},
                 false => html!{<>
@@ -146,10 +157,9 @@ impl Component for FileItem {
     }
 }
 
-impl FileItem {
+impl ModificationFileItem {
     fn show_file(&self) -> Html {
-        let onclick_file_info = self.link
-            .callback(|_| Msg::ClickFileInfo);
+        let onclick_file_info = self.link.callback(|_| Msg::ClickFileInfo);
 
         html!{
             <div class="buttons">

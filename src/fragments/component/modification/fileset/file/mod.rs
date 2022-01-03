@@ -1,10 +1,12 @@
-mod item;
+mod list_item;
+mod table_item;
 
-pub use item::ComponentFileItem;
+pub use list_item::FilesetFileItem;
+pub use table_item::FileOfFilesetItem;
 
 use std::collections::BTreeSet;
 use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
-// use log::debug;
+use log::debug;
 // use crate::error::{get_error, Error};
 use crate::types::{UUID, ShowFileInfo};
 
@@ -12,11 +14,11 @@ use crate::types::{UUID, ShowFileInfo};
 pub struct Props {
     pub show_download_btn: bool,
     pub show_delete_btn: bool,
-    pub component_uuid: UUID,
+    pub select_fileset_uuid: UUID,
     pub files: Vec<ShowFileInfo>,
 }
 
-pub struct ComponentFilesBlock {
+pub struct FilesetFilesBlock {
     link: ComponentLink<Self>,
     props: Props,
     show_full_files: bool,
@@ -27,10 +29,9 @@ pub struct ComponentFilesBlock {
 pub enum Msg {
     ShowFullList,
     RemoveFile(UUID),
-    Ignore,
 }
 
-impl Component for ComponentFilesBlock {
+impl Component for FilesetFilesBlock {
     type Message = Msg;
     type Properties = Props;
 
@@ -50,16 +51,18 @@ impl Component for ComponentFilesBlock {
             Msg::RemoveFile(file_uuid) => {
                 self.files_deleted_list.insert(file_uuid);
             },
-            Msg::Ignore => {},
         }
         true
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.component_uuid == props.component_uuid &&
+        if self.props.select_fileset_uuid == props.select_fileset_uuid &&
              self.props.files.first().map(|x| &x.uuid) == props.files.first().map(|x| &x.uuid) {
+            debug!("no change fileset uuid: {:?}", props.select_fileset_uuid);
             false
         } else {
+            debug!("change fileset uuid: {:?}", props.select_fileset_uuid);
+            self.show_full_files = false;
             self.files_deleted_list.clear();
             self.props = props;
             true
@@ -86,7 +89,7 @@ impl Component for ComponentFilesBlock {
     }
 }
 
-impl ComponentFilesBlock {
+impl FilesetFilesBlock {
     fn show_file_info(
         &self,
         file_info: &ShowFileInfo,
@@ -97,10 +100,10 @@ impl ComponentFilesBlock {
         match self.files_deleted_list.get(&file_info.uuid) {
             Some(_) => html!{}, // removed file
             None => html!{
-                <ComponentFileItem
+                <FilesetFileItem
                   show_download_btn = self.props.show_download_btn
                   show_delete_btn = self.props.show_delete_btn
-                  component_uuid = self.props.component_uuid.clone()
+                  select_fileset_uuid = self.props.select_fileset_uuid.clone()
                   file = file_info.clone()
                   callback_delete_file = callback_delete_file.clone()
                 />

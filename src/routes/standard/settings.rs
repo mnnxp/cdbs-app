@@ -20,7 +20,7 @@ use crate::fragments::{
     // switch_icon::res_btn,
     list_errors::ListErrors,
     // catalog_component::CatalogComponents,
-    standard::{FilesCard, SearchSpecsTags, AddKeywordsTags},
+    standard::{StandardFilesCard, SearchSpecsTags, AddKeywordsTags},
 };
 use crate::gqls::make_query;
 use crate::services::{
@@ -762,7 +762,7 @@ impl StandardSettings {
 
         html!{
             <div class="column">
-              <h2>{"Сharacteristics"}</h2>
+              <h2>{"Manage standard characteristics"}</h2>
               <div class="card">
                 <table class="table is-fullwidth">
                     <tbody>
@@ -863,7 +863,7 @@ impl StandardSettings {
             <div class="column">
               <h2>{"Files"}</h2>
               {self.show_frame_upload_files()}
-              <FilesCard
+              <StandardFilesCard
                   show_download_btn = false
                   show_delete_btn = true
                   standard_uuid = standard_data.uuid.clone()

@@ -66,6 +66,24 @@ query ComponentFiles($iptComponentFilesArg: IptComponentFilesArg!) {
   }
 }
 
+query ComponentFilesList($iptComponentFilesArg: IptComponentFilesArg!) {
+  componentFilesList(args: $iptComponentFilesArg){
+    ...showFileRelatedDataFields
+  }
+}
+
+query ComponentModificationFiles($iptModificationFilesArg: IptModificationFilesArg!) {
+  componentModificationFiles(args: $iptModificationFilesArg){
+    ...downloadFileFields
+  }
+}
+
+query ComponentModificationFilesList($iptModificationFilesArg: IptModificationFilesArg!) {
+  componentModificationFilesList(args: $iptModificationFilesArg){
+    ...showFileRelatedDataFields
+  }
+}
+
 mutation AddComponentFav($componentUuid: UUID!) {
   addComponentFav(componentUuid: $componentUuid)
 }
@@ -84,6 +102,10 @@ mutation DeleteComponentLicense($iptComponentLicenseData: IptComponentLicenseDat
 
 mutation DeleteComponentFile($deleteComponentFileData: DelComponentFileData!) {
   deleteComponentFile(args: $deleteComponentFileData)
+}
+
+mutation DeleteModificationFile($deleteModificationFileData: DelModificationFileData!) {
+  deleteModificationFile(args: $deleteModificationFileData)
 }
 
 mutation AddComponentKeywordsByNames($iptComponentKeywordsNames: IptComponentKeywordsNames!) {
@@ -201,6 +223,30 @@ mutation DeleteComponentModification($delComponentModificationData: DelComponent
 
 mutation PutComponentModificationUpdate($modificationUuid: UUID!, $iptUpdateComponentModificationData: IptUpdateComponentModificationData!) {
   putComponentModificationUpdate(componentModificationUuid: $modificationUuid, args: $iptUpdateComponentModificationData)
+}
+
+mutation RegisterModificationFileset($iptFilesetProgramData: IptFilesetProgramData!) {
+  registerModificationFileset(args: $iptFilesetProgramData)
+}
+
+mutation UploadModificationFiles($iptModificationFilesData: IptModificationFilesData!) {
+  uploadModificationFiles(args: $iptModificationFilesData){
+    ...uploadUrlFields
+  }
+}
+
+mutation UploadFilesToFileset($iptModificationFileFromFilesetData: IptModificationFileFromFilesetData!) {
+  uploadFilesToFileset(args: $iptModificationFileFromFilesetData){
+    ...uploadUrlFields
+  }
+}
+
+mutation DeleteFilesFromFileset($delModificationFileFromFilesetData: DelModificationFileFromFilesetData!) {
+  deleteFilesFromFileset(args: $delModificationFileFromFilesetData)
+}
+
+mutation DeleteModificationFileset($delFilesetProgramData: DelFilesetProgramData!) {
+  deleteModificationFileset(args: $delFilesetProgramData)
 }
 
 mutation ChangeComponentAccess($changeTypeAccessComponent: ChangeTypeAccessComponent!) {

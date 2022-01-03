@@ -1,13 +1,15 @@
+mod file;
 mod edit;
 mod heads;
 mod item;
 mod fileset;
 mod item_module;
 
+pub use file::{ModificationFilesTableCard, ManageModificationFilesCard};
 pub use edit::ModificationsTableEdit;
 pub use heads::ModificationTableHeads;
 pub use item::ModificationTableItem;
-pub use fileset::{FilesOfFilesetCard, FileOfFilesetItem};
+pub use fileset::{FilesOfFilesetCard, FileOfFilesetItem, ManageFilesOfFilesetBlock};
 pub use item_module::ModificationTableItemModule;
 
 use std::collections::HashMap;
@@ -19,7 +21,9 @@ use crate::types::{UUID, ComponentModificationInfo, Param};
 pub struct Props {
     pub modifications: Vec<ComponentModificationInfo>,
     pub select_modification: UUID,
+    pub open_modification_files: bool,
     pub callback_select_modification: Option<Callback<UUID>>,
+    pub callback_open_modification_files: Option<Callback<()>>,
 }
 
 pub struct ModificationsTable {
@@ -60,7 +64,7 @@ impl Component for ModificationsTable {
 
         if first_render || self.component_uuid != props_component_uuid {
             debug!("Clear modification data");
-            self.component_uuid = String::new();
+            self.component_uuid = props_component_uuid;
             self.collect_heads.clear();
             self.collect_items.clear();
             self.collect_columns.clear();
@@ -74,16 +78,10 @@ impl Component for ModificationsTable {
 
         match msg {
             Msg::ParseParams => {
-                let mut first = true;
                 let mut set_heads: Vec<usize> = vec![0];
                 let mut collect_heads: Vec<Param> = Vec::new();
 
                 for modification in &self.props.modifications {
-                    if first {
-                        self.component_uuid = modification.component_uuid.clone();
-                        first = false;
-                    }
-
                     self.collect_columns.clear();
                     self.collect_columns.insert(
                         0, modification.modification_name.clone(),
@@ -122,10 +120,19 @@ impl Component for ModificationsTable {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.select_modification == props.select_modification &&
-              self.props.modifications.len() == props.modifications.len() {
-            false
+        if self.props.select_modification == props.select_modification {
+            match self.props.open_modification_files == props.open_modification_files {
+                true => false,
+                false => {
+                    self.props = props;
+                    true
+                },
+            }
         } else {
+            self.component_uuid = match props.modifications.first().map(|x| x.component_uuid.clone()) {
+                Some(component_uuid) => component_uuid,
+                None => String::new(),
+            };
             self.props = props;
             true
         }
@@ -148,8 +155,10 @@ impl Component for ModificationsTable {
                       collect_heads = self.collect_heads.clone()
                       collect_item = item.clone()
                       select_item = &self.props.select_modification == modification_uuid
+                      open_modification_files = self.props.open_modification_files
                       callback_new_modification_param = None
                       callback_select_modification = self.props.callback_select_modification.clone()
+                      callback_open_modification_files = self.props.callback_open_modification_files.clone()
                       />}
                  })}
               </table>

@@ -48,7 +48,7 @@ impl Component for SpecsTags {
             <div id="specs" class="tags">
                 {for self.props.specs.iter().map(|spec| {
                     html!{<SpecTagItem
-                        show_delete_btn = self.props.show_delete_btn.clone()
+                        show_delete_btn = self.props.show_delete_btn
                         company_uuid = self.props.company_uuid.clone()
                         spec = spec.clone()
                         />}

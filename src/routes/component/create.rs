@@ -1,5 +1,5 @@
 use yew::prelude::*;
-use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
+use yew::{Component, ComponentLink, Html, ShouldRender, html};
 use yew_router::{
     agent::RouteRequest::ChangeRoute,
     prelude::*,
@@ -41,17 +41,11 @@ pub struct CreateComponent {
     error: Option<Error>,
     request_component: ComponentCreateData,
     router_agent: Box<dyn Bridge<RouteAgent>>,
-    props: Props,
     link: ComponentLink<Self>,
     component_types: Vec<ComponentType>,
     actual_statuses: Vec<ActualStatus>,
     types_access: Vec<TypeAccessInfo>,
     disable_create_btn: bool,
-}
-
-#[derive(Properties, Clone)]
-pub struct Props {
-    // pub current_user: Option<SlimUser>,
 }
 
 #[derive(Clone)]
@@ -71,14 +65,13 @@ pub enum Msg {
 
 impl Component for CreateComponent {
     type Message = Msg;
-    type Properties = Props;
+    type Properties = ();
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(_props: Self::Properties, link: ComponentLink<Self>) -> Self {
         CreateComponent {
             error: None,
             request_component: ComponentCreateData::new(),
             router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
-            props,
             link,
             component_types: Vec::new(),
             actual_statuses: Vec::new(),
@@ -208,9 +201,8 @@ impl Component for CreateComponent {
         true
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        self.props = props;
-        true
+    fn change(&mut self, _props: Self::Properties) -> ShouldRender {
+        false
     }
 
     fn view(&self) -> Html {

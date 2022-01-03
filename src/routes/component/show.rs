@@ -19,19 +19,16 @@ use crate::fragments::{
     list_errors::ListErrors,
     user::ListItemUser,
     component::{
-        ComponentStandardItem, ComponentSupplierItem,
-        ComponentLicenseTag, ComponentParamTag
-    },
-    component::{
-        ModificationsTable, FilesOfFilesetCard,
-        FilesCard, SpecsTags, KeywordsTags
+        ComponentStandardItem, ComponentSupplierItem, ComponentLicenseTag, ComponentParamTag,
+        ModificationsTable, FilesOfFilesetCard, ManageFilesOfFilesetBlock,
+        ComponentFilesBlock, ModificationFilesTableCard, SpecsTags, KeywordsTags,
     },
 };
 use crate::gqls::make_query;
 use crate::services::is_authenticated;
 use crate::types::{
     UUID, ComponentInfo, SlimUser, ComponentParam,
-    DownloadFile, ComponentModificationInfo,
+    ComponentModificationInfo,
 };
 
 #[derive(GraphQLQuery)]
@@ -58,14 +55,6 @@ struct AddComponentFav;
 )]
 struct DeleteComponentFav;
 
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct ComModFilesetFiles;
-
 /// Component with relate data
 pub struct ShowComponent {
     error: Option<Error>,
@@ -78,14 +67,15 @@ pub struct ShowComponent {
     link: ComponentLink<Self>,
     subscribers: usize,
     is_followed: bool,
-    select_component_modification: UUID,
+    select_modification_uuid: UUID,
     modification_filesets: HashMap<UUID, Vec<(UUID, String)>>,
-    select_fileset_program: UUID,
+    select_fileset_uuid: UUID,
     current_filesets_program: Vec<(UUID, String)>,
     show_full_description: bool,
     show_full_characteristics: bool,
     open_owner_user_info: bool,
     open_modification_card: bool,
+    open_modification_files_card: bool,
     open_fileset_files_card: bool,
     open_standard_info: bool,
     show_related_standards: bool,
@@ -99,7 +89,6 @@ pub struct Props {
 
 #[derive(Clone)]
 pub enum Msg {
-    RequestDownloadFiles,
     SelectFileset(UUID),
     SelectModification(UUID),
     Follow,
@@ -107,7 +96,6 @@ pub enum Msg {
     UnFollow,
     DelFollow(String),
     ResponseError(Error),
-    GetDownloadFilesResult(String),
     GetComponentData(String),
     ShowDescription,
     ShowFullCharacteristics,
@@ -115,8 +103,10 @@ pub enum Msg {
     ShowOwnerUserCard,
     ShowStandardCard,
     ShowModificationCard,
-    ShowFilesetFilesList,
+    ShowModificationFilesList,
+    ShowFilesetFilesBlock(bool),
     OpenComponentSetting,
+    ClearError,
     Ignore,
 }
 
@@ -136,14 +126,15 @@ impl Component for ShowComponent {
             link,
             subscribers: 0,
             is_followed: false,
-            select_component_modification: String::new(),
+            select_modification_uuid: String::new(),
             modification_filesets: HashMap::new(),
-            select_fileset_program: String::new(),
+            select_fileset_uuid: String::new(),
             current_filesets_program: Vec::new(),
             show_full_description: false,
             show_full_characteristics: false,
             open_owner_user_info: false,
             open_modification_card: false,
+            open_modification_files_card: false,
             open_fileset_files_card: false,
             open_standard_info: false,
             show_related_standards: false,
@@ -169,13 +160,16 @@ impl Component for ShowComponent {
         if (first_render || not_matches_component_uuid) && is_authenticated() {
             self.error = None;
             self.component = None;
-            // update current_component_uuid for checking change component in route
             self.current_component_uuid = target_component_uuid.to_string();
-            self.current_user_owner = false;
-            self.select_component_modification = String::new();
-            self.modification_filesets = HashMap::new();
-            self.select_fileset_program = String::new();
-            self.current_filesets_program = Vec::new();
+
+            // update current_component_uuid for checking change component in route
+            if not_matches_component_uuid {
+                self.current_user_owner = false;
+                self.select_modification_uuid = String::new();
+                self.modification_filesets = HashMap::new();
+                self.select_fileset_uuid = String::new();
+                self.current_filesets_program.clear();
+            }
 
             spawn_local(async move {
                 let res = make_query(GetComponentData::build_query(get_component_data::Variables{
@@ -191,42 +185,17 @@ impl Component for ShowComponent {
         let link = self.link.clone();
 
         match msg {
-            Msg::RequestDownloadFiles => {
-                debug!("Select modification: {:?}", self.select_component_modification);
-                match self.select_fileset_program.len() {
-                    36 => {
-                        debug!("Select fileset: {:?}", self.select_fileset_program);
-                        let ipt_file_of_fileset_arg = com_mod_fileset_files::IptFileOfFilesetArg{
-                            filesetUuid: self.select_fileset_program.clone(),
-                            fileUuids: None,
-                            limit: None,
-                            offset: None,
-                        };
-                        spawn_local(async move {
-                            let res = make_query(ComModFilesetFiles::build_query(com_mod_fileset_files::Variables {
-                                ipt_file_of_fileset_arg
-                            })).await.unwrap();
-
-                            link.send_message(Msg::GetDownloadFilesResult(res));
-                        })
-                    },
-                    _ => debug!("Bad select fileset: {:?}", self.select_fileset_program),
-                }
-            },
-            Msg::SelectFileset(fileset_uuid) => self.select_fileset_program = fileset_uuid,
+            Msg::SelectFileset(fileset_uuid) => self.select_fileset_uuid = fileset_uuid,
             Msg::SelectModification(modification_uuid) => {
-                match self.select_component_modification == modification_uuid {
+                match self.select_modification_uuid == modification_uuid {
                     true => link.send_message(Msg::ShowModificationCard),
                     false => {
-                        self.current_filesets_program = self.modification_filesets.get(&modification_uuid)
-                            .map(|f| f.clone()).unwrap_or_default();
-                        self.select_component_modification = modification_uuid;
-                        self.select_fileset_program = self.current_filesets_program.first()
-                            .map(|(fileset_uuid, program_name)| {
-                                debug!("mod fileset_uuid: {:?}", fileset_uuid);
-                                debug!("mod program_name: {:?}", program_name);
-                                fileset_uuid.clone()
-                            }).unwrap_or_default();
+                        self.select_modification_uuid = modification_uuid;
+                        self.current_filesets_program.clear();
+                        self.current_filesets_program = self.modification_filesets
+                            .get(&self.select_modification_uuid)
+                            .map(|f| f.clone())
+                            .unwrap_or_default();
                     },
                 }
             },
@@ -289,20 +258,6 @@ impl Component for ShowComponent {
                 }
             },
             Msg::ResponseError(err) => self.error = Some(err),
-            Msg::GetDownloadFilesResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        let result: Vec<DownloadFile> = serde_json::from_value(res.get("componentModificationFilesetFiles").unwrap().clone()).unwrap();
-                        debug!("componentModificationFilesetFiles: {:?}", result);
-                    },
-                    true => {
-                        link.send_message(Msg::ResponseError(get_error(&data)));
-                    },
-                }
-            },
             Msg::GetComponentData(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
@@ -322,11 +277,11 @@ impl Component for ShowComponent {
                         // length check for show btn more/less
                         self.show_full_description = component_data.description.len() < 250;
                         self.show_full_characteristics = component_data.component_params.len() < 4;
-                        self.select_component_modification = component_data.component_modifications
+                        self.select_modification_uuid = component_data.component_modifications
                             .first()
                             .map(|m| m.uuid.clone())
                             .unwrap_or_default();
-                        self.select_fileset_program = component_data.component_modifications
+                        self.select_fileset_uuid = component_data.component_modifications
                                 .first()
                                 .map(|m| m.filesets_for_program.first().map(|f| f.uuid.clone())
                                 .unwrap_or_default()
@@ -342,7 +297,7 @@ impl Component for ShowComponent {
                             );
                         }
                         self.current_filesets_program = self.modification_filesets
-                            .get(&self.select_component_modification)
+                            .get(&self.select_modification_uuid)
                             .map(|f| f.clone())
                             .unwrap_or_default();
 
@@ -357,7 +312,8 @@ impl Component for ShowComponent {
             Msg::ShowOwnerUserCard => self.open_owner_user_info = !self.open_owner_user_info,
             Msg::ShowStandardCard => self.open_standard_info = !self.open_standard_info,
             Msg::ShowModificationCard => self.open_modification_card = !self.open_modification_card,
-            Msg::ShowFilesetFilesList => self.open_fileset_files_card = !self.open_fileset_files_card,
+            Msg::ShowModificationFilesList => self.open_modification_files_card = !self.open_modification_files_card,
+            Msg::ShowFilesetFilesBlock(value) => self.open_fileset_files_card = value,
             Msg::OpenComponentSetting => {
                 if let Some(component_data) = &self.component {
                     // Redirect to page for change and update component
@@ -366,6 +322,7 @@ impl Component for ShowComponent {
                     ).into()));
                 }
             },
+            Msg::ClearError => self.error = None,
             Msg::Ignore => {},
         }
         true
@@ -381,10 +338,12 @@ impl Component for ShowComponent {
     }
 
     fn view(&self) -> Html {
+        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+
         match &self.component {
             Some(component_data) => html!{
                 <div class="component-page">
-                    <ListErrors error=self.error.clone()/>
+                    <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
                     <div class="container page">
                         <div class="row">
                             // modals cards
@@ -402,6 +361,8 @@ impl Component for ShowComponent {
                             <br/>
                             {self.show_modifications_table(component_data)}
                             <br/>
+                            {self.show_modification_files()}
+                            <br/>
                             {self.show_cards(component_data)}
                             {self.show_component_specs(component_data)}
                             <br/>
@@ -411,7 +372,7 @@ impl Component for ShowComponent {
                 </div>
             },
             None => html!{<div>
-                <ListErrors error=self.error.clone()/>
+                <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
                 // <h1>{"Not data"}</h1>
             </div>},
         }
@@ -527,14 +488,31 @@ impl ShowComponent {
         let onclick_select_modification = self.link
             .callback(|value: UUID| Msg::SelectModification(value));
 
+        let callback_open_modification_uuid = self.link
+            .callback(|_| Msg::ShowModificationFilesList);
+
         html!{<>
             <h2>{"Modifications"}</h2>
             <ModificationsTable
                 modifications = component_data.component_modifications.clone()
-                select_modification = self.select_component_modification.clone()
+                select_modification = self.select_modification_uuid.clone()
+                open_modification_files = self.open_modification_files_card
                 callback_select_modification = onclick_select_modification.clone()
+                callback_open_modification_files = callback_open_modification_uuid.clone()
               />
         </>}
+    }
+
+    fn show_modification_files(&self) -> Html {
+        match self.open_modification_files_card {
+            true => html!{
+                <ModificationFilesTableCard
+                    show_download_btn = true
+                    modification_uuid = self.select_modification_uuid.clone()
+                  />
+            },
+            false => html!{},
+        }
     }
 
     fn show_component_params(
@@ -565,7 +543,7 @@ impl ShowComponent {
     ) -> Html {
         html!{
             <div class="column">
-              <h2>{"Сharacteristics"}</h2>
+              <h2>{"Сharacteristics of the component"}</h2>
               <div class="card">
                 <table class="table is-fullwidth">
                     <tbody>
@@ -628,7 +606,7 @@ impl ShowComponent {
             <div class="columns">
                 {self.show_additional_params(component_data)}
                 <div class="column">
-                    <h2>{"Files"}</h2>
+                    <h2>{"Component files"}</h2>
                     {self.show_component_files(component_data)}
                 </div>
             </div>
@@ -648,14 +626,14 @@ impl ShowComponent {
         &self,
         component_data: &ComponentInfo,
     ) -> Html {
-        html!{
-              <FilesCard
+        html!{<div id="files" class="card">
+            <ComponentFilesBlock
                   show_download_btn = true
                   show_delete_btn = false
                   component_uuid = component_data.uuid.clone()
                   files = component_data.files.clone()
                 />
-        }
+        </div>}
     }
 
     fn show_component_specs(
@@ -798,7 +776,7 @@ impl ShowComponent {
         };
 
         let modification_data: Option<&ComponentModificationInfo> = component_data.component_modifications.iter()
-            .find(|x| x.uuid == self.select_component_modification);
+            .find(|x| x.uuid == self.select_modification_uuid);
 
         match modification_data {
             Some(mod_data) => html!{<div class=class_modal>
@@ -844,8 +822,8 @@ impl ShowComponent {
             true => html!{<>
                 <h2>{"Files of select fileset"}</h2>
                 <FilesOfFilesetCard
-                    show_manage_btn = false
-                    fileset_uuid = self.select_fileset_program.clone()
+                    show_download_btn = false
+                    select_fileset_uuid = self.select_fileset_uuid.clone()
                 />
             </>},
             false => html!{},
@@ -853,47 +831,19 @@ impl ShowComponent {
     }
 
     fn show_download_block(&self) -> Html {
-        let onchange_select_fileset_btn = self.link
-            .callback(|ev: ChangeData| Msg::SelectFileset(match ev {
-              ChangeData::Select(el) => el.value(),
-              _ => String::new(),
-          }));
-        let onclick_open_fileset_files_list_btn = self.link
-            .callback(|_| Msg::ShowFilesetFilesList);
-        let onclick_download_fileset_btn = self.link
-            .callback(|_| Msg::RequestDownloadFiles);
+        let callback_select_fileset_uuid = self.link
+            .callback(|value: UUID| Msg::SelectFileset(value));
 
-        let class_btn = match self.open_fileset_files_card {
-            true => "button is-light is-active",
-            false => "button",
-        };
+        let callback_open_fileset_uuid = self.link
+            .callback(|value: bool| Msg::ShowFilesetFilesBlock(value));
 
-        match self.select_fileset_program.len() {
-            36 => html!{<div style="margin-right: .5rem">
-                <div class="select" style="margin-right: .5rem">
-                  <select
-                        id="select-fileset-program"
-                        onchange=onchange_select_fileset_btn >
-                      {for self.current_filesets_program.iter().map(|(fileset_uuid, program_name)|
-                          match &self.select_fileset_program == fileset_uuid {
-                            true => html!{<option value={fileset_uuid.clone()} selected=true>{program_name}</option>},
-                            false => html!{<option value={fileset_uuid.clone()}>{program_name}</option>},
-                          }
-                      )}
-                      // <option>{"CADWolf"}</option>
-                      // <option>{"AutoCAD"}</option>
-                  </select>
-                </div>
-                <button class={class_btn}
-                    onclick = onclick_open_fileset_files_list_btn >
-                    <span class="icon is-small"><i class="fa fa-list"></i></span>
-                </button>
-                <button class="button is-info"
-                    onclick=onclick_download_fileset_btn >
-                  <span class="has-text-weight-bold">{"Download"}</span>
-                </button>
-            </div>},
-            _ => html!{},
+        html!{
+            <ManageFilesOfFilesetBlock
+                select_modification_uuid = self.select_modification_uuid.clone()
+                current_filesets_program = self.current_filesets_program.clone()
+                callback_select_fileset_uuid = callback_select_fileset_uuid.clone()
+                callback_open_fileset_uuid = callback_open_fileset_uuid.clone()
+            />
         }
     }
 

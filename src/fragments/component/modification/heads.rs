@@ -2,7 +2,7 @@ use yew::{
     html, Component, ComponentLink,
     Html, Properties, ShouldRender,
 };
-// use log::debug;
+use log::debug;
 use crate::types::{UUID, Param};
 
 #[derive(Clone, Debug, Properties)]
@@ -28,10 +28,11 @@ impl Component for ModificationTableHeads {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.component_uuid == props.component_uuid &&
-          self.props.params.len() == props.params.len() {
+        if self.props.component_uuid == props.component_uuid {
+            debug!("no change self.props.params: {:?}", self.props.params);
             false
         } else {
+            debug!("change self.props.params: {:?}", self.props.params);
             self.props = props;
             true
         }
@@ -45,7 +46,10 @@ impl Component for ModificationTableHeads {
 impl ModificationTableHeads {
     fn show_modification_head(&self) -> Html {
         html!{<>
-            <th>{"action"}</th>
+            {match self.props.show_new_column {
+                true => html!{<th>{"action"}</th>},
+                false => html!{<th>{"action | files"}</th>},
+            }}
             <th>{"modification"}</th>
             {for self.props.params.iter().map(|head| {
                 html!{<th>{head.paramname.clone()}</th>}

@@ -393,6 +393,8 @@ input IptComponentData {
 input IptComponentFilesArg {
   componentUuid: UUID!
   filesUuids: [UUID!]
+  limit: Int
+  offset: Int
 }
 
 input IptComponentFilesData {
@@ -512,14 +514,21 @@ input IptLicenseArg {
   offset: Int
 }
 
-input IptModificationFileData {
-  filenames: [String!]!
-  modificationUuid: UUID!
-}
-
 input IptModificationFileFromFilesetData {
   filesetUuid: UUID!
   filenames: [String!]!
+}
+
+input IptModificationFilesArg {
+  modificationUuid: UUID!
+  filesUuids: [UUID!]
+  limit: Int
+  offset: Int
+}
+
+input IptModificationFilesData {
+  filenames: [String!]!
+  modificationUuid: UUID!
 }
 
 input IptModificationParamData {
@@ -896,7 +905,7 @@ type MutationRoot {
   deleteComponentModification(args: DelComponentModificationData!): UUID!
   putModificationParams(args: IptModificationParamData!): Int!
   deleteModificationParams(args: DelModificationParamData!): Int!
-  uploadModificationFiles(args: IptModificationFileData!): [UploadFile!]!
+  uploadModificationFiles(args: IptModificationFilesData!): [UploadFile!]!
   deleteModificationFile(args: DelModificationFileData!): Boolean!
   registerModificationFileset(args: IptFilesetProgramData!): UUID!
   deleteModificationFileset(args: DelFilesetProgramData!): Boolean!
@@ -1025,8 +1034,12 @@ type QueryRoot {
     componentUuid: UUID!
   ): [UserAccessComponentAndRelatedData!]!
   componentFiles(args: IptComponentFilesArg!): [DownloadFile!]!
+  componentFilesList(args: IptComponentFilesArg!): [ShowFileRelatedData!]!
   componentSpecs(args: IptComponentSpecsArg!): [SpecTranslateList!]!
-  componentModificationFiles(modificationUuid: UUID!): [DownloadFile!]!
+  componentModificationFiles(args: IptModificationFilesArg!): [DownloadFile!]!
+  componentModificationFilesList(
+    args: IptModificationFilesArg!
+  ): [ShowFileRelatedData!]!
   componentModificationFilesets(
     args: IptFilesetProgramArg!
   ): [FilesetProgramRelatedData!]!

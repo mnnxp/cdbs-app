@@ -10,6 +10,13 @@ query GetParams($iptParamArg: IptParamArg) {
   }
 }
 
+query GetPrograms($iptProgramArg: IptProgramArg) {
+  programs(args: $iptProgramArg) {
+    id
+    name
+  }
+}
+
 fragment paramFields on ParamTranslateList {
   paramId
   langId

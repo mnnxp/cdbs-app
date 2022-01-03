@@ -1,4 +1,4 @@
-use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
+use yew::{Component, Callback, ComponentLink, Html, Properties, ShouldRender, html};
 use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
@@ -31,9 +31,10 @@ pub struct Props {
     pub show_delete_btn: bool,
     pub component_uuid: UUID,
     pub file: ShowFileInfo,
+    pub callback_delete_file: Option<Callback<UUID>>,
 }
 
-pub struct FileItem {
+pub struct ComponentFileItem {
     error: Option<Error>,
     props: Props,
     link: ComponentLink<Self>,
@@ -50,7 +51,7 @@ pub enum Msg {
     ClickFileInfo,
 }
 
-impl Component for FileItem {
+impl Component for ComponentFileItem {
     type Message = Msg;
     type Properties = Props;
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
@@ -74,6 +75,8 @@ impl Component for FileItem {
                     let ipt_component_files_arg = component_files::IptComponentFilesArg{
                         filesUuids: Some(vec![file_uuid]),
                         componentUuid: component_uuid,
+                        limit: None,
+                        offset: None,
                     };
                     let res = make_query(ComponentFiles::build_query(
                         component_files::Variables {
@@ -116,9 +119,15 @@ impl Component for FileItem {
 
                 match res.is_null() {
                     false => {
-                        let result: bool = serde_json::from_value(res.get("deleteComponentFile").unwrap().clone()).unwrap();
-                        debug!("deleteFile: {:?}", result);
-                        self.get_result_delete = result;
+                        self.get_result_delete = serde_json::from_value(
+                            res.get("deleteComponentFile").unwrap().clone()
+                        ).unwrap();
+                        debug!("deleteFile: {:?}", self.get_result_delete);
+                        if self.get_result_delete {
+                            if let Some(rollback) = &self.props.callback_delete_file {
+                                rollback.emit(self.props.file.uuid.clone());
+                            }
+                        }
                     },
                     true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }
@@ -148,7 +157,7 @@ impl Component for FileItem {
     }
 }
 
-impl FileItem {
+impl ComponentFileItem {
     fn show_file(&self) -> Html {
         let onclick_file_info = self.link
             .callback(|_| Msg::ClickFileInfo);
@@ -173,9 +182,9 @@ impl FileItem {
 
         match &self.props.show_download_btn {
             true => html!{
-                <button class="button is-white is-small" onclick=onclick_download_btn >
+                <button class="button is-white" onclick=onclick_download_btn >
                   <span class="icon" >
-                    <i class="fas fa-cloud-download-alt" aria-hidden="true"></i>
+                    <i class="fas fa-file-download" aria-hidden="true"></i>
                   </span>
                 </button>
             },
@@ -189,7 +198,7 @@ impl FileItem {
 
         match &self.props.show_delete_btn {
             true => html!{
-                <button class="button is-white is-small" onclick=onclick_delete_btn >
+                <button class="button is-white" onclick=onclick_delete_btn >
                   <span class="icon" >
                     <i class="fa fa-trash" aria-hidden="true"></i>
                   </span>
