@@ -5,7 +5,7 @@ use yew::{
 
 pub struct SideMenu {
     props: Props,
-    link: ComponentLink<Self>,
+    // link: ComponentLink<Self>,
 }
 
 // #[derive(Properties, Clone)]
@@ -49,8 +49,8 @@ impl Component for SideMenu {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        SideMenu { props, link }
+    fn create(props: Self::Properties, _link: ComponentLink<Self>) -> Self {
+        SideMenu { props }
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
@@ -66,7 +66,7 @@ impl Component for SideMenu {
         html! {
           <nav class="side-menu">
             <ul>
-              { for self.props.menu_arr.as_ref().unwrap().iter().map(|x|self.li_generator(x)) }
+              { for self.props.menu_arr.as_ref().unwrap().iter().map(|x| self.li_generator(x)) }
             </ul>
           </nav>
         }
@@ -83,13 +83,13 @@ impl SideMenu {
             is_active,
             is_extend,
         } = item.clone();
-        let show_tag = count == 0;
+        let hide_tag = count == 0;
 
         html!(
           <li class=classes!( if is_active {"active"} else {""}, if is_extend {"extend"} else {""} ) onclick=action>
             <a>
               <span>{title}</span>
-              <span hidden=show_tag>
+              <span hidden=hide_tag>
                 <span class="tag is-info is-small" >{count}</span>
               </span>
               <i class=classes!(icon_class.clone())></i>
