@@ -5,7 +5,7 @@ mod item;
 mod fileset;
 mod item_module;
 
-pub use file::{ModificationFilesCard, ManageModificationFilesCard};
+pub use file::{ModificationFilesTableCard, ManageModificationFilesCard};
 pub use edit::ModificationsTableEdit;
 pub use heads::ModificationTableHeads;
 pub use item::ModificationTableItem;

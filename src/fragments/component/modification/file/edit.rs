@@ -318,7 +318,7 @@ impl Component for ManageModificationFilesCard {
             <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
             <div class="columns">
                 <div class="column">
-                  <h2>{"Modification files"}</h2>
+                  <h2>{"Files for modification"}</h2>
                   {self.show_files_card()}
                 </div>
                 <div class="column">

@@ -21,7 +21,7 @@ use crate::fragments::{
     component::{
         ComponentStandardItem, ComponentSupplierItem, ComponentLicenseTag, ComponentParamTag,
         ModificationsTable, FilesOfFilesetCard, ManageFilesOfFilesetBlock,
-        ComponentFilesCard, ModificationFilesCard, SpecsTags, KeywordsTags,
+        ComponentFilesCard, ModificationFilesTableCard, SpecsTags, KeywordsTags,
     },
 };
 use crate::gqls::make_query;
@@ -106,6 +106,7 @@ pub enum Msg {
     ShowModificationFilesList,
     ShowFilesetFilesList(bool),
     OpenComponentSetting,
+    ClearError,
     Ignore,
 }
 
@@ -321,6 +322,7 @@ impl Component for ShowComponent {
                     ).into()));
                 }
             },
+            Msg::ClearError => self.error = None,
             Msg::Ignore => {},
         }
         true
@@ -336,10 +338,12 @@ impl Component for ShowComponent {
     }
 
     fn view(&self) -> Html {
+        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+
         match &self.component {
             Some(component_data) => html!{
                 <div class="component-page">
-                    <ListErrors error=self.error.clone()/>
+                    <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
                     <div class="container page">
                         <div class="row">
                             // modals cards
@@ -368,7 +372,7 @@ impl Component for ShowComponent {
                 </div>
             },
             None => html!{<div>
-                <ListErrors error=self.error.clone()/>
+                <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
                 // <h1>{"Not data"}</h1>
             </div>},
         }
@@ -502,7 +506,7 @@ impl ShowComponent {
     fn show_modification_files(&self) -> Html {
         match self.open_modification_files_card {
             true => html!{
-                <ModificationFilesCard
+                <ModificationFilesTableCard
                     show_download_btn = true
                     modification_uuid = self.select_modification_uuid.clone()
                   />
@@ -539,7 +543,7 @@ impl ShowComponent {
     ) -> Html {
         html!{
             <div class="column">
-              <h2>{"Сharacteristics"}</h2>
+              <h2>{"Сharacteristics of the component"}</h2>
               <div class="card">
                 <table class="table is-fullwidth">
                     <tbody>

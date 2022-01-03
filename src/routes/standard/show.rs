@@ -423,7 +423,7 @@ impl ShowStandard {
     ) -> Html {
         html!{
             <div class="column">
-              <h2>{"Сharacteristics"}</h2>
+              <h2>{"Сharacteristics of the standard"}</h2>
               <div class="card">
                 <table class="table is-fullwidth">
                     <tbody>

@@ -32,7 +32,7 @@ pub struct Props {
     pub modification_uuid: UUID,
 }
 
-pub struct ModificationFilesCard {
+pub struct ModificationFilesTableCard {
     error: Option<Error>,
     link: ComponentLink<Self>,
     props: Props,
@@ -49,7 +49,7 @@ pub enum Msg {
     ClearError,
 }
 
-impl Component for ModificationFilesCard {
+impl Component for ModificationFilesTableCard {
     type Message = Msg;
     type Properties = Props;
 
@@ -139,24 +139,29 @@ impl Component for ModificationFilesCard {
     }
 }
 
-impl ModificationFilesCard {
+impl ModificationFilesTableCard {
     fn show_files_card(&self) -> Html {
         html!{<div class="card">
             <table class="table is-fullwidth is-striped">
               <thead>
                 <tr>
                   <th>{"Filename"}</th>
-                  <th>{"Content"}</th>
+                  // <th>{"Content"}</th>
                   <th>{"Filesize"}</th>
                   <th>{"Program"}</th>
                   <th>{"Upload by"}</th>
                   <th>{"Upload at"}</th>
+                  {match &self.props.show_download_btn {
+                      true => html!{<th>{"Download"}</th>},
+                      false => html!{},
+                  }}
                 </tr>
               </thead>
               <tfoot>
                 {for self.files_list.iter().map(|file| html!{
                     <ModificationFileListItem
-                        show_download_btn = self.props.show_download_btn
+                        modification_uuid = self.props.modification_uuid.clone()
+                        show_download_tag = self.props.show_download_btn
                         file = file.clone()
                     />
                 })}
@@ -164,53 +169,4 @@ impl ModificationFilesCard {
             </table>
         </div>}
     }
-
-    // fn show_files_card(&self) -> Html {
-    //     html!{
-    //         <div id="files" class="card">
-    //             {for self.files_list.iter().enumerate().map(|(index, file)| {
-    //                 match (index >= 3, self.show_full_files) {
-    //                     // show full list
-    //                     (_, true) => html!{<ModificationFileItem
-    //                       show_download_btn = self.props.show_download_btn
-    //                       show_delete_btn = false
-    //                       modification_uuid = self.props.modification_uuid.clone()
-    //                       file = file.clone()
-    //                     />},
-    //                     // show full list or first 3 items
-    //                     (false, false) => html!{<ModificationFileItem
-    //                       show_download_btn = self.props.show_download_btn
-    //                       show_delete_btn = false
-    //                       modification_uuid = self.props.modification_uuid.clone()
-    //                       file = file.clone()
-    //                     />},
-    //                     _ => html!{},
-    //                 }
-    //             })}
-    //             {match self.files_list.len() {
-    //                 0 => html!{<span>{"Files not found"}</span>},
-    //                 0..=3 => html!{},
-    //                 _ => self.show_see_btn(),
-    //             }}
-    //         </div>
-    //     }
-    // }
-    //
-    // fn show_see_btn(&self) -> Html {
-    //     let show_full_files_btn = self.link
-    //         .callback(|_| Msg::ShowFullList);
-    //
-    //     match self.show_full_files {
-    //         true => html!{<>
-    //           <button class="button is-white"
-    //               onclick=show_full_files_btn
-    //             >{"See less"}</button>
-    //         </>},
-    //         false => html!{<>
-    //           <button class="button is-white"
-    //               onclick=show_full_files_btn
-    //             >{"See more"}</button>
-    //         </>},
-    //     }
-    // }
 }

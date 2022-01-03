@@ -106,8 +106,8 @@ impl Component for ModificationFileItem {
 
                 match res.is_null() {
                     false => {
-                        let result: Vec<DownloadFile> = serde_json::from_value(res.get("modificationFiles").unwrap().clone()).unwrap();
-                        debug!("modificationFiles: {:?}", result);
+                        let result: Vec<DownloadFile> = serde_json::from_value(res.get("componentModificationFiles").unwrap().clone()).unwrap();
+                        debug!("componentModificationFiles: {:?}", result);
                     },
                     true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }
@@ -125,9 +125,7 @@ impl Component for ModificationFileItem {
                     true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }
             },
-            Msg::ClickFileInfo => {
-                self.open_full_info_file = !self.open_full_info_file;
-            },
+            Msg::ClickFileInfo => self.open_full_info_file = !self.open_full_info_file,
         }
         true
     }
@@ -175,9 +173,9 @@ impl ModificationFileItem {
 
         match &self.props.show_download_btn {
             true => html!{
-                <button class="button is-white is-small" onclick=onclick_download_btn >
+                <button class="button is-white" onclick=onclick_download_btn >
                   <span class="icon" >
-                    <i class="fas fa-cloud-download-alt" aria-hidden="true"></i>
+                    <i class="fas fa-file-download" aria-hidden="true"></i>
                   </span>
                 </button>
             },
@@ -191,7 +189,7 @@ impl ModificationFileItem {
 
         match &self.props.show_delete_btn {
             true => html!{
-                <button class="button is-white is-small" onclick=onclick_delete_btn >
+                <button class="button is-white" onclick=onclick_delete_btn >
                   <span class="icon" >
                     <i class="fa fa-trash" aria-hidden="true"></i>
                   </span>

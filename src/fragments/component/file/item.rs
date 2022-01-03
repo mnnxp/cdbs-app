@@ -175,9 +175,9 @@ impl FileItem {
 
         match &self.props.show_download_btn {
             true => html!{
-                <button class="button is-white is-small" onclick=onclick_download_btn >
+                <button class="button is-white" onclick=onclick_download_btn >
                   <span class="icon" >
-                    <i class="fas fa-cloud-download-alt" aria-hidden="true"></i>
+                    <i class="fas fa-file-download" aria-hidden="true"></i>
                   </span>
                 </button>
             },
@@ -191,7 +191,7 @@ impl FileItem {
 
         match &self.props.show_delete_btn {
             true => html!{
-                <button class="button is-white is-small" onclick=onclick_delete_btn >
+                <button class="button is-white" onclick=onclick_delete_btn >
                   <span class="icon" >
                     <i class="fa fa-trash" aria-hidden="true"></i>
                   </span>

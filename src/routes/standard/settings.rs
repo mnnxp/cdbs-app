@@ -762,7 +762,7 @@ impl StandardSettings {
 
         html!{
             <div class="column">
-              <h2>{"Сharacteristics"}</h2>
+              <h2>{"Manage standard characteristics"}</h2>
               <div class="card">
                 <table class="table is-fullwidth">
                     <tbody>

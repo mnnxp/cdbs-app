@@ -855,7 +855,7 @@ impl ComponentSettings {
         component_data: &ComponentInfo,
     ) -> Html {
         html!{<div class="column">
-              <h2>{"Сharacteristics"}</h2>
+              <h2>{"Manage component characteristics"}</h2>
               <ComponentParamsTags
                   show_manage_btn = true
                   component_uuid = self.current_component_uuid.clone()
@@ -865,10 +865,11 @@ impl ComponentSettings {
     }
 
     fn show_component_files(&self) -> Html {
-        html!{
+        html!{<div class="card">
+            <h2>{"Manage component files"}</h2>
             <div class="columns">
                 <div class="column">
-                  <h2>{"Component files"}</h2>
+                  <h2>{"Files for component"}</h2>
                   <ComponentFilesCard
                       show_download_btn = false
                       show_delete_btn = true
@@ -881,7 +882,7 @@ impl ComponentSettings {
                   {self.show_frame_upload_files()}
                 </div>
             </div>
-        }
+        </div>}
     }
 
     fn show_component_standards(
