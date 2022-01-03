@@ -8,7 +8,7 @@ use wasm_bindgen_futures::spawn_local;
 use chrono::NaiveDateTime;
 use web_sys::FileList;
 
-use super::FilesetFilesCard;
+use super::FilesetFilesBlock;
 use crate::services::{PutUploadFile, UploadData};
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
@@ -632,7 +632,7 @@ impl ManageModificationFilesets {
 
     fn show_fileset_files(&self) -> Html {
         html!{
-            <FilesetFilesCard
+            <FilesetFilesBlock
                 show_download_btn = false
                 show_delete_btn = true
                 select_fileset_uuid = self.select_fileset_uuid.clone()

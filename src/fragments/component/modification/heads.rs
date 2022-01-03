@@ -2,7 +2,7 @@ use yew::{
     html, Component, ComponentLink,
     Html, Properties, ShouldRender,
 };
-// use log::debug;
+use log::debug;
 use crate::types::{UUID, Param};
 
 #[derive(Clone, Debug, Properties)]
@@ -29,8 +29,10 @@ impl Component for ModificationTableHeads {
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
         if self.props.component_uuid == props.component_uuid {
+            debug!("no change self.props.params: {:?}", self.props.params);
             false
         } else {
+            debug!("change self.props.params: {:?}", self.props.params);
             self.props = props;
             true
         }

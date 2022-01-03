@@ -1,3 +1,4 @@
+use std::collections::BTreeSet;
 use yew::services::fetch::FetchTask;
 use yew::services::reader::{File, FileData, ReaderService, ReaderTask};
 use yew::{Component, Callback, ComponentLink, Html, Properties, ShouldRender, html, ChangeData};
@@ -57,6 +58,7 @@ pub struct ManageModificationFilesCard {
     link: ComponentLink<Self>,
     props: Props,
     files_list: Vec<ShowFileInfo>,
+    files_deleted_list: BTreeSet<UUID>,
     put_upload_file: PutUploadFile,
     files: Vec<File>,
     files_index: u32,
@@ -81,6 +83,7 @@ pub enum Msg {
     UpdateFiles(FileList),
     FinishUploadFiles,
     ShowFullList,
+    RemoveFile(UUID),
     ClearFilesBoxed,
     ClearError,
     Ignore,
@@ -101,6 +104,7 @@ impl Component for ManageModificationFilesCard {
             link,
             props,
             files_list: Vec::new(),
+            files_deleted_list: BTreeSet::new(),
             put_upload_file: PutUploadFile::new(),
             files: Vec::new(),
             files_index: 0,
@@ -284,6 +288,9 @@ impl Component for ManageModificationFilesCard {
                 self.files_index = 0;
             },
             Msg::ShowFullList => self.show_full_files = !self.show_full_files,
+            Msg::RemoveFile(file_uuid) => {
+                self.files_deleted_list.insert(file_uuid);
+            },
             Msg::ClearFilesBoxed => {
                 self.files.clear();
                 self.files_index = 0;
@@ -301,7 +308,7 @@ impl Component for ManageModificationFilesCard {
         } else {
             debug!("update modification files {:?}", props.modification_uuid);
             self.props = props;
-
+            self.files_deleted_list.clear();
             self.files_list.clear();
             if self.props.modification_uuid.len() == 36 {
                 self.link.send_message(Msg::RequestModificationFilesList);
@@ -319,7 +326,7 @@ impl Component for ManageModificationFilesCard {
             <div class="columns">
                 <div class="column">
                   <h2>{"Files for modification"}</h2>
-                  {self.show_files_card()}
+                  {self.show_files_list()}
                 </div>
                 <div class="column">
                   <h2>{"Upload modification files"}</h2>
@@ -331,34 +338,43 @@ impl Component for ManageModificationFilesCard {
 }
 
 impl ManageModificationFilesCard {
-    fn show_files_card(&self) -> Html {
-        html!{
-            <div id="files" class="card">
-                {for self.files_list.iter().enumerate().map(|(index, file)| {
-                    match (index >= 3, self.show_full_files) {
-                        // show full list
-                        (_, true) => html!{<ModificationFileItem
-                          show_download_btn = self.props.show_download_btn
-                          show_delete_btn = true
-                          modification_uuid = self.props.modification_uuid.clone()
-                          file = file.clone()
-                        />},
-                        // show full list or first 3 items
-                        (false, false) => html!{<ModificationFileItem
-                          show_download_btn = self.props.show_download_btn
-                          show_delete_btn = true
-                          modification_uuid = self.props.modification_uuid.clone()
-                          file = file.clone()
-                        />},
-                        _ => html!{},
-                    }
-                })}
-                {match self.files_list.len() {
-                    0 => html!{<span>{"Files not found"}</span>},
-                    0..=3 => html!{},
-                    _ => self.show_see_btn(),
-                }}
-            </div>
+    fn show_files_list(&self) -> Html {
+        html!{<>
+            {for self.files_list.iter().enumerate().map(|(index, file)| {
+                match (index >= 3, self.show_full_files) {
+                    // show full list
+                    (_, true) => self.show_file_info(&file),
+                    // show full list or first 3 items
+                    (false, false) => self.show_file_info(&file),
+                    _ => html!{},
+                }
+            })}
+            {match self.files_list.len() {
+                0 => html!{<span>{"Files not found"}</span>},
+                0..=3 => html!{},
+                _ => self.show_see_btn(),
+            }}
+        </>}
+    }
+
+    fn show_file_info(
+        &self,
+        file_info: &ShowFileInfo,
+    ) -> Html {
+        let callback_delete_file = self.link
+            .callback(|value: UUID| Msg::RemoveFile(value));
+
+        match self.files_deleted_list.get(&file_info.uuid) {
+            Some(_) => html!{}, // removed file
+            None => html!{
+                <ModificationFileItem
+                  show_download_btn = self.props.show_download_btn
+                  show_delete_btn = true
+                  modification_uuid = self.props.modification_uuid.clone()
+                  file = file_info.clone()
+                  callback_delete_file = callback_delete_file.clone()
+                />
+            },
         }
     }
 
@@ -389,7 +405,7 @@ impl ManageModificationFilesCard {
             }
         });
 
-        html!{<div class="card">
+        html!{<>
             <div class="file has-name is-boxed is-centered">
                 <label class="file-label" style="width: 100%">
                   <input id="component-file-input"
@@ -418,14 +434,14 @@ impl ManageModificationFilesCard {
                 {self.show_clear_btn()}
                 {self.show_upload_files_btn()}
             </div>
-        </div>}
+        </>}
     }
 
     fn show_clear_btn(&self) -> Html {
         let onclick_clear_boxed = self.link.callback(|_| Msg::ClearFilesBoxed);
 
         html!{
-            <button id="clear-upload-fileset-files"
+            <button id="clear-upload-modification-files"
               class="button"
               onclick=onclick_clear_boxed
               disabled={self.files.is_empty()} >
@@ -447,7 +463,7 @@ impl ManageModificationFilesCard {
 
         html!{
             <button
-              id="upload-fileset-files"
+              id="upload-modification-files"
               class={class_upload_btn}
               disabled={self.files.is_empty() || self.props.modification_uuid.len() != 36}
               onclick={onclick_upload_files} >

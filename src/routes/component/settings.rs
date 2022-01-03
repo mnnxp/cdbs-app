@@ -25,7 +25,7 @@ use crate::fragments::{
         ComponentLicensesTags, ComponentParamsTags,
     },
     component::{
-        ModificationsTableEdit, ComponentFilesCard, SearchSpecsTags, AddKeywordsTags
+        ModificationsTableEdit, ComponentFilesBlock, SearchSpecsTags, AddKeywordsTags
     },
 };
 use crate::gqls::make_query;
@@ -681,18 +681,18 @@ impl Component for ComponentSettings {
                         {match &self.current_component {
                             Some(component_data) => html!{<>
                                 <br/>
-                                {self.show_component_files()}
-                                <br/>
-                                {self.show_additional_params(component_data)}
-                                <br/>
                                 {self.show_modifications_table()}
                                 <br/>
                                 // <div class="columns">
                                 // </div>
+                                {self.show_component_files()}
+                                <br/>
                                 <div class="columns">
+                                  {self.show_additional_params(component_data)}
                                   {self.show_component_standards(component_data)}
-                                  {self.show_component_suppliers(component_data)}
                                 </div>
+                                <br/>
+                                {self.show_component_suppliers(component_data)}
                                 <br/>
                                 {self.show_component_specs(component_data)}
                                 <br/>
@@ -842,7 +842,7 @@ impl ComponentSettings {
 
     fn show_modifications_table(&self) -> Html {
         html!{<>
-            <h2>{"Modifications"}</h2>
+            <h2>{"Manage component modifications"}</h2>
             <ModificationsTableEdit
                 current_component_uuid = self.current_component_uuid.clone()
                 component_modifications = self.current_modifications.clone()
@@ -870,7 +870,7 @@ impl ComponentSettings {
             <div class="columns">
                 <div class="column">
                   <h2>{"Files for component"}</h2>
-                  <ComponentFilesCard
+                  <ComponentFilesBlock
                       show_download_btn = false
                       show_delete_btn = true
                       component_uuid = self.current_component_uuid.clone()
@@ -890,6 +890,7 @@ impl ComponentSettings {
         component_data: &ComponentInfo,
     ) -> Html {
         html!{<div class="column">
+          <h2>{"Manage component standards"}</h2>
           <ComponentStandardsCard
               show_delete_btn = true
               component_uuid = component_data.uuid.clone()
@@ -903,7 +904,8 @@ impl ComponentSettings {
         &self,
         component_data: &ComponentInfo,
     ) -> Html {
-        html!{<div class="column">
+        html!{<>
+          <h2>{"Manage component suppliers"}</h2>
           <ComponentSuppliersCard
               show_delete_btn = true
               component_uuid = component_data.uuid.clone()
@@ -911,7 +913,7 @@ impl ComponentSettings {
               supplier_list = self.supplier_list.clone()
               is_base = self.current_component_is_base
             />
-        </div>}
+        </>}
     }
 
     fn show_component_specs(
@@ -1052,7 +1054,7 @@ impl ComponentSettings {
             }
         });
 
-        html!{<div class="card">
+        html!{<>
             <div class="file has-name is-boxed is-centered">
                 <label class="file-label" style="width: 100%">
                   <input id="component-file-input"
@@ -1081,14 +1083,14 @@ impl ComponentSettings {
                 {self.show_clear_btn()}
                 {self.show_upload_files_btn()}
             </div>
-        </div>}
+        </>}
     }
 
     fn show_clear_btn(&self) -> Html {
         let onclick_clear_boxed = self.link.callback(|_| Msg::ClearFilesBoxed);
 
         html!{
-            <button id="clear-upload-fileset-files"
+            <button id="clear-upload-component-files"
               class="button"
               onclick=onclick_clear_boxed
               disabled={self.files.is_empty()} >
@@ -1110,7 +1112,7 @@ impl ComponentSettings {
 
         html!{
             <button
-              id="upload-fileset-files"
+              id="upload-component-files"
               class={class_upload_btn}
               disabled={self.files.is_empty() || self.current_component_uuid.len() != 36}
               onclick={onclick_upload_files} >

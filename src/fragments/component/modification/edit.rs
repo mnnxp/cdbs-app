@@ -87,6 +87,7 @@ pub struct ModificationsTableEdit {
     update_edit_modification: bool,
     open_add_modification_card: bool,
     open_edit_modification_card: bool,
+    finish_parsing_heads: bool,
 }
 
 pub enum Msg {
@@ -165,6 +166,7 @@ impl Component for ModificationsTableEdit {
             update_edit_modification: false,
             open_add_modification_card: false,
             open_edit_modification_card: false,
+            finish_parsing_heads: false,
         }
     }
 
@@ -219,8 +221,9 @@ impl Component for ModificationsTableEdit {
                         self.collect_columns.clone()
                     ));
                 }
-                // debug!("collect_items: {:?}", self.collect_items);
+                debug!("collect_heads: {:?}", collect_heads);
                 self.collect_heads = collect_heads;
+                self.finish_parsing_heads = true;
             },
             Msg::ParseFilesets => {
                 let mut modification_filesets: HashMap<UUID, Vec<(UUID, String)>> = HashMap::new();
@@ -371,11 +374,11 @@ impl Component for ModificationsTableEdit {
 
                 match res_value.is_null() {
                     false => {
+                        self.clear_current_data();
                         self.current_modifications = serde_json::from_value(
                             res_value.get("componentModifications").unwrap().clone()
                         ).unwrap();
                         debug!("Update modifications list");
-                        self.clear_current_data();
                         link.send_message(Msg::ParseParams);
                         link.send_message(Msg::ParseFilesets);
                     },
@@ -500,13 +503,16 @@ impl Component for ModificationsTableEdit {
     }
 
     fn view(&self) -> Html {
-        html!{<>
-            {self.show_modifications_table()}
-            <br/>
-            {self.show_modification_files()}
-            <br/>
-            {self.show_fileset_files_card()}
-        </>}
+        match self.finish_parsing_heads {
+            true => html!{<>
+                {self.show_modifications_table()}
+                <br/>
+                {self.show_modification_files()}
+                <br/>
+                {self.show_fileset_files_card()}
+            </>},
+            false => html!{},
+        }
     }
 }
 
@@ -774,6 +780,7 @@ impl ModificationsTableEdit {
         self.request_edit_modification = ModificationUpdatePreData::default();
         self.update_add_modification = false;
         self.update_edit_modification = false;
+        self.finish_parsing_heads = false;
     }
 
     fn show_fileset_files_card(&self) -> Html {

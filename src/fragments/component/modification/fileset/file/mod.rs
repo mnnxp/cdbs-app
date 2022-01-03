@@ -4,6 +4,7 @@ mod table_item;
 pub use list_item::FilesetFileItem;
 pub use table_item::FileOfFilesetItem;
 
+use std::collections::BTreeSet;
 use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
 use log::debug;
 // use crate::error::{get_error, Error};
@@ -17,31 +18,29 @@ pub struct Props {
     pub files: Vec<ShowFileInfo>,
 }
 
-pub struct FilesetFilesCard {
+pub struct FilesetFilesBlock {
     link: ComponentLink<Self>,
     props: Props,
-    // files_list: Vec<ShowFileInfo>,
     show_full_files: bool,
+    files_deleted_list: BTreeSet<UUID>,
 }
 
 #[derive(Clone)]
 pub enum Msg {
     ShowFullList,
-    // Ignore,
+    RemoveFile(UUID),
 }
 
-impl Component for FilesetFilesCard {
+impl Component for FilesetFilesBlock {
     type Message = Msg;
     type Properties = Props;
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        // let files_list = props.files.clone();
-
         Self {
             link,
             props,
-            // files_list,
             show_full_files: false,
+            files_deleted_list: BTreeSet::new(),
         }
     }
 
@@ -49,7 +48,9 @@ impl Component for FilesetFilesCard {
         // let link = self.link.clone();
         match msg {
             Msg::ShowFullList => self.show_full_files = !self.show_full_files,
-            // Msg::Ignore => {},
+            Msg::RemoveFile(file_uuid) => {
+                self.files_deleted_list.insert(file_uuid);
+            },
         }
         true
     }
@@ -61,48 +62,52 @@ impl Component for FilesetFilesCard {
             false
         } else {
             debug!("change fileset uuid: {:?}", props.select_fileset_uuid);
-            // self.files_list = props.files.clone();
             self.show_full_files = false;
+            self.files_deleted_list.clear();
             self.props = props;
             true
         }
     }
 
     fn view(&self) -> Html {
-        // html!{}
-        self.show_files_list()
+        html!{<>
+            {for self.props.files.iter().enumerate().map(|(index, file)| {
+                match (index >= 3, self.show_full_files) {
+                    // show full list
+                    (_, true) => self.show_file_info(&file),
+                    // show full list or first 3 items
+                    (false, false) => self.show_file_info(&file),
+                    _ => html!{},
+                }
+            })}
+            {match self.props.files.len() {
+                0 => html!{<span>{"Files not found"}</span>},
+                0..=3 => html!{},
+                _ => self.show_see_btn(),
+            }}
+        </>}
     }
 }
 
-impl FilesetFilesCard {
-    fn show_files_list(&self) -> Html {
-        html!{
-            <div id="files" class="card">
-                {for self.props.files.iter().enumerate().map(|(index, file)| {
-                    match (index >= 3, self.show_full_files) {
-                        // show full list
-                        (_, true) => html!{<FilesetFileItem
-                          show_download_btn = self.props.show_download_btn
-                          show_delete_btn = self.props.show_delete_btn
-                          select_fileset_uuid = self.props.select_fileset_uuid.clone()
-                          file = file.clone()
-                        />},
-                        // show full list or first 3 items
-                        (false, false) => html!{<FilesetFileItem
-                          show_download_btn = self.props.show_download_btn
-                          show_delete_btn = self.props.show_delete_btn
-                          select_fileset_uuid = self.props.select_fileset_uuid.clone()
-                          file = file.clone()
-                        />},
-                        _ => html!{},
-                    }
-                })}
-                {match self.props.files.len() {
-                    0 => html!{<span>{"Files not found"}</span>},
-                    0..=3 => html!{},
-                    _ => self.show_see_btn(),
-                }}
-            </div>
+impl FilesetFilesBlock {
+    fn show_file_info(
+        &self,
+        file_info: &ShowFileInfo,
+    ) -> Html {
+        let callback_delete_file = self.link
+            .callback(|value: UUID| Msg::RemoveFile(value));
+
+        match self.files_deleted_list.get(&file_info.uuid) {
+            Some(_) => html!{}, // removed file
+            None => html!{
+                <FilesetFileItem
+                  show_download_btn = self.props.show_download_btn
+                  show_delete_btn = self.props.show_delete_btn
+                  select_fileset_uuid = self.props.select_fileset_uuid.clone()
+                  file = file_info.clone()
+                  callback_delete_file = callback_delete_file.clone()
+                />
+            },
         }
     }
 

@@ -2,7 +2,7 @@ mod file;
 mod edit;
 mod download_block;
 
-pub use file::{FilesetFilesCard, FileOfFilesetItem};
+pub use file::{FilesetFilesBlock, FileOfFilesetItem};
 pub use edit::ManageModificationFilesets;
 pub use download_block::ManageFilesOfFilesetBlock;
 
@@ -136,7 +136,7 @@ impl Component for FilesOfFilesetCard {
 impl FilesOfFilesetCard {
     // fn show_files_card(&self) -> Html {
     //     html!{
-    //         <FilesetFilesCard
+    //         <FilesetFilesBlock
     //             show_download_btn = !self.props.show_download_btn
     //             show_delete_btn = self.props.show_download_btn
     //             select_select_fileset_uuid = self.select_fileset_uuid.clone()

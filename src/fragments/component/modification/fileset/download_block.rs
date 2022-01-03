@@ -40,7 +40,7 @@ pub enum Msg {
     GetDownloadFilesetFilesResult(String),
     ParseFirstFilesetUuid,
     SelectFilesetUuid(UUID),
-    OpenFilesetFilesCard,
+    OpenFilesetFilesBlock,
     ClearError,
 }
 
@@ -119,7 +119,7 @@ impl Component for ManageFilesOfFilesetBlock {
                 self.props.callback_select_fileset_uuid.emit(fileset_uuid.clone());
                 self.select_fileset_uuid = fileset_uuid;
             },
-            Msg::OpenFilesetFilesCard => {
+            Msg::OpenFilesetFilesBlock => {
                 self.open_fileset_files_card = !self.open_fileset_files_card;
                 self.props.callback_open_fileset_uuid.emit(self.open_fileset_files_card);
             },
@@ -159,7 +159,7 @@ impl ManageFilesOfFilesetBlock {
           }));
 
         let onclick_open_fileset_files_list_btn = self.link
-            .callback(|_| Msg::OpenFilesetFilesCard);
+            .callback(|_| Msg::OpenFilesetFilesBlock);
 
         let onclick_download_fileset_btn = self.link
             .callback(|_| Msg::RequestDownloadFilesetFiles);

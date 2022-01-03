@@ -21,7 +21,7 @@ use crate::fragments::{
     component::{
         ComponentStandardItem, ComponentSupplierItem, ComponentLicenseTag, ComponentParamTag,
         ModificationsTable, FilesOfFilesetCard, ManageFilesOfFilesetBlock,
-        ComponentFilesCard, ModificationFilesTableCard, SpecsTags, KeywordsTags,
+        ComponentFilesBlock, ModificationFilesTableCard, SpecsTags, KeywordsTags,
     },
 };
 use crate::gqls::make_query;
@@ -104,7 +104,7 @@ pub enum Msg {
     ShowStandardCard,
     ShowModificationCard,
     ShowModificationFilesList,
-    ShowFilesetFilesList(bool),
+    ShowFilesetFilesBlock(bool),
     OpenComponentSetting,
     ClearError,
     Ignore,
@@ -313,7 +313,7 @@ impl Component for ShowComponent {
             Msg::ShowStandardCard => self.open_standard_info = !self.open_standard_info,
             Msg::ShowModificationCard => self.open_modification_card = !self.open_modification_card,
             Msg::ShowModificationFilesList => self.open_modification_files_card = !self.open_modification_files_card,
-            Msg::ShowFilesetFilesList(value) => self.open_fileset_files_card = value,
+            Msg::ShowFilesetFilesBlock(value) => self.open_fileset_files_card = value,
             Msg::OpenComponentSetting => {
                 if let Some(component_data) = &self.component {
                     // Redirect to page for change and update component
@@ -626,14 +626,14 @@ impl ShowComponent {
         &self,
         component_data: &ComponentInfo,
     ) -> Html {
-        html!{
-              <ComponentFilesCard
+        html!{<div id="files" class="card">
+            <ComponentFilesBlock
                   show_download_btn = true
                   show_delete_btn = false
                   component_uuid = component_data.uuid.clone()
                   files = component_data.files.clone()
                 />
-        }
+        </div>}
     }
 
     fn show_component_specs(
@@ -835,7 +835,7 @@ impl ShowComponent {
             .callback(|value: UUID| Msg::SelectFileset(value));
 
         let callback_open_fileset_uuid = self.link
-            .callback(|value: bool| Msg::ShowFilesetFilesList(value));
+            .callback(|value: bool| Msg::ShowFilesetFilesBlock(value));
 
         html!{
             <ManageFilesOfFilesetBlock

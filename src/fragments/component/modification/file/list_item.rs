@@ -1,4 +1,4 @@
-use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
+use yew::{Component, Callback, ComponentLink, Html, Properties, ShouldRender, html};
 use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
@@ -31,6 +31,7 @@ pub struct Props {
     pub show_delete_btn: bool,
     pub modification_uuid: UUID,
     pub file: ShowFileInfo,
+    pub callback_delete_file: Option<Callback<UUID>>,
 }
 
 pub struct ModificationFileItem {
@@ -48,6 +49,7 @@ pub enum Msg {
     GetDownloadFileResult(String),
     GetDeleteFileResult(String),
     ClickFileInfo,
+    ClearError,
 }
 
 impl Component for ModificationFileItem {
@@ -118,14 +120,19 @@ impl Component for ModificationFileItem {
 
                 match res.is_null() {
                     false => {
-                        let result: bool = serde_json::from_value(res.get("deleteModificationFile").unwrap().clone()).unwrap();
-                        debug!("deleteModificationFile: {:?}", result);
-                        self.get_result_delete = result;
+                        self.get_result_delete = serde_json::from_value(res.get("deleteModificationFile").unwrap().clone()).unwrap();
+                        debug!("deleteModificationFile: {:?}", self.get_result_delete);
+                        if self.get_result_delete {
+                            if let Some(rollback) = &self.props.callback_delete_file {
+                                rollback.emit(self.props.file.uuid.clone());
+                            }
+                        }
                     },
                     true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }
             },
             Msg::ClickFileInfo => self.open_full_info_file = !self.open_full_info_file,
+            Msg::ClearError => self.error = None,
         }
         true
     }
@@ -135,8 +142,10 @@ impl Component for ModificationFileItem {
     }
 
     fn view(&self) -> Html {
+        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+
         html!{<>
-            <ListErrors error=self.error.clone()/>
+            <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
             {match self.get_result_delete {
                 true => html!{},
                 false => html!{<>
@@ -150,8 +159,7 @@ impl Component for ModificationFileItem {
 
 impl ModificationFileItem {
     fn show_file(&self) -> Html {
-        let onclick_file_info = self.link
-            .callback(|_| Msg::ClickFileInfo);
+        let onclick_file_info = self.link.callback(|_| Msg::ClickFileInfo);
 
         html!{
             <div class="buttons">
