@@ -21,7 +21,7 @@ use crate::fragments::{
     component::{
         ComponentStandardItem, ComponentSupplierItem, ComponentLicenseTag, ComponentParamTag,
         ModificationsTable, FilesOfFilesetCard, ManageFilesOfFilesetBlock,
-        FilesCard, SpecsTags, KeywordsTags,
+        ComponentFilesCard, ModificationFilesCard, SpecsTags, KeywordsTags,
     },
 };
 use crate::gqls::make_query;
@@ -67,7 +67,7 @@ pub struct ShowComponent {
     link: ComponentLink<Self>,
     subscribers: usize,
     is_followed: bool,
-    select_component_modification: UUID,
+    select_modification_uuid: UUID,
     modification_filesets: HashMap<UUID, Vec<(UUID, String)>>,
     select_fileset_uuid: UUID,
     current_filesets_program: Vec<(UUID, String)>,
@@ -75,6 +75,7 @@ pub struct ShowComponent {
     show_full_characteristics: bool,
     open_owner_user_info: bool,
     open_modification_card: bool,
+    open_modification_files_card: bool,
     open_fileset_files_card: bool,
     open_standard_info: bool,
     show_related_standards: bool,
@@ -102,6 +103,7 @@ pub enum Msg {
     ShowOwnerUserCard,
     ShowStandardCard,
     ShowModificationCard,
+    ShowModificationFilesList,
     ShowFilesetFilesList(bool),
     OpenComponentSetting,
     Ignore,
@@ -123,7 +125,7 @@ impl Component for ShowComponent {
             link,
             subscribers: 0,
             is_followed: false,
-            select_component_modification: String::new(),
+            select_modification_uuid: String::new(),
             modification_filesets: HashMap::new(),
             select_fileset_uuid: String::new(),
             current_filesets_program: Vec::new(),
@@ -131,6 +133,7 @@ impl Component for ShowComponent {
             show_full_characteristics: false,
             open_owner_user_info: false,
             open_modification_card: false,
+            open_modification_files_card: false,
             open_fileset_files_card: false,
             open_standard_info: false,
             show_related_standards: false,
@@ -161,7 +164,7 @@ impl Component for ShowComponent {
             // update current_component_uuid for checking change component in route
             if not_matches_component_uuid {
                 self.current_user_owner = false;
-                self.select_component_modification = String::new();
+                self.select_modification_uuid = String::new();
                 self.modification_filesets = HashMap::new();
                 self.select_fileset_uuid = String::new();
                 self.current_filesets_program.clear();
@@ -183,13 +186,13 @@ impl Component for ShowComponent {
         match msg {
             Msg::SelectFileset(fileset_uuid) => self.select_fileset_uuid = fileset_uuid,
             Msg::SelectModification(modification_uuid) => {
-                match self.select_component_modification == modification_uuid {
+                match self.select_modification_uuid == modification_uuid {
                     true => link.send_message(Msg::ShowModificationCard),
                     false => {
-                        self.select_component_modification = modification_uuid;
+                        self.select_modification_uuid = modification_uuid;
                         self.current_filesets_program.clear();
                         self.current_filesets_program = self.modification_filesets
-                            .get(&self.select_component_modification)
+                            .get(&self.select_modification_uuid)
                             .map(|f| f.clone())
                             .unwrap_or_default();
                     },
@@ -273,7 +276,7 @@ impl Component for ShowComponent {
                         // length check for show btn more/less
                         self.show_full_description = component_data.description.len() < 250;
                         self.show_full_characteristics = component_data.component_params.len() < 4;
-                        self.select_component_modification = component_data.component_modifications
+                        self.select_modification_uuid = component_data.component_modifications
                             .first()
                             .map(|m| m.uuid.clone())
                             .unwrap_or_default();
@@ -293,7 +296,7 @@ impl Component for ShowComponent {
                             );
                         }
                         self.current_filesets_program = self.modification_filesets
-                            .get(&self.select_component_modification)
+                            .get(&self.select_modification_uuid)
                             .map(|f| f.clone())
                             .unwrap_or_default();
 
@@ -308,6 +311,7 @@ impl Component for ShowComponent {
             Msg::ShowOwnerUserCard => self.open_owner_user_info = !self.open_owner_user_info,
             Msg::ShowStandardCard => self.open_standard_info = !self.open_standard_info,
             Msg::ShowModificationCard => self.open_modification_card = !self.open_modification_card,
+            Msg::ShowModificationFilesList => self.open_modification_files_card = !self.open_modification_files_card,
             Msg::ShowFilesetFilesList(value) => self.open_fileset_files_card = value,
             Msg::OpenComponentSetting => {
                 if let Some(component_data) = &self.component {
@@ -352,6 +356,8 @@ impl Component for ShowComponent {
                             {self.show_fileset_files_card()}
                             <br/>
                             {self.show_modifications_table(component_data)}
+                            <br/>
+                            {self.show_modification_files()}
                             <br/>
                             {self.show_cards(component_data)}
                             {self.show_component_specs(component_data)}
@@ -478,14 +484,31 @@ impl ShowComponent {
         let onclick_select_modification = self.link
             .callback(|value: UUID| Msg::SelectModification(value));
 
+        let callback_open_modification_uuid = self.link
+            .callback(|_| Msg::ShowModificationFilesList);
+
         html!{<>
             <h2>{"Modifications"}</h2>
             <ModificationsTable
                 modifications = component_data.component_modifications.clone()
-                select_modification = self.select_component_modification.clone()
+                select_modification = self.select_modification_uuid.clone()
+                open_modification_files = self.open_modification_files_card
                 callback_select_modification = onclick_select_modification.clone()
+                callback_open_modification_files = callback_open_modification_uuid.clone()
               />
         </>}
+    }
+
+    fn show_modification_files(&self) -> Html {
+        match self.open_modification_files_card {
+            true => html!{
+                <ModificationFilesCard
+                    show_download_btn = true
+                    modification_uuid = self.select_modification_uuid.clone()
+                  />
+            },
+            false => html!{},
+        }
     }
 
     fn show_component_params(
@@ -579,7 +602,7 @@ impl ShowComponent {
             <div class="columns">
                 {self.show_additional_params(component_data)}
                 <div class="column">
-                    <h2>{"Files"}</h2>
+                    <h2>{"Component files"}</h2>
                     {self.show_component_files(component_data)}
                 </div>
             </div>
@@ -600,7 +623,7 @@ impl ShowComponent {
         component_data: &ComponentInfo,
     ) -> Html {
         html!{
-              <FilesCard
+              <ComponentFilesCard
                   show_download_btn = true
                   show_delete_btn = false
                   component_uuid = component_data.uuid.clone()
@@ -749,7 +772,7 @@ impl ShowComponent {
         };
 
         let modification_data: Option<&ComponentModificationInfo> = component_data.component_modifications.iter()
-            .find(|x| x.uuid == self.select_component_modification);
+            .find(|x| x.uuid == self.select_modification_uuid);
 
         match modification_data {
             Some(mod_data) => html!{<div class=class_modal>
@@ -812,7 +835,7 @@ impl ShowComponent {
 
         html!{
             <ManageFilesOfFilesetBlock
-                select_component_modification = self.select_component_modification.clone()
+                select_modification_uuid = self.select_modification_uuid.clone()
                 current_filesets_program = self.current_filesets_program.clone()
                 callback_select_fileset_uuid = callback_select_fileset_uuid.clone()
                 callback_open_fileset_uuid = callback_open_fileset_uuid.clone()

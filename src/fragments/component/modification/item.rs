@@ -45,8 +45,10 @@ pub struct Props {
     pub collect_heads: Vec<Param>,
     pub collect_item: HashMap<usize, String>,
     pub select_item: bool,
+    pub open_modification_files: bool,
     pub callback_new_modification_param: Option<Callback<UUID>>,
     pub callback_select_modification: Option<Callback<UUID>>,
+    pub callback_open_modification_files: Option<Callback<()>>,
 }
 
 pub struct ModificationTableItem {
@@ -78,6 +80,7 @@ pub enum Msg {
     GetUpdateParamResult(String),
     GetDeleteParamResult(String),
     SelectModification,
+    ShowModificationFilesList,
     UpdateParamId(String),
     UpdateValue(String),
     ShowNewParamCard,
@@ -280,6 +283,11 @@ impl Component for ModificationTableItem {
                     select_modification.emit(self.props.modification_uuid.clone());
                 }
             },
+            Msg::ShowModificationFilesList => {
+                if let Some(open_files) = &self.props.callback_open_modification_files {
+                    open_files.emit(());
+                }
+            },
             Msg::UpdateParamId(data) =>
                 self.request_add_param.param_id = data.parse::<usize>().unwrap_or_default(),
             Msg::UpdateValue(data) => {
@@ -340,9 +348,12 @@ impl Component for ModificationTableItem {
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
         if self.modification_uuid == props.modification_uuid &&
-              self.select_item == props.select_item {
+              self.select_item == props.select_item &&
+                self.props.open_modification_files == props.open_modification_files {
+            debug!("no change open_modification_files {:?}", props.open_modification_files);
             false
         } else {
+            debug!("change open_modification_files {:?}", props.open_modification_files);
             self.modification_uuid = props.modification_uuid.clone();
             self.collect_item = props.collect_item.clone();
             self.select_item = props.select_item;
@@ -366,9 +377,17 @@ impl ModificationTableItem {
         let onclick_select_modification = self.link
             .callback(|_| Msg::SelectModification);
 
+        let onclick_show_modification_files = self.link
+            .callback(|_| Msg::ShowModificationFilesList);
+
         let class_style = match &self.props.select_item {
             true => "is-selected",
             false => "",
+        };
+
+        let files_click_icon = match &self.props.open_modification_files {
+            true => "far fa-folder-open",
+            false => "far fa-folder",
         };
 
         let (double_click_text, double_click_icon) = match &self.props.show_manage_btn {
@@ -377,22 +396,36 @@ impl ModificationTableItem {
         };
 
         html!{<tr class={class_style}>
-            <td><a onclick={onclick_select_modification}>
-                {match &self.props.select_item {
+            <td>
+                <a onclick={onclick_select_modification}>
+                    {match &self.props.select_item {
+                        true => html!{<>
+                            <span>{double_click_text}</span>
+                            <span class="icon">
+                                <i class={double_click_icon} aria-hidden="true"></i>
+                            </span>
+                        </>},
+                        false => html!{<>
+                            <span>{"select"}</span>
+                            <span class="icon is-small">
+                                <i class="far fa-hand-pointer" aria-hidden="true"></i>
+                            </span>
+                        </>},
+                    }}
+                </a>
+                {match self.props.select_item && !self.props.show_manage_btn {
                     true => html!{<>
-                        <span>{double_click_text}</span>
-                        <span class="icon">
-                        <i class={double_click_icon} aria-hidden="true"></i>
-                        </span>
+                        <span>{" | "}</span>
+                        <a onclick={onclick_show_modification_files}>
+                            // <span>{files_click_text}</span>
+                            <span class="icon">
+                                <i class={files_click_icon} aria-hidden="true"></i>
+                            </span>
+                        </a>
                     </>},
-                    false => html!{<>
-                        <span>{"select"}</span>
-                        <span class="icon is-small">
-                        <i class="far fa-hand-pointer" aria-hidden="true"></i>
-                        </span>
-                    </>},
+                    false => html!{},
                 }}
-            </a></td>
+            </td>
             {match self.collect_item.get(&0) {
                 Some(value) => html!{<td>{value.clone()}</td>},
                 None => html!{<td></td>},

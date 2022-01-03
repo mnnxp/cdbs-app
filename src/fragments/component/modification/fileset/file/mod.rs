@@ -82,15 +82,15 @@ impl FilesetFilesCard {
                     match (index >= 3, self.show_full_files) {
                         // show full list
                         (_, true) => html!{<FilesetFileItem
-                          show_download_btn = self.props.show_download_btn.clone()
-                          show_delete_btn = self.props.show_delete_btn.clone()
+                          show_download_btn = self.props.show_download_btn
+                          show_delete_btn = self.props.show_delete_btn
                           select_fileset_uuid = self.props.select_fileset_uuid.clone()
                           file = file.clone()
                         />},
                         // show full list or first 3 items
                         (false, false) => html!{<FilesetFileItem
-                          show_download_btn = self.props.show_download_btn.clone()
-                          show_delete_btn = self.props.show_delete_btn.clone()
+                          show_download_btn = self.props.show_download_btn
+                          show_delete_btn = self.props.show_delete_btn
                           select_fileset_uuid = self.props.select_fileset_uuid.clone()
                           file = file.clone()
                         />},

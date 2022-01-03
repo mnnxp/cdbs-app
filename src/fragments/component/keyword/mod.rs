@@ -50,7 +50,7 @@ impl Component for KeywordsTags {
             <div id="keywords" class="field is-grouped is-grouped-multiline">
                 {for self.props.keywords.iter().map(|keyword| {
                     html!{<KeywordTagItem
-                        show_delete_btn = self.props.show_delete_btn.clone()
+                        show_delete_btn = self.props.show_delete_btn
                         component_uuid = self.props.component_uuid.clone()
                         keyword = keyword.clone()
                         delete_keyword = self.props.delete_keyword.clone()

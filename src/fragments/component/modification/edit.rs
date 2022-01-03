@@ -10,7 +10,7 @@ use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
-use super::file::ModificationFilesCard;
+use super::file::ManageModificationFilesCard;
 use super::heads::ModificationTableHeads;
 use super::item::ModificationTableItem;
 use super::fileset::ManageModificationFilesets;
@@ -543,6 +543,7 @@ impl ModificationsTableEdit {
                             collect_heads = self.collect_heads.clone()
                             collect_item = item.clone()
                             select_item = &self.select_modification_uuid == modification_uuid
+                            open_modification_files = false
                             callback_new_modification_param = Some(onclick_new_modification_param.clone())
                             callback_select_modification = Some(onclick_select_modification.clone())
                         />},
@@ -567,9 +568,8 @@ impl ModificationsTableEdit {
         html!{<>
             <h2>{"Modification files"}</h2>
             <br/>
-            <ModificationFilesCard
+            <ManageModificationFilesCard
                 show_download_btn = false
-                show_delete_btn = true
                 modification_uuid = self.select_modification_uuid.clone()
               />
         </>}

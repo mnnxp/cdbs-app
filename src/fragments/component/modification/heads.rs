@@ -44,7 +44,10 @@ impl Component for ModificationTableHeads {
 impl ModificationTableHeads {
     fn show_modification_head(&self) -> Html {
         html!{<>
-            <th>{"action"}</th>
+            {match self.props.show_new_column {
+                true => html!{<th>{"action"}</th>},
+                false => html!{<th>{"action | files"}</th>},
+            }}
             <th>{"modification"}</th>
             {for self.props.params.iter().map(|head| {
                 html!{<th>{head.paramname.clone()}</th>}

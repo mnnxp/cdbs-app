@@ -15,7 +15,7 @@ pub struct Props {
     pub files: Vec<ShowFileInfo>,
 }
 
-pub struct FilesCard {
+pub struct ComponentFilesCard {
     link: ComponentLink<Self>,
     props: Props,
     show_full_files: bool,
@@ -27,7 +27,7 @@ pub enum Msg {
     Ignore,
 }
 
-impl Component for FilesCard {
+impl Component for ComponentFilesCard {
     type Message = Msg;
     type Properties = Props;
 
@@ -64,15 +64,15 @@ impl Component for FilesCard {
                     match (index >= 3, self.show_full_files) {
                         // show full list
                         (_, true) => html!{<FileItem
-                          show_download_btn = self.props.show_download_btn.clone()
-                          show_delete_btn = self.props.show_delete_btn.clone()
+                          show_download_btn = self.props.show_download_btn
+                          show_delete_btn = self.props.show_delete_btn
                           component_uuid = self.props.component_uuid.clone()
                           file = file.clone()
                         />},
                         // show full list or first 3 items
                         (false, false) => html!{<FileItem
-                          show_download_btn = self.props.show_download_btn.clone()
-                          show_delete_btn = self.props.show_delete_btn.clone()
+                          show_download_btn = self.props.show_download_btn
+                          show_delete_btn = self.props.show_delete_btn
                           component_uuid = self.props.component_uuid.clone()
                           file = file.clone()
                         />},
@@ -89,7 +89,7 @@ impl Component for FilesCard {
     }
 }
 
-impl FilesCard {
+impl ComponentFilesCard {
     fn show_see_btn(&self) -> Html {
         let show_full_files_btn = self.link
             .callback(|_| Msg::ShowFullList);

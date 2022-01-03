@@ -25,7 +25,7 @@ use crate::fragments::{
         ComponentLicensesTags, ComponentParamsTags,
     },
     component::{
-        ModificationsTableEdit, FilesCard, SearchSpecsTags, AddKeywordsTags
+        ModificationsTableEdit, ComponentFilesCard, SearchSpecsTags, AddKeywordsTags
     },
 };
 use crate::gqls::make_query;
@@ -869,7 +869,7 @@ impl ComponentSettings {
             <div class="columns">
                 <div class="column">
                   <h2>{"Component files"}</h2>
-                  <FilesCard
+                  <ComponentFilesCard
                       show_download_btn = false
                       show_delete_btn = true
                       component_uuid = self.current_component_uuid.clone()
@@ -1065,7 +1065,7 @@ impl ComponentSettings {
                     <i class="fas fa-upload"></i>
                   </span>
                   <span class="file-label">
-                    {"Choose files…"}
+                    {"Choose component files…"}
                   </span>
                 </span>
                 {match self.files.is_empty() {

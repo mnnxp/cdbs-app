@@ -20,7 +20,7 @@ struct ComModFilesetFiles;
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
-    pub select_component_modification: UUID,
+    pub select_modification_uuid: UUID,
     pub current_filesets_program: Vec<(UUID, String)>,
     pub callback_select_fileset_uuid: Callback<UUID>,
     pub callback_open_fileset_uuid: Callback<bool>,
@@ -129,11 +129,11 @@ impl Component for ManageFilesOfFilesetBlock {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.select_component_modification == props.select_component_modification {
-            debug!("no change download block: {:?}", props.select_component_modification);
+        if self.props.select_modification_uuid == props.select_modification_uuid {
+            debug!("no change download block: {:?}", props.select_modification_uuid);
             false
         } else {
-            debug!("change download block: {:?}", props.select_component_modification);
+            debug!("change download block: {:?}", props.select_modification_uuid);
             self.props = props;
             self.link.send_message(Msg::ParseFirstFilesetUuid);
             true

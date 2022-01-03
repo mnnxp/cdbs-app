@@ -5,7 +5,7 @@ mod item;
 mod fileset;
 mod item_module;
 
-pub use file::ModificationFilesCard;
+pub use file::{ModificationFilesCard, ManageModificationFilesCard};
 pub use edit::ModificationsTableEdit;
 pub use heads::ModificationTableHeads;
 pub use item::ModificationTableItem;
@@ -21,7 +21,9 @@ use crate::types::{UUID, ComponentModificationInfo, Param};
 pub struct Props {
     pub modifications: Vec<ComponentModificationInfo>,
     pub select_modification: UUID,
+    pub open_modification_files: bool,
     pub callback_select_modification: Option<Callback<UUID>>,
+    pub callback_open_modification_files: Option<Callback<()>>,
 }
 
 pub struct ModificationsTable {
@@ -119,7 +121,13 @@ impl Component for ModificationsTable {
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
         if self.props.select_modification == props.select_modification {
-            false
+            match self.props.open_modification_files == props.open_modification_files {
+                true => false,
+                false => {
+                    self.props = props;
+                    true
+                },
+            }
         } else {
             self.component_uuid = match props.modifications.first().map(|x| x.component_uuid.clone()) {
                 Some(component_uuid) => component_uuid,
@@ -147,8 +155,10 @@ impl Component for ModificationsTable {
                       collect_heads = self.collect_heads.clone()
                       collect_item = item.clone()
                       select_item = &self.props.select_modification == modification_uuid
+                      open_modification_files = self.props.open_modification_files
                       callback_new_modification_param = None
                       callback_select_modification = self.props.callback_select_modification.clone()
+                      callback_open_modification_files = self.props.callback_open_modification_files.clone()
                       />}
                  })}
               </table>

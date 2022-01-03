@@ -664,7 +664,7 @@ impl ManageModificationFilesets {
                     <i class="fas fa-upload"></i>
                   </span>
                   <span class="file-label">
-                    {"Choose files…"}
+                    {"Choose fileset files…"}
                   </span>
                 </span>
                 {match self.files.is_empty() {

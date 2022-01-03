@@ -18,7 +18,7 @@ use crate::fragments::{
     switch_icon::res_btn,
     list_errors::ListErrors,
     component::CatalogComponents,
-    standard::{FilesCard, SpecsTags, KeywordsTags},
+    standard::{StandardFilesCard, SpecsTags, KeywordsTags},
 };
 use crate::gqls::make_query;
 use crate::services::{
@@ -465,7 +465,7 @@ impl ShowStandard {
         html!{
             <div class="column">
               <h2>{"Files"}</h2>
-              <FilesCard
+              <StandardFilesCard
                   show_download_btn = true
                   show_delete_btn = false
                   standard_uuid = standard_data.uuid.clone()
