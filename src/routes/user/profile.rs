@@ -17,13 +17,13 @@ use crate::fragments::{
     side_menu::{MenuItem, SideMenu},
     standard::CatalogStandards,
     user::CatalogUsers,
-    user::CertificateCard,
+    user::UserCertificatesCard,
 };
 use crate::gqls::make_query;
 // use crate::routes::AppRoute;
 use crate::services::{get_logged_user, is_authenticated};
 use crate::types::{
-    UserDataCard, Certificate, CompaniesQueryArg, ComponentsQueryArg, Program, Region, SelfUserInfo, SlimUser,
+    UserDataCard, CompaniesQueryArg, ComponentsQueryArg, Program, Region, SelfUserInfo, SlimUser,
     StandardsQueryArg, UserCertificate, UserInfo, UsersQueryArg, UUID,
 };
 
@@ -420,20 +420,20 @@ impl Profile {
         html!{<div class="card">
             <div class="columns is-mobile">
                 // <div class="column is-1">
-                    
+
                 // </div>
                 // <hr/>
                 <div class="column is-flex">
                     { self.show_profile_action() }
                     <div class="card-relate-data" style="flex:1;" >
                         {match self.profile_tab {
-                            ProfileTab::Certificates => self.view_certificates(&self_data.certificates),
+                            ProfileTab::Certificates => self.view_certificates(self_data.certificates.clone()),
                             ProfileTab::Components => self.view_components(&self_data.uuid),
                             ProfileTab::Companies => self.view_companies(&self_data.uuid),
                             ProfileTab::FavoriteComponents => self.view_favorite_components(None),
                             ProfileTab::FavoriteCompanies => self.view_favorite_companies(None),
                             ProfileTab::FavoriteStandards => self.view_favorite_standards(),
-                            ProfileTab::FavoriteUsers => self.view_favorite_users(),
+                            ProfileTab::FavoriteUsers => html!{<CatalogUsers arguments = UsersQueryArg::set_favorite() />},
                         }}
                     </div>
                 </div>
@@ -482,7 +482,7 @@ impl Profile {
           { self.show_profile_action() }
           <div class="card-relate-data" style="flex:1;">
               {match self.profile_tab {
-                  ProfileTab::Certificates => self.view_certificates(&user_data.certificates),
+                  ProfileTab::Certificates => self.view_certificates(user_data.certificates.clone()),
                   ProfileTab::Components => self.view_components(&user_data.uuid),
                   ProfileTab::Companies => self.view_companies(&user_data.uuid),
                   ProfileTab::FavoriteComponents => self.view_favorite_components(Some(user_data.uuid.clone())),
@@ -735,28 +735,18 @@ impl Profile {
         }
     }
 
-    fn view_certificates(&self, certificates: &[UserCertificate]) -> Html {
-        match certificates.is_empty() {
-            true => html! {},
-            false => {
-                html! {
-                    // <p class="card-footer-item">
-                    <footer class="card-footer is-flex is-flex-wrap-wrap">{
-                        for certificates.iter().map(|cert| {
-                            let view_cert: Certificate = cert.into();
-                            html!{
-                                <CertificateCard
-                                    certificate = view_cert
-                                    show_cert_btn = true
-                                    download_btn = false
-                                    change_btn = false
-                                 />
-                            }
-                        })
-                    }</footer>
-                    // </p>
-                }
-            }
+    fn view_certificates(
+        &self,
+        certificates: Vec<UserCertificate>
+    ) -> Html {
+        html!{
+            <UserCertificatesCard
+                user_uuid = self.current_user_uuid.clone()
+                certificates = certificates
+                show_cert_btn = true
+                download_btn = false
+                manage_btn = false
+             />
         }
     }
 
@@ -801,14 +791,6 @@ impl Profile {
             <CatalogStandards
                 show_create_btn = false
                 arguments = StandardsQueryArg::set_favorite()
-            />
-        }
-    }
-
-    fn view_favorite_users(&self) -> Html {
-        html! {
-            <CatalogUsers
-                arguments = UsersQueryArg::set_favorite()
             />
         }
     }

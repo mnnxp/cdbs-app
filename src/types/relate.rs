@@ -63,22 +63,6 @@ pub struct Certificate {
     pub description: String,
 }
 
-impl From<&super::UserCertificate> for Certificate {
-    fn from(data: &super::UserCertificate) -> Self {
-        let super::UserCertificate {
-            user_uuid,
-            file,
-            description,
-        } = data;
-
-        Self {
-            owner_uuid: user_uuid.to_string(),
-            file: file.to_owned(),
-            description: description.to_string(),
-        }
-    }
-}
-
 impl From<&super::CompanyCertificate> for Certificate {
     fn from(data: &super::CompanyCertificate) -> Self {
         let super::CompanyCertificate {

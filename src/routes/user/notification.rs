@@ -1,8 +1,5 @@
 // use yew::services::fetch::FetchTask;
-use yew::{
-    html, Callback, Component, ComponentLink,
-    Html, Properties, ShouldRender,
-};
+use yew::{html, Component, ComponentLink, Html, ShouldRender};
 // use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
 use yew::services::ConsoleService;
 
@@ -62,15 +59,10 @@ pub struct Notifications {
     error: Option<Error>,
     notifications: Vec<ShowNotification>,
     link: ComponentLink<Self>,
-    props: Props,
+    // props: Props,
     read_notification: Vec<i64>,
     delete_notification: Vec<i64>,
     select_menu: Menu,
-}
-
-#[derive(Properties, Clone)]
-pub struct Props {
-    pub callback: Callback<()>,
 }
 
 pub enum Msg {
@@ -90,16 +82,16 @@ pub enum Msg {
 
 impl Component for Notifications {
     type Message = Msg;
-    type Properties = Props;
+    type Properties = ();
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(_props: Self::Properties, link: ComponentLink<Self>) -> Self {
         Notifications {
             error: None,
-            notifications: vec![],
+            notifications: Vec::new(),
             link,
-            props,
-            read_notification: vec![],
-            delete_notification: vec![],
+            // props,
+            read_notification: Vec::new(),
+            delete_notification: Vec::new(),
             select_menu: Menu::GetAll,
         }
     }
@@ -217,9 +209,8 @@ impl Component for Notifications {
         true
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        self.props = props;
-        true
+    fn change(&mut self, _props: Self::Properties) -> ShouldRender {
+        false
     }
 
     fn view(&self) -> Html {

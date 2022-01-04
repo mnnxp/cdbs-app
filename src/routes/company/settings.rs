@@ -17,7 +17,7 @@ use crate::fragments::{
     company::{AddCertificateCard, AddCompanyRepresentCard, CompanyCertificateCard, CompanyRepresents},
     list_errors::ListErrors,
     spec::{SpecsTags, SearchSpecsTags},
-    user::UpdateFaviconCard,
+    upload_favicon::UpdateFaviconBlock,
 };
 use crate::gqls::make_query;
 use crate::routes::AppRoute;
@@ -918,7 +918,7 @@ impl CompanySettings {
         let callback_update_favicon = self.link.callback(|_| Msg::GetCurrentData);
 
         html!{
-            <UpdateFaviconCard
+            <UpdateFaviconBlock
                 company_uuid = self.company_uuid.clone()
                 callback=callback_update_favicon
                 />

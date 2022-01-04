@@ -132,8 +132,8 @@ impl Component for App {
                             // AppRoute::Editor(slug) => html!{<Editor slug=Some(slug.clone())/>},
                             // AppRoute::EditorCreate => html!{<Editor />},
                             // AppRoute::Article(slug) => html!{<Article slug=slug.clone() current_user=self.current_user.clone() />},
-                            AppRoute::Notifications => html!{<Notifications callback=callback_logout />},
-                            AppRoute::Settings => html!{<Settings callback=callback_logout />},
+                            AppRoute::Notifications => html!{<Notifications />},
+                            AppRoute::Settings => html!{<Settings />},
                             AppRoute::CatalogUsers => html!{<CatalogUsers />},
                             AppRoute::Profile(_username) => html!{<Profile current_user=self.current_user.clone()/>},
                             AppRoute::CompanySettings(company_uuid) => html!{<CompanySettings
