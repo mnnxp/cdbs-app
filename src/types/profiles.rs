@@ -74,6 +74,39 @@ pub struct SlimUser {
     pub username: String,
 }
 
+#[derive(Default, Debug)]
+pub struct UserDataCard{
+    pub image_file: String,
+    pub firstname: String,
+    pub lastname: String,
+    pub username: String,
+    pub updated_at: String,
+}
+
+impl From<&SelfUserInfo> for UserDataCard {
+    fn from(data: &SelfUserInfo) -> Self {
+        Self{
+            image_file: data.image_file.download_url.clone(),
+            firstname: data.firstname.clone(),
+            lastname: data.lastname.clone(),
+            username: data.username.clone(),
+            updated_at: format!("{:.*}", 19, data.updated_at.to_string()),
+        }
+    }
+}
+
+impl From<&UserInfo> for UserDataCard {
+    fn from(data: &UserInfo) -> Self {
+        Self{
+            image_file: data.image_file.download_url.clone(),
+            firstname: data.firstname.clone(),
+            lastname: data.lastname.clone(),
+            username: data.username.clone(),
+            updated_at: format!("{:.*}", 19, data.updated_at.to_string()),
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct UserUpdateInfo {

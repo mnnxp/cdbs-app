@@ -23,7 +23,7 @@ use crate::gqls::make_query;
 // use crate::routes::AppRoute;
 use crate::services::{get_logged_user, is_authenticated};
 use crate::types::{
-    Certificate, CompaniesQueryArg, ComponentsQueryArg, Program, Region, SelfUserInfo, SlimUser,
+    UserDataCard, Certificate, CompaniesQueryArg, ComponentsQueryArg, Program, Region, SelfUserInfo, SlimUser,
     StandardsQueryArg, UserCertificate, UserInfo, UsersQueryArg, UUID,
 };
 
@@ -92,6 +92,7 @@ pub struct Profile {
     is_followed: bool,
     profile_tab: ProfileTab,
     extend_tab: Option<ProfileTab>,
+    show_full_user_info: bool,
 }
 
 #[derive(Properties, Clone)]
@@ -100,15 +101,6 @@ pub struct Props {
     // pub username: String,
     pub current_user: Option<SlimUser>,
     // pub tab: ProfileTab,
-}
-
-#[derive(Default, Debug)]
-pub struct UserDataCard<'a> {
-    pub image_file: &'a str,
-    pub firstname: &'a str,
-    pub lastname: &'a str,
-    pub username: &'a str,
-    pub updated_at: String,
 }
 
 #[derive(Clone)]
@@ -121,6 +113,7 @@ pub enum Msg {
     GetUserData(String),
     UpdateList(String),
     ChangeTab(ProfileTab),
+    ShowFullUserInfo,
     Ignore,
 }
 
@@ -156,6 +149,7 @@ impl Component for Profile {
             is_followed: false,
             profile_tab: ProfileTab::Certificates,
             extend_tab: Some(ProfileTab::Certificates),
+            show_full_user_info: true,
         }
     }
 
@@ -233,7 +227,7 @@ impl Component for Profile {
 
                     link.send_message(Msg::AddFollow(res));
                 })
-            }
+            },
             Msg::AddFollow(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
@@ -253,7 +247,7 @@ impl Component for Profile {
                         self.error = Some(get_error(&data));
                     }
                 }
-            }
+            },
             Msg::UnFollow => {
                 let link = self.link.clone();
                 let user_uuid = self.profile.as_ref().unwrap().uuid.clone();
@@ -267,7 +261,7 @@ impl Component for Profile {
 
                     link.send_message(Msg::DelFollow(res.clone()));
                 })
-            }
+            },
             Msg::DelFollow(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
@@ -287,7 +281,7 @@ impl Component for Profile {
                         self.error = Some(get_error(&data));
                     }
                 }
-            }
+            },
             Msg::GetSelfData(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
@@ -312,7 +306,7 @@ impl Component for Profile {
                         self.error = Some(get_error(&data));
                     }
                 }
-            }
+            },
             Msg::GetUserData(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
@@ -335,20 +329,7 @@ impl Component for Profile {
                         self.error = Some(get_error(&data));
                     }
                 }
-            }
-            Msg::ChangeTab(set_tab) => {
-                self.profile_tab = set_tab.clone();
-                if self.extend_tab.is_none() {
-                    self.extend_tab = Some(set_tab);
-                } else {
-                    if self.extend_tab.clone().unwrap() != set_tab {
-                        self.extend_tab = Some(set_tab);
-                    } else {
-                        self.extend_tab = None;
-                    }
-                }
-            }
-            Msg::Ignore => {}
+            },
             Msg::UpdateList(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
@@ -367,7 +348,21 @@ impl Component for Profile {
                         self.error = Some(get_error(&data));
                     }
                 }
-            }
+            },
+            Msg::ChangeTab(set_tab) => {
+                self.profile_tab = set_tab.clone();
+                if self.extend_tab.is_none() {
+                    self.extend_tab = Some(set_tab);
+                } else {
+                    if self.extend_tab.clone().unwrap() != set_tab {
+                        self.extend_tab = Some(set_tab);
+                    } else {
+                        self.extend_tab = None;
+                    }
+                }
+            },
+            Msg::ShowFullUserInfo => self.show_full_user_info = !self.show_full_user_info,
+            Msg::Ignore => {},
         }
         true
     }
@@ -378,128 +373,125 @@ impl Component for Profile {
     }
 
     fn view(&self) -> Html {
-        // let onsubmit = self.link.callback(|ev: FocusEvent| {
-        //     ev.prevent_default();
-        //     Msg::Request
-        // });
-        // let title = match &self.profile {
-        //     Some(data) => format!("Profile {}", data.username),
-        //     None => "Not data".to_string(),
-        // };
-
         match (&self.self_profile, &self.profile) {
-            (Some(self_data), _) => html! {
-                <div class="profile-page">
-                    <ListErrors error=self.error.clone()/>
-                    <div class="container page">
-                        <div class="row">
-                            <div class="card">
-                              <div class="card-content">
-                                <div class="media">
-                                  { self.view_card() }
-                                </div>
-
-                                <div class="content">
-                                    { self.view_content(
-                                        self_data.description.as_str(),
-                                        self_data.position.as_str(),
-                                        self_data.region.region.as_str(),
-                                        self_data.program.name.as_str(),
-                                    ) }
-                                </div>
-                                <div style="display: flex;padding: 10px;padding-top: 20px;border-top: 5px dashed;padding-left:0;">
-                                { self.show_profile_action() }
-                                // <hr/>
-                                <div class="card-relate-data" style="flex:1;" >
-                                    {match self.profile_tab {
-                                        ProfileTab::Certificates => {
-                                            self.view_certificates(&self_data.certificates)
-                                        },
-                                        ProfileTab::Components => {
-                                            self.view_components(&self_data.uuid)
-                                        },
-                                        ProfileTab::Companies => {
-                                            self.view_companies(&self_data.uuid)
-                                        },
-                                        ProfileTab::FavoriteComponents => {
-                                            self.view_favorite_components(None)
-                                        },
-                                        ProfileTab::FavoriteCompanies => {
-                                            self.view_favorite_companies(None)
-                                        },
-                                        ProfileTab::FavoriteStandards => {
-                                            self.view_favorite_standards()
-                                        },
-                                        ProfileTab::FavoriteUsers => {
-                                            self.view_favorite_users()
-                                        },
-                                    }}
-                                </div>
-                                </div>
-                            </div>
-                          </div>
-                        </div>
-                    </div>
-                </div>
-            },
-            (_, Some(user_data)) => html! {
-                <div class="profile-page">
-                    <ListErrors error=self.error.clone()/>
-                    <div class="container page">
-                        <div class="row">
-                            // <h1 class="title">{ title }</h1>
-                            <div class="card">
-                              <div class="card-content">
-                                <div class="media">
-                                  { self.view_card() }
-                                </div>
-
-                                <div class="content">
-                                    { self.view_content(
-                                        user_data.description.as_str(),
-                                        user_data.position.as_str(),
-                                        user_data.region.region.as_str(),
-                                        user_data.program.name.as_str(),
-                                    ) }
-                                </div>
-                                <div style="display: flex;padding: 10px;">
-                                  { self.show_profile_action() }
-                                  <div class="card-relate-data" style="flex:1;">
-                                      {match self.profile_tab {
-                                          ProfileTab::Certificates => {
-                                              self.view_certificates(&user_data.certificates)
-                                          },
-                                          ProfileTab::Components => {
-                                              self.view_components(&user_data.uuid)
-                                          },
-                                          ProfileTab::Companies => {
-                                              self.view_companies(&user_data.uuid)
-                                          },
-                                          ProfileTab::FavoriteComponents => {
-                                              self.view_favorite_components(Some(user_data.uuid.clone()))
-                                          },
-                                          ProfileTab::FavoriteCompanies => {
-                                              self.view_favorite_companies(Some(user_data.uuid.clone()))
-                                          },
-                                          _ => html!{},
-                                      }}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            },
-            _ => html! {<div>
-                <ListErrors error=self.error.clone()/>
-                // <h1>{"Not data"}</h1>
-            </div>},
+            (Some(self_data), _) => self.self_user_card(self_data),
+            (_, Some(user_data)) => self.other_user_card(user_data),
+            _ => html!{<ListErrors error=self.error.clone()/>},
         }
     }
 }
 
 impl Profile {
+    fn self_user_card(
+        &self,
+        self_data: &SelfUserInfo,
+    ) -> Html {
+        html! {
+            <div class="profile-page">
+                <ListErrors error=self.error.clone()/>
+                <div class="container page">
+                    <div class="row">
+                        <div class="card">
+                          <div class="card-content">
+                            <div class="media">
+                              { self.view_card() }
+                            </div>
+                            <div class="content">
+                                { self.view_user_info(
+                                    self_data.description.as_str(),
+                                    self_data.position.as_str(),
+                                    self_data.region.region.as_str(),
+                                    self_data.program.name.as_str(),
+                                ) }
+                            </div>
+                        </div>
+                        {self.self_user_relate_object(self_data)}
+                      </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+
+    fn self_user_relate_object(
+        &self,
+        self_data: &SelfUserInfo,
+    ) -> Html {
+        html!{<div class="card">
+            <div class="columns is-mobile">
+                <div class="column is-1">
+                    { self.show_profile_action() }
+                </div>
+                // <hr/>
+                <div class="column">
+                    <div class="card-relate-data" style="flex:1;" >
+                        {match self.profile_tab {
+                            ProfileTab::Certificates => self.view_certificates(&self_data.certificates),
+                            ProfileTab::Components => self.view_components(&self_data.uuid),
+                            ProfileTab::Companies => self.view_companies(&self_data.uuid),
+                            ProfileTab::FavoriteComponents => self.view_favorite_components(None),
+                            ProfileTab::FavoriteCompanies => self.view_favorite_companies(None),
+                            ProfileTab::FavoriteStandards => self.view_favorite_standards(),
+                            ProfileTab::FavoriteUsers => self.view_favorite_users(),
+                        }}
+                    </div>
+                </div>
+            </div>
+        </div>}
+    }
+
+    fn other_user_card(
+        &self,
+        user_data: &UserInfo,
+    ) -> Html {
+        html! {
+            <div class="profile-page">
+                <ListErrors error=self.error.clone()/>
+                <div class="container page">
+                    <div class="row">
+                        // <h1 class="title">{ title }</h1>
+                        <div class="card">
+                          <div class="card-content">
+                            <div class="media">
+                              { self.view_card() }
+                            </div>
+
+                            <div class="content">
+                                { self.view_user_info(
+                                    user_data.description.as_str(),
+                                    user_data.position.as_str(),
+                                    user_data.region.region.as_str(),
+                                    user_data.program.name.as_str(),
+                                ) }
+                            </div>
+                          </div>
+                        </div>
+                        {self.other_user_relate_object(user_data)}
+                    </div>
+                </div>
+            </div>
+        }
+    }
+
+    fn other_user_relate_object(
+        &self,
+        user_data: &UserInfo,
+    ) -> Html {
+        html!{<div class="card">
+          { self.show_profile_action() }
+          <div class="card-relate-data" style="flex:1;">
+              {match self.profile_tab {
+                  ProfileTab::Certificates => self.view_certificates(&user_data.certificates),
+                  ProfileTab::Components => self.view_components(&user_data.uuid),
+                  ProfileTab::Companies => self.view_companies(&user_data.uuid),
+                  ProfileTab::FavoriteComponents => self.view_favorite_components(Some(user_data.uuid.clone())),
+                  ProfileTab::FavoriteCompanies => self.view_favorite_companies(Some(user_data.uuid.clone())),
+                  _ => html!{},
+              }}
+          </div>
+        </div>}
+    }
+
     fn view_card(&self) -> Html {
         let UserDataCard {
             // image_file,
@@ -509,20 +501,8 @@ impl Profile {
             updated_at,
             ..
         } = match (&self.self_profile, &self.profile) {
-            (_, Some(ref other_data)) => UserDataCard {
-                image_file: &other_data.image_file.download_url,
-                firstname: &other_data.firstname,
-                lastname: &other_data.lastname,
-                username: &other_data.username,
-                updated_at: format!("{:.*}", 19, &other_data.updated_at.to_string()),
-            },
-            (Some(ref self_data), _) => UserDataCard {
-                image_file: &self_data.image_file.download_url,
-                firstname: &self_data.firstname,
-                lastname: &self_data.lastname,
-                username: &self_data.username,
-                updated_at: format!("{:.*}", 19, &self_data.updated_at.to_string()),
-            },
+            (_, Some(ref other_data)) => other_data.into(),
+            (Some(ref self_data), _) => self_data.into(),
             (None, None) => UserDataCard::default(),
         };
 
@@ -609,34 +589,6 @@ impl Profile {
     }
 
     fn show_profile_action(&self) -> Html {
-        // let onclick_certificates = self
-        //     .link
-        //     .callback(|_| Msg::ChangeTab(ProfileTab::Certificates));
-
-        // let onclick_components = self
-        //     .link
-        //     .callback(|_| Msg::ChangeTab(ProfileTab::Components));
-
-        // let onclick_companies = self
-        //     .link
-        //     .callback(|_| Msg::ChangeTab(ProfileTab::Companies));
-
-        // let onclick_fav_components = self
-        //     .link
-        //     .callback(|_| Msg::ChangeTab(ProfileTab::FavoriteComponents));
-
-        // let onclick_fav_companies = self
-        //     .link
-        //     .callback(|_| Msg::ChangeTab(ProfileTab::FavoriteCompanies));
-
-        // let onclick_fav_standards = self
-        //     .link
-        //     .callback(|_| Msg::ChangeTab(ProfileTab::FavoriteStandards));
-
-        // let onclick_fav_users = self
-        //     .link
-        //     .callback(|_| Msg::ChangeTab(ProfileTab::FavoriteUsers));
-
         let menu_arr: Vec<MenuItem> = vec![
             MenuItem {
                 title: "Certificates".to_string(),
@@ -735,32 +687,50 @@ impl Profile {
         }
     }
 
-    fn view_content(&self, description: &str, position: &str, region: &str, program: &str) -> Html {
-        html! {
-            <div class="columns">
-                <div class="column">
-                    <div id="description" class="content">
-                      { format!("{}", description) }
+    fn view_user_info(
+        &self,
+        description: &str,
+        position: &str,
+        region: &str,
+        program: &str,
+    ) -> Html {
+        let onclick_change_full_show = self.link
+            .callback(|_| Msg::ShowFullUserInfo);
+
+        match self.show_full_user_info {
+            true => html! {<>
+                <div class="columns">
+                    <div class="column">
+                        <div id="description" class="content">
+                          { format!("{}", description) }
+                        </div>
                     </div>
-                    <br/>
+                    <div class="column">
+                        <span id="position">
+                          <i class="fas fa-briefcase"></i>
+                          { format!("Position: {}", position) }
+                        </span>
+                        <br/>
+                        <span id="region">
+                          <i class="fas fa-map-marker-alt"></i>
+                          { format!("Region: {}", region) }
+                        </span>
+                        <br/>
+                        <span id="program">
+                          <i class="fab fa-uncharted"></i>
+                          { format!("Working software: {}", program) }
+                        </span>
+                    </div>
                 </div>
-                <div class="column">
-                    <span id="position">
-                      <i class="fas fa-briefcase"></i>
-                      { format!("Position: {}", position) }
-                    </span>
-                    <br/>
-                    <span id="region">
-                      <i class="fas fa-map-marker-alt"></i>
-                      { format!("Region: {}", region) }
-                    </span>
-                    <br/>
-                    <span id="program">
-                      <i class="fab fa-uncharted"></i>
-                      { format!("Working software: {}", program) }
-                    </span>
-                </div>
-            </div>
+                <button class="button is-ghost" onclick={onclick_change_full_show}>
+                    <span>{"Hide info"}</span>
+                </button>
+            </>},
+            false => html!{
+                <button class="button is-ghost" onclick={onclick_change_full_show}>
+                    <span>{"Show info"}</span>
+                </button>
+            },
         }
     }
 
