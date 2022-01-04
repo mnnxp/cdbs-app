@@ -419,11 +419,12 @@ impl Profile {
     ) -> Html {
         html!{<div class="card">
             <div class="columns is-mobile">
-                <div class="column is-1">
-                    { self.show_profile_action() }
-                </div>
+                // <div class="column is-1">
+                    
+                // </div>
                 // <hr/>
-                <div class="column">
+                <div class="column is-flex">
+                    { self.show_profile_action() }
                     <div class="card-relate-data" style="flex:1;" >
                         {match self.profile_tab {
                             ProfileTab::Certificates => self.view_certificates(&self_data.certificates),
