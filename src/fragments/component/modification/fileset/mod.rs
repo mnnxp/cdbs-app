@@ -134,24 +134,13 @@ impl Component for FilesOfFilesetCard {
 }
 
 impl FilesOfFilesetCard {
-    // fn show_files_card(&self) -> Html {
-    //     html!{
-    //         <FilesetFilesBlock
-    //             show_download_btn = !self.props.show_download_btn
-    //             show_delete_btn = self.props.show_download_btn
-    //             select_select_fileset_uuid = self.select_fileset_uuid.clone()
-    //             files = self.files_list.clone()
-    //         />
-    //     }
-    // }
-
     fn show_files_card(&self) -> Html {
         html!{<div class="card">
             <table class="table is-fullwidth is-striped">
               <thead>
                 <tr>
                   <th>{"Filename"}</th>
-                  <th>{"Content"}</th>
+                  // <th>{"Content"}</th>
                   <th>{"Filesize"}</th>
                   <th>{"Program"}</th>
                   <th>{"Upload by"}</th>

@@ -174,7 +174,6 @@ impl Component for AddCertificateCard {
                     let res = make_query(ConfirmUploadCompleted::build_query(confirm_upload_completed::Variables {
                         file_uuids,
                     })).await.unwrap();
-                    crate::yewLog!(res);
                     link.send_message(Msg::GetUploadCompleted(res));
                 });
             },
@@ -198,9 +197,9 @@ impl Component for AddCertificateCard {
 
                 match res_value.is_null() {
                     false => {
-                        let result: UploadFile = serde_json::from_value(res_value.get("uploadCompanyCertificate").unwrap().clone()).unwrap();
-                        // crate::yewLog!(result);
-                        self.request_upload_data = result;
+                        self.request_upload_data = serde_json::from_value(
+                            res_value.get("uploadCompanyCertificate").unwrap().clone()
+                        ).unwrap();
 
                         if let Some(file) = self.file.clone() {
                             let file_name = file.name().clone();
@@ -214,9 +213,7 @@ impl Component for AddCertificateCard {
                         }
                         debug!("file: {:?}", self.file);
                     },
-                    true => {
-                        link.send_message(Msg::ResponseError(get_error(&data)));
-                    }
+                    true => self.error = Some(get_error(&data)),
                 }
             },
             Msg::GetUploadFile(res) => {
@@ -230,13 +227,12 @@ impl Component for AddCertificateCard {
 
                 match res_value.is_null() {
                     false => {
-                        let result: usize = serde_json::from_value(res_value.get("uploadCompleted").unwrap().clone()).unwrap();
-                        crate::yewLog!(result);
+                        let result: usize = serde_json::from_value(
+                            res_value.get("uploadCompleted").unwrap().clone()
+                        ).unwrap();
                         self.get_result_up_completed = result;
                     },
-                    true => {
-                        link.send_message(Msg::ResponseError(get_error(&data)));
-                    }
+                    true => self.error = Some(get_error(&data)),
                 }
             },
             Msg::ClearFileBoxed => {

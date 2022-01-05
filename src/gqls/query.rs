@@ -1,4 +1,3 @@
-// use graphql_client::{GraphQLQuery, Response};
 use std::{
     error::Error,
     fmt::{self, Debug, Display, Formatter},
@@ -6,13 +5,10 @@ use std::{
 use wasm_bindgen::{prelude::*, JsCast};
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{Request, RequestInit, RequestMode, Response as Res};
-// use yew::{html, Component, ComponentLink, Html, ShouldRender};
-// use yewtil::future::LinkFuture;
-// use serde::ser::{SerializeStruct, Serializer};
 use dotenv_codegen::dotenv;
-use crate::services::{get_token};
-// use yew::services::ConsoleService;
 use serde::{Deserialize, Serialize};
+// use log::debug;
+use crate::services::{get_token};
 
 // use serde
 
@@ -54,7 +50,7 @@ where
     T: Serialize,
 {
     let query = serde_json::json!(build_query);
-    // ConsoleService::info(format!("Update: {:?}", query.to_string()).as_ref());
+    // debug("Update: {:?}", query);
     let mut opts = RequestInit::new();
     opts.method("POST");
     opts.body(Some(&JsValue::from_str(query.to_string().as_str())));

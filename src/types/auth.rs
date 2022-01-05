@@ -36,8 +36,8 @@ pub struct RegisterInfo {
     pub address: String,
     pub time_zone: String,
     pub position: String,
-    pub region_id: i32,
-    pub program_id: i32,
+    pub region_id: usize,
+    pub program_id: usize,
 }
 
 impl Default for RegisterInfo {

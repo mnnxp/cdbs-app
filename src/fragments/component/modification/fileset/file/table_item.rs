@@ -47,7 +47,7 @@ impl FileOfFilesetItem {
     fn show_full_info_file(&self) -> Html {
         html!{<tr>
           <td>{self.props.file.filename.clone()}</td>
-          <td>{self.props.file.content_type.clone()}</td>
+          // <td>{self.props.file.content_type.clone()}</td>
           <td>{self.props.file.filesize.clone()}</td>
           <td>{self.props.file.program.name.clone()}</td>
           <td>{format!("{} {} (@{})",

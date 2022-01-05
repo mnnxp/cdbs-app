@@ -4,7 +4,7 @@ use crate::types::ErrorInfo;
 use crate::services::{set_token, set_logged_user};
 use thiserror::Error as ThisError;
 use serde_json::Value;
-use yew::services::ConsoleService;
+use log::debug;
 
 /// Define all possible errors
 #[derive(ThisError, Clone, Debug)]
@@ -49,7 +49,7 @@ pub(crate) fn get_error(data: &Value) -> Error {
     let err_message: String =
         serde_json::from_value(val_err.get(0).unwrap().get("message").unwrap().clone()).unwrap();
 
-    ConsoleService::info(format!("Err message: {:?}", err_message).as_ref());
+    debug!("Err message: {:?}", err_message);
 
     // clean storage if the token has expired
     if err_message == "Unauthorized" {

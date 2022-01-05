@@ -1,7 +1,4 @@
-// use yew::services::fetch::FetchTask;
 use yew::{html, Component, ComponentLink, Html, ShouldRender};
-// use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
-use yew::services::ConsoleService;
 
 use log::debug;
 use chrono::NaiveDateTime;
@@ -9,11 +6,10 @@ use chrono::NaiveDateTime;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
-use crate::gqls::make_query;
 
+use crate::gqls::make_query;
 use crate::error::{Error, get_error};
 use crate::fragments::list_errors::ListErrors;
-// use crate::routes::AppRoute;
 use crate::services::is_authenticated;
 use crate::types::{
     ShowNotification, DegreeImportanceTranslateList,
@@ -156,7 +152,7 @@ impl Component for Notifications {
                 match res_value.is_null() {
                     false => {
                         let notifications_data: Vec<ShowNotification> = serde_json::from_value(res_value.get("notifications").unwrap().clone()).unwrap();
-                        ConsoleService::info(format!("User notifications data: {:?}", notifications_data).as_ref());
+                        debug!("User notifications data: {:?}", notifications_data);
 
                         self.notifications = notifications_data;
                     },
@@ -174,7 +170,7 @@ impl Component for Notifications {
                 match res_value.is_null() {
                     false => {
                         let read_notification: usize = serde_json::from_value(res_value.get("readNotifications").unwrap().clone()).unwrap();
-                        ConsoleService::info(format!("Read notifications data: {:?}", read_notification).as_ref());
+                        debug!("Read notifications data: {:?}", read_notification);
 
                         if read_notification > 0 {
                             self.rendered(true);
@@ -192,7 +188,7 @@ impl Component for Notifications {
                 match res_value.is_null() {
                     false => {
                         let delete_notification: usize = serde_json::from_value(res_value.get("deleteNotifications").unwrap().clone()).unwrap();
-                        ConsoleService::info(format!("Read notifications data: {:?}", delete_notification).as_ref());
+                        debug!("Read notifications data: {:?}", delete_notification);
 
                         if delete_notification > 0 {
                             self.rendered(true);

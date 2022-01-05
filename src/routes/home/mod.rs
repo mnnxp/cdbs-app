@@ -1,41 +1,26 @@
 mod banner;
 mod main_view;
-mod tags;
 
-use yew::{html, Component, ComponentLink, Html, ShouldRender};
+use yew::{html, Component, classes, ComponentLink, Html, ShouldRender};
 
 use banner::Banner;
 // use main_view::MainView;
-// use tags::Tags;
 
 /// Home page with an article list and a tag list.
 pub struct Home {
-    tag: Option<String>,
     // link: ComponentLink<Self>,
 }
 
-pub enum Msg {
-    TagFiltered(String),
-}
-
 impl Component for Home {
-    type Message = Msg;
+    type Message = ();
     type Properties = ();
 
     fn create(_: Self::Properties, _link: ComponentLink<Self>) -> Self {
-        Home {
-            tag: None,
-            // link
-        }
+        Home { }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        match msg {
-            Msg::TagFiltered(tag) => {
-                self.tag = Some(tag);
-            }
-        }
-        true
+    fn update(&mut self, _msg: Self::Message) -> ShouldRender {
+        false
     }
 
     fn change(&mut self, _: Self::Properties) -> ShouldRender {
@@ -43,14 +28,12 @@ impl Component for Home {
     }
 
     fn view(&self) -> Html {
-        // let callback = self.link.callback(Msg::TagFiltered);
-
         html!{
-            <div class=vec!("tile", "is-ancestor", "is-vertical")>
+            <div class=classes!("tile", "is-ancestor", "is-vertical")>
                 <div class="tile is-child hero">
-                    <div class="hero-body container pb-0">
-                        <h1 class="title is-1" title="CADBase">
-                            <svg width="490" viewBox="0 0 149 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <div class=classes!("hero-body", "container", "pb-0")>
+                        <h1 class="title is-1" title="CADBase" style="margin-bottom: 0; position: initial;  width: 50%;">
+                            <svg position="initial" viewBox="0 0 145 35" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
                                     <g id="1-copy" transform="translate(-136.000000, -89.000000)">
                                         <g id="LOGO" transform="translate(136.000000, 89.000000)">
@@ -71,46 +54,22 @@ impl Component for Home {
                                 </g>
                             </svg>
                         </h1>
-                        <h2 class="subtitle"> { "engineer        component        supplier" } </h2>
-                    </div>
-                </div>
-
-                <div class="tile is-child">
-                    <div class="field">
-                      <p class="control has-icons-left has-icons-right">
-                        <input class="input" type="text" placeholder="Search and look in future"/>
-                        <span class="icon is-small is-left">
-                          <i class=vec!("fas", "fa-search")></i>
-                        </span>
-                        // <span class="icon is-small is-right">
-                        //   <i class=vec!("fas", "fa-arrow-right")></i>
-                        // </span>
-                      </p>
+                        <div class="media">
+                            <div class="media-left">
+                                <h2 class="subtitle"> { "engineer" } </h2>
+                            </div>
+                            <div class="media-content">
+                                <h2 class="subtitle" style="text-align: center"> { "component" } </h2>
+                            </div>
+                            <div class="media-right">
+                                <h2 class="subtitle"> { "supplier" } </h2>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <Banner />
-                // <div class="tile is-parent container">
-                //     { self.view_info_tiles() }
-                // </div>
             </div>
         }
     }
 }
-
-// html!{
-//     <div class="home-page">
-//         <Banner />
-//         <div class="container page">
-//             <div class="row">
-//                 <MainView tag=&self.tag />
-//                 <div class="col-md-3 col-xs-12">
-//                     <div class="sidebar">
-//                         <p>{ "Popular Tags" }</p>
-//                         <Tags callback=callback />
-//                     </div>
-//                 </div>
-//             </div>
-//         </div>
-//     </div>
-// }

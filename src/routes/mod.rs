@@ -2,7 +2,6 @@
 
 pub mod home;
 pub mod user;
-pub mod tender;
 pub mod component;
 pub mod company;
 pub mod standard;
@@ -30,12 +29,8 @@ pub enum AppRoute {
     Login,
     #[to = "#/register"]
     Register,
-    #[to = "#/tenders/create"]
-    CreateTender,
-    #[to = "#/tenders"]
-    Tenders,
-    #[to = "#/components"]
-    CatalogComponents,
+    // #[to = "#/components"]
+    // CatalogComponents,
     #[to = "#/component/settings/{uuid}"]
     ComponentSettings(String),
     #[to = "#/component/create"]
@@ -58,10 +53,8 @@ pub enum AppRoute {
     CreateStandard,
     #[to = "#/standard/{uuid}"]
     ShowStandard(String),
-    // #[to = "#/@{username}/favorites"]
-    // ProfileFavorites(String),
-    #[to = "#/users"]
-    CatalogUsers,
+    // #[to = "#/users"]
+    // CatalogUsers,
     #[to = "#/@{username}"]
     Profile(String),
     #[to = "#/"]

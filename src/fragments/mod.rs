@@ -9,7 +9,6 @@ pub mod user;
 pub mod footer;
 pub mod header;
 pub mod list_errors;
-pub mod list_pagination;
 pub mod switch_icon;
 pub mod side_menu;
 pub mod upload_favicon;

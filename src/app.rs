@@ -11,13 +11,8 @@ use crate::error::Error;
 use crate::fragments::{
     footer::Footer,
     header::Header,
-    user::CatalogUsers, // for test
-    component::CatalogComponents, // for test
 };
 use crate::routes::{
-    // article::Article,
-    tender::{Tenders, CreateTender},
-    // editor::Editor,
     fix_fragment_routes,
     home::Home,
     login::Login,
@@ -116,7 +111,7 @@ impl Component for App {
 
     fn view(&self) -> Html {
         let callback_login = self.link.callback(Msg::Authenticated);
-        let callback_register = self.link.callback(Msg::Authenticated);
+        // let callback_register = self.link.callback(Msg::Authenticated);
         let callback_logout = self.link.callback(|_| Msg::Logout);
 
         html!{
@@ -127,14 +122,10 @@ impl Component for App {
                     if let Some(route) = &self.current_route {
                         match route {
                             AppRoute::Login => html!{<Login callback=callback_login />},
-                            AppRoute::Register => html!{<Register callback=callback_register />},
+                            AppRoute::Register => html!{<Register />},
                             AppRoute::Home => html!{<Home />},
-                            // AppRoute::Editor(slug) => html!{<Editor slug=Some(slug.clone())/>},
-                            // AppRoute::EditorCreate => html!{<Editor />},
-                            // AppRoute::Article(slug) => html!{<Article slug=slug.clone() current_user=self.current_user.clone() />},
                             AppRoute::Notifications => html!{<Notifications />},
                             AppRoute::Settings => html!{<Settings />},
-                            AppRoute::CatalogUsers => html!{<CatalogUsers />},
                             AppRoute::Profile(_username) => html!{<Profile current_user=self.current_user.clone()/>},
                             AppRoute::CompanySettings(company_uuid) => html!{<CompanySettings
                                 current_user=self.current_user.clone()
@@ -154,8 +145,6 @@ impl Component for App {
                                 standard_uuid=standard_uuid.to_string()
                                 />},
                             AppRoute::CreateStandard => html!{<CreateStandard />},
-                            AppRoute::Tenders => html!{<Tenders />},
-                            AppRoute::CatalogComponents => html!{<CatalogComponents show_create_btn = true />},
                             AppRoute::ComponentSettings(component_uuid) => html!{<ComponentSettings
                                 current_user=self.current_user.clone()
                                 component_uuid=component_uuid.to_string()
@@ -165,7 +154,6 @@ impl Component for App {
                                 component_uuid=component_uuid.to_string()
                                 />},
                             AppRoute::CreateComponent => html!{<CreateComponent />},
-                            AppRoute::CreateTender => html!{<CreateTender />},
                         }
                     } else {
                         // 404 when route matches no component

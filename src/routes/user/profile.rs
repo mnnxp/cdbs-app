@@ -1,7 +1,5 @@
-// use yew::services::fetch::FetchTask;
 use chrono::NaiveDateTime;
 use web_sys::MouseEvent;
-// use yew::services::ConsoleService;
 use graphql_client::GraphQLQuery;
 use log::debug;
 use serde_json::Value;
@@ -20,7 +18,6 @@ use crate::fragments::{
     user::UserCertificatesCard,
 };
 use crate::gqls::make_query;
-// use crate::routes::AppRoute;
 use crate::services::{get_logged_user, is_authenticated};
 use crate::types::{
     UserDataCard, CompaniesQueryArg, ComponentsQueryArg, Program, Region, SelfUserInfo, SlimUser,
@@ -97,10 +94,7 @@ pub struct Profile {
 
 #[derive(Properties, Clone)]
 pub struct Props {
-    // pub current_route: Option<AppRoute>,
-    // pub username: String,
     pub current_user: Option<SlimUser>,
-    // pub tab: ProfileTab,
 }
 
 #[derive(Clone)]

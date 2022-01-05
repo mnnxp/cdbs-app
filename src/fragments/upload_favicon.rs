@@ -170,7 +170,6 @@ impl Component for UpdateFaviconBlock {
                     let res = make_query(ConfirmUploadCompleted::build_query(confirm_upload_completed::Variables {
                         file_uuids,
                     })).await.unwrap();
-                    crate::yewLog!(res);
                     link.send_message(Msg::GetUploadCompleted(res));
                 });
             },
@@ -190,12 +189,10 @@ impl Component for UpdateFaviconBlock {
 
                 match res_value.is_null() {
                     false => {
-                        let result: UploadFile = match &self.props.company_uuid {
+                        self.request_upload_data = match &self.props.company_uuid {
                             Some(_) => serde_json::from_value(res_value.get("uploadCompanyFavicon").unwrap().clone()).unwrap(),
                             None => serde_json::from_value(res_value.get("uploadFavicon").unwrap().clone()).unwrap(),
                         };
-                        // crate::yewLog!(result);
-                        self.request_upload_data = result;
 
                         if let Some(file) = self.file.clone() {
                             let file_name = file.name().clone();

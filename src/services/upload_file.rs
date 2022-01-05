@@ -1,13 +1,9 @@
 use yew::callback::Callback;
 use yew::services::fetch::FetchTask;
-// use yew::services::ConsoleService;
-
-// use graphql_client::GraphQLQuery;
-// use serde_json::Value;
+// use log::debug;
 
 use super::Requests;
 use crate::error::Error;
-// use crate::types::*;
 
 #[derive(Default, Debug)]
 pub struct UploadData {
@@ -34,7 +30,7 @@ impl PutUploadFile {
         upload_data: UploadData,
         callback: Callback<Result<Option<String>, Error>>,
     ) -> FetchTask {
-        // ConsoleService::info(format!("File data: {:?}", &upload_data.file_data).as_ref());
+        // debug!("File data: {:?}", upload_data.file_data);
         self.requests.put_f::<String>(
             upload_data.upload_url,
             upload_data.file_data,

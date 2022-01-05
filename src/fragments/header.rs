@@ -16,11 +16,11 @@ pub struct Header {
     link: ComponentLink<Self>,
 }
 
-#[derive(Clone)]
-pub struct NavMenu {
-    text: String,
-    route: AppRoute,
-}
+// #[derive(Clone)]
+// pub struct NavMenu {
+//     text: String,
+//     route: AppRoute,
+// }
 
 #[derive(Properties, Clone)]
 pub struct Props {
@@ -74,20 +74,16 @@ impl Component for Header {
     }
 
     fn view(&self) -> Html {
-        let nav_menu = vec![
-            NavMenu {
-                text: "Сatalog".to_string(),
-                route: AppRoute::CatalogComponents,
-            },
-            NavMenu {
-                text: "Tenders".to_string(),
-                route: AppRoute::Tenders,
-            },
-            NavMenu {
-                text: "About Us".to_string(),
-                route: AppRoute::Home,
-            },
-        ];
+        // let nav_menu = vec![
+        //     NavMenu {
+        //         text: "Сatalog".to_string(),
+        //         route: AppRoute::CatalogComponents,
+        //     },
+        //     NavMenu {
+        //         text: "About Us".to_string(),
+        //         route: AppRoute::Home,
+        //     },
+        // ];
 
         let onclick = self.link.callback(|_| Msg::Logout);
 
@@ -109,17 +105,17 @@ impl Component for Header {
                     </h1>
                 </div>
                 <div class="navbar-menu">
-                    <div class="navbar-start">
-                        {
-                          for nav_menu.iter().map(|item| {
-                            html!{
-                              <RouterAnchor<AppRoute> route=item.clone().route classes="navbar-item">
-                                { item.text.clone() }
-                              </RouterAnchor<AppRoute>>
-                            }
-                          })
-                        }
-                    </div>
+                    // <div class="navbar-start">
+                    //     {
+                    //       for nav_menu.iter().map(|item| {
+                    //         html!{
+                    //           <RouterAnchor<AppRoute> route=item.clone().route classes="navbar-item">
+                    //             { item.text.clone() }
+                    //           </RouterAnchor<AppRoute>>
+                    //         }
+                    //       })
+                    //     }
+                    // </div>
                     <div class="navbar-end">
                     {
                         if let Some(user_info) = &self.props.current_user {

@@ -1,20 +1,26 @@
 use yew::services::fetch::FetchTask;
 use yew::{
-    agent::Bridged, html, Bridge, Callback, Component, ComponentLink, FocusEvent, Html, InputData,
-    Properties, ShouldRender,
+    agent::Bridged, html, Bridge, Callback, Component,
+    ComponentLink, FocusEvent, Html, InputData, Properties, ShouldRender
 };
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
-use yew::services::ConsoleService;
 use graphql_client::GraphQLQuery;
+use log::debug;
 
 use crate::fragments::list_errors::ListErrors;
 use crate::error::Error;
 use crate::routes::AppRoute;
-use crate::services::{set_token, Auth, get_token, set_logged_user};
+use crate::services::{set_token, Auth, set_logged_user};
 use crate::types::{UUID, LoginInfo, LoginInfoWrapper, SlimUser, UserToken};
 use crate::gqls::make_query;
 use wasm_bindgen_futures::spawn_local;
 use std::sync::{Arc,Mutex};
+
+#[derive(PartialEq, Properties, Clone)]
+pub struct Props {
+    /// Callback when user is logged in successfully
+    pub callback: Callback<SlimUser>,
+}
 
 /// Login page
 pub struct Login {
@@ -26,12 +32,6 @@ pub struct Login {
     props: Props,
     router_agent: Arc<Mutex<Box<dyn Bridge<RouteAgent>>>>,
     link: ComponentLink<Self>,
-}
-
-#[derive(PartialEq, Properties, Clone)]
-pub struct Props {
-    /// Callback when user is logged in successfully
-    pub callback: Callback<SlimUser>,
 }
 
 pub enum Msg {
@@ -68,7 +68,6 @@ impl Component for Login {
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        // let link = self.link.clone();
         let props = self.props.clone();
         let router_agent = self.router_agent.clone();
         match msg {
@@ -77,42 +76,36 @@ impl Component for Login {
                     user: self.request.clone(),
                 };
                 self.task = Some(self.auth.login(request, self.response.clone()));
-            }
+            },
             Msg::Response(Ok(user_info)) => {
                 set_token(Some(user_info.to_string()));
                 spawn_local(async move {
                     let res = make_query(GetMySelf::build_query(get_my_self::Variables)).await.unwrap();
-                    ConsoleService::info(format!("{}", res).as_ref());
+                    debug!("res: {}", res);
                     let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
                     let res = data.as_object().unwrap().get("data").unwrap();
                     let user_json = res.get("myself").unwrap().clone();
                     set_logged_user(Some(user_json.to_string()));
                     let user : SlimUser = serde_json::from_value(user_json).unwrap();
-                    ConsoleService::info(format!("{}", user.username).as_ref());
+                    debug!("user.username: {}", user.username);
                     props.callback.emit(user);
                     router_agent.lock().unwrap().send(ChangeRoute(AppRoute::Home.into()));
                 });
-                // ConsoleService::info(format!("{}", get_token().unwrap()).as_ref());
-                crate::yewLog!(get_token().unwrap());
-            }
+                // debug!("get_token().unwrap(): {:?}", get_token().unwrap());
+            },
             Msg::Response(Err(err)) => {
                 self.error = Some(err);
                 self.task = None;
-            }
-            Msg::UpdateUsername(username) => {
-                self.request.username = username;
-            }
-            Msg::UpdatePassword(password) => {
-                self.request.password = password;
-            }
-            Msg::Ignore => {}
+            },
+            Msg::UpdateUsername(username) => self.request.username = username,
+            Msg::UpdatePassword(password) => self.request.password = password,
+            Msg::Ignore => {},
         }
         true
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        self.props = props;
-        true
+    fn change(&mut self, _props: Self::Properties) -> ShouldRender {
+        false
     }
 
     fn view(&self) -> Html {
@@ -187,30 +180,3 @@ impl Component for Login {
         </div>}
     }
 }
-
-// <div class="field">
-//   <p class="control has-icons-left has-icons-right">
-//     <input class="input" type="email" placeholder="Email">
-//     <span class="icon is-small is-left">
-//       <i class="fas fa-envelope"></i>
-//     </span>
-//     <span class="icon is-small is-right">
-//       <i class="fas fa-check"></i>
-//     </span>
-//   </p>
-// </div>
-// <div class="field">
-//   <p class="control has-icons-left">
-//     <input class="input" type="password" placeholder="Password">
-//     <span class="icon is-small is-left">
-//       <i class="fas fa-lock"></i>
-//     </span>
-//   </p>
-// </div>
-// <div class="field">
-//   <p class="control">
-//     <button class="button is-success">
-//       Login
-//     </button>
-//   </p>
-// </div>
