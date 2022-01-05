@@ -160,12 +160,12 @@ impl Component for CatalogStandards {
                 }}
                 </div>
                 <div class="level-right">
-                  <div class="select">
-                    <select>
-                      <option>{"Select dropdown"}</option>
-                      <option>{"With options"}</option>
-                    </select>
-                  </div>
+                  // <div class="select">
+                  //   <select>
+                  //     <option>{"Select dropdown"}</option>
+                  //     <option>{"With options"}</option>
+                  //   </select>
+                  // </div>
                   <button class="button" onclick={onclick_change_view} >
                     <span class={"icon is-small"}>
                       <i class={class_for_icon}></i>

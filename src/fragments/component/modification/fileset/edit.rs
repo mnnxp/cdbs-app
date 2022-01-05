@@ -535,12 +535,10 @@ impl ManageModificationFilesets {
                 <div class="select is-fullwidth" style="margin-right: .5rem">
                   <select
                         id="select-fileset-program"
+                        select={self.select_fileset_uuid.clone()}
                         onchange=onchange_select_fileset_btn >
                       {for self.filesets_program.iter().map(|(fileset_uuid, program_name)|
-                          match &self.select_fileset_uuid == fileset_uuid {
-                            true => html!{<option value={fileset_uuid.clone()} selected=true>{program_name}</option>},
-                            false => html!{<option value={fileset_uuid.clone()}>{program_name}</option>},
-                          }
+                          html!{<option value={fileset_uuid.clone()}>{program_name}</option>}
                       )}
                   </select>
                 </div>
@@ -607,10 +605,7 @@ impl ManageModificationFilesets {
                               onchange=onchange_select_program_id
                               >
                             {for self.programs.iter().map(|x|
-                                match self.request_fileset_program_id == x.id {
-                                    true => html!{<option value={x.id.to_string()} selected=true>{&x.name}</option>},
-                                    false => html!{<option value={x.id.to_string()}>{&x.name}</option>},
-                                }
+                                html!{<option value={x.id.to_string()}>{&x.name}</option>}
                             )}
                           </select>
                       </div>

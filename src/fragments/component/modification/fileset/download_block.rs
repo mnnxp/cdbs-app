@@ -173,16 +173,11 @@ impl ManageFilesOfFilesetBlock {
             <div class="select" style="margin-right: .5rem">
               <select
                     id="select-fileset-program"
-                    // select={self.select_fileset_uuid.clone()}
+                    select={self.select_fileset_uuid.clone()}
                     onchange=onchange_select_fileset_btn >
                   {for self.props.current_filesets_program.iter().map(|(fileset_uuid, program_name)|
-                      match &self.select_fileset_uuid == fileset_uuid {
-                        true => html!{<option value={fileset_uuid.clone()} selected=true>{program_name}</option>},
-                        false => html!{<option value={fileset_uuid.clone()}>{program_name}</option>},
-                      }
+                      html!{<option value={fileset_uuid.clone()}>{program_name}</option>}
                   )}
-                  // <option>{"CADWolf"}</option>
-                  // <option>{"AutoCAD"}</option>
               </select>
             </div>
             <button class={class_btn}

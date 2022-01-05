@@ -320,14 +320,11 @@ impl ComponentSuppliersCard {
                         <div class="select">
                           <select
                               id="set-main-supplier"
-                              // select={"-- select a supplier --"}
+                              select={self.request_set_supplier_uuid.clone()}
                               onchange=onchange_select_set_supplier
                             >
                           { for self.props.supplier_list.iter().map(|x|
-                              match self.request_set_supplier_uuid == x.uuid {
-                                  true => html!{ <option value={x.uuid.to_string()} selected=true>{&x.shortname}</option> },
-                                  false => html!{ <option value={x.uuid.to_string()}>{&x.shortname}</option> },
-                              }
+                              html!{<option value={x.uuid.to_string()}>{&x.shortname}</option>}
                           )}
                           </select>
                         </div>
@@ -389,13 +386,11 @@ impl ComponentSuppliersCard {
                         <div class="select">
                           <select
                               id="set-main-supplier"
+                              select={self.request_set_supplier_uuid.clone()}
                               onchange=onchange_select_add_supplier
                             >
                           { for self.props.supplier_list.iter().map(|x|
-                              match self.request_set_supplier_uuid == x.uuid {
-                                  true => html!{ <option value={x.uuid.to_string()} selected=true>{&x.shortname}</option> },
-                                  false => html!{ <option value={x.uuid.to_string()}>{&x.shortname}</option> },
-                              }
+                              html!{<option value={x.uuid.to_string()}>{&x.shortname}</option>}
                           )}
                           </select>
                         </div>

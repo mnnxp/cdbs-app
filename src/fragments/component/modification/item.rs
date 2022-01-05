@@ -528,10 +528,7 @@ impl ModificationTableItem {
                                   onchange=onchange_param_id
                                   >
                                 { for self.params_list.iter().map(|(_, x)|
-                                    match self.request_add_param.param_id == x.param_id {
-                                        true => html!{<option value={x.param_id.to_string()} selected=true>{&x.paramname}</option>},
-                                        false => html!{<option value={x.param_id.to_string()}>{&x.paramname}</option>},
-                                    }
+                                    html!{<option value={x.param_id.to_string()}>{&x.paramname}</option>}
                                 )}
                               </select>
                           </div>

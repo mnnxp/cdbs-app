@@ -310,19 +310,15 @@ impl ComponentStandardsCard {
                         <div class="select">
                           <select
                               id="add-standard"
+                              select={self.request_add_standard_uuid.clone()}
                               onchange=onchange_select_add_standard
                             >
                           { for self.standard_list.iter().map(|x|
                               match self.standard_uuids.get(&x.uuid) {
                                   Some(_) => html!{}, // this standard already has
-                                  None => match self.request_add_standard_uuid == x.uuid {
-                                      true => html!{ <option value={x.uuid.to_string()} selected=true>{
-                                          format!("{} ({})", &x.classifier, &x.name)
-                                      }</option> },
-                                      false => html!{ <option value={x.uuid.to_string()}>{
-                                          format!("{} ({})", &x.classifier, &x.name)
-                                      }</option> },
-                                  },
+                                  None => html!{ <option value={x.uuid.to_string()}>{
+                                      format!("{} ({})", &x.classifier, &x.name)
+                                  }</option> },
                               }
                           )}
                           </select>

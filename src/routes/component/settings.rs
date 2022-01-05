@@ -794,10 +794,7 @@ impl ComponentSettings {
                             onchange=onchange_actual_status_id
                             >
                           { for self.actual_statuses.iter().map(|x|
-                              match self.request_component.actual_status_id == x.actual_status_id {
-                                  true => html!{<option value={x.actual_status_id.to_string()} selected=true>{&x.name}</option>},
-                                  false => html!{<option value={x.actual_status_id.to_string()}>{&x.name}</option>},
-                              }
+                              html!{<option value={x.actual_status_id.to_string()}>{&x.name}</option>}
                           )}
                         </select>
                     </div>
@@ -811,10 +808,7 @@ impl ComponentSettings {
                           onchange=onchange_change_component_type
                         >
                       { for self.component_types.iter().map(|x|
-                          match self.request_component.component_type_id == x.component_type_id {
-                              true => html!{ <option value={x.component_type_id.to_string()} selected=true>{&x.component_type}</option> },
-                              false => html!{ <option value={x.component_type_id.to_string()}>{&x.component_type}</option> },
-                          }
+                          html!{<option value={x.component_type_id.to_string()}>{&x.component_type}</option>}
                       )}
                       </select>
                     </div>
@@ -828,10 +822,7 @@ impl ComponentSettings {
                           onchange=onchange_change_type_access
                         >
                       { for self.types_access.iter().map(|x|
-                          match self.current_component.as_ref().map(|c| c.type_access.type_access_id).unwrap_or_default() == x.type_access_id {
-                              true => html!{ <option value={x.type_access_id.to_string()} selected=true>{&x.name}</option> },
-                              false => html!{ <option value={x.type_access_id.to_string()}>{&x.name}</option> },
-                          }
+                          html!{<option value={x.type_access_id.to_string()}>{&x.name}</option>}
                       )}
                       </select>
                     </div>

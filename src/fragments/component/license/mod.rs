@@ -312,19 +312,15 @@ impl ComponentLicensesTags {
                         <div class="select">
                           <select
                               id="add-license"
+                              select={self.request_add_license_id.to_string()}
                               onchange=onchange_select_add_license
                             >
                           { for self.license_list.iter().map(|x|
                               match self.license_ids.get(&x.id) {
                                   Some(_) => html!{}, // this license already has
-                                  None => match self.request_add_license_id == x.id {
-                                      true => html!{ <option value={x.id.to_string()} selected=true>{
-                                          format!("{} ({})", &x.name, &x.keyword)
-                                      }</option> },
-                                      false => html!{ <option value={x.id.to_string()}>{
-                                          format!("{} ({})", &x.name, &x.keyword)
-                                      }</option> },
-                                  },
+                                  None => html!{<option value={x.id.to_string()}>{
+                                      format!("{} ({})", &x.name, &x.keyword)
+                                  }</option>},
                               }
                           )}
                           </select>

@@ -795,18 +795,7 @@ impl CompanySettings {
                                   onchange=onchange_region_id
                                   >
                                 { for self.regions.iter().map(|x|
-                                    match self.current_data.as_ref().unwrap().region.region_id == x.region_id {
-                                        true => {
-                                            html!{
-                                                <option value={x.region_id.to_string()} selected=true>{&x.region}</option>
-                                            }
-                                        },
-                                        false => {
-                                            html!{
-                                                <option value={x.region_id.to_string()}>{&x.region}</option>
-                                            }
-                                        },
-                                    }
+                                    html!{<option value={x.region_id.to_string()}>{&x.region}</option>}
                                 )}
                               </select>
                             </div>
@@ -881,18 +870,7 @@ impl CompanySettings {
                           onchange=onchange_company_type_id
                           >
                         { for self.company_types.iter().map(|x|
-                            match self.current_data.as_ref().unwrap().company_type.company_type_id == x.company_type_id {
-                                true => {
-                                    html!{
-                                        <option value={x.company_type_id.to_string()} selected=true>{&x.name}</option>
-                                    }
-                                },
-                                false => {
-                                    html!{
-                                        <option value={x.company_type_id.to_string()}>{&x.name}</option>
-                                    }
-                                },
-                            }
+                            html!{<option value={x.company_type_id.to_string()}>{&x.name}</option>}
                         )}
                       </select>
                     </div>
@@ -1058,18 +1036,7 @@ impl CompanySettings {
                                   onchange=onchange_type_access_id
                                   >
                                 { for self.types_access.iter().map(|x|
-                                    match self.current_data.as_ref().unwrap().type_access.type_access_id == x.type_access_id {
-                                        true => {
-                                            html!{
-                                                <option value={x.type_access_id.to_string()} selected=true>{&x.name}</option>
-                                            }
-                                        },
-                                        false => {
-                                            html!{
-                                                <option value={x.type_access_id.to_string()}>{&x.name}</option>
-                                            }
-                                        },
-                                    }
+                                    html!{<option value={x.type_access_id.to_string()}>{&x.name}</option>}
                                 )}
                               </select>
                             </div>

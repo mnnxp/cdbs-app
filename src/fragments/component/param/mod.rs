@@ -323,19 +323,15 @@ impl ComponentParamsTags {
                         <div class="select">
                           <select
                               id="add-param"
+                              select={self.request_add_param_id.to_string()}
                               onchange=onchange_select_add_param
                             >
                           { for self.param_list.iter().map(|x|
                               match self.param_ids.get(&x.param_id) {
                                   Some(_) => html!{}, // this param already has
-                                  None => match self.request_add_param_id == x.param_id {
-                                      true => html!{ <option value={x.param_id.to_string()} selected=true>
-                                          {&x.paramname}
-                                      </option>},
-                                      false => html!{ <option value={x.param_id.to_string()}>
-                                          {&x.paramname}
-                                      </option>},
-                                  },
+                                  None => html!{ <option value={x.param_id.to_string()}>
+                                      {&x.paramname}
+                                  </option>},
                               }
                           )}
                           </select>
