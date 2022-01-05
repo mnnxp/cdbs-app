@@ -1,28 +1,29 @@
 // use yew::services::fetch::FetchTask;
+use chrono::NaiveDateTime;
+use web_sys::MouseEvent;
 use yew::{
-    agent::Bridged, html, Bridge, Callback, Component, ComponentLink,
-    FocusEvent, Html, InputData, ChangeData, ShouldRender,
+    agent::Bridged, classes, html, Bridge, Callback, ChangeData, Component, ComponentLink,
+    FocusEvent, Html, InputData, ShouldRender,
 };
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
-use chrono::NaiveDateTime;
 
-use log::debug;
+use crate::gqls::make_query;
 use graphql_client::GraphQLQuery;
+use log::debug;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
-use crate::gqls::make_query;
 
-use crate::error::{Error, get_error};
+use crate::error::{get_error, Error};
 use crate::fragments::{
     list_errors::ListErrors,
-    user::{UserCertificatesCard, AddUserCertificateCard},
+    side_menu::{MenuItem, SideMenu},
     upload_favicon::UpdateFaviconBlock,
+    user::{AddUserCertificateCard, UserCertificatesCard},
 };
 use crate::routes::AppRoute;
-use crate::services::{is_authenticated, set_logged_user, get_current_user};
+use crate::services::{get_current_user, is_authenticated, set_logged_user};
 use crate::types::{
-    UUID, UserUpdateInfo, SelfUserInfo, Program, Region,
-    UpdatePasswordInfo, TypeAccessInfo
+    Program, Region, SelfUserInfo, TypeAccessInfo, UpdatePasswordInfo, UserUpdateInfo, UUID,
 };
 
 #[derive(GraphQLQuery)]
@@ -73,6 +74,7 @@ struct ChangeTypeAccessUser;
 )]
 struct DeleteUserData;
 
+#[derive(Clone, PartialEq)]
 pub enum Menu {
     Profile,
     UpdataFavicon,
@@ -103,6 +105,7 @@ pub struct Settings {
     select_menu: Menu,
 }
 
+#[derive(Clone)]
 pub enum Msg {
     RequestUpdateProfile,
     RequestChangeAccess,
@@ -399,12 +402,13 @@ impl Component for Settings {
                 <div class="container page">
                     <div class="row">
                         <div class="columns">
-                            <div class="column is-one-quarter">
-                                { self.view_menu() }
-                            </div>
+                            // <div class="column is-one-quarter">
+                                
+                            // </div>
                             // <h1 class="title">{ "Your Settings" }</h1>
-                            <div class="column">
-                                <div class="card">
+                            <div class="column is-flex">
+                                { self.view_menu() }
+                                <div class="card is-flex-grow-1" >
                                   <div class="card-content">
                                     {match self.select_menu {
                                         // Show interface for change profile data
@@ -556,106 +560,70 @@ impl Settings {
         </div>}
     }
 
-    fn view_menu(
-        &self
-    ) -> Html {
-        let onclick_profile = self.link
-            .callback(|_| Msg::SelectMenu(
-                Menu::Profile
-            ));
-        let onclick_favicon = self.link
-            .callback(|_| Msg::SelectMenu(
-                Menu::UpdataFavicon
-            ));
-        let onclick_certificates = self.link
-            .callback(|_| Msg::SelectMenu(
-                Menu::Certificates
-            ));
-        let onclick_access = self.link
-            .callback(|_| Msg::SelectMenu(
-                Menu::Access
-            ));
-        let onclick_password = self.link
-            .callback(|_| Msg::SelectMenu(
-                Menu::Password
-            ));
-        let onclick_remove_profile = self.link
-            .callback(|_| Msg::SelectMenu(
-                Menu::RemoveProfile
-            ));
-
-        let mut active_profile = "";
-        let mut active_favicon = "";
-        let mut active_certificates = "";
-        let mut active_access = "";
-        let mut active_password = "";
-        let mut active_remove_profile = "";
-
-        match self.select_menu {
-            Menu::Profile => active_profile = "is-active",
-            Menu::UpdataFavicon => active_favicon = "is-active",
-            Menu::Certificates => active_certificates = "is-active",
-            Menu::Access => active_access = "is-active",
-            Menu::Password => active_password = "is-active",
-            Menu::RemoveProfile => active_remove_profile = "is-active",
-        }
-
-        html!{
-            <aside class="menu">
-                <p class="menu-label">
-                    {"User Settings"}
-                </p>
-                <ul class="menu-list">
-                    <li><a
-                      id="profile"
-                      class=active_profile
-                      onclick=onclick_profile>
-                        { "Profile" }
-                    </a></li>
-                    <li><a
-                      id="profile"
-                      class=active_favicon
-                      onclick=onclick_favicon>
-                        { "Favicon" }
-                    </a></li>
-                    <li><a
-                      id="certificates"
-                      class=active_certificates
-                      onclick=onclick_certificates>
-                        { "Certificates" }
-                    </a></li>
-                    <li><a
-                      id="access"
-                      class=active_access
-                      onclick=onclick_access>
-                        { "Access" }
-                    </a></li>
-                    <li><a
-                      id="password"
-                      class=active_password
-                      onclick=onclick_password>
-                        { "Password" }
-                    </a></li>
-                    <li><a
-                      id="remove-profile"
-                      class=active_remove_profile
-                      onclick=onclick_remove_profile>
-                        { "Remove profile" }
-                    </a></li>
-                    // <li><a>{"Notification"}</a></li>
-                    // <li><a>{"Billing"}</a></li>
-                    // <li><a>{"Close account"}</a></li>
-                </ul>
-            </aside>
+    fn cb_generator(&self, cb: Menu) -> Callback<MouseEvent> {
+        match cb {
+            n => self.link.callback(move |_| Msg::SelectMenu(n.clone())),
         }
     }
 
-    fn fieldset_update_favicon(
-        &self
-    ) -> Html {
+    fn view_menu(&self) -> Html {
+        
+        let menu_arr: Vec<MenuItem> = vec![
+            // profile MenuItem
+            MenuItem {
+                title: "Profile".to_string(),
+                action: self.cb_generator(Menu::Profile),
+                is_active: self.select_menu == Menu::Profile,
+                ..Default::default()
+            },
+            // favicon MenuItem
+            MenuItem {
+                title: "Favicon".to_string(),
+                action: self.cb_generator(Menu::UpdataFavicon),
+                is_active: self.select_menu == Menu::UpdataFavicon,
+                ..Default::default()
+            },
+            // certificates MenuItem
+            MenuItem {
+                title: "Certificates".to_string(),
+                action: self.cb_generator(Menu::Certificates),
+                is_active: self.select_menu == Menu::Certificates,
+                ..Default::default()
+            },
+            // access MenuItem
+            MenuItem {
+                title: "Access".to_string(),
+                action: self.cb_generator(Menu::Access),
+                is_active: self.select_menu == Menu::Access,
+                ..Default::default()
+            },
+            // password MenuItem
+            MenuItem {
+                title: "Password".to_string(),
+                action: self.cb_generator(Menu::Password),
+                is_active: self.select_menu == Menu::Password,
+                ..Default::default()
+            },
+            // remove profile MenuItem
+            MenuItem {
+                title: "Remove profile".to_string(),
+                action: self.cb_generator(Menu::RemoveProfile),
+                is_active: self.select_menu == Menu::RemoveProfile,
+                ..Default::default()
+            },
+        ];
+
+        html! {
+          <div style="margin-right: 18px;z-index: 1;" >
+              <SideMenu menu_arr={menu_arr} ></SideMenu>
+          </div>
+        }
+    }
+
+    fn fieldset_update_favicon(&self) -> Html {
         let callback_update_favicon = self.link.callback(|_| Msg::GetCurrentData);
 
-        html!{
+        html! {
             <UpdateFaviconBlock
                 company_uuid = None
                 callback=callback_update_favicon
@@ -663,11 +631,9 @@ impl Settings {
         }
     }
 
-    fn fieldset_certificates(
-        &self
-    ) -> Html {
+    fn fieldset_certificates(&self) -> Html {
         match &self.current_data {
-            Some(current_data) => html!{
+            Some(current_data) => html! {
                 <UserCertificatesCard
                     user_uuid = self.current_data.as_ref().map(|x| x.uuid.clone()).unwrap_or_default()
                     certificates = current_data.certificates.clone()
@@ -676,21 +642,20 @@ impl Settings {
                     manage_btn = true
                 />
             },
-            None => html!{<span class="tag is-info is-light">{"Not fount certificates"}</span>},
+            None => html! {<span class="tag is-info is-light">{"Not fount certificates"}</span>},
         }
     }
 
-    fn fieldset_add_certificate(
-        &self
-    ) -> Html {
-        let user_uuid = self.current_data
+    fn fieldset_add_certificate(&self) -> Html {
+        let user_uuid = self
+            .current_data
             .as_ref()
             .map(|user| user.uuid.to_string())
             .unwrap_or_default();
 
         let callback_upload_cert = self.link.callback(|_| Msg::GetCurrentData);
 
-        html!{
+        html! {
             <AddUserCertificateCard
                 user_uuid = user_uuid
                 callback=callback_upload_cert
@@ -698,16 +663,15 @@ impl Settings {
         }
     }
 
-    fn fieldset_access(
-        &self
-    ) -> Html {
-        let onchange_type_access_id = self.link
-          .callback(|ev: ChangeData| Msg::UpdateTypeAccessId(match ev {
-            ChangeData::Select(el) => el.value(),
-            _ => "1".to_string(),
-        }));
+    fn fieldset_access(&self) -> Html {
+        let onchange_type_access_id = self.link.callback(|ev: ChangeData| {
+            Msg::UpdateTypeAccessId(match ev {
+                ChangeData::Select(el) => el.value(),
+                _ => "1".to_string(),
+            })
+        });
 
-        html!{
+        html! {
             <fieldset class="columns">
                 // first column
                 <fieldset class="column">
@@ -743,15 +707,15 @@ impl Settings {
         }
     }
 
-    fn fieldset_password(
-        &self
-    ) -> Html {
-        let oninput_old_password = self.link
+    fn fieldset_password(&self) -> Html {
+        let oninput_old_password = self
+            .link
             .callback(|ev: InputData| Msg::UpdateOldPassword(ev.value));
-        let oninput_new_password = self.link
+        let oninput_new_password = self
+            .link
             .callback(|ev: InputData| Msg::UpdateNewPassword(ev.value));
 
-        html!{
+        html! {
             <fieldset class="columns">
                 // first column
                 <fieldset class="column">
@@ -770,39 +734,48 @@ impl Settings {
         }
     }
 
-    fn fieldset_profile(
-        &self
-    ) -> Html {
-        let oninput_firstname = self.link
+    fn fieldset_profile(&self) -> Html {
+        let oninput_firstname = self
+            .link
             .callback(|ev: InputData| Msg::UpdateFirstname(ev.value));
-        let oninput_lastname = self.link
+        let oninput_lastname = self
+            .link
             .callback(|ev: InputData| Msg::UpdateLastname(ev.value));
-        let oninput_secondname = self.link
+        let oninput_secondname = self
+            .link
             .callback(|ev: InputData| Msg::UpdateSecondname(ev.value));
-        let oninput_username = self.link
+        let oninput_username = self
+            .link
             .callback(|ev: InputData| Msg::UpdateUsername(ev.value));
-        let oninput_email = self.link
+        let oninput_email = self
+            .link
             .callback(|ev: InputData| Msg::UpdateEmail(ev.value));
-        let oninput_description = self.link
+        let oninput_description = self
+            .link
             .callback(|ev: InputData| Msg::UpdateDescription(ev.value));
-        let oninput_position = self.link
+        let oninput_position = self
+            .link
             .callback(|ev: InputData| Msg::UpdatePosition(ev.value));
-        let oninput_phone = self.link
+        let oninput_phone = self
+            .link
             .callback(|ev: InputData| Msg::UpdatePhone(ev.value));
-        let oninput_address = self.link
+        let oninput_address = self
+            .link
             .callback(|ev: InputData| Msg::UpdateAddress(ev.value));
-        let oninput_program_id = self.link
-            .callback(|ev: ChangeData| Msg::UpdateProgramId(match ev {
-              ChangeData::Select(el) => el.value(),
-              _ => "1".to_string(),
-          }));
-        let onchange_region_id = self.link
-            .callback(|ev: ChangeData| Msg::UpdateRegionId(match ev {
-              ChangeData::Select(el) => el.value(),
-              _ => "1".to_string(),
-          }));
+        let oninput_program_id = self.link.callback(|ev: ChangeData| {
+            Msg::UpdateProgramId(match ev {
+                ChangeData::Select(el) => el.value(),
+                _ => "1".to_string(),
+            })
+        });
+        let onchange_region_id = self.link.callback(|ev: ChangeData| {
+            Msg::UpdateRegionId(match ev {
+                ChangeData::Select(el) => el.value(),
+                _ => "1".to_string(),
+            })
+        });
 
-        html!{<>
+        html! {<>
             // first columns (username, email)
             <div class="columns">
                 <div class="column">
@@ -923,16 +896,17 @@ impl Settings {
         </>}
     }
 
-    fn fieldset_remove_profile(
-        &self
-    ) -> Html {
-        let oninput_user_password = self.link
+    fn fieldset_remove_profile(&self) -> Html {
+        let oninput_user_password = self
+            .link
             .callback(|ev: InputData| Msg::UpdateUserPassword(ev.value));
 
         self.fileset_generator(
-            "password", "Input your password for confirm delete profile", "your password",
+            "password",
+            "Input your password for confirm delete profile",
+            "your password",
             self.request_user_password.to_string(),
-            oninput_user_password
+            oninput_user_password,
         )
     }
 }

@@ -25,6 +25,19 @@ pub struct MenuItem {
     pub is_extend: bool,
 }
 
+impl Default for MenuItem {
+    fn default() -> Self {
+        Self {
+            title: "".to_string(),
+            action: Callback::noop(),
+            icon_class: classes!("fas", "fa-certificate"),
+            count: 0,
+            is_active: false,
+            is_extend: false,
+        }
+    }
+}
+
 #[derive(Properties, Clone)]
 pub struct Props {
     // pub current_route: Option<AppRoute>,
