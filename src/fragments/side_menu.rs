@@ -102,9 +102,9 @@ impl SideMenu {
           <li class=classes!( if is_active {"active"} else {""}, if is_extend {"extend"} else {""} ) onclick=action>
             <a>
               <span>{title}</span>
-              <span hidden=hide_tag>
+              <div hidden=hide_tag style="display: inline-flex;" >
                 <span class="tag is-info is-small" >{count}</span>
-              </span>
+              </div>
               <i class=classes!(icon_class.clone())></i>
             </a>
           </li>

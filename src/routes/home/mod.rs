@@ -32,7 +32,7 @@ impl Component for Home {
             <div class=classes!("tile", "is-ancestor", "is-vertical")>
                 <div class="tile is-child hero">
                     <div class=classes!("hero-body", "container", "pb-0")>
-                        <h1 class="title is-1" title="CADBase" style="margin-bottom: 0; position: initial;  width: 50%;">
+                        <h1 class="title is-1" title="CADBase" style="margin-bottom: 0; position: initial;">
                             <svg position="initial" viewBox="0 0 145 35" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
                                     <g id="1-copy" transform="translate(-136.000000, -89.000000)">

@@ -581,7 +581,7 @@ impl Profile {
             MenuItem {
                 title: "Certificates".to_string(),
                 action: self.cb_generator(ProfileTab::Certificates),
-                count: self.get_number_of_items(),
+                count: self.get_number_of_items(ProfileTab::Certificates),
                 icon_class: classes!("fas", "fa-certificate"),
                 is_active: self.profile_tab == ProfileTab::Certificates,
                 is_extend: self.check_extend(ProfileTab::Certificates),
@@ -589,7 +589,7 @@ impl Profile {
             MenuItem {
                 title: "COMPONENTS all".to_string(),
                 action: self.cb_generator(ProfileTab::Components),
-                count: self.get_number_of_items(),
+                count: self.get_number_of_items(ProfileTab::Components),
                 icon_class: classes!("fas", "fa-certificate"),
                 is_active: self.profile_tab == ProfileTab::Components,
                 is_extend: self.check_extend(ProfileTab::Components),
@@ -597,7 +597,7 @@ impl Profile {
             MenuItem {
                 title: "COMPONENTS fav".to_string(),
                 action: self.cb_generator(ProfileTab::FavoriteComponents),
-                count: self.get_number_of_items(),
+                count: self.get_number_of_items(ProfileTab::FavoriteComponents),
                 icon_class: classes!("fas", "fa-certificate"),
                 is_active: self.profile_tab == ProfileTab::FavoriteComponents,
                 is_extend: self.check_extend(ProfileTab::FavoriteComponents),
@@ -606,7 +606,7 @@ impl Profile {
             MenuItem {
                 title: "COMPANIES all".to_string(),
                 action: self.cb_generator(ProfileTab::Companies),
-                count: self.get_number_of_items(),
+                count: self.get_number_of_items(ProfileTab::Companies),
                 icon_class: classes!("fas", "fa-certificate"),
                 is_active: self.profile_tab == ProfileTab::Companies,
                 is_extend: self.check_extend(ProfileTab::Companies),
@@ -615,7 +615,7 @@ impl Profile {
             MenuItem {
                 title: "COMPANIES fav".to_string(),
                 action: self.cb_generator(ProfileTab::FavoriteCompanies),
-                count: self.get_number_of_items(),
+                count: self.get_number_of_items(ProfileTab::FavoriteCompanies),
                 icon_class: classes!("fas", "fa-certificate"),
                 is_active: self.profile_tab == ProfileTab::FavoriteCompanies,
                 is_extend: self.check_extend(ProfileTab::FavoriteCompanies),
@@ -624,7 +624,7 @@ impl Profile {
             MenuItem {
                 title: "STANDARDS all".to_string(),
                 action: self.cb_generator(ProfileTab::FavoriteStandards),
-                count: self.get_number_of_items(),
+                count: self.get_number_of_items(ProfileTab::FavoriteStandards),
                 icon_class: classes!("fas", "fa-certificate"),
                 is_active: self.profile_tab == ProfileTab::FavoriteStandards,
                 is_extend: self.check_extend(ProfileTab::FavoriteStandards),
@@ -633,7 +633,7 @@ impl Profile {
             MenuItem {
                 title: "USERS fav".to_string(),
                 action: self.cb_generator(ProfileTab::FavoriteUsers),
-                count: self.get_number_of_items(),
+                count: self.get_number_of_items(ProfileTab::FavoriteUsers),
                 icon_class: classes!("fas", "fa-certificate"),
                 is_active: self.profile_tab == ProfileTab::FavoriteUsers,
                 is_extend: self.check_extend(ProfileTab::FavoriteUsers),
@@ -699,13 +699,15 @@ impl Profile {
         certificates: Vec<UserCertificate>
     ) -> Html {
         html!{
+          <div class="profileBox" >
             <UserCertificatesCard
-                user_uuid = self.current_user_uuid.clone()
-                certificates = certificates
-                show_cert_btn = true
-                download_btn = false
-                manage_btn = false
+                  user_uuid = self.current_user_uuid.clone()
+                  certificates = certificates
+                  show_cert_btn = true
+                  download_btn = false
+                  manage_btn = false
              />
+          </div>
         }
     }
 
@@ -754,9 +756,17 @@ impl Profile {
         }
     }
 
-    fn get_number_of_items(&self) -> usize {
+    fn get_number_of_items(&self, tab: ProfileTab ) -> usize {
         match &self.self_profile {
-            Some(res) => res.certificates.len(),
+            Some( ref res) =>  match tab {
+              ProfileTab::Certificates => res.certificates.len(),
+              ProfileTab::Components => res.components_count,
+              ProfileTab::FavoriteComponents => res.fav_components_count,
+              ProfileTab::Companies => res.companies_count,
+              ProfileTab::FavoriteCompanies => res.fav_companies_count,
+              ProfileTab::FavoriteStandards => res.fav_standards_count,
+              ProfileTab::FavoriteUsers => res.fav_users_count,
+            } ,
             None => 0,
         }
     }

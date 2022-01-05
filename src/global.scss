@@ -85,12 +85,13 @@
   border-radius: 0 8px 8px 0 !important;
 }
 
-.side-menu ul li a span:first-child {
+.side-menu ul li a span {
   max-width: 0;
   max-height: 2em;
   opacity: 0;
   overflow: hidden;
   margin-right: 0;
+  display: inline-flex;
 }
 
 // .side-menu .extend a span {
@@ -129,4 +130,14 @@
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.profileBox {
+  display: flex;
+  // justify-content: space-between;
+  flex-wrap: wrap;
+  // padding: 0 6%;
+  .boxItem {
+    margin-right: 10px;
+  }
 }
