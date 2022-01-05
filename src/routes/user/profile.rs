@@ -571,21 +571,14 @@ impl Profile {
     }
 
     fn cb_generator(&self, cb: ProfileTab) -> Callback<MouseEvent> {
-        match cb {
-            n => self.link.callback(move |_| Msg::ChangeTab(n.clone())),
-        }
-        // self.link.callback(move |_| Msg::ChangeTab(ProfileTab))
+        self.link.callback(move |_| Msg::ChangeTab(cb.clone()))
     }
 
     fn check_extend(&self, tab: ProfileTab) -> bool {
-        match tab {
-            n => {
-                if self.extend_tab.is_some() {
-                    self.extend_tab.clone().unwrap() == n.clone()
-                } else {
-                    false
-                }
-            }
+        if self.extend_tab.is_some() {
+            self.extend_tab.clone().unwrap() == tab.clone()
+        } else {
+            false
         }
     }
 
@@ -594,11 +587,7 @@ impl Profile {
             MenuItem {
                 title: "Certificates".to_string(),
                 action: self.cb_generator(ProfileTab::Certificates),
-                count: if let Some(res) = self.self_profile.as_ref() {
-                    res.certificates.len()
-                } else {
-                    0
-                },
+                count: self.get_number_of_items(),
                 icon_class: classes!("fas", "fa-certificate"),
                 is_active: self.profile_tab == ProfileTab::Certificates,
                 is_extend: self.check_extend(ProfileTab::Certificates),
@@ -606,11 +595,7 @@ impl Profile {
             MenuItem {
                 title: "COMPONENTS all".to_string(),
                 action: self.cb_generator(ProfileTab::Components),
-                count: if let Some(res) = self.self_profile.as_ref() {
-                    res.certificates.len()
-                } else {
-                    0
-                },
+                count: self.get_number_of_items(),
                 icon_class: classes!("fas", "fa-certificate"),
                 is_active: self.profile_tab == ProfileTab::Components,
                 is_extend: self.check_extend(ProfileTab::Components),
@@ -618,11 +603,7 @@ impl Profile {
             MenuItem {
                 title: "COMPONENTS fav".to_string(),
                 action: self.cb_generator(ProfileTab::FavoriteComponents),
-                count: if let Some(res) = self.self_profile.as_ref() {
-                    res.certificates.len()
-                } else {
-                    0
-                },
+                count: self.get_number_of_items(),
                 icon_class: classes!("fas", "fa-certificate"),
                 is_active: self.profile_tab == ProfileTab::FavoriteComponents,
                 is_extend: self.check_extend(ProfileTab::FavoriteComponents),
@@ -631,11 +612,7 @@ impl Profile {
             MenuItem {
                 title: "COMPANIES all".to_string(),
                 action: self.cb_generator(ProfileTab::Companies),
-                count: if let Some(res) = self.self_profile.as_ref() {
-                    res.certificates.len()
-                } else {
-                    0
-                },
+                count: self.get_number_of_items(),
                 icon_class: classes!("fas", "fa-certificate"),
                 is_active: self.profile_tab == ProfileTab::Companies,
                 is_extend: self.check_extend(ProfileTab::Companies),
@@ -644,11 +621,7 @@ impl Profile {
             MenuItem {
                 title: "COMPANIES fav".to_string(),
                 action: self.cb_generator(ProfileTab::FavoriteCompanies),
-                count: if let Some(res) = self.self_profile.as_ref() {
-                    res.certificates.len()
-                } else {
-                    0
-                },
+                count: self.get_number_of_items(),
                 icon_class: classes!("fas", "fa-certificate"),
                 is_active: self.profile_tab == ProfileTab::FavoriteCompanies,
                 is_extend: self.check_extend(ProfileTab::FavoriteCompanies),
@@ -657,11 +630,7 @@ impl Profile {
             MenuItem {
                 title: "STANDARDS all".to_string(),
                 action: self.cb_generator(ProfileTab::FavoriteStandards),
-                count: if let Some(res) = self.self_profile.as_ref() {
-                    res.certificates.len()
-                } else {
-                    0
-                },
+                count: self.get_number_of_items(),
                 icon_class: classes!("fas", "fa-certificate"),
                 is_active: self.profile_tab == ProfileTab::FavoriteStandards,
                 is_extend: self.check_extend(ProfileTab::FavoriteStandards),
@@ -670,11 +639,7 @@ impl Profile {
             MenuItem {
                 title: "USERS fav".to_string(),
                 action: self.cb_generator(ProfileTab::FavoriteUsers),
-                count: if let Some(res) = self.self_profile.as_ref() {
-                    res.certificates.len()
-                } else {
-                    0
-                },
+                count: self.get_number_of_items(),
                 icon_class: classes!("fas", "fa-certificate"),
                 is_active: self.profile_tab == ProfileTab::FavoriteUsers,
                 is_extend: self.check_extend(ProfileTab::FavoriteUsers),
@@ -792,6 +757,13 @@ impl Profile {
                 show_create_btn = false
                 arguments = StandardsQueryArg::set_favorite()
             />
+        }
+    }
+
+    fn get_number_of_items(&self) -> usize {
+        match &self.self_profile {
+            Some(res) => res.certificates.len(),
+            None => 0,
         }
     }
 }

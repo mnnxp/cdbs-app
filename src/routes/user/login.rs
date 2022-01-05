@@ -127,10 +127,8 @@ impl Component for Login {
             .link
             .callback(|ev: InputData| Msg::UpdatePassword(ev.value));
 
-        html!{
+        html!{<div class="container page">
             <div class="auth-page">
-                // <div class="container page">
-                    // <div class="row">
                 <h1 class="title">{ "Sign In" }</h1>
                 <h2 class="subtitle">
                     <RouterAnchor<AppRoute> route=AppRoute::Register>
@@ -161,8 +159,8 @@ impl Component for Login {
                             // <p class="help is-success">{"This username is available"}</p>
                         </fieldset>
                         <fieldset class="field">
-                            <p class="control has-icons-left">
-                                <label class="label">{"Password"}</label>
+                            <label class="label">{"Password"}</label>
+                            <div class="control has-icons-left">
                                 <input
                                     id="password"
                                     class="input"
@@ -174,7 +172,7 @@ impl Component for Login {
                                 <span class="icon is-small is-left">
                                   <i class="fas fa-lock"></i>
                                 </span>
-                            </p>
+                            </div>
                         </fieldset>
                         <button
                             id="submit-button"
@@ -186,9 +184,7 @@ impl Component for Login {
                     </fieldset>
                 </form>
             </div>
-                // </div>
-            // </div>
-        }
+        </div>}
     }
 }
 

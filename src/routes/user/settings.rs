@@ -403,7 +403,7 @@ impl Component for Settings {
                     <div class="row">
                         <div class="columns">
                             // <div class="column is-one-quarter">
-                                
+
                             // </div>
                             // <h1 class="title">{ "Your Settings" }</h1>
                             <div class="column is-flex">
@@ -430,7 +430,7 @@ impl Component for Settings {
                                         // Show interface for add and update Certificates
                                         Menu::Certificates => html!{<>
                                             <div class="block">
-                                                <span id="updated-certificates" class="overflow-title has-text-weight-bold">
+                                                <span id="updated-certificates" class=classes!("overflow-title", "has-text-weight-bold")>
                                                     { "Certificates" }
                                                 </span>
                                             </div>
@@ -439,7 +439,7 @@ impl Component for Settings {
                                         </>},
                                         // Show interface for change access
                                         Menu::Access => html!{<>
-                                            <span id="tag-info-updated-access" class="tag is-info is-light">
+                                            <span id="tag-info-updated-access" class=classes!("tag", "is-info", "is-light")>
                                                 { format!("Updated access: {}", self.get_result_access.clone()) }
                                             </span>
                                             <form onsubmit=onsubmit_update_access>
@@ -461,7 +461,7 @@ impl Component for Settings {
                                         </>},
                                         // Show interface for change password
                                         Menu::Password => html!{<>
-                                            <span id="tag-info-updated-pwd" class="tag is-info is-light">
+                                            <span id="tag-info-updated-pwd" class=classes!("tag", "is-info", "is-light")>
                                               { format!("Updated password: {}", self.get_result_pwd.clone()) }
                                             </span>
                                             <form onsubmit=onsubmit_update_password>
@@ -477,11 +477,11 @@ impl Component for Settings {
                                         </>},
                                         // Show interface for remove profile
                                         Menu::RemoveProfile => html!{<>
-                                            <span id="tag-danger-remove-profile" class="tag is-danger is-light">
+                                            <span id="tag-danger-remove-profile" class=classes!("tag", "is-danger", "is-light")>
                                               { "Warning: this removed all data related with profile, it cannot be canceled!" }
                                             </span>
                                             <br/>
-                                            <span id="tag-info-remove-profile" class="tag is-info is-light">
+                                            <span id="tag-info-remove-profile" class=classes!("tag", "is-info", "is-light")>
                                               { format!("Profile delete: {}", self.get_result_remove_profile) }
                                             </span>
                                             <br/>
@@ -545,11 +545,11 @@ impl Settings {
     fn show_update_profile_info(&self) -> Html {
         html!{<div class="media">
             <div id="updated-rows" class="media-left">
-                <span class="overflow-title has-text-weight-bold">{"Updated rows: "}</span>
+                <span class=classes!("overflow-title", "has-text-weight-bold")>{"Updated rows: "}</span>
                 <span class="overflow-title">{self.get_result_profile.clone()}</span>
             </div>
             <div id="updated-date" class="media-right">
-                <span class="overflow-title has-text-weight-bold">{"Last updated: : "}</span>
+                <span class=classes!("overflow-title", "has-text-weight-bold")>{"Last updated: "}</span>
                 {match &self.current_data {
                     Some(data) => html!{<span class="overflow-title">
                         {format!("{:.*}", 19, data.updated_at.to_string())}
@@ -561,13 +561,10 @@ impl Settings {
     }
 
     fn cb_generator(&self, cb: Menu) -> Callback<MouseEvent> {
-        match cb {
-            n => self.link.callback(move |_| Msg::SelectMenu(n.clone())),
-        }
+        self.link.callback(move |_| Msg::SelectMenu(cb.clone()))
     }
 
     fn view_menu(&self) -> Html {
-        
         let menu_arr: Vec<MenuItem> = vec![
             // profile MenuItem
             MenuItem {
@@ -642,7 +639,7 @@ impl Settings {
                     manage_btn = true
                 />
             },
-            None => html! {<span class="tag is-info is-light">{"Not fount certificates"}</span>},
+            None => html! {<span class=classes!("tag", "is-info", "is-light")>{"Not fount certificates"}</span>},
         }
     }
 
@@ -708,12 +705,8 @@ impl Settings {
     }
 
     fn fieldset_password(&self) -> Html {
-        let oninput_old_password = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateOldPassword(ev.value));
-        let oninput_new_password = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateNewPassword(ev.value));
+        let oninput_old_password = self.link.callback(|ev: InputData| Msg::UpdateOldPassword(ev.value));
+        let oninput_new_password = self.link.callback(|ev: InputData| Msg::UpdateNewPassword(ev.value));
 
         html! {
             <fieldset class="columns">
@@ -735,33 +728,15 @@ impl Settings {
     }
 
     fn fieldset_profile(&self) -> Html {
-        let oninput_firstname = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateFirstname(ev.value));
-        let oninput_lastname = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateLastname(ev.value));
-        let oninput_secondname = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateSecondname(ev.value));
-        let oninput_username = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateUsername(ev.value));
-        let oninput_email = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateEmail(ev.value));
-        let oninput_description = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateDescription(ev.value));
-        let oninput_position = self
-            .link
-            .callback(|ev: InputData| Msg::UpdatePosition(ev.value));
-        let oninput_phone = self
-            .link
-            .callback(|ev: InputData| Msg::UpdatePhone(ev.value));
-        let oninput_address = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateAddress(ev.value));
+        let oninput_firstname = self.link.callback(|ev: InputData| Msg::UpdateFirstname(ev.value));
+        let oninput_lastname = self.link.callback(|ev: InputData| Msg::UpdateLastname(ev.value));
+        let oninput_secondname = self.link.callback(|ev: InputData| Msg::UpdateSecondname(ev.value));
+        let oninput_username = self.link.callback(|ev: InputData| Msg::UpdateUsername(ev.value));
+        let oninput_email = self.link.callback(|ev: InputData| Msg::UpdateEmail(ev.value));
+        let oninput_description = self.link.callback(|ev: InputData| Msg::UpdateDescription(ev.value));
+        let oninput_position = self.link.callback(|ev: InputData| Msg::UpdatePosition(ev.value));
+        let oninput_phone = self.link.callback(|ev: InputData| Msg::UpdatePhone(ev.value));
+        let oninput_address = self.link.callback(|ev: InputData| Msg::UpdateAddress(ev.value));
         let oninput_program_id = self.link.callback(|ev: ChangeData| {
             Msg::UpdateProgramId(match ev {
                 ChangeData::Select(el) => el.value(),
@@ -897,9 +872,7 @@ impl Settings {
     }
 
     fn fieldset_remove_profile(&self) -> Html {
-        let oninput_user_password = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateUserPassword(ev.value));
+        let oninput_user_password = self.link.callback(|ev: InputData| Msg::UpdateUserPassword(ev.value));
 
         self.fileset_generator(
             "password",
