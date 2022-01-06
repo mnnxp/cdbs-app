@@ -2,8 +2,8 @@ use graphql_client::GraphQLQuery;
 use yew::services::fetch::FetchTask;
 use yew::services::reader::{File, FileData, ReaderService, ReaderTask};
 use yew::{
-    html, Callback, ChangeData, Component, ComponentLink, DragEvent, Html, InputData, Properties,
-    ShouldRender,
+    html, Callback, ChangeData, Component, ComponentLink, DragEvent, Html,
+    InputData, Properties, ShouldRender
 };
 // use serde_json::Value;
 use log::debug;
@@ -77,6 +77,7 @@ pub enum Msg {
     GetUploadFile(Option<String>),
     GetUploadCompleted(String),
     UpdateDescription(String),
+    HideNotification,
     ClearFileBoxed,
     ClearError,
     Ignore,
@@ -213,6 +214,10 @@ impl Component for AddUserCertificateCard {
                 }
             },
             Msg::UpdateDescription(new_description) => self.description = new_description,
+            Msg::HideNotification => {
+                link.send_message(Msg::ClearFileBoxed);
+                self.get_result_up_completed = !self.get_result_up_completed;
+            },
             Msg::ClearFileBoxed => {
                 self.file = None;
                 self.description = String::new();
@@ -367,10 +372,13 @@ impl AddUserCertificateCard {
     }
 
     fn show_success_upload(&self) -> Html {
+        let onclick_hide_notification = self.link.callback(|_| Msg::HideNotification);
+
         html!{
             <article class="message is-success">
               <div class="message-header">
                 <p>{ "Success" }</p>
+                <button class="delete" aria-label="close" onclick=onclick_hide_notification.clone() />
               </div>
               <div class="message-body">
                 { "This certificate upload!" }

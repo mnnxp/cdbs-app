@@ -255,7 +255,7 @@ impl Component for ManageModificationFilesets {
                 };
             },
             Msg::RequestUploadCompleted => {
-                let file_uuids = self.request_upload_confirm.to_vec();
+                let file_uuids = self.request_upload_confirm.clone();
                 spawn_local(async move {
                     let res = make_query(ConfirmUploadCompleted::build_query(
                         confirm_upload_completed::Variables { file_uuids }

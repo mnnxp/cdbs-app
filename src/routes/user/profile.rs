@@ -20,7 +20,7 @@ use crate::fragments::{
 use crate::gqls::make_query;
 use crate::services::{get_logged_user, is_authenticated};
 use crate::types::{
-    UserDataCard, CompaniesQueryArg, ComponentsQueryArg, Program, Region, SelfUserInfo, SlimUser,
+    UserDataCard, CompaniesQueryArg, ComponentsQueryArg, SelfUserInfo, SlimUser,
     StandardsQueryArg, UserCertificate, UserInfo, UsersQueryArg, UUID,
 };
 
@@ -46,23 +46,7 @@ struct DeleteUserFav;
     query_path = "./graphql/user.graphql",
     response_derives = "Debug"
 )]
-struct GetSelfDataOpt;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/user.graphql",
-    response_derives = "Debug"
-)]
 struct GetSelfData;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/user.graphql",
-    response_derives = "Debug"
-)]
-struct GetUserDataOpt;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -79,12 +63,8 @@ pub struct Profile {
     profile: Option<UserInfo>,
     current_user_uuid: UUID,
     current_username: String,
-    // task: Option<FetchTask>,
-    // router_agent: Box<dyn Bridge<RouteAgent>>,
     props: Props,
     link: ComponentLink<Self>,
-    programs: Vec<Program>,
-    regions: Vec<Region>,
     subscribers: usize,
     is_followed: bool,
     profile_tab: ProfileTab,
@@ -99,15 +79,16 @@ pub struct Props {
 
 #[derive(Clone)]
 pub enum Msg {
+    RequestProfileData(bool),
     Follow,
     AddFollow(String),
     UnFollow,
     DelFollow(String),
-    GetSelfData(String),
-    GetUserData(String),
-    UpdateList(String),
+    GetSelfProfileResult(String),
+    GetUserProfileResult(String),
     ChangeTab(ProfileTab),
     ShowFullUserInfo,
+    ClearError,
     Ignore,
 }
 
@@ -133,12 +114,8 @@ impl Component for Profile {
             profile: None,
             current_user_uuid: String::new(),
             current_username: String::new(),
-            // task: None,
-            // router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             props,
             link,
-            programs: Vec::new(),
-            regions: Vec::new(),
             subscribers: 0,
             is_followed: false,
             profile_tab: ProfileTab::Certificates,
@@ -164,60 +141,59 @@ impl Component for Profile {
             get_logged_user(),
             Some(cu) if cu.username == target_username
         );
-
-        let link = self.link.clone();
-
         // debug!("get_self {:?}", get_self);
 
         if (first_render || not_matches_username) && is_authenticated() {
+            // clear old data
+            self.error = None;
+            self.self_profile = None;
+            self.profile = None;
+
             // update current_username for checking change profile in route
             self.current_username = target_username.to_string();
 
-            spawn_local(async move {
-                match get_self {
-                    true => {
-                        let res =
-                            make_query(GetSelfDataOpt::build_query(get_self_data_opt::Variables))
-                                .await
-                                .unwrap();
-
-                        link.send_message(Msg::GetSelfData(res.clone()));
-                        link.send_message(Msg::UpdateList(res));
-                    }
-                    false => {
-                        let ipt_get_user_arg = get_user_data_opt::IptGetUserArg {
-                            userUuid: None,
-                            username: Some(target_username),
-                        };
-                        let res =
-                            make_query(GetUserDataOpt::build_query(get_user_data_opt::Variables {
-                                ipt_get_user_arg,
-                            }))
-                            .await
-                            .unwrap();
-
-                        link.send_message(Msg::GetUserData(res.clone()));
-                        link.send_message(Msg::UpdateList(res));
-                    }
-                }
-            })
+            self.link.send_message(Msg::RequestProfileData(get_self))
         }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        // let link = self.link.clone();
+        let link = self.link.clone();
 
         match msg {
+            Msg::RequestProfileData(get_self) => {
+                let target_username = self.current_username.clone();
+
+                spawn_local(async move {
+                    match get_self {
+                        true => {
+                            let res = make_query(GetSelfData::build_query(
+                                get_self_data::Variables
+                            )).await.unwrap();
+
+                            link.send_message(Msg::GetSelfProfileResult(res));
+                        }
+                        false => {
+                            let ipt_get_user_arg = get_user_data::IptGetUserArg {
+                                userUuid: None,
+                                username: Some(target_username),
+                            };
+                            let res = make_query(GetUserData::build_query(
+                                get_user_data::Variables { ipt_get_user_arg }
+                            )).await.unwrap();
+
+                            link.send_message(Msg::GetUserProfileResult(res));
+                        }
+                    }
+                })
+            },
             Msg::Follow => {
                 let link = self.link.clone();
                 let user_uuid = self.profile.as_ref().unwrap().uuid.clone();
 
                 spawn_local(async move {
-                    let res = make_query(AddUserFav::build_query(add_user_fav::Variables {
-                        user_uuid,
-                    }))
-                    .await
-                    .unwrap();
+                    let res = make_query(AddUserFav::build_query(
+                        add_user_fav::Variables { user_uuid }
+                    )).await.unwrap();
 
                     link.send_message(Msg::AddFollow(res));
                 })
@@ -228,18 +204,16 @@ impl Component for Profile {
 
                 match res_value.is_null() {
                     false => {
-                        let result: bool =
-                            serde_json::from_value(res_value.get("addUserFav").unwrap().clone())
-                                .unwrap();
+                        let result: bool = serde_json::from_value(
+                            res_value.get("addUserFav").unwrap().clone()
+                        ).unwrap();
 
                         if result {
                             self.subscribers += 1;
                             self.is_followed = true;
                         }
-                    }
-                    true => {
-                        self.error = Some(get_error(&data));
-                    }
+                    },
+                    true => self.error = Some(get_error(&data)),
                 }
             },
             Msg::UnFollow => {
@@ -247,13 +221,11 @@ impl Component for Profile {
                 let user_uuid = self.profile.as_ref().unwrap().uuid.clone();
 
                 spawn_local(async move {
-                    let res = make_query(DeleteUserFav::build_query(delete_user_fav::Variables {
-                        user_uuid,
-                    }))
-                    .await
-                    .unwrap();
+                    let res = make_query(DeleteUserFav::build_query(
+                        delete_user_fav::Variables { user_uuid }
+                    )).await.unwrap();
 
-                    link.send_message(Msg::DelFollow(res.clone()));
+                    link.send_message(Msg::DelFollow(res));
                 })
             },
             Msg::DelFollow(res) => {
@@ -262,21 +234,19 @@ impl Component for Profile {
 
                 match res_value.is_null() {
                     false => {
-                        let result: bool =
-                            serde_json::from_value(res_value.get("deleteUserFav").unwrap().clone())
-                                .unwrap();
+                        let result: bool = serde_json::from_value(
+                            res_value.get("deleteUserFav").unwrap().clone()
+                        ).unwrap();
 
                         if result {
                             self.subscribers -= 1;
                             self.is_followed = false;
                         }
-                    }
-                    true => {
-                        self.error = Some(get_error(&data));
-                    }
+                    },
+                    true => self.error = Some(get_error(&data)),
                 }
             },
-            Msg::GetSelfData(res) => {
+            Msg::GetSelfProfileResult(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
 
@@ -295,13 +265,11 @@ impl Component for Profile {
                         self.subscribers = self_data.subscribers.to_owned();
                         self.current_user_uuid = self_data.uuid.to_owned();
                         self.self_profile = Some(self_data);
-                    }
-                    true => {
-                        self.error = Some(get_error(&data));
-                    }
+                    },
+                    true => self.error = Some(get_error(&data)),
                 }
             },
-            Msg::GetUserData(res) => {
+            Msg::GetUserProfileResult(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
 
@@ -318,29 +286,8 @@ impl Component for Profile {
                         self.is_followed = user_data.is_followed.to_owned();
                         self.current_user_uuid = user_data.uuid.to_owned();
                         self.profile = Some(user_data);
-                    }
-                    true => {
-                        self.error = Some(get_error(&data));
-                    }
-                }
-            },
-            Msg::UpdateList(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        self.regions =
-                            serde_json::from_value(res_value.get("regions").unwrap().clone())
-                                .unwrap();
-                        self.programs =
-                            serde_json::from_value(res_value.get("programs").unwrap().clone())
-                                .unwrap();
-                        debug!("Update: {:?}", self.programs);
-                    }
-                    true => {
-                        self.error = Some(get_error(&data));
-                    }
+                    },
+                    true => self.error = Some(get_error(&data)),
                 }
             },
             Msg::ChangeTab(set_tab) => {
@@ -356,6 +303,7 @@ impl Component for Profile {
                 }
             },
             Msg::ShowFullUserInfo => self.show_full_user_info = !self.show_full_user_info,
+            Msg::ClearError => self.error = None,
             Msg::Ignore => {},
         }
         true
@@ -367,10 +315,12 @@ impl Component for Profile {
     }
 
     fn view(&self) -> Html {
+        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+
         match (&self.self_profile, &self.profile) {
             (Some(self_data), _) => self.self_user_card(self_data),
             (_, Some(user_data)) => self.other_user_card(user_data),
-            _ => html!{<ListErrors error=self.error.clone()/>},
+            _ => html!{<ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error) />},
         }
     }
 }
@@ -386,21 +336,19 @@ impl Profile {
                 <div class="container page">
                     <div class="row">
                         <div class="card">
-                          <div class="card-content">
-                            <div class="media">
-                              { self.view_card() }
+                            <div class="card-content">
+                                {self.view_card()}
+                                <div class="content">
+                                    { self.view_user_info(
+                                        self_data.description.as_str(),
+                                        self_data.position.as_str(),
+                                        self_data.region.region.as_str(),
+                                        self_data.program.name.as_str(),
+                                    ) }
+                                </div>
                             </div>
-                            <div class="content">
-                                { self.view_user_info(
-                                    self_data.description.as_str(),
-                                    self_data.position.as_str(),
-                                    self_data.region.region.as_str(),
-                                    self_data.program.name.as_str(),
-                                ) }
-                            </div>
+                            {self.self_user_relate_object(self_data)}
                         </div>
-                        {self.self_user_relate_object(self_data)}
-                      </div>
                     </div>
                 </div>
             </div>
@@ -413,10 +361,6 @@ impl Profile {
     ) -> Html {
         html!{<div class="card">
             <div class="columns is-mobile">
-                // <div class="column is-1">
-
-                // </div>
-                // <hr/>
                 <div class="column is-flex">
                     { self.show_profile_action() }
                     <div class="card-relate-data" style="flex:1;" >
@@ -447,10 +391,7 @@ impl Profile {
                         // <h1 class="title">{ title }</h1>
                         <div class="card">
                           <div class="card-content">
-                            <div class="media">
-                              { self.view_card() }
-                            </div>
-
+                            {self.view_card()}
                             <div class="content">
                                 { self.view_user_info(
                                     user_data.description.as_str(),
@@ -501,7 +442,7 @@ impl Profile {
             (None, None) => UserDataCard::default(),
         };
 
-        html! {<>
+        html!{<div class="media">
             <div class="media-left">
               <figure class="image is-48x48">
                 <img src="https://bulma.io/images/placeholders/96x96.png" alt="Placeholder image"/>
@@ -527,7 +468,7 @@ impl Profile {
                   </div>
               </p>
             </div>
-        </>}
+        </div>}
     }
 
     fn show_profile_followers(&self) -> Html {
@@ -568,7 +509,7 @@ impl Profile {
         self.link.callback(move |_| Msg::ChangeTab(cb.clone()))
     }
 
-    fn check_extend(&self, tab: ProfileTab) -> bool {
+    fn check_extend(&self, tab: &ProfileTab) -> bool {
         if self.extend_tab.is_some() {
             self.extend_tab.clone().unwrap() == tab.clone()
         } else {
@@ -579,70 +520,70 @@ impl Profile {
     fn show_profile_action(&self) -> Html {
         let menu_arr: Vec<MenuItem> = vec![
             MenuItem {
-                title: "Certificates".to_string(),
+                title: "CERTIFICATES".to_string(),
                 action: self.cb_generator(ProfileTab::Certificates),
-                count: self.get_number_of_items(ProfileTab::Certificates),
+                count: self.get_number_of_items(&ProfileTab::Certificates),
                 icon_class: classes!("fas", "fa-certificate"),
                 is_active: self.profile_tab == ProfileTab::Certificates,
-                is_extend: self.check_extend(ProfileTab::Certificates),
+                is_extend: self.check_extend(&ProfileTab::Certificates),
             },
             MenuItem {
                 title: "COMPONENTS all".to_string(),
                 action: self.cb_generator(ProfileTab::Components),
-                count: self.get_number_of_items(ProfileTab::Components),
+                count: self.get_number_of_items(&ProfileTab::Components),
                 icon_class: classes!("fas", "fa-certificate"),
                 is_active: self.profile_tab == ProfileTab::Components,
-                is_extend: self.check_extend(ProfileTab::Components),
+                is_extend: self.check_extend(&ProfileTab::Components),
             },
             MenuItem {
                 title: "COMPONENTS fav".to_string(),
                 action: self.cb_generator(ProfileTab::FavoriteComponents),
-                count: self.get_number_of_items(ProfileTab::FavoriteComponents),
+                count: self.get_number_of_items(&ProfileTab::FavoriteComponents),
                 icon_class: classes!("fas", "fa-certificate"),
                 is_active: self.profile_tab == ProfileTab::FavoriteComponents,
-                is_extend: self.check_extend(ProfileTab::FavoriteComponents),
+                is_extend: self.check_extend(&ProfileTab::FavoriteComponents),
             },
             // company MenuItem
             MenuItem {
                 title: "COMPANIES all".to_string(),
                 action: self.cb_generator(ProfileTab::Companies),
-                count: self.get_number_of_items(ProfileTab::Companies),
+                count: self.get_number_of_items(&ProfileTab::Companies),
                 icon_class: classes!("fas", "fa-certificate"),
                 is_active: self.profile_tab == ProfileTab::Companies,
-                is_extend: self.check_extend(ProfileTab::Companies),
+                is_extend: self.check_extend(&ProfileTab::Companies),
             },
             // company fav MenuItem
             MenuItem {
                 title: "COMPANIES fav".to_string(),
                 action: self.cb_generator(ProfileTab::FavoriteCompanies),
-                count: self.get_number_of_items(ProfileTab::FavoriteCompanies),
+                count: self.get_number_of_items(&ProfileTab::FavoriteCompanies),
                 icon_class: classes!("fas", "fa-certificate"),
                 is_active: self.profile_tab == ProfileTab::FavoriteCompanies,
-                is_extend: self.check_extend(ProfileTab::FavoriteCompanies),
+                is_extend: self.check_extend(&ProfileTab::FavoriteCompanies),
             },
             // standards MenuItem
             MenuItem {
                 title: "STANDARDS all".to_string(),
                 action: self.cb_generator(ProfileTab::FavoriteStandards),
-                count: self.get_number_of_items(ProfileTab::FavoriteStandards),
+                count: self.get_number_of_items(&ProfileTab::FavoriteStandards),
                 icon_class: classes!("fas", "fa-certificate"),
                 is_active: self.profile_tab == ProfileTab::FavoriteStandards,
-                is_extend: self.check_extend(ProfileTab::FavoriteStandards),
+                is_extend: self.check_extend(&ProfileTab::FavoriteStandards),
             },
             // user fav MenuItem
             MenuItem {
                 title: "USERS fav".to_string(),
                 action: self.cb_generator(ProfileTab::FavoriteUsers),
-                count: self.get_number_of_items(ProfileTab::FavoriteUsers),
+                count: self.get_number_of_items(&ProfileTab::FavoriteUsers),
                 icon_class: classes!("fas", "fa-certificate"),
                 is_active: self.profile_tab == ProfileTab::FavoriteUsers,
-                is_extend: self.check_extend(ProfileTab::FavoriteUsers),
+                is_extend: self.check_extend(&ProfileTab::FavoriteUsers),
             },
         ];
 
         html! {
             <div style="margin-right: 18px;z-index: 1;" >
-                <SideMenu menu_arr={menu_arr} ></SideMenu>
+                <SideMenu menu_arr={menu_arr} />
             </div>
         }
     }
@@ -756,7 +697,7 @@ impl Profile {
         }
     }
 
-    fn get_number_of_items(&self, tab: ProfileTab ) -> usize {
+    fn get_number_of_items(&self, tab: &ProfileTab ) -> usize {
         match &self.self_profile {
             Some( ref res) =>  match tab {
               ProfileTab::Certificates => res.certificates.len(),

@@ -149,28 +149,22 @@ impl Component for CatalogStandards {
             <div class="standardsBox" >
               <ListErrors error=self.error.clone()/>
               <div class="level" >
-                <div class="level-left ">
-                {match &self.props.show_create_btn {
-                    true => html!{
-                        <RouterAnchor<AppRoute> route=AppRoute::CreateStandard >
-                          <button class="button is-info" >{"Create"}</button>
-                        </RouterAnchor<AppRoute>>
-                    },
-                    false => html!{},
-                }}
+                <div class="level-left">
                 </div>
                 <div class="level-right">
-                  // <div class="select">
-                  //   <select>
-                  //     <option>{"Select dropdown"}</option>
-                  //     <option>{"With options"}</option>
-                  //   </select>
-                  // </div>
-                  <button class="button" onclick={onclick_change_view} >
-                    <span class={"icon is-small"}>
-                      <i class={class_for_icon}></i>
-                    </span>
-                  </button>
+                    {match &self.props.show_create_btn {
+                        true => html!{
+                            <RouterAnchor<AppRoute> route=AppRoute::CreateStandard >
+                              <button class="button is-info" >{"Create"}</button>
+                            </RouterAnchor<AppRoute>>
+                        },
+                        false => html!{},
+                    }}
+                    <button class="button" onclick={onclick_change_view} >
+                      <span class={"icon is-small"}>
+                        <i class={class_for_icon}></i>
+                      </span>
+                    </button>
                 </div>
               </div>
               <div class={class_for_list}>

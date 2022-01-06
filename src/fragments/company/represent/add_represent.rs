@@ -42,6 +42,8 @@ pub enum Msg {
     UpdateAddress(String),
     UpdatePhone(String),
     UpdateList(String),
+    HideNotification,
+    ClearError,
 }
 
 pub struct AddCompanyRepresentCard {
@@ -168,6 +170,12 @@ impl Component for AddCompanyRepresentCard {
                     true => self.error = Some(get_error(&data)),
                 }
             },
+            Msg::HideNotification => {
+                self.error = None;
+                self.request_register = RegisterCompanyRepresentInfo::default();
+                self.get_result_register = !self.get_result_register;
+            },
+            Msg::ClearError => self.error = None,
         }
         true
     }
@@ -178,13 +186,17 @@ impl Component for AddCompanyRepresentCard {
     }
 
     fn view(&self) -> Html {
+        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+        let onclick_hide_notification = self.link.callback(|_| Msg::HideNotification);
+
         html!{<>
-            <ListErrors error=self.error.clone()/>
+            <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
             {match &self.get_result_register {
                 true => html!{<div class="card">
                     <article class="message is-success">
                       <div class="message-header">
                         <p>{ "Success" }</p>
+                        <button class="delete" aria-label="close" onclick=onclick_hide_notification.clone() />
                       </div>
                       <div class="message-body">
                         { "This representative created!" }

@@ -14,7 +14,7 @@ use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*, service::RouteSer
 
 use crate::error::{get_error, Error};
 use crate::fragments::{
-    company::{AddCertificateCard, AddCompanyRepresentCard, CompanyCertificateCard, CompanyRepresents},
+    company::{CompanyCertificatesCard, AddCompanyCertificateCard, AddCompanyRepresentCard, CompanyRepresents},
     list_errors::ListErrors,
     spec::{SpecsTags, SearchSpecsTags},
     upload_favicon::UpdateFaviconBlock,
@@ -24,8 +24,7 @@ use crate::routes::AppRoute;
 use crate::services::is_authenticated;
 use crate::types::{
     UUID, SlimUser, CompanyUpdateInfo, CompanyInfo, Region,
-    CompanyType, TypeAccessInfo, SpecPathInfo, Spec,
-    Certificate, CompanyCertificate, CompanyRepresentInfo
+    CompanyType, TypeAccessInfo, SpecPathInfo, Spec
 };
 
 #[derive(GraphQLQuery)]
@@ -548,9 +547,9 @@ impl Component for CompanySettings {
                                                 // { format!("Updated certificates: {}", self.get_result_certificates.clone()) }
                                                 { "Certificates" }
                                             </span>
-                                            { self.fieldset_certificates() }
-                                            <br/>
                                             { self.fieldset_add_certificate() }
+                                            <br/>
+                                            { self.fieldset_certificates() }
                                         </>},
                                         // Show interface for add and update Represents
                                         Menu::Represent => html!{<>
@@ -904,40 +903,16 @@ impl CompanySettings {
     }
 
     fn fieldset_certificates(&self) -> Html {
-        let mut certificates: &[CompanyCertificate] = &Vec::new();
-        if let Some(ref data) = self.current_data {
-            certificates = data.company_certificates.as_ref();
-        };
-
-        match certificates.is_empty() {
-            true => html!{
-                <div>
-                    <span id="tag-info-no-certificates" class="tag is-info is-light">
-                        // { format!("Updated certificates: {}", self.get_result_certificates.clone()) }
-                        { "Company don't have Certificates" }
-                    </span>
-                </div>
+        match &self.current_data {
+            Some(current_data) => html!{
+                <CompanyCertificatesCard
+                    certificates = current_data.company_certificates.clone()
+                    show_cert_btn = true
+                    download_btn = false
+                    manage_btn = true
+                />
             },
-            false => {
-                html!{
-                    // <p class="card-footer-item">
-                    <>{
-                        for certificates.iter().map(|cert| {
-                            let view_cert: Certificate = cert.into();
-                            html!{
-                                <CompanyCertificateCard
-                                    company_uuid = self.company_uuid.clone()
-                                    certificate = view_cert
-                                    show_cert_btn = true
-                                    download_btn = false
-                                    change_btn = true
-                                    />
-                            }
-                        })
-                    }</>
-                    // </p>
-                }
-            }
+            None => html!{<span class=classes!("tag", "is-info", "is-light")>{"Not fount certificates"}</span>},
         }
     }
 
@@ -951,7 +926,7 @@ impl CompanySettings {
         let callback_upload_cert = self.link.callback(|_| Msg::GetCurrentData);
 
         html!{
-            <AddCertificateCard
+            <AddCompanyCertificateCard
                 company_uuid = company_uuid
                 callback=callback_upload_cert
                 />
@@ -959,30 +934,18 @@ impl CompanySettings {
     }
 
     fn fieldset_represents(&self) -> Html {
-        let mut represents: &[CompanyRepresentInfo] = &Vec::new();
-        if let Some(ref data) = self.current_data {
-            represents = data.company_represents.as_ref();
-        };
-        // debug!("first: {:?}", represents);
-
-        match represents.is_empty() {
-            true => html!{
-                <div>
-                    <span id="tag-info-no-represents" class="tag is-info is-light">
-                        // { format!("Updated represents: {}", self.get_result_represents.clone()) }
-                        { "Company don't have Represents" }
-                    </span>
-                </div>
+        match self.current_data {
+            Some(ref data) => html!{
+                <CompanyRepresents
+                    show_manage_btn = true
+                    list = data.company_represents.clone()
+                    />
             },
-            false => {
-                // debug!("false: {:?}", represents);
-                html!{
-                    <CompanyRepresents
-                        show_manage_btn = true
-                        list = represents.to_vec()
-                        />
-                }
-            }
+            None => html!{<div>
+                <span id="tag-info-no-represents" class="tag is-info is-light">
+                    { "Company don't have Represents" }
+                </span>
+            </div>},
         }
     }
 
