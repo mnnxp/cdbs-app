@@ -1,5 +1,5 @@
 use yew::{
-    html, Component, ComponentLink,
+    html, Component, Callback, ComponentLink,
     Html, InputData, ChangeData, Properties, ShouldRender,
 };
 use graphql_client::GraphQLQuery;
@@ -43,7 +43,6 @@ struct DeleteCompanyRepresent;
 pub enum Msg {
     RequestUpdateRepresent,
     RequestDeleteRepresent,
-    ResponseError(Error),
     GetUpdateResult(String),
     GetDeleteRepresentResult(String),
     UpdateRegionId(String),
@@ -52,6 +51,7 @@ pub enum Msg {
     UpdateAddress(String),
     UpdatePhone(String),
     UpdateList(String),
+    ClearError,
 }
 
 #[derive(Clone, Debug, Properties)]
@@ -120,30 +120,22 @@ impl Component for ChangeItem {
                 debug!("Update company represent: {:?}", &self.request_update);
                 let company_uuid = self.company_uuid.clone();
                 let company_represent_uuid = self.company_represent_uuid.clone();
-                let request_update = self.request_update.clone();
+                let ipt_update_company_represent_data = update_company_represent::IptUpdateCompanyRepresentData {
+                    regionId: self.request_update.region_id.clone(),
+                    representationTypeId: self.request_update.representation_type_id.clone(),
+                    name: self.request_update.name.clone(),
+                    address: self.request_update.address.clone(),
+                    phone: self.request_update.phone.clone(),
+                };
                 spawn_local(async move {
-                    let CompanyRepresentUpdateInfo {
-                        region_id,
-                        representation_type_id,
-                        name,
-                        address,
-                        phone,
-                    } = request_update;
-                    let ipt_update_company_represent_data = update_company_represent::IptUpdateCompanyRepresentData {
-                        regionId: region_id,
-                        representationTypeId: representation_type_id,
-                        name,
-                        address,
-                        phone,
-                    };
                     let res = make_query(UpdateCompanyRepresent::build_query(
                         update_company_represent::Variables {
                             company_uuid,
                             company_represent_uuid,
                             ipt_update_company_represent_data,
                         }
-                    )).await;
-                    link.send_message(Msg::GetUpdateResult(res.unwrap()));
+                    )).await.unwrap();
+                    link.send_message(Msg::GetUpdateResult(res));
                 })
             },
             Msg::RequestDeleteRepresent => {
@@ -156,13 +148,9 @@ impl Component for ChangeItem {
                             company_uuid,
                             company_represent_uuid,
                         }
-                    )).await;
-                    link.send_message(Msg::GetDeleteRepresentResult(res.unwrap()));
+                    )).await.unwrap();
+                    link.send_message(Msg::GetDeleteRepresentResult(res));
                 })
-            },
-            Msg::ResponseError(err) => {
-                self.error = Some(err);
-                // self.task = None;
             },
             Msg::GetUpdateResult(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
@@ -170,13 +158,12 @@ impl Component for ChangeItem {
 
                 match res_value.is_null() {
                     false => {
-                        let result: usize = serde_json::from_value(res_value.get("updateCompanyRepresent").unwrap().clone()).unwrap();
-                        debug!("Update company represent: {:?}", result);
-                        self.get_result_update = result;
+                        self.get_result_update = serde_json::from_value(
+                            res_value.get("updateCompanyRepresent").unwrap().clone()
+                        ).unwrap();
+                        debug!("Update company represent: {:?}", self.get_result_update);
                     },
-                    true => {
-                        link.send_message(Msg::ResponseError(get_error(&data)));
-                    }
+                    true => self.error = Some(get_error(&data)),
                 }
             },
             Msg::GetDeleteRepresentResult(res) => {
@@ -185,13 +172,12 @@ impl Component for ChangeItem {
 
                 match res_value.is_null() {
                     false => {
-                        let result: bool = serde_json::from_value(res_value.get("deleteCompanyRepresent").unwrap().clone()).unwrap();
-                        debug!("Delete company represent: {:?}", result);
-                        self.get_result_delete = result;
+                        self.get_result_delete = serde_json::from_value(
+                            res_value.get("deleteCompanyRepresent").unwrap().clone()
+                        ).unwrap();
+                        debug!("Delete company represent: {:?}", self.get_result_delete);
                     },
-                    true => {
-                        link.send_message(Msg::ResponseError(get_error(&data)));
-                    }
+                    true => self.error = Some(get_error(&data)),
                 }
             },
             Msg::UpdateRegionId(region_id) => {
@@ -220,11 +206,10 @@ impl Component for ChangeItem {
                         self.represent_types =
                             serde_json::from_value(res_value.get("companyRepresentTypes").unwrap().clone()).unwrap();
                     },
-                    true => {
-                        self.error = Some(get_error(&data));
-                    },
+                    true => self.error = Some(get_error(&data)),
                 }
             },
+            Msg::ClearError => self.error = None,
         }
         true
     }
@@ -235,32 +220,74 @@ impl Component for ChangeItem {
     }
 
     fn view(&self) -> Html {
+        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+
         html!{<>
-            <ListErrors error=self.error.clone()/>
-            {match &self.get_result_delete {
-                true => html!{<div class="card">
-                    <article class="message is-success">
-                      <div class="message-header">
-                        <p>{ "Success" }</p>
-                      </div>
-                      <div class="message-body">
-                        { "This representative removed!" }
-                      </div>
-                    </article>
-                </div>},
-                false => html!{<div class="card">
-                  {self.show_data_for_change()}
-                  {self.show_btn_delete()}
-                </div>}
-            }}
+            <br/>
+            <div class="card">
+                <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error) />
+                {match &self.get_result_delete {
+                    true => html!{
+                        <article class="message is-success">
+                          <div class="message-header">
+                            <p>{ "Success" }</p>
+                          </div>
+                          <div class="message-body">
+                            { "This representative removed!" }
+                          </div>
+                        </article>
+                    },
+                    false => html!{<div class="column">
+                        <label class="label">{"Change represent"}</label>
+                        {if self.get_result_update > 0 {
+                            html!{<span id="tag-info-update-represent" class="tag is-info is-light">
+                            { format!("Data updated! Change rows: {}", self.get_result_update) }
+                            </span>}
+                        } else { html!{} }}
+                        {self.change_represent_block()}
+                        {self.show_manage_buttons()}
+                    </div>}
+                }}
+            </div>
         </>}
     }
 }
 
 impl ChangeItem {
-    fn show_data_for_change(
+    fn fileset_generator(
         &self,
+        id: &str,
+        label: &str,
+        placeholder: &str,
+        value: String,
+        oninput: Callback<InputData>,
     ) -> Html {
+        let mut class = "input";
+        let (input_tag, input_type) = match id {
+            "email" => ("input", "email"),
+            "description" => {
+                class = "textarea";
+                ("textarea", "text")
+            },
+            "password" => ("input", "password"),
+            _ => ("input", "text"),
+        };
+
+        html!{
+            <fieldset class="field">
+                <label class="label">{label.to_string()}</label>
+                <@{input_tag}
+                    id={id.to_string()}
+                    class={class}
+                    type={input_type}
+                    placeholder={placeholder.to_string()}
+                    value={value}
+                    oninput=oninput ></@>
+            </fieldset>
+        }
+    }
+
+    fn change_represent_block(&self) -> Html {
         let oninput_region_id = self
             .link
             .callback(|ev: ChangeData| Msg::UpdateRegionId(match ev {
@@ -273,90 +300,33 @@ impl ChangeItem {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
-        let oninput_name = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateName(ev.value));
-        let oninput_address = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateAddress(ev.value));
-        let oninput_phone = self
-            .link
-            .callback(|ev: InputData| Msg::UpdatePhone(ev.value));
-
-        let onclick_change_represent = self
-            .link
-            .callback(|_| Msg::RequestUpdateRepresent);
+        let oninput_name =
+            self.link.callback(|ev: InputData| Msg::UpdateName(ev.value));
+        let oninput_address =
+            self.link.callback(|ev: InputData| Msg::UpdateAddress(ev.value));
+        let oninput_phone =
+            self.link.callback(|ev: InputData| Msg::UpdatePhone(ev.value));
 
         html!{<>
-            {if self.get_result_update > 0 {
-                html!{<span id="tag-info-update-represent" class="tag is-info is-light">
-                 { format!("Data updated! Change rows: {}", self.get_result_update) }
-                </span>}
-            } else { html!{} }}
+            {self.fileset_generator(
+                "name", "Name", "Name",
+                self.request_update.name.as_ref().map(|x| x.to_string()).unwrap_or_default(),
+                oninput_name
+            )}
+            // <div class="column">
+            // </div>
 
-            // without columns
-            <fieldset class="field">
-                <label class="label">{"name"}</label>
-                <input
-                    id="name"
-                    class="input"
-                    type="text"
-                    placeholder="name"
-                    value={self.request_update.name
-                        .as_ref()
-                        .map(|x| x.to_string())
-                        .unwrap_or_default()}
-                    oninput=oninput_name />
-            </fieldset>
-            <fieldset class="field">
-                <label class="label">{"address"}</label>
-                <input
-                    id="address"
-                    class="input"
-                    type="text"
-                    placeholder="address"
-                    value={self.request_update.address
-                        .as_ref()
-                        .map(|x| x.to_string())
-                        .unwrap_or_default()}
-                    oninput=oninput_address />
-            </fieldset>
-            <fieldset class="field">
-                <label class="label">{"phone"}</label>
-                <input
-                    id="phone"
-                    class="input"
-                    type="text"
-                    placeholder="phone"
-                    value={self.request_update.phone
-                        .as_ref()
-                        .map(|x| x.to_string())
-                        .unwrap_or_default()}
-                    oninput=oninput_phone />
-            </fieldset>
-            // two columns
-            <fieldset class="columns">
-                <fieldset class="column">
+            <div class="columns">
+                <div class="column">
+                    {self.fileset_generator(
+                        "phone", "Phone", "Phone",
+                        self.request_update.phone.as_ref().map(|x| x.to_string()).unwrap_or_default(),
+                        oninput_phone
+                    )}
+                </div>
+                <div class="column">
                     <fieldset class="field">
-                        <label class="label">{"region"}</label>
-                        <div class="control">
-                            <div class="select">
-                              <select
-                                  id="region_id"
-                                  select={self.props.data.region.region_id.to_string()}
-                                  onchange=oninput_region_id
-                                  >
-                                { for self.regions.iter().map(|x|
-                                    html!{<option value={x.region_id.to_string()}>{&x.region}</option>}
-                                )}
-                              </select>
-                            </div>
-                        </div>
-                    </fieldset>
-                </fieldset>
-                <fieldset class="column">
-                    <fieldset class="field">
-                        <label class="label">{"representation type"}</label>
+                        <label class="label">{"Representation type"}</label>
                         <div class="control">
                             <div class="select">
                               <select
@@ -371,28 +341,59 @@ impl ChangeItem {
                             </div>
                         </div>
                     </fieldset>
+                </div>
+            </div>
+            <div class="columns">
+                <div class="column">
+                <fieldset class="field">
+                    <label class="label">{"Region"}</label>
+                    <div class="control">
+                        <div class="select">
+                          <select
+                              id="region_id"
+                              select={self.props.data.region.region_id.to_string()}
+                              onchange=oninput_region_id
+                              >
+                            { for self.regions.iter().map(|x|
+                                html!{<option value={x.region_id.to_string()}>{&x.region}</option>}
+                            )}
+                          </select>
+                        </div>
+                    </div>
                 </fieldset>
-            </fieldset>
-            <a id={ format!("btn-change-represent-{}", &self.props.data.uuid) }
-                class="button"
-                onclick=onclick_change_represent>
-                { "Change" }
-            </a>
+                </div>
+                <div class="column">
+                    {self.fileset_generator(
+                        "address", "Address", "Address",
+                        self.request_update.address.as_ref().map(|x| x.to_string()).unwrap_or_default(),
+                        oninput_address
+                    )}
+                </div>
+            </div>
         </>}
     }
 
-    fn show_btn_delete(
-        &self,
-    ) -> Html {
-        let onclick_delete_represent = self
-            .link
-            .callback(|_| Msg::RequestDeleteRepresent);
+    fn show_manage_buttons(&self) -> Html {
+        let onclick_change_represent =
+            self.link.callback(|_| Msg::RequestUpdateRepresent);
+        let onclick_delete_represent =
+            self.link.callback(|_| Msg::RequestDeleteRepresent);
 
-        html!{<a id={ format!(
-            "btn-delete-represent-{}", &self.props.data.uuid) }
-            class="button"
-            onclick=onclick_delete_represent>
-            { "Delete" }
-        </a>}
+        html!{<div class="columns">
+            <div class="column">
+                <button id={"btn-delete-represent"}
+                    class="button is-danger is-fullwidth"
+                    onclick=onclick_delete_represent>
+                    { "Delete" }
+                </button>
+            </div>
+            <div class="column">
+                <button id={"btn-change-represent"}
+                    class="button is-fullwidth"
+                    onclick=onclick_change_represent>
+                    { "Update" }
+                </button>
+            </div>
+        </div>}
     }
 }

@@ -402,10 +402,6 @@ impl Component for Settings {
                 <div class="container page">
                     <div class="row">
                         <div class="columns">
-                            // <div class="column is-one-quarter">
-
-                            // </div>
-                            // <h1 class="title">{ "Your Settings" }</h1>
                             <div class="column is-flex">
                                 { self.view_menu() }
                                 <div class="card is-flex-grow-1" >

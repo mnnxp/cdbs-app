@@ -1,5 +1,5 @@
 use yew::{
-    html, Component, ComponentLink,
+    html, Component, Callback, ComponentLink,
     Html, InputData, ChangeData, Properties, ShouldRender,
 };
 use graphql_client::GraphQLQuery;
@@ -34,7 +34,6 @@ struct RegisterCompanyRepresent;
 
 pub enum Msg {
     RequestRegisterRepresent,
-    ResponseError(Error),
     GetRegisterResult(String),
     UpdateRegionId(String),
     UpdateRepresentationTypeId(String),
@@ -42,7 +41,7 @@ pub enum Msg {
     UpdateAddress(String),
     UpdatePhone(String),
     UpdateList(String),
-    HideNotification,
+    ClearData,
     ClearError,
 }
 
@@ -96,38 +95,21 @@ impl Component for AddCompanyRepresentCard {
         match msg {
             Msg::RequestRegisterRepresent => {
                 debug!("Register company represent: {:?}", &self.request_register);
-                let request_register = RegisterCompanyRepresentInfo {
-                    company_uuid: self.props.company_uuid.clone(),
-                    region_id: self.request_register.region_id,
-                    representation_type_id: self.request_register.representation_type_id,
+                let ipt_company_represent_data = register_company_represent::IptCompanyRepresentData {
+                    companyUuid: self.props.company_uuid.clone(),
+                    regionId: self.request_register.region_id as i64,
+                    representationTypeId: self.request_register.representation_type_id as i64,
                     name: self.request_register.name.clone(),
                     address: self.request_register.address.clone(),
                     phone: self.request_register.phone.clone(),
                 };
                 spawn_local(async move {
-                    let RegisterCompanyRepresentInfo {
-                        company_uuid,
-                        region_id,
-                        representation_type_id,
-                        name,
-                        address,
-                        phone,
-                    } = request_register;
-                    let ipt_company_represent_data = register_company_represent::IptCompanyRepresentData {
-                        companyUuid: company_uuid,
-                        regionId: region_id as i64,
-                        representationTypeId: representation_type_id as i64,
-                        name,
-                        address,
-                        phone,
-                    };
-                    let res = make_query(RegisterCompanyRepresent::build_query(register_company_represent::Variables {
-                        ipt_company_represent_data
-                    })).await.unwrap();
+                    let res = make_query(RegisterCompanyRepresent::build_query(
+                        register_company_represent::Variables { ipt_company_represent_data }
+                    )).await.unwrap();
                     link.send_message(Msg::GetRegisterResult(res));
                 })
             },
-            Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetRegisterResult(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
@@ -138,7 +120,7 @@ impl Component for AddCompanyRepresentCard {
                         debug!("Register company represent: {:?}", result);
                         self.get_result_register = result;
                     },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                    true => self.error = Some(get_error(&data)),
                 }
             },
             Msg::UpdateRegionId(region_id) => {
@@ -170,10 +152,10 @@ impl Component for AddCompanyRepresentCard {
                     true => self.error = Some(get_error(&data)),
                 }
             },
-            Msg::HideNotification => {
+            Msg::ClearData => {
                 self.error = None;
                 self.request_register = RegisterCompanyRepresentInfo::default();
-                self.get_result_register = !self.get_result_register;
+                self.get_result_register = false;
             },
             Msg::ClearError => self.error = None,
         }
@@ -187,12 +169,12 @@ impl Component for AddCompanyRepresentCard {
 
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
-        let onclick_hide_notification = self.link.callback(|_| Msg::HideNotification);
+        let onclick_hide_notification = self.link.callback(|_| Msg::ClearData);
 
-        html!{<>
+        html!{<div class="card">
             <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
             {match &self.get_result_register {
-                true => html!{<div class="card">
+                true => html!{
                     <article class="message is-success">
                       <div class="message-header">
                         <p>{ "Success" }</p>
@@ -202,19 +184,52 @@ impl Component for AddCompanyRepresentCard {
                         { "This representative created!" }
                       </div>
                     </article>
-                </div>},
-                false => html!{<div class="card">
-                  {self.show_data_for_change()}
+                },
+                false => html!{<div class="column">
+                    <label class="label">{"New represent"}</label>
+                    {self.new_represent_block()}
+                    {self.show_manage_buttons()}
                 </div>}
             }}
-        </>}
+        </div>}
     }
 }
 
 impl AddCompanyRepresentCard {
-    fn show_data_for_change(
+    fn fileset_generator(
         &self,
+        id: &str,
+        label: &str,
+        placeholder: &str,
+        value: String,
+        oninput: Callback<InputData>,
     ) -> Html {
+        let mut class = "input";
+        let (input_tag, input_type) = match id {
+            "email" => ("input", "email"),
+            "description" => {
+                class = "textarea";
+                ("textarea", "text")
+            },
+            "password" => ("input", "password"),
+            _ => ("input", "text"),
+        };
+
+        html!{
+            <fieldset class="field">
+                <label class="label">{label.to_string()}</label>
+                <@{input_tag}
+                    id={id.to_string()}
+                    class={class}
+                    type={input_type}
+                    placeholder={placeholder.to_string()}
+                    value={value}
+                    oninput=oninput ></@>
+            </fieldset>
+        }
+    }
+
+    fn new_represent_block(&self) -> Html {
         let oninput_region_id = self
             .link
             .callback(|ev: ChangeData| Msg::UpdateRegionId(match ev {
@@ -227,75 +242,33 @@ impl AddCompanyRepresentCard {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
-        let oninput_name = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateName(ev.value));
-        let oninput_address = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateAddress(ev.value));
-        let oninput_phone = self
-            .link
-            .callback(|ev: InputData| Msg::UpdatePhone(ev.value));
-
-        let onclick_create_represent = self
-            .link
-            .callback(|_| Msg::RequestRegisterRepresent);
+        let oninput_name =
+            self.link.callback(|ev: InputData| Msg::UpdateName(ev.value));
+        let oninput_address =
+            self.link.callback(|ev: InputData| Msg::UpdateAddress(ev.value));
+        let oninput_phone =
+            self.link.callback(|ev: InputData| Msg::UpdatePhone(ev.value));
 
         html!{<>
-            // without columns
-            <fieldset class="field">
-                <label class="label">{"name"}</label>
-                <input
-                    id="name"
-                    class="input"
-                    type="text"
-                    placeholder="name"
-                    value={self.request_register.name.clone()}
-                    oninput=oninput_name />
-            </fieldset>
-            <fieldset class="field">
-                <label class="label">{"address"}</label>
-                <input
-                    id="address"
-                    class="input"
-                    type="text"
-                    placeholder="address"
-                    value={self.request_register.address.clone()}
-                    oninput=oninput_address />
-            </fieldset>
-            <fieldset class="field">
-                <label class="label">{"phone"}</label>
-                <input
-                    id="phone"
-                    class="input"
-                    type="text"
-                    placeholder="phone"
-                    value={self.request_register.phone.clone()}
-                    oninput=oninput_phone />
-            </fieldset>
-            // two columns
-            <fieldset class="columns">
-                <fieldset class="column">
+            {self.fileset_generator(
+                "name", "Name", "Name",
+                self.request_register.name.clone(),
+                oninput_name
+            )}
+            // <div class="column">
+            // </div>
+
+            <div class="columns">
+                <div class="column">
+                    {self.fileset_generator(
+                        "phone", "Phone", "Phone",
+                        self.request_register.phone.clone(),
+                        oninput_phone
+                    )}
+                </div>
+                <div class="column">
                     <fieldset class="field">
-                        <label class="label">{"region"}</label>
-                        <div class="control">
-                            <div class="select">
-                              <select
-                                  id="region_id"
-                                  select={self.request_register.region_id.to_string()}
-                                  onchange=oninput_region_id
-                                  >
-                                { for self.regions.iter().map(|x|
-                                    html!{<option value={x.region_id.to_string()}>{&x.region}</option>}
-                                )}
-                              </select>
-                            </div>
-                        </div>
-                    </fieldset>
-                </fieldset>
-                <fieldset class="column">
-                    <fieldset class="field">
-                        <label class="label">{"representation type"}</label>
+                        <label class="label">{"Representation type"}</label>
                         <div class="control">
                             <div class="select">
                               <select
@@ -310,13 +283,60 @@ impl AddCompanyRepresentCard {
                             </div>
                         </div>
                     </fieldset>
-                </fieldset>
-            </fieldset>
-            <a id={ format!("btn-change-represent-{}", &self.props.company_uuid) }
-                class="button"
-                onclick=onclick_create_represent>
-                { "Create" }
-            </a>
+                </div>
+            </div>
+            <div class="columns">
+                <div class="column">
+                    <fieldset class="field">
+                        <label class="label">{"Region"}</label>
+                        <div class="control">
+                            <div class="select">
+                              <select
+                                  id="region_id"
+                                  select={self.request_register.region_id.to_string()}
+                                  onchange=oninput_region_id
+                                  >
+                                { for self.regions.iter().map(|x|
+                                    html!{<option value={x.region_id.to_string()}>{&x.region}</option>}
+                                )}
+                              </select>
+                            </div>
+                        </div>
+                    </fieldset>
+                </div>
+                <div class="column">
+                    {self.fileset_generator(
+                        "address", "Address", "Address",
+                        self.request_register.address.clone(),
+                        oninput_address
+                    )}
+                </div>
+            </div>
         </>}
+    }
+
+    fn show_manage_buttons(&self) -> Html {
+        let onclick_clear_data =
+            self.link.callback(|_| Msg::ClearData);
+
+        let onclick_create_represent =
+            self.link.callback(|_| Msg::RequestRegisterRepresent);
+
+        html!{<div class="columns">
+            <div class="column">
+                <button id={"btn-clear-represent"}
+                    class="button is-fullwidth"
+                    onclick=onclick_clear_data>
+                    { "Clear" }
+                </button>
+            </div>
+            <div class="column">
+                <button id={"btn-new-represent"}
+                    class="button is-success is-fullwidth"
+                    onclick=onclick_create_represent>
+                    { "Create" }
+                </button>
+            </div>
+        </div>}
     }
 }
