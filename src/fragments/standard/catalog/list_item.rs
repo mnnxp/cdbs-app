@@ -219,9 +219,9 @@ impl ListItemStandard {
                                     &owner_company.company_type.shortname
                             )}</span></div>
                         </div>
-                        <div class="column is-one-quarter flexBox" >
+                        <div class="column buttons is-one-quarter flexBox" >
                           {res_btn(classes!(
-                            String::from("fas fa-file")),
+                            String::from("fas fa-cube")),
                             show_standard_btn,
                             String::new()
                           )}

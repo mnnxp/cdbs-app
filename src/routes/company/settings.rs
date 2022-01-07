@@ -4,7 +4,7 @@ use log::debug;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 use yew::{
-    agent::Bridged, html, Bridge, ChangeData, Component, ComponentLink, FocusEvent, Html,
+    agent::Bridged, html, classes, Bridge, ChangeData, Component, ComponentLink, FocusEvent, Html,
     Callback, InputData, Properties, ShouldRender, MouseEvent
 };
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*, service::RouteService};
@@ -450,6 +450,8 @@ impl CompanySettings {
             MenuItem {
                 title: "Company".to_string(),
                 action: self.cb_generator(Menu::Company),
+                item_class: classes!("has-background-white"),
+                icon_class: classes!("fas", "fa-certificate"),
                 is_active: self.select_menu == Menu::Company,
                 ..Default::default()
             },
@@ -457,6 +459,8 @@ impl CompanySettings {
             MenuItem {
                 title: "Favicon".to_string(),
                 action: self.cb_generator(Menu::UpdateFavicon),
+                item_class: classes!("has-background-white"),
+                icon_class: classes!("fas", "fa-image"),
                 is_active: self.select_menu == Menu::UpdateFavicon,
                 ..Default::default()
             },
@@ -464,6 +468,8 @@ impl CompanySettings {
             MenuItem {
                 title: "Certificates".to_string(),
                 action: self.cb_generator(Menu::Certificates),
+                item_class: classes!("has-background-white"),
+                icon_class: classes!("fas", "fa-certificate"),
                 is_active: self.select_menu == Menu::Certificates,
                 ..Default::default()
             },
@@ -471,6 +477,8 @@ impl CompanySettings {
             MenuItem {
                 title: "Represent".to_string(),
                 action: self.cb_generator(Menu::Represent),
+                item_class: classes!("has-background-white"),
+                icon_class: classes!("fas", "fa-industry"),
                 is_active: self.select_menu == Menu::Represent,
                 ..Default::default()
             },
@@ -478,6 +486,8 @@ impl CompanySettings {
             MenuItem {
                 title: "Spec".to_string(),
                 action: self.cb_generator(Menu::Spec),
+                item_class: classes!("has-background-white"),
+                icon_class: classes!("fas", "fa-paperclip"),
                 is_active: self.select_menu == Menu::Spec,
                 ..Default::default()
             },
@@ -485,6 +495,8 @@ impl CompanySettings {
             MenuItem {
                 title: "Access".to_string(),
                 action: self.cb_generator(Menu::Access),
+                item_class: classes!("has-background-white"),
+                icon_class: classes!("fas", "fa-low-vision"),
                 is_active: self.select_menu == Menu::Access,
                 ..Default::default()
             },
@@ -492,6 +504,8 @@ impl CompanySettings {
             MenuItem {
                 title: "RemoveCompany".to_string(),
                 action: self.cb_generator(Menu::RemoveCompany),
+                item_class: classes!("has-background-danger-light"),
+                icon_class: classes!("fas", "fa-trash"),
                 is_active: self.select_menu == Menu::RemoveCompany,
                 ..Default::default()
             },

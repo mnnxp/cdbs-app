@@ -19,6 +19,8 @@ pub struct MenuItem {
     pub title: String,
     pub action: Callback<MouseEvent>,
     #[prop_or_default]
+    pub item_class: Classes,
+    #[prop_or_default]
     pub icon_class: Classes,
     pub count: usize,
     pub is_active: bool,
@@ -30,6 +32,7 @@ impl Default for MenuItem {
         Self {
             title: "".to_string(),
             action: Callback::noop(),
+            item_class: classes!("has-background-white"),
             icon_class: classes!("fas", "fa-certificate"),
             count: 0,
             is_active: false,
@@ -40,10 +43,7 @@ impl Default for MenuItem {
 
 #[derive(Properties, Clone)]
 pub struct Props {
-    // pub current_route: Option<AppRoute>,
-    // pub username: String,
     pub menu_arr: Option<Vec<MenuItem>>,
-    // pub tab: ProfileTab,
 }
 
 #[derive(Clone)]
@@ -79,7 +79,9 @@ impl Component for SideMenu {
         html! {
           <nav class="side-menu">
             <ul>
-              { for self.props.menu_arr.as_ref().unwrap().iter().map(|x| self.li_generator(x)) }
+              {for self.props.menu_arr.as_ref().unwrap().iter().map(|x|
+                  self.li_generator(x)
+              )}
             </ul>
           </nav>
         }
@@ -91,6 +93,7 @@ impl SideMenu {
         let MenuItem {
             title,
             action,
+            item_class,
             icon_class,
             count,
             is_active,
@@ -98,8 +101,18 @@ impl SideMenu {
         } = item.clone();
         let hide_tag = count == 0;
 
+        let mut item_class = item_class;
+
+        if is_active {
+            item_class.push("active");
+        }
+
+        if is_extend {
+            item_class.push("extend");
+        }
+
         html!(
-          <li class=classes!( if is_active {"active"} else {""}, if is_extend {"extend"} else {""} ) onclick=action>
+          <li class=item_class onclick=action>
             <a>
               <span>{title}</span>
               <div hidden=hide_tag style="display: inline-flex;" >

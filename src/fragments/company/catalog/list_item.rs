@@ -223,7 +223,7 @@ impl ListItemCompany {
                                 }}
                             </p>
                         </div>
-                        <div class="column is-one-quarter flexBox" >
+                        <div class="column buttons is-one-quarter flexBox" >
                             {res_btn(classes!(
                                 String::from("fas fa-building")),
                                 show_company_btn,

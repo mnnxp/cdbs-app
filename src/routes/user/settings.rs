@@ -566,6 +566,8 @@ impl Settings {
             MenuItem {
                 title: "Profile".to_string(),
                 action: self.cb_generator(Menu::Profile),
+                item_class: classes!("has-background-white"),
+                icon_class: classes!("fas", "fa-address-card"),
                 is_active: self.select_menu == Menu::Profile,
                 ..Default::default()
             },
@@ -573,6 +575,8 @@ impl Settings {
             MenuItem {
                 title: "Favicon".to_string(),
                 action: self.cb_generator(Menu::UpdateFavicon),
+                item_class: classes!("has-background-white"),
+                icon_class: classes!("fas", "fa-portrait"),
                 is_active: self.select_menu == Menu::UpdateFavicon,
                 ..Default::default()
             },
@@ -580,6 +584,8 @@ impl Settings {
             MenuItem {
                 title: "Certificates".to_string(),
                 action: self.cb_generator(Menu::Certificates),
+                item_class: classes!("has-background-white"),
+                icon_class: classes!("fas", "fa-certificate"),
                 is_active: self.select_menu == Menu::Certificates,
                 ..Default::default()
             },
@@ -587,6 +593,8 @@ impl Settings {
             MenuItem {
                 title: "Access".to_string(),
                 action: self.cb_generator(Menu::Access),
+                item_class: classes!("has-background-white"),
+                icon_class: classes!("fas", "fa-low-vision"),
                 is_active: self.select_menu == Menu::Access,
                 ..Default::default()
             },
@@ -594,6 +602,8 @@ impl Settings {
             MenuItem {
                 title: "Password".to_string(),
                 action: self.cb_generator(Menu::Password),
+                item_class: classes!("has-background-white"),
+                icon_class: classes!("fas", "fa-key"),
                 is_active: self.select_menu == Menu::Password,
                 ..Default::default()
             },
@@ -601,6 +611,8 @@ impl Settings {
             MenuItem {
                 title: "Remove profile".to_string(),
                 action: self.cb_generator(Menu::RemoveProfile),
+                item_class: classes!("has-background-danger-light"),
+                icon_class: classes!("fas", "fa-trash"),
                 is_active: self.select_menu == Menu::RemoveProfile,
                 ..Default::default()
             },
