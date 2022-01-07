@@ -2,20 +2,21 @@ use chrono::NaiveDateTime;
 use graphql_client::GraphQLQuery;
 use log::debug;
 use serde_json::Value;
-use std::time::Duration;
 use wasm_bindgen_futures::spawn_local;
-use yew::services::timeout::{TimeoutService, TimeoutTask};
 use yew::{
-    agent::Bridged, html, classes, Bridge, ChangeData, Component, ComponentLink, FocusEvent, Html,
-    NodeRef, Callback, InputData, Properties, ShouldRender
+    agent::Bridged, html, Bridge, ChangeData, Component, ComponentLink, FocusEvent, Html,
+    Callback, InputData, Properties, ShouldRender, MouseEvent
 };
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*, service::RouteService};
 
 use crate::error::{get_error, Error};
 use crate::fragments::{
-    company::{CompanyCertificatesCard, AddCompanyCertificateCard, AddCompanyRepresentCard, CompanyRepresents},
+    company::{
+        CompanyCertificatesCard, AddCompanyCertificateCard,
+        AddCompanyRepresentCard, CompanyRepresents, SearchSpecsTags
+    },
     list_errors::ListErrors,
-    spec::{SpecsTags, SearchSpecsTags},
+    side_menu::{MenuItem, SideMenu},
     upload_favicon::UpdateFaviconBlock,
 };
 use crate::gqls::make_query;
@@ -23,7 +24,7 @@ use crate::routes::AppRoute;
 use crate::services::is_authenticated;
 use crate::types::{
     UUID, SlimUser, CompanyUpdateInfo, CompanyInfo, Region,
-    CompanyType, TypeAccessInfo, SpecPathInfo, Spec
+    CompanyType, TypeAccessInfo
 };
 
 #[derive(GraphQLQuery)]
@@ -66,14 +67,6 @@ struct ChangeCompanyAccess;
 )]
 struct DeleteCompany;
 
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/specs.graphql",
-    response_derives = "Debug"
-)]
-struct SearchSpecs;
-
 /// Get data current company
 impl From<CompanyInfo> for CompanyUpdateInfo {
     fn from(data: CompanyInfo) -> Self {
@@ -93,9 +86,10 @@ impl From<CompanyInfo> for CompanyUpdateInfo {
     }
 }
 
+#[derive(Clone, PartialEq)]
 pub enum Menu {
     Company,
-    UpdataFavicon,
+    UpdateFavicon,
     Certificates,
     Represent,
     Spec,
@@ -120,11 +114,6 @@ pub struct CompanySettings {
     get_result_access: bool,
     get_result_remove_company: bool,
     select_menu: Menu,
-    edit_specs: bool,
-    ipt_timer: Option<TimeoutTask>,
-    ipt_ref: NodeRef,
-    specs_search_loading: bool,
-    search_specs: Vec<SpecPathInfo>,
 }
 
 #[derive(Properties, Clone)]
@@ -138,8 +127,9 @@ pub enum Msg {
     RequestUpdateCompany,
     RequestChangeAccess,
     RequestRemoveCompany,
+    ReguestCompanyData,
     GetUpdateAccessResult(String),
-    GetUpdateCompanyData(String),
+    GetCompanyDataResult(String),
     GetUpdateCompanyResult(String),
     GetRemoveCompanyResult(String),
     UpdateTypeAccessId(String),
@@ -154,11 +144,7 @@ pub enum Msg {
     UpdateTimeZone(String),
     UpdateCompanyTypeId(String),
     UpdateRegionId(String),
-    UpdateList(String),
-    EditSpecs(bool),
-    SetIptTimer(String),
-    GetCurrentData,
-    GetSearchRes(String),
+    GetUpdateListResult(String),
     ClearError,
     Ignore,
 }
@@ -184,11 +170,6 @@ impl Component for CompanySettings {
             get_result_access: false,
             get_result_remove_company: false,
             select_menu: Menu::Company,
-            edit_specs: false,
-            ipt_timer: None,
-            ipt_ref: NodeRef::default(),
-            specs_search_loading: false,
-            search_specs: Vec::new(),
         }
     }
 
@@ -214,8 +195,8 @@ impl Component for CompanySettings {
                 let res = make_query(GetCompanySettingDataOpt::build_query(get_company_setting_data_opt::Variables{
                     company_uuid
                 })).await.unwrap();
-                link.send_message(Msg::GetUpdateCompanyData(res.clone()));
-                link.send_message(Msg::UpdateList(res));
+                link.send_message(Msg::GetCompanyDataResult(res.clone()));
+                link.send_message(Msg::GetUpdateListResult(res));
             })
         }
     }
@@ -275,6 +256,15 @@ impl Component for CompanySettings {
                     link.send_message(Msg::GetRemoveCompanyResult(res));
                 })
             },
+            Msg::ReguestCompanyData => {
+                let company_uuid = self.company_uuid.clone();
+                spawn_local(async move {
+                    let res = make_query(GetCompanyData::build_query(
+                        get_company_data::Variables { company_uuid }
+                    )).await.unwrap();
+                    link.send_message(Msg::GetCompanyDataResult(res));
+                })
+            },
             Msg::GetUpdateAccessResult(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res = data.as_object().unwrap().get("data").unwrap();
@@ -290,7 +280,7 @@ impl Component for CompanySettings {
                     true => self.error = Some(get_error(&data)),
                 }
             },
-            Msg::GetUpdateCompanyData(res) => {
+            Msg::GetCompanyDataResult(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res = data.as_object().unwrap().get("data").unwrap();
 
@@ -306,22 +296,7 @@ impl Component for CompanySettings {
                     true => self.error = Some(get_error(&data)),
                 }
             },
-            Msg::UpdateTypeAccessId(type_access_id) =>
-                self.request_access = type_access_id.parse::<i64>().unwrap_or_default(),
-            Msg::UpdateOrgname(orgname) => self.request_company.orgname = Some(orgname),
-            Msg::UpdateShortname(shortname) => self.request_company.shortname = Some(shortname),
-            Msg::UpdateInn(inn) => self.request_company.inn = Some(inn),
-            Msg::UpdateEmail(email) => self.request_company.email = Some(email),
-            Msg::UpdatePhone(phone) => self.request_company.phone = Some(phone),
-            Msg::UpdateDescription(description) => self.request_company.description = Some(description),
-            Msg::UpdateAddress(address) => self.request_company.address = Some(address),
-            Msg::UpdateSiteUrl(site_url) => self.request_company.site_url = Some(site_url),
-            Msg::UpdateTimeZone(time_zone) => self.request_company.time_zone = Some(time_zone),
-            Msg::UpdateRegionId(region_id) =>
-                self.request_company.region_id = Some(region_id.parse::<i64>().unwrap_or_default()),
-            Msg::UpdateCompanyTypeId(type_id) =>
-                self.request_company.company_type_id = Some(type_id.parse::<i64>().unwrap_or_default()),
-            Msg::UpdateList(res) => {
+            Msg::GetUpdateListResult(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
                 match res_value.is_null() {
@@ -371,68 +346,26 @@ impl Component for CompanySettings {
                             res.get("putCompanyUpdate").unwrap().clone()
                         ).unwrap();
                         // debug!("Updated rows: {:?}", self.get_result_update);
-                        link.send_message(Msg::GetCurrentData);
+                        link.send_message(Msg::ReguestCompanyData);
                     },
                     true => self.error = Some(get_error(&data)),
                 }
             },
-            Msg::GetCurrentData => {
-                let company_uuid = self.company_uuid.clone();
-                spawn_local(async move {
-                    let res = make_query(GetCompanyData::build_query(
-                        get_company_data::Variables { company_uuid }
-                    )).await.unwrap();
-                    link.send_message(Msg::GetUpdateCompanyData(res));
-                })
-            },
-            Msg::EditSpecs(mode) => self.edit_specs = mode,
-            Msg::SetIptTimer(val) => {
-                debug!("ipt_val: {:?}", val.clone());
-                if val.is_empty() {
-                    self.ipt_timer = None;
-                    self.search_specs = Vec::new();
-                    return true;
-                }
-                self.specs_search_loading = true;
-                let cb_link = link.clone();
-                self.ipt_timer = Some(TimeoutService::spawn(
-                    Duration::from_millis(800),
-                    cb_link.callback(move |_| {
-                        let ipt_val = val.clone();
-                        let res_link = link.clone();
-                        spawn_local(async move {
-                            let ipt_search_spec_arg = search_specs::IptSearchSpecArg {
-                                text: ipt_val.clone(),
-                                splitChar: None,
-                                depthLevel: None,
-                                limit: None,
-                                offset: None,
-                            };
-                            let res = make_query(SearchSpecs::build_query(search_specs::Variables{
-                                ipt_search_spec_arg
-                            })).await.unwrap();
-                            res_link.send_message(Msg::GetSearchRes(res));
-                        });
-                        debug!("time up: {:?}", val.clone());
-                        Msg::Ignore
-                    }),
-                ));
-
-                // let server = self.ipt_timer.unwrap();
-            },
-            Msg::GetSearchRes(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-                let search_specs: Vec<SpecPathInfo> =
-                    serde_json::from_value(res.get("searchSpecs").unwrap().clone()).unwrap();
-                // debug!(
-                //     "specs res:{:?} {:?}",
-                //     search_specs.iter().map(|x| Spec::from(x.clone())).collect::<Vec<Spec>>(),
-                //     Spec::from(search_specs[0].clone())
-                // );
-                self.specs_search_loading = false;
-                self.search_specs = search_specs;
-            },
+            Msg::UpdateTypeAccessId(type_access_id) =>
+                self.request_access = type_access_id.parse::<i64>().unwrap_or_default(),
+            Msg::UpdateOrgname(orgname) => self.request_company.orgname = Some(orgname),
+            Msg::UpdateShortname(shortname) => self.request_company.shortname = Some(shortname),
+            Msg::UpdateInn(inn) => self.request_company.inn = Some(inn),
+            Msg::UpdateEmail(email) => self.request_company.email = Some(email),
+            Msg::UpdatePhone(phone) => self.request_company.phone = Some(phone),
+            Msg::UpdateDescription(description) => self.request_company.description = Some(description),
+            Msg::UpdateAddress(address) => self.request_company.address = Some(address),
+            Msg::UpdateSiteUrl(site_url) => self.request_company.site_url = Some(site_url),
+            Msg::UpdateTimeZone(time_zone) => self.request_company.time_zone = Some(time_zone),
+            Msg::UpdateRegionId(region_id) =>
+                self.request_company.region_id = Some(region_id.parse::<i64>().unwrap_or_default()),
+            Msg::UpdateCompanyTypeId(type_id) =>
+                self.request_company.company_type_id = Some(type_id.parse::<i64>().unwrap_or_default()),
             Msg::ClearError => self.error = None,
             Msg::Ignore => {},
         }
@@ -507,83 +440,67 @@ impl CompanySettings {
         }
     }
 
+    fn cb_generator(&self, cb: Menu) -> Callback<MouseEvent> {
+        self.link.callback(move |_| Msg::SelectMenu(cb.clone()))
+    }
+
     fn view_menu(&self) -> Html {
-        let onclick_company = self.link.callback(|_| Msg::SelectMenu(Menu::Company));
-        let onclick_favicon = self.link.callback(|_| Msg::SelectMenu(Menu::UpdataFavicon));
-        let onclick_certificates = self.link.callback(|_| Msg::SelectMenu(Menu::Certificates));
-        let onclick_represents = self.link.callback(|_| Msg::SelectMenu(Menu::Represent));
-        let onclick_specs = self.link.callback(|_| Msg::SelectMenu(Menu::Spec));
-        let onclick_access = self.link.callback(|_| Msg::SelectMenu(Menu::Access));
-        let onclick_remove_company = self.link.callback(|_| Msg::SelectMenu(Menu::RemoveCompany));
+        let menu_arr: Vec<MenuItem> = vec![
+            // Company MenuItem
+            MenuItem {
+                title: "Company".to_string(),
+                action: self.cb_generator(Menu::Company),
+                is_active: self.select_menu == Menu::Company,
+                ..Default::default()
+            },
+            // Favicon MenuItem
+            MenuItem {
+                title: "Favicon".to_string(),
+                action: self.cb_generator(Menu::UpdateFavicon),
+                is_active: self.select_menu == Menu::UpdateFavicon,
+                ..Default::default()
+            },
+            // Certificates MenuItem
+            MenuItem {
+                title: "Certificates".to_string(),
+                action: self.cb_generator(Menu::Certificates),
+                is_active: self.select_menu == Menu::Certificates,
+                ..Default::default()
+            },
+            // Represent MenuItem
+            MenuItem {
+                title: "Represent".to_string(),
+                action: self.cb_generator(Menu::Represent),
+                is_active: self.select_menu == Menu::Represent,
+                ..Default::default()
+            },
+            // Spec MenuItem
+            MenuItem {
+                title: "Spec".to_string(),
+                action: self.cb_generator(Menu::Spec),
+                is_active: self.select_menu == Menu::Spec,
+                ..Default::default()
+            },
+            // Access MenuItem
+            MenuItem {
+                title: "Access".to_string(),
+                action: self.cb_generator(Menu::Access),
+                is_active: self.select_menu == Menu::Access,
+                ..Default::default()
+            },
+            // RemoveCompany MenuItem
+            MenuItem {
+                title: "RemoveCompany".to_string(),
+                action: self.cb_generator(Menu::RemoveCompany),
+                is_active: self.select_menu == Menu::RemoveCompany,
+                ..Default::default()
+            },
+        ];
 
-        let mut active_company = "";
-        let mut active_favicon = "";
-        let mut active_certificates = "";
-        let mut active_represents = "";
-        let mut active_specs = "";
-        let mut active_access = "";
-        let mut active_remove_company = "";
-
-        match self.select_menu {
-            Menu::Company => active_company = "is-active",
-            Menu::UpdataFavicon => active_favicon = "is-active",
-            Menu::Certificates => active_certificates = "is-active",
-            Menu::Represent => active_represents = "is-active",
-            Menu::Spec => active_specs = "is-active",
-            Menu::Access => active_access = "is-active",
-            Menu::RemoveCompany => active_remove_company = "is-active",
-        }
-
-        html!{
-            <aside class="menu">
-                <p class="menu-label">
-                    {"Company Settings"}
-                </p>
-                <ul class="menu-list">
-                    <li><a
-                      id="company-data"
-                      class=active_company
-                      onclick=onclick_company>
-                        { "Company" }
-                    </a></li>
-                    <li><a
-                      id="company-favicon"
-                      class=active_favicon
-                      onclick=onclick_favicon>
-                        { "Favicon" }
-                    </a></li>
-                    <li><a
-                      id="certificates"
-                      class=active_certificates
-                      onclick=onclick_certificates>
-                        { "Certificates" }
-                    </a></li>
-                    <li><a
-                      id="represents"
-                      class=active_represents
-                      onclick=onclick_represents>
-                        { "Represents" }
-                    </a></li>
-                    <li><a
-                      id="specs"
-                      class=active_specs
-                      onclick=onclick_specs>
-                        { "Specs" }
-                    </a></li>
-                    <li><a
-                      id="access"
-                      class=active_access
-                      onclick=onclick_access>
-                        { "Access" }
-                    </a></li>
-                    <li><a
-                      id="remove-company"
-                      class=active_remove_company
-                      onclick=onclick_remove_company>
-                        { "Remove company" }
-                    </a></li>
-                </ul>
-            </aside>
+        html! {
+          <div style="margin-right: 18px;z-index: 1;" >
+              <SideMenu menu_arr={menu_arr} />
+          </div>
         }
     }
 
@@ -626,57 +543,38 @@ impl CompanySettings {
                 </form>
             </>},
             // Show interface for change favicon company
-            Menu::UpdataFavicon => html!{<>
+            Menu::UpdateFavicon => html!{<>
                 <h4 id="updated-favicon-company" class="title is-4">{"Favicon"}</h4>
-                { self.fieldset_update_favicon() }
+                { self.update_favicon_block() }
             </>},
             // Show interface for add and update Certificates
             Menu::Certificates => html!{<>
                 <h4 id="updated-certificates" class="title is-4">{"Certificates"}</h4>
-                { self.fieldset_add_certificate() }
+                { self.add_certificate_block() }
                 <br/>
-                { self.fieldset_certificates() }
+                { self.certificates_block() }
             </>},
             // Show interface for add and update Represents
             Menu::Represent => html!{<>
                 <h4 id="updated-represents" class="title is-4">{"Represents"}</h4>
                 <AddCompanyRepresentCard company_uuid = self.company_uuid.clone() />
                 <br/>
-                { self.fieldset_represents() }
+                { self.represents_block() }
             </>},
             // Show interface for add and update company Specs
             Menu::Spec => html!{<>
                 <h4 id="updated-specs" class="title is-4">{"Specs"}</h4>
-                <div class="is-flex is-justify-content-space-between" >
-                {html !{
-                    match self.edit_specs {
-                        true => html!{
-                            <div>
-                              <button class="button is-success" onclick=self.link.callback(|_| Msg::EditSpecs(false))> {"back"} </button>
-                              // <button class="button is-warning" onclick=self.link.callback(|_| Msg::EditSpecs(false))> {"cancel"} </button>
-                            </div>
-                        },
-                        false => html!{
-                            <div>
-                                <button class="button is-info" onclick=self.link.callback(|_| Msg::EditSpecs(true)) > {"add/edit"} </button>
-                            </div>
-                        },
-                    }
-                }}
-                </div>
-                { self.fieldset_add_specs(self.edit_specs) }
-                <br/>
-                { self.fieldset_specs() }
+                {self.manage_specs_block()}
             </>},
             // Show interface for manage Access
             Menu::Access => html!{<>
                 <h4 id="updated-represents" class="title is-4">{"Access"}</h4>
-                { self.fieldset_manage_access() }
+                { self.manage_access_block() }
             </>},
             // Show interface for remove company
             Menu::RemoveCompany => html!{<>
                 <h4 id="remove-company" class="title is-4">{"Delete company"}</h4>
-                {self.fieldset_remove_company()}
+                {self.remove_company_block()}
             </>},
         }
     }
@@ -825,8 +723,8 @@ impl CompanySettings {
         </>}
     }
 
-    fn fieldset_update_favicon(&self) -> Html {
-        let callback_update_favicon = self.link.callback(|_| Msg::GetCurrentData);
+    fn update_favicon_block(&self) -> Html {
+        let callback_update_favicon = self.link.callback(|_| Msg::ReguestCompanyData);
 
         html!{
             <UpdateFaviconBlock
@@ -836,7 +734,7 @@ impl CompanySettings {
         }
     }
 
-    fn fieldset_certificates(&self) -> Html {
+    fn certificates_block(&self) -> Html {
         match &self.current_data {
             Some(current_data) => html!{
                 <CompanyCertificatesCard
@@ -854,14 +752,30 @@ impl CompanySettings {
         }
     }
 
-    fn fieldset_add_certificate(&self) -> Html {
+    fn manage_specs_block(&self) -> Html {
+        match &self.current_data {
+            Some(current_data) => html!{
+                <SearchSpecsTags
+                    company_specs = current_data.company_specs.clone()
+                    company_uuid = current_data.uuid.clone()
+                 />
+            },
+            None => html!{
+                <div class="notification is-info">
+                    <span>{"Not company specs data."}</span>
+                </div>
+            },
+        }
+    }
+
+    fn add_certificate_block(&self) -> Html {
         let company_uuid = self
             .current_data
             .as_ref()
             .map(|company| company.uuid.to_string())
             .unwrap_or_default();
 
-        let callback_upload_cert = self.link.callback(|_| Msg::GetCurrentData);
+        let callback_upload_cert = self.link.callback(|_| Msg::ReguestCompanyData);
 
         html!{
             <AddCompanyCertificateCard
@@ -871,7 +785,7 @@ impl CompanySettings {
         }
     }
 
-    fn fieldset_represents(&self) -> Html {
+    fn represents_block(&self) -> Html {
         match self.current_data {
             Some(ref data) => html!{
                 <CompanyRepresents
@@ -887,7 +801,7 @@ impl CompanySettings {
         }
     }
 
-    fn fieldset_manage_access(&self) -> Html {
+    fn manage_access_block(&self) -> Html {
         let onsubmit_update_access = self.link.callback(|ev: FocusEvent| {
             ev.prevent_default();
             Msg::RequestChangeAccess
@@ -940,7 +854,7 @@ impl CompanySettings {
         }
     }
 
-    fn fieldset_remove_company(&self) -> Html {
+    fn remove_company_block(&self) -> Html {
         let onclick_delete_company = self.link.callback(|_| Msg::RequestRemoveCompany);
 
         html!{<>
@@ -959,78 +873,5 @@ impl CompanySettings {
                 { "Delete" }
             </button>
         </>}
-    }
-
-    fn fieldset_add_specs(&self, show_ipt: bool) -> Html {
-        let ipt_ref = self.ipt_ref.clone();
-        let company_id = self.current_data.as_ref().unwrap().uuid.clone();
-        let company_specs = self.current_data.as_ref().unwrap().company_specs.clone();
-        let specs = self
-            .search_specs
-            .iter()
-            .map(|x| Spec::from(x))
-            .collect::<Vec<Spec>>();
-        html!{
-          <div hidden=!show_ipt>
-            <article class=classes!(String::from("panel is-primary")) style="margin-top: 16px;">
-              <p class="panel-heading">
-                {"Specs Search"}
-              </p>
-              // <p class="panel-tabs">
-              //   <a class="is-active">All</a>
-              //   <a>Public</a>
-              //   <a>Private</a>
-              //   <a>Sources</a>
-              //   <a>Forks</a>
-              // </p>
-              <div class="panel-block">
-                <p class=classes!(String::from("control has-icons-left"),if self.specs_search_loading {
-                  String::from("is-loading")
-                } else {
-                  String::new()
-                }) >
-                  <input ref=ipt_ref oninput=self.link.callback(|ev: InputData| Msg::SetIptTimer(ev.value)) class="input is-rounded" type="text" placeholder="Rounded input" />
-                  <span class="icon is-left">
-                    <i class="fas fa-search" aria-hidden="true"></i>
-                  </span>
-                </p>
-              </div>
-              <div class="panel-block">
-            //   <SpecsTags
-            //   show_delete_btn = !self.edit_specs
-            //   company_uuid = company.uuid.clone()
-            //   specs = company.company_specs.clone()
-            // />
-                <SearchSpecsTags
-                  company_specs=company_specs
-                  company_uuid = company_id
-                  specs = specs.clone()
-                />
-              </div>
-            </article>
-          </div>
-              // <div class="field" hidden=!show_ipt>
-              //   <p class="control has-icons-left has-icons-right is-loading">
-              //   <input ref=ipt_ref oninput=self.link.callback(|ev: InputData| Msg::SetIptTimer(ev.value)) class="input is-rounded" type="text" placeholder="Rounded input" />
-              //     <span class="icon is-small is-left">
-              //       <i class="fas fa-search"></i>
-              //     </span>
-              //   </p>
-              // </div>
-        }
-    }
-
-    fn fieldset_specs(&self) -> Html {
-        match &self.current_data {
-            Some(company) => html!{<div>
-                <span>{"company specs: "}</span>
-                <SpecsTags
-                  show_delete_btn = !self.edit_specs
-                  company_uuid = company.uuid.clone()
-                  specs = company.company_specs.clone()
-                />
-            </div>},
-            None => html!{},
-        }
     }
 }

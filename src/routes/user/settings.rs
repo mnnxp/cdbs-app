@@ -77,7 +77,7 @@ struct DeleteUserData;
 #[derive(Clone, PartialEq)]
 pub enum Menu {
     Profile,
-    UpdataFavicon,
+    UpdateFavicon,
     Certificates,
     Access,
     Password,
@@ -422,7 +422,7 @@ impl Component for Settings {
                                             </form>
                                         </>},
                                         // Show interface for change favicon user
-                                        Menu::UpdataFavicon => {self.fieldset_update_favicon()},
+                                        Menu::UpdateFavicon => {self.fieldset_update_favicon()},
                                         // Show interface for add and update Certificates
                                         Menu::Certificates => html!{<>
                                             <div class="block">
@@ -572,8 +572,8 @@ impl Settings {
             // favicon MenuItem
             MenuItem {
                 title: "Favicon".to_string(),
-                action: self.cb_generator(Menu::UpdataFavicon),
-                is_active: self.select_menu == Menu::UpdataFavicon,
+                action: self.cb_generator(Menu::UpdateFavicon),
+                is_active: self.select_menu == Menu::UpdateFavicon,
                 ..Default::default()
             },
             // certificates MenuItem
@@ -608,7 +608,7 @@ impl Settings {
 
         html! {
           <div style="margin-right: 18px;z-index: 1;" >
-              <SideMenu menu_arr={menu_arr} ></SideMenu>
+              <SideMenu menu_arr={menu_arr} />
           </div>
         }
     }

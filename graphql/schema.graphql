@@ -369,15 +369,15 @@ input IptCompanyRepresentsArg {
   offset: Int
 }
 
-input IptCompanySpecData {
-  companyUuid: UUID!
-  specIds: [Int!]!
-}
-
 input IptCompanySpecsArg {
   companyUuid: UUID!
   limit: Int
   offset: Int
+}
+
+input IptCompanySpecsData {
+  companyUuid: UUID!
+  specIds: [Int!]!
 }
 
 input IptComponentData {
@@ -689,13 +689,6 @@ input IptTypeAccessArg {
   offset: Int
 }
 
-input IptUpdataNameRoleData {
-  companyUuid: UUID!
-  roleId: Int!
-  langId: Int!
-  name: String!
-}
-
 input IptUpdateCompanyCertificateData {
   companyUuid: UUID!
   fileUuid: UUID!
@@ -736,6 +729,13 @@ input IptUpdateComponentModificationData {
   modificationName: String
   description: String
   actualStatusId: Int
+}
+
+input IptUpdateNameRoleData {
+  companyUuid: UUID!
+  roleId: Int!
+  langId: Int!
+  name: String!
 }
 
 input IptUpdatePassword {
@@ -945,8 +945,8 @@ type MutationRoot {
   # Update company certificate description
   updateCompanyCertificate(args: IptUpdateCompanyCertificateData!): Boolean!
   deleteCompanyCertificate(args: DelCompanyCertificateData!): Boolean!
-  addCompanySpecs(args: IptCompanySpecData!): Int!
-  deleteCompanySpecs(args: IptCompanySpecData!): Int!
+  addCompanySpecs(args: IptCompanySpecsData!): Int!
+  deleteCompanySpecs(args: IptCompanySpecsData!): Int!
   registerCompanyRepresent(args: IptCompanyRepresentData!): Boolean!
   updateCompanyRepresent(
     companyUuid: UUID!
@@ -963,7 +963,7 @@ type MutationRoot {
   changeRoleMember(args: IptCompanyMemberData!): Boolean!
   deleteCompanyMember(args: DelCompanyMemberData!): Boolean!
   registerCompanyRole(args: IptRoleMemberData!): Int!
-  changeNameRoleCompany(args: IptUpdataNameRoleData!): Boolean!
+  changeNameRoleCompany(args: IptUpdateNameRoleData!): Boolean!
   deleteCompanyRole(args: DelRoleMemberData!): Int!
   addAccessRole(args: IptRoleAccessData!): Boolean!
   deleteAccessRole(args: DelRoleAccessData!): Int!

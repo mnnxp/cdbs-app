@@ -2,7 +2,7 @@
 
 pub mod company;
 pub mod component;
-pub mod spec;
+// pub mod spec;
 pub mod standard;
 pub mod user;
 

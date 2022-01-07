@@ -2,18 +2,19 @@ mod item;
 mod search;
 
 pub use item::SpecTagItem;
-pub use search::*;
+pub use search::SearchSpecsTags;
 
-use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
+use yew::{Callback, Component, ComponentLink, Html, Properties, ShouldRender, html};
 // use log::debug;
 // use crate::error::{get_error, Error};
 use crate::types::{UUID, Spec};
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
-    pub show_delete_btn: bool,
+    pub show_manage_btn: bool,
     pub company_uuid: UUID,
     pub specs: Vec<Spec>,
+    pub delete_spec: Option<Callback<usize>>,
 }
 
 pub struct SpecsTags {
@@ -35,22 +36,27 @@ impl Component for SpecsTags {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.show_delete_btn == props.show_delete_btn {
+        if self.props.company_uuid == props.company_uuid &&
+            self.props.show_manage_btn == props.show_manage_btn &&
+                self.props.specs.len() == props.specs.len() {
             false
         } else {
-            self.props.show_delete_btn = props.show_delete_btn;
+            self.props = props;
             true
         }
     }
 
     fn view(&self) -> Html {
         html!{
-            <div id="specs" class="tags">
+            <div id="specs" class="field is-grouped is-grouped-multiline">
                 {for self.props.specs.iter().map(|spec| {
                     html!{<SpecTagItem
-                        show_delete_btn = self.props.show_delete_btn
+                        show_manage_btn = self.props.show_manage_btn
+                        active_info_btn = true
                         company_uuid = self.props.company_uuid.clone()
                         spec = spec.clone()
+                        is_added = true
+                        delete_spec = self.props.delete_spec.clone()
                         />}
                 })}
             </div>

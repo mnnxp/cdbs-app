@@ -248,12 +248,12 @@ mutation UpdateCompanyRepresent(
   )
 }
 
-mutation AddCompanySpecs($iptCompanySpecData: IptCompanySpecData!){
-  addCompanySpecs(args: $iptCompanySpecData)
+mutation AddCompanySpecs($iptCompanySpecsData: IptCompanySpecsData!){
+  addCompanySpecs(args: $iptCompanySpecsData)
 }
 
-mutation DeleteCompanySpecs($iptCompanySpecData: IptCompanySpecData!){
-  deleteCompanySpecs(args: $iptCompanySpecData)
+mutation DeleteCompanySpecs($iptCompanySpecsData: IptCompanySpecsData!){
+  deleteCompanySpecs(args: $iptCompanySpecsData)
 }
 
 mutation RegisterCompanyRepresent($iptCompanyRepresentData: IptCompanyRepresentData!){

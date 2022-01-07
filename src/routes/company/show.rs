@@ -18,10 +18,9 @@ use crate::fragments::{
     switch_icon::res_btn,
     list_errors::ListErrors,
     side_menu::{MenuItem, SideMenu},
-    company::{CompanyCertificatesCard, CompanyRepresents},
+    company::{CompanyCertificatesCard, CompanyRepresents, SpecsTags},
     component::CatalogComponents,
     standard::CatalogStandards,
-    spec::SpecsTags,
 };
 use crate::gqls::make_query;
 use crate::services::is_authenticated;
@@ -465,7 +464,7 @@ impl ShowCompany {
                         </div>
                         <div class="media-content">
                             <SpecsTags
-                                show_delete_btn = false
+                                show_manage_btn = false
                                 company_uuid = company_data.uuid.clone()
                                 specs = company_data.company_specs.clone()
                             />
@@ -512,6 +511,7 @@ impl ShowCompany {
 
     fn show_company_action(&self) -> Html {
         let menu_arr: Vec<MenuItem> = vec![
+            // certificates MenuItem
             MenuItem {
                 title: "CERTIFICATES".to_string(),
                 action: self.cb_generator(CompanyTab::Certificates),
@@ -520,6 +520,7 @@ impl ShowCompany {
                 is_active: self.company_tab == CompanyTab::Certificates,
                 is_extend: self.check_extend(&CompanyTab::Certificates),
             },
+            // representations MenuItem
             MenuItem {
                 title: "REPRESENTATIONS".to_string(),
                 action: self.cb_generator(CompanyTab::Represent),
@@ -528,6 +529,7 @@ impl ShowCompany {
                 is_active: self.company_tab == CompanyTab::Represent,
                 is_extend: self.check_extend(&CompanyTab::Represent),
             },
+            // components MenuItem
             MenuItem {
                 title: "COMPONENTS".to_string(),
                 action: self.cb_generator(CompanyTab::Components),
@@ -536,7 +538,7 @@ impl ShowCompany {
                 is_active: self.company_tab == CompanyTab::Components,
                 is_extend: self.check_extend(&CompanyTab::Components),
             },
-            // company MenuItem
+            // standards MenuItem
             MenuItem {
                 title: "STANDARDS".to_string(),
                 action: self.cb_generator(CompanyTab::Standards),
