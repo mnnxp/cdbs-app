@@ -2,7 +2,11 @@ use yew::{
   agent::Bridged, html, Bridge, Callback, Component, ComponentLink,
   MouseEvent, Html, Properties, ShouldRender,
 };
-use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
+use yew_router::{
+    service::RouteService,
+    agent::RouteRequest::ChangeRoute,
+    prelude::*
+};
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
 
@@ -14,6 +18,7 @@ pub struct Header {
     props: Props,
     router_agent: Box<dyn Bridge<RouteAgent>>,
     link: ComponentLink<Self>,
+    open_notifications_page: bool,
 }
 
 // #[derive(Clone)]
@@ -40,7 +45,20 @@ impl Component for Header {
     type Properties = Props;
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        Header { props, router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)), link}
+        Header {
+            props,
+            router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
+            link,
+            open_notifications_page: false,
+        }
+    }
+
+    fn rendered(&mut self, _first_render: bool) {
+        // get company uuid for request company data
+        let route_service: RouteService<()> = RouteService::new();
+        // get target user from route
+        self.open_notifications_page = "#/notifications" == route_service.get_fragment().as_str();
+        // debug!("route_service.get_fragment().as_str(): {:?}", route_service.get_fragment().as_str());
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
@@ -148,6 +166,24 @@ impl Header {
     fn logged_in_view(&self, user_info: &SlimUser, logout:yew::Callback<MouseEvent> ) -> Html {
         html!{
             <div class="buttons">
+                 {match self.open_notifications_page {
+                     true => html!{
+                         <button id="header-notifications"
+                            class="button is-active"
+                            disabled=true >
+                             <span class="icon is-small" >
+                               <i class="far fa-bell"></i>
+                             </span>
+                         </button>
+                     },
+                     false => html!{
+                         <RouterAnchor<AppRoute> route=AppRoute::Notifications classes="button" >
+                             <span class="icon is-small" >
+                               <i class="far fa-bell"></i>
+                             </span>
+                         </RouterAnchor<AppRoute>>
+                     },
+                 }}
                  <div class="dropdown is-hoverable  is-right">
                   <div class="dropdown-trigger">
                     <button
