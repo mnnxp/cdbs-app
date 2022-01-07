@@ -238,7 +238,7 @@ impl SearchSpecsTags {
                     oninput=self.link.callback(|ev: InputData| Msg::SetIptTimer(ev.value))
                     class="input"
                     type="text"
-                    placeholder="Rounded input"
+                    placeholder="Enter data for specifications search"
                   />
                 <span class="icon is-left">
                   <i class="fas fa-search" aria-hidden="true"></i>

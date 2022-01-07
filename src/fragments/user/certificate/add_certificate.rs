@@ -312,10 +312,12 @@ impl AddUserCertificateCard {
                     </div>
                     <br/>
                     <div id="select-file" style="overflow-wrap: anywhere">
-                        <span class="overflow-title has-text-weight-bold">{"Select file: "}</span>
-                        <span>{self.file.as_ref()
-                            .map(|f| f.name().to_string())
-                            .unwrap_or_default()}</span>
+                        <span>{"Select file: "}</span>
+                        <span class="overflow-title has-text-weight-bold">
+                            {self.file.as_ref()
+                                .map(|f| f.name().to_string())
+                                .unwrap_or_default()}
+                        </span>
                     </div>
                 </div>
             </div>
