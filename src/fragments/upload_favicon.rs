@@ -248,8 +248,8 @@ impl Component for UpdateFaviconBlock {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
 
         html!{<>
+          <h4 id="show-notifications" class="title is-4">{"Favicon"}</h4>
           <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
-          <label class="label">{"Update favicon"}</label>
           <div class="column">
               {match self.get_result_up_completed {
                   true => self.show_success_upload(),

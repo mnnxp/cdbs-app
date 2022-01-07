@@ -602,32 +602,35 @@ impl Profile {
         region: &str,
         program: &str,
     ) -> Html {
-        let onclick_change_full_show = self.link
-            .callback(|_| Msg::ShowFullUserInfo);
+        let onclick_change_full_show =
+            self.link.callback(|_| Msg::ShowFullUserInfo);
 
         match self.show_full_user_info {
             true => html! {<>
                 <div class="columns">
                     <div class="column">
                         <div id="description" class="content">
-                          { format!("{}", description) }
+                          {description}
                         </div>
                     </div>
                     <div class="column">
-                        <span id="position">
-                          <i class="fas fa-briefcase"></i>
-                          { format!("Position: {}", position) }
-                        </span>
-                        <br/>
-                        <span id="region">
-                          <i class="fas fa-map-marker-alt"></i>
-                          { format!("Region: {}", region) }
-                        </span>
-                        <br/>
-                        <span id="program">
-                          <i class="fab fa-uncharted"></i>
-                          { format!("Working software: {}", program) }
-                        </span>
+                        <div id="position">
+                            <span class="icon is-small"><i class="fas fa-briefcase" /></span>
+                            <span>{" Position: "}</span>
+                            <span class="overflow-title has-text-weight-bold">{position}</span>
+                        </div>
+                        // <br/>
+                        <div id="region">
+                            <span class="icon is-small"><i class="fas fa-map-marker-alt" /></span>
+                            <span>{" Region: "}</span>
+                            <span class="overflow-title has-text-weight-bold">{region}</span>
+                        </div>
+                        // <br/>
+                        <div id="program">
+                            <span class="icon is-small"><i class="fab fa-uncharted" /></span>
+                            <span>{" Working software: "}</span>
+                            <span class="overflow-title has-text-weight-bold">{program}</span>
+                        </div>
                     </div>
                 </div>
                 <button class="button is-ghost" onclick={onclick_change_full_show}>

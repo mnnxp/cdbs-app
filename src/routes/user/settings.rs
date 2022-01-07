@@ -409,6 +409,7 @@ impl Component for Settings {
                                     {match self.select_menu {
                                         // Show interface for change profile data
                                         Menu::Profile => html!{<>
+                                            <h4 id="change-profile" class="title is-4">{"Profile"}</h4>
                                             {self.show_update_profile_info()}
                                             <form onsubmit=onsubmit_update_profile>
                                                 { self.fieldset_profile() }
@@ -425,16 +426,13 @@ impl Component for Settings {
                                         Menu::UpdateFavicon => {self.fieldset_update_favicon()},
                                         // Show interface for add and update Certificates
                                         Menu::Certificates => html!{<>
-                                            <div class="block">
-                                                <span id="updated-certificates" class=classes!("overflow-title", "has-text-weight-bold")>
-                                                    { "Certificates" }
-                                                </span>
-                                            </div>
+                                            <h4 id="change-certificates" class="title is-4">{"Certificates"}</h4>
                                             { self.fieldset_add_certificate() }
                                             { self.fieldset_certificates() }
                                         </>},
                                         // Show interface for change access
                                         Menu::Access => html!{<>
+                                            <h4 id="change-access" class="title is-4">{"Access"}</h4>
                                             <span id="tag-info-updated-access" class=classes!("tag", "is-info", "is-light")>
                                                 { format!("Updated access: {}", self.get_result_access.clone()) }
                                             </span>
@@ -457,6 +455,7 @@ impl Component for Settings {
                                         </>},
                                         // Show interface for change password
                                         Menu::Password => html!{<>
+                                            <h4 id="change-password" class="title is-4">{"Password"}</h4>
                                             <span id="tag-info-updated-pwd" class=classes!("tag", "is-info", "is-light")>
                                               { format!("Updated password: {}", self.get_result_pwd.clone()) }
                                             </span>
@@ -473,6 +472,7 @@ impl Component for Settings {
                                         </>},
                                         // Show interface for remove profile
                                         Menu::RemoveProfile => html!{<>
+                                            <h4 id="remove-profile" class="title is-4">{"Remove profile"}</h4>
                                             <span id="tag-danger-remove-profile" class=classes!("tag", "is-danger", "is-light")>
                                               { "Warning: this removed all data related with profile, it cannot be canceled!" }
                                             </span>
@@ -576,7 +576,7 @@ impl Settings {
                 title: "Favicon".to_string(),
                 action: self.cb_generator(Menu::UpdateFavicon),
                 item_class: classes!("has-background-white"),
-                icon_class: classes!("fas", "fa-portrait"),
+                icon_class: classes!("fas", "fa-image"),
                 is_active: self.select_menu == Menu::UpdateFavicon,
                 ..Default::default()
             },
@@ -677,11 +677,12 @@ impl Settings {
         });
 
         html! {
-            <fieldset class="columns">
-                // first column
-                <fieldset class="column">
+            <div class="columns">
+                <div class="column">
+                    <label class="label">{"Type Access"}</label>
+                </div>
+                <div class="column">
                     <fieldset class="field">
-                        <label class="label">{"Type Access"}</label>
                         <div class="control">
                             <div class="select">
                               <select
@@ -696,8 +697,8 @@ impl Settings {
                             </div>
                         </div>
                     </fieldset>
-                </fieldset>
-            </fieldset>
+                </div>
+            </div>
         }
     }
 

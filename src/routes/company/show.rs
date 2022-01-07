@@ -427,33 +427,39 @@ impl ShowCompany {
                         </div>
                     </div>
                     <div class="column">
-                        <span id="company-email">
-                          <i class="fas fa-envelope"></i>
-                          { format!("Email: {}", &company_data.email) }
-                        </span>
-                        <br/>
-                        <span id="company-phone">
-                          <i class="fas fa-phone"></i>
-                          { format!("Phone: {}", &company_data.phone) }
-                        </span>
-                        <br/>
-                        <span id="company-inn">
-                          <i class="fas fa-building"></i>
-                          { format!("Reg.№: {}", &company_data.inn) }
-                        </span>
-                        <br/>
-                        <span id="company-region">
-                          <i class="fas fa-map-marker-alt"></i>
-                          { format!("Location: {}, ", &company_data.region.region) }
-                        </span>
-                        <span id="company-address">
-                          { company_data.address.to_string() }
-                        </span>
-                        <br/>
-                        <span id="company-site">
-                          <i class="fas fa-building"></i>
-                          { format!("Site: {}", &company_data.site_url) }
-                        </span>
+                        <div id="company-email">
+                            <span class="icon is-small"><i class="fas fa-envelope" /></span>
+                            <span>{" Email: "}</span>
+                            <span class="overflow-title has-text-weight-bold">{company_data.email.clone()}</span>
+                        </div>
+                        // <br/>
+                        <div id="company-phone">
+                            <span class="icon is-small"><i class="fas fa-phone" /></span>
+                            <span>{" Phone: "}</span>
+                            <span class="overflow-title has-text-weight-bold">{company_data.phone.clone()}</span>
+                        </div>
+                        // <br/>
+                        <div id="company-inn">
+                            <span class="icon is-small"><i class="fas fa-building" /></span>
+                            <span>{" Reg.№: "}</span>
+                            <span class="overflow-title has-text-weight-bold">{company_data.inn.clone()}</span>
+                        </div>
+                        // <br/>
+                        <div id="company-region">
+                            <span class="icon is-small"><i class="fas fa-map-marker-alt" /></span>
+                            <span>{" Location: "}</span>
+                            <span class="overflow-title has-text-weight-bold">{company_data.region.region.clone()}</span>
+                            <span class="overflow-title has-text-weight-bold">{", "}</span>
+                            <span id="company-address" class="overflow-title has-text-weight-bold">
+                                {company_data.address.clone()}
+                            </span>
+                        </div>
+                        // <br/>
+                        <div id="company-site_url">
+                            <span class="icon is-small"><i class="fas fa-globe" /></span>
+                            <span>{" Site: "}</span>
+                            <span class="overflow-title has-text-weight-bold">{company_data.site_url.clone()}</span>
+                        </div>
                     </div>
                 </div>
                 {match company_data.company_specs.is_empty() {
