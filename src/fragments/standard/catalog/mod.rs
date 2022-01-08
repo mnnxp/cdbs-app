@@ -2,13 +2,15 @@ mod list_item;
 
 pub use list_item::ListItemStandard;
 
-use yew::prelude::*;
-use yew_router::prelude::*;
+use yew::{html, Component, ComponentLink, Html, ShouldRender, Properties};
+use yew_router::prelude::RouterAnchor;
+
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use log::debug;
 use chrono::NaiveDateTime;
+
 use crate::gqls::make_query;
 use crate::routes::AppRoute;
 use crate::error::{Error, get_error};
@@ -127,22 +129,11 @@ impl Component for CatalogStandards {
     }
 
     fn view(&self) -> Html {
-        // let list = self.list.clone();
+        let onclick_change_view = self.link.callback(|_|Msg::SwitchShowType);
 
-        let onclick_change_view = self
-            .link
-            .callback(|_|Msg::SwitchShowType);
-
-        let class_for_icon: &str;
-        let mut class_for_list = "";
-        match self.show_type {
-            ListState::Box => {
-                class_for_icon = "fas fa-bars";
-                class_for_list = "flex-box";
-            },
-            ListState::List => {
-                class_for_icon = "fas fa-th-large";
-            },
+        let (class_for_icon, class_for_list) = match self.show_type {
+            ListState::Box => ("fas fa-bars", "flex-box"),
+            ListState::List => ("fas fa-th-large", ""),
         };
 
         html!{
@@ -152,19 +143,21 @@ impl Component for CatalogStandards {
                 <div class="level-left">
                 </div>
                 <div class="level-right">
-                    {match &self.props.show_create_btn {
-                        true => html!{
-                            <RouterAnchor<AppRoute> route=AppRoute::CreateStandard >
-                              <button class="button is-info" >{"Create"}</button>
-                            </RouterAnchor<AppRoute>>
-                        },
-                        false => html!{},
-                    }}
-                    <button class="button" onclick={onclick_change_view} >
-                      <span class={"icon is-small"}>
-                        <i class={class_for_icon}></i>
-                      </span>
-                    </button>
+                    <div class="buttons">
+                        {match &self.props.show_create_btn {
+                            true => html!{
+                                <RouterAnchor<AppRoute> route=AppRoute::CreateStandard classes="button is-info">
+                                    {"Create"}
+                                </RouterAnchor<AppRoute>>
+                            },
+                            false => html!{},
+                        }}
+                        <button class="button" onclick={onclick_change_view} >
+                          <span class={"icon is-small"}>
+                            <i class={class_for_icon}></i>
+                          </span>
+                        </button>
+                    </div>
                 </div>
               </div>
               <div class={class_for_list}>

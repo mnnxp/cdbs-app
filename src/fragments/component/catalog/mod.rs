@@ -2,18 +2,20 @@ mod list_item;
 
 pub use list_item::ListItem;
 
-use crate::error::{get_error, Error};
-use crate::fragments::list_errors::ListErrors;
-use crate::gqls::make_query;
-use crate::routes::AppRoute;
-use crate::types::{ComponentsQueryArg, ShowComponentShort, UUID};
+use yew::{html, Component, ComponentLink, Html, ShouldRender, Properties};
+use yew_router::prelude::RouterAnchor;
 use chrono::NaiveDateTime;
 use graphql_client::GraphQLQuery;
 use log::debug;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
-use yew::prelude::*;
-use yew_router::prelude::*;
+
+use crate::error::{get_error, Error};
+use crate::fragments::list_errors::ListErrors;
+use crate::gqls::make_query;
+use crate::routes::AppRoute;
+use crate::types::{ComponentsQueryArg, ShowComponentShort, UUID};
+
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -182,20 +184,11 @@ impl Component for CatalogComponents {
     }
 
     fn view(&self) -> Html {
-        // let list = self.list.clone();
-
         let onclick_change_view = self.link.callback(|_| Msg::SwitchShowType);
 
-        let class_for_icon: &str;
-        let mut class_for_list = "";
-        match self.show_type {
-            ListState::Box => {
-                class_for_icon = "fas fa-bars";
-                class_for_list = "flex-box";
-            }
-            ListState::List => {
-                class_for_icon = "fas fa-th-large";
-            }
+        let (class_for_icon, class_for_list) = match self.show_type {
+            ListState::Box => ("fas fa-bars", "flex-box"),
+            ListState::List => ("fas fa-th-large", ""),
         };
 
         html! {
@@ -205,25 +198,27 @@ impl Component for CatalogComponents {
                 <div class="level-left ">
                 </div>
                 <div class="level-right">
-                {match &self.props.show_create_btn {
-                  true => html!{
-                      <RouterAnchor<AppRoute> route=AppRoute::CreateComponent >
-                        <button class="button is-info" >{"Create"}</button>
-                      </RouterAnchor<AppRoute>>
-                  },
-                  false => html!{},
-                }}
-                  // <div class="select">
-                  //   <select>
-                  //     <option>{"Select dropdown"}</option>
-                  //     <option>{"With options"}</option>
-                  //   </select>
-                  // </div>
-                  <button class="button" onclick={onclick_change_view} >
-                    <span class={"icon is-small"}>
-                      <i class={class_for_icon}></i>
-                    </span>
-                  </button>
+                    <div class="buttons">
+                        {match &self.props.show_create_btn {
+                          true => html!{
+                              <RouterAnchor<AppRoute> route=AppRoute::CreateComponent classes="button is-info">
+                                  {"Create"}
+                              </RouterAnchor<AppRoute>>
+                          },
+                          false => html!{},
+                        }}
+                        // <div class="select">
+                        //   <select>
+                        //     <option>{"Select dropdown"}</option>
+                        //     <option>{"With options"}</option>
+                        //   </select>
+                        // </div>
+                        <button class="button" onclick={onclick_change_view} >
+                            <span class={"icon is-small"}>
+                                <i class={class_for_icon}></i>
+                            </span>
+                        </button>
+                    </div>
                 </div>
               </div>
               <div class={class_for_list}>
