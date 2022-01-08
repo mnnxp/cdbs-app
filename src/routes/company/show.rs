@@ -360,8 +360,7 @@ impl ShowCompany {
                               String::new())},
                           false => html!{},
                       }}
-                      // for self user data not show button "following"
-                      { self.show_company_followers() }
+                      {self.show_company_followers()}
                     </div>
                 </div>
             </div>},
@@ -372,44 +371,29 @@ impl ShowCompany {
     fn show_company_followers(&self) -> Html {
         html!{<>
             {match &self.company {
-                Some(_) => {
-                    let class_fav = match self.is_followed {
-                        true => "fas fa-bookmark",
-                        false => "far fa-bookmark",
-                    };
-
-                    let onclick_following = match self.is_followed {
-                        true => self.link.callback(|_| Msg::UnFollow),
-                        false => self.link.callback(|_| Msg::Follow),
-                    };
-
-                    html!{
-                        // for self user data not show button "following"
-                        <div class="media-right flexBox" >
-                          <button
-                              id="following-button"
-                              class="button"
-                              onclick=onclick_following >
-                            <span class="icon is-small">
-                              <i class={class_fav}></i>
-                            </span>
-                          </button>
-                        </div>
-                    }
-                },
-                None => html!{},
+                Some(_) => self.show_favorite_btn(),
+                None => html!{<span>{self.subscribers}</span>},
             }}
-            { format!(" {}", &self.subscribers) }
-            <div class="media-right flexBox" >
-              <button
-                  id="share-button"
-                  class="button" >
-                <span class="icon is-small">
-                  <i class="fas fa-share-alt"></i>
-                </span>
-              </button>
-            </div>
         </>}
+    }
+
+    fn show_favorite_btn(&self) -> Html {
+        let (class_fav, onclick_following) = match self.is_followed {
+            true => ("fas fa-bookmark", self.link.callback(|_| Msg::UnFollow)),
+            false => ("far fa-bookmark", self.link.callback(|_| Msg::Follow)),
+        };
+
+        html!{
+            <button
+                id="following-button"
+                class="button"
+                onclick=onclick_following >
+              <span class="icon is-small">
+                <i class={class_fav}></i>
+              </span>
+              <span>{self.subscribers}</span>
+            </button>
+        }
     }
 
     fn view_content(
@@ -423,7 +407,7 @@ impl ShowCompany {
                 <div class="columns">
                     <div class="column">
                         <div id="description" class="content">
-                          { format!("{}", &company_data.description) }
+                          {company_data.description.clone()}
                         </div>
                     </div>
                     <div class="column">

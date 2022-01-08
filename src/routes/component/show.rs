@@ -418,7 +418,7 @@ impl ShowComponent {
                     {self.show_download_block()}
                     {self.show_setting_btn()}
                     {self.show_followers_btn()}
-                    {self.show_share_btn()}
+                    // {self.show_share_btn()}
                     {match component_data.licenses.is_empty() {
                         true => html!{},
                         false => self.show_component_licenses(component_data),
@@ -831,11 +831,11 @@ impl ShowComponent {
     }
 
     fn show_download_block(&self) -> Html {
-        let callback_select_fileset_uuid = self.link
-            .callback(|value: UUID| Msg::SelectFileset(value));
+        let callback_select_fileset_uuid =
+            self.link.callback(|value: UUID| Msg::SelectFileset(value));
 
-        let callback_open_fileset_uuid = self.link
-            .callback(|value: bool| Msg::ShowFilesetFilesBlock(value));
+        let callback_open_fileset_uuid =
+            self.link.callback(|value: bool| Msg::ShowFilesetFilesBlock(value));
 
         html!{
             <ManageFilesOfFilesetBlock
@@ -848,8 +848,8 @@ impl ShowComponent {
     }
 
     fn show_setting_btn(&self) -> Html {
-        let onclick_setting_standard_btn = self.link
-            .callback(|_| Msg::OpenComponentSetting);
+        let onclick_setting_standard_btn =
+            self.link.callback(|_| Msg::OpenComponentSetting);
 
         match &self.current_user_owner {
             true => {res_btn(classes!(String::from("fa fa-cog")),
@@ -860,42 +860,35 @@ impl ShowComponent {
     }
 
     fn show_followers_btn(&self) -> Html {
-        let class_fav = match self.is_followed {
-            true => "fas fa-bookmark",
-            false => "far fa-bookmark",
-        };
-
-        let onclick_following = match self.is_followed {
-            true => self.link.callback(|_| Msg::UnFollow),
-            false => self.link.callback(|_| Msg::Follow),
+        let (class_fav, onclick_following) = match self.is_followed {
+            true => ("fas fa-bookmark", self.link.callback(|_| Msg::UnFollow)),
+            false => ("far fa-bookmark", self.link.callback(|_| Msg::Follow)),
         };
 
         html!{<>
-            <div class="media-right flexBox" >
-              <button
-                  id="following-button"
-                  class="button"
-                  onclick=onclick_following >
-                <span class="icon is-small">
-                  <i class={class_fav}></i>
-                </span>
-              </button>
-            </div>
-            { format!(" {}", &self.subscribers) }
+            <button
+                id="following-button"
+                class="button"
+                onclick=onclick_following >
+              <span class="icon is-small">
+                <i class={class_fav}></i>
+              </span>
+              <span>{self.subscribers}</span>
+            </button>
         </>}
     }
 
-    fn show_share_btn(&self) -> Html {
-        html!{
-            <div class="media-right flexBox" >
-              <button
-                  id="share-button"
-                  class="button" >
-                <span class="icon is-small">
-                  <i class="fas fa-share-alt"></i>
-                </span>
-              </button>
-            </div>
-        }
-    }
+    // fn show_share_btn(&self) -> Html {
+    //     html!{
+    //         <div class="media-right flexBox" >
+    //           <button
+    //               id="share-button"
+    //               class="button" >
+    //             <span class="icon is-small">
+    //               <i class="fas fa-share-alt"></i>
+    //             </span>
+    //           </button>
+    //         </div>
+    //     }
+    // }
 }

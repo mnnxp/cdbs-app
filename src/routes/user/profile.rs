@@ -458,51 +458,52 @@ impl Profile {
               }</p>
             </div>
             <div class="media-right">
-              <p class="subtitle is-6 left">
-                  // date formatting for show on page
-                  { updated_at }
-                  <br/>
-                  // for self user data not show button "following"
-                  <div class="media-right flexBox " >
-                    { self.show_profile_followers() }
-                  </div>
-              </p>
+                {match self.show_full_user_info {
+                    true => html!{
+                        <div>
+                            <span>{"Updated at: "}</span>
+                            <span>{updated_at}</span>
+                        </div>
+                    },
+                    false => html!{},
+                }}
+                { self.show_profile_followers() }
             </div>
         </div>}
     }
 
     fn show_profile_followers(&self) -> Html {
         html! {<>
+            // for self user data not show button "following"
             {match &self.profile {
-                Some(_) => {
-                    let class_fav = match self.is_followed {
-                        true => "fas fa-bookmark",
-                        false => "far fa-bookmark",
-                    };
-
-                    let onclick_following = match self.is_followed {
-                        true => self.link.callback(|_| Msg::UnFollow),
-                        false => self.link.callback(|_| Msg::Follow),
-                    };
-
-                    html!{
-                        // for self user data not show button "following"
-                        <div class="media-right flexBox" >
-                          <button
-                              id="following-button"
-                              class="button"
-                              onclick=onclick_following >
-                            <span class="icon is-small">
-                              <i class={class_fav}></i>
-                            </span>
-                          </button>
-                        </div>
-                    }
+                Some(_) => self.show_favorite_btn(),
+                None => html!{
+                    <div>
+                        <span>{"Followers: "}</span>
+                        <span>{self.subscribers}</span>
+                    </div>
                 },
-                None => html!{},
             }}
-            { format!(" {}", &self.subscribers) }
         </>}
+    }
+
+    fn show_favorite_btn(&self) -> Html {
+        let (class_fav, onclick_following) = match self.is_followed {
+            true => ("fas fa-bookmark", self.link.callback(|_| Msg::UnFollow)),
+            false => ("far fa-bookmark", self.link.callback(|_| Msg::Follow)),
+        };
+
+        html!{
+            <button
+                id="following-button"
+                class="button"
+                onclick=onclick_following >
+              <span class="icon is-small">
+                <i class={class_fav}></i>
+              </span>
+              <span>{self.subscribers}</span>
+            </button>
+        }
     }
 
     fn cb_generator(&self, cb: ProfileTab) -> Callback<MouseEvent> {

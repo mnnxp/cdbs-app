@@ -387,7 +387,7 @@ impl ShowStandard {
                     {self.show_download_btn()}
                     {self.show_setting_btn()}
                     {self.show_followers_btn()}
-                    {self.show_share_btn()}
+                    // {self.show_share_btn()}
                 </div>
                 <div class="standard-description">{
                     match self.show_full_description {
@@ -508,44 +508,37 @@ impl ShowStandard {
     }
 
     fn show_followers_btn(&self) -> Html {
-        let class_fav = match self.is_followed {
-            true => "fas fa-bookmark",
-            false => "far fa-bookmark",
-        };
-
-        let onclick_following = match self.is_followed {
-            true => self.link.callback(|_| Msg::UnFollow),
-            false => self.link.callback(|_| Msg::Follow),
+        let (class_fav, onclick_following) = match self.is_followed {
+            true => ("fas fa-bookmark", self.link.callback(|_| Msg::UnFollow)),
+            false => ("far fa-bookmark", self.link.callback(|_| Msg::Follow)),
         };
 
         html!{<>
-            <div class="media-right flexBox" >
-              <button
-                  id="following-button"
-                  class="button"
-                  onclick=onclick_following >
-                <span class="icon is-small">
-                  <i class={class_fav}></i>
-                </span>
-              </button>
-            </div>
-            { format!(" {}", &self.subscribers) }
+            <button
+                id="following-button"
+                class="button"
+                onclick=onclick_following >
+              <span class="icon is-small">
+                <i class={class_fav}></i>
+              </span>
+              <span>{self.subscribers}</span>
+            </button>
         </>}
     }
 
-    fn show_share_btn(&self) -> Html {
-        html!{
-            <div class="media-right flexBox" >
-              <button
-                  id="share-button"
-                  class="button" >
-                <span class="icon is-small">
-                  <i class="fas fa-share-alt"></i>
-                </span>
-              </button>
-            </div>
-        }
-    }
+    // fn show_share_btn(&self) -> Html {
+    //     html!{
+    //         <div class="media-right flexBox" >
+    //           <button
+    //               id="share-button"
+    //               class="button" >
+    //             <span class="icon is-small">
+    //               <i class="fas fa-share-alt"></i>
+    //             </span>
+    //           </button>
+    //         </div>
+    //     }
+    // }
 
     fn show_related_components_btn(&self) -> Html {
         let onclick_related_components_btn = self.link

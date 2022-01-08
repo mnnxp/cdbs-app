@@ -90,7 +90,7 @@ impl From<&SelfUserInfo> for UserDataCard {
             firstname: data.firstname.clone(),
             lastname: data.lastname.clone(),
             username: data.username.clone(),
-            updated_at: format!("{:.*}", 19, data.updated_at.to_string()),
+            updated_at: format!("{:.*}", 10, data.updated_at.to_string()),
         }
     }
 }
@@ -102,7 +102,7 @@ impl From<&UserInfo> for UserDataCard {
             firstname: data.firstname.clone(),
             lastname: data.lastname.clone(),
             username: data.username.clone(),
-            updated_at: format!("{:.*}", 19, data.updated_at.to_string()),
+            updated_at: format!("{:.*}", 10, data.updated_at.to_string()),
         }
     }
 }
