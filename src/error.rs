@@ -51,11 +51,15 @@ pub(crate) fn get_error(data: &Value) -> Error {
 
     debug!("Err message: {:?}", err_message);
 
-    // clean storage if the token has expired
-    if err_message == "Unauthorized" {
-        set_token(None);
-        set_logged_user(None);
-    }
+    match err_message.as_str() {
+        "Unauthorized" => {
+            // clean storage if the token has expired
+            set_token(None);
+            set_logged_user(None);
+            Error::Unauthorized
+        },
+        // "Not Found" => Error::NotFound,
+        _ => Error::BadRequest(err_message),
 
-    Error::BadRequest(err_message)
+    }
 }
