@@ -939,12 +939,12 @@ impl ComponentSettings {
     }
 
     fn show_manage_btn(&self) -> Html {
-        let onclick_open_component = self.link
-            .callback(|_| Msg::OpenComponent);
-        let onclick_show_delete_modal = self.link
-            .callback(|_| Msg::ChangeHideDeleteComponent);
-        let onclick_save_changes = self.link
-            .callback(|_| Msg::RequestManager);
+        let onclick_open_component =
+            self.link.callback(|_| Msg::OpenComponent);
+        let onclick_show_delete_modal =
+            self.link.callback(|_| Msg::ChangeHideDeleteComponent);
+        let onclick_save_changes =
+            self.link.callback(|_| Msg::RequestManager);
 
         html!{
             <div class="media">

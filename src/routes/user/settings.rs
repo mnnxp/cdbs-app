@@ -1,4 +1,3 @@
-// use yew::services::fetch::FetchTask;
 use chrono::NaiveDateTime;
 use web_sys::MouseEvent;
 use yew::{
@@ -107,16 +106,17 @@ pub struct Settings {
 
 #[derive(Clone)]
 pub enum Msg {
+    OpenProfile,
+    RequestCurrentData,
     RequestUpdateProfile,
     RequestChangeAccess,
     RequestUpdatePassword,
     RequestRemoveProfile,
     GetUpdateAccessResult(String),
     GetUpdatePwdResult(String),
-    GetUpdateProfileData(String),
+    GetProfileDataResult(String),
     GetUpdateProfileResult(String),
     GetRemoveProfileResult(String),
-    GetCurrentData,
     UpdateUserPassword(String),
     UpdateTypeAccessId(String),
     UpdateOldPassword(String),
@@ -133,7 +133,7 @@ pub enum Msg {
     UpdateTimeZone(String),
     UpdateProgramId(String),
     UpdateRegionId(String),
-    UpdateList(String),
+    GetUpdateListResult(String),
     SelectMenu(Menu),
     ClearError,
     Ignore,
@@ -150,8 +150,6 @@ impl Component for Settings {
             request_access: 0,
             request_password: UpdatePasswordInfo::default(),
             request_user_password: String::new(),
-            // response: link.callback(Msg::Response),
-            // task: None,
             router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             // props,
             link,
@@ -174,8 +172,8 @@ impl Component for Settings {
                 let res = make_query(GetSettingDataOpt::build_query(
                     get_setting_data_opt::Variables
                 )).await.unwrap();
-                link.send_message(Msg::GetUpdateProfileData(res.clone()));
-                link.send_message(Msg::UpdateList(res));
+                link.send_message(Msg::GetProfileDataResult(res.clone()));
+                link.send_message(Msg::GetUpdateListResult(res));
             })
         }
     }
@@ -184,6 +182,22 @@ impl Component for Settings {
         let link = self.link.clone();
 
         match msg {
+            Msg::OpenProfile => {
+                // Redirect to user page
+                if let Some(user_data) = &self.current_data {
+                    self.router_agent.send(ChangeRoute(
+                        AppRoute::Profile(user_data.username.clone()).into()
+                    ));
+                }
+            },
+            Msg::RequestCurrentData => {
+                spawn_local(async move {
+                    let res = make_query(GetSelfData::build_query(
+                        get_self_data::Variables
+                    )).await.unwrap();
+                    link.send_message(Msg::GetProfileDataResult(res));
+                })
+            },
             Msg::RequestUpdateProfile => {
                 let ipt_update_user_data = user_update::IptUpdateUserData {
                     email: self.request_profile.email.clone(),
@@ -262,7 +276,7 @@ impl Component for Settings {
                     true => self.error = Some(get_error(&data)),
                 }
             },
-            Msg::GetUpdateProfileData(res) => {
+            Msg::GetProfileDataResult(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res = data.as_object().unwrap().get("data").unwrap();
 
@@ -273,6 +287,43 @@ impl Component for Settings {
                         self.current_data = Some(user_data.clone());
                         self.request_profile = user_data.into();
                         self.rendered(false);
+                    },
+                    true => self.error = Some(get_error(&data)),
+                }
+            },
+            Msg::GetUpdateListResult(res) => {
+                let data: Value = serde_json::from_str(res.as_str()).unwrap();
+                let res_value = data.as_object().unwrap().get("data").unwrap();
+                match res_value.is_null() {
+                    false => {
+                        // debug!("Result: {:#?}", res_value.clone());
+                        self.regions =
+                            serde_json::from_value(res_value.get("regions").unwrap().clone()).unwrap();
+                        self.programs =
+                            serde_json::from_value(res_value.get("programs").unwrap().clone()).unwrap();
+                        self.types_access =
+                            serde_json::from_value(res_value.get("typesAccess").unwrap().clone()).unwrap();
+                    },
+                    true => self.error = Some(get_error(&data)),
+                }
+            },
+            Msg::GetUpdateProfileResult(res) => {
+                let data: Value = serde_json::from_str(res.as_str()).unwrap();
+                let res = data.as_object().unwrap().get("data").unwrap();
+
+                match res.is_null() {
+                    false => {
+                        let updated_rows: usize =
+                            serde_json::from_value(res.get("putUserUpdate").unwrap().clone()).unwrap();
+                        debug!("Updated rows: {:?}", updated_rows);
+                        // update local data
+                        set_logged_user(None);
+                        spawn_local(async move {
+                            let res = get_current_user().await;
+                            debug!("update locale slim user: {:?}", res);
+                        });
+                        self.get_result_profile = updated_rows;
+                        link.send_message(Msg::RequestCurrentData);
                     },
                     true => self.error = Some(get_error(&data)),
                 }
@@ -311,54 +362,8 @@ impl Component for Settings {
                 self.request_profile.program_id = Some(program_id.parse::<i64>().unwrap_or_default()),
             Msg::UpdateRegionId(region_id) =>
                 self.request_profile.region_id = Some(region_id.parse::<i64>().unwrap_or_default()),
-            Msg::UpdateList(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-                match res_value.is_null() {
-                    false => {
-                        // debug!("Result: {:#?}", res_value.clone());
-                        self.regions =
-                            serde_json::from_value(res_value.get("regions").unwrap().clone()).unwrap();
-                        self.programs =
-                            serde_json::from_value(res_value.get("programs").unwrap().clone()).unwrap();
-                        self.types_access =
-                            serde_json::from_value(res_value.get("typesAccess").unwrap().clone()).unwrap();
-                    },
-                    true => self.error = Some(get_error(&data)),
-                }
-            },
-            Msg::GetUpdateProfileResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        let updated_rows: usize =
-                            serde_json::from_value(res.get("putUserUpdate").unwrap().clone()).unwrap();
-                        debug!("Updated rows: {:?}", updated_rows);
-                        // update local data
-                        set_logged_user(None);
-                        spawn_local(async move {
-                            let res = get_current_user().await;
-                            debug!("update locale slim user: {:?}", res);
-                        });
-                        self.get_result_profile = updated_rows;
-                        link.send_message(Msg::GetCurrentData);
-                    },
-                    true => self.error = Some(get_error(&data)),
-                }
-            },
-            Msg::GetCurrentData => {
-                spawn_local(async move {
-                    let res = make_query(GetSelfData::build_query(
-                        get_self_data::Variables
-                    )).await.unwrap();
-                    link.send_message(Msg::GetUpdateProfileData(res));
-                })
-            },
-            Msg::UpdateUserPassword(user_password) => {
-                self.request_user_password = user_password;
-            },
+            Msg::UpdateUserPassword(user_password) =>
+                self.request_user_password = user_password,
             Msg::SelectMenu(value) => {
                 self.select_menu = value;
                 self.rendered(false);
@@ -412,7 +417,7 @@ impl Component for Settings {
                                             <h4 id="change-profile" class="title is-4">{"Profile"}</h4>
                                             {self.show_update_profile_info()}
                                             <form onsubmit=onsubmit_update_profile>
-                                                { self.fieldset_profile() }
+                                                { self.change_profile_card() }
                                                 <button
                                                     id="update-settings"
                                                     class="button"
@@ -423,12 +428,12 @@ impl Component for Settings {
                                             </form>
                                         </>},
                                         // Show interface for change favicon user
-                                        Menu::UpdateFavicon => {self.fieldset_update_favicon()},
+                                        Menu::UpdateFavicon => {self.update_favicon_card()},
                                         // Show interface for add and update Certificates
                                         Menu::Certificates => html!{<>
                                             <h4 id="change-certificates" class="title is-4">{"Certificates"}</h4>
-                                            { self.fieldset_add_certificate() }
-                                            { self.fieldset_certificates() }
+                                            { self.add_certificate_card() }
+                                            { self.change_certificates_card() }
                                         </>},
                                         // Show interface for change access
                                         Menu::Access => html!{<>
@@ -437,7 +442,7 @@ impl Component for Settings {
                                                 { format!("Updated access: {}", self.get_result_access.clone()) }
                                             </span>
                                             <form onsubmit=onsubmit_update_access>
-                                                { self.fieldset_access() }
+                                                { self.change_access_card() }
                                                 <button
                                                     id="update-access"
                                                     class="button"
@@ -460,7 +465,7 @@ impl Component for Settings {
                                               { format!("Updated password: {}", self.get_result_pwd.clone()) }
                                             </span>
                                             <form onsubmit=onsubmit_update_password>
-                                                { self.fieldset_password() }
+                                                { self.update_password_card() }
                                                 <button
                                                     id="update-password"
                                                     class="button"
@@ -482,7 +487,7 @@ impl Component for Settings {
                                             </span>
                                             <br/>
                                             <form onsubmit=onsubmit_remove_profile>
-                                                { self.fieldset_remove_profile() }
+                                                { self.remove_profile_card() }
                                                 <button
                                                     id="button-remove-profile"
                                                     class="button is-danger"
@@ -562,6 +567,15 @@ impl Settings {
 
     fn view_menu(&self) -> Html {
         let menu_arr: Vec<MenuItem> = vec![
+            // return profile page MenuItem
+            MenuItem {
+                title: "Return profile".to_string(),
+                action: self.link.callback(|_| Msg::OpenProfile),
+                item_class: classes!("has-background-white"),
+                icon_class: classes!("fas", "fa-angle-double-left"),
+                is_active: false,
+                ..Default::default()
+            },
             // profile MenuItem
             MenuItem {
                 title: "Profile".to_string(),
@@ -625,8 +639,8 @@ impl Settings {
         }
     }
 
-    fn fieldset_update_favicon(&self) -> Html {
-        let callback_update_favicon = self.link.callback(|_| Msg::GetCurrentData);
+    fn update_favicon_card(&self) -> Html {
+        let callback_update_favicon = self.link.callback(|_| Msg::RequestCurrentData);
 
         html! {
             <UpdateFaviconBlock
@@ -636,7 +650,7 @@ impl Settings {
         }
     }
 
-    fn fieldset_certificates(&self) -> Html {
+    fn change_certificates_card(&self) -> Html {
         match &self.current_data {
             Some(current_data) => html! {
                 <UserCertificatesCard
@@ -651,14 +665,14 @@ impl Settings {
         }
     }
 
-    fn fieldset_add_certificate(&self) -> Html {
+    fn add_certificate_card(&self) -> Html {
         let user_uuid = self
             .current_data
             .as_ref()
             .map(|user| user.uuid.to_string())
             .unwrap_or_default();
 
-        let callback_upload_cert = self.link.callback(|_| Msg::GetCurrentData);
+        let callback_upload_cert = self.link.callback(|_| Msg::RequestCurrentData);
 
         html! {
             <AddUserCertificateCard
@@ -668,7 +682,7 @@ impl Settings {
         }
     }
 
-    fn fieldset_access(&self) -> Html {
+    fn change_access_card(&self) -> Html {
         let onchange_type_access_id = self.link.callback(|ev: ChangeData| {
             Msg::UpdateTypeAccessId(match ev {
                 ChangeData::Select(el) => el.value(),
@@ -702,7 +716,7 @@ impl Settings {
         }
     }
 
-    fn fieldset_password(&self) -> Html {
+    fn update_password_card(&self) -> Html {
         let oninput_old_password = self.link.callback(|ev: InputData| Msg::UpdateOldPassword(ev.value));
         let oninput_new_password = self.link.callback(|ev: InputData| Msg::UpdateNewPassword(ev.value));
 
@@ -725,7 +739,7 @@ impl Settings {
         }
     }
 
-    fn fieldset_profile(&self) -> Html {
+    fn change_profile_card(&self) -> Html {
         let oninput_firstname = self.link.callback(|ev: InputData| Msg::UpdateFirstname(ev.value));
         let oninput_lastname = self.link.callback(|ev: InputData| Msg::UpdateLastname(ev.value));
         let oninput_secondname = self.link.callback(|ev: InputData| Msg::UpdateSecondname(ev.value));
@@ -863,7 +877,7 @@ impl Settings {
         </>}
     }
 
-    fn fieldset_remove_profile(&self) -> Html {
+    fn remove_profile_card(&self) -> Html {
         let oninput_user_password = self.link.callback(|ev: InputData| Msg::UpdateUserPassword(ev.value));
 
         self.fileset_generator(
