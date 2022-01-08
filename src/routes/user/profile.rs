@@ -627,7 +627,7 @@ impl Profile {
                         </div>
                         // <br/>
                         <div id="program">
-                            <span class="icon is-small"><i class="fab fa-uncharted" /></span>
+                            <span class="icon is-small"><i class="fas fa-drafting-compass" /></span>
                             <span>{" Working software: "}</span>
                             <span class="overflow-title has-text-weight-bold">{program}</span>
                         </div>
