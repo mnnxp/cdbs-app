@@ -21,7 +21,7 @@ pub struct MenuItem {
     #[prop_or_default]
     pub item_class: Classes,
     #[prop_or_default]
-    pub icon_class: Classes,
+    pub icon_classes: Vec<Classes>,
     pub count: usize,
     pub is_active: bool,
     pub is_extend: bool,
@@ -33,7 +33,7 @@ impl Default for MenuItem {
             title: "".to_string(),
             action: Callback::noop(),
             item_class: classes!("has-background-white"),
-            icon_class: classes!("fas", "fa-certificate"),
+            icon_classes: vec![classes!("fas", "fa-certificate")],
             count: 0,
             is_active: false,
             is_extend: false,
@@ -94,10 +94,10 @@ impl SideMenu {
             title,
             action,
             item_class,
-            icon_class,
             count,
             is_active,
             is_extend,
+            ..
         } = item.clone();
         let hide_tag = count == 0;
 
@@ -118,7 +118,9 @@ impl SideMenu {
               <div hidden=hide_tag >
                 <span class="tag is-info is-small" >{count}</span>
               </div>
-              <i class=classes!(icon_class.clone())></i>
+              {for item.icon_classes.iter().map(|icon_class|
+                  html!{<i class=classes!(icon_class.clone()) style="margin-right: 0.1rem"></i>}
+              )}
             </a>
           </li>
         )

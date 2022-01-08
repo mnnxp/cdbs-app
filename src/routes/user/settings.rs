@@ -572,7 +572,7 @@ impl Settings {
                 title: "Return profile".to_string(),
                 action: self.link.callback(|_| Msg::OpenProfile),
                 item_class: classes!("has-background-white"),
-                icon_class: classes!("fas", "fa-angle-double-left"),
+                icon_classes: vec![classes!("fas", "fa-angle-double-left")],
                 is_active: false,
                 ..Default::default()
             },
@@ -581,7 +581,7 @@ impl Settings {
                 title: "Profile".to_string(),
                 action: self.cb_generator(Menu::Profile),
                 item_class: classes!("has-background-white"),
-                icon_class: classes!("fas", "fa-address-card"),
+                icon_classes: vec![classes!("fas", "fa-address-card")],
                 is_active: self.select_menu == Menu::Profile,
                 ..Default::default()
             },
@@ -590,7 +590,7 @@ impl Settings {
                 title: "Favicon".to_string(),
                 action: self.cb_generator(Menu::UpdateFavicon),
                 item_class: classes!("has-background-white"),
-                icon_class: classes!("fas", "fa-image"),
+                icon_classes: vec![classes!("fas", "fa-image")],
                 is_active: self.select_menu == Menu::UpdateFavicon,
                 ..Default::default()
             },
@@ -599,7 +599,7 @@ impl Settings {
                 title: "Certificates".to_string(),
                 action: self.cb_generator(Menu::Certificates),
                 item_class: classes!("has-background-white"),
-                icon_class: classes!("fas", "fa-certificate"),
+                icon_classes: vec![classes!("fas", "fa-certificate")],
                 is_active: self.select_menu == Menu::Certificates,
                 ..Default::default()
             },
@@ -608,7 +608,7 @@ impl Settings {
                 title: "Access".to_string(),
                 action: self.cb_generator(Menu::Access),
                 item_class: classes!("has-background-white"),
-                icon_class: classes!("fas", "fa-low-vision"),
+                icon_classes: vec![classes!("fas", "fa-low-vision")],
                 is_active: self.select_menu == Menu::Access,
                 ..Default::default()
             },
@@ -617,7 +617,7 @@ impl Settings {
                 title: "Password".to_string(),
                 action: self.cb_generator(Menu::Password),
                 item_class: classes!("has-background-white"),
-                icon_class: classes!("fas", "fa-key"),
+                icon_classes: vec![classes!("fas", "fa-key")],
                 is_active: self.select_menu == Menu::Password,
                 ..Default::default()
             },
@@ -626,7 +626,7 @@ impl Settings {
                 title: "Remove profile".to_string(),
                 action: self.cb_generator(Menu::RemoveProfile),
                 item_class: classes!("has-background-danger-light"),
-                icon_class: classes!("fas", "fa-trash"),
+                icon_classes: vec![classes!("fas", "fa-trash")],
                 is_active: self.select_menu == Menu::RemoveProfile,
                 ..Default::default()
             },

@@ -460,7 +460,7 @@ impl CompanySettings {
                 title: "Return company".to_string(),
                 action: self.link.callback(|_| Msg::OpenCompany),
                 item_class: classes!("has-background-white"),
-                icon_class: classes!("fas", "fa-angle-double-left"),
+                icon_classes: vec![classes!("fas", "fa-angle-double-left")],
                 is_active: false,
                 ..Default::default()
             },
@@ -469,7 +469,7 @@ impl CompanySettings {
                 title: "Company".to_string(),
                 action: self.cb_generator(Menu::Company),
                 item_class: classes!("has-background-white"),
-                icon_class: classes!("fas", "fa-certificate"),
+                icon_classes: vec![classes!("fas", "fa-certificate")],
                 is_active: self.select_menu == Menu::Company,
                 ..Default::default()
             },
@@ -478,7 +478,7 @@ impl CompanySettings {
                 title: "Favicon".to_string(),
                 action: self.cb_generator(Menu::UpdateFavicon),
                 item_class: classes!("has-background-white"),
-                icon_class: classes!("fas", "fa-image"),
+                icon_classes: vec![classes!("fas", "fa-image")],
                 is_active: self.select_menu == Menu::UpdateFavicon,
                 ..Default::default()
             },
@@ -487,7 +487,7 @@ impl CompanySettings {
                 title: "Certificates".to_string(),
                 action: self.cb_generator(Menu::Certificates),
                 item_class: classes!("has-background-white"),
-                icon_class: classes!("fas", "fa-certificate"),
+                icon_classes: vec![classes!("fas", "fa-certificate")],
                 is_active: self.select_menu == Menu::Certificates,
                 ..Default::default()
             },
@@ -496,7 +496,7 @@ impl CompanySettings {
                 title: "Represent".to_string(),
                 action: self.cb_generator(Menu::Represent),
                 item_class: classes!("has-background-white"),
-                icon_class: classes!("fas", "fa-industry"),
+                icon_classes: vec![classes!("fas", "fa-industry")],
                 is_active: self.select_menu == Menu::Represent,
                 ..Default::default()
             },
@@ -505,7 +505,7 @@ impl CompanySettings {
                 title: "Spec".to_string(),
                 action: self.cb_generator(Menu::Spec),
                 item_class: classes!("has-background-white"),
-                icon_class: classes!("fas", "fa-paperclip"),
+                icon_classes: vec![classes!("fas", "fa-paperclip")],
                 is_active: self.select_menu == Menu::Spec,
                 ..Default::default()
             },
@@ -514,7 +514,7 @@ impl CompanySettings {
                 title: "Access".to_string(),
                 action: self.cb_generator(Menu::Access),
                 item_class: classes!("has-background-white"),
-                icon_class: classes!("fas", "fa-low-vision"),
+                icon_classes: vec![classes!("fas", "fa-low-vision")],
                 is_active: self.select_menu == Menu::Access,
                 ..Default::default()
             },
@@ -523,7 +523,7 @@ impl CompanySettings {
                 title: "RemoveCompany".to_string(),
                 action: self.cb_generator(Menu::RemoveCompany),
                 item_class: classes!("has-background-danger-light"),
-                icon_class: classes!("fas", "fa-trash"),
+                icon_classes: vec![classes!("fas", "fa-trash")],
                 is_active: self.select_menu == Menu::RemoveCompany,
                 ..Default::default()
             },
