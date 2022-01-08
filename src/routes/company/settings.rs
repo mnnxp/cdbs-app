@@ -123,6 +123,7 @@ pub struct Props {
 }
 
 pub enum Msg {
+    OpenCompany,
     SelectMenu(Menu),
     RequestUpdateCompany,
     RequestChangeAccess,
@@ -131,6 +132,7 @@ pub enum Msg {
     GetUpdateAccessResult(String),
     GetCompanyDataResult(String),
     GetUpdateCompanyResult(String),
+    GetUpdateListResult(String),
     GetRemoveCompanyResult(String),
     UpdateTypeAccessId(String),
     UpdateOrgname(String),
@@ -144,7 +146,6 @@ pub enum Msg {
     UpdateTimeZone(String),
     UpdateCompanyTypeId(String),
     UpdateRegionId(String),
-    GetUpdateListResult(String),
     ClearError,
     Ignore,
 }
@@ -205,9 +206,13 @@ impl Component for CompanySettings {
         let link = self.link.clone();
 
         match msg {
-            Msg::SelectMenu(value) => {
-                self.select_menu = value;
-                self.rendered(false);
+            Msg::OpenCompany => {
+                // Redirect to user page
+                if let Some(company_data) = &self.current_data {
+                    self.router_agent.send(ChangeRoute(
+                        AppRoute::ShowCompany(company_data.uuid.clone()).into()
+                    ));
+                }
             },
             Msg::RequestUpdateCompany => {
                 let company_uuid = self.company_uuid.clone();
@@ -366,6 +371,10 @@ impl Component for CompanySettings {
                 self.request_company.region_id = Some(region_id.parse::<i64>().unwrap_or_default()),
             Msg::UpdateCompanyTypeId(type_id) =>
                 self.request_company.company_type_id = Some(type_id.parse::<i64>().unwrap_or_default()),
+            Msg::SelectMenu(value) => {
+                self.select_menu = value;
+                self.rendered(false);
+            },
             Msg::ClearError => self.error = None,
             Msg::Ignore => {},
         }
@@ -446,6 +455,15 @@ impl CompanySettings {
 
     fn view_menu(&self) -> Html {
         let menu_arr: Vec<MenuItem> = vec![
+            // return company page MenuItem
+            MenuItem {
+                title: "Return company".to_string(),
+                action: self.link.callback(|_| Msg::OpenCompany),
+                item_class: classes!("has-background-white"),
+                icon_class: classes!("fas", "fa-angle-double-left"),
+                is_active: false,
+                ..Default::default()
+            },
             // Company MenuItem
             MenuItem {
                 title: "Company".to_string(),

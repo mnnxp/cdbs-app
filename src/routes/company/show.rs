@@ -405,7 +405,7 @@ impl ShowCompany {
                   id="share-button"
                   class="button" >
                 <span class="icon is-small">
-                  <i class="far fa-share"></i>
+                  <i class="fas fa-share-alt"></i>
                 </span>
               </button>
             </div>
