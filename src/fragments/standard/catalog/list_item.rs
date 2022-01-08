@@ -174,7 +174,7 @@ impl ListItemStandard {
         match &self.is_followed {
             true => {
                 class_res_btn.push("fas");
-                class_color_btn = "color: #3298DD;";
+                class_color_btn = "color: #1872F0;";
             },
             false => {
                 class_res_btn.push("far");
@@ -266,7 +266,7 @@ impl ListItemStandard {
         match &self.is_followed {
             true => {
                 class_res_btn.push("fas");
-                class_color_btn = "color: #3298DD;";
+                class_color_btn = "color: #1872F0;";
             },
             false => {
                 class_res_btn.push("far");
