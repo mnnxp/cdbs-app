@@ -115,14 +115,9 @@ impl SideMenu {
           <li class=item_class onclick=action>
             <a>
               <span>{title}</span>
-              {match hide_tag {
-                  true => html!{},
-                  false => html!{
-                      <div style="display: inline-flex;" >
-                        <span class="tag is-info is-small" >{count}</span>
-                      </div>
-                  },
-              }}
+              <div hidden=hide_tag >
+                <span class="tag is-info is-small" >{count}</span>
+              </div>
               <i class=classes!(icon_class.clone())></i>
             </a>
           </li>

@@ -84,7 +84,8 @@
   border-radius: 0 8px 8px 0 !important;
 }
 
-.side-menu ul li a span {
+.side-menu ul li a span,
+.side-menu ul li a div {
   max-width: 0;
   max-height: 2em;
   opacity: 0;
@@ -103,7 +104,8 @@
 //   margin-right: 10px !important;
 // }
 
-.side-menu ul li:hover a span {
+.side-menu ul li:hover a span,
+.side-menu ul li:hover a div:not([hidden="hidden"]) {
   opacity: 1;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -112,6 +114,11 @@
   max-width: 20em;
   margin-right: 10px;
 }
+
+.side-menu ul li:hover a div span {
+  margin-right: 0;
+}
+
 .side-menu ul li a {
   display: inline-flex;
   // color: #fff;
@@ -139,4 +146,8 @@
   .boxItem {
     margin-right: 10px;
   }
+}
+
+.set_none {
+  display: none;
 }
