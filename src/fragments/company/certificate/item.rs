@@ -159,7 +159,10 @@ impl Component for CompanyCertificateItem {
             false => {
                 match self.props.manage_btn {
                     true => self.show_certificate_update(),
-                    false => self.show_certificate_data(),
+                    false => html!{<>
+                        {self.modal_full_certificate()}
+                        {self.show_certificate_data()}
+                    </>},
                 }
             },
         }
@@ -182,8 +185,8 @@ impl CompanyCertificateItem {
                     {match self.show_cert {
                         true => html!{<figure class="image is-128x128" style="margin-left: 1rem" >
                             <img
-                                src="https://bulma.io/images/placeholders/128x128.png" alt="Image"
-                                // src={self.props.certificate.file.download_url.clone()}
+                                // src="https://bulma.io/images/placeholders/128x128.png" alt="Image"
+                                src={self.props.certificate.file.download_url.clone()}
                                 loading="lazy"
                             />
                         </figure>},
@@ -219,16 +222,13 @@ impl CompanyCertificateItem {
           <div class="innerBox" >
             <ListErrors error=self.error.clone() clear_error=onclick_clear_error.clone()/>
             <div class="imgBox" >
-              {match self.show_cert {
-                  true => html!{<figure class="image is-256x256" >
-                      <img
-                          src="https://bulma.io/images/placeholders/128x128.png" alt="Image"
-                          // src={self.props.certificate.file.download_url.clone()}
-                          loading="lazy"
-                      />
-                  </figure>},
-                  false => html!{<div class="column">{self.props.certificate.file.filename.clone()}</div>},
-              }}
+                <figure class="image is-256x256" >
+                    <img
+                        src="https://bulma.io/images/placeholders/128x128.png" alt="Image"
+                        // src={self.props.certificate.file.download_url.clone()}
+                        loading="lazy"
+                    />
+                </figure>
             </div>
             <div class="overflow-title has-text-weight-bold">{self.props.certificate.description.clone()}</div>
             <div class="btnBox">
@@ -258,11 +258,8 @@ impl CompanyCertificateItem {
         }
     }
 
-    fn show_certificate_btn(
-        &self,
-    ) -> Html {
-        let onclick_show_cert = self.link
-            .callback(|_| Msg::ShowCert);
+    fn show_certificate_btn(&self) -> Html {
+        let onclick_show_cert = self.link.callback(|_| Msg::ShowCert);
 
         let text_btn = match self.show_cert {
             true => "Hide",
@@ -320,6 +317,31 @@ impl CompanyCertificateItem {
                 { "Download" }
             </button>},
             false => html!{},
+        }
+    }
+
+    fn modal_full_certificate(&self) -> Html {
+        let onclick_show_cert = self.link.callback(|_| Msg::ShowCert);
+
+        let class_modal = match &self.show_cert {
+            true => "modal is-active",
+            false => "modal",
+        };
+
+        html!{
+            <div class=class_modal>
+              <div class="modal-background" onclick=onclick_show_cert.clone() />
+              <div class="modal-content">
+                <p class="image is-4by3">
+                  // <img src="https://bulma.io/images/placeholders/1280x960.png" alt="" />
+                  <img
+                    src={self.props.certificate.file.download_url.clone()}
+                    loading="lazy"
+                  />
+                </p>
+              </div>
+              <button class="modal-close is-large" aria-label="close"></button>
+            </div>
         }
     }
 }
