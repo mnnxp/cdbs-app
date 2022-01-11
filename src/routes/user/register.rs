@@ -26,6 +26,7 @@ pub struct Register {
     regions: Vec<Region>,
     programs: Vec<Program>,
     link: ComponentLink<Self>,
+    show_conditions: bool,
 }
 
 #[derive(GraphQLQuery)]
@@ -46,7 +47,6 @@ struct RegUser;
 
 pub enum Msg {
     Request,
-    Ignore,
     UpdateFirstname(String),
     UpdateLastname(String),
     UpdateSecondname(String),
@@ -57,6 +57,8 @@ pub enum Msg {
     UpdateRegionId(String),
     UpdateList(String),
     GetRegister(String),
+    ShowConditions,
+    Ignore,
 }
 
 impl Component for Register {
@@ -72,6 +74,7 @@ impl Component for Register {
             link,
             programs: Vec::new(),
             regions: Vec::new(),
+            show_conditions: false,
         }
     }
 
@@ -142,6 +145,7 @@ impl Component for Register {
                 self.request.program_id = program_id.parse::<usize>().unwrap_or(1),
             Msg::UpdateRegionId(region_id) =>
                 self.request.region_id = region_id.parse::<usize>().unwrap_or(1),
+            Msg::ShowConditions => self.show_conditions = !self.show_conditions,
             Msg::Ignore => {}
         }
         true
@@ -152,6 +156,8 @@ impl Component for Register {
     }
 
     fn view(&self) -> Html {
+        let onclick_show_conditions = self.link.callback(|_| Msg::ShowConditions);
+
         let onsubmit = self.link.callback(|ev: FocusEvent| {
             ev.prevent_default();
             Msg::Request
@@ -166,23 +172,32 @@ impl Component for Register {
                     </RouterAnchor<AppRoute>>
                 </h2>
                 <ListErrors error=self.error.clone() />
+                {self.modal_conditions()}
                 <form onsubmit=onsubmit>
                     <fieldset>
                         {self.fieldset_profile()}
-                        <button
-                            id="submit-button"
-                            class="button"
-                            type="submit"
-                            disabled=self.request.username.is_empty() &&
-                                self.request.email.is_empty() &&
-                                self.request.password.is_empty()
-                        >
-                            { "Sign up" }
-                        </button>
-                        <span class=classes!("tag", "is-info", "is-light", "is-large")>
-                            {" By clicking, you agree to the "}
-                            <a href="#">{"terms and conditions"}</a>
-                        </span>
+
+                        <div class="columns">
+                            <div class="column">
+                                <button
+                                    id="submit-button"
+                                    class=classes!("button", "is-fullwidth", "is-large")
+                                    type="submit"
+                                    disabled=self.request.username.is_empty() ||
+                                        self.request.email.is_empty() ||
+                                        self.request.password.is_empty()
+                                >
+                                    { "Sign up" }
+                                </button>
+                            </div>
+                            <div class="column">
+                                <div class="column is-flex is-vcentered">
+                                    <span>{"By clicking \"Sign up\", you agree to the ["}</span>
+                                    <a onclick=onclick_show_conditions>{"terms and conditions"}</a>
+                                    <span>{"]"}</span>
+                                </div>
+                            </div>
+                        </div>
                     </fieldset>
                 </form>
             </div>
@@ -236,7 +251,7 @@ impl Register {
             <div class="columns">
                 <div class="column">
                     {self.fileset_generator(
-                        "firstname", "Firstname", "Firstname",
+                        "firstname", "Firstname", "Firstname (not required)",
                         "", // no set icon for input
                         self.request.firstname.clone(),
                         oninput_firstname
@@ -244,7 +259,7 @@ impl Register {
                 </div>
                 <div class="column">
                     {self.fileset_generator(
-                        "lastname", "Lastname", "Lastname",
+                        "lastname", "Lastname", "Lastname (not required)",
                         "", // no set icon for input
                         self.request.lastname.clone(),
                         oninput_lastname
@@ -252,7 +267,7 @@ impl Register {
                 </div>
                 <div class="column">
                     {self.fileset_generator(
-                        "secondname", "Secondname", "Secondname",
+                        "secondname", "Secondname", "Secondname (not required)",
                         "", // no set icon for input
                         self.request.secondname.clone(),
                         oninput_secondname
@@ -261,14 +276,12 @@ impl Register {
             </div>
 
             // third columns (password)
-            <div class="column">
-                {self.fileset_generator(
-                    "password", "Password", "Password",
-                    "fas fa-lock",
-                    self.request.password.clone(),
-                    oninput_password
-                )}
-            </div>
+            {self.fileset_generator(
+                "password", "Password", "Password",
+                "fas fa-lock",
+                self.request.password.clone(),
+                oninput_password
+            )}
 
             // fourth columns (program, region)
             <div class="columns">
@@ -336,20 +349,50 @@ impl Register {
                             value={value}
                             oninput=oninput />
                     },
-                    false => html!{<div class="control has-icons-left">
-                        <input
-                            id={id.to_string()}
-                            class="input"
-                            type={input_type}
-                            placeholder={placeholder.to_string()}
-                            value={value}
-                            oninput=oninput />
-                        <span class="icon is-small is-left">
-                          <i class={icon_left.to_string()}></i>
-                        </span>
-                    </div>},
+                    false => html!{
+                        <div class="control has-icons-left">
+                            <input
+                                id={id.to_string()}
+                                class="input"
+                                type={input_type}
+                                placeholder={placeholder.to_string()}
+                                value={value}
+                                oninput=oninput />
+                            <span class="icon is-small is-left">
+                              <i class={icon_left.to_string()}></i>
+                            </span>
+                        </div>
+                    },
                 }}
             </fieldset>
         }
+    }
+
+    fn modal_conditions(&self) -> Html {
+        let onclick_show_conditions = self.link.callback(|_| Msg::ShowConditions);
+
+        let class_modal = match &self.show_conditions {
+            true => "modal is-active",
+            false => "modal",
+        };
+
+        html!{<div class=class_modal>
+          <div class="modal-background" onclick=onclick_show_conditions.clone() />
+          <div class="modal-card">
+            <header class="modal-card-head">
+              <p class="modal-card-title">{"CADBase conditions"}</p>
+              <button class="delete" aria-label="close" onclick=onclick_show_conditions.clone() />
+            </header>
+            <section class="modal-card-body">
+              <span>{"THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE."}</span>
+              <br/>
+              <span class="has-text-weight-bold">{"If you need support or help, please contact us: "}</span>
+              <a href="mailto:support@cadbase.rs">{"support@cadbase.rs"}</a>
+            </section>
+            <footer class="modal-card-foot">
+              <button class="button is-fullwidth is-large" onclick=onclick_show_conditions>{"Great!"}</button>
+            </footer>
+          </div>
+        </div>}
     }
 }
