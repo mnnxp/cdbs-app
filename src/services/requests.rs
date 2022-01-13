@@ -11,10 +11,10 @@ use yew::services::storage::{Area, StorageService};
 use crate::error::Error;
 use crate::types::{SlimUser, ErrorInfo};
 
-const API_ROOT: &str = dotenv!("API_ROOT");
-// const API_GPL: &str = dotenv!("API_GPL");
+const BACKEND_HOST: &str = dotenv!("BACKEND_HOST");
+const BACKEND_PORT: &str = dotenv!("BACKEND_PORT");
+
 const TOKEN_KEY: &str = dotenv!("TOKEN_KEY");
-// const TOKEN_KEY: &str = "yew.token";
 const LOGGED_USER_KEY: &str = dotenv!("LOGGED_USER_KEY");
 
 lazy_static! {
@@ -136,7 +136,8 @@ impl Requests {
             }
         };
 
-        let url = format!("{}{}", API_ROOT, url);
+        let url = format!("http://{}:{}{}", BACKEND_HOST, BACKEND_PORT, url);
+        debug!("complect url: {}", url);
         let mut builder = Request::builder()
             .method(method)
             .uri(url.as_str())

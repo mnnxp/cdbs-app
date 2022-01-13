@@ -12,9 +12,9 @@ use crate::services::{get_token};
 
 // use serde
 
-pub const API_GPL: &str = dotenv!("API_GPL");
-
-// type ObjectId = String;
+const BACKEND_HOST: &str = dotenv!("BACKEND_HOST");
+const BACKEND_PORT: &str = dotenv!("BACKEND_PORT");
+const API_GPL: &str = dotenv!("API_GPL");
 
 /// Something wrong has occurred while fetching an external resource.
 #[derive(Debug, Clone, PartialEq)]
@@ -40,11 +40,6 @@ pub struct HttpHeaders {
   authorization: String
 }
 
-// let token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJlbWFpbCI6ImlvazJAYnVkc2hvbWUuY29tIiwidXNlcm5hbWUiOiLmiJHmmK9vazIiLCJleHAiOjEwMDAwMDAwMDAwfQ.Gk98TjaFPpyW2Vdunn-pVqSPizP_zzTr89psBTE6zzfLQStUnBEXA2k0yVrS0CHBt9bHLLcFgmo4zYiioRBzBg";
-//     let build_query = AllUsers::build_query(all_users::Variables {
-//         token: token.to_string(),
-//     });
-
 pub async fn make_query<T>(build_query: graphql_client::QueryBody<T>) -> Result<String, FetchError>
 where
     T: Serialize,
@@ -61,7 +56,12 @@ where
       }))).unwrap());
     }
 
-    let url = String::from(API_GPL);
+    let url = format!(
+        "http://{}:{}/{}",
+        BACKEND_HOST,
+        BACKEND_PORT,
+        API_GPL
+    );
     let request = Request::new_with_str_and_init(url.as_str(), &opts)?;
 
     let window = yew::utils::window();
@@ -71,25 +71,3 @@ where
     let text = JsFuture::from(resp.text()?).await?;
     Ok(text.as_string().unwrap())
 }
-
-// pub async fn make_query<T, Y>(get_query: Y, query:T) -> Result<String, FetchError>
-// where
-//     T: Serialize,
-//     Y: Fn(T) -> graphql_client::QueryBody<T>,
-// {
-//     let builder: graphql_client::QueryBody<T> = get_query(query);
-//     let query = serde_json::json!(builder);
-//     let mut opts = RequestInit::new();
-//     opts.method("POST");
-//     opts.body(Some(&JsValue::from_str(query.to_string().as_str())));
-//     opts.mode(RequestMode::Cors);
-//     let url = String::from(API_GPL);
-//     let request = Request::new_with_str_and_init(url.as_str(), &opts)?;
-
-//     let window = yew::utils::window();
-//     let resp_value = JsFuture::from(window.fetch_with_request(&request)).await?;
-//     let resp: Res = resp_value.dyn_into().unwrap();
-
-//     let text = JsFuture::from(resp.text()?).await?;
-//     Ok(text.as_string().unwrap())
-// }

@@ -1,3 +1,18 @@
+[build]
+target = "index.html"
+# Build in release mode.
+release = true
+# The output dir for all final assets.
+dist = "dist"
+# The public URL from which assets are to be served.
+public_url = "/"
+
 [serve]
-port = 3001
-open = true
+# The address to serve on.
+addr = "0.0.0.0"
+# The port to serve on.
+port = 3080
+# Open a browser tab once the initial build is complete.
+open = false
+# Disable auto-reload of the web app.
+no_autoreload = false
