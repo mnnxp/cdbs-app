@@ -32,7 +32,14 @@ use crate::types::{
     ComponentModificationInfo,
     DownloadFile
 };
-use crate::gqls::query_structs::components::{*};
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/components.graphql",
+    response_derives = "Debug"
+)]
+pub struct ComponentFiles;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -444,7 +451,7 @@ impl ShowComponent {
                   html!{<div style="padding-left: 0.75rem;" />}
                 }}
                 // <img class="imgBox" src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
-              
+
               <div class="column">
                 <div class="media">
                     <div class="media-content">
