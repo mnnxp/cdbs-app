@@ -23,13 +23,16 @@ use crate::fragments::{
         ModificationsTable, FilesOfFilesetCard, ManageFilesOfFilesetBlock,
         ComponentFilesBlock, ModificationFilesTableCard, SpecsTags, KeywordsTags,
     },
+    img_showcase::ImgShowcase,
 };
 use crate::gqls::make_query;
-use crate::services::is_authenticated;
+use crate::services::{is_authenticated, get_logged_user};
 use crate::types::{
     UUID, ComponentInfo, SlimUser, ComponentParam,
     ComponentModificationInfo,
+    DownloadFile
 };
+use crate::gqls::query_structs::components::{*};
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -79,6 +82,7 @@ pub struct ShowComponent {
     open_fileset_files_card: bool,
     open_standard_info: bool,
     show_related_standards: bool,
+    img_arr : Option<Vec<DownloadFile>>,
 }
 
 #[derive(Properties, Clone)]
@@ -106,6 +110,7 @@ pub enum Msg {
     ShowModificationFilesList,
     ShowFilesetFilesBlock(bool),
     OpenComponentSetting,
+    GetDownloadFileResult(String),
     ClearError,
     Ignore,
 }
@@ -138,6 +143,7 @@ impl Component for ShowComponent {
             open_fileset_files_card: false,
             open_standard_info: false,
             show_related_standards: false,
+            img_arr: None
         }
     }
 
@@ -151,7 +157,7 @@ impl Component for ShowComponent {
             .to_string();
         // get flag changing current component in route
         let not_matches_component_uuid = target_component_uuid != self.current_component_uuid;
-        // debug!("self.current_component_uuid {:#?}", self.current_component_uuid);
+        debug!("self.current_component_uuid {:#?}", self.current_component_uuid);
 
         let link = self.link.clone();
 
@@ -171,13 +177,32 @@ impl Component for ShowComponent {
                 self.current_filesets_program.clear();
             }
 
-            spawn_local(async move {
+            {
+              let target_component_uuid = target_component_uuid.clone();
+              let link = self.link.clone();
+              spawn_local(async move {
                 let res = make_query(GetComponentData::build_query(get_component_data::Variables{
                     component_uuid: target_component_uuid,
                 })).await.unwrap();
 
                 link.send_message(Msg::GetComponentData(res));
-            })
+            })};
+
+            spawn_local(async move {
+              let ipt_component_files_arg = component_files::IptComponentFilesArg{
+                  componentUuid: target_component_uuid.clone(),
+                  filesUuids: None,
+                  limit: None,
+                  offset: None,
+              };
+              let res = make_query(ComponentFiles::build_query(
+                  component_files::Variables {
+                      ipt_component_files_arg,
+                  }
+              )).await;
+              debug!("res {:?}", res);
+              link.send_message(Msg::GetDownloadFileResult(res.unwrap()));
+          });
         }
     }
 
@@ -271,8 +296,9 @@ impl Component for ShowComponent {
                         self.subscribers = component_data.subscribers;
                         self.is_followed = component_data.is_followed;
                         self.current_component_uuid = component_data.uuid.clone();
-                        if let Some(user) = &self.props.current_user {
+                        if let Some(user) = get_logged_user() {
                             self.current_user_owner = component_data.owner_user.uuid == user.uuid;
+                            debug!("Component data: {:?}", component_data);
                         }
                         // length check for show btn more/less
                         self.show_full_description = component_data.description.len() < 250;
@@ -302,6 +328,23 @@ impl Component for ShowComponent {
                             .unwrap_or_default();
 
                         self.component = Some(component_data);
+                    }
+                    true => self.error = Some(get_error(&data)),
+                }
+            },
+            Msg::GetDownloadFileResult(res) => {
+                let data: Value = serde_json::from_str(res.as_str()).unwrap();
+                let res_value = data.as_object().unwrap().get("data").unwrap();
+
+                match res_value.is_null() {
+                    false => {
+                        let download_file: Vec<DownloadFile> =
+                            serde_json::from_value(res_value.get("componentFiles").unwrap().clone())
+                                .unwrap();
+                        debug!("Download file: {:?}", download_file);
+                        if download_file.len() > 0 {
+                            self.img_arr = Some(download_file);
+                        }
                     }
                     true => self.error = Some(get_error(&data)),
                 }
@@ -392,9 +435,16 @@ impl ShowComponent {
 
         html!{
             <div class="columns">
-              <div class="column is-one-quarter">
-                <img class="imgBox" src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
-              </div>
+                {if self.img_arr.is_some() {
+                  html!{<div class="column is-one-quarter show-img-box">
+                          <ImgShowcase img_arr=self.img_arr.clone() />
+                        </div>
+                      }
+                }else {
+                  html!{<div style="padding-left: 0.75rem;" />}
+                }}
+                // <img class="imgBox" src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
+              
               <div class="column">
                 <div class="media">
                     <div class="media-content">
