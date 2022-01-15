@@ -136,7 +136,7 @@ impl Requests {
             }
         };
 
-        let url = format!("http://{}:{}{}", BACKEND_HOST, BACKEND_PORT, url);
+        let url = format!("{}:{}{}", BACKEND_HOST, BACKEND_PORT, url);
         debug!("complect url: {}", url);
         let mut builder = Request::builder()
             .method(method)

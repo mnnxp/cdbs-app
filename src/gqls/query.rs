@@ -57,7 +57,7 @@ where
     }
 
     let url = format!(
-        "http://{}:{}/{}",
+        "{}:{}/{}",
         BACKEND_HOST,
         BACKEND_PORT,
         API_GPL
