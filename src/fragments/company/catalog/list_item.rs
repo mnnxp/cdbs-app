@@ -170,7 +170,7 @@ impl ListItemCompany {
             shortname,
             inn,
             description,
-            // image_file,
+            image_file,
             region,
             company_type,
             is_supplier,
@@ -198,8 +198,11 @@ impl ListItemCompany {
                   <div class="media-left">
                     <figure class="image is-96x96">
                         <div hidden={!is_supplier} class="top-tag" >{"supplier"}</div>
-                        <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
-                        // <img src={image_file.download_url.to_string()} alt="Favicon profile"/>
+                        // <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
+                        <img
+                            src={image_file.download_url.clone()} alt="Favicon profile"
+                            loading="lazy"
+                        />
                     </figure>
                   </div>
                   <div class="media-content">
@@ -252,7 +255,7 @@ impl ListItemCompany {
     fn showing_in_box(&self) -> Html {
         let ShowCompanyShort {
             shortname,
-            // image_file,
+            image_file,
             region,
             company_type,
             is_supplier,
@@ -279,8 +282,11 @@ impl ListItemCompany {
             <div class="innerBox" >
               <div class="imgBox" >
                 <div class="top-tag" hidden={!is_supplier} >{"supplier"}</div>
-                <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
-                // <img src={image_file.download_url.to_string()} alt="Favicon profile"/>
+                // <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
+                <img
+                    src={image_file.download_url.to_string()} alt="Favicon profile"
+                    loading="lazy"
+                />
               </div>
               <div>
                 {"from "}<span class="id-box has-text-grey-light has-text-weight-bold">{region.region.to_string()}</span>

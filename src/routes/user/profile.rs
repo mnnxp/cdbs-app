@@ -430,7 +430,7 @@ impl Profile {
 
     fn view_card(&self) -> Html {
         let UserDataCard {
-            // image_file,
+            image_file,
             firstname,
             lastname,
             username,
@@ -445,8 +445,11 @@ impl Profile {
         html!{<div class="media">
             <div class="media-left">
               <figure class="image is-48x48">
-                <img src="https://bulma.io/images/placeholders/96x96.png" alt="Placeholder image"/>
-                // <img src={image_file.to_string()} alt="Favicon profile"/>
+                // <img src="https://bulma.io/images/placeholders/96x96.png" alt="Placeholder image"/>
+                <img
+                    src={image_file.clone()} alt="Favicon profile"
+                    loading="lazy"
+                />
               </figure>
             </div>
             <div class="media-content">

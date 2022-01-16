@@ -187,8 +187,11 @@ impl ListItemStandard {
                   <div class="media-left">
                     <figure class="image is-96x96">
                       <div class="top-tag" >{standard_status.name.to_string()}</div>
-                      <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
-                      // <img src={owner_company.image_file.download_url.to_string()} alt="Favicon profile"/>
+                      // <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
+                      <img
+                        src={owner_company.image_file.download_url.to_string()} alt="Favicon profile"
+                        loading="lazy"
+                      />
                     </figure>
                   </div>
                   <div class="media-content">
@@ -280,7 +283,6 @@ impl ListItemStandard {
               <div class="imgBox" >
                 <div class="top-tag" >{standard_status.name.to_string()}</div>
                 <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
-                // <img src={image_file.download_url.to_string()} alt="Favicon profile"/>
               </div>
               <div>
                 {"classifier "} <span class="id-box has-text-grey-light has-text-weight-bold">{

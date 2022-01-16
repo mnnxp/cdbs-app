@@ -309,8 +309,11 @@ impl ShowCompany {
                 <div class="media-left">
                   <figure class=classes!("image", size_favicon)>
                     // <div hidden={!company_data.is_supplier} class="top-tag" >{"supplier"}</div>
-                    <img src="https://bulma.io/images/placeholders/96x96.png" alt="Placeholder image"/>
-                    // <img src={company_data.image_file.download_url.to_string()} alt="Favicon company"/>
+                    // <img src="https://bulma.io/images/placeholders/96x96.png" alt="Placeholder image"/>
+                    <img
+                        src={company_data.image_file.download_url.to_string()} alt="Favicon company"
+                        loading="lazy"
+                    />
                   </figure>
                 </div>
                 <div class="media-content">
