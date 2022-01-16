@@ -56,10 +56,12 @@ impl Component for ImgShowcase {
         let selected_img = self.selected_img;
         html! {
           <div class="showImg">
-            <div class="itemBox">
-              {for self.props.img_arr.as_ref().unwrap().iter().enumerate().map(|x|
-                self.item_generator((x.0, x.1.clone()))
-              )}
+            <div class="outBox">
+              <div class="itemBox">
+                {for self.props.img_arr.as_ref().unwrap().iter().enumerate().map(|x|
+                  self.item_generator((x.0, x.1.clone()))
+                )}
+              </div>
             </div>
             <div class="mainImgBox">
               <img onclick=self.link.callback(|_| Msg::ShowCert) src=self.props.img_arr.as_ref().unwrap()[selected_img].download_url.clone() alt="" srcset="" />
@@ -81,7 +83,6 @@ impl ImgShowcase {
             >
               <img src=file.download_url alt="" srcset="" />
             </div>
-            
           </>
         )
     }

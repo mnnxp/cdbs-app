@@ -153,7 +153,7 @@
 }
 
 .show-img-box {
-  width: auto!important;
+  width: auto !important;
   display: inline-flex;
   align-items: center;
   margin: 20px;
@@ -161,12 +161,18 @@
 
 .showImg {
   $bigHW: 200px;
-  $smallHW: 50px;
+  $smallHW: 42px;
 
   display: flex;
 
-  .modal-content{
-    img{
+  .outBox {
+    width: 62px;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .modal-content {
+    img {
       object-fit: contain;
     }
   }
@@ -185,7 +191,11 @@
   }
   .itemBox {
     height: $bigHW;
-    overflow: auto;
+    width: 100%;
+    overflow: hidden;
+    overflow-y: scroll;
+    padding-right: 50px;
+    box-sizing: content-box;
   }
   .itemBox .item {
     width: $smallHW;
