@@ -108,7 +108,7 @@ impl ImgShowcase {
                   />
                 </p>
               </div>
-              <button class="modal-close is-large" aria-label="close"></button>
+              <button class="modal-close is-large" aria-label="close" onclick=onclick_show_cert />
             </div>
         }
     }
