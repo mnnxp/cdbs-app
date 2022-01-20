@@ -180,7 +180,7 @@ impl Header {
                 </svg>
             },
             false => html!{
-                <svg width="145" height="35" margin="2vh" xmlns="http://www.w3.org/2000/svg">
+                <svg width="145" height="35" xmlns="http://www.w3.org/2000/svg">
                         <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
                         <g id="1-copy" transform="translate(-136.000000, -89.000000)">
                             <g id="LOGO" transform="translate(136.000000, 89.000000)">
