@@ -30,6 +30,7 @@ pub struct ModificationFileListItem {
     props: Props,
     link: ComponentLink<Self>,
     file_uuid: UUID,
+    download_url: String,
 }
 
 pub enum Msg {
@@ -48,6 +49,7 @@ impl Component for ModificationFileListItem {
             props,
             link,
             file_uuid: String::new(),
+            download_url: String::new(),
         }
     }
 
@@ -133,15 +135,22 @@ impl ModificationFileListItem {
     }
 
     fn show_download_tag(&self) -> Html {
-        let onclick_download_btn = self.link
-            .callback(|_| Msg::RequestDownloadFile);
+        let onclick_download_btn =
+            self.link.callback(|_| Msg::RequestDownloadFile);
 
-        html!{<td>
-            <a onclick=onclick_download_btn >
-              <span class="icon" >
-                <i class="fas fa-file-download" aria-hidden="true"></i>
-              </span>
-            </a>
-        </td>}
+        match self.download_url.is_empty() {
+            true => html!{<td>
+                <button class="button is-ghost" onclick=onclick_download_btn>
+                  <span>{"Get link"}</span>
+                </button>
+            </td>},
+            false => html!{<td>
+                <a class="button is-ghost" href={self.download_url.clone()}  target="_blank">
+                  <span class="icon" >
+                    <i class="fas fa-file-download" aria-hidden="true"></i>
+                  </span>
+                </a>
+            </td>},
+        }
     }
 }

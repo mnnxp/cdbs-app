@@ -310,12 +310,14 @@ impl CompanyCertificateItem {
 
     fn show_download_btn(&self) -> Html {
         match self.props.download_btn {
-            true => html!{<button id={"down-cert"}
-                class="button is-light is-fullwidth has-text-weight-bold"
-                href={ self.props.certificate.file.download_url.clone() }
-                download={ self.props.certificate.file.filename.clone() }>
-                { "Download" }
-            </button>},
+            true => html!{
+                <a id={"down-cert"}
+                    class="button is-light is-fullwidth has-text-weight-bold"
+                    href={ self.props.certificate.file.download_url.clone() }
+                    download={ self.props.certificate.file.filename.clone() }>
+                    { "Download" }
+                </a>
+            },
             false => html!{},
         }
     }
