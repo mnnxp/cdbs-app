@@ -8,10 +8,16 @@
   flex-wrap: wrap;
 }
 
-.header-logo{
+.header-logo {
   position: absolute;
-  top: .2vh;
-  z-index: -1;
+  // top: .2vh;
+  // z-index: -1;
+}
+
+// .header-logo .logo-full{}
+
+.logo-bookmark {
+  top: -2vh;
 }
 
 .navbar-item>.button{
