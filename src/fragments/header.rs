@@ -1,6 +1,7 @@
 use yew::{
   agent::Bridged, html, Bridge, Callback, Component, ComponentLink,
   MouseEvent, Html, Properties, ShouldRender,
+  classes
 };
 use yew_router::{
     service::RouteService,
@@ -19,6 +20,7 @@ pub struct Header {
     router_agent: Box<dyn Bridge<RouteAgent>>,
     link: ComponentLink<Self>,
     open_notifications_page: bool,
+    is_active: bool,
 }
 
 // #[derive(Clone)]
@@ -37,7 +39,8 @@ pub struct Props {
 pub enum Msg {
   Logout,
   LogoutComplete(String),
-  Ignore
+  Ignore,
+  TriggerMenu
 }
 
 impl Component for Header {
@@ -50,6 +53,7 @@ impl Component for Header {
             router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             link,
             open_notifications_page: false,
+            is_active: false,
         }
     }
 
@@ -80,6 +84,9 @@ impl Component for Header {
               // Redirect to home page
               self.router_agent.send(ChangeRoute(AppRoute::Home.into()));
           },
+          Msg::TriggerMenu => {
+              self.is_active = !self.is_active;
+          },
           Msg::Ignore => {}
         }
 
@@ -103,12 +110,13 @@ impl Component for Header {
         //     },
         // ];
 
-        let onclick = self.link.callback(|_| Msg::Logout);
+        let onclick : Callback<MouseEvent> = self.link.callback(|_| Msg::Logout);
+        let triggrt_menu : Callback<MouseEvent> = self.link.callback(|_| Msg::TriggerMenu);
 
         html!{
             <nav class="navbar" role="navigation" aria-label="main navigation">
                 <div class="navbar-brand">
-                    <h1 class="navbar-item is-size-3">
+                    <h1 class="navbar-item is-size-3 header-logo">
                         <RouterAnchor<AppRoute> route=AppRoute::Home>
                             <svg width="66" height="91" viewBox="0 0 66 91" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M0 0H66V82C66 86.9706 61.9706 91 57 91H9C4.02944 91 0 86.9706 0 82V0Z" fill="#F3F6FF"/>
@@ -121,8 +129,13 @@ impl Component for Header {
                             </svg>
                         </RouterAnchor<AppRoute>>
                     </h1>
+                    <div role="button" class=classes!("navbar-burger", if self.is_active { "is-active" } else { "" }) onclick=triggrt_menu aria-label="menu" aria-expanded="false">
+                      <span aria-hidden="true"></span>
+                      <span aria-hidden="true"></span>
+                      <span aria-hidden="true"></span>
+                    </div>
                 </div>
-                <div class="navbar-menu">
+                <div class=classes!("navbar-menu", if self.is_active { "is-active" } else { "" })>
                     // <div class="navbar-start">
                     //     {
                     //       for nav_menu.iter().map(|item| {
@@ -152,20 +165,28 @@ impl Component for Header {
 impl Header {
     fn logged_out_view(&self) -> Html {
         html!{
-            <div class="buttons">
-                 <RouterAnchor<AppRoute> route=AppRoute::Login classes="button">
-                  { "Sign in" }
-                 </RouterAnchor<AppRoute>>
-                 <RouterAnchor<AppRoute> route=AppRoute::Register classes="button">
-                  { "Sign up" }
-                 </RouterAnchor<AppRoute>>
-            </div>
+          <div class="navbar-item">
+            <RouterAnchor<AppRoute> route=AppRoute::Login classes="button">
+              { "Sign in" }
+            </RouterAnchor<AppRoute>>
+            <RouterAnchor<AppRoute> route=AppRoute::Register classes="button">
+              { "Sign up" }
+            </RouterAnchor<AppRoute>>
+          </div>
+            // <div class="buttons">
+            //      <RouterAnchor<AppRoute> route=AppRoute::Login classes="button">
+            //       { "Sign in" }
+            //      </RouterAnchor<AppRoute>>
+            //      <RouterAnchor<AppRoute> route=AppRoute::Register classes="button">
+            //       { "Sign up" }
+            //      </RouterAnchor<AppRoute>>
+            // </div>
         }
     }
 
     fn logged_in_view(&self, user_info: &SlimUser, logout:yew::Callback<MouseEvent> ) -> Html {
         html!{
-            <div class="buttons">
+            <div class="buttons navbar-item">
                  {match self.open_notifications_page {
                      true => html!{
                          <button id="header-notifications"
@@ -177,48 +198,39 @@ impl Header {
                          </button>
                      },
                      false => html!{
-                         <RouterAnchor<AppRoute> route=AppRoute::Notifications classes="button" >
+                         <RouterAnchor<AppRoute> route=AppRoute::Notifications classes="button navbar-item" >
                              <span class="icon is-small" >
                                <i class="far fa-bell"></i>
                              </span>
                          </RouterAnchor<AppRoute>>
                      },
                  }}
-                 <div class="dropdown is-hoverable  is-right">
-                  <div class="dropdown-trigger">
-                    <button
-                        id="header-menu-button"
-                        class="button"
-                        aria-haspopup="true"
-                        aria-controls="dropdown-menu">
-                          // <span>
-                          //   <RouterAnchor<AppRoute> route=AppRoute::Profile(user_info.username.clone()) >
-                          //     { &user_info.username }
-                          //   </RouterAnchor<AppRoute>>
-                          // </span>
-                          <span>{ &user_info.username }</span>
-                          <span class="icon is-small">
-                            <i class="fas fa-angle-down" aria-hidden="true"></i>
-                          </span>
-                    </button>
-                  </div>
-                  <div class="dropdown-menu" id="dropdown-menu" role="menu">
-                    <div class="dropdown-content">
-                      <RouterAnchor<AppRoute> route=AppRoute::Profile(user_info.username.clone()) >
-                        <a class="dropdown-item">
-                          { "Profile" }
-                        </a>
-                      </RouterAnchor<AppRoute>>
-                      <RouterAnchor<AppRoute> route=AppRoute::Settings>
-                        <a class="dropdown-item">
-                          { "Settings" }
-                        </a>
-                      </RouterAnchor<AppRoute>>
-                      <hr class="dropdown-divider" />
-                      <a class="dropdown-item" onclick=logout >
-                        {"Logout"}
-                      </a>
-                    </div>
+                 <div class="navbar-item has-dropdown is-hoverable">
+                  <a id="header-menu-button"
+                  class="navbar-link"
+                  aria-haspopup="true"
+                  aria-controls="dropdown-menu">
+                      // <span>
+                      //   <RouterAnchor<AppRoute> route=AppRoute::Profile(user_info.username.clone()) >
+                      //     { &user_info.username }
+                      //   </RouterAnchor<AppRoute>>
+                      // </span>
+                      <span>{ &user_info.username }</span>
+                      // <span class="icon is-small">
+                      //   <i class="fas fa-angle-down" aria-hidden="true"></i>
+                      // </span>
+                    </a>
+                  <div class="navbar-dropdown is-boxed is-right" id="dropdown-menu" role="menu">
+                    <RouterAnchor<AppRoute> classes="navbar-item" route=AppRoute::Profile(user_info.username.clone()) >
+                    { "Profile" }
+                    </RouterAnchor<AppRoute>>
+                    <RouterAnchor<AppRoute> classes="navbar-item" route=AppRoute::Settings>
+                    { "Settings" }
+                    </RouterAnchor<AppRoute>>
+                    <hr class="navbar-divider" />
+                    <a class="navbar-item" onclick=logout >
+                      {"Logout"}
+                    </a>
                   </div>
                 </div>
             </div>

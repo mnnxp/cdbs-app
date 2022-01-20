@@ -8,6 +8,15 @@
   flex-wrap: wrap;
 }
 
+.header-logo{
+  position: absolute;
+  top: .2vh;
+}
+
+.navbar-item>.button{
+  margin-bottom: 0;
+}
+
 .side-menu {
   // width: 14em;
   position: sticky;
