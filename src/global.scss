@@ -11,6 +11,7 @@
 .header-logo{
   position: absolute;
   top: .2vh;
+  z-index: -1;
 }
 
 .navbar-item>.button{
