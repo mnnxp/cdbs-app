@@ -54,7 +54,7 @@ impl Component for Footer {
                     //      { "Rus" }
                     //   </a>
                     // </div>
-                    <a class=vec!("social-network") href="mailto:info@cadbase.ru" title="Email">
+                    <a class=vec!("social-network") href="mailto:info@cadbase.rs" title="Email">
                         <i class=vec!("fas", "fa-lg", "fa-envelope")></i>
                     </a>
                     // <a class=vec!("social-network") href="#" title="YouTube">
