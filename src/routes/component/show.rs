@@ -549,7 +549,7 @@ impl ShowComponent {
             .callback(|_| Msg::ShowModificationFilesList);
 
         html!{<>
-            <h2>{"Modifications"}</h2>
+            <h2 class="has-text-weight-bold">{"Modifications"}</h2>
             <ModificationsTable
                 modifications = component_data.component_modifications.clone()
                 select_modification = self.select_modification_uuid.clone()
@@ -600,7 +600,7 @@ impl ShowComponent {
     ) -> Html {
         html!{
             <div class="column">
-              <h2>{"Сharacteristics of the component"}</h2>
+              <h2 class="has-text-weight-bold">{"Сharacteristics of the component"}</h2>
               <div class="card">
                 <table class="table is-fullwidth">
                     <tbody>
@@ -663,13 +663,13 @@ impl ShowComponent {
             <div class="columns">
                 {self.show_additional_params(component_data)}
                 <div class="column">
-                    <h2>{"Component files"}</h2>
+                    <h2 class="has-text-weight-bold">{"Component files"}</h2>
                     {self.show_component_files(component_data)}
                 </div>
             </div>
             <div class="columns">
                 <div class="column">
-                    <h2>{"Standards"}</h2>
+                    <h2 class="has-text-weight-bold">{"Standards"}</h2>
                     {self.show_component_standards(component_data)}
                 </div>
                 <div class="column">
@@ -698,7 +698,7 @@ impl ShowComponent {
         component_data: &ComponentInfo,
     ) -> Html {
         html!{<>
-              <h2>{"Specs"}</h2>
+              <h2 class="has-text-weight-bold">{"Specs"}</h2>
               <div class="card">
                 <SpecsTags
                     show_manage_btn = false
@@ -714,7 +714,7 @@ impl ShowComponent {
         component_data: &ComponentInfo,
     ) -> Html {
         html!{<>
-              <h2>{"Keywords"}</h2>
+              <h2 class="has-text-weight-bold">{"Keywords"}</h2>
               <div class="card">
                 <KeywordsTags
                     show_delete_btn = false
@@ -735,7 +735,7 @@ impl ShowComponent {
         };
 
         html!{<>
-            <h2>{table_label}</h2>
+            <h2 class="has-text-weight-bold">{table_label}</h2>
             <div class="card">
               <table class="table is-fullwidth">
                 <tbody>
@@ -877,7 +877,7 @@ impl ShowComponent {
     fn show_fileset_files_card(&self) -> Html {
         match &self.open_fileset_files_card {
             true => html!{<>
-                <h2>{"Files of select fileset"}</h2>
+                <h2 class="has-text-weight-bold">{"Files of select fileset"}</h2>
                 <FilesOfFilesetCard
                     show_download_btn = false
                     select_fileset_uuid = self.select_fileset_uuid.clone()
