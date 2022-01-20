@@ -18,6 +18,10 @@
   margin-bottom: 0;
 }
 
+.navbar-item>.button:first-child{
+  margin-right: 12px;
+}
+
 .side-menu {
   // width: 14em;
   position: sticky;
