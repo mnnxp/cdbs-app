@@ -73,7 +73,7 @@ pub fn set_logged_user(logged_user: Option<String>) {
     *logged_user_lock = logged_user;
 }
 
-/// Get authenticated user from lazy static.
+/// Get authenticated user from browser storage
 pub fn get_logged_user() -> Option<SlimUser> {
     let logged_user_lock = LOGGED_USER.read();
     let logged_user_lock: Option<SlimUser> = serde_json::from_str(
