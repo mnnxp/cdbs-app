@@ -1,6 +1,6 @@
 use yew::{
     agent::Bridged, html, Bridge, Component, ComponentLink,
-    FocusEvent, Html, InputData, ChangeData, Properties, ShouldRender,
+    Html, InputData, ChangeData, Properties, ShouldRender,
 };
 use yew_router::{
     agent::RouteRequest::ChangeRoute,
@@ -209,29 +209,27 @@ impl Component for CreateCompany {
     }
 
     fn view(&self) -> Html {
-        let onsubmit_create_company = self.link.callback(|ev: FocusEvent| {
-            ev.prevent_default();
-            Msg::RequestCreateCompany
-        });
+        let onclick_create_company =
+            self.link.callback(|_| Msg::RequestCreateCompany);
 
         html!{
             <div class="settings-page">
                 <ListErrors error=self.error.clone()/>
                 <div class="container page">
                     <div class="row">
+                        <h1 class="title">{ "Create company" }</h1>
                         <div class="card">
-                            <h1 class="title">{ "Create company" }</h1>
-                            <form onsubmit=onsubmit_create_company>
-                                { self.fieldset_company() }
-                                <button
-                                    id="create-company"
-                                    class="button"
-                                    type="submit"
-                                    disabled=false>
-                                    { "Create company" }
-                                </button>
-                            </form>
+                            { self.fieldset_company() }
                         </div>
+                        <button
+                            id="create-company"
+                            class="button is-success is-medium is-fullwidth"
+                            type="submit"
+                            disabled=false
+                            onclick=onclick_create_company
+                            >
+                            { "Create" }
+                        </button>
                     </div>
                 </div>
             </div>

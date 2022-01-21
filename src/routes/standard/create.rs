@@ -297,7 +297,7 @@ impl Component for CreateStandard {
                 <div class="container page">
                     <div class="row">
                         <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
-                        // <br/>
+                        <h1 class="title">{ "Create standard" }</h1>
                         {self.show_main_card()}
                         <br/>
                         {self.show_standard_params()}
