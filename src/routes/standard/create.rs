@@ -298,11 +298,11 @@ impl Component for CreateStandard {
                     <div class="row">
                         <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
                         // <br/>
-                        {self.show_manage_btn()}
-                        <br/>
                         {self.show_main_card()}
                         <br/>
                         {self.show_standard_params()}
+                        <br/>
+                        {self.show_manage_btn()}
                     </div>
                 </div>
             </div>
@@ -504,29 +504,20 @@ impl CreateStandard {
     }
 
     fn show_manage_btn(&self) -> Html {
-        let onclick_create_changes = self.link
-            .callback(|_| Msg::RequestManager);
+        let onclick_create_changes =
+            self.link.callback(|_| Msg::RequestManager);
 
-        html!{
-            <div class="media">
-                <div class="media-content">
-                    // html!{"Data updated"}
-                </div>
-                <div class="media-right">
-                    {match self.supplier_list.is_empty() {
-                        true => html!{},
-                        false => html!{
-                            <button
-                                id="create-data"
-                                class="button"
-                                onclick={onclick_create_changes}
-                                disabled={self.disable_create_btn} >
-                                {"Create"}
-                            </button>
-                        },
-                    }}
-                </div>
-            </div>
-        }
+        {match self.supplier_list.is_empty() {
+            true => html!{},
+            false => html!{
+                <button
+                    id="create-data"
+                    class="button is-success is-medium is-fullwidth"
+                    onclick={onclick_create_changes}
+                    disabled={self.disable_create_btn} >
+                    {"Create"}
+                </button>
+            },
+        }}
     }
 }
