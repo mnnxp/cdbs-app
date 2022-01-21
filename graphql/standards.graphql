@@ -26,6 +26,14 @@ query GetStandardData($standardUuid: UUID!) {
   }
 }
 
+query StandardFilesList($standardUuid: UUID!) {
+  standard(standardUuid: $standardUuid) {
+    standardFiles {
+      ...showFileRelatedDataFields
+    }
+  }
+}
+
 query GetUpdateStandardDataOpt($standardUuid: UUID!, $iptCompaniesArg: IptCompaniesArg!) {
   standard(standardUuid: $standardUuid) {
     ...standardAndRelatedDataFields

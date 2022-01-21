@@ -1,4 +1,4 @@
-use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
+use yew::{Component, Callback, ComponentLink, Html, Properties, ShouldRender, html};
 use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
@@ -31,6 +31,7 @@ pub struct Props {
     pub show_delete_btn: bool,
     pub standard_uuid: UUID,
     pub file: ShowFileInfo,
+    pub callback_delete_file: Option<Callback<UUID>>,
 }
 
 pub struct FileItem {
@@ -116,9 +117,13 @@ impl Component for FileItem {
 
                 match res.is_null() {
                     false => {
-                        let result: bool = serde_json::from_value(res.get("deleteStandardFile").unwrap().clone()).unwrap();
-                        debug!("deleteFile: {:?}", result);
-                        self.get_result_delete = result;
+                        self.get_result_delete = serde_json::from_value(res.get("deleteStandardFile").unwrap().clone()).unwrap();
+                        debug!("deleteFile: {:?}", self.get_result_delete);
+                        if self.get_result_delete {
+                            if let Some(rollback) = &self.props.callback_delete_file {
+                                rollback.emit(self.props.file.uuid.clone());
+                            }
+                        }
                     },
                     true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }

@@ -28,7 +28,7 @@ use crate::services::{
     is_authenticated, get_logged_user
 };
 use crate::types::{
-    UUID, StandardInfo, SlimUser, Region, TypeAccessInfo, UploadFile,
+    UUID, StandardInfo, SlimUser, Region, TypeAccessInfo, UploadFile, ShowFileInfo,
     ShowCompanyShort, StandardUpdatePreData, StandardUpdateData, StandardStatus,
 };
 
@@ -77,6 +77,14 @@ struct UploadStandardFiles;
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/standards.graphql",
+    response_derives = "Debug"
+)]
+struct StandardFilesList;
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
     query_path = "./graphql/relate.graphql",
     response_derives = "Debug"
 )]
@@ -90,6 +98,7 @@ pub struct StandardSettings {
     request_standard: StandardUpdatePreData,
     request_upload_data: Vec<UploadFile>,
     request_upload_file: Callback<Result<Option<String>, Error>>,
+    request_upload_confirm: Vec<UUID>,
     request_access: i64,
     router_agent: Box<dyn Bridge<RouteAgent>>,
     task_read: Vec<(FileName, ReaderTask)>,
@@ -106,6 +115,7 @@ pub struct StandardSettings {
     put_upload_file: PutUploadFile,
     files: Vec<File>,
     files_index: u32,
+    files_list: Vec<ShowFileInfo>,
     disable_delete_standard_btn: bool,
     confirm_delete_standard: String,
     hide_delete_modal: bool,
@@ -114,7 +124,7 @@ pub struct StandardSettings {
     get_result_access: bool,
     get_result_up_file: bool,
     get_result_up_completed: usize,
-    get_result_upload_files: bool,
+    active_loading_files_btn: bool,
 }
 
 #[derive(Properties, Clone)]
@@ -127,6 +137,7 @@ pub struct Props {
 pub enum Msg {
     OpenStandard,
     RequestManager,
+    RequestStandardFilesList,
     RequestUpdateStandardData,
     RequestChangeAccess,
     RequestDeleteStandard,
@@ -134,13 +145,15 @@ pub enum Msg {
     RequestUploadFile(Vec<u8>),
     ResponseUploadFile(Result<Option<String>, Error>),
     RequestUploadCompleted,
+    GetStandardFilesList(String),
     GetStandardData(String),
     GetListOpt(String),
     GetUpdateStandardResult(String),
     GetUpdateAccessResult(String),
     GetUploadData(String),
-    GetUploadFile(Option<String>),
+    GetUploadFile,
     GetUploadCompleted(String),
+    FinishUploadFiles,
     GetDeleteStandard(String),
     EditFiles,
     UpdateTypeAccessId(String),
@@ -174,6 +187,7 @@ impl Component for StandardSettings {
             request_standard: StandardUpdatePreData::default(),
             request_upload_data: Vec::new(),
             request_upload_file: link.callback(Msg::ResponseUploadFile),
+            request_upload_confirm: Vec::new(),
             request_access: 0,
             router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             task_read: Vec::new(),
@@ -190,6 +204,7 @@ impl Component for StandardSettings {
             put_upload_file: PutUploadFile::new(),
             files: Vec::new(),
             files_index: 0,
+            files_list: Vec::new(),
             disable_delete_standard_btn: true,
             confirm_delete_standard: String::new(),
             hide_delete_modal: true,
@@ -198,7 +213,7 @@ impl Component for StandardSettings {
             get_result_access: false,
             get_result_up_file: false,
             get_result_up_completed: 0,
-            get_result_upload_files: false,
+            active_loading_files_btn: false,
         }
     }
 
@@ -271,16 +286,25 @@ impl Component for StandardSettings {
                     self.link.send_message(Msg::RequestChangeAccess)
                 }
 
-                if self.upload_standard_files && !self.files.is_empty() {
-                    self.link.send_message(Msg::RequestUploadStandardFiles);
-                }
+                // if self.upload_standard_files && !self.files.is_empty() {
+                //     self.link.send_message(Msg::RequestUploadStandardFiles);
+                // }
 
                 self.update_standard = false;
                 self.update_standard_access = false;
-                self.upload_standard_files = false;
+                // self.upload_standard_files = false;
                 self.disable_save_changes_btn = true;
                 self.get_result_standard_data = 0;
                 self.get_result_access = false;
+            },
+            Msg::RequestStandardFilesList => {
+                let standard_uuid = self.props.standard_uuid.clone();
+                spawn_local(async move {
+                    let res = make_query(StandardFilesList::build_query(
+                        standard_files_list::Variables { standard_uuid }
+                    )).await.unwrap();
+                    link.send_message(Msg::GetStandardFilesList(res));
+                })
             },
             Msg::RequestUpdateStandardData => {
                 let standard_uuid = self.current_standard_uuid.clone();
@@ -341,7 +365,7 @@ impl Component for StandardSettings {
             },
             Msg::RequestUploadStandardFiles => {
                 // see loading button
-                self.get_result_upload_files = true;
+                self.active_loading_files_btn = true;
 
                 if !self.files.is_empty() {
                     let mut filenames: Vec<String> = Vec::new();
@@ -370,19 +394,32 @@ impl Component for StandardSettings {
                     debug!("request: {:?}", request);
 
                     self.task.push(self.put_upload_file.put_file(request, self.request_upload_file.clone()));
+                    self.request_upload_confirm.push(upload_data.file_uuid.clone());
                 };
             },
             Msg::RequestUploadCompleted => {
-                if !self.request_upload_data.is_empty() {
-                    let mut file_uuids: Vec<UUID> = Vec::new();
-                    for up_data in &self.request_upload_data {file_uuids.push(up_data.file_uuid.clone());}
-                    spawn_local(async move {
-                        let res = make_query(ConfirmUploadCompleted::build_query(confirm_upload_completed::Variables {
-                            file_uuids,
-                        })).await.unwrap();
-                        debug!("ConfirmUploadCompleted: {:?}", res);
-                        link.send_message(Msg::GetUploadCompleted(res));
-                    });
+                let file_uuids = self.request_upload_confirm.clone();
+                spawn_local(async move {
+                    let res = make_query(ConfirmUploadCompleted::build_query(
+                        confirm_upload_completed::Variables { file_uuids }
+                    )).await.unwrap();
+                    // debug!("ConfirmUploadCompleted: {:?}", res);
+                    link.send_message(Msg::GetUploadCompleted(res));
+                });
+            },
+            Msg::GetStandardFilesList(res) => {
+                let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
+                let res_value = data.as_object().unwrap().get("data").unwrap();
+
+                match res_value.is_null() {
+                    false => {
+                        self.files_list = serde_json::from_value(
+                            res_value.get("standard").unwrap()
+                                .get("standardFiles").unwrap().clone()
+                        ).unwrap();
+                        debug!("standardFilesList {:?}", self.files_list.len());
+                    },
+                    true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }
             },
             Msg::GetUploadData(res) => {
@@ -413,12 +450,17 @@ impl Component for StandardSettings {
                 }
             },
             Msg::ResponseUploadFile(Ok(res)) => {
-                link.send_message(Msg::GetUploadFile(res))
+                debug!("ResponseUploadFile: {:?}", res);
+                link.send_message(Msg::GetUploadFile)
             },
             Msg::ResponseUploadFile(Err(err)) => {
                 self.error = Some(err);
-                self.task = Vec::new();
-                self.task_read = Vec::new();
+                self.task.clear();
+                self.task_read.clear();
+                self.files_index = 0;
+                self.request_upload_confirm.clear();
+                self.get_result_up_completed = 0;
+                self.active_loading_files_btn = false;
             },
             Msg::GetStandardData(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
@@ -431,6 +473,7 @@ impl Component for StandardSettings {
                         debug!("Standard data: {:?}", standard_data);
 
                         self.current_standard_uuid = standard_data.uuid.clone();
+                        self.files_list = standard_data.standard_files.clone();
                         self.current_standard = Some(standard_data.clone());
                         self.request_standard = standard_data.into();
                     },
@@ -488,13 +531,13 @@ impl Component for StandardSettings {
                     true => self.error = Some(get_error(&data)),
                 }
             },
-            Msg::GetUploadFile(res) => {
-                debug!("res: {:?}", res);
+            Msg::GetUploadFile => {
+                debug!("next: {:?}", self.files_index);
+                self.files_index -= 1;
                 if self.files_index == 0 {
                     self.get_result_up_file = true;
+                    debug!("finish: {:?}", self.request_upload_confirm.len());
                     link.send_message(Msg::RequestUploadCompleted);
-                } else {
-                    self.files_index -= 1;
                 }
             },
             Msg::GetUploadCompleted(res) => {
@@ -503,12 +546,23 @@ impl Component for StandardSettings {
 
                 match res_value.is_null() {
                     false => {
-                        let result: usize = serde_json::from_value(res_value.get("uploadCompleted").unwrap().clone()).unwrap();
-                        debug!("uploadCompleted: {:?}", result);
-                        self.get_result_up_completed = result;
+                        self.get_result_up_completed = serde_json::from_value(res_value.get("uploadCompleted").unwrap().clone()).unwrap();
+                        debug!("uploadCompleted: {:?}", self.get_result_up_completed);
+
+                        link.send_message(Msg::FinishUploadFiles);
                     },
                     true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }
+            },
+            Msg::FinishUploadFiles => {
+                self.files_list.clear();
+                link.send_message(Msg::RequestStandardFilesList);
+                self.active_loading_files_btn = false;
+                self.task.clear();
+                self.task_read.clear();
+                self.request_upload_confirm.clear();
+                self.files.clear();
+                self.files_index = 0;
             },
             Msg::GetDeleteStandard(res) => {
                 let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
@@ -593,7 +647,6 @@ impl Component for StandardSettings {
                     debug!("self.files_index: {:?}", self.files_index);
                     self.files_index += 1;
                     self.upload_standard_files = true;
-                    self.disable_save_changes_btn = false;
                     self.files.push(file.clone());
                 }
                 self.files_index = 0;
@@ -635,6 +688,7 @@ impl Component for StandardSettings {
                         {self.show_main_card()}
                         {match &self.current_standard {
                             Some(standard_data) => html!{<>
+                                <br/>
                                 <div class="columns">
                                   {self.show_standard_params()}
                                   {self.show_standard_files(standard_data)}
@@ -850,13 +904,15 @@ impl StandardSettings {
         html!{
             <div class="column">
               <h2 class="has-text-weight-bold">{"Files"}</h2>
-              {self.show_frame_upload_files()}
-              <StandardFilesCard
-                  show_download_btn = false
-                  show_delete_btn = true
-                  standard_uuid = standard_data.uuid.clone()
-                  files = standard_data.standard_files.clone()
-                />
+              <div class="card column">
+                  {self.show_frame_upload_files()}
+                  <StandardFilesCard
+                      show_download_btn = false
+                      show_delete_btn = true
+                      standard_uuid = standard_data.uuid.clone()
+                      files = self.files_list.clone()
+                    />
+                </div>
             </div>
         }
     }
@@ -1002,8 +1058,8 @@ impl StandardSettings {
         });
 
         html!{<>
-            <div class="file has-name is-boxed">
-                <label class="file-label">
+            <div class="file has-name is-boxed is-centered">
+                <label class="file-label" style="width: 100%">
                   <input id="standard-file-input"
                   class="file-input"
                   type="file"
@@ -1012,43 +1068,60 @@ impl StandardSettings {
                   multiple=true />
                 <span class="file-cta">
                   <span class="file-icon">
-                    <i class="fas fa-cloud-upload-alt"></i>
+                    <i class="fas fa-upload"></i>
                   </span>
                   <span class="file-label">
-                    {"Drop file here…"}
+                    {"Choose standard files…"}
                   </span>
                 </span>
-                {if self.files.is_empty() {
-                    html!{<span class="file-name">
-                        {"No file uploaded"}
-                    </span>}
-                } else {
-                    html!{for self.files.iter().map(|f| html!{
-                        <span class="file-name">
-                            {f.name().clone()}
-                        </span>
+                {match self.files.is_empty() {
+                    true => html!{<span class="file-name">{"No file uploaded"}</span>},
+                    false => html!{for self.files.iter().map(|f| html!{
+                        <span class="file-name">{f.name().clone()}</span>
                     })}
                 }}
               </label>
             </div>
-            {self.show_btn_clear()}
+            <div class="buttons">
+                {self.show_clear_btn()}
+                {self.show_upload_files_btn()}
+            </div>
         </>}
     }
 
-    fn show_btn_clear(&self) -> Html {
-        let onclick_clear_boxed = self.link
-            .callback(|_| Msg::ClearFilesBoxed);
+    fn show_clear_btn(&self) -> Html {
+        let onclick_clear_boxed =
+            self.link.callback(|_| Msg::ClearFilesBoxed);
 
-        match self.disable_save_changes_btn {
-            true => html!{},
-            false => html!{
-                <a id="clear-frame-upload-files"
-                      class="button"
-                      onclick=onclick_clear_boxed
-                      disabled={self.files.is_empty()} >
-                    { "Clear select files" }
-                </a>
-            },
+        html!{
+            <button id="clear-upload-standard-files"
+              class="button"
+              onclick=onclick_clear_boxed
+              disabled={self.files.is_empty()} >
+                <span>{"Clear"}</span>
+            </button>
+        }
+    }
+
+    fn show_upload_files_btn(&self) -> Html {
+        let onclick_upload_files = self.link.callback(|_| Msg::RequestUploadStandardFiles);
+
+        let class_upload_btn = match self.active_loading_files_btn {
+            true => "button is-loading",
+            false => "button",
+        };
+
+        html!{
+            <button
+              id="upload-component-files"
+              class={class_upload_btn}
+              disabled={self.files.is_empty() || self.current_standard_uuid.len() != 36}
+              onclick={onclick_upload_files} >
+                // <span class="icon" >
+                //     <i class="fas fa-angle-double-up" aria-hidden="true"></i>
+                // </span>
+                <span>{"Upload"}</span>
+            </button>
         }
     }
 }
