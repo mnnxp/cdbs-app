@@ -218,9 +218,10 @@ impl Component for CreateCompany {
                 <div class="container page">
                     <div class="row">
                         <h1 class="title">{ "Create company" }</h1>
-                        <div class="card">
+                        <div class="card column">
                             { self.fieldset_company() }
                         </div>
+                        <br/>
                         <button
                             id="create-company"
                             class="button is-success is-medium is-fullwidth"
@@ -408,8 +409,8 @@ impl CreateCompany {
                 <label class="label">{"Description"}</label>
                 <textarea
                     id="description"
-                    class="input"
-                    type="description"
+                    class="textarea"
+                    type="text"
                     placeholder="description"
                     value={self.request_company.description.clone()}
                     oninput=oninput_description />

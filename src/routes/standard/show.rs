@@ -325,6 +325,7 @@ impl Component for ShowStandard {
                             {match &self.show_related_components {
                                 true => {self.show_related_components(&standard_data.uuid)},
                                 false => html!{<>
+                                    <br/>
                                     <div class="columns">
                                       {self.show_standard_params(standard_data)}
                                       {self.show_standard_files(standard_data)}
