@@ -546,21 +546,21 @@ impl CompanySettings {
             // Show interface for change company data
             Menu::Company => html!{<>
                 <h4 id="updated-company" class="title is-4">{"Company"}</h4>
-                <div class="media">
-                    <div class="media-left">
-                        <span id="updated-date" class="tag is-info is-light">{
-                            match &self.current_data {
-                                Some(data) => format!("Last updated: {}", data.updated_at.to_string()),
-                                None => "Not data".to_string(),
-                            }
-                        }</span>
+                <div class="columns">
+                    <div class="column">
+                        <span class=classes!("overflow-title", "has-text-weight-bold")>{"Updated rows: "}</span>
+                        <span class="overflow-title">{self.get_result_update.clone()}</span>
                     </div>
-                    <div class="media-content">
-                    </div>
-                    <div class="media-right">
-                        <span id="updated-rows" class="tag is-info is-light">
-                            { format!("Updated rows: {}", self.get_result_update.clone()) }
-                        </span>
+                    <div class="column">
+                        <span class=classes!("overflow-title", "has-text-weight-bold")>{"Last updated: "}</span>
+                        {match &self.current_data {
+                            Some(data) => html!{
+                                <span class="overflow-title">
+                                    {format!("{:.*}", 19, data.updated_at.to_string())}
+                                </span>
+                            },
+                            None => html!{<span>{"not data"}</span>},
+                        }}
                     </div>
                 </div>
                 <form onsubmit=onsubmit_update_company >

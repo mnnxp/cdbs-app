@@ -544,21 +544,25 @@ impl Settings {
     }
 
     fn show_update_profile_info(&self) -> Html {
-        html!{<div class="media">
-            <div id="updated-rows" class="media-left">
-                <span class=classes!("overflow-title", "has-text-weight-bold")>{"Updated rows: "}</span>
-                <span class="overflow-title">{self.get_result_profile.clone()}</span>
+        html!{
+            <div class="columns">
+                <div id="updated-rows" class="column">
+                    <span class=classes!("overflow-title", "has-text-weight-bold")>{"Updated rows: "}</span>
+                    <span class="overflow-title">{self.get_result_profile.clone()}</span>
+                </div>
+                <div id="updated-date" class="column">
+                    <span class=classes!("overflow-title", "has-text-weight-bold")>{"Last updated: "}</span>
+                    {match &self.current_data {
+                        Some(data) => html!{
+                            <span class="overflow-title">
+                                {format!("{:.*}", 19, data.updated_at.to_string())}
+                            </span>
+                        },
+                        None => html!{<span>{"not data"}</span>},
+                    }}
+                </div>
             </div>
-            <div id="updated-date" class="media-right">
-                <span class=classes!("overflow-title", "has-text-weight-bold")>{"Last updated: "}</span>
-                {match &self.current_data {
-                    Some(data) => html!{<span class="overflow-title">
-                        {format!("{:.*}", 19, data.updated_at.to_string())}
-                    </span>},
-                    None => html!{<span>{"not data"}</span>},
-                }}
-            </div>
-        </div>}
+        }
     }
 
     fn cb_generator(&self, cb: Menu) -> Callback<MouseEvent> {
