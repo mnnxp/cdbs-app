@@ -3,6 +3,10 @@
 @import "./fragments/company/catalog/index.scss";
 @import "./fragments/standard/catalog/index.scss";
 
+body {
+  background-color: #fafafa;
+}
+
 .flex_warp {
   display: flex;
   flex-wrap: wrap;
@@ -19,6 +23,10 @@
 
 .logo-bookmark {
   top: -2vh;
+}
+
+.navbar {
+  background-color: #fafafa;
 }
 
 .navbar-item>.button{
@@ -239,4 +247,8 @@
     object-fit: contain;
     background: #eee;
   }
+}
+
+.footer {
+  background-color: #fff
 }
