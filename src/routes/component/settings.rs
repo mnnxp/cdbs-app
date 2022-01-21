@@ -968,19 +968,21 @@ impl ComponentSettings {
                 </div>
                 <div class="media-right">
                     {self.modal_delete_component()}
-                    <button
-                        id="delete-component"
-                        class="button is-danger"
-                        onclick={onclick_show_delete_modal} >
-                        {"Delete"}
-                    </button>
-                    <button
-                        id="update-data"
-                        class="button"
-                        onclick={onclick_save_changes}
-                        disabled={self.disable_save_changes_btn} >
-                        {"Update"}
-                    </button>
+                    <div class="buttons">
+                        <button
+                            id="delete-component"
+                            class="button is-danger"
+                            onclick={onclick_show_delete_modal} >
+                            {"Delete"}
+                        </button>
+                        <button
+                            id="update-data"
+                            class="button"
+                            onclick={onclick_save_changes}
+                            disabled={self.disable_save_changes_btn} >
+                            {"Update"}
+                        </button>
+                    </div>
                 </div>
             </div>
         }
