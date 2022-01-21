@@ -569,7 +569,7 @@ impl Settings {
         let menu_arr: Vec<MenuItem> = vec![
             // return profile page MenuItem
             MenuItem {
-                title: "Return profile".to_string(),
+                title: "Open profile".to_string(),
                 action: self.link.callback(|_| Msg::OpenProfile),
                 item_class: classes!("has-background-white"),
                 icon_classes: vec![classes!("fas", "fa-angle-double-left")],

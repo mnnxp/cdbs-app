@@ -457,7 +457,7 @@ impl CompanySettings {
         let menu_arr: Vec<MenuItem> = vec![
             // return company page MenuItem
             MenuItem {
-                title: "Return company".to_string(),
+                title: "Open company".to_string(),
                 action: self.link.callback(|_| Msg::OpenCompany),
                 item_class: classes!("has-background-white"),
                 icon_classes: vec![classes!("fas", "fa-angle-double-left")],

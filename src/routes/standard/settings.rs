@@ -907,7 +907,7 @@ impl StandardSettings {
                         id="open-standard"
                         class="button"
                         onclick={onclick_open_standard} >
-                        {"Cancel"}
+                        {"Open standard"}
                     </button>
                 </div>
                 <div class="media-content">
