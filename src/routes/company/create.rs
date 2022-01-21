@@ -1,5 +1,5 @@
 use yew::{
-    agent::Bridged, html, Bridge, Component, ComponentLink,
+    agent::Bridged, html, Bridge, Callback, Component, ComponentLink,
     Html, InputData, ChangeData, Properties, ShouldRender,
 };
 use yew_router::{
@@ -239,6 +239,53 @@ impl Component for CreateCompany {
 }
 
 impl CreateCompany {
+    fn fileset_generator(
+        &self,
+        id: &str,
+        label: &str,
+        placeholder: &str,
+        icon_left: &str,
+        value: String,
+        oninput: Callback<InputData>,
+    ) -> Html {
+        let input_type = match id {
+            "email" => "email",
+            "password" => "password",
+            _ => "text",
+        };
+
+        html!{
+            <fieldset class="field">
+                <label class="label">{label.to_string()}</label>
+                {match icon_left.is_empty() {
+                    true => html!{
+                        <input
+                            id={id.to_string()}
+                            class="input"
+                            type={input_type}
+                            placeholder={placeholder.to_string()}
+                            value={value}
+                            oninput=oninput />
+                    },
+                    false => html!{
+                        <div class="control has-icons-left">
+                            <input
+                                id={id.to_string()}
+                                class="input"
+                                type={input_type}
+                                placeholder={placeholder.to_string()}
+                                value={value}
+                                oninput=oninput />
+                            <span class="icon is-small is-left">
+                              <i class={icon_left.to_string()}></i>
+                            </span>
+                        </div>
+                    },
+                }}
+            </fieldset>
+        }
+    }
+
     fn fieldset_company(
         &self
     ) -> Html {
@@ -277,39 +324,75 @@ impl CreateCompany {
             }));
 
         html!{<>
-            <fieldset class="columns">
-                // first column
-                <fieldset class="column">
+            <div class="columns">
+                <div class="column">
+                    {self.fileset_generator(
+                        "orgname", "Orgname", "Orgname",
+                        "",
+                        self.request_company.orgname.clone(),
+                        oninput_orgname
+                    )}
+                </div>
+                <div class="column">
+                    {self.fileset_generator(
+                        "shortname", "Shortname", "Shortname",
+                        "",
+                        self.request_company.shortname.clone(),
+                        oninput_shortname
+                    )}
+                </div>
+            </div>
+
+            <div class="columns">
+                <div class="column">
+                    {self.fileset_generator(
+                        "inn", "Inn", "Inn",
+                        "",
+                        self.request_company.inn.clone(),
+                        oninput_inn
+                    )}
+                </div>
+                <div class="column">
                     <fieldset class="field">
-                        <label class="label">{"Orgname"}</label>
-                        <input
-                            id="orgname"
-                            class="input"
-                            type="text"
-                            placeholder="orgname"
-                            value={self.request_company.orgname.clone()}
-                            oninput=oninput_orgname />
+                        <label class="label">{"Company type"}</label>
+                        <div class="control">
+                            <div class="select">
+                              <select
+                                  id="company_type"
+                                  select={self.request_company.company_type_id.to_string()}
+                                  onchange=onchange_company_type_id
+                                  >
+                                { for self.company_types.iter().map(|x|
+                                    html!{<option value={x.company_type_id.to_string()}>{&x.name}</option>}
+                                )}
+                              </select>
+                            </div>
+                        </div>
                     </fieldset>
-                    <fieldset class="field">
-                        <label class="label">{"Shortname"}</label>
-                        <input
-                            id="shortname"
-                            class="input"
-                            type="text"
-                            placeholder="shortname"
-                            value={self.request_company.shortname.clone()}
-                            oninput=oninput_shortname />
-                    </fieldset>
-                    <fieldset class="field">
-                        <label class="label">{"Inn"}</label>
-                        <input
-                            id="inn"
-                            class="input"
-                            type="text"
-                            placeholder="inn"
-                            value={self.request_company.inn.clone()}
-                            oninput=oninput_inn />
-                    </fieldset>
+                </div>
+            </div>
+
+            <div class="columns">
+                <div class="column">
+                    {self.fileset_generator(
+                        "email", "Email", "Email",
+                        "fas fa-at",
+                        self.request_company.email.clone(),
+                        oninput_email
+                    )}
+                </div>
+                <div class="column">
+                    {self.fileset_generator(
+                        "phone", "Phone", "Phone",
+                        "fas fa-phone",
+                        self.request_company.phone.clone(),
+                        oninput_phone
+                    )}
+                </div>
+            </div>
+
+            <div class="columns">
+                <div class="column">
                     <fieldset class="field">
                         <label class="label">{"Region"}</label>
                         <div class="control">
@@ -326,85 +409,46 @@ impl CreateCompany {
                             </div>
                         </div>
                     </fieldset>
-                </fieldset>
+                </div>
+                <div class="column">
+                    {self.fileset_generator(
+                        "address", "Address", "Address",
+                        "fas fa-map-marker-alt",
+                        self.request_company.address.clone(),
+                        oninput_address
+                    )}
+                </div>
+            </div>
 
-                // second column
-                <fieldset class="column">
-                    <fieldset class="field">
-                        <label class="label">{"Email"}</label>
-                        <input
-                            id="email"
-                            class="input"
-                            type="email"
-                            placeholder="email"
-                            value={self.request_company.email.clone()}
-                            oninput=oninput_email />
-                    </fieldset>
-                    <fieldset class="field">
-                        <label class="label">{"Phone"}</label>
-                        <input
-                            id="phone"
-                            class="input"
-                            type="text"
-                            placeholder="phone"
-                            value={self.request_company.phone.clone()}
-                            oninput=oninput_phone />
-                    </fieldset>
-                    <fieldset class="field">
-                        <label class="label">{"Address"}</label>
-                        <input
-                            id="address"
-                            class="input"
-                            type="text"
-                            placeholder="address"
-                            value={self.request_company.address.clone()}
-                            oninput=oninput_address />
-                    </fieldset>
-                    <fieldset class="field">
-                        <label class="label">{"Site"}</label>
-                        <input
-                            id="site_url"
-                            class="input"
-                            type="text"
-                            placeholder="site_url"
-                            value={self.request_company.site_url.clone()}
-                            oninput=oninput_site_url />
-                    </fieldset>
-                </fieldset>
-            </fieldset>
-            // separate fields
-            <fieldset class="field">
-                <label class="label">{"Company type"}</label>
-                <div class="control">
-                    <div class="select">
-                      <select
-                          id="company_type"
-                          select={self.request_company.company_type_id.to_string()}
-                          onchange=onchange_company_type_id
-                          >
-                        { for self.company_types.iter().map(|x|
-                            html!{<option value={x.company_type_id.to_string()}>{&x.name}</option>}
-                        )}
-                      </select>
-                    </div>
+            <div class="columns">
+                <div class="column">
+                    {self.fileset_generator(
+                        "site_url", "Site", "Site",
+                        "fas fa-link",
+                        self.request_company.site_url.clone(),
+                        oninput_site_url
+                    )}
                 </div>
-            </fieldset>
-            <fieldset class="field">
-                <label class="label">{"Type Access"}</label>
-                <div class="control">
-                    <div class="select">
-                      <select
-                          id="types-access"
-                          select={self.request_company.type_access_id.to_string()}
-                          onchange=onchange_type_access_id
-                          >
-                        { for self.types_access.iter().map(|x|
-                            html!{<option value={x.type_access_id.to_string()}>{&x.name}</option>}
-                        )}
-                      </select>
-                    </div>
+                <div class="column">
+                    <fieldset class="field">
+                        <label class="label">{"Type Access"}</label>
+                        <div class="control">
+                            <div class="select">
+                              <select
+                                  id="types-access"
+                                  select={self.request_company.type_access_id.to_string()}
+                                  onchange=onchange_type_access_id
+                                  >
+                                { for self.types_access.iter().map(|x|
+                                    html!{<option value={x.type_access_id.to_string()}>{&x.name}</option>}
+                                )}
+                              </select>
+                            </div>
+                        </div>
+                    </fieldset>
                 </div>
-            </fieldset>
+            </div>
+
             <fieldset class="field">
                 <label class="label">{"Description"}</label>
                 <textarea
