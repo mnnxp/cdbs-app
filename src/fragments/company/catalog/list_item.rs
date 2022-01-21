@@ -227,8 +227,8 @@ impl ListItemCompany {
                             </p>
                         </div>
                         <div class="column buttons is-one-quarter flexBox" >
-                            {res_btn(classes!(
-                                String::from("fas fa-building")),
+                            {res_btn(
+                                classes!("fas", "fa-eye"),
                                 show_company_btn,
                                 String::new())}
                             {res_btn(

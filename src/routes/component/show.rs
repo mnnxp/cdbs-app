@@ -909,7 +909,8 @@ impl ShowComponent {
             self.link.callback(|_| Msg::OpenComponentSetting);
 
         match &self.current_user_owner {
-            true => {res_btn(classes!(String::from("fa fa-cog")),
+            true => {res_btn(
+                classes!("fa", "fa-tools"),
                 onclick_setting_standard_btn,
                 String::new())},
             false => html!{},

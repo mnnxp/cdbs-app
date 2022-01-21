@@ -160,7 +160,7 @@ impl ListItem {
                           </div>
                       </div>
                       <div class="column buttons is-one-quarter flexBox" >
-                          {res_btn(classes!(String::from("fas fa-puzzle-piece")),
+                          {res_btn(classes!("fas", "fa-eye"),
                               onclick_open_component,
                               String::new())}
                           {res_btn(

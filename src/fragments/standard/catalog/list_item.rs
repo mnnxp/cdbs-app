@@ -223,8 +223,8 @@ impl ListItemStandard {
                             )}</span></div>
                         </div>
                         <div class="column buttons is-one-quarter flexBox" >
-                          {res_btn(classes!(
-                            String::from("fas fa-cube")),
+                          {res_btn(
+                            classes!("fas", "fa-eye"),
                             show_standard_btn,
                             String::new()
                           )}

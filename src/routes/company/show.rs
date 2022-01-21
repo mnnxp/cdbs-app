@@ -357,8 +357,8 @@ impl ShowCompany {
                           onclick_owner_company_btn,
                           String::new())}
                       {match &self.current_user_owner {
-                          true => {res_btn(classes!(
-                              String::from("fa fa-cog")),
+                          true => {res_btn(
+                              classes!("fa", "fa-tools"),
                               onclick_setting_company_btn,
                               String::new())},
                           false => html!{},
@@ -530,7 +530,7 @@ impl ShowCompany {
                 action: self.cb_generator(CompanyTab::Components),
                 count: self.get_number_of_items(&CompanyTab::Components),
                 item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-puzzle-piece")],
+                icon_classes: vec![classes!("fas", "fa-cogs")],
                 is_active: self.company_tab == CompanyTab::Components,
                 is_extend: self.check_extend(&CompanyTab::Components),
             },
