@@ -469,7 +469,7 @@ impl CompanySettings {
                 title: "Company".to_string(),
                 action: self.cb_generator(Menu::Company),
                 item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-certificate")],
+                icon_classes: vec![classes!("fas", "fa-building")],
                 is_active: self.select_menu == Menu::Company,
                 ..Default::default()
             },
