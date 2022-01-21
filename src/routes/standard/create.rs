@@ -301,9 +301,8 @@ impl Component for CreateStandard {
                         {self.show_manage_btn()}
                         <br/>
                         {self.show_main_card()}
-                        <div class="columns">
-                          {self.show_standard_params()}
-                        </div>
+                        <br/>
+                        {self.show_standard_params()}
                     </div>
                 </div>
             </div>
@@ -417,9 +416,9 @@ impl CreateStandard {
           }));
 
         html!{
-            <div class="column">
-              <h2>{"Set standard characteristics"}</h2>
-              <div class="card">
+            <>
+              <h2 class="has-text-weight-bold">{"Set standard characteristics"}</h2>
+              <div class="card column">
                 <table class="table is-fullwidth">
                     <tbody>
                       <tr>
@@ -500,7 +499,7 @@ impl CreateStandard {
                     </tbody>
                   </table>
               </div>
-            </div>
+            </>
         }
     }
 

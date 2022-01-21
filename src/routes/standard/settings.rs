@@ -756,8 +756,8 @@ impl StandardSettings {
 
         html!{
             <div class="column">
-              <h2>{"Manage standard characteristics"}</h2>
-              <div class="card">
+              <h2 class="has-text-weight-bold">{"Manage standard characteristics"}</h2>
+              <div class="card column">
                 <table class="table is-fullwidth">
                     <tbody>
                       <tr>
@@ -849,7 +849,7 @@ impl StandardSettings {
     ) -> Html {
         html!{
             <div class="column">
-              <h2>{"Files"}</h2>
+              <h2 class="has-text-weight-bold">{"Files"}</h2>
               {self.show_frame_upload_files()}
               <StandardFilesCard
                   show_download_btn = false
@@ -866,7 +866,7 @@ impl StandardSettings {
         standard_data: &StandardInfo,
     ) -> Html {
         html!{<>
-            <h2>{"Specs"}</h2>
+            <h2 class="has-text-weight-bold">{"Specs"}</h2>
             <div class="card">
               <SearchSpecsTags
                   standard_specs = standard_data.standard_specs.clone()
@@ -882,7 +882,7 @@ impl StandardSettings {
     ) -> Html {
         // debug!("Keywords: {:?}", &standard_data.uuid);
         html!{<>
-              <h2>{"Keywords"}</h2>
+              <h2 class="has-text-weight-bold">{"Keywords"}</h2>
               <div class="card">
                 <AddKeywordsTags
                     standard_keywords = standard_data.standard_keywords.clone()

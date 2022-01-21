@@ -572,7 +572,7 @@ impl ModificationsTableEdit {
 
     fn show_modification_files(&self) -> Html {
         html!{<>
-            <h2>{"Manage modification files"}</h2>
+            <h2 class="has-text-weight-bold">{"Manage modification files"}</h2>
             <br/>
             <div class="card">
                 <ManageModificationFilesCard
@@ -779,7 +779,7 @@ impl ModificationsTableEdit {
 
     fn show_fileset_files_card(&self) -> Html {
         html!{<>
-            <h2>{"Manage modification filesets"}</h2>
+            <h2 class="has-text-weight-bold">{"Manage modification filesets"}</h2>
             <br/>
             <ManageModificationFilesets
                 select_modification_uuid = self.select_modification_uuid.clone()

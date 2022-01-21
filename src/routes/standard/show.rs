@@ -423,8 +423,8 @@ impl ShowStandard {
     ) -> Html {
         html!{
             <div class="column">
-              <h2>{"Сharacteristics of the standard"}</h2>
-              <div class="card">
+              <h2 class="has-text-weight-bold">{"Сharacteristics of the standard"}</h2>
+              <div class="card column">
                 <table class="table is-fullwidth">
                     <tbody>
                       <tr>
@@ -464,7 +464,7 @@ impl ShowStandard {
     ) -> Html {
         html!{
             <div class="column">
-              <h2>{"Files"}</h2>
+              <h2 class="has-text-weight-bold">{"Files"}</h2>
               <StandardFilesCard
                   show_download_btn = true
                   show_delete_btn = false
@@ -480,8 +480,8 @@ impl ShowStandard {
         standard_data: &StandardInfo,
     ) -> Html {
         html!{<>
-              <h2>{"Specs"}</h2>
-              <div class="card">
+              <h2 class="has-text-weight-bold">{"Specs"}</h2>
+              <div class="card column">
                 <SpecsTags
                     show_manage_btn = false
                     standard_uuid = standard_data.uuid.clone()
@@ -496,8 +496,8 @@ impl ShowStandard {
         standard_data: &StandardInfo,
     ) -> Html {
         html!{<>
-              <h2>{"Keywords"}</h2>
-              <div class="card">
+              <h2 class="has-text-weight-bold">{"Keywords"}</h2>
+              <div class="card column">
                 <KeywordsTags
                     show_delete_btn = false
                     standard_uuid = standard_data.uuid.clone()
@@ -563,7 +563,7 @@ impl ShowStandard {
     ) -> Html {
         html!{<>
             <br/>
-            <h2>{"Components"}</h2>
+            <h2 class="has-text-weight-bold">{"Components"}</h2>
             <div class="card">
               <CatalogComponents
                   show_create_btn = false

@@ -242,7 +242,7 @@ impl ComponentStandardsCard {
         let onclick_action_btn = self.link
             .callback(|_| Msg::ChangeHideAddStandard);
 
-        html!{<div class="card">
+        html!{<div class="card column">
           <table class="table is-fullwidth">
             <tbody>
                <th>{"Classifier"}</th>

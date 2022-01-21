@@ -601,7 +601,7 @@ impl ShowComponent {
         html!{
             <div class="column">
               <h2 class="has-text-weight-bold">{"Сharacteristics of the component"}</h2>
-              <div class="card">
+              <div class="card column">
                 <table class="table is-fullwidth">
                     <tbody>
                       {for component_data.component_params.iter().enumerate().map(|(index, data)| {
@@ -699,7 +699,7 @@ impl ShowComponent {
     ) -> Html {
         html!{<>
               <h2 class="has-text-weight-bold">{"Specs"}</h2>
-              <div class="card">
+              <div class="card column">
                 <SpecsTags
                     show_manage_btn = false
                     component_uuid = component_data.uuid.clone()
@@ -715,7 +715,7 @@ impl ShowComponent {
     ) -> Html {
         html!{<>
               <h2 class="has-text-weight-bold">{"Keywords"}</h2>
-              <div class="card">
+              <div class="card column">
                 <KeywordsTags
                     show_delete_btn = false
                     component_uuid = component_data.uuid.clone()
@@ -736,7 +736,7 @@ impl ShowComponent {
 
         html!{<>
             <h2 class="has-text-weight-bold">{table_label}</h2>
-            <div class="card">
+            <div class="card column">
               <table class="table is-fullwidth">
                 <tbody>
                    <th>{"Company"}</th>
@@ -775,7 +775,7 @@ impl ShowComponent {
         &self,
         component_data: &ComponentInfo,
     ) -> Html {
-        html!{<div class="card">
+        html!{<div class="card column">
           <table class="table is-fullwidth">
             <tbody>
                <th>{"Classifier"}</th>

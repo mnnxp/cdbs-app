@@ -251,7 +251,7 @@ impl ComponentParamsTags {
         let onclick_action_btn = self.link
             .callback(|_| Msg::ChangeHideAddParam);
 
-        html!{<div class="card">
+        html!{<div class="card column">
           <table class="table is-fullwidth">
             <tbody>
                <th>{"Param"}</th>

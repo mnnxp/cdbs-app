@@ -246,7 +246,7 @@ impl ComponentSuppliersCard {
         let onclick_action_btn = self.link
             .callback(|_| Msg::ChangeHideSetSupplier);
 
-        html!{<div class="card">
+        html!{<div class="card column">
           <table class="table is-fullwidth">
             <tbody>
                <th>{"Company"}</th>

@@ -230,7 +230,7 @@ impl FilesetFileItem {
             <div class=class_modal>
               <div class="modal-background" onclick=onclick_file_info.clone() />
               <div class="modal-content">
-                  <div class="card">
+                  <div class="card column">
                     <table class="table is-fullwidth">
                       <tbody>
                         <tr>
