@@ -403,7 +403,7 @@ impl Component for ShowComponent {
                                 false => html!{},
                             }}
 
-                            <div class="card">
+                            <div class="card column">
                               {self.show_main_card(component_data)}
                             </div>
                             <br/>
