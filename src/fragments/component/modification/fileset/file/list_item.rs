@@ -112,6 +112,7 @@ impl Component for FilesetFileItem {
                             res.get("componentModificationFilesetFiles").unwrap().clone()
                         ).unwrap();
                         debug!("componentModificationFilesetFiles: {:?}", result);
+                        self.download_url = result.first().map(|f| f.download_url.clone()).unwrap_or_default();
                     },
                     true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }

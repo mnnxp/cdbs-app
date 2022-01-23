@@ -107,6 +107,7 @@ impl Component for FileItem {
                     false => {
                         let result: Vec<DownloadFile> = serde_json::from_value(res.get("standardFiles").unwrap().clone()).unwrap();
                         debug!("standardFiles: {:?}", result);
+                        self.download_url = result.first().map(|f| f.download_url.clone()).unwrap_or_default();
                     },
                     true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }

@@ -84,6 +84,7 @@ impl Component for ModificationFileListItem {
                     false => {
                         let result: Vec<DownloadFile> = serde_json::from_value(res.get("componentModificationFiles").unwrap().clone()).unwrap();
                         debug!("componentModificationFiles: {:?}", result);
+                        self.download_url = result.first().map(|f| f.download_url.clone()).unwrap_or_default();
                     },
                     true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }
