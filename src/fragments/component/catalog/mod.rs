@@ -118,7 +118,7 @@ impl Component for CatalogComponents {
                     debug!("GetList res: {:?}", res);
                     link.send_message(Msg::UpdateList(res));
                 });
-            }
+            },
             Msg::UpdateList(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
@@ -135,7 +135,7 @@ impl Component for CatalogComponents {
                         self.error = Some(get_error(&data));
                     }
                 }
-            }
+            },
             Msg::AddFav(component_uuid) => {
                 spawn_local(async move {
                     make_query(AddComponentFav::build_query(add_component_fav::Variables {
@@ -146,7 +146,7 @@ impl Component for CatalogComponents {
                     // debug!("AddFav res: {:?}", res);
                     link.send_message(Msg::GetList);
                 });
-            }
+            },
             Msg::DelFav(component_uuid) => {
                 spawn_local(async move {
                     make_query(DeleteComponentFav::build_query(
@@ -157,7 +157,7 @@ impl Component for CatalogComponents {
                     // debug!("DelFav res: {:?}", res);
                     link.send_message(Msg::GetList);
                 });
-            }
+            },
         }
         true
     }

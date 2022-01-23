@@ -29,11 +29,11 @@ body {
   background-color: #fafafa;
 }
 
-.navbar-item>.button{
+.navbar-item > .button {
   margin-bottom: 0;
 }
 
-.navbar-item>.button:first-child{
+.navbar-item > .button:first-child {
   margin-right: 12px;
 }
 
@@ -167,6 +167,18 @@ body {
   align-items: center;
 }
 
+.componentListItem {
+  figure {
+    display: inline-flex;
+    img {
+      display: block;
+      height: auto;
+      width: 100%;
+      object-fit: contain;
+    }
+  }
+}
+
 .profileBox {
   display: flex;
   // justify-content: space-between;
@@ -250,5 +262,5 @@ body {
 }
 
 .footer {
-  background-color: #fff
+  background-color: #fff;
 }
