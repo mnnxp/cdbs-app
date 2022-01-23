@@ -319,7 +319,7 @@ impl Component for ShowStandard {
                     <ListErrors error=self.error.clone()/>
                     <div class="container page">
                         <div class="row">
-                            <div class="card">
+                            <div class="card column">
                               {self.show_main_card(standard_data)}
                             </div>
                             {match &self.show_related_components {
