@@ -428,7 +428,7 @@ impl ShowCompany {
                         // <br/>
                         <div id="company-inn">
                             <span class="icon is-small"><i class="fas fa-building" /></span>
-                            <span>{" Reg.№: "}</span>
+                            <span>{" Reg.№ "}</span>
                             <span class="overflow-title has-text-weight-bold">{company_data.inn.clone()}</span>
                         </div>
                         // <br/>

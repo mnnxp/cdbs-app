@@ -206,14 +206,7 @@ impl ListItemCompany {
                     </figure>
                   </div>
                   <div class="media-content">
-                    <div class="columns is-gapless" style="margin-bottom:0">
-                      <div class="column">
-                          {"from "} <span class="id-box has-text-grey-light has-text-weight-bold">{region.region.clone()}</span>
-                      </div>
-                      <div class="column">
-                          {"Reg.№: "} <span class="id-box has-text-grey-light has-text-weight-bold">{inn.clone()}</span>
-                      </div>
-                    </div>
+                    {"from "} <span class="id-box has-text-grey-light has-text-weight-bold">{region.region.clone()}</span>
                     <div class="columns" style="margin-bottom:0">
                         <div class="column">
                             <div class="overflow-title has-text-weight-bold is-size-4">{
@@ -238,9 +231,9 @@ impl ListItemCompany {
                             )}
                         </div>
                     </div>
-                    <div class="columns is-gapless" style="margin-bottom:0">
+                    <div class="columns is-gapless">
                         <div class="column">
-                        // {format!("Reg.№: {}", inn.to_string())}
+                            {"Reg.№ "} <span class="id-box has-text-grey-light has-text-weight-bold">{inn.clone()}</span>
                         </div>
                         <div class="column">
                           {format!("Updated at: {:.*}", 10, updated_at.to_string())}
