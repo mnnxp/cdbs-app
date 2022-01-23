@@ -649,7 +649,7 @@ impl Component for StandardSettings {
                     self.upload_standard_files = true;
                     self.files.push(file.clone());
                 }
-                self.files_index = 0;
+                // self.files_index = 0;
             },
             Msg::UpdateConfirmDelete(data) => {
                 self.disable_delete_standard_btn = self.current_standard_uuid != data;
