@@ -627,6 +627,11 @@ input IptStandardData {
   regionId: Int!
 }
 
+input IptStandardFaviconData {
+  filename: String!
+  standardUuid: UUID!
+}
+
 input IptStandardFilesArg {
   standardUuid: UUID!
   filesUuids: [UUID!]
@@ -932,6 +937,7 @@ type MutationRoot {
   addStandardKeywordsByNames(args: IptStandardKeywordsNames!): Int!
   deleteStandardKeywords(args: IptStandardKeywordsData!): Int!
   uploadStandardFiles(args: IptStandardFilesData!): [UploadFile!]!
+  uploadStandardFavicon(args: IptStandardFaviconData!): UploadFile!
   deleteStandardFile(args: DeleteStandardFileData!): Boolean!
   registerCompany(args: IptCompanyData!): UUID!
   putCompanyUpdate(companyUuid: UUID!, args: IptUpdateCompanyData!): Int!
@@ -1167,6 +1173,7 @@ type ShowStandardShort {
   description: String!
   specifiedTolerance: String!
   publicationAt: NaiveDateTime!
+  imageFile: DownloadFile!
   ownerCompany: ShowCompanyShort!
   standardStatus: StandardStatusTranslateList!
   updatedAt: NaiveDateTime!

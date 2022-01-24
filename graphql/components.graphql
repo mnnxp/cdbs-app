@@ -471,6 +471,9 @@ fragment showStandardShortFields on ShowStandardShort {
   description
   specifiedTolerance
   publicationAt
+  imageFile {
+    ...downloadFileFields
+  }
   ownerCompany {
     ...companyShortFields
   }

@@ -87,9 +87,8 @@ pub struct ShowComponent {
     open_modification_card: bool,
     open_modification_files_card: bool,
     open_fileset_files_card: bool,
-    open_standard_info: bool,
     show_related_standards: bool,
-    img_arr : Option<Vec<DownloadFile>>,
+    file_arr: Vec<DownloadFile>,
 }
 
 #[derive(Properties, Clone)]
@@ -112,7 +111,6 @@ pub enum Msg {
     ShowFullCharacteristics,
     ShowStandardsList,
     ShowOwnerUserCard,
-    ShowStandardCard,
     ShowModificationCard,
     ShowModificationFilesList,
     ShowFilesetFilesBlock(bool),
@@ -148,9 +146,8 @@ impl Component for ShowComponent {
             open_modification_card: false,
             open_modification_files_card: false,
             open_fileset_files_card: false,
-            open_standard_info: false,
             show_related_standards: false,
-            img_arr: None
+            file_arr: Vec::new(),
         }
     }
 
@@ -345,13 +342,8 @@ impl Component for ShowComponent {
 
                 match res_value.is_null() {
                     false => {
-                        let download_file: Vec<DownloadFile> =
-                            serde_json::from_value(res_value.get("componentFiles").unwrap().clone())
-                                .unwrap();
-                        debug!("Download file: {:?}", download_file);
-                        if download_file.len() > 0 {
-                            self.img_arr = Some(download_file);
-                        }
+                        self.file_arr = serde_json::from_value(res_value.get("componentFiles").unwrap().clone()).unwrap();
+                        debug!("Download file: {:?}", self.file_arr);
                     }
                     true => self.error = Some(get_error(&data)),
                 }
@@ -360,7 +352,6 @@ impl Component for ShowComponent {
             Msg::ShowFullCharacteristics => self.show_full_characteristics = !self.show_full_characteristics,
             Msg::ShowStandardsList => self.show_related_standards = !self.show_related_standards,
             Msg::ShowOwnerUserCard => self.open_owner_user_info = !self.open_owner_user_info,
-            Msg::ShowStandardCard => self.open_standard_info = !self.open_standard_info,
             Msg::ShowModificationCard => self.open_modification_card = !self.open_modification_card,
             Msg::ShowModificationFilesList => self.open_modification_files_card = !self.open_modification_files_card,
             Msg::ShowFilesetFilesBlock(value) => self.open_fileset_files_card = value,
@@ -442,14 +433,7 @@ impl ShowComponent {
 
         html!{
             <div class="columns">
-                {if self.img_arr.is_some() {
-                  html!{<div class="column is-one-quarter show-img-box">
-                          <ImgShowcase img_arr=self.img_arr.clone() />
-                        </div>
-                      }
-                }else {
-                  html!{<div style="padding-left: 0.75rem;" />}
-                }}
+                <ImgShowcase file_arr=self.file_arr.clone() />
                 // <img class="imgBox" src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
 
               <div class="column">

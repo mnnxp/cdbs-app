@@ -84,7 +84,7 @@ pub struct ShowStandard {
     is_followed: bool,
     show_full_description: bool,
     show_related_components: bool,
-    img_arr : Option<Vec<DownloadFile>>,
+    file_arr: Vec<DownloadFile>,
 }
 
 #[derive(Properties, Clone)]
@@ -128,7 +128,7 @@ impl Component for ShowStandard {
             is_followed: false,
             show_full_description: false,
             show_related_components: false,
-            img_arr: None,
+            file_arr: Vec::new(),
         }
     }
 
@@ -250,10 +250,12 @@ impl Component for ShowStandard {
 
                 match res.is_null() {
                     false => {
-                        let result: Vec<DownloadFile> = serde_json::from_value(res.get("standardFiles").unwrap().clone()).unwrap();
-                        debug!("standardFiles: {:?}", result);
-                        if result.len() > 0 {
-                            self.img_arr = Some(result);
+                        self.file_arr = serde_json::from_value(res.get("standardFiles").unwrap().clone()).unwrap();
+                        debug!("standardFiles: {:?}", self.file_arr);
+
+                        // add main image
+                        if let Some(standard) = &self.standard {
+                            self.file_arr.push(standard.image_file.clone())
                         }
                     },
                     true => {
@@ -366,14 +368,7 @@ impl ShowStandard {
 
         html!{
             <div class="columns">
-              {if self.img_arr.is_some() {
-                html!{<div class="column is-one-quarter show-img-box">
-                        <ImgShowcase img_arr=self.img_arr.clone() />
-                      </div>
-                    }
-              }else {
-                html!{<div style="padding-left: 0.75rem;" />}
-              }}
+              <ImgShowcase file_arr=self.file_arr.clone() />
               // <div class="column is-one-quarter">
               //   <img class="imgBox" src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
               // </div>
@@ -559,13 +554,13 @@ impl ShowStandard {
         let onclick_related_components_btn = self.link
             .callback(|_| Msg::ShowComponentsList);
 
-        let text_btn = match &self.show_related_components {
-            true => "Hide components",
-            false => "See components",
+        let (text_btn, classes_btn) = match &self.show_related_components {
+            true => ("Hide components", "button"),
+            false => ("See components", "button is-info is-light"),
         };
 
         html!{
-            <button class="button is-info is-light"
+            <button class=classes_btn
                 onclick=onclick_related_components_btn >
               <span class="has-text-black">{text_btn}</span>
             </button>

@@ -64,6 +64,9 @@ query GetStandardsShortList($iptStandardsArg: IptStandardsArg) {
     description
     specifiedTolerance
     publicationAt
+    imageFile {
+      ...downloadFileFields
+    }
     ownerCompany {
       ...companyShortFields
     }

@@ -77,6 +77,7 @@ pub struct ShowStandardShort {
     pub description: String,
     pub specified_tolerance: String,
     pub publication_at: NaiveDateTime,
+    pub image_file: DownloadFile,
     pub owner_company: ShowCompanyShort,
     pub standard_status: StandardStatus,
     pub updated_at: NaiveDateTime,
