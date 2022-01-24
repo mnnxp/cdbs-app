@@ -19,6 +19,7 @@ use crate::fragments::{
     list_errors::ListErrors,
     component::CatalogComponents,
     standard::{StandardFilesCard, SpecsTags, KeywordsTags},
+    img_showcase::ImgShowcase,
 };
 use crate::gqls::make_query;
 use crate::services::{
@@ -83,6 +84,7 @@ pub struct ShowStandard {
     is_followed: bool,
     show_full_description: bool,
     show_related_components: bool,
+    img_arr : Option<Vec<DownloadFile>>,
 }
 
 #[derive(Properties, Clone)]
@@ -126,6 +128,7 @@ impl Component for ShowStandard {
             is_followed: false,
             show_full_description: false,
             show_related_components: false,
+            img_arr: None,
         }
     }
 
@@ -148,7 +151,7 @@ impl Component for ShowStandard {
         if (first_render || not_matches_standard_uuid) && is_authenticated() {
             // update current_standard_uuid for checking change standard in route
             self.current_standard_uuid = target_standard_uuid.to_string();
-
+            link.send_message(Msg::RequestDownloadFiles);
             spawn_local(async move {
                 let res = make_query(GetStandardData::build_query(get_standard_data::Variables {
                     standard_uuid: target_standard_uuid,
@@ -249,6 +252,9 @@ impl Component for ShowStandard {
                     false => {
                         let result: Vec<DownloadFile> = serde_json::from_value(res.get("standardFiles").unwrap().clone()).unwrap();
                         debug!("standardFiles: {:?}", result);
+                        if result.len() > 0 {
+                            self.img_arr = Some(result);
+                        }
                     },
                     true => {
                         link.send_message(Msg::ResponseError(get_error(&data)));
@@ -360,9 +366,17 @@ impl ShowStandard {
 
         html!{
             <div class="columns">
-              <div class="column is-one-quarter">
-                <img class="imgBox" src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
-              </div>
+              {if self.img_arr.is_some() {
+                html!{<div class="column is-one-quarter show-img-box">
+                        <ImgShowcase img_arr=self.img_arr.clone() />
+                      </div>
+                    }
+              }else {
+                html!{<div style="padding-left: 0.75rem;" />}
+              }}
+              // <div class="column is-one-quarter">
+              //   <img class="imgBox" src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
+              // </div>
               <div class="column">
                 <div class="media">
                     <div class="media-content">
