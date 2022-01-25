@@ -1,19 +1,17 @@
+use graphql_client::GraphQLQuery;
 use yew::services::fetch::FetchTask;
 use yew::services::reader::{File, FileData, ReaderService, ReaderTask};
 use yew::{
-    html, Callback, Component, ComponentLink, Html,
-    Properties, ShouldRender, ChangeData, DragEvent
+    html, Callback, ChangeData, Component, ComponentLink, DragEvent, Html,
+    Properties, ShouldRender
 };
-use graphql_client::GraphQLQuery;
-// use serde_json::Value;
-use wasm_bindgen_futures::spawn_local;
 use log::debug;
+use wasm_bindgen_futures::spawn_local;
 
 use crate::gqls::make_query;
-
+use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
-use crate::error::{Error, get_error};
-use crate::services::{PutUploadFile, UploadData};
+use crate::services::{PutUploadFile, UploadData, filter_images};
 use crate::types::{UUID, UploadFile};
 
 type FileName = String;
@@ -22,18 +20,10 @@ type FileName = String;
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/user.graphql",
+    query_path = "./graphql/standards.graphql",
     response_derives = "Debug"
 )]
-struct UploadUserFavicon;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/companies.graphql",
-    response_derives = "Debug"
-)]
-struct UploadCompanyFavicon;
+struct UploadStandardFavicon;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -43,16 +33,15 @@ struct UploadCompanyFavicon;
 )]
 struct ConfirmUploadCompleted;
 
-
 #[derive(PartialEq, Clone, Debug, Properties)]
 pub struct Props {
-    pub callback: Callback<String>,
-    pub company_uuid: Option<String>,
+    pub standard_uuid: String,
+    pub callback: Callback<()>,
 }
 
-/// For upload favicon file to user and company
+/// For viewing favicon data on page
 #[derive(Debug)]
-pub struct UpdateFaviconBlock {
+pub struct UpdateStandardFaviconCard {
     error: Option<Error>,
     request_upload_data: UploadFile,
     request_upload_file: Callback<Result<Option<String>, Error>>,
@@ -64,28 +53,26 @@ pub struct UpdateFaviconBlock {
     get_result_up_completed: bool,
     put_upload_file: PutUploadFile,
     file: Option<File>,
-    dis_upload_btn: bool,
     active_loading_files_btn: bool,
+    dis_upload_btn: bool,
 }
 
 pub enum Msg {
     RequestUploadData,
-    RequestUploadUserData,
-    RequestUploadCompanyData,
     RequestUploadFile(Vec<u8>),
     ResponseUploadFile(Result<Option<String>, Error>),
     RequestUploadCompleted,
-    ResponseError(Error),
     UpdateFile(Option<File>),
     GetUploadData(String),
     GetUploadFile(Option<String>),
     GetUploadCompleted(String),
+    HideNotificationSuccess,
     ClearFileBoxed,
     ClearError,
     Ignore,
 }
 
-impl Component for UpdateFaviconBlock {
+impl Component for UpdateStandardFaviconCard {
     type Message = Msg;
     type Properties = Props;
 
@@ -102,8 +89,8 @@ impl Component for UpdateFaviconBlock {
             get_result_up_completed: false,
             put_upload_file: PutUploadFile::new(),
             file: None,
-            dis_upload_btn: true,
             active_loading_files_btn: false,
+            dis_upload_btn: true,
         }
     }
 
@@ -112,41 +99,26 @@ impl Component for UpdateFaviconBlock {
 
         match msg {
             Msg::RequestUploadData => {
-                // see loading button
-                self.active_loading_files_btn = true;
+                if let Some(file) = &self.file {
+                    if filter_images(file.name().as_str()) {
+                        // see loading button
+                        self.active_loading_files_btn = true;
 
-                match &self.props.company_uuid {
-                    Some(_) => self.link.send_message(Msg::RequestUploadCompanyData),
-                    None => self.link.send_message(Msg::RequestUploadUserData),
-                }
-            },
-            Msg::RequestUploadUserData => {
-                if let Some(file) = &self.file {
-                    // debug!("RequestUploadData: {:?}", &self.request_update);
-                    let filename_upload_favicon = file.name().to_string();
-                    spawn_local(async move {
-                        let res = make_query(UploadUserFavicon::build_query(
-                            upload_user_favicon::Variables {
-                                filename_upload_favicon,
-                            }
-                        )).await;
-                        link.send_message(Msg::GetUploadData(res.unwrap()));
-                    })
-                }
-            },
-            Msg::RequestUploadCompanyData => {
-                if let Some(file) = &self.file {
-                    let company_uuid = self.props.company_uuid.as_ref().map(|u| u.clone()).unwrap();
-                    let filename_upload_favicon = file.name().clone();
-                    spawn_local(async move {
-                        let res = make_query(UploadCompanyFavicon::build_query(
-                            upload_company_favicon::Variables {
-                                company_uuid,
-                                filename_upload_favicon,
-                            }
-                        )).await.unwrap();
-                        link.send_message(Msg::GetUploadData(res));
-                    })
+                        // debug!("RequestUploadData: {:?}", &self.request_update);
+                        let ipt_standard_favicon_data = upload_standard_favicon::IptStandardFaviconData {
+                            standardUuid: self.props.standard_uuid.clone(),
+                            filename: file.name().to_string(),
+                        };
+                        spawn_local(async move {
+                            let res = make_query(UploadStandardFavicon::build_query(
+                                upload_standard_favicon::Variables { ipt_standard_favicon_data },
+                            )).await.unwrap();
+                            link.send_message(Msg::GetUploadData(res));
+                        });
+                    } else {
+                        // select file is not image
+                        link.send_message(Msg::ClearFileBoxed);
+                    }
                 }
             },
             Msg::RequestUploadFile(data) => {
@@ -156,9 +128,7 @@ impl Component for UpdateFaviconBlock {
                 };
                 self.task = Some(self.put_upload_file.put_file(request, self.request_upload_file.clone()));
             },
-            Msg::ResponseUploadFile(Ok(res)) => {
-                link.send_message(Msg::GetUploadFile(res))
-            },
+            Msg::ResponseUploadFile(Ok(res)) => link.send_message(Msg::GetUploadFile(res)),
             Msg::ResponseUploadFile(Err(err)) => {
                 self.error = Some(err);
                 self.task = None;
@@ -167,14 +137,12 @@ impl Component for UpdateFaviconBlock {
             Msg::RequestUploadCompleted => {
                 let file_uuids = vec![self.request_upload_data.file_uuid.clone()];
                 spawn_local(async move {
-                    let res = make_query(ConfirmUploadCompleted::build_query(confirm_upload_completed::Variables {
-                        file_uuids,
-                    })).await.unwrap();
+                    let res = make_query(ConfirmUploadCompleted::build_query(
+                        confirm_upload_completed::Variables { file_uuids })
+                    ).await.unwrap();
+                    debug!("ConfirmUploadCompleted: {:?}", res);
                     link.send_message(Msg::GetUploadCompleted(res));
                 });
-            },
-            Msg::ResponseError(err) => {
-                self.error = Some(err);
             },
             Msg::UpdateFile(op_file) => {
                 if op_file.is_some() {
@@ -189,23 +157,22 @@ impl Component for UpdateFaviconBlock {
 
                 match res_value.is_null() {
                     false => {
-                        self.request_upload_data = match &self.props.company_uuid {
-                            Some(_) => serde_json::from_value(res_value.get("uploadCompanyFavicon").unwrap().clone()).unwrap(),
-                            None => serde_json::from_value(res_value.get("uploadFavicon").unwrap().clone()).unwrap(),
-                        };
+                        self.request_upload_data = serde_json::from_value(
+                            res_value.get("uploadStandardFavicon").unwrap().clone(),
+                        ).unwrap();
 
                         if let Some(file) = self.file.clone() {
                             let file_name = file.name().clone();
                             let task = {
-                                let callback = self
-                                    .link
-                                    .callback(move |data: FileData| Msg::RequestUploadFile(data.content));
+                                let callback = self.link.callback(move |data: FileData| {
+                                    Msg::RequestUploadFile(data.content)
+                                });
                                 ReaderService::read_file(file, callback).unwrap()
                             };
                             self.task_read = Some((file_name, task));
                         }
                         debug!("file: {:?}", self.file);
-                    },
+                    }
                     true => self.error = Some(get_error(&data)),
                 }
             },
@@ -224,10 +191,15 @@ impl Component for UpdateFaviconBlock {
                             res_value.get("uploadCompleted").unwrap().clone()
                         ).unwrap();
                         self.get_result_up_completed = result > 0;
+                        self.props.callback.emit(());
                         self.active_loading_files_btn = false;
                     },
                     true => self.error = Some(get_error(&data)),
                 }
+            },
+            Msg::HideNotificationSuccess => {
+                link.send_message(Msg::ClearFileBoxed);
+                self.get_result_up_completed = !self.get_result_up_completed;
             },
             Msg::ClearFileBoxed => {
                 self.file = None;
@@ -236,7 +208,6 @@ impl Component for UpdateFaviconBlock {
             Msg::ClearError => self.error = None,
             Msg::Ignore => {},
         }
-
         true
     }
 
@@ -249,24 +220,15 @@ impl Component for UpdateFaviconBlock {
 
         html!{<>
           <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
-          <div class="column">
-              {match self.get_result_up_completed {
-                  true => self.show_success_upload(),
-                  false => html!{<>
-                      { self.show_frame_upload_file() }
-                      <br/>
-                      <div class="buttons">
-                          { self.show_btn_clear() }
-                          { self.show_btn_upload() }
-                      </div>
-                  </>},
-              }}
-          </div>
+          {match self.get_result_up_completed {
+              true => html!{self.show_success_upload()},
+              false => html!{self.show_frame_upload_file()},
+          }}
         </>}
     }
 }
 
-impl UpdateFaviconBlock {
+impl UpdateStandardFaviconCard {
     fn show_frame_upload_file(&self) -> Html {
         let onchange_favicon_file = self.link.callback(move |value| {
             if let ChangeData::Files(files) = value {
@@ -290,51 +252,50 @@ impl UpdateFaviconBlock {
             Msg::Ignore
         });
 
-        html!{<div class="block">
-            <div class="columns">
-                <div class="column">
-                    <div class="file is-large is-boxed has-name">
-                      <label
-                        for="favicon-file-input"
-                        class="file-label"
-                        style="width: 100%; text-align: center"
-                      >
-                        <input
-                            id="favicon-file-input"
-                            class="file-input"
-                            type="file"
-                            accept="image/*"
-                            onchange={onchange_favicon_file} />
-                        <span class="file-cta" ondrop=ondrop_favicon_file ondragover=ondragover_favicon_file >
-                          <span class="file-icon">
-                            <i class="fas fa-upload"></i>
-                          </span>
-                          <span class="file-label">{"Drop favicon file here"}</span>
-                        </span>
-                      </label>
+        html!{
+            <>
+                <div class="file is-boxed has-name">
+                  <label
+                    for="favicon-file-input"
+                    class="file-label"
+                    style="width: 100%; text-align: center"
+                  >
+                    <input
+                        id="favicon-file-input"
+                        class="file-input"
+                        type="file"
+                        accept="image/*"
+                        onchange={onchange_favicon_file} />
+                    <span class="file-cta" ondrop=ondrop_favicon_file ondragover=ondragover_favicon_file >
+                      <span class="file-icon">
+                        <i class="fas fa-upload"></i>
+                      </span>
+                      <span class="file-label">{"Drop preview image here"}</span>
+                    </span>
+                    <div class="columns">
+                        <div class="column">
+                            <span class="file-name" style="overflow-wrap: anywhere">
+                                {self.file.as_ref().map(|f| f.name().to_string()).unwrap_or_default()}
+                            </span>
+                        </div>
+                        <div class="column">
+                            <span class="has-text-grey-light is-size-6" style="overflow-wrap: anywhere">
+                                {"Possible format: .apng, .avif, .gif, .jpg, .jpeg, .jpe, .jif, .jfif, .png, .svg, .webp."}
+                            </span>
+                        </div>
                     </div>
+                  </label>
                 </div>
-                <div class="column">
-                    <div class="has-text-grey-light" style="overflow-wrap: anywhere">
-                        {"It is recommended to upload the favicon in image format."}
-                    </div>
-                    <br/>
-                    <div id="select-file" style="overflow-wrap: anywhere">
-                        <span>{"Select file: "}</span>
-                        <span class="overflow-title has-text-weight-bold">
-                            {self.file.as_ref()
-                                .map(|f| f.name().to_string())
-                                .unwrap_or_default()}
-                        </span>
-                    </div>
+                <div class="buttons">
+                    { self.show_btn_clear() }
+                    { self.show_btn_upload() }
                 </div>
-            </div>
-        </div>}
+            </>
+        }
     }
 
     fn show_btn_upload(&self) -> Html {
-        let onclick_upload_favicon = self.link
-            .callback(|_| Msg::RequestUploadData);
+        let onclick_upload_favicon = self.link.callback(|_| Msg::RequestUploadData);
 
         let class_upload_btn = match self.active_loading_files_btn {
             true => "button is-loading",
@@ -352,9 +313,7 @@ impl UpdateFaviconBlock {
     }
 
     fn show_btn_clear(&self) -> Html {
-        let onclick_clear_boxed = self
-            .link
-            .callback(|_| Msg::ClearFileBoxed);
+        let onclick_clear_boxed = self.link.callback(|_| Msg::ClearFileBoxed);
 
         html!{
             <a id="btn-new-favicon-clear"
@@ -368,10 +327,13 @@ impl UpdateFaviconBlock {
     }
 
     fn show_success_upload(&self) -> Html {
+        let onclick_hide_notification = self.link.callback(|_| Msg::HideNotificationSuccess);
+
         html!{
             <article class="message is-success">
               <div class="message-header">
                 <p>{ "Success" }</p>
+                <button class="delete" aria-label="close" onclick=onclick_hide_notification.clone() />
               </div>
               <div class="message-body">
                 { "This favicon upload!" }

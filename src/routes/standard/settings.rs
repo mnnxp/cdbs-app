@@ -20,7 +20,10 @@ use crate::fragments::{
     // switch_icon::res_btn,
     list_errors::ListErrors,
     // catalog_component::CatalogComponents,
-    standard::{StandardFilesCard, SearchSpecsTags, AddKeywordsTags},
+    standard::{
+        StandardFilesCard, SearchSpecsTags,
+        AddKeywordsTags, UpdateStandardFaviconCard
+    },
 };
 use crate::gqls::make_query;
 use crate::services::{
@@ -690,7 +693,11 @@ impl Component for StandardSettings {
                             Some(standard_data) => html!{<>
                                 <br/>
                                 <div class="columns">
-                                  {self.show_standard_params()}
+                                  <div class="column">
+                                    {self.update_standard_favicon()}
+                                    <br/>
+                                    {self.show_standard_params()}
+                                  </div>
                                   {self.show_standard_files(standard_data)}
                                 </div>
                                 {self.show_standard_specs(standard_data)}
@@ -783,6 +790,20 @@ impl StandardSettings {
         </div>}
     }
 
+    fn update_standard_favicon(&self) -> Html {
+        let callback_update_favicon = self.link.callback(|_| Msg::Ignore);
+
+        html!{<>
+            <h2 class="has-text-weight-bold">{"Update image for preview"}</h2>
+            <div class="card column">
+                <UpdateStandardFaviconCard
+                    standard_uuid=self.current_standard_uuid.clone()
+                    callback=callback_update_favicon.clone()
+                />
+            </div>
+        </>}
+    }
+
     fn show_standard_params(&self) -> Html {
         let oninput_classifier = self.link
             .callback(|ev: InputData| Msg::UpdateClassifier(ev.value));
@@ -809,7 +830,7 @@ impl StandardSettings {
           }));
 
         html!{
-            <div class="column">
+            <>
               <h2 class="has-text-weight-bold">{"Manage standard characteristics"}</h2>
               <div class="card column">
                 <table class="table is-fullwidth">
@@ -893,7 +914,7 @@ impl StandardSettings {
                     </tbody>
                   </table>
               </div>
-            </div>
+            </>
         }
     }
 
@@ -903,7 +924,7 @@ impl StandardSettings {
     ) -> Html {
         html!{
             <div class="column">
-              <h2 class="has-text-weight-bold">{"Files"}</h2>
+              <h2 class="has-text-weight-bold">{"Files stadndard"}</h2>
               <div class="card column">
                   {self.show_frame_upload_files()}
                   <StandardFilesCard

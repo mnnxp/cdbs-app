@@ -98,6 +98,12 @@ mutation UploadStandardFiles($iptStandardFilesData: IptStandardFilesData!) {
   }
 }
 
+mutation UploadStandardFavicon($iptStandardFaviconData: IptStandardFaviconData!) {
+  uploadStandardFavicon(args: $iptStandardFaviconData){
+    ...uploadUrlFields
+  }
+}
+
 mutation AddStandardSpecs($iptStandardSpecsData: IptStandardSpecsData!) {
   addStandardSpecs(args: $iptStandardSpecsData)
 }
