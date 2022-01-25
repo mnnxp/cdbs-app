@@ -1,7 +1,8 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use yew::{
     classes, html, Component, ComponentLink, Html, Properties, ShouldRender,
 };
+use log::debug;
 // use web_sys::MouseEvent;
 use crate::services::filter_images;
 use crate::types::DownloadFile;
@@ -11,7 +12,7 @@ pub struct ImgShowcase {
     selected_img: usize,
     show_image: bool,
     link: ComponentLink<Self>,
-    img_arr: HashMap<usize, DownloadFile>,
+    img_arr: BTreeMap<usize, DownloadFile>,
 }
 
 #[derive(Properties, Clone)]
@@ -21,6 +22,7 @@ pub struct Props {
 
 #[derive(Clone)]
 pub enum Msg {
+    ParsingFiles,
     SetSelectImg(usize),
     ShowImg,
     Ignore,
@@ -31,41 +33,53 @@ impl Component for ImgShowcase {
     type Properties = Props;
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        let mut img_arr: HashMap<usize, DownloadFile> = HashMap::new();
-        let mut key = 0;
-        for file_data in &props.file_arr {
-            if filter_images(&file_data.filename) {
-                img_arr.insert(key, file_data.clone());
-                key += 1;
-            }
-        }
-
         ImgShowcase {
             props,
             selected_img: 0,
             link,
             show_image: false,
-            img_arr,
+            img_arr: BTreeMap::new(),
         }
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.file_arr.len() == props.file_arr.len() &&
-              self.props.file_arr.last().map(|x| &x.uuid) == props.file_arr.last().map(|x| &x.uuid) {
-            false
-        } else {
-            self.props = props;
-            true
+    fn rendered(&mut self, first_render: bool) {
+        if first_render {
+            self.link.send_message(Msg::ParsingFiles);
         }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
+            Msg::ParsingFiles => {
+                // remove old images
+                self.img_arr.clear();
+
+                let mut key = 0;
+                for file_data in &self.props.file_arr {
+                    if filter_images(&file_data.filename) {
+                        self.img_arr.insert(key, file_data.clone());
+                        key += 1;
+                    }
+                }
+            },
             Msg::SetSelectImg(index) => self.selected_img = index,
             Msg::ShowImg => self.show_image = !self.show_image,
             Msg::Ignore => {}
         };
         true
+    }
+
+    fn change(&mut self, props: Self::Properties) -> ShouldRender {
+        if self.props.file_arr.len() == props.file_arr.len() &&
+              self.props.file_arr.last().map(|x| &x.uuid) == props.file_arr.last().map(|x| &x.uuid) {
+            debug!("no change: {:?}", self.props.file_arr.len());
+            false
+        } else {
+            self.props = props;
+            self.link.send_message(Msg::ParsingFiles);
+            debug!("change: {:?}", self.props.file_arr.len());
+            true
+        }
     }
 
     fn view(&self) -> Html {
@@ -76,13 +90,18 @@ impl Component for ImgShowcase {
             false => html!{
                 <div class="column is-one-quarter show-img-box">
                     <div class="showImg">
-                      <div class="outBox">
-                        <div class="itemBox">
-                          {for self.img_arr.iter().map(|x|
-                            {self.item_generator(x.clone())}
-                          )}
-                        </div>
-                      </div>
+                      {match self.img_arr.len() > 1 {
+                          true => html!{
+                              <div class="outBox">
+                                <div class="itemBox">
+                                  {for self.img_arr.iter().map(|x|
+                                    {self.item_generator(x.clone())}
+                                  )}
+                                </div>
+                              </div>
+                          },
+                          false => html!{},
+                      }}
                       <div class="mainImgBox">
                           {match self.img_arr.get(&self.selected_img) {
                               Some(img_data) => html!{<img onclick=onclick_show_image src=img_data.download_url.clone() alt="" srcset="" />},

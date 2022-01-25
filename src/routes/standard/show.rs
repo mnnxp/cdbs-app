@@ -178,7 +178,7 @@ impl Component for ShowStandard {
                     })).await.unwrap();
                     link.send_message(Msg::GetDownloadFilesResult(res));
                 })
-            }
+            },
             Msg::Follow => {
                 let standard_uuid_string = self.standard.as_ref().unwrap().uuid.to_string();
 
@@ -189,7 +189,7 @@ impl Component for ShowStandard {
 
                     link.send_message(Msg::AddFollow(res));
                 })
-            }
+            },
             Msg::AddFollow(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
@@ -209,7 +209,7 @@ impl Component for ShowStandard {
                         self.error = Some(get_error(&data));
                     }
                 }
-            }
+            },
             Msg::UnFollow => {
                 let standard_uuid_string = self.standard.as_ref().unwrap().uuid.to_string();
 
@@ -220,7 +220,7 @@ impl Component for ShowStandard {
 
                     link.send_message(Msg::DelFollow(res));
                 })
-            }
+            },
             Msg::DelFollow(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
@@ -240,29 +240,35 @@ impl Component for ShowStandard {
                         self.error = Some(get_error(&data));
                     }
                 }
-            }
+            },
             Msg::ResponseError(err) => {
                 self.error = Some(err);
-            }
+            },
             Msg::GetDownloadFilesResult(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res = data.as_object().unwrap().get("data").unwrap();
 
                 match res.is_null() {
                     false => {
-                        self.file_arr = serde_json::from_value(res.get("standardFiles").unwrap().clone()).unwrap();
-                        debug!("standardFiles: {:?}", self.file_arr);
+                        let mut result: Vec<DownloadFile> = serde_json::from_value(res.get("standardFiles").unwrap().clone()).unwrap();
+                        debug!("standardFiles: {:?}", result);
 
-                        // add main image
-                        if let Some(standard) = &self.standard {
-                            self.file_arr.push(standard.image_file.clone())
+                        if !result.is_empty() {
+                            // checkign have main image
+                            match self.file_arr.first() {
+                                Some(main_img) => {
+                                    result.push(main_img.clone());
+                                    self.file_arr = result;
+                                },
+                                None => self.file_arr = result,
+                            }
                         }
                     },
                     true => {
                         link.send_message(Msg::ResponseError(get_error(&data)));
                     },
                 }
-            }
+            },
             Msg::GetStandardData(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
@@ -281,19 +287,23 @@ impl Component for ShowStandard {
                         }
                         // description length check for show
                         self.show_full_description = standard_data.description.len() < 250;
+
+                        // add main image
+                        self.file_arr.push(standard_data.image_file.clone());
+
                         self.standard = Some(standard_data);
                     }
                     true => {
                         self.error = Some(get_error(&data));
                     }
                 }
-            }
+            },
             Msg::ShowDescription => {
                 self.show_full_description = !self.show_full_description;
-            }
+            },
             Msg::ShowComponentsList => {
                 self.show_related_components = !self.show_related_components;
-            }
+            },
             Msg::OpenStandardOwner => {
                 if let Some(standard_data) = &self.standard {
                     // Redirect to owner standard page
@@ -301,7 +311,7 @@ impl Component for ShowStandard {
                         standard_data.owner_company.uuid.to_string()
                     ).into()));
                 }
-            }
+            },
             Msg::OpenStandardSetting => {
                 if let Some(standard_data) = &self.standard {
                     // Redirect to page for change and update standard
@@ -309,15 +319,19 @@ impl Component for ShowStandard {
                         standard_data.uuid.clone()
                     ).into()));
                 }
-            }
+            },
             Msg::Ignore => {}
         }
         true
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        self.props = props;
-        true
+        if self.props.standard_uuid == props.standard_uuid {
+            false
+        } else {
+            self.props = props;
+            true
+        }
     }
 
     fn view(&self) -> Html {
