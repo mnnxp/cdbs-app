@@ -22,21 +22,10 @@ use crate::fragments::{
     img_showcase::ImgShowcase,
 };
 use crate::gqls::make_query;
-use crate::services::{
-    is_authenticated,
-    // get_logged_user
-};
+use crate::services::{is_authenticated, get_logged_user};
 use crate::types::{
     UUID, StandardInfo, SlimUser, DownloadFile, ComponentsQueryArg,
 };
-
-// #[derive(GraphQLQuery)]
-// #[graphql(
-//     schema_path = "./graphql/schema.graphql",
-//     query_path = "./graphql/standards.graphql",
-//     response_derives = "Debug"
-// )]
-// struct GetStandardDataOpt;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -100,7 +89,6 @@ pub enum Msg {
     AddFollow(String),
     UnFollow,
     DelFollow(String),
-    ResponseError(Error),
     GetDownloadFilesResult(String),
     GetStandardData(String),
     ShowDescription,
@@ -204,10 +192,8 @@ impl Component for ShowStandard {
                             self.subscribers += 1;
                             self.is_followed = true;
                         }
-                    }
-                    true => {
-                        self.error = Some(get_error(&data));
-                    }
+                    },
+                    true => self.error = Some(get_error(&data)),
                 }
             },
             Msg::UnFollow => {
@@ -235,14 +221,9 @@ impl Component for ShowStandard {
                             self.subscribers -= 1;
                             self.is_followed = false;
                         }
-                    }
-                    true => {
-                        self.error = Some(get_error(&data));
-                    }
+                    },
+                    true => self.error = Some(get_error(&data)),
                 }
-            },
-            Msg::ResponseError(err) => {
-                self.error = Some(err);
             },
             Msg::GetDownloadFilesResult(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
@@ -264,9 +245,7 @@ impl Component for ShowStandard {
                             }
                         }
                     },
-                    true => {
-                        link.send_message(Msg::ResponseError(get_error(&data)));
-                    },
+                    true => self.error = Some(get_error(&data)),
                 }
             },
             Msg::GetStandardData(res) => {
@@ -282,7 +261,7 @@ impl Component for ShowStandard {
                         self.subscribers = standard_data.subscribers;
                         self.is_followed = standard_data.is_followed;
                         self.current_standard_uuid = standard_data.uuid.clone();
-                        if let Some(user) = &self.props.current_user {
+                        if let Some(user) = get_logged_user() {
                             self.current_user_owner = standard_data.owner_user.uuid == user.uuid;
                         }
                         // description length check for show
@@ -292,10 +271,8 @@ impl Component for ShowStandard {
                         self.file_arr.push(standard_data.image_file.clone());
 
                         self.standard = Some(standard_data);
-                    }
-                    true => {
-                        self.error = Some(get_error(&data));
-                    }
+                    },
+                    true => self.error = Some(get_error(&data)),
                 }
             },
             Msg::ShowDescription => {
@@ -382,7 +359,10 @@ impl ShowStandard {
 
         html!{
             <div class="columns">
-              <ImgShowcase file_arr=self.file_arr.clone() />
+              <ImgShowcase
+                object_uuid=self.current_standard_uuid.clone()
+                file_arr=self.file_arr.clone()
+              />
               // <div class="column is-one-quarter">
               //   <img class="imgBox" src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
               // </div>
@@ -598,17 +578,14 @@ impl ShowStandard {
     }
 
     fn show_download_btn(&self) -> Html {
-        let onclick_download_standard_btn = self.link
-            .callback(|_| Msg::RequestDownloadFiles);
+        let onclick_download_standard_btn =
+            self.link.callback(|_| Msg::RequestDownloadFiles);
 
-        match &self.current_user_owner {
-            true => html!{
-                <button class="button is-info"
-                    onclick=onclick_download_standard_btn >
-                  <span class="has-text-weight-bold">{"Download"}</span>
-                </button>
-            },
-            false => html!{},
+        html!{
+            <button class="button is-info"
+                onclick=onclick_download_standard_btn >
+              <span class="has-text-weight-bold">{"Download"}</span>
+            </button>
         }
     }
 

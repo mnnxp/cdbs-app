@@ -1,11 +1,9 @@
 use std::collections::BTreeMap;
-use yew::{
-    classes, html, Component, ComponentLink, Html, Properties, ShouldRender,
-};
+use yew::{classes, html, Component, ComponentLink, Html, Properties, ShouldRender};
+use wasm_bindgen_futures::spawn_local;
 use log::debug;
-// use web_sys::MouseEvent;
 use crate::services::filter_images;
-use crate::types::DownloadFile;
+use crate::types::{DownloadFile, UUID};
 
 pub struct ImgShowcase {
     props: Props,
@@ -17,12 +15,14 @@ pub struct ImgShowcase {
 
 #[derive(Properties, Clone)]
 pub struct Props {
+    pub object_uuid: UUID,
     pub file_arr: Vec<DownloadFile>,
 }
 
 #[derive(Clone)]
 pub enum Msg {
     ParsingFiles,
+    SetImgArr(BTreeMap<usize, DownloadFile>),
     SetSelectImg(usize),
     ShowImg,
     Ignore,
@@ -49,19 +49,26 @@ impl Component for ImgShowcase {
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
+        let link = self.link.clone();
+
         match msg {
             Msg::ParsingFiles => {
-                // remove old images
-                self.img_arr.clear();
+                let file_arr = self.props.file_arr.clone();
+                spawn_local(async move {
+                    let mut img_arr: BTreeMap<usize, DownloadFile> = BTreeMap::new();
+                    let mut key = 0;
 
-                let mut key = 0;
-                for file_data in &self.props.file_arr {
-                    if filter_images(&file_data.filename) {
-                        self.img_arr.insert(key, file_data.clone());
-                        key += 1;
+                    for file_data in &file_arr {
+                        if filter_images(&file_data.filename) {
+                            img_arr.insert(key, file_data.clone());
+                            key += 1;
+                        }
                     }
-                }
+
+                    link.send_message(Msg::SetImgArr(img_arr));
+                });
             },
+            Msg::SetImgArr(img_arr) => self.img_arr = img_arr,
             Msg::SetSelectImg(index) => self.selected_img = index,
             Msg::ShowImg => self.show_image = !self.show_image,
             Msg::Ignore => {}
@@ -70,8 +77,8 @@ impl Component for ImgShowcase {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.file_arr.len() == props.file_arr.len() &&
-              self.props.file_arr.last().map(|x| &x.uuid) == props.file_arr.last().map(|x| &x.uuid) {
+        if self.props.object_uuid == props.object_uuid &&
+              self.props.file_arr.len() == props.file_arr.len() {
             debug!("no change: {:?}", self.props.file_arr.len());
             false
         } else {

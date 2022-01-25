@@ -433,7 +433,10 @@ impl ShowComponent {
 
         html!{
             <div class="columns">
-                <ImgShowcase file_arr=self.file_arr.clone() />
+                <ImgShowcase
+                    object_uuid=self.current_component_uuid.clone()
+                    file_arr=self.file_arr.clone()
+                />
                 // <img class="imgBox" src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
 
               <div class="column">
