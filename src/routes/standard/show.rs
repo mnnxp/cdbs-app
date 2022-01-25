@@ -388,7 +388,7 @@ impl ShowStandard {
                 }</div>
                 <div class="buttons flexBox">
                     {self.show_related_components_btn()}
-                    {self.show_download_btn()}
+                    // {self.show_download_btn()}
                     {self.show_setting_btn()}
                     {self.show_followers_btn()}
                     // {self.show_share_btn()}
@@ -577,17 +577,17 @@ impl ShowStandard {
         </>}
     }
 
-    fn show_download_btn(&self) -> Html {
-        let onclick_download_standard_btn =
-            self.link.callback(|_| Msg::RequestDownloadFiles);
-
-        html!{
-            <button class="button is-info"
-                onclick=onclick_download_standard_btn >
-              <span class="has-text-weight-bold">{"Download"}</span>
-            </button>
-        }
-    }
+    // fn show_download_btn(&self) -> Html {
+    //     let onclick_download_standard_btn =
+    //         self.link.callback(|_| Msg::RequestDownloadFiles);
+    //
+    //     html!{
+    //         <button class="button is-info"
+    //             onclick=onclick_download_standard_btn >
+    //           <span class="has-text-weight-bold">{"Download"}</span>
+    //         </button>
+    //     }
+    // }
 
     fn show_setting_btn(&self) -> Html {
         let onclick_setting_standard_btn = self.link
