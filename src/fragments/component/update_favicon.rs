@@ -20,10 +20,10 @@ type FileName = String;
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/standards.graphql",
+    query_path = "./graphql/components.graphql",
     response_derives = "Debug"
 )]
-struct UploadStandardFavicon;
+struct UploadComponentFavicon;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -35,13 +35,13 @@ struct ConfirmUploadCompleted;
 
 #[derive(PartialEq, Clone, Debug, Properties)]
 pub struct Props {
-    pub standard_uuid: String,
+    pub component_uuid: String,
     pub callback: Callback<()>,
 }
 
 /// For viewing favicon data on page
 #[derive(Debug)]
-pub struct UpdateStandardFaviconCard {
+pub struct UpdateComponentFaviconCard {
     error: Option<Error>,
     request_upload_data: UploadFile,
     request_upload_file: Callback<Result<Option<String>, Error>>,
@@ -72,7 +72,7 @@ pub enum Msg {
     Ignore,
 }
 
-impl Component for UpdateStandardFaviconCard {
+impl Component for UpdateComponentFaviconCard {
     type Message = Msg;
     type Properties = Props;
 
@@ -105,13 +105,13 @@ impl Component for UpdateStandardFaviconCard {
                         self.active_loading_files_btn = true;
 
                         // debug!("RequestUploadData: {:?}", &self.request_update);
-                        let ipt_standard_favicon_data = upload_standard_favicon::IptStandardFaviconData {
-                            standardUuid: self.props.standard_uuid.clone(),
+                        let ipt_component_favicon_data = upload_component_favicon::IptComponentFaviconData {
+                            componentUuid: self.props.component_uuid.clone(),
                             filename: file.name().to_string(),
                         };
                         spawn_local(async move {
-                            let res = make_query(UploadStandardFavicon::build_query(
-                                upload_standard_favicon::Variables { ipt_standard_favicon_data },
+                            let res = make_query(UploadComponentFavicon::build_query(
+                                upload_component_favicon::Variables { ipt_component_favicon_data },
                             )).await.unwrap();
                             link.send_message(Msg::GetUploadData(res));
                         });
@@ -158,7 +158,7 @@ impl Component for UpdateStandardFaviconCard {
                 match res_value.is_null() {
                     false => {
                         self.request_upload_data = serde_json::from_value(
-                            res_value.get("uploadStandardFavicon").unwrap().clone(),
+                            res_value.get("uploadComponentFavicon").unwrap().clone(),
                         ).unwrap();
 
                         if let Some(file) = self.file.clone() {
@@ -228,7 +228,7 @@ impl Component for UpdateStandardFaviconCard {
     }
 }
 
-impl UpdateStandardFaviconCard {
+impl UpdateComponentFaviconCard {
     fn show_frame_upload_file(&self) -> Html {
         let onchange_favicon_file = self.link.callback(move |value| {
             if let ChangeData::Files(files) = value {

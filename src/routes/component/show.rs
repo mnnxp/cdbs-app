@@ -190,7 +190,8 @@ impl Component for ShowComponent {
                 })).await.unwrap();
 
                 link.send_message(Msg::GetComponentData(res));
-            })};
+              })
+            };
 
             spawn_local(async move {
               let ipt_component_files_arg = component_files::IptComponentFilesArg{
@@ -306,6 +307,8 @@ impl Component for ShowComponent {
                         }
                         // length check for show btn more/less
                         self.show_full_description = component_data.description.len() < 250;
+                        // add main image
+                        self.file_arr.push(component_data.image_file.clone());
                         self.show_full_characteristics = component_data.component_params.len() < 4;
                         self.select_modification_uuid = component_data.component_modifications
                             .first()
@@ -342,8 +345,19 @@ impl Component for ShowComponent {
 
                 match res_value.is_null() {
                     false => {
-                        self.file_arr = serde_json::from_value(res_value.get("componentFiles").unwrap().clone()).unwrap();
-                        debug!("Download file: {:?}", self.file_arr);
+                        let mut result: Vec<DownloadFile> = serde_json::from_value(res_value.get("componentFiles").unwrap().clone()).unwrap();
+                        debug!("Download file: {:?}", result);
+
+                        if !result.is_empty() {
+                            // checkign have main image
+                            match self.file_arr.first() {
+                                Some(main_img) => {
+                                    result.push(main_img.clone());
+                                    self.file_arr = result;
+                                },
+                                None => self.file_arr = result,
+                            }
+                        }
                     }
                     true => self.error = Some(get_error(&data)),
                 }

@@ -22,7 +22,7 @@ use crate::fragments::{
     // catalog_component::CatalogComponents,
     component::{
         ComponentStandardsCard, ComponentSuppliersCard,
-        ComponentLicensesTags, ComponentParamsTags,
+        ComponentLicensesTags, ComponentParamsTags, UpdateComponentFaviconCard
     },
     component::{
         ModificationsTableEdit, ComponentFilesBlock, SearchSpecsTags, AddKeywordsTags
@@ -683,17 +683,18 @@ impl Component for ComponentSettings {
                                 <br/>
                                 {self.show_modifications_table()}
                                 <br/>
-                                // <div class="columns">
-                                // </div>
+                                <div class="columns">
+                                    {self.update_component_favicon()}
+                                    {self.show_additional_params(component_data)}
+                                </div>
+                                // <br/>
                                 {self.show_component_files()}
                                 <br/>
                                 <div class="columns">
-                                  {self.show_additional_params(component_data)}
                                   {self.show_component_standards(component_data)}
+                                  {self.show_component_suppliers(component_data)}
                                 </div>
-                                <br/>
-                                {self.show_component_suppliers(component_data)}
-                                <br/>
+                                // <br/>
                                 {self.show_component_specs(component_data)}
                                 <br/>
                                 {self.show_component_keywords(component_data)}
@@ -855,6 +856,20 @@ impl ComponentSettings {
         </div>}
     }
 
+    fn update_component_favicon(&self) -> Html {
+        let callback_update_favicon = self.link.callback(|_| Msg::Ignore);
+
+        html!{<div class="column">
+            <h2 class="has-text-weight-bold">{"Update image for preview"}</h2>
+            <div class="card column">
+                <UpdateComponentFaviconCard
+                    component_uuid=self.current_component_uuid.clone()
+                    callback=callback_update_favicon.clone()
+                />
+            </div>
+        </div>}
+    }
+
     fn show_component_files(&self) -> Html {
         html!{<>
             <h2 class="has-text-weight-bold">{"Manage component files"}</h2>
@@ -898,7 +913,7 @@ impl ComponentSettings {
         &self,
         component_data: &ComponentInfo,
     ) -> Html {
-        html!{<>
+        html!{<div class="column">
           <h2 class="has-text-weight-bold">{"Manage component suppliers"}</h2>
           <ComponentSuppliersCard
               show_delete_btn = true
@@ -907,7 +922,7 @@ impl ComponentSettings {
               supplier_list = self.supplier_list.clone()
               is_base = self.current_component_is_base
             />
-        </>}
+        </div>}
     }
 
     fn show_component_specs(

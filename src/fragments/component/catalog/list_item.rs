@@ -139,20 +139,12 @@ impl Component for ListItem {
 }
 
 impl ListItem {
-
-    fn show_img(&self) -> String {
-      if let Some(src) = self.show_img.clone() {
-        src
-      }else{
-        "https://bulma.io/images/placeholders/128x128.png".to_string()
-      }
-    }
-
     fn showing_in_list(&self) -> Html {
         let ShowComponentShort {
             // uuid,
             name,
             description,
+            image_file,
             owner_user,
             // type_access,
             // component_type,
@@ -188,11 +180,7 @@ impl ListItem {
               <div class="media-left">
                 <figure class="image is-96x96">
                   <div hidden={!is_base} class="top-tag" >{"standard"}</div>
-                  // {match files.first() {
-                  //     Some(f) => html!{<img src={f.download_url.clone()} alt="Image" />},
-                  //     None => html!{<img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />},
-                  // }}
-                  <img src={self.show_img()} alt="Image" />
+                  <img src={image_file.download_url.clone()} alt="Image" />
                 </figure>
               </div>
               <div class="media-content">
@@ -267,6 +255,7 @@ impl ListItem {
         let ShowComponentShort {
             is_base,
             is_followed,
+            image_file,
             name,
             ..
         } = self.props.data.clone();
@@ -292,7 +281,7 @@ impl ListItem {
             <div class="innerBox" >
               <div class="imgBox" >
                 <div class="top-tag" hidden={!is_base} >{"standart"}</div>
-                <img src={self.show_img()} alt="Image" />
+                <img src={image_file.download_url.clone()} alt="Image" />
               </div>
               <div>
                 {"manufactured by "}<span class="id-box has-text-grey-light has-text-weight-bold">{"Alphametall"}</span>

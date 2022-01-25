@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 use yew::{classes, html, Component, ComponentLink, Html, Properties, ShouldRender};
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
-use crate::services::filter_images;
+use crate::services::image_detector;
 use crate::types::{DownloadFile, UUID};
 
 pub struct ImgShowcase {
@@ -59,7 +59,7 @@ impl Component for ImgShowcase {
                     let mut key = 0;
 
                     for file_data in &file_arr {
-                        if filter_images(&file_data.filename) {
+                        if image_detector(&file_data.filename) {
                             img_arr.insert(key, file_data.clone());
                             key += 1;
                         }

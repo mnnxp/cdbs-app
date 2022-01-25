@@ -42,7 +42,9 @@ impl Component for Footer {
                 <div class="columns">
                     // left footer
                     <div class="column">
-                        <h4>{current_info}</h4>
+                        <a class=vec!("social-network") href="mailto:info@cadbase.rs" title="Email">
+                            <i class=vec!("fas", "fa-lg", "fa-envelope")></i>
+                        </a>
                         // <h4>
                         //     { "Let’s stay in touch!" }
                         // </h4>
@@ -92,9 +94,7 @@ impl Component for Footer {
                     </div>
                     // right footer
                     <div class="column">
-                        <a class=vec!("social-network") href="mailto:info@cadbase.rs" title="Email">
-                            <i class=vec!("fas", "fa-lg", "fa-envelope")></i>
-                        </a>
+                        <h4>{current_info}</h4>
                         // <span style="margin-left: 1rem;">
                         //     <a class="button is-ghost" onclick=onclick_show_about >{ "About us" }</a>
                         // </span>

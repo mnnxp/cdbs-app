@@ -1,7 +1,7 @@
 use regex::Regex;
 
-/// Filter files for get images when can display in browser
-pub(crate) fn filter_images(filename: &str) -> bool {
+/// Checkign files for get images when can display in browser
+pub(crate) fn image_detector(filename: &str) -> bool {
     let ext_str = Regex::new(r"\w*$").unwrap().find(filename).unwrap().as_str();
 
     matches!(

@@ -131,6 +131,7 @@ type ComponentAndRelatedData {
   parentComponentUuid: UUID!
   name: String!
   description: String!
+  imageFile: DownloadFile!
   ownerUser: ShowUserShort!
   typeAccess: TypeAccessTranslateList!
   componentType: ComponentTypeTranslateList!
@@ -388,6 +389,11 @@ input IptComponentData {
   componentTypeId: Int!
   actualStatusId: Int!
   isBase: Boolean!
+}
+
+input IptComponentFaviconData {
+  filename: String!
+  componentUuid: UUID!
 }
 
 input IptComponentFilesArg {
@@ -898,6 +904,7 @@ type MutationRoot {
   addComponentKeywordsByNames(args: IptComponentKeywordsNames!): Int!
   deleteComponentKeywords(args: IptComponentKeywordsData!): Int!
   uploadComponentFiles(args: IptComponentFilesData!): [UploadFile!]!
+  uploadComponentFavicon(args: IptComponentFaviconData!): UploadFile!
   deleteComponentFile(args: DelComponentFileData!): Boolean!
   deleteSuppliersComponent(args: DelSuppliersComponentData!): Int!
   addStandardToComponent(args: IptStandardToComponentData!): Boolean!
@@ -1134,12 +1141,13 @@ type ShowComponentShort {
   uuid: UUID!
   name: String!
   description: String!
+  imageFile: DownloadFile!
   ownerUser: ShowUserShort!
   typeAccess: TypeAccessTranslateList!
   componentType: ComponentTypeTranslateList!
   actualStatus: ActualStatusTranslateList!
-  isFollowed: Boolean!
   isBase: Boolean!
+  isFollowed: Boolean!
   updatedAt: NaiveDateTime!
   licenses: [License!]!
   files: [DownloadFile!]!

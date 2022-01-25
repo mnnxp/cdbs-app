@@ -259,6 +259,12 @@ mutation UploadComponentFiles($iptComponentFilesData: IptComponentFilesData!) {
   }
 }
 
+mutation UploadComponentFavicon($iptComponentFaviconData: IptComponentFaviconData!) {
+  uploadComponentFavicon(args: $iptComponentFaviconData){
+    ...uploadUrlFields
+  }
+}
+
 mutation AddStandardToComponent($iptStandardToComponentData: IptStandardToComponentData!) {
   addStandardToComponent(args: $iptStandardToComponentData)
 }
@@ -298,6 +304,9 @@ fragment componentFields on ComponentAndRelatedData {
   parentComponentUuid
   name
   description
+  imageFile {
+    ...downloadFileFields
+  }
   ownerUser {
     ...showUserShortFields
   }
@@ -540,6 +549,9 @@ fragment showComponentShortFields on ShowComponentShort {
   uuid
   name
   description
+  imageFile {
+    ...downloadFileFields
+  }
   ownerUser {
     ...showUserShortFields
   }

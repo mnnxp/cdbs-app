@@ -499,7 +499,7 @@ impl Component for ManageModificationFilesets {
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
 
-        html!{<div class="card">
+        html!{<>
             <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
             {self.modal_add_fileset()}
             {self.show_manage()}
@@ -514,7 +514,7 @@ impl Component for ManageModificationFilesets {
                     {self.show_frame_upload_files()}
                 </div>
             </div>
-        </div>}
+        </>}
     }
 }
 
@@ -645,7 +645,7 @@ impl ManageModificationFilesets {
             }
         });
 
-        html!{<div class="card">
+        html!{<div class="block">
             <div class="file has-name is-boxed is-centered">
                 <label class="file-label" style="width: 100%">
                   <input id="component-file-input"

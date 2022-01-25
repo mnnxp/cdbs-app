@@ -9,6 +9,7 @@ use crate::gqls::make_query;
 
 use crate::fragments::list_errors::ListErrors;
 use crate::error::{Error, get_error};
+use crate::services::image_detector;
 use crate::types::{UUID, CompanyCertificate};
 
 #[derive(GraphQLQuery)]
@@ -175,6 +176,11 @@ impl CompanyCertificateItem {
 
         let onclick_delete_cert = self.link.callback(|_| Msg::RequestDeleteCert);
 
+        let cert_url = match image_detector(&self.props.certificate.file.filename) {
+            true => self.props.certificate.file.download_url.clone(),
+            false => String::from("https://bulma.io/images/placeholders/128x128.png"),
+        };
+
         html!{<>
             <br/>
             <div class="card">
@@ -185,8 +191,7 @@ impl CompanyCertificateItem {
                     {match self.show_cert {
                         true => html!{<figure class="image is-128x128" style="margin-left: 1rem" >
                             <img
-                                // src="https://bulma.io/images/placeholders/128x128.png" alt="Image"
-                                src={self.props.certificate.file.download_url.clone()}
+                                src={cert_url}
                                 loading="lazy"
                             />
                         </figure>},
@@ -218,14 +223,18 @@ impl CompanyCertificateItem {
     fn show_certificate_data(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
 
+        let cert_url = match image_detector(&self.props.certificate.file.filename) {
+            true => self.props.certificate.file.download_url.clone(),
+            false => String::from("https://bulma.io/images/placeholders/128x128.png"),
+        };
+
         html!{<div class="boxItem" >
           <div class="innerBox" >
             <ListErrors error=self.error.clone() clear_error=onclick_clear_error.clone()/>
             <div class="imgBox" >
                 <figure class="image is-256x256" >
                     <img
-                        src="https://bulma.io/images/placeholders/128x128.png" alt="Image"
-                        // src={self.props.certificate.file.download_url.clone()}
+                        src={cert_url}
                         loading="lazy"
                     />
                 </figure>
@@ -266,11 +275,16 @@ impl CompanyCertificateItem {
             false => "Show",
         };
 
-        html!{<button id={"show-cert"}
-            class="button is-light is-fullwidth has-text-weight-bold"
-            onclick=onclick_show_cert>
-            { text_btn }
-        </button>}
+        match self.props.show_cert_btn {
+            true => html!{
+                <button id={"show-cert"}
+                    class="button is-light is-fullwidth has-text-weight-bold"
+                    onclick=onclick_show_cert>
+                    { text_btn }
+                </button>
+            },
+            false => html!{},
+        }
     }
 
     fn show_update_block(&self) -> Html {
@@ -330,6 +344,11 @@ impl CompanyCertificateItem {
             false => "modal",
         };
 
+        let cert_url = match image_detector(&self.props.certificate.file.filename) {
+            true => self.props.certificate.file.download_url.clone(),
+            false => String::from("https://bulma.io/images/placeholders/128x128.png"),
+        };
+
         html!{
             <div class=class_modal>
               <div class="modal-background" onclick=onclick_show_cert.clone() />
@@ -337,7 +356,7 @@ impl CompanyCertificateItem {
                 <p class="image is-4by3">
                   // <img src="https://bulma.io/images/placeholders/1280x960.png" alt="" />
                   <img
-                    src={self.props.certificate.file.download_url.clone()}
+                    src={cert_url}
                     loading="lazy"
                   />
                 </p>

@@ -7,6 +7,7 @@ mod param;
 mod spec;
 mod supplier;
 mod standard;
+mod update_favicon;
 
 pub use catalog::*;
 pub use file::*;
@@ -17,3 +18,4 @@ pub use param::*;
 pub use spec::*;
 pub use supplier::*;
 pub use standard::*;
+pub use update_favicon::*;
