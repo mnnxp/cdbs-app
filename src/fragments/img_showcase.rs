@@ -90,18 +90,13 @@ impl Component for ImgShowcase {
             false => html!{
                 <div class="column is-one-quarter show-img-box">
                     <div class="showImg">
-                      {match self.img_arr.len() > 1 {
-                          true => html!{
-                              <div class="outBox">
-                                <div class="itemBox">
-                                  {for self.img_arr.iter().map(|x|
-                                    {self.item_generator(x.clone())}
-                                  )}
-                                </div>
-                              </div>
-                          },
-                          false => html!{},
-                      }}
+                      <div class="outBox">
+                        <div class="itemBox">
+                          {for self.img_arr.iter().map(|x|
+                            {self.item_generator(x.clone())}
+                          )}
+                        </div>
+                      </div>
                       <div class="mainImgBox">
                           {match self.img_arr.get(&self.selected_img) {
                               Some(img_data) => html!{<img onclick=onclick_show_image src=img_data.download_url.clone() alt="" srcset="" />},
