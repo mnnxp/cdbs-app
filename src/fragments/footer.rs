@@ -128,7 +128,7 @@ impl Footer {
               <div class="modal-content">
                 {"Привет! Как дела?"}
               </div>
-              <button class="modal-close is-large" aria-label="close"></button>
+              <button class="modal-close is-large" aria-label="close" onclick=onclick_show_about />
             </div>
         }
     }

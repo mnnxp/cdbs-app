@@ -222,7 +222,7 @@ impl UserCertificateItem {
     fn show_certificate_data(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         let onclick_show_cert = self.link.callback(|_| Msg::ShowCert);
-        
+
 
         let cert_url = match image_detector(&self.props.certificate.file.filename) {
             true => self.props.certificate.file.download_url.clone(),
@@ -360,7 +360,7 @@ impl UserCertificateItem {
                   />
                 </p>
               </div>
-              <button class="modal-close is-large" aria-label="close"></button>
+              <button class="modal-close is-large" aria-label="close" onclick=onclick_show_cert />
             </div>
         }
     }
