@@ -388,21 +388,20 @@ impl Profile {
                 <ListErrors error=self.error.clone()/>
                 <div class="container page">
                     <div class="row">
-                        // <h1 class="title">{ title }</h1>
                         <div class="card">
-                          <div class="card-content">
-                            {self.view_card()}
-                            <div class="content">
-                                { self.view_user_info(
-                                    user_data.description.as_str(),
-                                    user_data.position.as_str(),
-                                    user_data.region.region.as_str(),
-                                    user_data.program.name.as_str(),
-                                ) }
+                            <div class="card-content">
+                                {self.view_card()}
+                                <div class="content">
+                                    { self.view_user_info(
+                                        user_data.description.as_str(),
+                                        user_data.position.as_str(),
+                                        user_data.region.region.as_str(),
+                                        user_data.program.name.as_str(),
+                                    ) }
+                                </div>
                             </div>
-                          </div>
+                            {self.other_user_relate_object(user_data)}
                         </div>
-                        {self.other_user_relate_object(user_data)}
                     </div>
                 </div>
             </div>
@@ -414,16 +413,20 @@ impl Profile {
         user_data: &UserInfo,
     ) -> Html {
         html!{<div class="card">
-          { self.show_profile_action() }
-          <div class="card-relate-data" style="flex:1;">
-              {match self.profile_tab {
-                  ProfileTab::Certificates => self.view_certificates(user_data.certificates.clone()),
-                  ProfileTab::Components => self.view_components(&user_data.uuid),
-                  ProfileTab::Companies => self.view_companies(&user_data.uuid),
-                  ProfileTab::FavoriteComponents => self.view_favorite_components(Some(user_data.uuid.clone())),
-                  ProfileTab::FavoriteCompanies => self.view_favorite_companies(Some(user_data.uuid.clone())),
-                  _ => html!{},
-              }}
+            <div class="columns is-mobile">
+                <div class="column is-flex">
+                  { self.show_profile_action() }
+                  <div class="card-relate-data" style="flex:1;">
+                      {match self.profile_tab {
+                          ProfileTab::Certificates => self.view_certificates(user_data.certificates.clone()),
+                          ProfileTab::Components => self.view_components(&user_data.uuid),
+                          ProfileTab::Companies => self.view_companies(&user_data.uuid),
+                          ProfileTab::FavoriteComponents => self.view_favorite_components(Some(user_data.uuid.clone())),
+                          ProfileTab::FavoriteCompanies => self.view_favorite_companies(Some(user_data.uuid.clone())),
+                          _ => html!{},
+                      }}
+                  </div>
+              </div>
           </div>
         </div>}
     }
