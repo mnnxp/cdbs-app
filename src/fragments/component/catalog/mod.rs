@@ -125,15 +125,12 @@ impl Component for CatalogComponents {
 
                 match res_value.is_null() {
                     false => {
-                        let result: Vec<ShowComponentShort> =
-                            serde_json::from_value(res_value.get("components").unwrap().clone())
-                                .unwrap();
-                        // debug!("UpdateList result: {:?}", result);
-                        self.list = result;
-                    }
-                    true => {
-                        self.error = Some(get_error(&data));
-                    }
+                        self.list = serde_json::from_value(
+                            res_value.get("components").unwrap().clone()
+                        ).unwrap();
+                        // debug!("UpdateList result: {:?}", self.list);
+                    },
+                    true => self.error = Some(get_error(&data)),
                 }
             },
             Msg::AddFav(component_uuid) => {

@@ -421,27 +421,27 @@ impl ShowCompany {
                         <div id="company-email">
                             <span class="icon is-small"><i class="fas fa-envelope" /></span>
                             <span>{" Email: "}</span>
-                            <span class="overflow-title has-text-weight-bold">{company_data.email.clone()}</span>
+                            <span class="has-text-weight-bold">{company_data.email.clone()}</span>
                         </div>
                         // <br/>
                         <div id="company-phone">
                             <span class="icon is-small"><i class="fas fa-phone" /></span>
                             <span>{" Phone: "}</span>
-                            <span class="overflow-title has-text-weight-bold">{company_data.phone.clone()}</span>
+                            <span class="has-text-weight-bold">{company_data.phone.clone()}</span>
                         </div>
                         // <br/>
                         <div id="company-inn">
                             <span class="icon is-small"><i class="fas fa-building" /></span>
                             <span>{" Reg.№ "}</span>
-                            <span class="overflow-title has-text-weight-bold">{company_data.inn.clone()}</span>
+                            <span class="has-text-weight-bold">{company_data.inn.clone()}</span>
                         </div>
                         // <br/>
                         <div id="company-region">
                             <span class="icon is-small"><i class="fas fa-map-marker-alt" /></span>
                             <span>{" Location: "}</span>
-                            <span class="overflow-title has-text-weight-bold">{company_data.region.region.clone()}</span>
-                            <span class="overflow-title has-text-weight-bold">{", "}</span>
-                            <span id="company-address" class="overflow-title has-text-weight-bold">
+                            <span class="has-text-weight-bold">{company_data.region.region.clone()}</span>
+                            <span class="has-text-weight-bold">{", "}</span>
+                            <span id="company-address" class="has-text-weight-bold">
                                 {company_data.address.clone()}
                             </span>
                         </div>
@@ -449,7 +449,7 @@ impl ShowCompany {
                         <div id="company-site_url">
                             <span class="icon is-small"><i class="fas fa-globe" /></span>
                             <span>{" Site: "}</span>
-                            <span class="overflow-title has-text-weight-bold">{company_data.site_url.clone()}</span>
+                            <span class="has-text-weight-bold">{company_data.site_url.clone()}</span>
                         </div>
                     </div>
                 </div>
@@ -574,7 +574,7 @@ impl ShowCompany {
         html!{<div class="profileBox" >
             <CompanyCertificatesCard
                 certificates = company_data.company_certificates.clone()
-                show_cert_btn = false
+                show_cert_btn = true
                 download_btn = false
                 manage_btn = false
              />

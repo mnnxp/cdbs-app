@@ -323,14 +323,14 @@ impl ComponentStandardsCard {
                           )}
                           </select>
                         </div>
+                        <button
+                            id="standard-component"
+                            class="button"
+                            disabled={self.request_add_standard_uuid.is_empty()}
+                            onclick={onclick_add_standard} >
+                            {"Add"}
+                        </button>
                     </section>
-                    <button
-                        id="standard-component"
-                        class="button"
-                        disabled={self.request_add_standard_uuid.is_empty()}
-                        onclick={onclick_add_standard} >
-                        {"Add"}
-                    </button>
                   </div>
                 </div>
               </div>

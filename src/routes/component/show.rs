@@ -411,11 +411,9 @@ impl Component for ShowComponent {
                             <div class="card column">
                               {self.show_main_card(component_data)}
                             </div>
-                            <br/>
                             {self.show_fileset_files_card()}
                             <br/>
                             {self.show_modifications_table(component_data)}
-                            <br/>
                             {self.show_modification_files()}
                             <br/>
                             {self.show_cards(component_data)}
@@ -563,12 +561,13 @@ impl ShowComponent {
 
     fn show_modification_files(&self) -> Html {
         match self.open_modification_files_card {
-            true => html!{
+            true => html!{<>
+                <br/>
                 <ModificationFilesTableCard
                     show_download_btn = true
                     modification_uuid = self.select_modification_uuid.clone()
                   />
-            },
+            </>},
             false => html!{},
         }
     }
@@ -878,6 +877,7 @@ impl ShowComponent {
     fn show_fileset_files_card(&self) -> Html {
         match &self.open_fileset_files_card {
             true => html!{<>
+                <br/>
                 <h2 class="has-text-weight-bold">{"Files of select fileset"}</h2>
                 <FilesOfFilesetCard
                     show_download_btn = false

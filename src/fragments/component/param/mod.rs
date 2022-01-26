@@ -336,24 +336,24 @@ impl ComponentParamsTags {
                           )}
                           </select>
                         </div>
+                        <textarea
+                            id="param-value"
+                            class="textarea"
+                            // rows="10"
+                            type="text"
+                            placeholder="param value"
+                            value={self.request_set_param_value.clone()}
+                            oninput=oninput_set_param_value
+                            />
+                        <button
+                            id="add-param-component"
+                            class="button"
+                            disabled={self.request_add_param_id == 0 ||
+                                self.request_set_param_value.is_empty()}
+                            onclick={onclick_add_param} >
+                            {"Add"}
+                        </button>
                     </section>
-                    <textarea
-                        id="param-value"
-                        class="textarea"
-                        // rows="10"
-                        type="text"
-                        placeholder="param value"
-                        value={self.request_set_param_value.clone()}
-                        oninput=oninput_set_param_value
-                        />
-                    <button
-                        id="add-param-component"
-                        class="button"
-                        disabled={self.request_add_param_id == 0 ||
-                            self.request_set_param_value.is_empty()}
-                        onclick={onclick_add_param} >
-                        {"Add"}
-                    </button>
                   </div>
                 </div>
               </div>
