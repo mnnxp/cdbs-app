@@ -67,13 +67,8 @@ impl Component for SideMenu {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.menu_arr.as_ref().map(|x| x.len()) == props.menu_arr.as_ref().map(|x| x.len()) &&
-              self.props.menu_arr.as_ref().map(|x| x.first().as_ref().map(|m| &m.title)) == props.menu_arr.as_ref().map(|x| x.first().map(|m| &m.title)) {
-            false
-        } else {
-            self.props = props;
-            true
-        }
+        self.props = props;
+        true
     }
 
     fn update(&mut self, _msg: Self::Message) -> ShouldRender {
