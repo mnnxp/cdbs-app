@@ -221,6 +221,8 @@ impl UserCertificateItem {
 
     fn show_certificate_data(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+        let onclick_show_cert = self.link.callback(|_| Msg::ShowCert);
+        
 
         let cert_url = match image_detector(&self.props.certificate.file.filename) {
             true => self.props.certificate.file.download_url.clone(),
@@ -231,7 +233,7 @@ impl UserCertificateItem {
           <div class="innerBox" >
             <ListErrors error=self.error.clone() clear_error=onclick_clear_error.clone()/>
             <div class="imgBox" >
-                <figure class="image is-256x256" >
+                <figure class="image is-256x256" onclick=onclick_show_cert >
                     <img
                         // src="https://bulma.io/images/placeholders/128x128.png" alt="Image"
                         src={cert_url}

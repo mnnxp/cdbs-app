@@ -47,12 +47,12 @@
 .boxItem {
   padding: 20px;
   background: #ffffff;
-  border: 2px solid #EDF1FB;
+  border: 2px solid #edf1fb;
   border-radius: 8px;
   width: 240px;
   box-sizing: content-box;
   margin-bottom: 26px;
-  &:hover{
+  &:hover {
     // border: 2px solid #1872f0;
     // cursor: pointer;
     transform: translateY(-2px);
@@ -71,6 +71,19 @@
   height: 240px;
   display: inline-flex;
   position: relative;
+  justify-content: center;
+}
+
+.imgBox {
+  figure {
+    img {
+      display: block;
+      height: 100%;
+      width: auto;
+      object-fit: contain;
+      cursor: zoom-in;
+    }
+  }
 }
 
 .imgBox > img {
@@ -82,4 +95,14 @@
   box-sizing: border-box;
   margin-top: 20px;
   display: flex;
+}
+
+.modal{
+  .modal-content{
+    .image.is-4by3{
+      img{
+        object-fit: contain;
+      }
+    }
+  }
 }
