@@ -267,6 +267,10 @@ body {
   display: inline-flex;
   position: relative;
   justify-content: center;
+  .image {
+    display: inline-flex;
+    justify-content: center;
+  }
 }
 
 .footer {
