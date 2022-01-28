@@ -1,6 +1,8 @@
 mod item;
+mod add;
 
 pub use item::ComponentParamTag;
+pub use add::RegisterParamnameBlock;
 
 use std::collections::BTreeSet;
 use yew::prelude::*;
@@ -67,7 +69,8 @@ pub enum Msg {
     GetParamsListResult(String),
     GetComponentParamsResult(String),
     GetAddParamResult(String),
-    UpdateSelectParam(String),
+    UpdateSetParamId(usize),
+    // UpdateSelectParam(String),
     UpdateParamValue(String),
     ChangeHideAddParam,
     SetSelectParam,
@@ -122,13 +125,13 @@ impl Component for ComponentParamsTags {
                     paramId: self.request_add_param_id as i64,
                     value: self.request_set_param_value.clone(),
                 };
-                let ipt_component_param_data = put_component_params::IptComponentParamData{
+                let ipt_component_params_data = put_component_params::IptComponentParamsData{
                     componentUuid: self.props.component_uuid.clone(),
                     params: vec![ipt_param_data],
                 };
                 spawn_local(async move {
                     let res = make_query(PutComponentParams::build_query(
-                        put_component_params::Variables { ipt_component_param_data }
+                        put_component_params::Variables { ipt_component_params_data }
                     )).await.unwrap();
                     link.send_message(Msg::GetAddParamResult(res));
                 })
@@ -193,8 +196,9 @@ impl Component for ComponentParamsTags {
                     true => self.error = Some(get_error(&data)),
                 }
             },
-            Msg::UpdateSelectParam(data) =>
-                self.request_add_param_id = data.parse::<usize>().unwrap_or_default(),
+            Msg::UpdateSetParamId(param_id) => self.request_add_param_id = param_id,
+            // Msg::UpdateSelectParam(data) =>
+            //     self.request_add_param_id = data.parse::<usize>().unwrap_or_default(),
             Msg::UpdateParamValue(data) => self.request_set_param_value = data,
             Msg::ChangeHideAddParam => {
                 if self.hide_add_param_modal && self.param_list.is_empty() {
@@ -289,17 +293,17 @@ impl ComponentParamsTags {
     }
 
     fn modal_add_param(&self) -> Html {
-        let onclick_add_param = self.link
-            .callback(|_| Msg::RequestAddParam);
+        let onclick_add_param = self.link.callback(|_| Msg::RequestAddParam);
 
-        let onclick_hide_modal = self.link
-            .callback(|_| Msg::ChangeHideAddParam);
+        let onclick_hide_modal = self.link.callback(|_| Msg::ChangeHideAddParam);
 
-        let onchange_select_add_param = self.link
-            .callback(|ev: ChangeData| Msg::UpdateSelectParam(match ev {
-              ChangeData::Select(el) => el.value(),
-              _ => String::new(),
-          }));
+        let onclick_set_param_id = self.link.callback(|value| Msg::UpdateSetParamId(value));
+
+        // let onchange_select_add_param = self.link
+        //     .callback(|ev: ChangeData| Msg::UpdateSelectParam(match ev {
+        //       ChangeData::Select(el) => el.value(),
+        //       _ => String::new(),
+        //   }));
 
         let oninput_set_param_value = self.link
             .callback(|ev: InputData| Msg::UpdateParamValue(ev.value));
@@ -319,32 +323,34 @@ impl ComponentParamsTags {
                       <button class="delete" aria-label="close" onclick=onclick_hide_modal.clone() />
                     </header>
                     <section class="modal-card-body">
-                        <label class="label">{"Select param"}</label>
-                        <div class="select">
-                          <select
-                              id="add-param"
-                              select={self.request_add_param_id.to_string()}
-                              onchange=onchange_select_add_param
-                            >
-                          { for self.param_list.iter().map(|x|
-                              match self.param_ids.get(&x.param_id) {
-                                  Some(_) => html!{}, // this param already has
-                                  None => html!{ <option value={x.param_id.to_string()}>
-                                      {&x.paramname}
-                                  </option>},
-                              }
-                          )}
-                          </select>
-                        </div>
-                        <textarea
+                        // <label class="label">{"Select param"}</label>
+                        // <div class="select">
+                        //   <select
+                        //       id="add-param"
+                        //       select={self.request_add_param_id.to_string()}
+                        //       onchange=onchange_select_add_param
+                        //     >
+                        //   { for self.param_list.iter().map(|x|
+                        //       match self.param_ids.get(&x.param_id) {
+                        //           Some(_) => html!{}, // this param already has
+                        //           None => html!{ <option value={x.param_id.to_string()}>
+                        //               {&x.paramname}
+                        //           </option>},
+                        //       }
+                        //   )}
+                        //   </select>
+                        // </div>
+                        <RegisterParamnameBlock callback_new_param_id=onclick_set_param_id.clone() />
+                        <label class="label">{"Set value"}</label>
+                        <input
                             id="param-value"
-                            class="textarea"
-                            // rows="10"
+                            class="input is-fullwidth"
                             type="text"
                             placeholder="param value"
                             value={self.request_set_param_value.clone()}
                             oninput=oninput_set_param_value
                             />
+                        <br/>
                         <button
                             id="add-param-component"
                             class="button"

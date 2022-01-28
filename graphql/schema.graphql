@@ -443,7 +443,7 @@ input IptComponentModificationData {
   actualStatusId: Int!
 }
 
-input IptComponentParamData {
+input IptComponentParamsData {
   componentUuid: UUID!
   params: [IptParamData!]!
 }
@@ -894,7 +894,7 @@ type MutationRoot {
   deleteCompanyAccessComponent(args: DelCompanyAccessComponentData!): Boolean!
   setUserAccessComponent(args: IptUserAccessComponentData!): Boolean!
   deleteUserAccessComponent(args: DelUserAccessComponentData!): Boolean!
-  putComponentParams(args: IptComponentParamData!): Int!
+  putComponentParams(args: IptComponentParamsData!): Int!
   deleteComponentParams(args: DelComponentParamData!): Int!
   addComponentLicense(args: IptComponentLicenseData!): Boolean!
   deleteComponentLicense(args: IptComponentLicenseData!): Int!
@@ -992,7 +992,7 @@ type MutationRoot {
   registerExtension(args: IptExtensionData!): Extension!
   registerKeyword(args: IptKeywordData!): Keyword!
   registerLicense(args: LicenseData!): License!
-  registerParam(args: IptParamTranslateListData!): ParamTranslateList!
+  registerParam(args: IptParamTranslateListData!): Int!
   registerProgram(args: IptProgramData!): Program!
   registerRegion(args: IptRegionTranslateListData!): RegionTranslateList!
 

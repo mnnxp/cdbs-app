@@ -86,13 +86,13 @@ impl Component for ComponentParamTag {
                     paramId: self.props.param_data.param.param_id as i64,
                     value: self.request_set_param_value.clone(),
                 };
-                let ipt_component_param_data = put_component_params::IptComponentParamData{
+                let ipt_component_params_data = put_component_params::IptComponentParamsData{
                     componentUuid: self.props.component_uuid.clone(),
                     params: vec![ipt_param_data],
                 };
                 spawn_local(async move {
                     let res = make_query(PutComponentParams::build_query(
-                        put_component_params::Variables { ipt_component_param_data }
+                        put_component_params::Variables { ipt_component_params_data }
                     )).await.unwrap();
                     link.send_message(Msg::GetChangeValueResult(res));
                 })

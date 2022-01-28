@@ -193,8 +193,8 @@ query ComponentActualStatuses($filterInt: [Int!]) {
   }
 }
 
-mutation PutComponentParams($iptComponentParamData: IptComponentParamData!) {
-  putComponentParams(args: $iptComponentParamData)
+mutation PutComponentParams($iptComponentParamsData: IptComponentParamsData!) {
+  putComponentParams(args: $iptComponentParamsData)
 }
 
 mutation DeleteComponentParams($delComponentParamData: DelComponentParamData!) {

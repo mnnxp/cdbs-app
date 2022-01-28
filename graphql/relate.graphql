@@ -49,3 +49,7 @@ mutation ConfirmUploadCompleted($fileUuids: [String!]!) {
 mutation DeleteFile($fileUuid: UUID!) {
   deleteFile(fileUuid: $fileUuid)
 }
+
+mutation RegisterParam($iptParamTranslateListData: IptParamTranslateListData!) {
+  registerParam(args: $iptParamTranslateListData)
+}

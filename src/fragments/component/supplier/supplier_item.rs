@@ -205,14 +205,14 @@ impl ComponentSupplierItem {
         match &self.company_data {
             Some(data) => html!{<div class=class_modal>
               <div class="modal-background" onclick=onclick_company_data_info.clone() />
-              <div class="modal-content">
+              // <div class="modal-content">
                   <div class="card">
                     <ListItemCompany
                         data = data.clone()
                         show_list = true
                       />
                   </div>
-              </div>
+              // </div>
               <button class="modal-close is-large" aria-label="close" onclick=onclick_company_data_info />
             </div>},
             None => html!{},

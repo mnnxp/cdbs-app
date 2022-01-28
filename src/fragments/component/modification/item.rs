@@ -1,7 +1,8 @@
 use std::collections::{HashMap, BTreeMap};
 use yew::{
     html, Callback, Component, ComponentLink,
-    Html, Properties, ShouldRender, ChangeData, InputData
+    Html, Properties, ShouldRender, InputData,
+    // ChangeData,
 };
 use log::debug;
 use graphql_client::GraphQLQuery;
@@ -11,7 +12,10 @@ use wasm_bindgen_futures::spawn_local;
 use super::ModificationTableItemModule;
 use crate::error::{get_error, Error};
 use crate::gqls::make_query;
-use crate::fragments::list_errors::ListErrors;
+use crate::fragments::{
+    list_errors::ListErrors,
+    component::param::RegisterParamnameBlock,
+};
 use crate::types::{UUID, Param, ParamValue};
 
 #[derive(GraphQLQuery)]
@@ -81,7 +85,8 @@ pub enum Msg {
     GetDeleteParamResult(String),
     SelectModification,
     ShowModificationFilesList,
-    UpdateParamId(String),
+    UpdateSetParamId(usize),
+    // UpdateParamId(String),
     UpdateValue(String),
     ShowNewParamCard,
     ShowAddParamCard(usize),
@@ -288,8 +293,9 @@ impl Component for ModificationTableItem {
                     open_files.emit(());
                 }
             },
-            Msg::UpdateParamId(data) =>
-                self.request_add_param.param_id = data.parse::<usize>().unwrap_or_default(),
+            Msg::UpdateSetParamId(param_id) => self.request_add_param.param_id = param_id,
+            // Msg::UpdateParamId(data) =>
+            //     self.request_add_param.param_id = data.parse::<usize>().unwrap_or_default(),
             Msg::UpdateValue(data) => {
                 match self.open_edit_param_card {
                     true => {
@@ -488,20 +494,19 @@ impl ModificationTableItem {
     fn modal_new_value(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
 
-        let onchange_param_id = self.link
-            .callback(|ev: ChangeData| Msg::UpdateParamId(match ev {
-              ChangeData::Select(el) => el.value(),
-              _ => "1".to_string(),
-          }));
+        // let onchange_param_id = self.link
+        //     .callback(|ev: ChangeData| Msg::UpdateParamId(match ev {
+        //       ChangeData::Select(el) => el.value(),
+        //       _ => "1".to_string(),
+        //   }));
 
-        let oninput_param_value = self.link
-            .callback(|ev: InputData| Msg::UpdateValue(ev.value));
+        let onclick_set_param_id = self.link.callback(|value| Msg::UpdateSetParamId(value));
 
-        let onclick_new_param_card = self.link
-            .callback(|_| Msg::ShowNewParamCard);
+        let oninput_param_value = self.link.callback(|ev: InputData| Msg::UpdateValue(ev.value));
 
-        let onclick_param_add = self.link
-            .callback(|_| Msg::RequestAddParamData);
+        let onclick_new_param_card = self.link.callback(|_| Msg::ShowNewParamCard);
+
+        let onclick_param_add = self.link.callback(|_| Msg::RequestAddParamData);
 
         let class_modal = match &self.open_new_param_card {
             true => "modal is-active",
@@ -520,18 +525,19 @@ impl ModificationTableItem {
                   <article class="media center-media">
                       <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
                       <div class="media-content">
-                          <label class="label">{"Select param"}</label>
-                          <div class="select">
-                              <select
-                                  id="new-modification-param-id"
-                                  select={self.request_add_param.param_id.to_string()}
-                                  onchange=onchange_param_id
-                                  >
-                                { for self.params_list.iter().map(|(_, x)|
-                                    html!{<option value={x.param_id.to_string()}>{&x.paramname}</option>}
-                                )}
-                              </select>
-                          </div>
+                          // <label class="label">{"Select param"}</label>
+                          // <div class="select">
+                          //     <select
+                          //         id="new-modification-param-id"
+                          //         select={self.request_add_param.param_id.to_string()}
+                          //         onchange=onchange_param_id
+                          //         >
+                          //       { for self.params_list.iter().map(|(_, x)|
+                          //           html!{<option value={x.param_id.to_string()}>{&x.paramname}</option>}
+                          //       )}
+                          //     </select>
+                          // </div>
+                          <RegisterParamnameBlock callback_new_param_id=onclick_set_param_id.clone() />
                           <label class="label">{"Set value"}</label>
                           <input
                               id="new-modification-param-value"
