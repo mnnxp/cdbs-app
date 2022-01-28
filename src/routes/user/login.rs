@@ -88,8 +88,9 @@ impl Component for Login {
                     set_logged_user(Some(user_json.to_string()));
                     let user : SlimUser = serde_json::from_value(user_json).unwrap();
                     debug!("user.username: {}", user.username);
+                    let username = user.username.clone();
                     props.callback.emit(user);
-                    router_agent.lock().unwrap().send(ChangeRoute(AppRoute::Home.into()));
+                    router_agent.lock().unwrap().send(ChangeRoute(AppRoute::Profile(username).into()));
                 });
                 // debug!("get_token().unwrap(): {:?}", get_token().unwrap());
             },
