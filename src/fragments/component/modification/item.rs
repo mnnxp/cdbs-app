@@ -212,7 +212,8 @@ impl Component for ModificationTableItem {
                 }
             },
             Msg::GetAddParamResult(res) => {
-                debug!("GetAddParamResult: {:?}", res);let data: Value = serde_json::from_str(res.as_str()).unwrap();
+                debug!("GetAddParamResult: {:?}", res);
+                let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
 
                 match res_value.is_null() {
