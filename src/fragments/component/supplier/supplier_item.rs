@@ -178,7 +178,11 @@ impl Component for ComponentSupplierItem {
             <tr>
                 <td>{self.props.supplier_data.supplier.shortname.clone()}</td>
                 <td>{self.props.supplier_data.description.clone()}</td>
-                <td><a onclick={onclick_supplier_data_info.clone()}>{"info"}</a></td>
+                <td><a onclick={onclick_supplier_data_info.clone()}>
+                    <span class="icon" >
+                        <i class="fas fa-info" aria-hidden="true"></i>
+                    </span>
+                </a></td>
                 {match self.props.show_delete_btn {
                     true => html!{<td><a onclick={onclick_delete_supplier.clone()}>
                         <span class="icon" >

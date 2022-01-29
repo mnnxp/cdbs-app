@@ -133,21 +133,19 @@ impl RegisterParamnameBlock {
         };
 
         html!{<>
-            <label class="label">{"Set paramname"}</label>
-            // <div class="columns">
-                <div class="column">
-                    <input
-                        id="paramname"
-                        class="input is-fullwidth"
-                        type="text"
-                        placeholder="param name"
-                        value={self.request_new_paramname.clone()}
-                        oninput=oninput_set_paramname
-                        />
-                </div>
-            // </div>
-            <label class="label">{"Set value"}</label>
             <div class="column">
+                <label class="label">{"Set paramname (letter case has matter)"}</label>
+                <input
+                    id="paramname"
+                    class="input is-fullwidth"
+                    type="text"
+                    placeholder="param name"
+                    value={self.request_new_paramname.clone()}
+                    oninput=oninput_set_paramname
+                    />
+            </div>
+            <div class="column">
+                <label class="label">{"Set value"}</label>
                 <input
                     id="param-value"
                     class="input is-fullwidth"
@@ -161,7 +159,8 @@ impl RegisterParamnameBlock {
                 <button
                     id="add-paramname"
                     class=class_btn
-                    disabled={self.disable_btn || self.set_param_value.is_empty()}
+                    disabled={self.disable_btn || self.request_new_paramname.is_empty() ||
+                        self.set_param_value.is_empty()}
                     onclick={onclick_register_paramname} >
                     {"Add"}
                 </button>

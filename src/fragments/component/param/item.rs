@@ -196,7 +196,11 @@ impl ComponentParamTag {
             <td>{self.current_param_value.clone()}</td>
             {match self.props.show_manage_btn {
                 true => html!{<>
-                    <td><a onclick={onclick_change_param.clone()}>{"change"}</a></td>
+                    <td><a onclick={onclick_change_param.clone()}>
+                        <span class="icon" >
+                            <i class="fas fa-pen" aria-hidden="true"></i>
+                        </span>
+                    </a></td>
                     <td><a onclick={onclick_delete_param.clone()}>
                         <span class="icon" >
                           <i class="fa fa-trash" aria-hidden="true"></i>
@@ -232,24 +236,29 @@ impl ComponentParamTag {
                       <p class="modal-card-title">{"Change param value"}</p>
                       <button class="delete" aria-label="close" onclick=onclick_hide_modal.clone() />
                     </header>
-                    // <label class="label">{"Set value"}</label>
-                    <textarea
-                        id="param-value"
-                        class="textarea"
-                        // rows="10"
-                        type="text"
-                        placeholder="param value"
-                        value={self.request_set_param_value.clone()}
-                        oninput=oninput_set_param_value
-                        />
-                    <button
-                        id="change-param-value"
-                        class="button"
-                        disabled={self.request_set_param_value.is_empty() ||
-                            self.current_param_value == self.request_set_param_value}
-                        onclick={onclick_change_param_value} >
-                        {"Change"}
-                    </button>
+                    <section class="modal-card-body">
+                        <div class="column">
+                            <label class="label">{"Set value"}</label>
+                            <input
+                                id="param-value"
+                                class="input is-fullwidth"
+                                type="text"
+                                placeholder="param value"
+                                value={self.request_set_param_value.clone()}
+                                oninput=oninput_set_param_value
+                                />
+                        </div>
+                        <div class="column">
+                            <button
+                                id="change-param-value"
+                                class="button is-fullwidth"
+                                disabled={self.request_set_param_value.is_empty() ||
+                                    self.current_param_value == self.request_set_param_value}
+                                onclick={onclick_change_param_value} >
+                                {"Change"}
+                            </button>
+                        </div>
+                      </section>
                   </div>
                 </div>
               </div>
