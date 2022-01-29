@@ -19,7 +19,7 @@ struct RegisterParam;
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
-    pub callback_new_param_id: Callback<usize>,
+    pub callback_add_param: Callback<(usize, String)>,
 }
 
 pub struct RegisterParamnameBlock {
@@ -27,6 +27,7 @@ pub struct RegisterParamnameBlock {
     props: Props,
     link: ComponentLink<Self>,
     request_new_paramname: String,
+    set_param_value: String,
     active_loading_btn: bool,
     disable_btn: bool,
 }
@@ -36,6 +37,7 @@ pub enum Msg {
     RequestRegisterParamname,
     GetRegisterParamnameResult(String),
     UpdateParamname(String),
+    UpdateParamValue(String),
     ClearError,
     Ignore,
 }
@@ -50,6 +52,7 @@ impl Component for RegisterParamnameBlock {
             props,
             link,
             request_new_paramname: String::new(),
+            set_param_value: String::new(),
             active_loading_btn: false,
             disable_btn: true,
         }
@@ -82,7 +85,7 @@ impl Component for RegisterParamnameBlock {
                         let value: usize =
                             serde_json::from_value(res_value.get("registerParam").unwrap().clone()).unwrap();
                         debug!("registerParam: {:?}", value);
-                        self.props.callback_new_param_id.emit(value);
+                        self.props.callback_add_param.emit((value, self.set_param_value.clone()));
                         self.active_loading_btn = false;
                     },
                     true => self.error = Some(get_error(&data)),
@@ -92,6 +95,7 @@ impl Component for RegisterParamnameBlock {
                 self.disable_btn = false;
                 self.request_new_paramname = data;
             },
+            Msg::UpdateParamValue(data) => self.set_param_value = data,
             Msg::ClearError => self.error = None,
             Msg::Ignore => {},
         }
@@ -120,14 +124,17 @@ impl RegisterParamnameBlock {
         let oninput_set_paramname =
             self.link.callback(|ev: InputData| Msg::UpdateParamname(ev.value));
 
+        let oninput_set_param_value =
+            self.link.callback(|ev: InputData| Msg::UpdateParamValue(ev.value));
+
         let class_btn = match self.active_loading_btn {
-            true => "button is-loading",
-            false => "button",
+            true => "button is-loading is-fullwidth",
+            false => "button is-fullwidth",
         };
 
         html!{<>
             <label class="label">{"Set paramname"}</label>
-            <div class="columns">
+            // <div class="columns">
                 <div class="column">
                     <input
                         id="paramname"
@@ -138,15 +145,26 @@ impl RegisterParamnameBlock {
                         oninput=oninput_set_paramname
                         />
                 </div>
-                <div class="column">
-                    <button
-                        id="add-paramname"
-                        class=class_btn
-                        disabled={self.disable_btn || self.request_new_paramname.is_empty()}
-                        onclick={onclick_register_paramname} >
-                        {"Set paramname"}
-                    </button>
-                </div>
+            // </div>
+            <label class="label">{"Set value"}</label>
+            <div class="column">
+                <input
+                    id="param-value"
+                    class="input is-fullwidth"
+                    type="text"
+                    placeholder="value"
+                    value={self.set_param_value.clone()}
+                    oninput=oninput_set_param_value
+                    />
+            </div>
+            <div class="column">
+                <button
+                    id="add-paramname"
+                    class=class_btn
+                    disabled={self.disable_btn || self.set_param_value.is_empty()}
+                    onclick={onclick_register_paramname} >
+                    {"Add"}
+                </button>
             </div>
         </>}
     }
