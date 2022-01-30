@@ -178,7 +178,11 @@ impl Component for ComponentSupplierItem {
             <tr>
                 <td>{self.props.supplier_data.supplier.shortname.clone()}</td>
                 <td>{self.props.supplier_data.description.clone()}</td>
-                <td><a onclick={onclick_supplier_data_info.clone()}>{"info"}</a></td>
+                <td><a onclick={onclick_supplier_data_info.clone()}>
+                    <span class="icon" >
+                        <i class="fas fa-info" aria-hidden="true"></i>
+                    </span>
+                </a></td>
                 {match self.props.show_delete_btn {
                     true => html!{<td><a onclick={onclick_delete_supplier.clone()}>
                         <span class="icon" >
@@ -205,14 +209,14 @@ impl ComponentSupplierItem {
         match &self.company_data {
             Some(data) => html!{<div class=class_modal>
               <div class="modal-background" onclick=onclick_company_data_info.clone() />
-              <div class="modal-content">
+              // <div class="modal-content">
                   <div class="card">
                     <ListItemCompany
                         data = data.clone()
                         show_list = true
                       />
                   </div>
-              </div>
+              // </div>
               <button class="modal-close is-large" aria-label="close" onclick=onclick_company_data_info />
             </div>},
             None => html!{},

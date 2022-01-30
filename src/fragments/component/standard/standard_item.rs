@@ -145,7 +145,11 @@ impl ComponentStandardItem {
             <tr>
                 <td>{self.props.standard_data.classifier.clone()}</td>
                 <td>{self.props.standard_data.specified_tolerance.clone()}</td>
-                <td><a onclick={onclick_standard_data_info.clone()}>{"info"}</a></td>
+                <td><a onclick={onclick_standard_data_info.clone()}>
+                    <span class="icon" >
+                        <i class="fas fa-info" aria-hidden="true"></i>
+                    </span>
+                </a></td>
                 {match self.props.show_delete_btn {
                     true => html!{<td><a onclick={onclick_delete_standard.clone()}>
                         <span class="icon" >
@@ -168,14 +172,14 @@ impl ComponentStandardItem {
 
         html!{<div class=class_modal>
           <div class="modal-background" onclick=onclick_standard_data_info.clone() />
-          <div class="modal-content">
+            // <div class="modal-content">
               <div class="card">
                 <ListItemStandard
                     data = self.props.standard_data.clone()
                     show_list = true
                   />
               </div>
-          </div>
+            // </div>
           <button class="modal-close is-large" aria-label="close" onclick=onclick_standard_data_info />
         </div>}
     }

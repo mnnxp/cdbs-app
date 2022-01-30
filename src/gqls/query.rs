@@ -12,8 +12,7 @@ use crate::services::{get_token};
 
 // use serde
 
-const BACKEND_HOST: &str = dotenv!("BACKEND_HOST");
-const BACKEND_PORT: &str = dotenv!("BACKEND_PORT");
+const API_BACKEND: &str = dotenv!("API_BACKEND");
 const API_GPL: &str = dotenv!("API_GPL");
 
 /// Something wrong has occurred while fetching an external resource.
@@ -56,12 +55,7 @@ where
       }))).unwrap());
     }
 
-    let url = format!(
-        "{}:{}/{}",
-        BACKEND_HOST,
-        BACKEND_PORT,
-        API_GPL
-    );
+    let url = format!("{}/{}", API_BACKEND, API_GPL);
     let request = Request::new_with_str_and_init(url.as_str(), &opts)?;
 
     let window = yew::utils::window();

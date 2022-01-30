@@ -131,6 +131,7 @@ type ComponentAndRelatedData {
   parentComponentUuid: UUID!
   name: String!
   description: String!
+  imageFile: DownloadFile!
   ownerUser: ShowUserShort!
   typeAccess: TypeAccessTranslateList!
   componentType: ComponentTypeTranslateList!
@@ -390,6 +391,11 @@ input IptComponentData {
   isBase: Boolean!
 }
 
+input IptComponentFaviconData {
+  filename: String!
+  componentUuid: UUID!
+}
+
 input IptComponentFilesArg {
   componentUuid: UUID!
   filesUuids: [UUID!]
@@ -437,7 +443,7 @@ input IptComponentModificationData {
   actualStatusId: Int!
 }
 
-input IptComponentParamData {
+input IptComponentParamsData {
   componentUuid: UUID!
   params: [IptParamData!]!
 }
@@ -625,6 +631,11 @@ input IptStandardData {
   typeAccessId: Int!
   standardStatusId: Int!
   regionId: Int!
+}
+
+input IptStandardFaviconData {
+  filename: String!
+  standardUuid: UUID!
 }
 
 input IptStandardFilesArg {
@@ -883,7 +894,7 @@ type MutationRoot {
   deleteCompanyAccessComponent(args: DelCompanyAccessComponentData!): Boolean!
   setUserAccessComponent(args: IptUserAccessComponentData!): Boolean!
   deleteUserAccessComponent(args: DelUserAccessComponentData!): Boolean!
-  putComponentParams(args: IptComponentParamData!): Int!
+  putComponentParams(args: IptComponentParamsData!): Int!
   deleteComponentParams(args: DelComponentParamData!): Int!
   addComponentLicense(args: IptComponentLicenseData!): Boolean!
   deleteComponentLicense(args: IptComponentLicenseData!): Int!
@@ -893,6 +904,7 @@ type MutationRoot {
   addComponentKeywordsByNames(args: IptComponentKeywordsNames!): Int!
   deleteComponentKeywords(args: IptComponentKeywordsData!): Int!
   uploadComponentFiles(args: IptComponentFilesData!): [UploadFile!]!
+  uploadComponentFavicon(args: IptComponentFaviconData!): UploadFile!
   deleteComponentFile(args: DelComponentFileData!): Boolean!
   deleteSuppliersComponent(args: DelSuppliersComponentData!): Int!
   addStandardToComponent(args: IptStandardToComponentData!): Boolean!
@@ -932,6 +944,7 @@ type MutationRoot {
   addStandardKeywordsByNames(args: IptStandardKeywordsNames!): Int!
   deleteStandardKeywords(args: IptStandardKeywordsData!): Int!
   uploadStandardFiles(args: IptStandardFilesData!): [UploadFile!]!
+  uploadStandardFavicon(args: IptStandardFaviconData!): UploadFile!
   deleteStandardFile(args: DeleteStandardFileData!): Boolean!
   registerCompany(args: IptCompanyData!): UUID!
   putCompanyUpdate(companyUuid: UUID!, args: IptUpdateCompanyData!): Int!
@@ -979,7 +992,7 @@ type MutationRoot {
   registerExtension(args: IptExtensionData!): Extension!
   registerKeyword(args: IptKeywordData!): Keyword!
   registerLicense(args: LicenseData!): License!
-  registerParam(args: IptParamTranslateListData!): ParamTranslateList!
+  registerParam(args: IptParamTranslateListData!): Int!
   registerProgram(args: IptProgramData!): Program!
   registerRegion(args: IptRegionTranslateListData!): RegionTranslateList!
 
@@ -1128,12 +1141,13 @@ type ShowComponentShort {
   uuid: UUID!
   name: String!
   description: String!
+  imageFile: DownloadFile!
   ownerUser: ShowUserShort!
   typeAccess: TypeAccessTranslateList!
   componentType: ComponentTypeTranslateList!
   actualStatus: ActualStatusTranslateList!
-  isFollowed: Boolean!
   isBase: Boolean!
+  isFollowed: Boolean!
   updatedAt: NaiveDateTime!
   licenses: [License!]!
   files: [DownloadFile!]!
@@ -1167,6 +1181,7 @@ type ShowStandardShort {
   description: String!
   specifiedTolerance: String!
   publicationAt: NaiveDateTime!
+  imageFile: DownloadFile!
   ownerCompany: ShowCompanyShort!
   standardStatus: StandardStatusTranslateList!
   updatedAt: NaiveDateTime!

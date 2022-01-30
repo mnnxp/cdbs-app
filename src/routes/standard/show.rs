@@ -19,23 +19,13 @@ use crate::fragments::{
     list_errors::ListErrors,
     component::CatalogComponents,
     standard::{StandardFilesCard, SpecsTags, KeywordsTags},
+    img_showcase::ImgShowcase,
 };
 use crate::gqls::make_query;
-use crate::services::{
-    is_authenticated,
-    // get_logged_user
-};
+use crate::services::{is_authenticated, get_logged_user};
 use crate::types::{
     UUID, StandardInfo, SlimUser, DownloadFile, ComponentsQueryArg,
 };
-
-// #[derive(GraphQLQuery)]
-// #[graphql(
-//     schema_path = "./graphql/schema.graphql",
-//     query_path = "./graphql/standards.graphql",
-//     response_derives = "Debug"
-// )]
-// struct GetStandardDataOpt;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -83,6 +73,7 @@ pub struct ShowStandard {
     is_followed: bool,
     show_full_description: bool,
     show_related_components: bool,
+    file_arr: Vec<DownloadFile>,
 }
 
 #[derive(Properties, Clone)]
@@ -98,7 +89,6 @@ pub enum Msg {
     AddFollow(String),
     UnFollow,
     DelFollow(String),
-    ResponseError(Error),
     GetDownloadFilesResult(String),
     GetStandardData(String),
     ShowDescription,
@@ -126,6 +116,7 @@ impl Component for ShowStandard {
             is_followed: false,
             show_full_description: false,
             show_related_components: false,
+            file_arr: Vec::new(),
         }
     }
 
@@ -148,7 +139,7 @@ impl Component for ShowStandard {
         if (first_render || not_matches_standard_uuid) && is_authenticated() {
             // update current_standard_uuid for checking change standard in route
             self.current_standard_uuid = target_standard_uuid.to_string();
-
+            link.send_message(Msg::RequestDownloadFiles);
             spawn_local(async move {
                 let res = make_query(GetStandardData::build_query(get_standard_data::Variables {
                     standard_uuid: target_standard_uuid,
@@ -175,7 +166,7 @@ impl Component for ShowStandard {
                     })).await.unwrap();
                     link.send_message(Msg::GetDownloadFilesResult(res));
                 })
-            }
+            },
             Msg::Follow => {
                 let standard_uuid_string = self.standard.as_ref().unwrap().uuid.to_string();
 
@@ -186,7 +177,7 @@ impl Component for ShowStandard {
 
                     link.send_message(Msg::AddFollow(res));
                 })
-            }
+            },
             Msg::AddFollow(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
@@ -201,12 +192,10 @@ impl Component for ShowStandard {
                             self.subscribers += 1;
                             self.is_followed = true;
                         }
-                    }
-                    true => {
-                        self.error = Some(get_error(&data));
-                    }
+                    },
+                    true => self.error = Some(get_error(&data)),
                 }
-            }
+            },
             Msg::UnFollow => {
                 let standard_uuid_string = self.standard.as_ref().unwrap().uuid.to_string();
 
@@ -217,7 +206,7 @@ impl Component for ShowStandard {
 
                     link.send_message(Msg::DelFollow(res));
                 })
-            }
+            },
             Msg::DelFollow(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
@@ -232,29 +221,33 @@ impl Component for ShowStandard {
                             self.subscribers -= 1;
                             self.is_followed = false;
                         }
-                    }
-                    true => {
-                        self.error = Some(get_error(&data));
-                    }
+                    },
+                    true => self.error = Some(get_error(&data)),
                 }
-            }
-            Msg::ResponseError(err) => {
-                self.error = Some(err);
-            }
+            },
             Msg::GetDownloadFilesResult(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res = data.as_object().unwrap().get("data").unwrap();
 
                 match res.is_null() {
                     false => {
-                        let result: Vec<DownloadFile> = serde_json::from_value(res.get("standardFiles").unwrap().clone()).unwrap();
+                        let mut result: Vec<DownloadFile> = serde_json::from_value(res.get("standardFiles").unwrap().clone()).unwrap();
                         debug!("standardFiles: {:?}", result);
+
+                        if !result.is_empty() {
+                            // checkign have main image
+                            match self.file_arr.first() {
+                                Some(main_img) => {
+                                    result.push(main_img.clone());
+                                    self.file_arr = result;
+                                },
+                                None => self.file_arr = result,
+                            }
+                        }
                     },
-                    true => {
-                        link.send_message(Msg::ResponseError(get_error(&data)));
-                    },
+                    true => self.error = Some(get_error(&data)),
                 }
-            }
+            },
             Msg::GetStandardData(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
@@ -268,24 +261,26 @@ impl Component for ShowStandard {
                         self.subscribers = standard_data.subscribers;
                         self.is_followed = standard_data.is_followed;
                         self.current_standard_uuid = standard_data.uuid.clone();
-                        if let Some(user) = &self.props.current_user {
+                        if let Some(user) = get_logged_user() {
                             self.current_user_owner = standard_data.owner_user.uuid == user.uuid;
                         }
                         // description length check for show
                         self.show_full_description = standard_data.description.len() < 250;
+
+                        // add main image
+                        self.file_arr.push(standard_data.image_file.clone());
+
                         self.standard = Some(standard_data);
-                    }
-                    true => {
-                        self.error = Some(get_error(&data));
-                    }
+                    },
+                    true => self.error = Some(get_error(&data)),
                 }
-            }
+            },
             Msg::ShowDescription => {
                 self.show_full_description = !self.show_full_description;
-            }
+            },
             Msg::ShowComponentsList => {
                 self.show_related_components = !self.show_related_components;
-            }
+            },
             Msg::OpenStandardOwner => {
                 if let Some(standard_data) = &self.standard {
                     // Redirect to owner standard page
@@ -293,7 +288,7 @@ impl Component for ShowStandard {
                         standard_data.owner_company.uuid.to_string()
                     ).into()));
                 }
-            }
+            },
             Msg::OpenStandardSetting => {
                 if let Some(standard_data) = &self.standard {
                     // Redirect to page for change and update standard
@@ -301,15 +296,19 @@ impl Component for ShowStandard {
                         standard_data.uuid.clone()
                     ).into()));
                 }
-            }
+            },
             Msg::Ignore => {}
         }
         true
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        self.props = props;
-        true
+        if self.props.standard_uuid == props.standard_uuid {
+            false
+        } else {
+            self.props = props;
+            true
+        }
     }
 
     fn view(&self) -> Html {
@@ -319,12 +318,13 @@ impl Component for ShowStandard {
                     <ListErrors error=self.error.clone()/>
                     <div class="container page">
                         <div class="row">
-                            <div class="card">
+                            <div class="card column">
                               {self.show_main_card(standard_data)}
                             </div>
                             {match &self.show_related_components {
                                 true => {self.show_related_components(&standard_data.uuid)},
                                 false => html!{<>
+                                    <br/>
                                     <div class="columns">
                                       {self.show_standard_params(standard_data)}
                                       {self.show_standard_files(standard_data)}
@@ -359,9 +359,13 @@ impl ShowStandard {
 
         html!{
             <div class="columns">
-              <div class="column is-one-quarter">
-                <img class="imgBox" src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
-              </div>
+              <ImgShowcase
+                object_uuid=self.current_standard_uuid.clone()
+                file_arr=self.file_arr.clone()
+              />
+              // <div class="column is-one-quarter">
+              //   <img class="imgBox" src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
+              // </div>
               <div class="column">
                 <div class="media">
                     <div class="media-content">
@@ -384,7 +388,7 @@ impl ShowStandard {
                 }</div>
                 <div class="buttons flexBox">
                     {self.show_related_components_btn()}
-                    {self.show_download_btn()}
+                    // {self.show_download_btn()}
                     {self.show_setting_btn()}
                     {self.show_followers_btn()}
                     // {self.show_share_btn()}
@@ -423,8 +427,8 @@ impl ShowStandard {
     ) -> Html {
         html!{
             <div class="column">
-              <h2>{"Сharacteristics of the standard"}</h2>
-              <div class="card">
+              <h2 class="has-text-weight-bold">{"Сharacteristics of the standard"}</h2>
+              <div class="card column">
                 <table class="table is-fullwidth">
                     <tbody>
                       <tr>
@@ -464,7 +468,7 @@ impl ShowStandard {
     ) -> Html {
         html!{
             <div class="column">
-              <h2>{"Files"}</h2>
+              <h2 class="has-text-weight-bold">{"Files"}</h2>
               <StandardFilesCard
                   show_download_btn = true
                   show_delete_btn = false
@@ -480,8 +484,8 @@ impl ShowStandard {
         standard_data: &StandardInfo,
     ) -> Html {
         html!{<>
-              <h2>{"Specs"}</h2>
-              <div class="card">
+              <h2 class="has-text-weight-bold">{"Specs"}</h2>
+              <div class="card column">
                 <SpecsTags
                     show_manage_btn = false
                     standard_uuid = standard_data.uuid.clone()
@@ -496,8 +500,8 @@ impl ShowStandard {
         standard_data: &StandardInfo,
     ) -> Html {
         html!{<>
-              <h2>{"Keywords"}</h2>
-              <div class="card">
+              <h2 class="has-text-weight-bold">{"Keywords"}</h2>
+              <div class="card column">
                 <KeywordsTags
                     show_delete_btn = false
                     standard_uuid = standard_data.uuid.clone()
@@ -544,13 +548,13 @@ impl ShowStandard {
         let onclick_related_components_btn = self.link
             .callback(|_| Msg::ShowComponentsList);
 
-        let text_btn = match &self.show_related_components {
-            true => "Hide components",
-            false => "See components",
+        let (text_btn, classes_btn) = match &self.show_related_components {
+            true => ("Hide components", "button"),
+            false => ("See components", "button is-info is-light"),
         };
 
         html!{
-            <button class="button is-info is-light"
+            <button class=classes_btn
                 onclick=onclick_related_components_btn >
               <span class="has-text-black">{text_btn}</span>
             </button>
@@ -563,7 +567,7 @@ impl ShowStandard {
     ) -> Html {
         html!{<>
             <br/>
-            <h2>{"Components"}</h2>
+            <h2 class="has-text-weight-bold">{"Components"}</h2>
             <div class="card">
               <CatalogComponents
                   show_create_btn = false
@@ -573,28 +577,25 @@ impl ShowStandard {
         </>}
     }
 
-    fn show_download_btn(&self) -> Html {
-        let onclick_download_standard_btn = self.link
-            .callback(|_| Msg::RequestDownloadFiles);
-
-        match &self.current_user_owner {
-            true => html!{
-                <button class="button is-info"
-                    onclick=onclick_download_standard_btn >
-                  <span class="has-text-weight-bold">{"Download"}</span>
-                </button>
-            },
-            false => html!{},
-        }
-    }
+    // fn show_download_btn(&self) -> Html {
+    //     let onclick_download_standard_btn =
+    //         self.link.callback(|_| Msg::RequestDownloadFiles);
+    //
+    //     html!{
+    //         <button class="button is-info"
+    //             onclick=onclick_download_standard_btn >
+    //           <span class="has-text-weight-bold">{"Download"}</span>
+    //         </button>
+    //     }
+    // }
 
     fn show_setting_btn(&self) -> Html {
         let onclick_setting_standard_btn = self.link
             .callback(|_| Msg::OpenStandardSetting);
 
         match &self.current_user_owner {
-            true => {res_btn(classes!(
-                String::from("fa fa-cog")),
+            true => {res_btn(
+                classes!("fa", "fa-tools"),
                 onclick_setting_standard_btn,
                 String::new())},
             false => html!{},

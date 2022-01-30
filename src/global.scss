@@ -3,9 +3,38 @@
 @import "./fragments/company/catalog/index.scss";
 @import "./fragments/standard/catalog/index.scss";
 
+body {
+  background-color: #fafafa;
+}
+
 .flex_warp {
   display: flex;
   flex-wrap: wrap;
+}
+
+.header-logo {
+  // position: absolute;
+  margin-left: 10px;
+  // top: .2vh;
+  // z-index: -1;
+}
+
+// .logo-full{}
+
+.logo-bookmark {
+  top: -2vh;
+}
+
+.navbar {
+  background-color: #fafafa;
+}
+
+.navbar-item > .button {
+  margin-bottom: 0;
+}
+
+.navbar-item > .button:first-child {
+  margin-right: 12px;
 }
 
 .side-menu {
@@ -138,6 +167,18 @@
   align-items: center;
 }
 
+.componentListItem {
+  figure {
+    display: inline-flex;
+    img {
+      display: block;
+      height: auto;
+      width: 100%;
+      object-fit: contain;
+    }
+  }
+}
+
 .profileBox {
   display: flex;
   // justify-content: space-between;
@@ -153,7 +194,7 @@
 }
 
 .show-img-box {
-  width: auto!important;
+  width: auto !important;
   display: inline-flex;
   align-items: center;
   margin: 20px;
@@ -161,12 +202,18 @@
 
 .showImg {
   $bigHW: 200px;
-  $smallHW: 50px;
+  $smallHW: 42px;
 
   display: flex;
 
-  .modal-content{
-    img{
+  .outBox {
+    width: 62px;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .modal-content {
+    img {
       object-fit: contain;
     }
   }
@@ -185,7 +232,11 @@
   }
   .itemBox {
     height: $bigHW;
-    overflow: auto;
+    width: 100%;
+    overflow: hidden;
+    overflow-y: scroll;
+    padding-right: 50px;
+    box-sizing: content-box;
   }
   .itemBox .item {
     width: $smallHW;
@@ -208,4 +259,22 @@
     object-fit: contain;
     background: #eee;
   }
+}
+
+.imgBox {
+  // width: 240px;
+  // height: 240px;
+  display: inline-flex;
+  position: relative;
+  justify-content: center;
+  .image {
+    display: inline-flex;
+    justify-content: center;
+  }
+}
+
+.footer {
+  background-color: #fff;
+  padding: 1rem 1.5rem 1rem;
+  margin-top: 1.5rem;
 }

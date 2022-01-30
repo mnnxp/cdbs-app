@@ -11,8 +11,7 @@ use yew::services::storage::{Area, StorageService};
 use crate::error::Error;
 use crate::types::{SlimUser, ErrorInfo};
 
-const BACKEND_HOST: &str = dotenv!("BACKEND_HOST");
-const BACKEND_PORT: &str = dotenv!("BACKEND_PORT");
+const API_BACKEND: &str = dotenv!("API_BACKEND");
 
 const TOKEN_KEY: &str = dotenv!("TOKEN_KEY");
 const LOGGED_USER_KEY: &str = dotenv!("LOGGED_USER_KEY");
@@ -74,7 +73,7 @@ pub fn set_logged_user(logged_user: Option<String>) {
     *logged_user_lock = logged_user;
 }
 
-/// Get authenticated user from lazy static.
+/// Get authenticated user from browser storage
 pub fn get_logged_user() -> Option<SlimUser> {
     let logged_user_lock = LOGGED_USER.read();
     let logged_user_lock: Option<SlimUser> = serde_json::from_str(
@@ -136,7 +135,7 @@ impl Requests {
             }
         };
 
-        let url = format!("{}:{}{}", BACKEND_HOST, BACKEND_PORT, url);
+        let url = format!("{}{}", API_BACKEND, url);
         debug!("complect url: {}", url);
         let mut builder = Request::builder()
             .method(method)

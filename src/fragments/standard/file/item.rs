@@ -1,4 +1,4 @@
-use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
+use yew::{Component, Callback, ComponentLink, Html, Properties, ShouldRender, html};
 use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
@@ -31,6 +31,7 @@ pub struct Props {
     pub show_delete_btn: bool,
     pub standard_uuid: UUID,
     pub file: ShowFileInfo,
+    pub callback_delete_file: Option<Callback<UUID>>,
 }
 
 pub struct FileItem {
@@ -39,6 +40,7 @@ pub struct FileItem {
     link: ComponentLink<Self>,
     open_full_info_file: bool,
     get_result_delete: bool,
+    download_url: String,
 }
 
 pub enum Msg {
@@ -60,6 +62,7 @@ impl Component for FileItem {
             link,
             open_full_info_file: false,
             get_result_delete: false,
+            download_url: String::new(),
         }
     }
 
@@ -104,6 +107,7 @@ impl Component for FileItem {
                     false => {
                         let result: Vec<DownloadFile> = serde_json::from_value(res.get("standardFiles").unwrap().clone()).unwrap();
                         debug!("standardFiles: {:?}", result);
+                        self.download_url = result.first().map(|f| f.download_url.clone()).unwrap_or_default();
                     },
                     true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }
@@ -114,9 +118,13 @@ impl Component for FileItem {
 
                 match res.is_null() {
                     false => {
-                        let result: bool = serde_json::from_value(res.get("deleteStandardFile").unwrap().clone()).unwrap();
-                        debug!("deleteFile: {:?}", result);
-                        self.get_result_delete = result;
+                        self.get_result_delete = serde_json::from_value(res.get("deleteStandardFile").unwrap().clone()).unwrap();
+                        debug!("deleteFile: {:?}", self.get_result_delete);
+                        if self.get_result_delete {
+                            if let Some(rollback) = &self.props.callback_delete_file {
+                                rollback.emit(self.props.file.uuid.clone());
+                            }
+                        }
                     },
                     true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }
@@ -170,12 +178,19 @@ impl FileItem {
             .callback(|_| Msg::RequestDownloadFile);
 
         match &self.props.show_download_btn {
-            true => html!{
-                <button class="button is-white" onclick=onclick_download_btn >
-                  <span class="icon" >
-                    <i class="fas fa-file-download" aria-hidden="true"></i>
-                  </span>
-                </button>
+            true => match self.download_url.is_empty() {
+                true => html!{
+                    <button class="button is-ghost" onclick=onclick_download_btn>
+                      <span>{"Get link"}</span>
+                    </button>
+                },
+                false => html!{
+                    <a class="button is-ghost" href={self.download_url.clone()}  target="_blank">
+                      <span class="icon" >
+                        <i class="fas fa-file-download" aria-hidden="true"></i>
+                      </span>
+                    </a>
+                },
             },
             false => html!{},
         }
@@ -210,7 +225,7 @@ impl FileItem {
             <div class=class_modal>
               <div class="modal-background" onclick=onclick_file_info.clone() />
               <div class="modal-content">
-                  <div class="card">
+                  <div class="card column">
                     <table class="table is-fullwidth">
                       <tbody>
                         <tr>

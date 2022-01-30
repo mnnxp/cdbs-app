@@ -3,13 +3,29 @@ use yew_router::{
     agent::RouteRequest::ChangeRoute,
     prelude::*,
 };
+use serde_json::Value;
+use wasm_bindgen_futures::spawn_local;
+use graphql_client::GraphQLQuery;
+use crate::gqls::make_query;
+
 use crate::routes::AppRoute;
 use crate::fragments::switch_icon::res_btn;
-use crate::types::ShowComponentShort;
+use crate::types::{ShowComponentShort, DownloadFile, UUID};
+use log::debug;
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/components.graphql",
+    response_derives = "Debug"
+)]
+pub struct ComponentFiles;
 
 pub enum Msg {
     OpenComponent,
     TriggerFav,
+    GetImg,
+    GetDownloadFileResult(String),
     Ignore,
 }
 
@@ -24,7 +40,8 @@ pub struct Props {
 pub struct ListItem {
     router_agent: Box<dyn Bridge<RouteAgent>>,
     link: ComponentLink<Self>,
-    props: Props
+    props: Props,
+    show_img: Option<String>,
 }
 
 impl Component for ListItem {
@@ -36,10 +53,18 @@ impl Component for ListItem {
             router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             link,
             props,
+            show_img: None
+        }
+    }
+
+    fn rendered(&mut self, first_render: bool) {
+        if first_render {
+            self.link.send_message(Msg::GetImg);
         }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
+        let link = self.link.clone();
         match msg {
             Msg::OpenComponent => {
                 // Redirect to profile page
@@ -53,6 +78,41 @@ impl Component for ListItem {
                     self.props.add_fav.emit(String::new());
                 } else {
                     self.props.del_fav.emit(String::new());
+                }
+            },
+            Msg::GetImg => {
+                let component_uuid = self.props.data.uuid.clone();
+                spawn_local(async move {
+                    let ipt_component_files_arg = component_files::IptComponentFilesArg{
+                        componentUuid: component_uuid,
+                        filesUuids: None,
+                        limit: Some(1),
+                        offset: None,
+                    };
+                    let res = make_query(ComponentFiles::build_query(
+                        component_files::Variables {
+                            ipt_component_files_arg,
+                        }
+                    )).await;
+                    debug!("res {:?}", res);
+                    link.send_message(Msg::GetDownloadFileResult(res.unwrap()));
+                });
+            },
+            Msg::GetDownloadFileResult(res) => {
+                let data: Value = serde_json::from_str(res.as_str()).unwrap();
+                let res_value = data.as_object().unwrap().get("data").unwrap();
+
+                match res_value.is_null() {
+                    false => {
+                        let download_file: Vec<DownloadFile> =
+                            serde_json::from_value(res_value.get("componentFiles").unwrap().clone())
+                                .unwrap();
+                        debug!("Download file: {:?}", download_file);
+                        if download_file.len() > 0 {
+                            self.show_img = Some(download_file[0].download_url.clone());
+                        }
+                    }
+                    true => {},
                 }
             },
             Msg::Ignore => (),
@@ -84,6 +144,7 @@ impl ListItem {
             // uuid,
             name,
             description,
+            image_file,
             owner_user,
             // type_access,
             // component_type,
@@ -104,6 +165,7 @@ impl ListItem {
 
         let mut class_res_btn = vec!["fa-bookmark"];
         let mut class_color_btn = "";
+
         match is_followed {
             true => {
                 class_res_btn.push("fas");
@@ -113,16 +175,12 @@ impl ListItem {
         }
 
         html!{
-          <div class="box itemBox">
+          <div class="box itemBox componentListItem">
             <article class="media center-media">
               <div class="media-left">
                 <figure class="image is-96x96">
                   <div hidden={!is_base} class="top-tag" >{"standard"}</div>
-                  // {match files.first() {
-                  //     Some(f) => html!{<img src={f.download_url.clone()} alt="Image" />},
-                  //     None => html!{<img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />},
-                  // }}
-                  <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
+                  <img src={image_file.download_url.clone()} alt="Image" />
                 </figure>
               </div>
               <div class="media-content">
@@ -160,7 +218,7 @@ impl ListItem {
                           </div>
                       </div>
                       <div class="column buttons is-one-quarter flexBox" >
-                          {res_btn(classes!(String::from("fas fa-puzzle-piece")),
+                          {res_btn(classes!("fas", "fa-eye"),
                               onclick_open_component,
                               String::new())}
                           {res_btn(
@@ -197,6 +255,7 @@ impl ListItem {
         let ShowComponentShort {
             is_base,
             is_followed,
+            image_file,
             name,
             ..
         } = self.props.data.clone();
@@ -222,7 +281,7 @@ impl ListItem {
             <div class="innerBox" >
               <div class="imgBox" >
                 <div class="top-tag" hidden={!is_base} >{"standart"}</div>
-                <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
+                <img src={image_file.download_url.clone()} alt="Image" />
               </div>
               <div>
                 {"manufactured by "}<span class="id-box has-text-grey-light has-text-weight-bold">{"Alphametall"}</span>

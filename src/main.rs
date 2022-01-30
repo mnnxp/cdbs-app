@@ -2,6 +2,9 @@
 #![allow(clippy::large_enum_variant)]
 #![allow(clippy::eval_order_dependence)]
 
+// #[macro_use]
+// extern crate log;
+
 pub mod app;
 pub mod fragments;
 pub mod error;

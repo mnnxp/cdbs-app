@@ -2,6 +2,7 @@ mod item;
 
 pub use item::FileItem;
 
+use std::collections::BTreeSet;
 use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
 // use log::debug;
 // use crate::error::{get_error, Error};
@@ -19,11 +20,13 @@ pub struct StandardFilesCard {
     link: ComponentLink<Self>,
     props: Props,
     show_full_files: bool,
+    files_deleted_list: BTreeSet<UUID>,
 }
 
 #[derive(Clone)]
 pub enum Msg {
     ShowFullList,
+    RemoveFile(UUID),
     Ignore,
 }
 
@@ -36,6 +39,7 @@ impl Component for StandardFilesCard {
             link,
             props,
             show_full_files: false,
+            files_deleted_list: BTreeSet::new(),
         }
     }
 
@@ -43,6 +47,9 @@ impl Component for StandardFilesCard {
         // let link = self.link.clone();
         match msg {
             Msg::ShowFullList => self.show_full_files = !self.show_full_files,
+            Msg::RemoveFile(file_uuid) => {
+                self.files_deleted_list.insert(file_uuid);
+            },
             Msg::Ignore => {},
         }
         true
@@ -55,6 +62,7 @@ impl Component for StandardFilesCard {
                     self.props.files.len() == props.files.len() {
             false
         } else {
+            self.files_deleted_list.clear();
             self.props = props;
             true
         }
@@ -66,19 +74,9 @@ impl Component for StandardFilesCard {
                 {for self.props.files.iter().enumerate().map(|(index, file)| {
                     match (index >= 3, self.show_full_files) {
                         // show full list
-                        (_, true) => html!{<FileItem
-                          show_download_btn = self.props.show_download_btn
-                          show_delete_btn = self.props.show_delete_btn
-                          standard_uuid = self.props.standard_uuid.clone()
-                          file = file.clone()
-                        />},
+                        (_, true) => self.show_file_info(file),
                         // show full list or first 3 items
-                        (false, false) => html!{<FileItem
-                          show_download_btn = self.props.show_download_btn
-                          show_delete_btn = self.props.show_delete_btn
-                          standard_uuid = self.props.standard_uuid.clone()
-                          file = file.clone()
-                        />},
+                        (false, false) => self.show_file_info(file),
                         _ => html!{},
                     }
                 })}
@@ -93,9 +91,29 @@ impl Component for StandardFilesCard {
 }
 
 impl StandardFilesCard {
+    fn show_file_info(
+        &self,
+        file: &ShowFileInfo
+    ) -> Html {
+        let callback_delete_file =
+            self.link.callback(|value: UUID| Msg::RemoveFile(value));
+
+        match self.files_deleted_list.get(&file.uuid) {
+            Some(_) => html!{}, // removed file
+            None => html!{
+                <FileItem
+                  show_download_btn = self.props.show_download_btn
+                  show_delete_btn = self.props.show_delete_btn
+                  standard_uuid = self.props.standard_uuid.clone()
+                  file = file.clone()
+                  callback_delete_file = Some(callback_delete_file.clone())
+                />
+            },
+        }
+    }
+
     fn show_see_btn(&self) -> Html {
-        let show_full_files_btn = self.link
-            .callback(|_| Msg::ShowFullList);
+        let show_full_files_btn = self.link.callback(|_| Msg::ShowFullList);
 
         match self.show_full_files {
             true => html!{<>

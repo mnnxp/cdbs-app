@@ -242,7 +242,7 @@ impl ComponentStandardsCard {
         let onclick_action_btn = self.link
             .callback(|_| Msg::ChangeHideAddStandard);
 
-        html!{<div class="card">
+        html!{<div class="card column">
           <table class="table is-fullwidth">
             <tbody>
                <th>{"Classifier"}</th>
@@ -323,14 +323,14 @@ impl ComponentStandardsCard {
                           )}
                           </select>
                         </div>
+                        <button
+                            id="standard-component"
+                            class="button"
+                            disabled={self.request_add_standard_uuid.is_empty()}
+                            onclick={onclick_add_standard} >
+                            {"Add"}
+                        </button>
                     </section>
-                    <button
-                        id="standard-component"
-                        class="button"
-                        disabled={self.request_add_standard_uuid.is_empty()}
-                        onclick={onclick_add_standard} >
-                        {"Add"}
-                    </button>
                   </div>
                 </div>
               </div>

@@ -170,7 +170,7 @@ impl ListItemCompany {
             shortname,
             inn,
             description,
-            // image_file,
+            image_file,
             region,
             company_type,
             is_supplier,
@@ -198,19 +198,15 @@ impl ListItemCompany {
                   <div class="media-left">
                     <figure class="image is-96x96">
                         <div hidden={!is_supplier} class="top-tag" >{"supplier"}</div>
-                        <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
-                        // <img src={image_file.download_url.to_string()} alt="Favicon profile"/>
+                        // <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
+                        <img
+                            src={image_file.download_url.clone()} alt="Favicon profile"
+                            loading="lazy"
+                        />
                     </figure>
                   </div>
                   <div class="media-content">
-                    <div class="columns is-gapless" style="margin-bottom:0">
-                      <div class="column">
-                          {"from "} <span class="id-box has-text-grey-light has-text-weight-bold">{region.region.clone()}</span>
-                      </div>
-                      <div class="column">
-                          {"Reg.№: "} <span class="id-box has-text-grey-light has-text-weight-bold">{inn.clone()}</span>
-                      </div>
-                    </div>
+                    {"from "} <span class="id-box has-text-grey-light has-text-weight-bold">{region.region.clone()}</span>
                     <div class="columns" style="margin-bottom:0">
                         <div class="column">
                             <div class="overflow-title has-text-weight-bold is-size-4">{
@@ -224,8 +220,8 @@ impl ListItemCompany {
                             </p>
                         </div>
                         <div class="column buttons is-one-quarter flexBox" >
-                            {res_btn(classes!(
-                                String::from("fas fa-building")),
+                            {res_btn(
+                                classes!("fas", "fa-eye"),
                                 show_company_btn,
                                 String::new())}
                             {res_btn(
@@ -235,9 +231,9 @@ impl ListItemCompany {
                             )}
                         </div>
                     </div>
-                    <div class="columns is-gapless" style="margin-bottom:0">
+                    <div class="columns is-gapless">
                         <div class="column">
-                        // {format!("Reg.№: {}", inn.to_string())}
+                            {"Reg.№ "} <span class="id-box has-text-grey-light has-text-weight-bold">{inn.clone()}</span>
                         </div>
                         <div class="column">
                           {format!("Updated at: {:.*}", 10, updated_at.to_string())}
@@ -252,7 +248,7 @@ impl ListItemCompany {
     fn showing_in_box(&self) -> Html {
         let ShowCompanyShort {
             shortname,
-            // image_file,
+            image_file,
             region,
             company_type,
             is_supplier,
@@ -279,8 +275,11 @@ impl ListItemCompany {
             <div class="innerBox" >
               <div class="imgBox" >
                 <div class="top-tag" hidden={!is_supplier} >{"supplier"}</div>
-                <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
-                // <img src={image_file.download_url.to_string()} alt="Favicon profile"/>
+                // <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
+                <img
+                    src={image_file.download_url.to_string()} alt="Favicon profile"
+                    loading="lazy"
+                />
               </div>
               <div>
                 {"from "}<span class="id-box has-text-grey-light has-text-weight-bold">{region.region.to_string()}</span>

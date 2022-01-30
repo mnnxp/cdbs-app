@@ -159,6 +159,7 @@ impl ListItemStandard {
             description,
             specified_tolerance,
             publication_at,
+            image_file,
             owner_company,
             standard_status,
             updated_at,
@@ -187,8 +188,11 @@ impl ListItemStandard {
                   <div class="media-left">
                     <figure class="image is-96x96">
                       <div class="top-tag" >{standard_status.name.to_string()}</div>
-                      <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
-                      // <img src={owner_company.image_file.download_url.to_string()} alt="Favicon profile"/>
+                      // <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
+                      <img
+                        src={image_file.download_url.clone()} alt="Image standard"
+                        loading="lazy"
+                      />
                     </figure>
                   </div>
                   <div class="media-content">
@@ -220,8 +224,8 @@ impl ListItemStandard {
                             )}</span></div>
                         </div>
                         <div class="column buttons is-one-quarter flexBox" >
-                          {res_btn(classes!(
-                            String::from("fas fa-cube")),
+                          {res_btn(
+                            classes!("fas", "fa-eye"),
                             show_standard_btn,
                             String::new()
                           )}
@@ -252,6 +256,7 @@ impl ListItemStandard {
             name,
             // specified_tolerance,
             // publication_at,
+            image_file,
             owner_company,
             standard_status,
             // is_followed,
@@ -279,8 +284,11 @@ impl ListItemStandard {
             <div class="innerBox" >
               <div class="imgBox" >
                 <div class="top-tag" >{standard_status.name.to_string()}</div>
-                <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
-                // <img src={image_file.download_url.to_string()} alt="Favicon profile"/>
+                // <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
+                <img
+                  src={image_file.download_url.clone()} alt="Image standard"
+                  loading="lazy"
+                />
               </div>
               <div>
                 {"classifier "} <span class="id-box has-text-grey-light has-text-weight-bold">{

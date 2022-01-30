@@ -22,7 +22,7 @@ use crate::fragments::{
     // catalog_component::CatalogComponents,
     component::{
         ComponentStandardsCard, ComponentSuppliersCard,
-        ComponentLicensesTags, ComponentParamsTags,
+        ComponentLicensesTags, ComponentParamsTags, UpdateComponentFaviconCard
     },
     component::{
         ModificationsTableEdit, ComponentFilesBlock, SearchSpecsTags, AddKeywordsTags
@@ -683,17 +683,18 @@ impl Component for ComponentSettings {
                                 <br/>
                                 {self.show_modifications_table()}
                                 <br/>
-                                // <div class="columns">
-                                // </div>
+                                <div class="columns">
+                                    {self.update_component_favicon()}
+                                    {self.show_additional_params(component_data)}
+                                </div>
+                                // <br/>
                                 {self.show_component_files()}
                                 <br/>
                                 <div class="columns">
-                                  {self.show_additional_params(component_data)}
                                   {self.show_component_standards(component_data)}
+                                  {self.show_component_suppliers(component_data)}
                                 </div>
-                                <br/>
-                                {self.show_component_suppliers(component_data)}
-                                <br/>
+                                // <br/>
                                 {self.show_component_specs(component_data)}
                                 <br/>
                                 {self.show_component_keywords(component_data)}
@@ -833,7 +834,7 @@ impl ComponentSettings {
 
     fn show_modifications_table(&self) -> Html {
         html!{<>
-            <h2>{"Manage component modifications"}</h2>
+            <h2 class="has-text-weight-bold">{"Manage component modifications"}</h2>
             <ModificationsTableEdit
                 current_component_uuid = self.current_component_uuid.clone()
                 component_modifications = self.current_modifications.clone()
@@ -846,7 +847,7 @@ impl ComponentSettings {
         component_data: &ComponentInfo,
     ) -> Html {
         html!{<div class="column">
-              <h2>{"Manage component characteristics"}</h2>
+              <h2 class="has-text-weight-bold">{"Manage component characteristics"}</h2>
               <ComponentParamsTags
                   show_manage_btn = true
                   component_uuid = self.current_component_uuid.clone()
@@ -855,25 +856,42 @@ impl ComponentSettings {
         </div>}
     }
 
-    fn show_component_files(&self) -> Html {
-        html!{<div class="card">
-            <h2>{"Manage component files"}</h2>
-            <div class="columns">
-                <div class="column">
-                  <h2>{"Files for component"}</h2>
-                  <ComponentFilesBlock
-                      show_download_btn = false
-                      show_delete_btn = true
-                      component_uuid = self.current_component_uuid.clone()
-                      files = self.files_list.clone()
-                    />
-                </div>
-                <div class="column">
-                  <h2>{"Upload component files"}</h2>
-                  {self.show_frame_upload_files()}
-                </div>
+    fn update_component_favicon(&self) -> Html {
+        let callback_update_favicon = self.link.callback(|_| Msg::Ignore);
+
+        html!{<div class="column">
+            <h2 class="has-text-weight-bold">{"Update image for preview"}</h2>
+            <div class="card column">
+                <UpdateComponentFaviconCard
+                    component_uuid=self.current_component_uuid.clone()
+                    callback=callback_update_favicon.clone()
+                />
             </div>
         </div>}
+    }
+
+    fn show_component_files(&self) -> Html {
+        html!{<>
+            <h2 class="has-text-weight-bold">{"Manage component files"}</h2>
+            <br/>
+            <div class="card">
+                <div class="columns">
+                    <div class="column">
+                      <h2 class="has-text-weight-bold">{"Files for component"}</h2>
+                      <ComponentFilesBlock
+                          show_download_btn = false
+                          show_delete_btn = true
+                          component_uuid = self.current_component_uuid.clone()
+                          files = self.files_list.clone()
+                        />
+                    </div>
+                    <div class="column">
+                      <h2 class="has-text-weight-bold">{"Upload component files"}</h2>
+                      {self.show_frame_upload_files()}
+                    </div>
+                </div>
+            </div>
+        </>}
     }
 
     fn show_component_standards(
@@ -881,7 +899,7 @@ impl ComponentSettings {
         component_data: &ComponentInfo,
     ) -> Html {
         html!{<div class="column">
-          <h2>{"Manage component standards"}</h2>
+          <h2 class="has-text-weight-bold">{"Manage component standards"}</h2>
           <ComponentStandardsCard
               show_delete_btn = true
               component_uuid = component_data.uuid.clone()
@@ -895,8 +913,8 @@ impl ComponentSettings {
         &self,
         component_data: &ComponentInfo,
     ) -> Html {
-        html!{<>
-          <h2>{"Manage component suppliers"}</h2>
+        html!{<div class="column">
+          <h2 class="has-text-weight-bold">{"Manage component suppliers"}</h2>
           <ComponentSuppliersCard
               show_delete_btn = true
               component_uuid = component_data.uuid.clone()
@@ -904,7 +922,7 @@ impl ComponentSettings {
               supplier_list = self.supplier_list.clone()
               is_base = self.current_component_is_base
             />
-        </>}
+        </div>}
     }
 
     fn show_component_specs(
@@ -912,7 +930,7 @@ impl ComponentSettings {
         component_data: &ComponentInfo,
     ) -> Html {
         html!{<>
-            <h2>{"Specs"}</h2>
+            <h2 class="has-text-weight-bold">{"Specs"}</h2>
             <div class="card">
               <SearchSpecsTags
                   component_specs = component_data.component_specs.clone()
@@ -928,7 +946,7 @@ impl ComponentSettings {
     ) -> Html {
         // debug!("Keywords: {:?}", &component_data.uuid);
         html!{<>
-              <h2>{"Keywords"}</h2>
+              <h2 class="has-text-weight-bold">{"Keywords"}</h2>
               <div class="card">
                 <AddKeywordsTags
                     component_keywords = component_data.component_keywords.clone()
@@ -953,7 +971,7 @@ impl ComponentSettings {
                         id="open-component"
                         class="button"
                         onclick={onclick_open_component} >
-                        {"Cancel"}
+                        {"Show component"}
                     </button>
                 </div>
                 <div class="media-content">
@@ -965,19 +983,21 @@ impl ComponentSettings {
                 </div>
                 <div class="media-right">
                     {self.modal_delete_component()}
-                    <button
-                        id="delete-component"
-                        class="button is-danger"
-                        onclick={onclick_show_delete_modal} >
-                        {"Delete"}
-                    </button>
-                    <button
-                        id="update-data"
-                        class="button"
-                        onclick={onclick_save_changes}
-                        disabled={self.disable_save_changes_btn} >
-                        {"Update"}
-                    </button>
+                    <div class="buttons">
+                        <button
+                            id="delete-component"
+                            class="button is-danger"
+                            onclick={onclick_show_delete_modal} >
+                            {"Delete"}
+                        </button>
+                        <button
+                            id="update-data"
+                            class="button"
+                            onclick={onclick_save_changes}
+                            disabled={self.disable_save_changes_btn} >
+                            {"Update"}
+                        </button>
+                    </div>
                 </div>
             </div>
         }

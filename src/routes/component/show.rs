@@ -32,7 +32,14 @@ use crate::types::{
     ComponentModificationInfo,
     DownloadFile
 };
-use crate::gqls::query_structs::components::{*};
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/components.graphql",
+    response_derives = "Debug"
+)]
+pub struct ComponentFiles;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -80,9 +87,8 @@ pub struct ShowComponent {
     open_modification_card: bool,
     open_modification_files_card: bool,
     open_fileset_files_card: bool,
-    open_standard_info: bool,
     show_related_standards: bool,
-    img_arr : Option<Vec<DownloadFile>>,
+    file_arr: Vec<DownloadFile>,
 }
 
 #[derive(Properties, Clone)]
@@ -105,7 +111,6 @@ pub enum Msg {
     ShowFullCharacteristics,
     ShowStandardsList,
     ShowOwnerUserCard,
-    ShowStandardCard,
     ShowModificationCard,
     ShowModificationFilesList,
     ShowFilesetFilesBlock(bool),
@@ -141,9 +146,8 @@ impl Component for ShowComponent {
             open_modification_card: false,
             open_modification_files_card: false,
             open_fileset_files_card: false,
-            open_standard_info: false,
             show_related_standards: false,
-            img_arr: None
+            file_arr: Vec::new(),
         }
     }
 
@@ -186,7 +190,8 @@ impl Component for ShowComponent {
                 })).await.unwrap();
 
                 link.send_message(Msg::GetComponentData(res));
-            })};
+              })
+            };
 
             spawn_local(async move {
               let ipt_component_files_arg = component_files::IptComponentFilesArg{
@@ -302,6 +307,8 @@ impl Component for ShowComponent {
                         }
                         // length check for show btn more/less
                         self.show_full_description = component_data.description.len() < 250;
+                        // add main image
+                        self.file_arr.push(component_data.image_file.clone());
                         self.show_full_characteristics = component_data.component_params.len() < 4;
                         self.select_modification_uuid = component_data.component_modifications
                             .first()
@@ -338,12 +345,18 @@ impl Component for ShowComponent {
 
                 match res_value.is_null() {
                     false => {
-                        let download_file: Vec<DownloadFile> =
-                            serde_json::from_value(res_value.get("componentFiles").unwrap().clone())
-                                .unwrap();
-                        debug!("Download file: {:?}", download_file);
-                        if download_file.len() > 0 {
-                            self.img_arr = Some(download_file);
+                        let mut result: Vec<DownloadFile> = serde_json::from_value(res_value.get("componentFiles").unwrap().clone()).unwrap();
+                        debug!("Download file: {:?}", result);
+
+                        if !result.is_empty() {
+                            // checkign have main image
+                            match self.file_arr.first() {
+                                Some(main_img) => {
+                                    result.push(main_img.clone());
+                                    self.file_arr = result;
+                                },
+                                None => self.file_arr = result,
+                            }
                         }
                     }
                     true => self.error = Some(get_error(&data)),
@@ -353,7 +366,6 @@ impl Component for ShowComponent {
             Msg::ShowFullCharacteristics => self.show_full_characteristics = !self.show_full_characteristics,
             Msg::ShowStandardsList => self.show_related_standards = !self.show_related_standards,
             Msg::ShowOwnerUserCard => self.open_owner_user_info = !self.open_owner_user_info,
-            Msg::ShowStandardCard => self.open_standard_info = !self.open_standard_info,
             Msg::ShowModificationCard => self.open_modification_card = !self.open_modification_card,
             Msg::ShowModificationFilesList => self.open_modification_files_card = !self.open_modification_files_card,
             Msg::ShowFilesetFilesBlock(value) => self.open_fileset_files_card = value,
@@ -396,14 +408,12 @@ impl Component for ShowComponent {
                                 false => html!{},
                             }}
 
-                            <div class="card">
+                            <div class="card column">
                               {self.show_main_card(component_data)}
                             </div>
-                            <br/>
                             {self.show_fileset_files_card()}
                             <br/>
                             {self.show_modifications_table(component_data)}
-                            <br/>
                             {self.show_modification_files()}
                             <br/>
                             {self.show_cards(component_data)}
@@ -435,16 +445,12 @@ impl ShowComponent {
 
         html!{
             <div class="columns">
-                {if self.img_arr.is_some() {
-                  html!{<div class="column is-one-quarter show-img-box">
-                          <ImgShowcase img_arr=self.img_arr.clone() />
-                        </div>
-                      }
-                }else {
-                  html!{<div style="padding-left: 0.75rem;" />}
-                }}
+                <ImgShowcase
+                    object_uuid=self.current_component_uuid.clone()
+                    file_arr=self.file_arr.clone()
+                />
                 // <img class="imgBox" src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
-              
+
               <div class="column">
                 <div class="media">
                     <div class="media-content">
@@ -542,7 +548,7 @@ impl ShowComponent {
             .callback(|_| Msg::ShowModificationFilesList);
 
         html!{<>
-            <h2>{"Modifications"}</h2>
+            <h2 class="has-text-weight-bold">{"Modifications"}</h2>
             <ModificationsTable
                 modifications = component_data.component_modifications.clone()
                 select_modification = self.select_modification_uuid.clone()
@@ -555,12 +561,13 @@ impl ShowComponent {
 
     fn show_modification_files(&self) -> Html {
         match self.open_modification_files_card {
-            true => html!{
+            true => html!{<>
+                <br/>
                 <ModificationFilesTableCard
                     show_download_btn = true
                     modification_uuid = self.select_modification_uuid.clone()
                   />
-            },
+            </>},
             false => html!{},
         }
     }
@@ -593,8 +600,8 @@ impl ShowComponent {
     ) -> Html {
         html!{
             <div class="column">
-              <h2>{"Сharacteristics of the component"}</h2>
-              <div class="card">
+              <h2 class="has-text-weight-bold">{"Сharacteristics of the component"}</h2>
+              <div class="card column">
                 <table class="table is-fullwidth">
                     <tbody>
                       {for component_data.component_params.iter().enumerate().map(|(index, data)| {
@@ -656,13 +663,13 @@ impl ShowComponent {
             <div class="columns">
                 {self.show_additional_params(component_data)}
                 <div class="column">
-                    <h2>{"Component files"}</h2>
+                    <h2 class="has-text-weight-bold">{"Component files"}</h2>
                     {self.show_component_files(component_data)}
                 </div>
             </div>
             <div class="columns">
                 <div class="column">
-                    <h2>{"Standards"}</h2>
+                    <h2 class="has-text-weight-bold">{"Standards"}</h2>
                     {self.show_component_standards(component_data)}
                 </div>
                 <div class="column">
@@ -691,8 +698,8 @@ impl ShowComponent {
         component_data: &ComponentInfo,
     ) -> Html {
         html!{<>
-              <h2>{"Specs"}</h2>
-              <div class="card">
+              <h2 class="has-text-weight-bold">{"Specs"}</h2>
+              <div class="card column">
                 <SpecsTags
                     show_manage_btn = false
                     component_uuid = component_data.uuid.clone()
@@ -707,8 +714,8 @@ impl ShowComponent {
         component_data: &ComponentInfo,
     ) -> Html {
         html!{<>
-              <h2>{"Keywords"}</h2>
-              <div class="card">
+              <h2 class="has-text-weight-bold">{"Keywords"}</h2>
+              <div class="card column">
                 <KeywordsTags
                     show_delete_btn = false
                     component_uuid = component_data.uuid.clone()
@@ -728,8 +735,8 @@ impl ShowComponent {
         };
 
         html!{<>
-            <h2>{table_label}</h2>
-            <div class="card">
+            <h2 class="has-text-weight-bold">{table_label}</h2>
+            <div class="card column">
               <table class="table is-fullwidth">
                 <tbody>
                    <th>{"Company"}</th>
@@ -768,7 +775,7 @@ impl ShowComponent {
         &self,
         component_data: &ComponentInfo,
     ) -> Html {
-        html!{<div class="card">
+        html!{<div class="card column">
           <table class="table is-fullwidth">
             <tbody>
                <th>{"Classifier"}</th>
@@ -870,7 +877,8 @@ impl ShowComponent {
     fn show_fileset_files_card(&self) -> Html {
         match &self.open_fileset_files_card {
             true => html!{<>
-                <h2>{"Files of select fileset"}</h2>
+                <br/>
+                <h2 class="has-text-weight-bold">{"Files of select fileset"}</h2>
                 <FilesOfFilesetCard
                     show_download_btn = false
                     select_fileset_uuid = self.select_fileset_uuid.clone()
@@ -902,7 +910,8 @@ impl ShowComponent {
             self.link.callback(|_| Msg::OpenComponentSetting);
 
         match &self.current_user_owner {
-            true => {res_btn(classes!(String::from("fa fa-cog")),
+            true => {res_btn(
+                classes!("fa", "fa-tools"),
                 onclick_setting_standard_btn,
                 String::new())},
             false => html!{},

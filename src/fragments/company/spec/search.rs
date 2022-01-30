@@ -206,8 +206,12 @@ impl Component for SearchSpecsTags {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        self.props = props;
-        true
+        if self.props.company_uuid == props.company_uuid {
+            false
+        } else {
+            self.props = props;
+            true
+        }
     }
 
     fn view(&self) -> Html {

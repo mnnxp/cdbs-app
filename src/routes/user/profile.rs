@@ -388,21 +388,20 @@ impl Profile {
                 <ListErrors error=self.error.clone()/>
                 <div class="container page">
                     <div class="row">
-                        // <h1 class="title">{ title }</h1>
                         <div class="card">
-                          <div class="card-content">
-                            {self.view_card()}
-                            <div class="content">
-                                { self.view_user_info(
-                                    user_data.description.as_str(),
-                                    user_data.position.as_str(),
-                                    user_data.region.region.as_str(),
-                                    user_data.program.name.as_str(),
-                                ) }
+                            <div class="card-content">
+                                {self.view_card()}
+                                <div class="content">
+                                    { self.view_user_info(
+                                        user_data.description.as_str(),
+                                        user_data.position.as_str(),
+                                        user_data.region.region.as_str(),
+                                        user_data.program.name.as_str(),
+                                    ) }
+                                </div>
                             </div>
-                          </div>
+                            {self.other_user_relate_object(user_data)}
                         </div>
-                        {self.other_user_relate_object(user_data)}
                     </div>
                 </div>
             </div>
@@ -414,23 +413,27 @@ impl Profile {
         user_data: &UserInfo,
     ) -> Html {
         html!{<div class="card">
-          { self.show_profile_action() }
-          <div class="card-relate-data" style="flex:1;">
-              {match self.profile_tab {
-                  ProfileTab::Certificates => self.view_certificates(user_data.certificates.clone()),
-                  ProfileTab::Components => self.view_components(&user_data.uuid),
-                  ProfileTab::Companies => self.view_companies(&user_data.uuid),
-                  ProfileTab::FavoriteComponents => self.view_favorite_components(Some(user_data.uuid.clone())),
-                  ProfileTab::FavoriteCompanies => self.view_favorite_companies(Some(user_data.uuid.clone())),
-                  _ => html!{},
-              }}
+            <div class="columns is-mobile">
+                <div class="column is-flex">
+                  { self.show_profile_action() }
+                  <div class="card-relate-data" style="flex:1;">
+                      {match self.profile_tab {
+                          ProfileTab::Certificates => self.view_certificates(user_data.certificates.clone()),
+                          ProfileTab::Components => self.view_components(&user_data.uuid),
+                          ProfileTab::Companies => self.view_companies(&user_data.uuid),
+                          ProfileTab::FavoriteComponents => self.view_favorite_components(Some(user_data.uuid.clone())),
+                          ProfileTab::FavoriteCompanies => self.view_favorite_companies(Some(user_data.uuid.clone())),
+                          _ => html!{},
+                      }}
+                  </div>
+              </div>
           </div>
         </div>}
     }
 
     fn view_card(&self) -> Html {
         let UserDataCard {
-            // image_file,
+            image_file,
             firstname,
             lastname,
             username,
@@ -445,8 +448,11 @@ impl Profile {
         html!{<div class="media">
             <div class="media-left">
               <figure class="image is-48x48">
-                <img src="https://bulma.io/images/placeholders/96x96.png" alt="Placeholder image"/>
-                // <img src={image_file.to_string()} alt="Favicon profile"/>
+                // <img src="https://bulma.io/images/placeholders/96x96.png" alt="Placeholder image"/>
+                <img
+                    src={image_file.clone()} alt="Favicon profile"
+                    loading="lazy"
+                />
               </figure>
             </div>
             <div class="media-content">
@@ -534,7 +540,7 @@ impl Profile {
                 action: self.cb_generator(ProfileTab::Components),
                 count: self.get_number_of_items(&ProfileTab::Components),
                 item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-puzzle-piece")],
+                icon_classes: vec![classes!("fas", "fa-cogs")],
                 is_active: self.profile_tab == ProfileTab::Components,
                 is_extend: self.check_extend(&ProfileTab::Components),
             },
@@ -543,7 +549,7 @@ impl Profile {
                 action: self.cb_generator(ProfileTab::FavoriteComponents),
                 count: self.get_number_of_items(&ProfileTab::FavoriteComponents),
                 item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-puzzle-piece"), classes!("fas", "fa-bookmark")],
+                icon_classes: vec![classes!("fas", "fa-cogs"), classes!("fas", "fa-bookmark")],
                 is_active: self.profile_tab == ProfileTab::FavoriteComponents,
                 is_extend: self.check_extend(&ProfileTab::FavoriteComponents),
             },
@@ -655,7 +661,7 @@ impl Profile {
             <UserCertificatesCard
                   user_uuid = self.current_user_uuid.clone()
                   certificates = certificates
-                  show_cert_btn = true
+                  show_cert_btn = false
                   download_btn = false
                   manage_btn = false
              />

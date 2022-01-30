@@ -193,8 +193,8 @@ query ComponentActualStatuses($filterInt: [Int!]) {
   }
 }
 
-mutation PutComponentParams($iptComponentParamData: IptComponentParamData!) {
-  putComponentParams(args: $iptComponentParamData)
+mutation PutComponentParams($iptComponentParamsData: IptComponentParamsData!) {
+  putComponentParams(args: $iptComponentParamsData)
 }
 
 mutation DeleteComponentParams($delComponentParamData: DelComponentParamData!) {
@@ -259,6 +259,12 @@ mutation UploadComponentFiles($iptComponentFilesData: IptComponentFilesData!) {
   }
 }
 
+mutation UploadComponentFavicon($iptComponentFaviconData: IptComponentFaviconData!) {
+  uploadComponentFavicon(args: $iptComponentFaviconData){
+    ...uploadUrlFields
+  }
+}
+
 mutation AddStandardToComponent($iptStandardToComponentData: IptStandardToComponentData!) {
   addStandardToComponent(args: $iptStandardToComponentData)
 }
@@ -298,6 +304,9 @@ fragment componentFields on ComponentAndRelatedData {
   parentComponentUuid
   name
   description
+  imageFile {
+    ...downloadFileFields
+  }
   ownerUser {
     ...showUserShortFields
   }
@@ -471,6 +480,9 @@ fragment showStandardShortFields on ShowStandardShort {
   description
   specifiedTolerance
   publicationAt
+  imageFile {
+    ...downloadFileFields
+  }
   ownerCompany {
     ...companyShortFields
   }
@@ -537,6 +549,9 @@ fragment showComponentShortFields on ShowComponentShort {
   uuid
   name
   description
+  imageFile {
+    ...downloadFileFields
+  }
   ownerUser {
     ...showUserShortFields
   }

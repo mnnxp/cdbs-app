@@ -1,7 +1,8 @@
 use std::collections::{HashMap, BTreeMap};
 use yew::{
     html, Callback, Component, ComponentLink,
-    Html, Properties, ShouldRender, ChangeData, InputData
+    Html, Properties, ShouldRender, InputData,
+    // ChangeData,
 };
 use log::debug;
 use graphql_client::GraphQLQuery;
@@ -11,7 +12,10 @@ use wasm_bindgen_futures::spawn_local;
 use super::ModificationTableItemModule;
 use crate::error::{get_error, Error};
 use crate::gqls::make_query;
-use crate::fragments::list_errors::ListErrors;
+use crate::fragments::{
+    list_errors::ListErrors,
+    component::param::RegisterParamnameBlock,
+};
 use crate::types::{UUID, Param, ParamValue};
 
 #[derive(GraphQLQuery)]
@@ -72,6 +76,7 @@ pub struct ModificationTableItem {
 
 pub enum Msg {
     RequestParamsListData,
+    RequestAddNewParam(usize, String),
     RequestAddParamData,
     RequestUpdateParamData,
     RequestDeleteParamData,
@@ -81,7 +86,6 @@ pub enum Msg {
     GetDeleteParamResult(String),
     SelectModification,
     ShowModificationFilesList,
-    UpdateParamId(String),
     UpdateValue(String),
     ShowNewParamCard,
     ShowAddParamCard(usize),
@@ -129,6 +133,11 @@ impl Component for ModificationTableItem {
                     )).await.unwrap();
                     link.send_message(Msg::GetParamsListResult(res));
                 })
+            },
+            Msg::RequestAddNewParam(param_id, param_value) => {
+                self.request_add_param.param_id = param_id;
+                self.request_add_param.value = param_value;
+                link.send_message(Msg::RequestAddParamData);
             },
             Msg::RequestAddParamData => {
                 debug!("RequestAddParamData: {:?}", self.request_add_param);
@@ -203,7 +212,8 @@ impl Component for ModificationTableItem {
                 }
             },
             Msg::GetAddParamResult(res) => {
-                debug!("GetAddParamResult: {:?}", res);let data: Value = serde_json::from_str(res.as_str()).unwrap();
+                debug!("GetAddParamResult: {:?}", res);
+                let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
 
                 match res_value.is_null() {
@@ -288,8 +298,6 @@ impl Component for ModificationTableItem {
                     open_files.emit(());
                 }
             },
-            Msg::UpdateParamId(data) =>
-                self.request_add_param.param_id = data.parse::<usize>().unwrap_or_default(),
             Msg::UpdateValue(data) => {
                 match self.open_edit_param_card {
                     true => {
@@ -488,20 +496,10 @@ impl ModificationTableItem {
     fn modal_new_value(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
 
-        let onchange_param_id = self.link
-            .callback(|ev: ChangeData| Msg::UpdateParamId(match ev {
-              ChangeData::Select(el) => el.value(),
-              _ => "1".to_string(),
-          }));
+        let onclick_add_new_param =
+            self.link.callback(|(param_id, param_value)| Msg::RequestAddNewParam(param_id, param_value));
 
-        let oninput_param_value = self.link
-            .callback(|ev: InputData| Msg::UpdateValue(ev.value));
-
-        let onclick_new_param_card = self.link
-            .callback(|_| Msg::ShowNewParamCard);
-
-        let onclick_param_add = self.link
-            .callback(|_| Msg::RequestAddParamData);
+        let onclick_close_param_card = self.link.callback(|_| Msg::ShowNewParamCard);
 
         let class_modal = match &self.open_new_param_card {
             true => "modal is-active",
@@ -509,45 +507,18 @@ impl ModificationTableItem {
         };
 
         html!{<div class=class_modal>
-          <div class="modal-background" onclick=onclick_new_param_card.clone() />
+          <div class="modal-background" onclick=onclick_close_param_card.clone() />
           <div class="card">
             <div class="modal-content">
                 <header class="modal-card-head">
                     <p class="modal-card-title">{"Add new param"}</p>
-                    <button class="delete" aria-label="close" onclick=onclick_new_param_card />
+                    <button class="delete" aria-label="close" onclick=onclick_close_param_card />
                 </header>
                 <div class="box itemBox">
                   <article class="media center-media">
                       <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
                       <div class="media-content">
-                          <label class="label">{"Select param"}</label>
-                          <div class="select">
-                              <select
-                                  id="new-modification-param-id"
-                                  select={self.request_add_param.param_id.to_string()}
-                                  onchange=onchange_param_id
-                                  >
-                                { for self.params_list.iter().map(|(_, x)|
-                                    html!{<option value={x.param_id.to_string()}>{&x.paramname}</option>}
-                                )}
-                              </select>
-                          </div>
-                          <label class="label">{"Set value"}</label>
-                          <input
-                              id="new-modification-param-value"
-                              class="input is-fullwidth"
-                              type="text"
-                              placeholder={"input param value"}
-                              value={self.request_add_param.value.clone()}
-                              oninput=oninput_param_value />
-                          <br/>
-                          <button
-                              id="new-modification-param"
-                              class="button"
-                              disabled={!self.update_add_param}
-                              onclick={onclick_param_add} >
-                              {"Add"}
-                          </button>
+                          <RegisterParamnameBlock callback_add_param=onclick_add_new_param.clone() />
                       </div>
                   </article>
                 </div>
@@ -562,7 +533,7 @@ impl ModificationTableItem {
         let oninput_param_value = self.link
             .callback(|ev: InputData| Msg::UpdateValue(ev.value));
 
-        let onclick_add_param_card = self.link
+        let onclick_close_add_param = self.link
             .callback(|_| Msg::ShowAddParamCard(0));
 
         let onclick_param_add = self.link
@@ -574,12 +545,12 @@ impl ModificationTableItem {
         };
 
         html!{<div class=class_modal>
-          <div class="modal-background" onclick=onclick_add_param_card.clone() />
+          <div class="modal-background" onclick=onclick_close_add_param.clone() />
           <div class="card">
             <div class="modal-content">
                 <header class="modal-card-head">
                     <p class="modal-card-title">{"Add param for modification"}</p>
-                    <button class="delete" aria-label="close" onclick=onclick_add_param_card />
+                    <button class="delete" aria-label="close" onclick=onclick_close_add_param />
                 </header>
                 <div class="box itemBox">
                   <article class="media center-media">

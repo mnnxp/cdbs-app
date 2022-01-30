@@ -133,7 +133,7 @@ impl Component for ModificationFilesTableCard {
 
         html!{<>
             <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
-            <h2>{"Modification files"}</h2>
+            <h2 class="has-text-weight-bold">{"Modification files"}</h2>
             {self.show_files_card()}
         </>}
     }

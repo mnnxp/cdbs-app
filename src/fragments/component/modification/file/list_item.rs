@@ -40,6 +40,7 @@ pub struct ModificationFileItem {
     link: ComponentLink<Self>,
     open_full_info_file: bool,
     get_result_delete: bool,
+    download_url: String,
 }
 
 pub enum Msg {
@@ -62,6 +63,7 @@ impl Component for ModificationFileItem {
             link,
             open_full_info_file: false,
             get_result_delete: false,
+            download_url: String::new(),
         }
     }
 
@@ -110,6 +112,7 @@ impl Component for ModificationFileItem {
                     false => {
                         let result: Vec<DownloadFile> = serde_json::from_value(res.get("componentModificationFiles").unwrap().clone()).unwrap();
                         debug!("componentModificationFiles: {:?}", result);
+                        self.download_url = result.first().map(|f| f.download_url.clone()).unwrap_or_default();
                     },
                     true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }
@@ -180,12 +183,19 @@ impl ModificationFileItem {
             .callback(|_| Msg::RequestDownloadFile);
 
         match &self.props.show_download_btn {
-            true => html!{
-                <button class="button is-white" onclick=onclick_download_btn >
-                  <span class="icon" >
-                    <i class="fas fa-file-download" aria-hidden="true"></i>
-                  </span>
-                </button>
+            true => match self.download_url.is_empty() {
+                true => html!{
+                    <button class="button is-ghost" onclick=onclick_download_btn>
+                      <span>{"Get link"}</span>
+                    </button>
+                },
+                false => html!{
+                    <a class="button is-ghost" href={self.download_url.clone()}  target="_blank">
+                      <span class="icon" >
+                        <i class="fas fa-file-download" aria-hidden="true"></i>
+                      </span>
+                    </a>
+                },
             },
             false => html!{},
         }
@@ -220,7 +230,7 @@ impl ModificationFileItem {
             <div class=class_modal>
               <div class="modal-background" onclick=onclick_file_info.clone() />
               <div class="modal-content">
-                  <div class="card">
+                  <div class="card column">
                     <table class="table is-fullwidth">
                       <tbody>
                         <tr>

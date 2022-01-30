@@ -284,8 +284,12 @@ impl Component for CreateStandard {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        self.props = props;
-        true
+        if self.props.current_user.as_ref().map(|x| &x.uuid) == props.current_user.as_ref().map(|x| &x.uuid) {
+            false
+        } else {
+            self.props = props;
+            true
+        }
     }
 
     fn view(&self) -> Html {
@@ -297,13 +301,12 @@ impl Component for CreateStandard {
                 <div class="container page">
                     <div class="row">
                         <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
-                        // <br/>
-                        {self.show_manage_btn()}
-                        <br/>
+                        <h1 class="title">{ "Create standard" }</h1>
                         {self.show_main_card()}
-                        <div class="columns">
-                          {self.show_standard_params()}
-                        </div>
+                        <br/>
+                        {self.show_standard_params()}
+                        <br/>
+                        {self.show_manage_btn()}
                     </div>
                 </div>
             </div>
@@ -417,9 +420,9 @@ impl CreateStandard {
           }));
 
         html!{
-            <div class="column">
-              <h2>{"Set standard characteristics"}</h2>
-              <div class="card">
+            <>
+              <h2 class="has-text-weight-bold">{"Set standard characteristics"}</h2>
+              <div class="card column">
                 <table class="table is-fullwidth">
                     <tbody>
                       <tr>
@@ -500,34 +503,25 @@ impl CreateStandard {
                     </tbody>
                   </table>
               </div>
-            </div>
+            </>
         }
     }
 
     fn show_manage_btn(&self) -> Html {
-        let onclick_create_changes = self.link
-            .callback(|_| Msg::RequestManager);
+        let onclick_create_changes =
+            self.link.callback(|_| Msg::RequestManager);
 
-        html!{
-            <div class="media">
-                <div class="media-content">
-                    // html!{"Data updated"}
-                </div>
-                <div class="media-right">
-                    {match self.supplier_list.is_empty() {
-                        true => html!{},
-                        false => html!{
-                            <button
-                                id="create-data"
-                                class="button"
-                                onclick={onclick_create_changes}
-                                disabled={self.disable_create_btn} >
-                                {"Create"}
-                            </button>
-                        },
-                    }}
-                </div>
-            </div>
-        }
+        {match self.supplier_list.is_empty() {
+            true => html!{},
+            false => html!{
+                <button
+                    id="create-data"
+                    class="button is-success is-medium is-fullwidth"
+                    onclick={onclick_create_changes}
+                    disabled={self.disable_create_btn} >
+                    {"Create"}
+                </button>
+            },
+        }}
     }
 }

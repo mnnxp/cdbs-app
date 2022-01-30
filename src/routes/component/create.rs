@@ -214,10 +214,10 @@ impl Component for CreateComponent {
                 <div class="container page">
                     <div class="row">
                         <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
-                        // <br/>
-                        {self.show_manage_btn()}
-                        <br/>
+                        <h1 class="title">{ "Create component" }</h1>
                         {self.show_main_card()}
+                        <br/>
+                        {self.show_manage_btn()}
                     </div>
                 </div>
             </div>
@@ -327,20 +327,13 @@ impl CreateComponent {
             .callback(|_| Msg::RequestManager);
 
         html!{
-            <div class="media">
-                <div class="media-content">
-                    // html!{"Data updated"}
-                </div>
-                <div class="media-right">
-                    <button
-                        id="create-data"
-                        class="button"
-                        onclick={onclick_create_changes}
-                        disabled={self.disable_create_btn} >
-                        {"Create"}
-                    </button>
-                </div>
-            </div>
+            <button
+                id="create-data"
+                class="button is-success is-medium is-fullwidth"
+                onclick={onclick_create_changes}
+                disabled={self.disable_create_btn} >
+                {"Create"}
+            </button>
         }
     }
 }

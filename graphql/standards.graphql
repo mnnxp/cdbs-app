@@ -26,6 +26,14 @@ query GetStandardData($standardUuid: UUID!) {
   }
 }
 
+query StandardFilesList($standardUuid: UUID!) {
+  standard(standardUuid: $standardUuid) {
+    standardFiles {
+      ...showFileRelatedDataFields
+    }
+  }
+}
+
 query GetUpdateStandardDataOpt($standardUuid: UUID!, $iptCompaniesArg: IptCompaniesArg!) {
   standard(standardUuid: $standardUuid) {
     ...standardAndRelatedDataFields
@@ -56,6 +64,9 @@ query GetStandardsShortList($iptStandardsArg: IptStandardsArg) {
     description
     specifiedTolerance
     publicationAt
+    imageFile {
+      ...downloadFileFields
+    }
     ownerCompany {
       ...companyShortFields
     }
@@ -83,6 +94,12 @@ mutation DeleteStandard($standardUuid: UUID!) {
 
 mutation UploadStandardFiles($iptStandardFilesData: IptStandardFilesData!) {
   uploadStandardFiles(args: $iptStandardFilesData){
+    ...uploadUrlFields
+  }
+}
+
+mutation UploadStandardFavicon($iptStandardFaviconData: IptStandardFaviconData!) {
+  uploadStandardFavicon(args: $iptStandardFaviconData){
     ...uploadUrlFields
   }
 }

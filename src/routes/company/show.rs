@@ -263,8 +263,12 @@ impl Component for ShowCompany {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        self.props = props;
-        true
+        if self.props.company_uuid == props.company_uuid {
+            false
+        } else {
+            self.props = props;
+            true
+        }
     }
 
     fn view(&self) -> Html {
@@ -309,8 +313,11 @@ impl ShowCompany {
                 <div class="media-left">
                   <figure class=classes!("image", size_favicon)>
                     // <div hidden={!company_data.is_supplier} class="top-tag" >{"supplier"}</div>
-                    <img src="https://bulma.io/images/placeholders/96x96.png" alt="Placeholder image"/>
-                    // <img src={company_data.image_file.download_url.to_string()} alt="Favicon company"/>
+                    // <img src="https://bulma.io/images/placeholders/96x96.png" alt="Placeholder image"/>
+                    <img
+                        src={company_data.image_file.download_url.to_string()} alt="Favicon company"
+                        loading="lazy"
+                    />
                   </figure>
                 </div>
                 <div class="media-content">
@@ -354,8 +361,8 @@ impl ShowCompany {
                           onclick_owner_company_btn,
                           String::new())}
                       {match &self.current_user_owner {
-                          true => {res_btn(classes!(
-                              String::from("fa fa-cog")),
+                          true => {res_btn(
+                              classes!("fa", "fa-tools"),
                               onclick_setting_company_btn,
                               String::new())},
                           false => html!{},
@@ -414,27 +421,27 @@ impl ShowCompany {
                         <div id="company-email">
                             <span class="icon is-small"><i class="fas fa-envelope" /></span>
                             <span>{" Email: "}</span>
-                            <span class="overflow-title has-text-weight-bold">{company_data.email.clone()}</span>
+                            <span class="has-text-weight-bold">{company_data.email.clone()}</span>
                         </div>
                         // <br/>
                         <div id="company-phone">
                             <span class="icon is-small"><i class="fas fa-phone" /></span>
                             <span>{" Phone: "}</span>
-                            <span class="overflow-title has-text-weight-bold">{company_data.phone.clone()}</span>
+                            <span class="has-text-weight-bold">{company_data.phone.clone()}</span>
                         </div>
                         // <br/>
                         <div id="company-inn">
                             <span class="icon is-small"><i class="fas fa-building" /></span>
-                            <span>{" Reg.№: "}</span>
-                            <span class="overflow-title has-text-weight-bold">{company_data.inn.clone()}</span>
+                            <span>{" Reg.№ "}</span>
+                            <span class="has-text-weight-bold">{company_data.inn.clone()}</span>
                         </div>
                         // <br/>
                         <div id="company-region">
                             <span class="icon is-small"><i class="fas fa-map-marker-alt" /></span>
                             <span>{" Location: "}</span>
-                            <span class="overflow-title has-text-weight-bold">{company_data.region.region.clone()}</span>
-                            <span class="overflow-title has-text-weight-bold">{", "}</span>
-                            <span id="company-address" class="overflow-title has-text-weight-bold">
+                            <span class="has-text-weight-bold">{company_data.region.region.clone()}</span>
+                            <span class="has-text-weight-bold">{", "}</span>
+                            <span id="company-address" class="has-text-weight-bold">
                                 {company_data.address.clone()}
                             </span>
                         </div>
@@ -442,7 +449,7 @@ impl ShowCompany {
                         <div id="company-site_url">
                             <span class="icon is-small"><i class="fas fa-globe" /></span>
                             <span>{" Site: "}</span>
-                            <span class="overflow-title has-text-weight-bold">{company_data.site_url.clone()}</span>
+                            <span class="has-text-weight-bold">{company_data.site_url.clone()}</span>
                         </div>
                     </div>
                 </div>
@@ -527,7 +534,7 @@ impl ShowCompany {
                 action: self.cb_generator(CompanyTab::Components),
                 count: self.get_number_of_items(&CompanyTab::Components),
                 item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-puzzle-piece")],
+                icon_classes: vec![classes!("fas", "fa-cogs")],
                 is_active: self.company_tab == CompanyTab::Components,
                 is_extend: self.check_extend(&CompanyTab::Components),
             },

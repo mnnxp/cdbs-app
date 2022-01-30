@@ -32,6 +32,10 @@ pub struct ManageFilesOfFilesetBlock {
     link: ComponentLink<Self>,
     select_fileset_uuid: UUID,
     open_fileset_files_card: bool,
+    open_modal_download_files: bool,
+    file_arr: Vec<DownloadFile>,
+    flag_get_dowload_url: bool,
+    active_loading_files_btn: bool,
 }
 
 pub enum Msg {
@@ -40,6 +44,7 @@ pub enum Msg {
     GetDownloadFilesetFilesResult(String),
     ParseFirstFilesetUuid,
     SelectFilesetUuid(UUID),
+    ShowModalDownloadFiles,
     OpenFilesetFilesBlock,
     ClearError,
 }
@@ -64,6 +69,10 @@ impl Component for ManageFilesOfFilesetBlock {
             link,
             select_fileset_uuid,
             open_fileset_files_card: false,
+            open_modal_download_files: false,
+            file_arr: Vec::new(),
+            flag_get_dowload_url: false,
+            active_loading_files_btn: false,
         }
     }
 
@@ -74,6 +83,8 @@ impl Component for ManageFilesOfFilesetBlock {
             Msg::RequestDownloadFilesetFiles => {
                 debug!("Select fileset: {:?}", self.select_fileset_uuid);
                 if self.select_fileset_uuid.len() == 36 {
+                    // set active loading button
+                    self.active_loading_files_btn = true;
                     let ipt_file_of_fileset_arg = com_mod_fileset_files::IptFileOfFilesetArg{
                         filesetUuid: self.select_fileset_uuid.clone(),
                         fileUuids: None,
@@ -96,10 +107,14 @@ impl Component for ManageFilesOfFilesetBlock {
 
                 match res.is_null() {
                     false => {
-                        let result: Vec<DownloadFile> = serde_json::from_value(
+                        self.file_arr = serde_json::from_value(
                             res.get("componentModificationFilesetFiles").unwrap().clone()
                         ).unwrap();
-                        debug!("componentModificationFilesetFiles: {:?}", result);
+                        debug!("componentModificationFilesetFiles: {:?}", self.file_arr);
+
+                        self.flag_get_dowload_url = true;
+                        self.open_modal_download_files = true;
+                        self.active_loading_files_btn = false;
                     },
                     true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }
@@ -119,6 +134,7 @@ impl Component for ManageFilesOfFilesetBlock {
                 self.props.callback_select_fileset_uuid.emit(fileset_uuid.clone());
                 self.select_fileset_uuid = fileset_uuid;
             },
+            Msg::ShowModalDownloadFiles => self.open_modal_download_files = !self.open_modal_download_files,
             Msg::OpenFilesetFilesBlock => {
                 self.open_fileset_files_card = !self.open_fileset_files_card;
                 self.props.callback_open_fileset_uuid.emit(self.open_fileset_files_card);
@@ -145,6 +161,7 @@ impl Component for ManageFilesOfFilesetBlock {
 
         html!{<>
             <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
+            {self.modal_download_files()}
             {self.show_download_block()}
         </>}
     }
@@ -161,12 +178,19 @@ impl ManageFilesOfFilesetBlock {
         let onclick_open_fileset_files_list_btn = self.link
             .callback(|_| Msg::OpenFilesetFilesBlock);
 
-        let onclick_download_fileset_btn = self.link
-            .callback(|_| Msg::RequestDownloadFilesetFiles);
+        let onclick_download_fileset_btn = match self.flag_get_dowload_url {
+            true => self.link.callback(|_| Msg::ShowModalDownloadFiles),
+            false => self.link.callback(|_| Msg::RequestDownloadFilesetFiles),
+        };
 
-        let class_btn = match self.open_fileset_files_card {
+        let class_fileset_btn = match self.open_fileset_files_card {
             true => "button is-light is-active",
             false => "button",
+        };
+
+        let class_download_btn = match self.active_loading_files_btn {
+            true => "button is-info is-active is-loading",
+            false => "button is-info",
         };
 
         html!{<div style="margin-right: .5rem">
@@ -180,16 +204,68 @@ impl ManageFilesOfFilesetBlock {
                   )}
               </select>
             </div>
-            <button class={class_btn}
+            <button class={class_fileset_btn}
                 // disabled = self.select_fileset_uuid.len() != 36
                 onclick = onclick_open_fileset_files_list_btn >
                 <span class="icon is-small"><i class="fa fa-list"></i></span>
             </button>
-            <button class="button is-info"
+            <button class=class_download_btn
                 disabled = self.select_fileset_uuid.len() != 36
                 onclick=onclick_download_fileset_btn >
               <span class="has-text-weight-bold">{"Download"}</span>
             </button>
+        </div>}
+    }
+
+    fn modal_download_files(&self) -> Html {
+        let onclick_modal_download_btn =
+            self.link.callback(|_| Msg::ShowModalDownloadFiles);
+
+        let class_modal = match &self.open_modal_download_files {
+            true => "modal is-active",
+            false => "modal",
+        };
+
+        html!{<div class=class_modal>
+          <div class="modal-background" onclick=onclick_modal_download_btn.clone() />
+            <div class="card">
+              <div class="modal-content">
+                <header class="modal-card-head">
+                    <p class="modal-card-title">{"Temp solution for download files"}</p>
+                    <button class="delete" aria-label="close" onclick=onclick_modal_download_btn.clone() />
+                </header>
+                <div class="box itemBox">
+                  <article class="media center-media">
+                      <div class="media-content">
+                          <table class="table is-fullwidth">
+                              <thead>
+                                <tr>
+                                  <th>{"Filename"}</th>
+                                  <th>{"Filesize"}</th>
+                                  <th>{"Download"}</th>
+                                </tr>
+                              </thead>
+                            <tbody>
+                              {for self.file_arr.iter().map(|file| html!{
+                                  <tr>
+                                    <td>{file.filename.clone()}</td>
+                                    <td>{file.filesize.clone()}</td>
+                                    <td>
+                                        <a class="button is-ghost" href={file.download_url.clone()}  target="_blank">
+                                          <span class="icon" >
+                                            <i class="fas fa-file-download" aria-hidden="true"></i>
+                                          </span>
+                                        </a>
+                                    </td>
+                                  </tr>
+                              })}
+                            </tbody>
+                          </table>
+                      </div>
+                  </article>
+                </div>
+              </div>
+          </div>
         </div>}
     }
 }

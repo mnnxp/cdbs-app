@@ -572,9 +572,8 @@ impl ModificationsTableEdit {
 
     fn show_modification_files(&self) -> Html {
         html!{<>
-            <h2>{"Manage modification files"}</h2>
-            <br/>
-            <div class="card">
+            <h2 class="has-text-weight-bold">{"Manage modification files"}</h2>
+            <div class="card column">
                 <ManageModificationFilesCard
                     show_download_btn = false
                     modification_uuid = self.select_modification_uuid.clone()
@@ -779,15 +778,16 @@ impl ModificationsTableEdit {
 
     fn show_fileset_files_card(&self) -> Html {
         html!{<>
-            <h2>{"Manage modification filesets"}</h2>
-            <br/>
-            <ManageModificationFilesets
-                select_modification_uuid = self.select_modification_uuid.clone()
-                filesets_program = self.modification_filesets
-                    .get(&self.select_modification_uuid)
-                    .map(|f| f.clone())
-                    .unwrap_or_default()
-            />
+            <h2 class="has-text-weight-bold">{"Manage modification filesets"}</h2>
+            <div class="card column">
+                <ManageModificationFilesets
+                    select_modification_uuid = self.select_modification_uuid.clone()
+                    filesets_program = self.modification_filesets
+                        .get(&self.select_modification_uuid)
+                        .map(|f| f.clone())
+                        .unwrap_or_default()
+                />
+            </div>
         </>}
     }
 }

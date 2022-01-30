@@ -4,7 +4,7 @@ use wasm_bindgen_futures::spawn_local;
 // use yew::services::fetch::FetchTask;
 use yew::{
     agent::Bridged, classes, html, Bridge, Callback, Component, ComponentLink,
-    FocusEvent, Html, InputData, ChangeData, ShouldRender,
+    Html, InputData, ChangeData, ShouldRender,
 };
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
 use log::debug;
@@ -158,10 +158,7 @@ impl Component for Register {
     fn view(&self) -> Html {
         let onclick_show_conditions = self.link.callback(|_| Msg::ShowConditions);
 
-        let onsubmit = self.link.callback(|ev: FocusEvent| {
-            ev.prevent_default();
-            Msg::Request
-        });
+        let onclick_signup_btn = self.link.callback(|_| Msg::Request);
 
         html!{<div class="container page">
             <div class="auth-page">
@@ -173,33 +170,30 @@ impl Component for Register {
                 </h2>
                 <ListErrors error=self.error.clone() />
                 {self.modal_conditions()}
-                <form onsubmit=onsubmit>
-                    <fieldset>
-                        {self.fieldset_profile()}
-
-                        <div class="columns">
-                            <div class="column">
-                                <button
-                                    id="submit-button"
-                                    class=classes!("button", "is-fullwidth", "is-large")
-                                    type="submit"
-                                    disabled=self.request.username.is_empty() ||
-                                        self.request.email.is_empty() ||
-                                        self.request.password.is_empty()
-                                >
-                                    { "Sign up" }
-                                </button>
-                            </div>
-                            <div class="column">
-                                <div class="column is-flex is-vcentered">
-                                    <span>{"By clicking \"Sign up\", you agree to the ["}</span>
-                                    <a onclick=onclick_show_conditions>{"terms and conditions"}</a>
-                                    <span>{"]"}</span>
-                                </div>
+                <div class="card column">
+                    {self.fieldset_profile()}
+                    <div class="columns">
+                        <div class="column">
+                            <button
+                                id="signup-button"
+                                class=classes!("button", "is-fullwidth", "is-large")
+                                onclick={onclick_signup_btn}
+                                disabled=self.request.username.is_empty() ||
+                                    self.request.email.is_empty() ||
+                                    self.request.password.is_empty()
+                            >
+                                { "Sign up" }
+                            </button>
+                        </div>
+                        <div class="column">
+                            <div class="column is-flex is-vcentered">
+                                <span>{"By clicking \"Sign up\", you agree to the ["}</span>
+                                <a onclick=onclick_show_conditions>{"terms and conditions"}</a>
+                                <span>{"]"}</span>
                             </div>
                         </div>
-                    </fieldset>
-                </form>
+                    </div>
+                </div>
             </div>
         </div>}
     }
