@@ -20,7 +20,7 @@ use crate::fragments::{
     user::{AddUserCertificateCard, UserCertificatesCard},
 };
 use crate::routes::AppRoute;
-use crate::services::{get_current_user, is_authenticated, set_logged_user};
+use crate::services::{get_current_user, is_authenticated, set_token, set_logged_user};
 use crate::types::{
     Program, Region, SelfUserInfo, TypeAccessInfo, UpdatePasswordInfo, UserUpdateInfo, UUID,
 };
@@ -338,6 +338,10 @@ impl Component for Settings {
                             serde_json::from_value(res.get("deleteUserData").unwrap().clone()).unwrap();
                         debug!("Delete user data: {:?}", self.get_result_remove_profile);
                         if self.get_result_remove_profile {
+                            // Clear global token and logged user after delete profile
+                            set_token(None);
+                            set_logged_user(None);
+
                             self.router_agent.send(ChangeRoute(AppRoute::Home.into()));
                         }
                     },
