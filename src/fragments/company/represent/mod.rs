@@ -44,7 +44,7 @@ impl Component for CompanyRepresents {
             error: None,
             link,
             props,
-            show_type: ListState::List,
+            show_type: ListState::Box,
         }
     }
 

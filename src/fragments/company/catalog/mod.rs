@@ -59,7 +59,7 @@ impl Component for CatalogCompanies {
             error: None,
             link,
             props,
-            show_type: ListState::List,
+            show_type: ListState::Box,
             list: Vec::new()
         }
     }

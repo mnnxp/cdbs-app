@@ -73,7 +73,7 @@ impl Component for CatalogUsers {
             link,
             props,
             value: 0,
-            show_type: ListState::List,
+            show_type: ListState::Box,
             list: Vec::new()
         }
     }
