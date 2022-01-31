@@ -1,7 +1,9 @@
+use yew::{
+    agent::Bridged, html, Bridge, Callback, Component, Properties,
+    ComponentLink, Html, ShouldRender, InputData, ChangeData
+};
 use yew::services::fetch::FetchTask;
 use yew::services::reader::{File, FileData, ReaderService, ReaderTask};
-use yew::prelude::*;
-use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
 use yew_router::{
     service::RouteService,
     agent::RouteRequest::ChangeRoute,
@@ -29,10 +31,7 @@ use crate::fragments::{
     },
 };
 use crate::gqls::make_query;
-use crate::services::{
-    PutUploadFile, UploadData,
-    is_authenticated, get_logged_user
-};
+use crate::services::{PutUploadFile, UploadData, get_logged_user};
 use crate::types::{
     UUID, ComponentInfo, SlimUser, TypeAccessInfo, UploadFile, ActualStatus,
     ComponentUpdatePreData, ComponentUpdateData, ComponentType, ShowCompanyShort,
@@ -229,6 +228,15 @@ impl Component for ComponentSettings {
     }
 
     fn rendered(&mut self, first_render: bool) {
+        let logged_user_uuid = match get_logged_user() {
+            Some(cu) => cu.uuid,
+            None => {
+                // route to login page if not found token
+                self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
+                String::new()
+            },
+        };
+
         // get component uuid for request component data
         let route_service: RouteService<()> = RouteService::new();
         // get target user from route
@@ -250,22 +258,16 @@ impl Component for ComponentSettings {
             self.select_component_modification = String::new();
         }
 
-        let link = self.link.clone();
+        if first_render || not_matches_component_uuid {
+            let link = self.link.clone();
 
-        // debug!("get_self {:?}", get_self);
-
-        if (first_render || not_matches_component_uuid) && is_authenticated() {
             // update current_component_uuid for checking change component in route
             self.current_component_uuid = target_component_uuid.clone();
-            let user_uuid = match &self.props.current_user {
-                Some(user) => user.uuid.clone(),
-                None => get_logged_user().unwrap().uuid.clone(),
-            };
 
             spawn_local(async move {
                 let ipt_companies_arg = get_update_component_data_opt::IptCompaniesArg{
                     companiesUuids: None,
-                    userUuid: Some(user_uuid),
+                    userUuid: Some(logged_user_uuid),
                     favorite: None,
                     supplier: Some(true),
                     limit: None,

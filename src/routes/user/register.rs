@@ -9,10 +9,11 @@ use yew::{
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
 use log::debug;
 
-use crate::error::{Error, get_error};
-use crate::fragments::list_errors::ListErrors;
 use crate::gqls::make_query;
 use crate::routes::AppRoute;
+use crate::error::{Error, get_error};
+use crate::fragments::list_errors::ListErrors;
+use crate::services::get_logged_user;
 use crate::types::{
     UUID, RegisterInfo, Region, Program
 };
@@ -79,8 +80,14 @@ impl Component for Register {
     }
 
     fn rendered(&mut self, first_render: bool) {
-        let link = self.link.clone();
         if first_render {
+            if let Some(user) = get_logged_user() {
+                // route to profile page if user already logged
+                self.router_agent.send(ChangeRoute(AppRoute::Profile(user.username).into()));
+            };
+            
+            let link = self.link.clone();
+
             spawn_local(async move {
                 let res = make_query(RegisterOpt::build_query(
                     register_opt::Variables

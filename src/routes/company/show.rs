@@ -1,16 +1,18 @@
-use chrono::NaiveDateTime;
-use web_sys::MouseEvent;
-use yew::prelude::*;
-use yew::{Callback, Component, classes, ComponentLink, Html, Properties, ShouldRender, html};
+use yew::{
+    agent::Bridged, classes, html, Bridge, Callback, Component, Properties,
+    ComponentLink, Html, ShouldRender
+};
 use yew_router::{
     service::RouteService,
     agent::RouteRequest::ChangeRoute,
     prelude::*,
 };
+use web_sys::MouseEvent;
 use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
+use chrono::NaiveDateTime;
 
 use crate::routes::AppRoute;
 use crate::error::{get_error, Error};
@@ -23,7 +25,7 @@ use crate::fragments::{
     standard::CatalogStandards,
 };
 use crate::gqls::make_query;
-use crate::services::is_authenticated;
+use crate::services::get_logged_user;
 use crate::types::{
     UUID, CompanyInfo, SlimUser, ComponentsQueryArg, StandardsQueryArg
 };
@@ -120,6 +122,11 @@ impl Component for ShowCompany {
     }
 
     fn rendered(&mut self, first_render: bool) {
+        if let None = get_logged_user() {
+            // route to login page if not found token
+            self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
+        };
+
         // get company uuid for request company data
         let route_service: RouteService<()> = RouteService::new();
         // get target user from route
@@ -131,11 +138,9 @@ impl Component for ShowCompany {
         let not_matches_company_uuid = target_company_uuid != self.current_company_uuid;
         // debug!("self.current_company_uuid {:#?}", self.current_company_uuid);
 
-        let link = self.link.clone();
+        if first_render || not_matches_company_uuid {
+            let link = self.link.clone();
 
-        // debug!("get_self {:?}", get_self);
-
-        if (first_render || not_matches_company_uuid) && is_authenticated() {
             // clear old data
             self.error = None;
             self.company = None;

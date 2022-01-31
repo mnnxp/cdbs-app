@@ -1,7 +1,8 @@
+use yew::{
+    agent::Bridged, classes, html, Bridge, Component,
+    ComponentLink, Html, ShouldRender, Properties
+};
 use chrono::NaiveDateTime;
-// use web_sys::MouseEvent;
-use yew::prelude::*;
-use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
 use yew_router::{
     service::RouteService,
     agent::RouteRequest::ChangeRoute,
@@ -22,7 +23,7 @@ use crate::fragments::{
     img_showcase::ImgShowcase,
 };
 use crate::gqls::make_query;
-use crate::services::{is_authenticated, get_logged_user};
+use crate::services::get_logged_user;
 use crate::types::{
     UUID, StandardInfo, SlimUser, DownloadFile, ComponentsQueryArg,
 };
@@ -121,6 +122,11 @@ impl Component for ShowStandard {
     }
 
     fn rendered(&mut self, first_render: bool) {
+        if let None = get_logged_user() {
+            // route to login page if not found token
+            self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
+        };
+
         // get standard uuid for request standard data
         let route_service: RouteService<()> = RouteService::new();
         // get target user from route
@@ -132,11 +138,9 @@ impl Component for ShowStandard {
         let not_matches_standard_uuid = target_standard_uuid != self.current_standard_uuid;
         // debug!("self.current_standard_uuid {:#?}", self.current_standard_uuid);
 
-        let link = self.link.clone();
+        if first_render || not_matches_standard_uuid {
+            let link = self.link.clone();
 
-        // debug!("get_self {:?}", get_self);
-
-        if (first_render || not_matches_standard_uuid) && is_authenticated() {
             // update current_standard_uuid for checking change standard in route
             self.current_standard_uuid = target_standard_uuid.to_string();
             link.send_message(Msg::RequestDownloadFiles);

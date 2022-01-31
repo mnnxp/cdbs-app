@@ -1,5 +1,7 @@
-use yew::prelude::*;
-use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
+use yew::{
+    agent::Bridged, html, Bridge, Component, Properties,
+    ComponentLink, Html, ShouldRender, InputData, ChangeData
+};
 use yew_router::{
     agent::RouteRequest::ChangeRoute,
     prelude::*,
@@ -14,9 +16,7 @@ use crate::routes::AppRoute;
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
 use crate::gqls::make_query;
-use crate::services::{
-    is_authenticated, get_logged_user
-};
+use crate::services::get_logged_user;
 use crate::types::{
     UUID, StandardCreateData, SlimUser, Region, TypeAccessInfo,
     ShowCompanyShort, StandardStatus,
@@ -100,20 +100,22 @@ impl Component for CreateStandard {
     }
 
     fn rendered(&mut self, first_render: bool) {
-        let link = self.link.clone();
+        let logged_user_uuid = match get_logged_user() {
+            Some(cu) => cu.uuid,
+            None => {
+                // route to login page if not found token
+                self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
+                String::new()
+            },
+        };
 
-        // debug!("get_self {:?}", get_self);
-
-        if first_render && is_authenticated() {
-            let user_uuid = match &self.props.current_user {
-                Some(user) => user.uuid.clone(),
-                None => get_logged_user().unwrap().uuid.clone(),
-            };
+        if first_render {
+            let link = self.link.clone();
 
             spawn_local(async move {
                 let ipt_companies_arg = get_standard_data_opt::IptCompaniesArg{
                     companiesUuids: None,
-                    userUuid: Some(user_uuid),
+                    userUuid: Some(logged_user_uuid),
                     favorite: None,
                     supplier: Some(true),
                     limit: None,
