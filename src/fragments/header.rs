@@ -113,6 +113,10 @@ impl Component for Header {
         if self.current_path == current_path {
             false
         } else {
+            if self.is_active {
+              self.link.send_message(Msg::TriggerMenu)
+            }
+
             // update current path
             self.current_path = current_path;
 
