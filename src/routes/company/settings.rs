@@ -326,11 +326,11 @@ impl Component for CompanySettings {
 
                 match res.is_null() {
                     false => {
-                        let delete_company: bool = serde_json::from_value(
+                        let delete_company_uuid: UUID = serde_json::from_value(
                             res.get("deleteCompany").unwrap().clone()
                         ).unwrap();
-                        debug!("Delete company: {:?}", delete_company);
-                        self.get_result_remove_company = delete_company;
+                        debug!("Delete company: {:?}", delete_company_uuid);
+                        self.get_result_remove_company = !delete_company_uuid.is_empty();
                         match &self.props.current_user {
                             Some(user) => self
                                 .router_agent
