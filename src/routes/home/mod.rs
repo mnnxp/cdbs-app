@@ -1,29 +1,46 @@
 mod banner;
 mod main_view;
 
-use yew::{html, Component, classes, ComponentLink, Html, ShouldRender};
+use yew::{Bridged, classes, html, Bridge, Component, ComponentLink, Html, ShouldRender};
+use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
+use crate::routes::AppRoute;
+use crate::services::get_logged_user;
 
 use banner::Banner;
 // use main_view::MainView;
 
 /// Home page with an article list and a tag list.
 pub struct Home {
+    router_agent: Box<dyn Bridge<RouteAgent>>,
     // link: ComponentLink<Self>,
 }
 
+pub enum Msg {
+    Ignore,
+}
+
 impl Component for Home {
-    type Message = ();
+    type Message = Msg;
     type Properties = ();
 
-    fn create(_: Self::Properties, _link: ComponentLink<Self>) -> Self {
-        Home { }
+    fn create(_props: Self::Properties, link: ComponentLink<Self>) -> Self {
+        Home { router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)) }
+    }
+
+    fn rendered(&mut self, first_render: bool) {
+        if first_render {
+            if let Some(user) = get_logged_user() {
+                // route to profile page if user already logged
+                self.router_agent.send(ChangeRoute(AppRoute::Profile(user.username).into()));
+            };
+        }
     }
 
     fn update(&mut self, _msg: Self::Message) -> ShouldRender {
         false
     }
 
-    fn change(&mut self, _: Self::Properties) -> ShouldRender {
+    fn change(&mut self, _props: Self::Properties) -> ShouldRender {
         false
     }
 
