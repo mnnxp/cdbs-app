@@ -10,7 +10,7 @@ use log::debug;
 use crate::fragments::list_errors::ListErrors;
 use crate::error::Error;
 use crate::routes::AppRoute;
-use crate::services::{set_token, Auth, set_logged_user};
+use crate::services::{set_token, Auth, set_logged_user, get_logged_user};
 use crate::types::{UUID, LoginInfo, LoginInfoWrapper, SlimUser, UserToken};
 use crate::gqls::make_query;
 use wasm_bindgen_futures::spawn_local;
@@ -64,6 +64,15 @@ impl Component for Login {
             router_agent: Arc::new(Mutex::new(RouteAgent::bridge(link.callback(|_| Msg::Ignore)))) ,
             task: None,
             link,
+        }
+    }
+
+    fn rendered(&mut self, first_render: bool) {
+        if first_render {
+            if let Some(user) = get_logged_user() {
+                // route to profile page if user already logged
+                self.router_agent.lock().unwrap().send(ChangeRoute(AppRoute::Profile(user.username).into()));
+            };
         }
     }
 

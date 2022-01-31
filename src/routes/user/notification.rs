@@ -1,16 +1,19 @@
-use yew::{html, Component, ComponentLink, Html, ShouldRender};
-
+use yew::{
+    agent::Bridged, html, Bridge, Component,
+    ComponentLink, Html, ShouldRender
+};
+use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
 use log::debug;
 use chrono::NaiveDateTime;
-
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
+use crate::routes::AppRoute;
 use crate::gqls::make_query;
 use crate::error::{Error, get_error};
 use crate::fragments::list_errors::ListErrors;
-use crate::services::is_authenticated;
+use crate::services::get_logged_user;
 use crate::types::{
     ShowNotification, DegreeImportanceTranslateList,
 };
@@ -54,8 +57,9 @@ pub enum Menu {
 pub struct Notifications {
     error: Option<Error>,
     notifications: Vec<ShowNotification>,
-    link: ComponentLink<Self>,
+    router_agent: Box<dyn Bridge<RouteAgent>>,
     // props: Props,
+    link: ComponentLink<Self>,
     read_notification: Vec<i64>,
     delete_notification: Vec<i64>,
     select_menu: Menu,
@@ -84,8 +88,9 @@ impl Component for Notifications {
         Notifications {
             error: None,
             notifications: Vec::new(),
-            link,
+            router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             // props,
+            link,
             read_notification: Vec::new(),
             delete_notification: Vec::new(),
             select_menu: Menu::GetAll,
@@ -95,7 +100,12 @@ impl Component for Notifications {
     fn rendered(&mut self, first_render: bool) {
         let link = self.link.clone();
 
-        if first_render && is_authenticated() {
+        if let None = get_logged_user() {
+            // route to login page if not found token
+            self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
+        };
+
+        if first_render {
             spawn_local(async move {
                 let res = make_query(GetNotifications::build_query(
                     get_notifications::Variables {

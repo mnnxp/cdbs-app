@@ -1,14 +1,16 @@
-use chrono::NaiveDateTime;
-use graphql_client::GraphQLQuery;
-use log::debug;
-use serde_json::Value;
-use wasm_bindgen_futures::spawn_local;
 use yew::{
     agent::Bridged, html, classes, Bridge, ChangeData, Component, ComponentLink, FocusEvent, Html,
     Callback, InputData, Properties, ShouldRender, MouseEvent
 };
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*, service::RouteService};
+use chrono::NaiveDateTime;
+use graphql_client::GraphQLQuery;
+use log::debug;
+use serde_json::Value;
+use wasm_bindgen_futures::spawn_local;
 
+use crate::gqls::make_query;
+use crate::routes::AppRoute;
 use crate::error::{get_error, Error};
 use crate::fragments::{
     company::{
@@ -19,9 +21,7 @@ use crate::fragments::{
     side_menu::{MenuItem, SideMenu},
     upload_favicon::UpdateFaviconBlock,
 };
-use crate::gqls::make_query;
-use crate::routes::AppRoute;
-use crate::services::is_authenticated;
+use crate::services::get_logged_user;
 use crate::types::{
     UUID, SlimUser, CompanyUpdateInfo, CompanyInfo, Region,
     CompanyType, TypeAccessInfo
@@ -175,26 +175,29 @@ impl Component for CompanySettings {
     }
 
     fn rendered(&mut self, first_render: bool) {
-        let link = self.link.clone();
-        self.company_uuid = match self.props.company_uuid.is_empty() {
-            true => {
-                // get company uuid for request
-                let route_service: RouteService<()> = RouteService::new();
-                // get target company from route
-                route_service
-                    .get_fragment()
-                    .trim_start_matches("#/company/settings/")
-                    .to_string()
-            }
-            false => self.props.company_uuid.clone(),
+        if let None = get_logged_user() {
+            // route to login page if not found token
+            self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
         };
 
-        let company_uuid = self.company_uuid.clone();
+        // get company uuid for request
+        let route_service: RouteService<()> = RouteService::new();
+        // get target company from route
+        let target_company_uuid = route_service
+            .get_fragment()
+            .trim_start_matches("#/company/settings/")
+            .to_string();
 
-        if first_render && is_authenticated() && !company_uuid.is_empty() {
+        // get flag changing current company in route
+        let not_matches_company_uuid = target_company_uuid != self.company_uuid;
+
+        if first_render || not_matches_company_uuid {
+            let link = self.link.clone();
+            self.company_uuid = target_company_uuid.clone();
+
             spawn_local(async move {
                 let res = make_query(GetCompanySettingDataOpt::build_query(get_company_setting_data_opt::Variables{
-                    company_uuid
+                    company_uuid: target_company_uuid
                 })).await.unwrap();
                 link.send_message(Msg::GetCompanyDataResult(res.clone()));
                 link.send_message(Msg::GetUpdateListResult(res));

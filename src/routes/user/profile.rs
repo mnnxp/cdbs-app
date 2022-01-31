@@ -4,9 +4,17 @@ use graphql_client::GraphQLQuery;
 use log::debug;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
-use yew::{classes, html, Callback, Component, ComponentLink, Html, Properties, ShouldRender};
-use yew_router::service::RouteService;
+use yew::{
+    agent::Bridged, classes, html, Bridge, Callback, Component,
+    ComponentLink, Html, Properties, ShouldRender
+};
+use yew_router::{
+    service::RouteService,
+    agent::RouteRequest::ChangeRoute,
+    prelude::*
+};
 
+use crate::routes::AppRoute;
 use crate::error::{get_error, Error};
 use crate::fragments::{
     company::CatalogCompanies,
@@ -18,7 +26,7 @@ use crate::fragments::{
     user::UserCertificatesCard,
 };
 use crate::gqls::make_query;
-use crate::services::{get_logged_user, is_authenticated};
+use crate::services::get_logged_user;
 use crate::types::{
     UserDataCard, CompaniesQueryArg, ComponentsQueryArg, SelfUserInfo, SlimUser,
     StandardsQueryArg, UserCertificate, UserInfo, UsersQueryArg, UUID,
@@ -63,6 +71,7 @@ pub struct Profile {
     profile: Option<UserInfo>,
     current_user_uuid: UUID,
     current_username: String,
+    router_agent: Box<dyn Bridge<RouteAgent>>,
     props: Props,
     link: ComponentLink<Self>,
     subscribers: usize,
@@ -114,6 +123,7 @@ impl Component for Profile {
             profile: None,
             current_user_uuid: String::new(),
             current_username: String::new(),
+            router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             props,
             link,
             subscribers: 0,
@@ -125,6 +135,15 @@ impl Component for Profile {
     }
 
     fn rendered(&mut self, first_render: bool) {
+        let logged_username = match get_logged_user() {
+            Some(cu) => cu.username,
+            None => {
+                // route to login page if not found token
+                self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
+                String::new()
+            },
+        };
+
         // get username for request user data
         let route_service: RouteService<()> = RouteService::new();
         // get target user from route
@@ -137,13 +156,10 @@ impl Component for Profile {
         // debug!("self.current_username {:?}", self.current_username);
 
         // check get self data
-        let get_self = matches!(
-            get_logged_user(),
-            Some(cu) if cu.username == target_username
-        );
+        let get_self = logged_username == target_username;
         // debug!("get_self {:?}", get_self);
 
-        if (first_render || not_matches_username) && is_authenticated() {
+        if first_render || not_matches_username {
             // clear old data
             self.error = None;
             self.self_profile = None;

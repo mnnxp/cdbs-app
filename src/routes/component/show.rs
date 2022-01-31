@@ -1,7 +1,9 @@
 use std::collections::HashMap;
 use chrono::NaiveDateTime;
-use yew::prelude::*;
-use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
+use yew::{
+    agent::Bridged, classes, html, Bridge, Component, Properties,
+    ComponentLink, Html, ShouldRender
+};
 use yew_router::{
     service::RouteService,
     agent::RouteRequest::ChangeRoute,
@@ -26,7 +28,7 @@ use crate::fragments::{
     img_showcase::ImgShowcase,
 };
 use crate::gqls::make_query;
-use crate::services::{is_authenticated, get_logged_user};
+use crate::services::get_logged_user;
 use crate::types::{
     UUID, ComponentInfo, SlimUser, ComponentParam,
     ComponentModificationInfo,
@@ -152,6 +154,11 @@ impl Component for ShowComponent {
     }
 
     fn rendered(&mut self, first_render: bool) {
+        if let None = get_logged_user() {
+            // route to login page if not found token
+            self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
+        };
+
         // get component uuid for request component data
         let route_service: RouteService<()> = RouteService::new();
         // get target user from route
@@ -167,7 +174,7 @@ impl Component for ShowComponent {
 
         // debug!("get_self {:?}", get_self);
 
-        if (first_render || not_matches_component_uuid) && is_authenticated() {
+        if first_render || not_matches_component_uuid {
             self.error = None;
             self.component = None;
             self.current_component_uuid = target_component_uuid.to_string();

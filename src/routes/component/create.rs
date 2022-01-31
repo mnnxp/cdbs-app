@@ -1,10 +1,11 @@
-use yew::prelude::*;
-use yew::{Component, ComponentLink, Html, ShouldRender, html};
+use yew::{
+    agent::Bridged, html, Bridge, Component,
+    ComponentLink, Html, ShouldRender, InputData, ChangeData
+};
 use yew_router::{
     agent::RouteRequest::ChangeRoute,
     prelude::*,
 };
-// use chrono::NaiveDateTime;
 use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
@@ -14,7 +15,7 @@ use crate::routes::AppRoute;
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
 use crate::gqls::make_query;
-use crate::services::is_authenticated;
+use crate::services::get_logged_user;
 use crate::types::{
     UUID, ComponentCreateData, TypeAccessInfo,
     ActualStatus, ComponentType
@@ -81,11 +82,14 @@ impl Component for CreateComponent {
     }
 
     fn rendered(&mut self, first_render: bool) {
-        let link = self.link.clone();
+        if let None = get_logged_user() {
+            // route to login page if not found token
+            self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
+        };
 
-        // debug!("get_self {:?}", get_self);
+        if first_render {
+            let link = self.link.clone();
 
-        if first_render && is_authenticated() {
             spawn_local(async move {
                 let res = make_query(GetComponentDataOpt::build_query(
                     get_component_data_opt::Variables

@@ -12,10 +12,10 @@ use wasm_bindgen_futures::spawn_local;
 use log::debug;
 
 use crate::gqls::make_query;
+use crate::routes::AppRoute;
 use crate::error::{Error, get_error};
 use crate::fragments::list_errors::ListErrors;
-use crate::routes::AppRoute;
-use crate::services::is_authenticated;
+use crate::services::get_logged_user;
 use crate::types::{
     UUID, SlimUser, CompanyCreateInfo, Region,
     CompanyType, TypeAccessInfo,
@@ -92,9 +92,14 @@ impl Component for CreateCompany {
     }
 
     fn rendered(&mut self, first_render: bool) {
-        let link = self.link.clone();
+        if let None = get_logged_user() {
+            // route to login page if not found token
+            self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
+        };
 
-        if first_render && is_authenticated() {
+        if first_render {
+            let link = self.link.clone();
+
             spawn_local(async move {
                 let res = make_query(GetCreateCompanyDataOpt::build_query(
                     get_create_company_data_opt::Variables

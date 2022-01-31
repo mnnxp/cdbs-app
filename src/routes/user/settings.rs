@@ -5,13 +5,12 @@ use yew::{
     FocusEvent, Html, InputData, ShouldRender,
 };
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
-
-use crate::gqls::make_query;
 use graphql_client::GraphQLQuery;
 use log::debug;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
+use crate::gqls::make_query;
 use crate::error::{get_error, Error};
 use crate::fragments::{
     list_errors::ListErrors,
@@ -20,7 +19,7 @@ use crate::fragments::{
     user::{AddUserCertificateCard, UserCertificatesCard},
 };
 use crate::routes::AppRoute;
-use crate::services::{get_current_user, is_authenticated, set_token, set_logged_user};
+use crate::services::{get_current_user, set_token, set_logged_user, get_logged_user};
 use crate::types::{
     Program, Region, SelfUserInfo, TypeAccessInfo, UpdatePasswordInfo, UserUpdateInfo, UUID,
 };
@@ -166,8 +165,14 @@ impl Component for Settings {
     }
 
     fn rendered(&mut self, first_render: bool) {
-        let link = self.link.clone();
-        if first_render && is_authenticated() {
+        if let None = get_logged_user() {
+            // route to login page if not found token
+            self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
+        };
+
+        if first_render {
+            let link = self.link.clone();
+
             spawn_local(async move {
                 let res = make_query(GetSettingDataOpt::build_query(
                     get_setting_data_opt::Variables
