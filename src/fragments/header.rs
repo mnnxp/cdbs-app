@@ -37,6 +37,7 @@ pub enum Msg {
   LogoutComplete(String),
   TriggerMenu,
   CheckPath,
+  SetActive(bool),
   Ignore,
 }
 
@@ -89,6 +90,9 @@ impl Component for Header {
           },
           Msg::TriggerMenu => {
               self.is_active = !self.is_active;
+          },
+          Msg::SetActive(active) => {
+              self.is_active = active;
           },
           Msg::CheckPath => {
               // debug!("route_service: {:?}", route_service.get_fragment().as_str());
@@ -226,6 +230,10 @@ impl Header {
         user_info: &SlimUser,
         logout: Callback<MouseEvent>,
     ) -> Html {
+        let active_menu = if self.is_active { "is-active" } else { "" };
+        let triggrt_menu : Callback<MouseEvent> = self.link.callback(|_| Msg::SetActive(true));
+        let out_menu : Callback<MouseEvent> = self.link.callback(|_| Msg::SetActive(false));
+
         html!{
             <div class="buttons navbar-item">
                  {match self.open_notifications_page {
@@ -246,7 +254,7 @@ impl Header {
                          </RouterAnchor<AppRoute>>
                      },
                  }}
-                 <div class="navbar-item has-dropdown is-hoverable">
+                 <div class=classes!("navbar-item", "has-dropdown", active_menu) onmouseover=triggrt_menu onmouseout=out_menu >
                   <a id="header-menu-button"
                     class="navbar-link"
                     aria-haspopup="true"
