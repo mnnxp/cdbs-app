@@ -93,6 +93,7 @@ pub struct Settings {
     // props: Props,
     link: ComponentLink<Self>,
     current_data: Option<SelfUserInfo>,
+    current_username: String,
     programs: Vec<Program>,
     regions: Vec<Region>,
     types_access: Vec<TypeAccessInfo>,
@@ -153,6 +154,7 @@ impl Component for Settings {
             // props,
             link,
             current_data: None,
+            current_username: String::new(),
             programs: Vec::new(),
             regions: Vec::new(),
             types_access: Vec::new(),
@@ -165,12 +167,12 @@ impl Component for Settings {
     }
 
     fn rendered(&mut self, first_render: bool) {
-        if let None = get_logged_user() {
-            // route to login page if not found token
-            self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
-        };
-
         if first_render {
+            if let None = get_logged_user() {
+                // route to login page if not found token
+                self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
+            };
+
             let link = self.link.clone();
 
             spawn_local(async move {
@@ -204,12 +206,21 @@ impl Component for Settings {
                 })
             },
             Msg::RequestUpdateProfile => {
+                let username =
+                    match matches!(
+                        &self.request_profile.username,
+                        Some(username) if &self.current_username == username
+                    ) {
+                        true => None,
+                        false => self.request_profile.username.clone(),
+                    };
+
                 let ipt_update_user_data = user_update::IptUpdateUserData {
                     email: self.request_profile.email.clone(),
                     firstname: self.request_profile.firstname.clone(),
                     lastname: self.request_profile.lastname.clone(),
                     secondname: self.request_profile.secondname.clone(),
-                    username: self.request_profile.username.clone(),
+                    username,
                     phone: self.request_profile.phone.clone(),
                     description: self.request_profile.description.clone(),
                     address: self.request_profile.address.clone(),
@@ -290,6 +301,7 @@ impl Component for Settings {
                         let user_data: SelfUserInfo = serde_json::from_value(res.get("selfData").unwrap().clone()).unwrap();
                         debug!("User data: {:?}", user_data);
                         self.current_data = Some(user_data.clone());
+                        self.current_username = user_data.username.clone();
                         self.request_profile = user_data.into();
                         self.rendered(false);
                     },
