@@ -471,7 +471,8 @@ impl Component for ManageModificationFilesets {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.select_modification_uuid == props.select_modification_uuid {
+        if self.props.select_modification_uuid == props.select_modification_uuid &&
+              self.props.filesets_program.len() == props.filesets_program.len() {
             debug!("no change filesets: {:?}", props.filesets_program.len());
             false
         } else {
