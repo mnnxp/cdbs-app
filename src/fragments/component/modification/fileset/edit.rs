@@ -161,7 +161,7 @@ impl Component for ManageModificationFilesets {
     }
 
     fn rendered(&mut self, first_render: bool) {
-        if first_render && self.select_fileset_uuid.len() == 36 {
+        if first_render {
             self.link.send_message(Msg::RequestFilesOfFileset);
         }
     }
@@ -206,19 +206,21 @@ impl Component for ManageModificationFilesets {
                 })
             },
             Msg::RequestFilesOfFileset => {
-                let ipt_file_of_fileset_arg = com_mod_files_of_fileset::IptFileOfFilesetArg{
-                    filesetUuid: self.select_fileset_uuid.clone(),
-                    fileUuids: None,
-                    limit: None,
-                    offset: None,
-                };
-                spawn_local(async move {
-                    let res = make_query(ComModFilesOfFileset::build_query(com_mod_files_of_fileset::Variables {
-                        ipt_file_of_fileset_arg
-                    })).await.unwrap();
+                if self.select_fileset_uuid.len() == 36 {
+                    let ipt_file_of_fileset_arg = com_mod_files_of_fileset::IptFileOfFilesetArg{
+                        filesetUuid: self.select_fileset_uuid.clone(),
+                        fileUuids: None,
+                        limit: None,
+                        offset: None,
+                    };
+                    spawn_local(async move {
+                        let res = make_query(ComModFilesOfFileset::build_query(com_mod_files_of_fileset::Variables {
+                            ipt_file_of_fileset_arg
+                        })).await.unwrap();
 
-                    link.send_message(Msg::GetFilesOfFilesetResult(res));
-                })
+                        link.send_message(Msg::GetFilesOfFilesetResult(res));
+                    })
+                }
             },
             Msg::RequestUploadFilesOfFileset => {
                 if !self.files.is_empty() && self.select_fileset_uuid.len() == 36 {
@@ -314,9 +316,8 @@ impl Component for ManageModificationFilesets {
                         ).unwrap();
                         // debug!("registerModificationFileset: {:?}", self.select_fileset_uuid);
 
-                        if self.select_fileset_uuid.len() == 36 {
-                            self.link.send_message(Msg::RequestFilesOfFileset);
-                        }
+                        // clear shown files (new fileset always empty)
+                        self.files_list.clear();
 
                         if let Some(program) = self.programs.iter().find(|x| x.id == self.request_fileset_program_id) {
                             if let None = self.filesets_program.iter().find(|(_, p_name)| p_name == &program.name) {
@@ -350,10 +351,12 @@ impl Component for ManageModificationFilesets {
                                 }
                             }
                             self.select_fileset_uuid = update_filesets
-                                .first()
+                                .last()
                                 .map(|(fileset_uuid, _)| fileset_uuid.clone())
                                 .unwrap_or_default();
                             self.filesets_program = update_filesets;
+
+                            self.link.send_message(Msg::RequestFilesOfFileset);
                         }
                     },
                     true => link.send_message(Msg::ResponseError(get_error(&data))),
@@ -447,9 +450,7 @@ impl Component for ManageModificationFilesets {
                 debug!("SelectFileset: {:?}", fileset_uuid);
                 self.select_fileset_uuid = fileset_uuid;
                 self.files_list.clear();
-                if self.select_fileset_uuid.len() == 36 {
-                    self.link.send_message(Msg::RequestFilesOfFileset);
-                }
+                self.link.send_message(Msg::RequestFilesOfFileset);
             },
             Msg::UpdateSelectProgramId(data) =>
                 self.request_fileset_program_id = data.parse::<usize>().unwrap_or_default(),
@@ -488,9 +489,7 @@ impl Component for ManageModificationFilesets {
                 .unwrap_or_default();
 
             self.files_list.clear();
-            if self.select_fileset_uuid.len() == 36 {
-                self.link.send_message(Msg::RequestFilesOfFileset);
-            }
+            self.link.send_message(Msg::RequestFilesOfFileset);
 
             self.props = props;
             true
@@ -539,7 +538,12 @@ impl ManageModificationFilesets {
                         select={self.select_fileset_uuid.clone()}
                         onchange=onchange_select_fileset_btn >
                       {for self.filesets_program.iter().map(|(fileset_uuid, program_name)|
-                          html!{<option value={fileset_uuid.clone()}>{program_name}</option>}
+                          html!{
+                              <option value={fileset_uuid.to_string()}
+                                    selected={fileset_uuid == &self.select_fileset_uuid} >
+                                  {program_name}
+                              </option>
+                          }
                       )}
                   </select>
                 </div>
