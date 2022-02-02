@@ -133,6 +133,8 @@ impl Component for ManageFilesOfFilesetBlock {
             Msg::SelectFilesetUuid(fileset_uuid) => {
                 self.props.callback_select_fileset_uuid.emit(fileset_uuid.clone());
                 self.select_fileset_uuid = fileset_uuid;
+                // for get new download urls
+                self.flag_get_dowload_url = false;
             },
             Msg::ShowModalDownloadFiles => self.open_modal_download_files = !self.open_modal_download_files,
             Msg::OpenFilesetFilesBlock => {
@@ -200,7 +202,12 @@ impl ManageFilesOfFilesetBlock {
                     select={self.select_fileset_uuid.clone()}
                     onchange=onchange_select_fileset_btn >
                   {for self.props.current_filesets_program.iter().map(|(fileset_uuid, program_name)|
-                      html!{<option value={fileset_uuid.clone()}>{program_name}</option>}
+                      html!{
+                          <option value={fileset_uuid.to_string()}
+                                selected={fileset_uuid == &self.select_fileset_uuid} >
+                              {program_name}
+                          </option>
+                      }
                   )}
               </select>
             </div>
