@@ -606,7 +606,12 @@ impl ManageModificationFilesets {
                               onchange=onchange_select_program_id
                               >
                             {for self.programs.iter().map(|x|
-                                html!{<option value={x.id.to_string()}>{&x.name}</option>}
+                                html!{
+                                    <option value={x.id.to_string()}
+                                          selected={x.id == self.request_fileset_program_id} >
+                                        {&x.name}
+                                    </option>
+                                }
                             )}
                           </select>
                       </div>

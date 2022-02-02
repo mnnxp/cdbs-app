@@ -353,7 +353,12 @@ impl CreateStandard {
                                   onchange=onchange_change_owner_company
                                 >
                               { for self.supplier_list.iter().map(|x|
-                                  html!{<option value={x.uuid.to_string()}>{&x.shortname}</option>}
+                                  html!{
+                                      <option value={x.uuid.to_string()}
+                                            selected={x.uuid == self.request_standard.company_uuid} >
+                                          {&x.shortname}
+                                      </option>
+                                  }
                               )}
                               </select>
                             </div>
@@ -363,11 +368,16 @@ impl CreateStandard {
                             <div class="select">
                               <select
                                   id="set-type-access"
-                                  select={self.request_standard.company_uuid.clone()}
+                                  select={self.request_standard.type_access_id.to_string()}
                                   onchange=onchange_change_type_access
                                 >
                               { for self.types_access.iter().map(|x|
-                                  html!{<option value={x.type_access_id.to_string()}>{&x.name}</option>}
+                                  html!{
+                                      <option value={x.type_access_id.to_string()}
+                                            selected={x.type_access_id == self.request_standard.type_access_id} >
+                                          {&x.name}
+                                      </option>
+                                  }
                               )}
                               </select>
                             </div>
@@ -481,7 +491,12 @@ impl CreateStandard {
                                   onchange=onchange_standard_status_id
                                   >
                                 { for self.standard_statuses.iter().map(|x|
-                                    html!{<option value={x.standard_status_id.to_string()}>{&x.name}</option>}
+                                    html!{
+                                        <option value={x.standard_status_id.to_string()}
+                                              selected={x.standard_status_id == self.request_standard.standard_status_id} >
+                                            {&x.name}
+                                        </option>
+                                    }
                                 )}
                               </select>
                             </div>
@@ -496,7 +511,12 @@ impl CreateStandard {
                                   onchange=onchange_region_id
                                   >
                                 { for self.regions.iter().map(|x|
-                                    html!{<option value={x.region_id.to_string()}>{&x.region}</option>}
+                                    html!{
+                                        <option value={x.region_id.to_string()}
+                                              selected={x.region_id == self.request_standard.region_id} >
+                                            {&x.region}
+                                        </option>
+                                    }
                                 )}
                               </select>
                             </div>

@@ -277,7 +277,12 @@ impl AddCompanyRepresentCard {
                                   onchange=oninput_representation_type_id
                                   >
                                 { for self.represent_types.iter().map(|x|
-                                    html!{<option value={x.representation_type_id.to_string()}>{&x.representation_type}</option>}
+                                    html!{
+                                        <option value={x.representation_type_id.to_string()}
+                                              selected={x.representation_type_id == self.request_register.representation_type_id} >
+                                            {&x.representation_type}
+                                        </option>
+                                    }
                                 )}
                               </select>
                             </div>
@@ -297,7 +302,12 @@ impl AddCompanyRepresentCard {
                                   onchange=oninput_region_id
                                   >
                                 { for self.regions.iter().map(|x|
-                                    html!{<option value={x.region_id.to_string()}>{&x.region}</option>}
+                                    html!{
+                                        <option value={x.region_id.to_string()}
+                                              selected={x.region_id == self.request_register.region_id} >
+                                            {&x.region}
+                                        </option>
+                                    }
                                 )}
                               </select>
                             </div>

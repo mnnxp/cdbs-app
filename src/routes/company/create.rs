@@ -372,7 +372,12 @@ impl CreateCompany {
                                   onchange=onchange_company_type_id
                                   >
                                 { for self.company_types.iter().map(|x|
-                                    html!{<option value={x.company_type_id.to_string()}>{&x.name}</option>}
+                                    html!{
+                                        <option value={x.company_type_id.to_string()}
+                                              selected={x.company_type_id as i64 == self.request_company.company_type_id} >
+                                            {&x.name}
+                                        </option>
+                                    }
                                 )}
                               </select>
                             </div>
@@ -412,7 +417,12 @@ impl CreateCompany {
                                   onchange=onchange_region_id
                                   >
                                 { for self.regions.iter().map(|x|
-                                    html!{<option value={x.region_id.to_string()}>{&x.region}</option>}
+                                    html!{
+                                        <option value={x.region_id.to_string()}
+                                              selected={x.region_id as i64 == self.request_company.region_id} >
+                                            {&x.region}
+                                        </option>
+                                    }
                                 )}
                               </select>
                             </div>
@@ -449,7 +459,12 @@ impl CreateCompany {
                                   onchange=onchange_type_access_id
                                   >
                                 { for self.types_access.iter().map(|x|
-                                    html!{<option value={x.type_access_id.to_string()}>{&x.name}</option>}
+                                    html!{
+                                        <option value={x.type_access_id.to_string()}
+                                              selected={x.type_access_id as i64 == self.request_company.type_access_id} >
+                                            {&x.name}
+                                        </option>
+                                    }
                                 )}
                               </select>
                             </div>

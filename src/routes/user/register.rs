@@ -85,7 +85,7 @@ impl Component for Register {
                 // route to profile page if user already logged
                 self.router_agent.send(ChangeRoute(AppRoute::Profile(user.username).into()));
             };
-            
+
             let link = self.link.clone();
 
             spawn_local(async move {
@@ -312,7 +312,12 @@ impl Register {
                               onchange=onchange_region_id
                               >
                               { for self.regions.iter().map(|x| html!{
-                                <option value={x.region_id.to_string()} >{&x.region}</option>
+                                  html!{
+                                      <option value={x.region_id.to_string()}
+                                            selected={x.region_id == self.request.region_id} >
+                                          {&x.region}
+                                      </option>
+                                  }
                               }) }
                           </select>
                         </div>

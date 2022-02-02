@@ -324,7 +324,12 @@ impl ComponentSuppliersCard {
                               onchange=onchange_select_set_supplier
                             >
                           { for self.props.supplier_list.iter().map(|x|
-                              html!{<option value={x.uuid.to_string()}>{&x.shortname}</option>}
+                              html!{
+                                  <option value={x.uuid.to_string()}
+                                        selected={x.uuid == self.request_set_supplier_uuid} >
+                                      {&x.shortname}
+                                  </option>
+                              }
                           )}
                           </select>
                         </div>
@@ -390,7 +395,12 @@ impl ComponentSuppliersCard {
                               onchange=onchange_select_add_supplier
                             >
                           { for self.props.supplier_list.iter().map(|x|
-                              html!{<option value={x.uuid.to_string()}>{&x.shortname}</option>}
+                              html!{
+                                  <option value={x.uuid.to_string()}
+                                        selected={x.uuid == self.request_set_supplier_uuid} >
+                                      {&x.shortname}
+                                  </option>
+                              }
                           )}
                           </select>
                         </div>

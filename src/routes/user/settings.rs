@@ -21,7 +21,7 @@ use crate::fragments::{
 use crate::routes::AppRoute;
 use crate::services::{get_current_user, set_token, set_logged_user, get_logged_user};
 use crate::types::{
-    Program, Region, SelfUserInfo, TypeAccessInfo, UpdatePasswordInfo, UserUpdateInfo, UUID,
+    Program, Region, SelfUserInfo, TypeAccessInfo, UpdatePasswordInfo, UserUpdateInfo, UUID
 };
 
 #[derive(GraphQLQuery)]
@@ -730,7 +730,12 @@ impl Settings {
                                   onchange=onchange_type_access_id
                                   >
                                 { for self.types_access.iter().map(|x|
-                                    html!{<option value={x.type_access_id.to_string()} selected={x.type_access_id.to_string() == self.request_access.to_string()} >{&x.name}</option>}
+                                    html!{
+                                        <option value={x.type_access_id.to_string()}
+                                          selected={x.type_access_id == self.current_data.as_ref().map(|x| x.type_access.type_access_id).unwrap_or_default()} >
+                                            {&x.name}
+                                        </option>
+                                    }
                                 )}
                               </select>
                             </div>
@@ -868,7 +873,12 @@ impl Settings {
                               onchange=oninput_program_id
                               >
                             { for self.programs.iter().map(|x|
-                                html!{<option value={x.id.to_string()} selected={x.id.to_string() == self.request_profile.program_id.unwrap_or_default().to_string()}>{&x.name}</option>}
+                                html!{
+                                    <option value={x.id.to_string()}
+                                        selected={x.id as i64 == self.request_profile.program_id.unwrap_or_default()} >
+                                        {&x.name}
+                                    </option>
+                                }
                             )}
                           </select>
                         </div>
@@ -884,7 +894,12 @@ impl Settings {
                               onchange=onchange_region_id
                               >
                             { for self.regions.iter().map(|x|
-                                html!{<option value={x.region_id.to_string()} selected={self.request_profile.region_id.unwrap_or_default().to_string() == x.region_id.to_string()} >{&x.region}</option>}
+                                html!{
+                                    <option value={x.region_id.to_string()}
+                                          selected={x.region_id as i64 == self.request_profile.region_id.unwrap_or_default()} >
+                                        {&x.region}
+                                    </option>
+                                }
                             )}
                           </select>
                         </div>

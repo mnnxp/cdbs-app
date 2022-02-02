@@ -642,7 +642,12 @@ impl ModificationsTableEdit {
                               onchange=onchange_actual_status_id
                               >
                             { for self.actual_statuses.iter().map(|x|
-                                html!{<option value={x.actual_status_id.to_string()}>{&x.name}</option>}
+                                html!{
+                                    <option value={x.actual_status_id.to_string()}
+                                          selected={x.actual_status_id == self.request_add_modification.actual_status_id} >
+                                        {&x.name}
+                                    </option>
+                                }
                             )}
                           </select>
                       </div>
@@ -729,7 +734,12 @@ impl ModificationsTableEdit {
                                   onchange=onchange_modification_actual_status_id
                                   >
                                 { for self.actual_statuses.iter().map(|x|
-                                    html!{<option value={x.actual_status_id.to_string()}>{&x.name}</option>}
+                                    html!{
+                                        <option value={x.actual_status_id.to_string()}
+                                              selected={x.actual_status_id == self.request_add_modification.actual_status_id} >
+                                            {&x.name}
+                                        </option>
+                                    }
                                 )}
                               </select>
                           </div>
