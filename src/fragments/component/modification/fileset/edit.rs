@@ -345,15 +345,33 @@ impl Component for ManageModificationFilesets {
                         // debug!("deleteModificationFileset: {:?}", self.select_fileset_uuid);
                         if result {
                             let mut update_filesets: Vec<(UUID, String)> = Vec::new();
+
+                            // for set next item after delete
+                            let delete_fileset_uuid = self.select_fileset_uuid.clone();
+                            self.select_fileset_uuid = String::new();
+                            let mut flag_delete = false;
+
                             for x in self.filesets_program.iter() {
-                                if x.0 != self.select_fileset_uuid {
+                                if flag_delete {
+                                    self.select_fileset_uuid = x.0.clone();
+                                    flag_delete = false;
+                                    // debug!("self.select_fileset_uuid: {:?}", self.select_fileset_uuid);
+                                }
+
+                                if x.0 != delete_fileset_uuid {
                                     update_filesets.push(x.clone());
+                                } else {
+                                    flag_delete = true;
                                 }
                             }
-                            self.select_fileset_uuid = update_filesets
-                                .last()
-                                .map(|(fileset_uuid, _)| fileset_uuid.clone())
-                                .unwrap_or_default();
+
+                            if self.select_fileset_uuid.is_empty() {
+                                self.select_fileset_uuid = update_filesets
+                                    .first()
+                                    .map(|(fileset_uuid, _)| fileset_uuid.clone())
+                                    .unwrap_or_default();
+                            }
+
                             self.filesets_program = update_filesets;
 
                             self.link.send_message(Msg::RequestFilesOfFileset);
