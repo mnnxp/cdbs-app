@@ -493,8 +493,7 @@ impl Component for ManageModificationFilesets {
         if self.props.select_modification_uuid == props.select_modification_uuid &&
               self.props.filesets_program.len() == props.filesets_program.len() {
             debug!("no change filesets: {:?}", props.filesets_program.len());
-            // false
-            true
+            false
         } else {
             debug!("change filesets: {:?}", props.filesets_program.len());
             self.filesets_program = props.filesets_program.clone();
