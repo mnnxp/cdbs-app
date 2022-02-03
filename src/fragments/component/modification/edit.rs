@@ -19,7 +19,7 @@ use crate::gqls::make_query;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{
     UUID, ComponentModificationInfo, Param, ActualStatus,
-    ModificationUpdatePreData,
+    ModificationUpdatePreData, FilesetProgramInfo,
 };
 
 #[derive(GraphQLQuery)]
@@ -53,6 +53,14 @@ struct DeleteComponentModification;
     response_derives = "Debug"
 )]
 struct GetComponentModifications;
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/components.graphql",
+    response_derives = "Debug"
+)]
+struct ComponentModificationFilesets;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -97,11 +105,13 @@ pub enum Msg {
     RequestUpdateModificationData,
     RequestDeleteModificationData,
     RequestComponentModificationsData,
+    RequestComponentModificationFilesetsData,
     RequestListOptData,
     GetAddModificationResult(String),
     GetUpdateModificationResult(String),
     GetDeleteModificationResult(String),
     GetComponentModificationsResult(String),
+    GetComponentModificationFilesetResult(String),
     GetListOptResult(String),
     ResponseError(Error),
     UpdateAddName(String),
@@ -311,6 +321,22 @@ impl Component for ModificationsTableEdit {
                     link.send_message(Msg::GetComponentModificationsResult(res));
                 })
             },
+            Msg::RequestComponentModificationFilesetsData => {
+                let ipt_fileset_program_arg = component_modification_filesets::IptFilesetProgramArg{
+                    modificationUuid: self.select_modification_uuid.clone(),
+                    programIds: None,
+                    limit: None,
+                    offset: None,
+                };
+
+                spawn_local(async move {
+                    let res = make_query(ComponentModificationFilesets::build_query(
+                        component_modification_filesets::Variables { ipt_fileset_program_arg }
+                    )).await.unwrap();
+
+                    link.send_message(Msg::GetComponentModificationFilesetResult(res));
+                })
+            },
             Msg::RequestListOptData => {
                 spawn_local(async move {
                     let res = make_query(ComponentActualStatuses::build_query(
@@ -385,6 +411,32 @@ impl Component for ModificationsTableEdit {
                     true => self.error = Some(get_error(&data)),
                 }
             },
+            Msg::GetComponentModificationFilesetResult(res) => {
+                let data: Value = serde_json::from_str(res.as_str()).unwrap();
+                let res_value = data.as_object().unwrap().get("data").unwrap();
+
+                match res_value.is_null() {
+                    false => {
+                        let filesets: Vec<FilesetProgramInfo> = serde_json::from_value(
+                            res_value.get("componentModificationFilesets").unwrap().clone()
+                        ).unwrap();
+                        debug!("Update modification filesets list");
+
+                        let component_modification_uuid = filesets.first().map(|x| x.modification_uuid.clone()).unwrap_or_default();
+                        let mut fileset_data: Vec<(UUID, String)> = Vec::new();
+                        for fileset in &filesets {
+                            fileset_data.push((fileset.uuid.clone(), fileset.program.name.clone()));
+                        }
+
+                        self.modification_filesets.remove(&component_modification_uuid);
+                        self.modification_filesets.insert(
+                            component_modification_uuid,
+                            fileset_data.clone()
+                        );
+                    },
+                    true => self.error = Some(get_error(&data)),
+                }
+            },
             Msg::GetListOptResult(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
@@ -447,7 +499,8 @@ impl Component for ModificationsTableEdit {
                     true => link.send_message(Msg::ShowEditModificationCard),
                     false => {
                         self.select_modification_uuid = modification_uuid;
-                        link.send_message(Msg::ParseFilesets);
+
+                        link.send_message(Msg::RequestComponentModificationFilesetsData);
                     },
                 }
             },

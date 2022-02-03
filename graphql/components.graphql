@@ -138,6 +138,12 @@ query ComModFilesOfFileset($iptFileOfFilesetArg: IptFileOfFilesetArg!) {
   }
 }
 
+query ComponentModificationFilesets($iptFilesetProgramArg: IptFilesetProgramArg!) {
+  componentModificationFilesets(args: $iptFilesetProgramArg){
+    ...filesetProgramRelatedDataFields
+  }
+}
+
 query ComModFilesetFiles($iptFileOfFilesetArg: IptFileOfFilesetArg!) {
   componentModificationFilesetFiles(args: $iptFileOfFilesetArg){
     ...downloadFileFields
