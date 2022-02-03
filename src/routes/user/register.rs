@@ -222,7 +222,7 @@ impl Register {
           }));
         let onchange_region_id = self
             .link
-            .callback(|ev: ChangeData| Msg::UpdateProgramId(match ev {
+            .callback(|ev: ChangeData| Msg::UpdateRegionId(match ev {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
