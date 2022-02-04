@@ -87,6 +87,10 @@ impl Component for RegisterParamnameBlock {
                         debug!("registerParam: {:?}", value);
                         self.props.callback_add_param.emit((value, self.set_param_value.clone()));
                         self.active_loading_btn = false;
+
+                        // clear old data
+                        self.request_new_paramname.clear();
+                        self.set_param_value.clear();
                     },
                     true => self.error = Some(get_error(&data)),
                 }

@@ -273,7 +273,7 @@ impl ComponentStandardsCard {
               <span class="icon" >
                   <i class="fas fa-plus" aria-hidden="true"></i>
               </span>
-              <span>{"Add standard for component"}</span>
+              <span>{"Add a standard to a component"}</span>
           </button>
         </div>}
     }
@@ -302,34 +302,40 @@ impl ComponentStandardsCard {
                 <div class="modal-content">
                   <div class="card">
                     <header class="modal-card-head">
-                      <p class="modal-card-title">{"Add standard for component"}</p>
+                      <p class="modal-card-title">{"Add a standard to a component"}</p>
                       <button class="delete" aria-label="close" onclick=onclick_hide_modal.clone() />
                     </header>
                     <section class="modal-card-body">
                         <label class="label">{"Select standard"}</label>
-                        <div class="select">
-                          <select
-                              id="add-standard"
-                              select={self.request_add_standard_uuid.clone()}
-                              onchange=onchange_select_add_standard
-                            >
-                          { for self.standard_list.iter().map(|x|
-                              match self.standard_uuids.get(&x.uuid) {
-                                  Some(_) => html!{}, // this standard already has
-                                  None => html!{ <option value={x.uuid.to_string()}>{
-                                      format!("{} ({})", &x.classifier, &x.name)
-                                  }</option> },
-                              }
-                          )}
-                          </select>
+                        <div class="columns">
+                            <div class="column">
+                                <div class="select">
+                                  <select
+                                      id="add-standard"
+                                      select={self.request_add_standard_uuid.clone()}
+                                      onchange=onchange_select_add_standard
+                                    >
+                                  { for self.standard_list.iter().map(|x|
+                                      match self.standard_uuids.get(&x.uuid) {
+                                          Some(_) => html!{}, // this standard already has
+                                          None => html!{ <option value={x.uuid.to_string()}>{
+                                              format!("{} ({})", &x.classifier, &x.name)
+                                          }</option> },
+                                      }
+                                  )}
+                                  </select>
+                                </div>
+                            </div>
+                            <div class="column">
+                                <button
+                                    id="standard-component"
+                                    class="button is-fullwidth"
+                                    disabled={self.request_add_standard_uuid.is_empty()}
+                                    onclick={onclick_add_standard} >
+                                    {"Add"}
+                                </button>
+                            </div>
                         </div>
-                        <button
-                            id="standard-component"
-                            class="button"
-                            disabled={self.request_add_standard_uuid.is_empty()}
-                            onclick={onclick_add_standard} >
-                            {"Add"}
-                        </button>
                     </section>
                   </div>
                 </div>

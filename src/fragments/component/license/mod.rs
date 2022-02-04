@@ -304,35 +304,41 @@ impl ComponentLicensesTags {
                 <div class="modal-content">
                   <div class="card">
                     <header class="modal-card-head">
-                      <p class="modal-card-title">{"Add license for component"}</p>
+                      <p class="modal-card-title">{"Add a license for a component"}</p>
                       <button class="delete" aria-label="close" onclick=onclick_hide_modal.clone() />
                     </header>
                     <section class="modal-card-body">
-                        <label class="label">{"Select license"}</label>
-                        <div class="select">
-                          <select
-                              id="add-license"
-                              select={self.request_add_license_id.to_string()}
-                              onchange=onchange_select_add_license
-                            >
-                          { for self.license_list.iter().map(|x|
-                              match self.license_ids.get(&x.id) {
-                                  Some(_) => html!{}, // this license already has
-                                  None => html!{<option value={x.id.to_string()}>{
-                                      format!("{} ({})", &x.name, &x.keyword)
-                                  }</option>},
-                              }
-                          )}
-                          </select>
+                        <label class="label">{"Select a license"}</label>
+                        <div class="columns">
+                            <div class="column">
+                                <div class="select">
+                                  <select
+                                      id="add-license"
+                                      select={self.request_add_license_id.to_string()}
+                                      onchange=onchange_select_add_license
+                                    >
+                                  { for self.license_list.iter().map(|x|
+                                      match self.license_ids.get(&x.id) {
+                                          Some(_) => html!{}, // this license already has
+                                          None => html!{<option value={x.id.to_string()}>{
+                                              format!("{} ({})", &x.name, &x.keyword)
+                                          }</option>},
+                                      }
+                                  )}
+                                  </select>
+                                </div>
+                            </div>
+                            <div class="column">
+                                <button
+                                    id="license-component"
+                                    class="button is-fullwidth"
+                                    disabled={self.request_add_license_id == 0}
+                                    onclick={onclick_add_license} >
+                                    {"Add"}
+                                </button>
+                            </div>
                         </div>
                     </section>
-                    <button
-                        id="license-component"
-                        class="button"
-                        disabled={self.request_add_license_id == 0}
-                        onclick={onclick_add_license} >
-                        {"Add"}
-                    </button>
                   </div>
                 </div>
               </div>

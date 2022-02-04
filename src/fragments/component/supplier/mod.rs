@@ -333,23 +333,25 @@ impl ComponentSuppliersCard {
                           )}
                           </select>
                         </div>
+                        <br/>
+                        <label class="label">{"Supplier description"}</label>
+                        <textarea
+                            id="update-description"
+                            class="textarea"
+                            type="text"
+                            placeholder="description for supplier"
+                            value={self.request_set_supplier_description.clone()}
+                            oninput=oninput_supplier_description
+                            />
+                        <br/>
+                        <button
+                            id="supplier-component"
+                            class="button is-fullwidth"
+                            disabled={self.request_set_supplier_uuid.is_empty()}
+                            onclick={onclick_set_owner_supplier} >
+                            {"Change"}
+                        </button>
                     </section>
-                    <textarea
-                        id="update-description"
-                        class="textarea"
-                        // rows="10"
-                        type="text"
-                        placeholder="description for supplier"
-                        value={self.request_set_supplier_description.clone()}
-                        oninput=oninput_supplier_description
-                        />
-                    <button
-                        id="supplier-component"
-                        class="button"
-                        disabled={self.request_set_supplier_uuid.is_empty()}
-                        onclick={onclick_set_owner_supplier} >
-                        {"Change"}
-                    </button>
                   </div>
                 </div>
               </div>
@@ -383,11 +385,11 @@ impl ComponentSuppliersCard {
                 <div class="modal-content">
                   <div class="card">
                     <header class="modal-card-head">
-                      <p class="modal-card-title">{"Add supplier for component"}</p>
+                      <p class="modal-card-title">{"Add a supplier for a component"}</p>
                       <button class="delete" aria-label="close" onclick=onclick_hide_modal.clone() />
                     </header>
                     <section class="modal-card-body">
-                        <label class="label">{"Select supplier"}</label>
+                        <label class="label">{"Select a supplier"}</label>
                         <div class="select">
                           <select
                               id="set-main-supplier"
@@ -416,7 +418,7 @@ impl ComponentSuppliersCard {
                         />
                     <button
                         id="supplier-component"
-                        class="button"
+                        class="button is-fullwidth"
                         disabled={self.request_set_supplier_uuid.is_empty()}
                         onclick={onclick_add_supplier} >
                         {"Add"}
