@@ -134,18 +134,18 @@ impl RegisterParamnameBlock {
 
         html!{<>
             <div class="column">
-                <label class="label">{"Set paramname (letter case has matter)"}</label>
+                <label class="label">{"Set a paramname (letter case has matter)"}</label>
                 <input
                     id="paramname"
                     class="input is-fullwidth"
                     type="text"
-                    placeholder="param name"
+                    placeholder="enter new paramname"
                     value={self.request_new_paramname.clone()}
                     oninput=oninput_set_paramname
                     />
             </div>
             <div class="column">
-                <label class="label">{"Set value"}</label>
+                <label class="label">{"Set a value"}</label>
                 <input
                     id="param-value"
                     class="input is-fullwidth"

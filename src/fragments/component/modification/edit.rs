@@ -490,7 +490,7 @@ impl Component for ModificationsTableEdit {
                 }
             },
             Msg::ChangeNewModificationParam(modification_uuid) => {
-                debug!("Add new modification param");
+                debug!("Add new modification parameter name");
                 link.send_message(Msg::RequestComponentModificationsData);
                 self.select_modification_uuid = modification_uuid;
             },
@@ -518,11 +518,11 @@ impl Component for ModificationsTableEdit {
                 for modification in self.current_modifications.iter_mut() {
                     if modification.uuid == self.select_modification_uuid {
                         if self.request_edit_modification.modification_name.is_empty() {
-                            modification.modification_name = self.request_edit_modification.modification_name.clone()
+                            modification.modification_name = self.request_edit_modification.modification_name.clone();
                         }
 
                         if self.request_edit_modification.description.is_empty() {
-                            modification.description = self.request_edit_modification.description.clone()
+                            modification.description = self.request_edit_modification.description.clone();
                         }
 
                         if self.request_edit_modification.actual_status_id == 0 {

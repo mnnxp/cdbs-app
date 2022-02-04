@@ -511,7 +511,7 @@ impl ModificationTableItem {
           <div class="card">
             <div class="modal-content">
                 <header class="modal-card-head">
-                    <p class="modal-card-title">{"Add new param"}</p>
+                    <p class="modal-card-title">{"Add new parameter name"}</p>
                     <button class="delete" aria-label="close" onclick=onclick_close_param_card />
                 </header>
                 <div class="box itemBox">
@@ -549,25 +549,25 @@ impl ModificationTableItem {
           <div class="card">
             <div class="modal-content">
                 <header class="modal-card-head">
-                    <p class="modal-card-title">{"Add param for modification"}</p>
+                    <p class="modal-card-title">{"Add a parameter to modification"}</p>
                     <button class="delete" aria-label="close" onclick=onclick_close_add_param />
                 </header>
                 <div class="box itemBox">
                   <article class="media center-media">
                       <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
                       <div class="media-content">
-                          <label class="label">{"Add value"}</label>
+                          <label class="label">{"Set a value"}</label>
                           <input
                               id="change-modification-param-value"
                               class="input is-fullwidth"
                               type="text"
-                              placeholder={"input param value"}
+                              placeholder={"enter a value"}
                               value={self.request_add_param.value.clone()}
                               oninput=oninput_param_value />
                       <br/>
                       <button
                           id="update-modification-param"
-                          class="button"
+                          class="button is-fullwidth"
                           disabled={!self.update_add_param}
                           onclick={onclick_param_add} >
                           {"Add"}
@@ -605,19 +605,19 @@ impl ModificationTableItem {
           <div class="card">
             <div class="modal-content">
                 <header class="modal-card-head">
-                    <p class="modal-card-title">{"Change param value"}</p>
+                    <p class="modal-card-title">{"Change the value"}</p>
                     <button class="delete" aria-label="close" onclick=onclick_edit_param_card />
                 </header>
+                <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
                 <div class="box itemBox">
                   <article class="media center-media">
-                      <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
                       <div class="media-content">
                           <label class="label">{"Change value"}</label>
                           <input
                               id="change-modification-param-value"
                               class="input is-fullwidth"
                               type="text"
-                              placeholder={"input param value"}
+                              placeholder={"enter a value"}
                               value={self.request_edit_param.value.clone()}
                               oninput=oninput_param_value />
                       <br/>
@@ -625,7 +625,7 @@ impl ModificationTableItem {
                           <div class="column">
                               <button
                                   id="delete-modification-param"
-                                  class="button is-danger"
+                                  class="button is-danger is-fullwidth"
                                   onclick={onclick_delete_param} >
                                   {"Delete"}
                               </button>
@@ -633,7 +633,7 @@ impl ModificationTableItem {
                           <div class="column">
                               <button
                                   id="update-modification-param"
-                                  class="button"
+                                  class="button is-fullwidth"
                                   disabled={!self.update_edit_param}
                                   onclick={onclick_param_update} >
                                   {"Update"}

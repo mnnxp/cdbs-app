@@ -282,7 +282,7 @@ impl ComponentParamsTags {
               <span class="icon" >
                   <i class="fas fa-plus" aria-hidden="true"></i>
               </span>
-              <span>{"Add component param"}</span>
+              <span>{"Add component parameter name"}</span>
           </button>
         </div>}
     }
@@ -304,7 +304,7 @@ impl ComponentParamsTags {
                 <div class="modal-content">
                   <div class="card">
                     <header class="modal-card-head">
-                      <p class="modal-card-title">{"Add param for component"}</p>
+                      <p class="modal-card-title">{"Add a parameter to component"}</p>
                       <button class="delete" aria-label="close" onclick=onclick_hide_modal.clone() />
                     </header>
                     <section class="modal-card-body">

@@ -233,7 +233,7 @@ impl ComponentParamTag {
                 <div class="modal-content">
                   <div class="card">
                     <header class="modal-card-head">
-                      <p class="modal-card-title">{"Change param value"}</p>
+                      <p class="modal-card-title">{"Changing the parameter value"}</p>
                       <button class="delete" aria-label="close" onclick=onclick_hide_modal.clone() />
                     </header>
                     <section class="modal-card-body">
@@ -243,7 +243,7 @@ impl ComponentParamTag {
                                 id="param-value"
                                 class="input is-fullwidth"
                                 type="text"
-                                placeholder="param value"
+                                placeholder="paramname value"
                                 value={self.request_set_param_value.clone()}
                                 oninput=oninput_set_param_value
                                 />
