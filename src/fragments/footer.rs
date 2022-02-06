@@ -127,7 +127,7 @@ impl Footer {
                 <section class="modal-card-body">
                     <div class="content">
                         <h1>{"Make For Into Future"}</h1>
-                        <p>{"CADBase - is home to engineers, architechs and creators, when like sharing ideas, concepts and  experience other engineers, for  manufactures, that ready share drawings and documentations."}</p>
+                        <p>{"CADBase - is home to engineers, architects and creators, when like sharing ideas, concepts and  experience other engineers, for  manufactures, that ready share drawings and documentations."}</p>
                         <p>{"The motivation behind the creation of the CADBase platform was a protest against corporations creating an artificial threshold of entry into the manufacturing sector for start-up manufacturing companies in some contries (this is one of the reasons why we don't open source project now)."}</p>
                         <p>{"We are happy any good people, no matter where you live, if you want to get and share knowledge then we try to help you with it."}</p>
                         <p>{"Project was founded start development in 2018 by Ivan Nosovsky (some guy from Russia), after some year in project accept participial Yulia Gerasimova (since 2019) and Xia Tianhao (夏添豪, since 2021)."}</p>
