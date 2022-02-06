@@ -890,8 +890,7 @@ impl ComponentSettings {
     fn show_component_files(&self) -> Html {
         html!{<>
             <h2 class="has-text-weight-bold">{"Manage component files"}</h2>
-            <br/>
-            <div class="card">
+            <div class="card column">
                 <div class="columns">
                     <div class="column">
                       <h2 class="has-text-weight-bold">{"Files for component"}</h2>

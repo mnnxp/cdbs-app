@@ -3,15 +3,12 @@ use yew_router::{
     agent::RouteRequest::ChangeRoute,
     prelude::*,
 };
-use serde_json::Value;
-use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
-use crate::gqls::make_query;
+// use log::debug;
 
 use crate::routes::AppRoute;
 use crate::fragments::switch_icon::res_btn;
-use crate::types::{ShowComponentShort, DownloadFile, UUID};
-use log::debug;
+use crate::types::{ShowComponentShort, UUID};
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -24,8 +21,6 @@ pub struct ComponentFiles;
 pub enum Msg {
     OpenComponent,
     TriggerFav,
-    GetImg,
-    GetDownloadFileResult(String),
     Ignore,
 }
 
@@ -41,7 +36,6 @@ pub struct ListItem {
     router_agent: Box<dyn Bridge<RouteAgent>>,
     link: ComponentLink<Self>,
     props: Props,
-    show_img: Option<String>,
 }
 
 impl Component for ListItem {
@@ -53,18 +47,10 @@ impl Component for ListItem {
             router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             link,
             props,
-            show_img: None
-        }
-    }
-
-    fn rendered(&mut self, first_render: bool) {
-        if first_render {
-            self.link.send_message(Msg::GetImg);
         }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
         match msg {
             Msg::OpenComponent => {
                 // Redirect to profile page
@@ -78,41 +64,6 @@ impl Component for ListItem {
                     self.props.add_fav.emit(String::new());
                 } else {
                     self.props.del_fav.emit(String::new());
-                }
-            },
-            Msg::GetImg => {
-                let component_uuid = self.props.data.uuid.clone();
-                spawn_local(async move {
-                    let ipt_component_files_arg = component_files::IptComponentFilesArg{
-                        componentUuid: component_uuid,
-                        filesUuids: None,
-                        limit: Some(1),
-                        offset: None,
-                    };
-                    let res = make_query(ComponentFiles::build_query(
-                        component_files::Variables {
-                            ipt_component_files_arg,
-                        }
-                    )).await;
-                    debug!("res {:?}", res);
-                    link.send_message(Msg::GetDownloadFileResult(res.unwrap()));
-                });
-            },
-            Msg::GetDownloadFileResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let download_file: Vec<DownloadFile> =
-                            serde_json::from_value(res_value.get("componentFiles").unwrap().clone())
-                                .unwrap();
-                        debug!("Download file: {:?}", download_file);
-                        if download_file.len() > 0 {
-                            self.show_img = Some(download_file[0].download_url.clone());
-                        }
-                    }
-                    true => {},
                 }
             },
             Msg::Ignore => (),
