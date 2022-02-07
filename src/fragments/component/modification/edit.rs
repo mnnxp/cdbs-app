@@ -670,48 +670,55 @@ impl ModificationsTableEdit {
                 <div class="box itemBox">
                   <article class="media center-media">
                       <div class="media-content">
-                          <label class="label">{"Modification name"}</label>
-                          <input
-                              id="add-modification-name"
-                              class="input is-fullwidth"
-                              type="text"
-                              placeholder="component name"
-                              value={self.request_add_modification.modification_name.clone()}
-                              oninput=oninput_name />
-                          <label class="label">{"Description"}</label>
-                          <textarea
-                              id="add-modification-description"
-                              class="textarea is-fullwidth"
-                              // rows="10"
-                              type="text"
-                              placeholder="component description"
-                              value={self.request_add_modification.description.clone()}
-                              oninput=oninput_description />
-                      <label class="label">{"Actual status"}</label>
-                      <div class="select">
-                          <select
-                              id="add-modification-actual-status"
-                              select={self.request_add_modification.actual_status_id.to_string()}
-                              onchange=onchange_actual_status_id
-                              >
-                            { for self.actual_statuses.iter().map(|x|
-                                html!{
-                                    <option value={x.actual_status_id.to_string()}
-                                          selected={x.actual_status_id == self.request_add_modification.actual_status_id} >
-                                        {&x.name}
-                                    </option>
-                                }
-                            )}
-                          </select>
-                      </div>
-                      <br/>
-                      <button
-                          id="add-component-modification"
-                          class="button"
-                          disabled={self.request_add_modification.modification_name.is_empty()}
-                          onclick={onclick_add_component_modification} >
-                          {"Add"}
-                      </button>
+                          <div class="column">
+                              <label class="label">{"Modification name"}</label>
+                              <input
+                                  id="add-modification-name"
+                                  class="input is-fullwidth"
+                                  type="text"
+                                  placeholder="component name"
+                                  value={self.request_add_modification.modification_name.clone()}
+                                  oninput=oninput_name />
+                          </div>
+                          <div class="column">
+                              <label class="label">{"Description"}</label>
+                              <textarea
+                                  id="add-modification-description"
+                                  class="textarea is-fullwidth"
+                                  // rows="10"
+                                  type="text"
+                                  placeholder="component description"
+                                  value={self.request_add_modification.description.clone()}
+                                  oninput=oninput_description />
+                          </div>
+                          <div class="column">
+                              <label class="label">{"Actual status"}</label>
+                              <div class="select">
+                                  <select
+                                      id="add-modification-actual-status"
+                                      select={self.request_add_modification.actual_status_id.to_string()}
+                                      onchange=onchange_actual_status_id
+                                      >
+                                    { for self.actual_statuses.iter().map(|x|
+                                        html!{
+                                            <option value={x.actual_status_id.to_string()}
+                                                  selected={x.actual_status_id == self.request_add_modification.actual_status_id} >
+                                                {&x.name}
+                                            </option>
+                                        }
+                                    )}
+                                  </select>
+                              </div>
+                          </div>
+                          <div class="column">
+                              <button
+                                  id="add-component-modification"
+                                  class="button is-fullwidth"
+                                  disabled={self.request_add_modification.modification_name.is_empty()}
+                                  onclick={onclick_add_component_modification} >
+                                  {"Add"}
+                              </button>
+                          </div>
                     </div>
                   </article>
                 </div>
