@@ -65,6 +65,12 @@ impl Component for Footer {
                             { "About us" }
                         </a>
                     </div>
+                    // 3 center footer
+                    <div class="column">
+                        <a href="https://docs.cadbase.rs/" >
+                            { "API reference" }
+                        </a>
+                    </div>
                     // right footer
                     <div class="column">
                         <h4>{current_info}</h4>
