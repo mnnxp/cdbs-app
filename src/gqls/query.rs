@@ -4,15 +4,12 @@ use std::{
 };
 use wasm_bindgen::{prelude::*, JsCast};
 use wasm_bindgen_futures::JsFuture;
-use web_sys::{Request, RequestInit, RequestMode, Response as Res};
+use web_sys::{Request, RequestInit, RequestMode, Response};
 use dotenv_codegen::dotenv;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 // use log::debug;
-use crate::services::{get_token};
+use crate::services::{get_token, get_lang};
 
-// use serde
-
-const API_BACKEND: &str = dotenv!("API_BACKEND");
 const API_GPL: &str = dotenv!("API_GPL");
 
 /// Something wrong has occurred while fetching an external resource.
@@ -33,12 +30,6 @@ impl From<JsValue> for FetchError {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct HttpHeaders {
-  authorization: String
-}
-
 pub async fn make_query<T>(build_query: graphql_client::QueryBody<T>) -> Result<String, FetchError>
 where
     T: Serialize,
@@ -49,18 +40,19 @@ where
     opts.method("POST");
     opts.body(Some(&JsValue::from_str(query.to_string().as_str())));
     opts.mode(RequestMode::Cors);
-    if get_token().is_some() {
-      opts.headers(&JsValue::from_serde(&serde_json::json!(serde_json::json!(HttpHeaders{
-        authorization: format!("Bearer {}", get_token().unwrap())
-      }))).unwrap());
-    }
 
-    let url = format!("{}/{}", API_BACKEND, API_GPL);
-    let request = Request::new_with_str_and_init(url.as_str(), &opts)?;
+    let request = Request::new_with_str_and_init(API_GPL, &opts)?;
+
+    if let Some(token) = get_token() {
+        request.headers().set("Authorization", format!("Bearer {}", token).as_str()).unwrap();
+    }
+    if let Some(lang) = get_lang() {
+        request.headers().set("Accept-Language", lang.as_str()).unwrap();
+    }
 
     let window = yew::utils::window();
     let resp_value = JsFuture::from(window.fetch_with_request(&request)).await?;
-    let resp: Res = resp_value.dyn_into().unwrap();
+    let resp: Response = resp_value.dyn_into().unwrap();
 
     let text = JsFuture::from(resp.text()?).await?;
     Ok(text.as_string().unwrap())

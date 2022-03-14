@@ -15,6 +15,7 @@ const API_BACKEND: &str = dotenv!("API_BACKEND");
 
 const TOKEN_KEY: &str = dotenv!("TOKEN_KEY");
 const LOGGED_USER_KEY: &str = dotenv!("LOGGED_USER_KEY");
+const ACCEPT_LANGUAGE: &str = dotenv!("ACCEPT_LANGUAGE");
 
 lazy_static! {
     /// Jwt token read from local storage.
@@ -32,6 +33,16 @@ lazy_static! {
         let storage = StorageService::new(Area::Local).expect("storage was disabled by the user");
         if let Ok(logged_user) = storage.restore(LOGGED_USER_KEY) {
             RwLock::new(Some(logged_user))
+        } else {
+            RwLock::new(None)
+        }
+    };
+
+    /// Read accept language data from local storage.
+    pub static ref LANGUAGE: RwLock<Option<String>> = {
+        let storage = StorageService::new(Area::Local).expect("storage was disabled by the user");
+        if let Ok(accept_language) = storage.restore(ACCEPT_LANGUAGE) {
+            RwLock::new(Some(accept_language))
         } else {
             RwLock::new(None)
         }
@@ -80,6 +91,24 @@ pub fn get_logged_user() -> Option<SlimUser> {
         &logged_user_lock.clone().unwrap_or_default()
       ).unwrap_or_default();
     logged_user_lock.clone()
+}
+
+/// Set language to local storage.
+pub fn set_lang(lang: Option<String>) {
+    let mut storage = StorageService::new(Area::Local).expect("storage was disabled by the user");
+    if let Some(l) = lang.clone() {
+        storage.store(ACCEPT_LANGUAGE, Ok(l));
+    } else {
+        storage.remove(ACCEPT_LANGUAGE);
+    }
+    let mut lang_lock = LANGUAGE.write();
+    *lang_lock = lang;
+}
+
+/// Get set language for Accept-Language
+pub fn get_lang() -> Option<String> {
+    let lang_lock = LANGUAGE.read();
+    lang_lock.clone()
 }
 
 /// Http request

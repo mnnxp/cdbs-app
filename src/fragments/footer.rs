@@ -1,14 +1,17 @@
-use yew::{html, Component, ComponentLink, Html, ShouldRender};
+use yew::{html, classes, Component, ComponentLink, Html, ShouldRender};
+use crate::services::{set_lang, get_lang};
 
 pub struct Footer {
     link: ComponentLink<Self>,
     show_terms: bool,
     show_about: bool,
+    current_lang: u8,
 }
 
 pub enum Msg {
     ShowTerms,
     ShowAbout,
+    ChangeLanguage(u8),
 }
 
 impl Component for Footer {
@@ -16,10 +19,18 @@ impl Component for Footer {
     type Properties = ();
 
     fn create(_props: Self::Properties, link: ComponentLink<Self>) -> Self {
+        let current_lang = get_lang().map(|lang|
+            match lang.as_str() {
+                "ru" => 2,
+                _ => 1,
+            }
+        ).unwrap_or(1);
+
         Footer {
             link,
             show_terms: false,
             show_about: false,
+            current_lang,
         }
     }
 
@@ -27,6 +38,13 @@ impl Component for Footer {
         match msg {
             Msg::ShowTerms => self.show_terms = !self.show_terms,
             Msg::ShowAbout => self.show_about = !self.show_about,
+            Msg::ChangeLanguage(lang_id) => {
+                match lang_id {
+                    2 => set_lang(Some(String::from("ru"))),
+                    _ => set_lang(Some(String::from("en"))),
+                }
+                self.current_lang = lang_id;
+            },
         }
         true
     }
@@ -37,10 +55,15 @@ impl Component for Footer {
 
     fn view(&self) -> Html {
         let current_info = "© CADBase 2022";
-
+        let onclick_lang_en = self.link.callback(|_| Msg::ChangeLanguage(1));
+        let onclick_lang_ru = self.link.callback(|_| Msg::ChangeLanguage(2));
         let onclick_show_terms = self.link.callback(|_| Msg::ShowTerms);
-
         let onclick_show_about = self.link.callback(|_| Msg::ShowAbout);
+
+        let (tag_en, tag_ru) = match self.current_lang {
+            2 => (classes!("tag"), classes!("tag", "is-info")),
+            _ => (classes!("tag", "is-info"), classes!("tag")),
+        };
 
         html!{
             <footer class="footer">
@@ -52,6 +75,17 @@ impl Component for Footer {
                         <a class=vec!("social-network") href="mailto:info@cadbase.rs" title="Email">
                             <i class=vec!("fas", "fa-lg", "fa-envelope")></i>
                         </a>
+                    </div>
+                    // left footer 2
+                    <div class="column">
+                        <div class="tags are-medium">
+                            <a onclick=onclick_lang_en>
+                                <span class=tag_en>{"English"}</span>
+                            </a>
+                            <a onclick=onclick_lang_ru>
+                                <span class=tag_ru>{"Russian"}</span>
+                            </a>
+                        </div>
                     </div>
                     // 1 center footer
                     <div class="column">
