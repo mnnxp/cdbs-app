@@ -1,7 +1,6 @@
 use yew::{
   agent::Bridged, html, Bridge, Callback, Component, ComponentLink,
-  MouseEvent, Html, Properties, ShouldRender,
-  classes
+  classes, MouseEvent, Html, Properties, ShouldRender,
 };
 use yew_router::{
     service::RouteService,
@@ -11,7 +10,7 @@ use yew_router::{
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
 
-use crate::services::{set_token, get_logged_user, set_logged_user, logout};
+use crate::services::{set_token, get_logged_user, set_logged_user, logout, get_value_field};
 use crate::routes::AppRoute;
 use crate::types::SlimUser;
 
@@ -216,10 +215,10 @@ impl Header {
         html!{
           <div class="navbar-item">
             <RouterAnchor<AppRoute> route=AppRoute::Login classes="button">
-              { "Sign in" }
+              { get_value_field(&13) }
             </RouterAnchor<AppRoute>>
             <RouterAnchor<AppRoute> route=AppRoute::Register classes="button">
-              { "Sign up" }
+              { get_value_field(&14) }
             </RouterAnchor<AppRoute>>
           </div>
         }
@@ -263,14 +262,14 @@ impl Header {
                   </a>
                   <div class="navbar-dropdown is-boxed is-right" id="dropdown-menu" role="menu">
                     <RouterAnchor<AppRoute> classes="navbar-item" route=AppRoute::Profile(user_info.username.clone()) >
-                    { "Profile" }
+                        { get_value_field(&15) }
                     </RouterAnchor<AppRoute>>
                     <RouterAnchor<AppRoute> classes="navbar-item" route=AppRoute::Settings>
-                    { "Settings" }
+                        { get_value_field(&16) }
                     </RouterAnchor<AppRoute>>
                     <hr class="navbar-divider" />
                     <a class="navbar-item" onclick=logout >
-                      {"Logout"}
+                        { get_value_field(&17) }
                     </a>
                   </div>
                 </div>

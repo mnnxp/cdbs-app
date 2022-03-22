@@ -1,5 +1,6 @@
 use yew::{html, classes, Component, ComponentLink, Html, ShouldRender};
 use crate::services::{set_lang, get_lang};
+use crate::services::get_value_field;
 
 pub struct Footer {
     link: ComponentLink<Self>,
@@ -80,29 +81,29 @@ impl Component for Footer {
                     <div class="column">
                         <div class="tags are-medium">
                             <a onclick=onclick_lang_en>
-                                <span class=tag_en>{"English"}</span>
+                                <span class=tag_en>{ get_value_field(&8) }</span>
                             </a>
                             <a onclick=onclick_lang_ru>
-                                <span class=tag_ru>{"Russian"}</span>
+                                <span class=tag_ru>{ get_value_field(&9) }</span>
                             </a>
                         </div>
                     </div>
                     // 1 center footer
                     <div class="column">
                         <a onclick=onclick_show_terms >
-                            { "Terms" }
+                            { get_value_field(&10) }
                         </a>
                     </div>
                     // 2 center footer
                     <div class="column">
                         <a onclick=onclick_show_about >
-                            { "About us" }
+                            { get_value_field(&11) }
                         </a>
                     </div>
                     // 3 center footer
                     <div class="column">
                         <a href="https://docs.cadbase.rs/" >
-                            { "API reference" }
+                            { get_value_field(&12) }
                         </a>
                     </div>
                     // right footer
