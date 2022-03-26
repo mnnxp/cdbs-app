@@ -61,9 +61,9 @@ impl Component for Footer {
         let onclick_show_terms = self.link.callback(|_| Msg::ShowTerms);
         let onclick_show_about = self.link.callback(|_| Msg::ShowAbout);
 
-        let (tag_en, tag_ru) = match self.current_lang {
-            2 => (classes!("tag"), classes!("tag", "is-info")),
-            _ => (classes!("tag", "is-info"), classes!("tag")),
+        let (button_en, button_ru) = match self.current_lang {
+            2 => (classes!("button"), classes!("button", "is-info")),
+            _ => (classes!("button", "is-info"), classes!("button")),
         };
 
         html!{
@@ -73,35 +73,33 @@ impl Component for Footer {
                 <div class="columns">
                     // left footer
                     <div class="column">
-                        <a class=vec!("social-network") href="mailto:info@cadbase.rs" title="Email">
-                            <i class=vec!("fas", "fa-lg", "fa-envelope")></i>
-                        </a>
-                    </div>
-                    // left footer 2
-                    <div class="column">
-                        <div class="tags are-medium">
-                            <a onclick=onclick_lang_en>
-                                <span class=tag_en>{ get_value_field(&8) }</span>
+                        <div class="tags are-large">
+                            <a class=vec!("social-network") href="mailto:info@cadbase.rs" title="Email">
+                                <i class=vec!("fas", "fa-lg", "fa-envelope")></i>
                             </a>
-                            <a onclick=onclick_lang_ru>
-                                <span class=tag_ru>{ get_value_field(&9) }</span>
+                        </div>
+                        <div class="buttons">
+                            <a class=button_en onclick=onclick_lang_en>
+                                { get_value_field(&8) }
+                            </a>
+                            <a class=button_ru onclick=onclick_lang_ru>
+                                { get_value_field(&9) }
                             </a>
                         </div>
                     </div>
                     // 1 center footer
                     <div class="column">
-                        <a onclick=onclick_show_terms >
-                            { get_value_field(&10) }
-                        </a>
                     </div>
                     // 2 center footer
                     <div class="column">
                         <a onclick=onclick_show_about >
                             { get_value_field(&11) }
                         </a>
-                    </div>
-                    // 3 center footer
-                    <div class="column">
+                        <br/>
+                        <a onclick=onclick_show_terms >
+                            { get_value_field(&10) }
+                        </a>
+                        <br/>
                         <a href="https://docs.cadbase.rs/" >
                             { get_value_field(&12) }
                         </a>
