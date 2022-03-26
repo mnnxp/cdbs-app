@@ -25,7 +25,7 @@ use crate::fragments::{
     standard::CatalogStandards,
 };
 use crate::gqls::make_query;
-use crate::services::get_logged_user;
+use crate::services::{get_logged_user, get_value_field};
 use crate::types::{
     UUID, CompanyInfo, SlimUser, ComponentsQueryArg, StandardsQueryArg
 };
@@ -317,7 +317,7 @@ impl ShowCompany {
             Some(company_data) => html!{<div class="media">
                 <div class="media-left">
                   <figure class=classes!("image", size_favicon)>
-                    // <div hidden={!company_data.is_supplier} class="top-tag" >{"supplier"}</div>
+                    // <div hidden={!company_data.is_supplier} class="top-tag" >{ get_value_field(&3) }</div>
                     // <img src="https://bulma.io/images/placeholders/96x96.png" alt="Placeholder image"/>
                     <img
                         src={company_data.image_file.download_url.to_string()} alt="Favicon company"
@@ -326,9 +326,9 @@ impl ShowCompany {
                   </figure>
                 </div>
                 <div class="media-content">
-                  <span>{"Company"}</span>
+                  <span>{ get_value_field(&109) }</span>
                   <span hidden={!company_data.is_supplier} id="company-region">
-                    {" supplier"}
+                    { get_value_field(&275) }
                     // <i class="fa fa-diamond" aria-hidden="true"></i>
                     // <svg width="25" height="25" viewBox="0 0 197.249 197.25" xmlns="http://www.w3.org/2000/svg">
                     // <g transform="translate(-11.136 -18.506)">
@@ -354,9 +354,9 @@ impl ShowCompany {
                     {match self.show_full_company_info {
                         true => html!{<p class="subtitle is-6 left">
                             // date formatting for show on page
-                            {format!("Created at {:.*}", 19, company_data.created_at.to_string())}
+                            {format!("{} {:.*}", get_value_field(&276), 19, company_data.created_at.to_string())}
                             <br/>
-                            {format!("Updated at {:.*}", 19, company_data.updated_at.to_string())}
+                            {format!("{} {:.*}", get_value_field(&277), 19, company_data.updated_at.to_string())}
                         </p>},
                         false => html!{},
                     }}
@@ -425,25 +425,25 @@ impl ShowCompany {
                     <div class="column">
                         <div id="company-email">
                             <span class="icon is-small"><i class="fas fa-envelope" /></span>
-                            <span>{" Email: "}</span>
+                            <span>{ get_value_field(&278) }</span> // Email
                             <span class="has-text-weight-bold">{company_data.email.clone()}</span>
                         </div>
                         // <br/>
                         <div id="company-phone">
                             <span class="icon is-small"><i class="fas fa-phone" /></span>
-                            <span>{" Phone: "}</span>
+                            <span>{ get_value_field(&279) }</span> // Phone
                             <span class="has-text-weight-bold">{company_data.phone.clone()}</span>
                         </div>
                         // <br/>
                         <div id="company-inn">
                             <span class="icon is-small"><i class="fas fa-building" /></span>
-                            <span>{" Reg.№ "}</span>
+                            <span>{ get_value_field(&280) }</span> // Reg.№
                             <span class="has-text-weight-bold">{company_data.inn.clone()}</span>
                         </div>
                         // <br/>
                         <div id="company-region">
                             <span class="icon is-small"><i class="fas fa-map-marker-alt" /></span>
-                            <span>{" Location: "}</span>
+                            <span>{ get_value_field(&281) }</span> // Location
                             <span class="has-text-weight-bold">{company_data.region.region.clone()}</span>
                             <span class="has-text-weight-bold">{", "}</span>
                             <span id="company-address" class="has-text-weight-bold">
@@ -453,7 +453,7 @@ impl ShowCompany {
                         // <br/>
                         <div id="company-site_url">
                             <span class="icon is-small"><i class="fas fa-globe" /></span>
-                            <span>{" Site: "}</span>
+                            <span>{ get_value_field(&282) }</span> // Site
                             <span class="has-text-weight-bold">{company_data.site_url.clone()}</span>
                         </div>
                     </div>
@@ -462,7 +462,7 @@ impl ShowCompany {
                     true => html!{},
                     false => html!{<div class="media">
                         <div class="media-left">
-                            <span>{"Sphere of activity: "}</span>
+                            <span>{ get_value_field(&283) }</span> // Sphere of activity
                         </div>
                         <div class="media-content">
                             <SpecsTags
@@ -474,12 +474,12 @@ impl ShowCompany {
                     </div>}
                 }}
                 <button class="button is-ghost" onclick={onclick_change_full_show}>
-                    <span>{"Hide info"}</span>
+                    <span>{ get_value_field(&42) }</span>
                 </button>
             </>},
             false => html!{
                 <button class="button is-ghost" onclick={onclick_change_full_show}>
-                    <span>{"Show info"}</span>
+                    <span>{ get_value_field(&43) }</span>
                 </button>
             },
         }

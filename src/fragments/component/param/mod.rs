@@ -16,6 +16,7 @@ use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
 use crate::gqls::make_query;
 use crate::types::{UUID, ComponentParam, Param};
+use crate::services::get_value_field;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -253,12 +254,12 @@ impl ComponentParamsTags {
         html!{<div class="card column">
           <table class="table is-fullwidth">
             <tbody>
-               <th>{"Param"}</th>
-               <th>{"Value"}</th>
+               <th>{ get_value_field(&178) }</th> // Param
+               <th>{ get_value_field(&179) }</th> // Value
                {match self.props.show_manage_btn {
                    true => html!{<>
-                       <th>{"Change"}</th>
-                       <th>{"Delete"}</th>
+                       <th>{ get_value_field(&59) }</th> // Change
+                       <th>{ get_value_field(&135) }</th> // Delete
                    </>},
                    false => html!{},
                }}
@@ -282,7 +283,7 @@ impl ComponentParamsTags {
               <span class="icon" >
                   <i class="fas fa-plus" aria-hidden="true"></i>
               </span>
-              <span>{"Add component parameter name"}</span>
+              <span>{ get_value_field(&180) }</span> // Add component parameter name
           </button>
         </div>}
     }
@@ -304,7 +305,7 @@ impl ComponentParamsTags {
                 <div class="modal-content">
                   <div class="card">
                     <header class="modal-card-head">
-                      <p class="modal-card-title">{"Add a parameter to component"}</p>
+                      <p class="modal-card-title">{ get_value_field(&181) }</p> // Add a parameter to component
                       <button class="delete" aria-label="close" onclick=onclick_hide_modal.clone() />
                     </header>
                     <section class="modal-card-body">

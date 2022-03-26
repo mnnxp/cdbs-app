@@ -11,6 +11,7 @@ use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
 use crate::gqls::make_query;
 use crate::types::{UUID, Spec, SpecPathInfo};
+use crate::services::get_value_field;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -290,11 +291,11 @@ impl SpecTagItem {
                         <table class="table is-fullwidth">
                           <tbody>
                             <tr>
-                              <td>{"Id:"}</td>
+                              <td>{ get_value_field(&246) }</td>
                               <td>{data.spec_id.to_string()}</td>
                             </tr>
                             <tr>
-                              <td>{"Patch:"}</td>
+                              <td>{ get_value_field(&247) }</td>
                               <td>{data.path.clone()}</td>
                             </tr>
                           </tbody>

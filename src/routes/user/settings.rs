@@ -19,7 +19,7 @@ use crate::fragments::{
     user::{AddUserCertificateCard, UserCertificatesCard},
 };
 use crate::routes::AppRoute;
-use crate::services::{get_current_user, set_token, set_logged_user, get_logged_user};
+use crate::services::{get_current_user, set_token, set_logged_user, get_logged_user, get_value_field};
 use crate::types::{
     Program, Region, SelfUserInfo, TypeAccessInfo, UpdatePasswordInfo, UserUpdateInfo, UUID
 };
@@ -435,16 +435,16 @@ impl Component for Settings {
                                     {match self.select_menu {
                                         // Show interface for change profile data
                                         Menu::Profile => html!{<>
-                                            <h4 id="change-profile" class="title is-4">{"Profile"}</h4>
+                                            <h4 id="change-profile" class="title is-4">{ get_value_field(&63) }</h4> // "Profile"
                                             {self.show_update_profile_info()}
                                             <form onsubmit=onsubmit_update_profile>
                                                 { self.change_profile_card() }
                                                 <button
                                                     id="update-settings"
-                                                    class="button"
+                                                    class=classes!("button", "is-fullwidth")
                                                     type="submit"
                                                     disabled=false>
-                                                    { "Update Profile" }
+                                                    { get_value_field(&46) }
                                                 </button>
                                             </form>
                                         </>},
@@ -452,24 +452,24 @@ impl Component for Settings {
                                         Menu::UpdateFavicon => {self.update_favicon_card()},
                                         // Show interface for add and update Certificates
                                         Menu::Certificates => html!{<>
-                                            <h4 id="change-certificates" class="title is-4">{"Certificates"}</h4>
+                                            <h4 id="change-certificates" class="title is-4">{ get_value_field(&64) }</h4> // "Certificates"
                                             { self.add_certificate_card() }
                                             { self.change_certificates_card() }
                                         </>},
                                         // Show interface for change access
                                         Menu::Access => html!{<>
-                                            <h4 id="change-access" class="title is-4">{"Access"}</h4>
+                                            <h4 id="change-access" class="title is-4">{ get_value_field(&65) }</h4> // "Access"
                                             <span id="tag-info-updated-access" class=classes!("tag", "is-info", "is-light")>
-                                                { format!("Updated access: {}", self.get_result_access.clone()) }
+                                                { format!("{}: {}", get_value_field(&68), self.get_result_access.clone()) } // Updated access
                                             </span>
                                             <form onsubmit=onsubmit_update_access>
                                                 { self.change_access_card() }
                                                 <button
                                                     id="update-access"
-                                                    class="button"
+                                                    class=classes!("button", "is-fullwidth")
                                                     type="submit"
                                                     disabled=false>
-                                                    { "Update access" }
+                                                    { get_value_field(&46) }
                                                 </button>
                                             </form>
                                             // todo!(tasks:)
@@ -481,40 +481,35 @@ impl Component for Settings {
                                         </>},
                                         // Show interface for change password
                                         Menu::Password => html!{<>
-                                            <h4 id="change-password" class="title is-4">{"Password"}</h4>
+                                            <h4 id="change-password" class="title is-4">{ get_value_field(&20) }</h4> // "Password"
                                             <span id="tag-info-updated-pwd" class=classes!("tag", "is-info", "is-light")>
-                                              { format!("Updated password: {}", self.get_result_pwd.clone()) }
+                                              { format!("{}: {}", get_value_field(&69), self.get_result_pwd.clone()) } // Updated password
                                             </span>
                                             <form onsubmit=onsubmit_update_password>
                                                 { self.update_password_card() }
                                                 <button
                                                     id="update-password"
-                                                    class="button"
+                                                    class=classes!("button", "is-fullwidth")
                                                     type="submit"
                                                     disabled=false>
-                                                    { "Update Password" }
+                                                    { get_value_field(&46) }
                                                 </button>
                                             </form>
                                         </>},
                                         // Show interface for remove profile
                                         Menu::RemoveProfile => html!{<>
-                                            <h4 id="remove-profile" class="title is-4">{"Remove profile"}</h4>
-                                            <span id="tag-danger-remove-profile" class=classes!("tag", "is-danger", "is-light")>
-                                              { "Warning: this removed all data related with profile, it cannot be canceled!" }
-                                            </span>
-                                            <br/>
-                                            <span id="tag-info-remove-profile" class=classes!("tag", "is-info", "is-light")>
-                                              { format!("Profile delete: {}", self.get_result_remove_profile) }
-                                            </span>
-                                            <br/>
+                                            <h4 id="remove-profile" class="title is-4">{ get_value_field(&67) }</h4> // "Remove profile"
+                                            <div id="tag-danger-remove-profile" class=classes!("notification", "is-danger", "is-light")>
+                                              { get_value_field(&71) }
+                                            </div>
                                             <form onsubmit=onsubmit_remove_profile>
                                                 { self.remove_profile_card() }
                                                 <button
                                                     id="button-remove-profile"
-                                                    class="button is-danger"
+                                                    class=classes!("button", "is-fullwidth", "is-danger")
                                                     type="submit"
                                                     disabled=false>
-                                                    { "Delete profile data" }
+                                                    { get_value_field(&47) }
                                                 </button>
                                             </form>
                                         </>},
@@ -535,10 +530,11 @@ impl Settings {
         &self,
         id: &str,
         label: &str,
-        placeholder: &str,
+        // placeholder: &str,
         value: String,
         oninput: Callback<InputData>,
     ) -> Html {
+        let placeholder = label;
         let mut class = "input";
         let (input_tag, input_type) = match id {
             "email" => ("input", "email"),
@@ -568,18 +564,18 @@ impl Settings {
         html!{
             <div class="columns">
                 <div id="updated-rows" class="column">
-                    <span class=classes!("overflow-title", "has-text-weight-bold")>{"Updated rows: "}</span>
+                    <span class=classes!("overflow-title", "has-text-weight-bold")>{ get_value_field(&72) }</span> // "Updated rows: "
                     <span class="overflow-title">{self.get_result_profile.clone()}</span>
                 </div>
                 <div id="updated-date" class="column">
-                    <span class=classes!("overflow-title", "has-text-weight-bold")>{"Last updated: "}</span>
+                    <span class=classes!("overflow-title", "has-text-weight-bold")>{ get_value_field(&73) }</span> // "Last updated: "
                     {match &self.current_data {
                         Some(data) => html!{
                             <span class="overflow-title">
                                 {format!("{:.*}", 19, data.updated_at.to_string())}
                             </span>
                         },
-                        None => html!{<span>{"not data"}</span>},
+                        None => html!{<span>{ get_value_field(&75) }</span>},
                     }}
                 </div>
             </div>
@@ -594,7 +590,7 @@ impl Settings {
         let menu_arr: Vec<MenuItem> = vec![
             // return profile page MenuItem
             MenuItem {
-                title: "Open profile".to_string(),
+                title: get_value_field(&76).to_string(),
                 action: self.link.callback(|_| Msg::OpenProfile),
                 item_class: classes!("has-background-white"),
                 icon_classes: vec![classes!("fas", "fa-angle-double-left")],
@@ -603,7 +599,7 @@ impl Settings {
             },
             // profile MenuItem
             MenuItem {
-                title: "Profile".to_string(),
+                title: get_value_field(&77).to_string(),
                 action: self.cb_generator(Menu::Profile),
                 item_class: classes!("has-background-white"),
                 icon_classes: vec![classes!("fas", "fa-address-card")],
@@ -612,7 +608,7 @@ impl Settings {
             },
             // favicon MenuItem
             MenuItem {
-                title: "Favicon".to_string(),
+                title: get_value_field(&78).to_string(),
                 action: self.cb_generator(Menu::UpdateFavicon),
                 item_class: classes!("has-background-white"),
                 icon_classes: vec![classes!("fas", "fa-image")],
@@ -621,7 +617,7 @@ impl Settings {
             },
             // certificates MenuItem
             MenuItem {
-                title: "Certificates".to_string(),
+                title: get_value_field(&64).to_string(),
                 action: self.cb_generator(Menu::Certificates),
                 item_class: classes!("has-background-white"),
                 icon_classes: vec![classes!("fas", "fa-certificate")],
@@ -630,7 +626,7 @@ impl Settings {
             },
             // access MenuItem
             MenuItem {
-                title: "Access".to_string(),
+                title: get_value_field(&80).to_string(),
                 action: self.cb_generator(Menu::Access),
                 item_class: classes!("has-background-white"),
                 icon_classes: vec![classes!("fas", "fa-low-vision")],
@@ -639,7 +635,7 @@ impl Settings {
             },
             // password MenuItem
             MenuItem {
-                title: "Password".to_string(),
+                title: get_value_field(&20).to_string(),
                 action: self.cb_generator(Menu::Password),
                 item_class: classes!("has-background-white"),
                 icon_classes: vec![classes!("fas", "fa-key")],
@@ -648,7 +644,7 @@ impl Settings {
             },
             // remove profile MenuItem
             MenuItem {
-                title: "Remove profile".to_string(),
+                title: get_value_field(&82).to_string(),
                 action: self.cb_generator(Menu::RemoveProfile),
                 item_class: classes!("has-background-danger-light"),
                 icon_classes: vec![classes!("fas", "fa-trash")],
@@ -686,7 +682,7 @@ impl Settings {
                     manage_btn = true
                 />
             },
-            None => html! {<span class=classes!("tag", "is-info", "is-light")>{"Not fount certificates"}</span>},
+            None => html! {<span class=classes!("tag", "is-info", "is-light")>{ get_value_field(&74) }</span>}, // "Not fount certificates"
         }
     }
 
@@ -718,7 +714,7 @@ impl Settings {
         html! {
             <div class="columns">
                 <div class="column">
-                    <label class="label">{"Type Access"}</label>
+                    <label class="label">{ get_value_field(&58) }</label> // "Type Access"
                 </div>
                 <div class="column">
                     <fieldset class="field">
@@ -755,12 +751,12 @@ impl Settings {
                 // first column
                 <fieldset class="column">
                     {self.fileset_generator(
-                        "password", "Old password", "old password",
+                        "password", get_value_field(&48), // "Old password"
                         self.request_password.old_password.to_string(),
                         oninput_old_password
                     )}
                     {self.fileset_generator(
-                        "password", "New password", "new-password",
+                        "password", get_value_field(&49), // "New password"
                         self.request_password.new_password.to_string(),
                         oninput_new_password
                     )}
@@ -797,14 +793,14 @@ impl Settings {
             <div class="columns">
                 <div class="column">
                     {self.fileset_generator(
-                        "username", "Username", "Username",
+                        "username", get_value_field(&50), // "Username"
                         self.request_profile.username.as_ref().map(|x| x.clone()).unwrap_or_default(),
                         oninput_username
                     )}
                 </div>
                 <div class="column">
                     {self.fileset_generator(
-                        "email", "Email", "Email",
+                        "email", get_value_field(&22), // "Email"
                         self.request_profile.email.as_ref().map(|x| x.clone()).unwrap_or_default(),
                         oninput_email
                     )}
@@ -815,21 +811,21 @@ impl Settings {
             <div class="columns">
                 <div class="column">
                     {self.fileset_generator(
-                        "firstname", "Firstname", "Firstname",
+                        "firstname", get_value_field(&52), // "Firstname"
                         self.request_profile.firstname.as_ref().map(|x| x.clone()).unwrap_or_default(),
                         oninput_firstname
                     )}
                 </div>
                 <div class="column">
                     {self.fileset_generator(
-                        "lastname", "Lastname", "Lastname",
+                        "lastname", get_value_field(&53), // "Lastname"
                         self.request_profile.lastname.as_ref().map(|x| x.clone()).unwrap_or_default(),
                         oninput_lastname
                     )}
                 </div>
                 <div class="column">
                     {self.fileset_generator(
-                        "secondname", "Secondname", "Secondname",
+                        "secondname", get_value_field(&54), // "Secondname"
                         self.request_profile.secondname.as_ref().map(|x| x.clone()).unwrap_or_default(),
                         oninput_secondname
                     )}
@@ -840,21 +836,21 @@ impl Settings {
             <div class="columns">
                 <div class="column">
                     {self.fileset_generator(
-                        "position", "Position", "Position",
+                        "position", get_value_field(&55), // "Position"
                         self.request_profile.position.as_ref().map(|x| x.clone()).unwrap_or_default(),
                         oninput_position
                     )}
                 </div>
                 <div class="column">
                     {self.fileset_generator(
-                        "phone", "Phone", "Phone",
+                        "phone", get_value_field(&56), // "Phone"
                         self.request_profile.phone.as_ref().map(|x| x.clone()).unwrap_or_default(),
                         oninput_phone
                     )}
                 </div>
                 <div class="column">
                     {self.fileset_generator(
-                        "address", "Address", "Address",
+                        "address", get_value_field(&57), // "Address"
                         self.request_profile.address.as_ref().map(|x| x.clone()).unwrap_or_default(),
                         oninput_address
                     )}
@@ -864,7 +860,7 @@ impl Settings {
             // fourth columns (program, region)
             <div class="columns">
                 <div class="column">
-                    <label class="label">{"Program"}</label>
+                    <label class="label">{ get_value_field(&26) }</label> // "Program"
                     <div class="control">
                         <div class="select">
                           <select
@@ -885,7 +881,7 @@ impl Settings {
                     </div>
                 </div>
                 <div class="column">
-                    <label class="label">{"Region"}</label>
+                    <label class="label">{ get_value_field(&27) }</label> // "Region"
                     <div class="control">
                         <div class="select">
                           <select
@@ -909,7 +905,7 @@ impl Settings {
 
             // fifth column (only description)
             {self.fileset_generator(
-                "description", "Description", "Description",
+                "description", get_value_field(&61), // "Description"
                 self.request_profile.description.as_ref().map(|x| x.clone()).unwrap_or_default(),
                 oninput_description
             )}
@@ -921,9 +917,7 @@ impl Settings {
         let oninput_user_password = self.link.callback(|ev: InputData| Msg::UpdateUserPassword(ev.value));
 
         self.fileset_generator(
-            "password",
-            "Input your password for confirm delete profile",
-            "your password",
+            "password", get_value_field(&62), // "your password"
             self.request_user_password.to_string(),
             oninput_user_password,
         )

@@ -8,7 +8,7 @@ use wasm_bindgen_futures::spawn_local;
 use log::debug;
 
 use crate::gqls::make_query;
-use crate::services::is_authenticated;
+use crate::services::{is_authenticated, get_value_field};
 use crate::fragments::list_errors::ListErrors;
 use crate::error::{Error, get_error};
 use crate::types::{
@@ -177,16 +177,16 @@ impl Component for AddCompanyRepresentCard {
                 true => html!{
                     <article class="message is-success">
                       <div class="message-header">
-                        <p>{ "Success" }</p>
+                        <p>{ get_value_field(&89) }</p>
                         <button class="delete" aria-label="close" onclick=onclick_hide_notification.clone() />
                       </div>
                       <div class="message-body">
-                        { "This representative created!" }
+                        { get_value_field(&293) }
                       </div>
                     </article>
                 },
                 false => html!{<div class="column">
-                    <label class="label">{"New represent"}</label>
+                    <label class="label">{ get_value_field(&230) }</label> // New represent
                     {self.new_represent_block()}
                     {self.show_manage_buttons()}
                 </div>}
@@ -200,10 +200,11 @@ impl AddCompanyRepresentCard {
         &self,
         id: &str,
         label: &str,
-        placeholder: &str,
+        // placeholder: &str,
         value: String,
         oninput: Callback<InputData>,
     ) -> Html {
+        let placeholder = label;
         let mut class = "input";
         let (input_tag, input_type) = match id {
             "email" => ("input", "email"),
@@ -251,7 +252,7 @@ impl AddCompanyRepresentCard {
 
         html!{<>
             {self.fileset_generator(
-                "name", "Name", "Name",
+                "name", get_value_field(&110), // Name
                 self.request_register.name.clone(),
                 oninput_name
             )}
@@ -261,14 +262,14 @@ impl AddCompanyRepresentCard {
             <div class="columns">
                 <div class="column">
                     {self.fileset_generator(
-                        "phone", "Phone", "Phone",
+                        "phone", get_value_field(&56), // Phone
                         self.request_register.phone.clone(),
                         oninput_phone
                     )}
                 </div>
                 <div class="column">
                     <fieldset class="field">
-                        <label class="label">{"Representation type"}</label>
+                        <label class="label">{ get_value_field(&216) }</label> // Representation type
                         <div class="control">
                             <div class="select">
                               <select
@@ -293,7 +294,7 @@ impl AddCompanyRepresentCard {
             <div class="columns">
                 <div class="column">
                     <fieldset class="field">
-                        <label class="label">{"Region"}</label>
+                        <label class="label">{ get_value_field(&27) }</label> // Region
                         <div class="control">
                             <div class="select">
                               <select
@@ -316,7 +317,7 @@ impl AddCompanyRepresentCard {
                 </div>
                 <div class="column">
                     {self.fileset_generator(
-                        "address", "Address", "Address",
+                        "address", get_value_field(&57), // Address
                         self.request_register.address.clone(),
                         oninput_address
                     )}
@@ -337,14 +338,14 @@ impl AddCompanyRepresentCard {
                 <button id={"btn-clear-represent"}
                     class="button is-fullwidth"
                     onclick=onclick_clear_data>
-                    { "Clear" }
+                    { get_value_field(&88) }
                 </button>
             </div>
             <div class="column">
                 <button id={"btn-new-represent"}
                     class="button is-success is-fullwidth"
                     onclick=onclick_create_represent>
-                    { "Create" }
+                    { get_value_field(&45) } // Create
                 </button>
             </div>
         </div>}

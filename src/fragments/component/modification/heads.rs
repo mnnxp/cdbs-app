@@ -1,9 +1,7 @@
-use yew::{
-    html, Component, ComponentLink,
-    Html, Properties, ShouldRender,
-};
+use yew::{html, Component, ComponentLink, Html, Properties, ShouldRender};
 use log::debug;
 use crate::types::{UUID, Param};
+use crate::services::get_value_field;
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
@@ -47,15 +45,15 @@ impl ModificationTableHeads {
     fn show_modification_head(&self) -> Html {
         html!{<>
             {match self.props.show_new_column {
-                true => html!{<th>{"action"}</th>},
-                false => html!{<th>{"action | files"}</th>},
+                true => html!{<th>{ get_value_field(&111) }</th>}, // Action
+                false => html!{<th>{ get_value_field(&115) }</th>}, // Action | files
             }}
-            <th>{"modification"}</th>
+            <th>{ get_value_field(&116) }</th> // modification
             {for self.props.params.iter().map(|head| {
-                html!{<th>{head.paramname.clone()}</th>}
+                html!{<th>{ head.paramname.clone() }</th>}
             })}
             {match self.props.show_new_column {
-                true => html!{<th>{"add"}</th>},
+                true => html!{<th>{ get_value_field(&117) }</th>}, // add
                 false => html!{},
             }}
         </>}

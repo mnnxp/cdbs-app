@@ -1,6 +1,6 @@
 use yew::services::fetch::FetchTask;
 use yew::{
-    agent::Bridged, html, Bridge, Callback, Component,
+    agent::Bridged, classes, html, Bridge, Callback, Component,
     ComponentLink, FocusEvent, Html, InputData, Properties, ShouldRender
 };
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
@@ -10,7 +10,7 @@ use log::debug;
 use crate::fragments::list_errors::ListErrors;
 use crate::error::Error;
 use crate::routes::AppRoute;
-use crate::services::{set_token, Auth, set_logged_user, get_logged_user};
+use crate::services::{set_token, Auth, set_logged_user, get_logged_user, get_value_field};
 use crate::types::{UUID, LoginInfo, LoginInfoWrapper, SlimUser, UserToken};
 use crate::gqls::make_query;
 use wasm_bindgen_futures::spawn_local;
@@ -132,23 +132,23 @@ impl Component for Login {
 
         html!{<div class="container page">
             <div class="auth-page">
-                <h1 class="title">{ "Sign In" }</h1>
+                <h1 class="title">{ get_value_field(&13) }</h1>
                 <h2 class="subtitle">
                     <RouterAnchor<AppRoute> route=AppRoute::Register>
-                        { "Need an account?" }
+                        { get_value_field(&18) }
                     </RouterAnchor<AppRoute>>
                 </h2>
                 <ListErrors error=self.error.clone() />
                 <form onsubmit=onsubmit>
                     <fieldset class="box">
                         <fieldset class="field">
-                            <label class="label">{"Username"}</label>
+                            <label class="label">{ get_value_field(&19) }</label>
                             <div class="control has-icons-left has-icons-right">
                                 <input
                                     id="username"
                                     class="input"
                                     type="text"
-                                    placeholder="Username"
+                                    placeholder={ get_value_field(&19) }
                                     value=self.request.username.clone()
                                     oninput=oninput_username
                                     />
@@ -162,13 +162,13 @@ impl Component for Login {
                             // <p class="help is-success">{"This username is available"}</p>
                         </fieldset>
                         <fieldset class="field">
-                            <label class="label">{"Password"}</label>
+                            <label class="label">{ get_value_field(&20) }</label>
                             <div class="control has-icons-left">
                                 <input
                                     id="password"
                                     class="input"
                                     type="password"
-                                    placeholder="Password"
+                                    placeholder={ get_value_field(&20) }
                                     value=self.request.password.clone()
                                     oninput=oninput_password
                                     />
@@ -179,10 +179,10 @@ impl Component for Login {
                         </fieldset>
                         <button
                             id="submit-button"
-                            class="button"
+                            class=classes!("button", "is-fullwidth", "is-large")
                             type="submit"
                             disabled=false>
-                            { "Sign in" }
+                            { get_value_field(&44) }
                         </button>
                     </fieldset>
                 </form>

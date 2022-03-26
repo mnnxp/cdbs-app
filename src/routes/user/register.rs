@@ -13,7 +13,7 @@ use crate::gqls::make_query;
 use crate::routes::AppRoute;
 use crate::error::{Error, get_error};
 use crate::fragments::list_errors::ListErrors;
-use crate::services::get_logged_user;
+use crate::services::{get_logged_user, get_value_field};
 use crate::types::{
     UUID, RegisterInfo, Region, Program
 };
@@ -169,10 +169,10 @@ impl Component for Register {
 
         html!{<div class="container page">
             <div class="auth-page">
-                <h1 class="title">{ "Sign Up" }</h1>
+                <h1 class="title">{ get_value_field(&14) }</h1>
                 <h2 class="subtitle">
                     <RouterAnchor<AppRoute> route=AppRoute::Login>
-                        { "Have an account?" }
+                        { get_value_field(&21) }
                     </RouterAnchor<AppRoute>>
                 </h2>
                 <ListErrors error=self.error.clone() />
@@ -189,14 +189,15 @@ impl Component for Register {
                                     self.request.email.is_empty() ||
                                     self.request.password.is_empty()
                             >
-                                { "Sign up" }
+                                { get_value_field(&45) }
                             </button>
                         </div>
                         <div class="column">
                             <div class="column is-flex is-vcentered">
-                                <span>{"By clicking \"Sign up\", you agree to the ["}</span>
-                                <a onclick=onclick_show_conditions>{"terms and conditions"}</a>
-                                <span>{"]"}</span>
+                                <span>
+                                    { get_value_field(&28) }
+                                    {" ["}<a onclick=onclick_show_conditions>{ get_value_field(&29)}</a>{"]"}
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -232,7 +233,7 @@ impl Register {
             <div class="columns">
                 <div class="column">
                     {self.fileset_generator(
-                        "username", "Username", "Username",
+                        "username", get_value_field(&19), // "Username",
                         "fas fa-user",
                         self.request.username.clone(),
                         oninput_username
@@ -240,7 +241,7 @@ impl Register {
                 </div>
                 <div class="column">
                     {self.fileset_generator(
-                        "email", "Email", "Email",
+                        "email", get_value_field(&22), // "Email",
                         "fas fa-envelope",
                         self.request.email.clone(),
                         oninput_email
@@ -252,7 +253,7 @@ impl Register {
             <div class="columns">
                 <div class="column">
                     {self.fileset_generator(
-                        "firstname", "Firstname", "Firstname (not required)",
+                        "firstname", get_value_field(&23), // "Firstname (not required)",
                         "", // no set icon for input
                         self.request.firstname.clone(),
                         oninput_firstname
@@ -260,7 +261,7 @@ impl Register {
                 </div>
                 <div class="column">
                     {self.fileset_generator(
-                        "lastname", "Lastname", "Lastname (not required)",
+                        "lastname", get_value_field(&24), // "Lastname (not required)",
                         "", // no set icon for input
                         self.request.lastname.clone(),
                         oninput_lastname
@@ -268,7 +269,7 @@ impl Register {
                 </div>
                 <div class="column">
                     {self.fileset_generator(
-                        "secondname", "Secondname", "Secondname (not required)",
+                        "secondname", get_value_field(&25), // "Secondname (not required)",
                         "", // no set icon for input
                         self.request.secondname.clone(),
                         oninput_secondname
@@ -278,7 +279,7 @@ impl Register {
 
             // third columns (password)
             {self.fileset_generator(
-                "password", "Password", "Password",
+                "password", get_value_field(&20), // "Password",
                 "fas fa-lock",
                 self.request.password.clone(),
                 oninput_password
@@ -287,7 +288,7 @@ impl Register {
             // fourth columns (program, region)
             <div class="columns">
                 <div class="column">
-                    <label class="label">{"Program"}</label>
+                    <label class="label">{ get_value_field(&26) }</label>
                     <div class="control">
                         <div class="select">
                           <select
@@ -303,7 +304,7 @@ impl Register {
                     </div>
                 </div>
                 <div class="column">
-                    <label class="label">{"Region"}</label>
+                    <label class="label">{ get_value_field(&27) }</label>
                     <div class="control">
                         <div class="select">
                           <select
@@ -331,11 +332,12 @@ impl Register {
         &self,
         id: &str,
         label: &str,
-        placeholder: &str,
+        // placeholder: &str,
         icon_left: &str,
         value: String,
         oninput: Callback<InputData>,
     ) -> Html {
+        let placeholder = label;
         let input_type = match id {
             "email" => "email",
             "password" => "password",
@@ -386,17 +388,19 @@ impl Register {
           <div class="modal-background" onclick=onclick_show_conditions.clone() />
           <div class="modal-card">
             <header class="modal-card-head">
-              <p class="modal-card-title">{"CADBase conditions"}</p>
+              <p class="modal-card-title">{ get_value_field(&285) }</p>
               <button class="delete" aria-label="close" onclick=onclick_show_conditions.clone() />
             </header>
             <section class="modal-card-body">
-              <span>{"THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE."}</span>
+              <span>{ get_value_field(&251) }</span>
               <br/>
-              <span class="has-text-weight-bold">{"If you need support or help, please contact us: "}</span>
+              <span class="has-text-weight-bold">{ get_value_field(&287) }</span>
               <a href="mailto:support@cadbase.rs">{"support@cadbase.rs"}</a>
             </section>
             <footer class="modal-card-foot">
-              <button class="button is-fullwidth is-large" onclick=onclick_show_conditions>{"Great!"}</button>
+              <button class="button is-fullwidth is-large" onclick=onclick_show_conditions>
+                { get_value_field(&288) }
+              </button>
             </footer>
           </div>
         </div>}

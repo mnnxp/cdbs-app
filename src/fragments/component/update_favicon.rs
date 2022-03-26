@@ -11,7 +11,7 @@ use wasm_bindgen_futures::spawn_local;
 use crate::gqls::make_query;
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
-use crate::services::{PutUploadFile, UploadData, image_detector};
+use crate::services::{PutUploadFile, UploadData, image_detector, get_value_field};
 use crate::types::{UUID, UploadFile};
 
 type FileName = String;
@@ -270,7 +270,7 @@ impl UpdateComponentFaviconCard {
                       <span class="file-icon">
                         <i class="fas fa-upload"></i>
                       </span>
-                      <span class="file-label">{"Drop preview image here"}</span>
+                      <span class="file-label">{ get_value_field(&182) }</span> // Drop preview image here
                     </span>
                     <div class="columns">
                         <div class="column">
@@ -280,7 +280,8 @@ impl UpdateComponentFaviconCard {
                         </div>
                         <div class="column">
                             <span class="has-text-grey-light is-size-6" style="overflow-wrap: anywhere">
-                                {"Possible format: .apng, .avif, .gif, .jpg, .jpeg, .jpe, .jif, .jfif, .png, .svg, .webp."}
+                                { get_value_field(&183) }
+                                {": .apng, .avif, .gif, .jpg, .jpeg, .jpe, .jif, .jfif, .png, .svg, .webp."}
                             </span>
                         </div>
                     </div>
@@ -307,7 +308,7 @@ impl UpdateComponentFaviconCard {
                   class={class_upload_btn}
                   onclick=onclick_upload_favicon
                   disabled={self.dis_upload_btn} >
-                { "Upload" }
+                { get_value_field(&87) }
             </a>
         }
     }
@@ -321,7 +322,7 @@ impl UpdateComponentFaviconCard {
                   class="button"
                   onclick=onclick_clear_boxed
                   disabled={self.dis_upload_btn} >
-                { "Clear" }
+                { get_value_field(&88) }
             </a>
         }
     }
@@ -332,11 +333,11 @@ impl UpdateComponentFaviconCard {
         html!{
             <article class="message is-success">
               <div class="message-header">
-                <p>{ "Success" }</p>
+                <p>{ get_value_field(&89) }</p>
                 <button class="delete" aria-label="close" onclick=onclick_hide_notification.clone() />
               </div>
               <div class="message-body">
-                { "This favicon upload!" }
+                { get_value_field(&92) }
               </div>
             </article>
         }

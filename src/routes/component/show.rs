@@ -28,7 +28,7 @@ use crate::fragments::{
     img_showcase::ImgShowcase,
 };
 use crate::gqls::make_query;
-use crate::services::get_logged_user;
+use crate::services::{get_logged_user, get_value_field};
 use crate::types::{
     UUID, ComponentInfo, SlimUser, ComponentParam,
     ComponentModificationInfo,
@@ -461,14 +461,14 @@ impl ShowComponent {
               <div class="column">
                 <div class="media">
                     <div class="media-content">
-                        {"uploaded from "}
+                        { get_value_field(&94) }
                         <a class="id-box has-text-grey-light has-text-weight-bold"
                             onclick={onclick_open_owner_company} >
                           {format!("@{}",&component_data.owner_user.username)}
                         </a>
                     </div>
                     <div class="media-right" style="margin-right: 1rem">
-                        {"updated at "}<span class="id-box has-text-grey-light has-text-weight-bold">
+                        { get_value_field(&95) }<span class="id-box has-text-grey-light has-text-weight-bold">
                             {format!("{:.*}", 10, component_data.updated_at.to_string())}
                         </span>
                     </div>
@@ -497,7 +497,7 @@ impl ShowComponent {
                                 <br/>
                                 <button class="button is-white"
                                     onclick=show_description_btn >
-                                  {"See less"}
+                                  { get_value_field(&99) }
                                 </button>
                               </>},
                               _ => html!{},
@@ -508,7 +508,7 @@ impl ShowComponent {
                           <br/>
                           <button class="button is-white"
                               onclick=show_description_btn >
-                            {"See more"}
+                            { get_value_field(&98) }
                           </button>
                         </>},
                     }
@@ -555,7 +555,7 @@ impl ShowComponent {
             .callback(|_| Msg::ShowModificationFilesList);
 
         html!{<>
-            <h2 class="has-text-weight-bold">{"Modifications"}</h2>
+            <h2 class="has-text-weight-bold">{ get_value_field(&100) }</h2> // Modifications
             <ModificationsTable
                 modifications = component_data.component_modifications.clone()
                 select_modification = self.select_modification_uuid.clone()
@@ -586,15 +586,15 @@ impl ShowComponent {
         html!{
             <div class="columns">
                 <div class="column">
-                    <label class="label">{"Actual status"}</label>
+                    <label class="label">{ get_value_field(&96) }</label>
                     {component_data.actual_status.name.clone()}
                 </div>
                 <div class="column">
-                    <label class="label">{"Component type"}</label>
+                    <label class="label">{ get_value_field(&97) }</label>
                     {component_data.component_type.component_type.clone()}
                 </div>
                 <div class="column">
-                    <label class="label">{"Type access "}</label>
+                    <label class="label">{ get_value_field(&114) }</label>
                     {component_data.type_access.name.clone()}
                 </div>
             </div>
@@ -607,7 +607,7 @@ impl ShowComponent {
     ) -> Html {
         html!{
             <div class="column">
-              <h2 class="has-text-weight-bold">{"Сharacteristics of the component"}</h2>
+              <h2 class="has-text-weight-bold">{ get_value_field(&101) }</h2> // Сharacteristics of the component
               <div class="card column">
                 <table class="table is-fullwidth">
                     <tbody>
@@ -621,7 +621,7 @@ impl ShowComponent {
                           }
                       })}
                       {match component_data.component_params.len() {
-                          0 => html!{<span>{"No additional parameters"}</span>},
+                          0 => html!{<span>{ get_value_field(&136) }</span>},
                           0..=3 => html!{},
                           _ => self.show_see_characteristic_btn(),
                       }}
@@ -652,12 +652,12 @@ impl ShowComponent {
             true => html!{<>
               <button class="button is-white"
                   onclick=show_full_characteristics_btn
-                >{"See less"}</button>
+                >{ get_value_field(&99) }</button>
             </>},
             false => html!{<>
               <button class="button is-white"
                   onclick=show_full_characteristics_btn
-                >{"See more"}</button>
+                >{ get_value_field(&98) }</button>
             </>},
         }
     }
@@ -670,13 +670,13 @@ impl ShowComponent {
             <div class="columns">
                 {self.show_additional_params(component_data)}
                 <div class="column">
-                    <h2 class="has-text-weight-bold">{"Component files"}</h2>
+                    <h2 class="has-text-weight-bold">{ get_value_field(&102) }</h2> // Component files
                     {self.show_component_files(component_data)}
                 </div>
             </div>
             <div class="columns">
                 <div class="column">
-                    <h2 class="has-text-weight-bold">{"Standards"}</h2>
+                    <h2 class="has-text-weight-bold">{ get_value_field(&103) }</h2> // Standards
                     {self.show_component_standards(component_data)}
                 </div>
                 <div class="column">
@@ -705,7 +705,7 @@ impl ShowComponent {
         component_data: &ComponentInfo,
     ) -> Html {
         html!{<>
-              <h2 class="has-text-weight-bold">{"Specs"}</h2>
+              <h2 class="has-text-weight-bold">{ get_value_field(&104) }</h2> // Specs
               <div class="card column">
                 <SpecsTags
                     show_manage_btn = false
@@ -721,7 +721,7 @@ impl ShowComponent {
         component_data: &ComponentInfo,
     ) -> Html {
         html!{<>
-              <h2 class="has-text-weight-bold">{"Keywords"}</h2>
+              <h2 class="has-text-weight-bold">{ get_value_field(&105) }</h2> // Keywords
               <div class="card column">
                 <KeywordsTags
                     show_delete_btn = false
@@ -737,8 +737,8 @@ impl ShowComponent {
         component_data: &ComponentInfo,
     ) -> Html {
         let table_label = match component_data.is_base {
-            true => "Supplier".to_string(),
-            false => "Main supplier".to_string(),
+            true => get_value_field(&107).to_string(),
+            false => get_value_field(&108).to_string(),
         };
 
         html!{<>
@@ -746,9 +746,9 @@ impl ShowComponent {
             <div class="card column">
               <table class="table is-fullwidth">
                 <tbody>
-                   <th>{"Company"}</th>
-                   <th>{"Description"}</th>
-                   <th>{"Action"}</th>
+                   <th>{ get_value_field(&109) }</th> // Company
+                   <th>{ get_value_field(&61) }</th> // Description
+                   <th>{ get_value_field(&111) }</th> // Action
                    {match component_data.is_base {
                        true => html!{<>
                            {for component_data.component_suppliers.iter().map(|data| {
@@ -785,9 +785,9 @@ impl ShowComponent {
         html!{<div class="card column">
           <table class="table is-fullwidth">
             <tbody>
-               <th>{"Classifier"}</th>
-               <th>{"Specified tolerance"}</th>
-               <th>{"Action"}</th>
+               <th>{ get_value_field(&112) }</th> // Classifier
+               <th>{ get_value_field(&113) }</th> // Specified tolerance
+               <th>{ get_value_field(&111) }</th> // Action
                {for component_data.component_standards.iter().map(|data| {
                    html!{<ComponentStandardItem
                        show_delete_btn = false
@@ -852,22 +852,20 @@ impl ShowComponent {
                           <div class="media-content">
                             <div class="columns" style="margin-bottom:0">
                                 <div class="column">
-                                    <p class="overflow-title">{"Modification name"}</p>
-                                    <div class="overflow-title has-text-weight-bold">
+                                    <p class="overflow-title">{ get_value_field(&116) }</p> // Modification
+                                    <div class="has-text-weight-bold">
                                         {mod_data.modification_name.clone()}
                                     </div>
-                                    <p class="overflow-title">{"Description"}</p>
-                                    <p class="overflow-title">
-                                        {mod_data.description.clone()}
-                                    </p>
+                                    <p class="overflow-title">{ get_value_field(&61) }</p> // Description
+                                    <p>{mod_data.description.clone()}</p>
                                 </div>
                             </div>
                             <div class="columns" style="margin-bottom:0">
                                 <div class="column">
-                                  {format!("Actual status: {}", &mod_data.actual_status.name)}
+                                  {format!("{}: {}", get_value_field(&118), &mod_data.actual_status.name)}
                                 </div>
                                 <div class="column">
-                                  {format!("Updated at: {:.*}", 10, mod_data.updated_at.to_string())}
+                                  {format!("{} {:.*}", get_value_field(&30), 10, mod_data.updated_at.to_string())}
                                 </div>
                             </div>
                           </div>
@@ -885,7 +883,7 @@ impl ShowComponent {
         match &self.open_fileset_files_card {
             true => html!{<>
                 <br/>
-                <h2 class="has-text-weight-bold">{"Files of select fileset"}</h2>
+                <h2 class="has-text-weight-bold">{ get_value_field(&106) }</h2> // Files of select fileset
                 <FilesOfFilesetCard
                     show_download_btn = false
                     select_fileset_uuid = self.select_fileset_uuid.clone()

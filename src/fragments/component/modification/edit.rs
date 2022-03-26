@@ -21,6 +21,7 @@ use crate::types::{
     UUID, ComponentModificationInfo, Param, ActualStatus,
     ModificationUpdatePreData, FilesetProgramInfo,
 };
+use crate::services::get_value_field;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -618,14 +619,14 @@ impl ModificationsTableEdit {
                 <span class="icon" >
                     <i class="fas fa-plus" aria-hidden="true"></i>
                 </span>
-                <span>{"Add new modification"}</span>
+                <span>{ get_value_field(&174) }</span> // Add new modification
             </button>
         </div>}
     }
 
     fn show_modification_files(&self) -> Html {
         html!{<>
-            <h2 class="has-text-weight-bold">{"Manage modification files"}</h2>
+            <h2 class="has-text-weight-bold">{ get_value_field(&172) }</h2> // Manage modification files
             <div class="card column">
                 <ManageModificationFilesCard
                     show_download_btn = false
@@ -664,35 +665,35 @@ impl ModificationsTableEdit {
             <div class="card">
               <div class="modal-content">
                 <header class="modal-card-head">
-                    <p class="modal-card-title">{"Create new modification"}</p>
+                    <p class="modal-card-title">{ get_value_field(&175) }</p> // Create new modification
                     <button class="delete" aria-label="close" onclick=onclick_add_modification_card.clone() />
                 </header>
                 <div class="box itemBox">
                   <article class="media center-media">
                       <div class="media-content">
                           <div class="column">
-                              <label class="label">{"Modification name"}</label>
+                              <label class="label">{ get_value_field(&176) }</label> // Modification name
                               <input
                                   id="add-modification-name"
                                   class="input is-fullwidth"
                                   type="text"
-                                  placeholder="component name"
+                                  placeholder=get_value_field(&176)
                                   value={self.request_add_modification.modification_name.clone()}
                                   oninput=oninput_name />
                           </div>
                           <div class="column">
-                              <label class="label">{"Description"}</label>
+                              <label class="label">{ get_value_field(&61) }</label>
                               <textarea
                                   id="add-modification-description"
                                   class="textarea is-fullwidth"
                                   // rows="10"
                                   type="text"
-                                  placeholder="component description"
+                                  placeholder=get_value_field(&61)
                                   value={self.request_add_modification.description.clone()}
                                   oninput=oninput_description />
                           </div>
                           <div class="column">
-                              <label class="label">{"Actual status"}</label>
+                              <label class="label">{ get_value_field(&96) }</label>
                               <div class="select">
                                   <select
                                       id="add-modification-actual-status"
@@ -716,7 +717,7 @@ impl ModificationsTableEdit {
                                   class="button is-fullwidth"
                                   disabled={self.request_add_modification.modification_name.is_empty()}
                                   onclick={onclick_add_component_modification} >
-                                  {"Add"}
+                                  { get_value_field(&117) } // Add
                               </button>
                           </div>
                     </div>
@@ -763,13 +764,13 @@ impl ModificationsTableEdit {
                 <div class="card">
                   <div class="modal-content">
                     <header class="modal-card-head">
-                        <p class="modal-card-title">{"Change modification data"}</p>
+                        <p class="modal-card-title">{ get_value_field(&177) }</p> // Change modification data
                         <button class="delete" aria-label="close" onclick=onclick_modification_card />
                     </header>
                     <div class="box itemBox">
                       <article class="media center-media">
                           <div class="media-content">
-                              <label class="label">{"Modification name"}</label>
+                              <label class="label">{ get_value_field(&176) }</label> // Modification name
                               <input
                                   id="add-modification-name"
                                   class="input is-fullwidth"
@@ -777,7 +778,7 @@ impl ModificationsTableEdit {
                                   placeholder={modification_data.modification_name.clone()}
                                   value={self.request_edit_modification.modification_name.clone()}
                                   oninput=oninput_modification_name />
-                              <label class="label">{"Description"}</label>
+                              <label class="label">{ get_value_field(&61) }</label>
                               <textarea
                                   id="update-modification-description"
                                   class="textarea is-fullwidth"
@@ -786,7 +787,7 @@ impl ModificationsTableEdit {
                                   placeholder={modification_data.description.clone()}
                                   value={self.request_edit_modification.description.clone()}
                                   oninput=oninput_modification_description />
-                          <label class="label">{"Actual status"}</label>
+                          <label class="label">{ get_value_field(&96) }</label>
                           <div class="select">
                               <select
                                   id="update-modification-actual-status"
@@ -810,7 +811,7 @@ impl ModificationsTableEdit {
                                       id="delete-component-modification"
                                       class="button is-danger"
                                       onclick={onclick_delete_component_modification} >
-                                      {"Delete"}
+                                      { get_value_field(&135) } // Delete
                                   </button>
                               </div>
                               <div class="column">
@@ -819,7 +820,7 @@ impl ModificationsTableEdit {
                                       class="button"
                                       disabled={!self.update_edit_modification}
                                       onclick={onclick_component_modification_update} >
-                                      {"Update"}
+                                      { get_value_field(&46) } // Update
                                   </button>
                               </div>
                           </div>
@@ -848,7 +849,7 @@ impl ModificationsTableEdit {
 
     fn show_fileset_files_card(&self) -> Html {
         html!{<>
-            <h2 class="has-text-weight-bold">{"Manage modification filesets"}</h2>
+            <h2 class="has-text-weight-bold">{ get_value_field(&173) }</h2> // Manage modification filesets
             <div class="card column">
                 <ManageModificationFilesets
                     select_modification_uuid = self.select_modification_uuid.clone()

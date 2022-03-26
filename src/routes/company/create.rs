@@ -15,7 +15,7 @@ use crate::gqls::make_query;
 use crate::routes::AppRoute;
 use crate::error::{Error, get_error};
 use crate::fragments::list_errors::ListErrors;
-use crate::services::get_logged_user;
+use crate::services::{get_logged_user, get_value_field};
 use crate::types::{
     UUID, SlimUser, CompanyCreateInfo, Region,
     CompanyType, TypeAccessInfo,
@@ -226,7 +226,7 @@ impl Component for CreateCompany {
                 <ListErrors error=self.error.clone()/>
                 <div class="container page">
                     <div class="row">
-                        <h1 class="title">{ "Create company" }</h1>
+                        <h1 class="title">{ get_value_field(&289) }</h1>
                         <div class="card column">
                             { self.fieldset_company() }
                         </div>
@@ -238,7 +238,7 @@ impl Component for CreateCompany {
                             disabled=false
                             onclick=onclick_create_company
                             >
-                            { "Create" }
+                            { get_value_field(&45) } // Create
                         </button>
                     </div>
                 </div>
@@ -252,11 +252,12 @@ impl CreateCompany {
         &self,
         id: &str,
         label: &str,
-        placeholder: &str,
+        // placeholder: &str,
         icon_left: &str,
         value: String,
         oninput: Callback<InputData>,
     ) -> Html {
+        let placeholder = label;
         let input_type = match id {
             "email" => "email",
             "password" => "password",
@@ -336,7 +337,7 @@ impl CreateCompany {
             <div class="columns">
                 <div class="column">
                     {self.fileset_generator(
-                        "orgname", "Orgname", "Orgname",
+                        "orgname", get_value_field(&170), // Orgname
                         "",
                         self.request_company.orgname.clone(),
                         oninput_orgname
@@ -344,7 +345,7 @@ impl CreateCompany {
                 </div>
                 <div class="column">
                     {self.fileset_generator(
-                        "shortname", "Shortname", "Shortname",
+                        "shortname", get_value_field(&171), // Shortname
                         "",
                         self.request_company.shortname.clone(),
                         oninput_shortname
@@ -355,7 +356,7 @@ impl CreateCompany {
             <div class="columns">
                 <div class="column">
                     {self.fileset_generator(
-                        "inn", "Inn", "Inn",
+                        "inn", get_value_field(&81), // Inn
                         "",
                         self.request_company.inn.clone(),
                         oninput_inn
@@ -363,7 +364,7 @@ impl CreateCompany {
                 </div>
                 <div class="column">
                     <fieldset class="field">
-                        <label class="label">{"Company type"}</label>
+                        <label class="label">{ get_value_field(&51) }</label> // Company type
                         <div class="control">
                             <div class="select">
                               <select
@@ -389,7 +390,7 @@ impl CreateCompany {
             <div class="columns">
                 <div class="column">
                     {self.fileset_generator(
-                        "email", "Email", "Email",
+                        "email", get_value_field(&22), // Email
                         "fas fa-at",
                         self.request_company.email.clone(),
                         oninput_email
@@ -397,7 +398,7 @@ impl CreateCompany {
                 </div>
                 <div class="column">
                     {self.fileset_generator(
-                        "phone", "Phone", "Phone",
+                        "phone", get_value_field(&56), // Phone
                         "fas fa-phone",
                         self.request_company.phone.clone(),
                         oninput_phone
@@ -408,7 +409,7 @@ impl CreateCompany {
             <div class="columns">
                 <div class="column">
                     <fieldset class="field">
-                        <label class="label">{"Region"}</label>
+                        <label class="label">{ get_value_field(&27) }</label> // Region
                         <div class="control">
                             <div class="select">
                               <select
@@ -431,7 +432,7 @@ impl CreateCompany {
                 </div>
                 <div class="column">
                     {self.fileset_generator(
-                        "address", "Address", "Address",
+                        "address", get_value_field(&57), // Address
                         "fas fa-map-marker-alt",
                         self.request_company.address.clone(),
                         oninput_address
@@ -442,7 +443,7 @@ impl CreateCompany {
             <div class="columns">
                 <div class="column">
                     {self.fileset_generator(
-                        "site_url", "Site", "Site",
+                        "site_url", get_value_field(&66), // Site
                         "fas fa-link",
                         self.request_company.site_url.clone(),
                         oninput_site_url
@@ -450,7 +451,7 @@ impl CreateCompany {
                 </div>
                 <div class="column">
                     <fieldset class="field">
-                        <label class="label">{"Type Access"}</label>
+                        <label class="label">{ get_value_field(&58) }</label> // Type access
                         <div class="control">
                             <div class="select">
                               <select
@@ -474,12 +475,12 @@ impl CreateCompany {
             </div>
 
             <fieldset class="field">
-                <label class="label">{"Description"}</label>
+                <label class="label">{ get_value_field(&61) }</label>
                 <textarea
                     id="description"
                     class="textarea"
                     type="text"
-                    placeholder="description"
+                    placeholder={ get_value_field(&61) }
                     value={self.request_company.description.clone()}
                     oninput=oninput_description />
             </fieldset>

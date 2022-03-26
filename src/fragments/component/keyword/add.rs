@@ -13,6 +13,7 @@ use crate::fragments::{
 };
 use crate::gqls::make_query;
 use crate::types::{UUID, Keyword};
+use crate::services::get_value_field;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -307,13 +308,13 @@ impl AddKeywordsTags {
                     class="input"
                     type="text"
                     value={self.ipt_keyword.clone()}
-                    placeholder="Input keywords separated by spaces or commas"
+                    placeholder=get_value_field(&193) // Emter keywords separated by spaces or commas
                   />
             </div>
            {match self.bad_keyword {
                true => html!{<div class="notification is-danger">
                   <button class="delete" onclick={onclick_hide_notification}></button>
-                  {"Keywords must be less than 10 symbols"}
+                  { get_value_field(&243) } // Keywords must be less than 10 symbols
                </div>},
                false => html!{}
            }}

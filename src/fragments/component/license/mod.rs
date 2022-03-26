@@ -15,6 +15,7 @@ use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
 use crate::gqls::make_query;
 use crate::types::{UUID, LicenseInfo};
+use crate::services::get_value_field;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -304,11 +305,11 @@ impl ComponentLicensesTags {
                 <div class="modal-content">
                   <div class="card">
                     <header class="modal-card-head">
-                      <p class="modal-card-title">{"Add a license for a component"}</p>
+                      <p class="modal-card-title">{ get_value_field(&244) }</p> // Add a license for a component
                       <button class="delete" aria-label="close" onclick=onclick_hide_modal.clone() />
                     </header>
                     <section class="modal-card-body">
-                        <label class="label">{"Select a license"}</label>
+                        <label class="label">{ get_value_field(&245) }</label> // Select a license
                         <div class="columns">
                             <div class="column">
                                 <div class="select">
@@ -334,7 +335,7 @@ impl ComponentLicensesTags {
                                     class="button is-fullwidth"
                                     disabled={self.request_add_license_id == 0}
                                     onclick={onclick_add_license} >
-                                    {"Add"}
+                                    { get_value_field(&117) }
                                 </button>
                             </div>
                         </div>

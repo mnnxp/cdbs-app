@@ -1,4 +1,5 @@
 use yew::{html, Component, ComponentLink, Html, ShouldRender};
+use crate::services::get_value_field;
 
 pub struct Banner {}
 
@@ -33,11 +34,7 @@ impl Component for Banner {
                         </svg>
 
                         <div class="content">
-                            {r#"
-                            A wide range of
-                            different components
-                            & component catalogs
-                            "#}
+                            { get_value_field(&4) }
                         </div>
                     </div>
                 </div>
@@ -50,10 +47,7 @@ impl Component for Banner {
                         </svg>
 
                         <div class="content">
-                            {r#"
-                                Constantly updated
-                                component base
-                            "#}
+                            { get_value_field(&5) }
                         </div>
                     </div>
                 </div>
@@ -69,10 +63,7 @@ impl Component for Banner {
                         </svg>
 
                         <div class="content">
-                            {r#"
-                                Ability to add custom
-                                components
-                            "#}
+                            { get_value_field(&6) }
                         </div>
                     </div>
                 </div>
@@ -88,10 +79,7 @@ impl Component for Banner {
                         </svg>
 
                         <div class="content">
-                            {r#"
-                                Buying and selling
-                                components
-                            "#}
+                            { get_value_field(&7) }
                         </div>
                     </div>
                 </div>

@@ -26,7 +26,7 @@ use crate::fragments::{
     user::UserCertificatesCard,
 };
 use crate::gqls::make_query;
-use crate::services::get_logged_user;
+use crate::services::{get_logged_user, get_value_field};
 use crate::types::{
     UserDataCard, CompaniesQueryArg, ComponentsQueryArg, SelfUserInfo, SlimUser,
     StandardsQueryArg, UserCertificate, UserInfo, UsersQueryArg, UUID,
@@ -483,7 +483,7 @@ impl Profile {
                 {match self.show_full_user_info {
                     true => html!{
                         <div>
-                            <span>{"Updated at: "}</span>
+                            <span>{ get_value_field(&30) }</span>
                             <span>{updated_at}</span>
                         </div>
                     },
@@ -501,7 +501,7 @@ impl Profile {
                 Some(_) => self.show_favorite_btn(),
                 None => html!{
                     <div>
-                        <span>{"Followers: "}</span>
+                        <span>{ get_value_field(&31) }</span>
                         <span>{self.subscribers}</span>
                     </div>
                 },
@@ -543,7 +543,7 @@ impl Profile {
     fn show_profile_action(&self) -> Html {
         let menu_arr: Vec<MenuItem> = vec![
             MenuItem {
-                title: "CERTIFICATES".to_string(),
+                title: get_value_field(&32).to_string(),
                 action: self.cb_generator(ProfileTab::Certificates),
                 count: self.get_number_of_items(&ProfileTab::Certificates),
                 item_class: classes!("has-background-white"),
@@ -552,7 +552,7 @@ impl Profile {
                 is_extend: self.check_extend(&ProfileTab::Certificates),
             },
             MenuItem {
-                title: "COMPONENTS all".to_string(),
+                title: get_value_field(&33).to_string(),
                 action: self.cb_generator(ProfileTab::Components),
                 count: self.get_number_of_items(&ProfileTab::Components),
                 item_class: classes!("has-background-white"),
@@ -561,7 +561,7 @@ impl Profile {
                 is_extend: self.check_extend(&ProfileTab::Components),
             },
             MenuItem {
-                title: "fav COMPONENTS".to_string(),
+                title: get_value_field(&34).to_string(),
                 action: self.cb_generator(ProfileTab::FavoriteComponents),
                 count: self.get_number_of_items(&ProfileTab::FavoriteComponents),
                 item_class: classes!("has-background-white"),
@@ -571,7 +571,7 @@ impl Profile {
             },
             // company MenuItem
             MenuItem {
-                title: "COMPANIES all".to_string(),
+                title: get_value_field(&35).to_string(),
                 action: self.cb_generator(ProfileTab::Companies),
                 count: self.get_number_of_items(&ProfileTab::Companies),
                 item_class: classes!("has-background-white"),
@@ -581,7 +581,7 @@ impl Profile {
             },
             // company fav MenuItem
             MenuItem {
-                title: "fav COMPANIES".to_string(),
+                title: get_value_field(&36).to_string(),
                 action: self.cb_generator(ProfileTab::FavoriteCompanies),
                 count: self.get_number_of_items(&ProfileTab::FavoriteCompanies),
                 item_class: classes!("has-background-white"),
@@ -591,7 +591,7 @@ impl Profile {
             },
             // standards MenuItem
             MenuItem {
-                title: "fav STANDARDS".to_string(),
+                title: get_value_field(&37).to_string(),
                 action: self.cb_generator(ProfileTab::FavoriteStandards),
                 count: self.get_number_of_items(&ProfileTab::FavoriteStandards),
                 item_class: classes!("has-background-white"),
@@ -601,7 +601,7 @@ impl Profile {
             },
             // user fav MenuItem
             MenuItem {
-                title: "fav USERS".to_string(),
+                title: get_value_field(&38).to_string(),
                 action: self.cb_generator(ProfileTab::FavoriteUsers),
                 count: self.get_number_of_items(&ProfileTab::FavoriteUsers),
                 item_class: classes!("has-background-white"),
@@ -639,30 +639,30 @@ impl Profile {
                     <div class="column">
                         <div id="position">
                             <span class="icon is-small"><i class="fas fa-briefcase" /></span>
-                            <span>{" Position: "}</span>
+                            <span>{ get_value_field(&39) }</span>
                             <span class="overflow-title has-text-weight-bold">{position}</span>
                         </div>
                         // <br/>
                         <div id="region">
                             <span class="icon is-small"><i class="fas fa-map-marker-alt" /></span>
-                            <span>{" Region: "}</span>
+                            <span>{ get_value_field(&40) }</span>
                             <span class="overflow-title has-text-weight-bold">{region}</span>
                         </div>
                         // <br/>
                         <div id="program">
                             <span class="icon is-small"><i class="fas fa-drafting-compass" /></span>
-                            <span>{" Working software: "}</span>
+                            <span>{ get_value_field(&41) }</span>
                             <span class="overflow-title has-text-weight-bold">{program}</span>
                         </div>
                     </div>
                 </div>
                 <button class="button is-ghost" onclick={onclick_change_full_show}>
-                    <span>{"Hide info"}</span>
+                    <span>{ get_value_field(&42) }</span>
                 </button>
             </>},
             false => html!{
                 <button class="button is-ghost" onclick={onclick_change_full_show}>
-                    <span>{"Show info"}</span>
+                    <span>{ get_value_field(&43) }</span>
                 </button>
             },
         }

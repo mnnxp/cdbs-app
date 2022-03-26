@@ -15,7 +15,7 @@ use crate::routes::AppRoute;
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
 use crate::gqls::make_query;
-use crate::services::get_logged_user;
+use crate::services::{get_logged_user, get_value_field};
 use crate::types::{
     UUID, ComponentCreateData, TypeAccessInfo,
     ActualStatus, ComponentType
@@ -218,7 +218,7 @@ impl Component for CreateComponent {
                 <div class="container page">
                     <div class="row">
                         <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
-                        <h1 class="title">{ "Create component" }</h1>
+                        <h1 class="title">{ get_value_field(&290) }</h1>
                         {self.show_main_card()}
                         <br/>
                         {self.show_manage_btn()}
@@ -260,7 +260,7 @@ impl CreateComponent {
                 <div class="column">
                     <div class="columns">
                         <div class="column" style="margin-right: 1rem">
-                            <label class="label">{"Actual status"}</label>
+                            <label class="label">{ get_value_field(&96) }</label>
                             <div class="select">
                               <select
                                   id="component-status-id"
@@ -279,7 +279,7 @@ impl CreateComponent {
                             </div>
                         </div>
                         <div class="column" style="margin-right: 1rem">
-                            <label class="label">{"Component type "}</label>
+                            <label class="label">{ get_value_field(&97) }</label>
                             <div class="select">
                               <select
                                   id="set-component-type"
@@ -298,7 +298,7 @@ impl CreateComponent {
                             </div>
                         </div>
                         <div class="column" style="margin-right: 1rem">
-                            <label class="label">{"Type access "}</label>
+                            <label class="label">{ get_value_field(&114) }</label>
                             <div class="select">
                               <select
                                   id="set-type-access"
@@ -319,21 +319,21 @@ impl CreateComponent {
                     </div>
                 </div>
                 <div class="column">
-                  <label class="label">{"Name"}</label>
+                  <label class="label">{ get_value_field(&110) }</label>
                   <input
                       id="update-name"
                       class="input"
                       type="text"
-                      placeholder="component name"
+                      placeholder=get_value_field(&110)
                       value={self.request_component.name.clone()}
                       oninput=oninput_name />
-                  <label class="label">{"Description"}</label>
+                  <label class="label">{ get_value_field(&61) }</label>
                   <textarea
                       id="update-description"
                       class="textarea"
                       // rows="10"
                       type="text"
-                      placeholder="component description"
+                      placeholder=get_value_field(&61)
                       value={self.request_component.description.clone()}
                       oninput=oninput_description />
                 </div>
@@ -351,7 +351,7 @@ impl CreateComponent {
                 class="button is-success is-medium is-fullwidth"
                 onclick={onclick_create_changes}
                 disabled={self.disable_create_btn} >
-                {"Create"}
+                { get_value_field(&45) } // Create
             </button>
         }
     }

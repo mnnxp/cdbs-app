@@ -8,7 +8,7 @@ use wasm_bindgen_futures::spawn_local;
 use log::debug;
 
 use crate::gqls::make_query;
-use crate::services::is_authenticated;
+use crate::services::{is_authenticated, get_value_field};
 use crate::fragments::list_errors::ListErrors;
 use crate::error::{Error, get_error};
 use crate::types::{
@@ -230,19 +230,22 @@ impl Component for ChangeItem {
                     true => html!{
                         <article class="message is-success">
                           <div class="message-header">
-                            <p>{ "Success" }</p>
+                            <p>{ get_value_field(&89) }</p>
                           </div>
                           <div class="message-body">
-                            { "This representative removed!" }
+                            { get_value_field(&292) }
                           </div>
                         </article>
                     },
                     false => html!{<div class="column">
-                        <label class="label">{"Change represent"}</label>
+                        <label class="label">{ get_value_field(&215) }</label> // Change represent
                         {if self.get_result_update > 0 {
-                            html!{<span id="tag-info-update-represent" class="tag is-info is-light">
-                            { format!("Data updated! Change rows: {}", self.get_result_update) }
-                            </span>}
+                            html!{
+                                <span id="tag-info-update-represent" class="tag is-info is-light">
+                                    // Data updated! Change rows:
+                                    {format!("{} {}", get_value_field(&213), self.get_result_update)}
+                                </span>
+                            }
                         } else { html!{} }}
                         {self.change_represent_block()}
                         {self.show_manage_buttons()}
@@ -258,10 +261,11 @@ impl ChangeItem {
         &self,
         id: &str,
         label: &str,
-        placeholder: &str,
+        // placeholder: &str,
         value: String,
         oninput: Callback<InputData>,
     ) -> Html {
+        let placeholder = label;
         let mut class = "input";
         let (input_tag, input_type) = match id {
             "email" => ("input", "email"),
@@ -309,7 +313,7 @@ impl ChangeItem {
 
         html!{<>
             {self.fileset_generator(
-                "name", "Name", "Name",
+                "name", get_value_field(&110), // Name
                 self.request_update.name.as_ref().map(|x| x.to_string()).unwrap_or_default(),
                 oninput_name
             )}
@@ -319,14 +323,14 @@ impl ChangeItem {
             <div class="columns">
                 <div class="column">
                     {self.fileset_generator(
-                        "phone", "Phone", "Phone",
+                        "phone", get_value_field(&56), // Phone
                         self.request_update.phone.as_ref().map(|x| x.to_string()).unwrap_or_default(),
                         oninput_phone
                     )}
                 </div>
                 <div class="column">
                     <fieldset class="field">
-                        <label class="label">{"Representation type"}</label>
+                        <label class="label">{ get_value_field(&216) }</label> // Representation type
                         <div class="control">
                             <div class="select">
                               <select
@@ -351,7 +355,7 @@ impl ChangeItem {
             <div class="columns">
                 <div class="column">
                 <fieldset class="field">
-                    <label class="label">{"Region"}</label>
+                    <label class="label">{ get_value_field(&27) }</label> // Region
                     <div class="control">
                         <div class="select">
                           <select
@@ -374,7 +378,7 @@ impl ChangeItem {
                 </div>
                 <div class="column">
                     {self.fileset_generator(
-                        "address", "Address", "Address",
+                        "address", get_value_field(&57), // Address
                         self.request_update.address.as_ref().map(|x| x.to_string()).unwrap_or_default(),
                         oninput_address
                     )}
@@ -394,14 +398,14 @@ impl ChangeItem {
                 <button id={"btn-delete-represent"}
                     class="button is-danger is-fullwidth"
                     onclick=onclick_delete_represent>
-                    { "Delete" }
+                    { get_value_field(&135) }
                 </button>
             </div>
             <div class="column">
                 <button id={"btn-change-represent"}
                     class="button is-fullwidth"
                     onclick=onclick_change_represent>
-                    { "Update" }
+                    { get_value_field(&46) }
                 </button>
             </div>
         </div>}

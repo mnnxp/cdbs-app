@@ -13,10 +13,8 @@ use crate::routes::AppRoute;
 use crate::gqls::make_query;
 use crate::error::{Error, get_error};
 use crate::fragments::list_errors::ListErrors;
-use crate::services::get_logged_user;
-use crate::types::{
-    ShowNotification, DegreeImportanceTranslateList,
-};
+use crate::services::{get_logged_user, get_value_field};
+use crate::types::{ShowNotification, DegreeImportanceTranslateList};
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -225,7 +223,7 @@ impl Component for Notifications {
                 <ListErrors error=self.error.clone()/>
                 <div class="container page">
                     <div class="row">
-                        <h4 id="show-notifications" class="title is-4">{"Notifications"}</h4>
+                        <h4 id="show-notifications" class="title is-4">{ get_value_field(&284) }</h4>
                         <div class="card">
                             <div class="column">
                                 <>{for self.notifications.iter().rev().map(|notif_data|

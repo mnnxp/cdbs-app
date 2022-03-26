@@ -15,6 +15,7 @@ use crate::routes::AppRoute;
 use crate::error::{Error, get_error};
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, ShowCompanyShort, CompaniesQueryArg};
+use crate::services::get_value_field;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -159,7 +160,7 @@ impl Component for CatalogCompanies {
                         {match &self.props.show_create_btn {
                             true => html!{
                                 <RouterAnchor<AppRoute> route=AppRoute::CreateCompany classes="button is-info">
-                                    {"Create"}
+                                    { get_value_field(&45) } // Create
                                 </RouterAnchor<AppRoute>>
                             },
                             false => html!{},

@@ -23,7 +23,7 @@ use crate::fragments::{
     img_showcase::ImgShowcase,
 };
 use crate::gqls::make_query;
-use crate::services::get_logged_user;
+use crate::services::{get_logged_user, get_value_field};
 use crate::types::{
     UUID, StandardInfo, SlimUser, DownloadFile, ComponentsQueryArg,
 };
@@ -373,7 +373,8 @@ impl ShowStandard {
               <div class="column">
                 <div class="media">
                     <div class="media-content">
-                        {"uploaded from "}<a class="id-box has-text-grey-light has-text-weight-bold"
+                        { get_value_field(&94) }
+                        <a class="id-box has-text-grey-light has-text-weight-bold"
                               onclick={onclick_open_owner_company}
                             >{format!("{} {}",
                             &standard_data.owner_company.shortname,
@@ -381,15 +382,16 @@ impl ShowStandard {
                         )}</a>
                     </div>
                     <div class="media-right" style="margin-right: 1rem">
-                        {"type access "}<span class="id-box has-text-grey-light has-text-weight-bold">{
-                            standard_data.type_access.name.clone()
-                        }</span>
+                        { get_value_field(&145) } // type access
+                        <span class="id-box has-text-grey-light has-text-weight-bold">
+                            {standard_data.type_access.name.clone()}
+                        </span>
                     </div>
                 </div>
                 // <h1>{"Standard"}</h1>
-                <div class="has-text-weight-bold is-size-4">{
-                    standard_data.name.clone()
-                }</div>
+                <div class="has-text-weight-bold is-size-4">
+                    {standard_data.name.clone()}
+                </div>
                 <div class="buttons flexBox">
                     {self.show_related_components_btn()}
                     // {self.show_download_btn()}
@@ -404,9 +406,9 @@ impl ShowStandard {
                           {match standard_data.description.len() {
                               250.. => html!{<>
                                 <br/>
-                                <button class="button is-white"
-                                    onclick=show_description_btn
-                                  >{"See less"}</button>
+                                <button class="button is-white" onclick=show_description_btn>
+                                    { get_value_field(&99) }
+                                </button>
                               </>},
                               _ => html!{},
                           }}
@@ -414,9 +416,9 @@ impl ShowStandard {
                         false => html!{<>
                           {format!("{:.*}", 200, standard_data.description)}
                           <br/>
-                          <button class="button is-white"
-                              onclick=show_description_btn
-                            >{"See more"}</button>
+                          <button class="button is-white" onclick=show_description_btn>
+                            { get_value_field(&98) }
+                          </button>
                         </>},
                     }
                 }</div>
@@ -431,32 +433,32 @@ impl ShowStandard {
     ) -> Html {
         html!{
             <div class="column">
-              <h2 class="has-text-weight-bold">{"Сharacteristics of the standard"}</h2>
+              <h2 class="has-text-weight-bold">{ get_value_field(&152) }</h2> // Сharacteristics of the standard
               <div class="card column">
                 <table class="table is-fullwidth">
                     <tbody>
                       <tr>
-                        <td>{"classifier"}</td>
+                        <td>{ get_value_field(&146) }</td> // classifier
                         <td>{standard_data.classifier.clone()}</td>
                       </tr>
                       <tr>
-                        <td>{"specified_tolerance"}</td>
+                        <td>{ get_value_field(&147) }</td> // specified_tolerance
                         <td>{standard_data.specified_tolerance.clone()}</td>
                       </tr>
                       <tr>
-                        <td>{"technical_committee"}</td>
+                        <td>{ get_value_field(&148) }</td> // technical_committee
                         <td>{standard_data.technical_committee.clone()}</td>
                       </tr>
                       <tr>
-                        <td>{"publication_at"}</td>
+                        <td>{ get_value_field(&149) }</td> // publication_at
                         <td>{format!("{:.*}", 10, standard_data.publication_at.to_string())}</td>
                       </tr>
                       <tr>
-                        <td>{"standard_status"}</td>
+                        <td>{ get_value_field(&150) }</td> // standard_status
                         <td>{standard_data.standard_status.name.clone()}</td>
                       </tr>
                       <tr>
-                        <td>{"region"}</td>
+                        <td>{ get_value_field(&151) }</td> // region
                         <td>{standard_data.region.region.clone()}</td>
                       </tr>
                     </tbody>
@@ -472,7 +474,7 @@ impl ShowStandard {
     ) -> Html {
         html!{
             <div class="column">
-              <h2 class="has-text-weight-bold">{"Files"}</h2>
+              <h2 class="has-text-weight-bold">{ get_value_field(&153) }</h2> // Files
               <StandardFilesCard
                   show_download_btn = true
                   show_delete_btn = false
@@ -488,7 +490,7 @@ impl ShowStandard {
         standard_data: &StandardInfo,
     ) -> Html {
         html!{<>
-              <h2 class="has-text-weight-bold">{"Specs"}</h2>
+              <h2 class="has-text-weight-bold">{ get_value_field(&104) }</h2> // Specs
               <div class="card column">
                 <SpecsTags
                     show_manage_btn = false
@@ -504,7 +506,7 @@ impl ShowStandard {
         standard_data: &StandardInfo,
     ) -> Html {
         html!{<>
-              <h2 class="has-text-weight-bold">{"Keywords"}</h2>
+              <h2 class="has-text-weight-bold">{ get_value_field(&105) }</h2> // Keywords
               <div class="card column">
                 <KeywordsTags
                     show_delete_btn = false
@@ -553,8 +555,8 @@ impl ShowStandard {
             .callback(|_| Msg::ShowComponentsList);
 
         let (text_btn, classes_btn) = match &self.show_related_components {
-            true => ("Hide components", "button"),
-            false => ("See components", "button is-info is-light"),
+            true => (get_value_field(&295), "button"),
+            false => (get_value_field(&296), "button is-info is-light"),
         };
 
         html!{
@@ -571,7 +573,7 @@ impl ShowStandard {
     ) -> Html {
         html!{<>
             <br/>
-            <h2 class="has-text-weight-bold">{"Components"}</h2>
+            <h2 class="has-text-weight-bold">{ get_value_field(&154) }</h2> // Components
             <div class="card">
               <CatalogComponents
                   show_create_btn = false
@@ -588,7 +590,7 @@ impl ShowStandard {
     //     html!{
     //         <button class="button is-info"
     //             onclick=onclick_download_standard_btn >
-    //           <span class="has-text-weight-bold">{"Download"}</span>
+    //           <span class="has-text-weight-bold">{ get_value_field(&126) }</span>
     //         </button>
     //     }
     // }

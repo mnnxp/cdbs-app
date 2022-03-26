@@ -4,7 +4,7 @@ mod main_view;
 use yew::{Bridged, classes, html, Bridge, Component, ComponentLink, Html, ShouldRender};
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
 use crate::routes::AppRoute;
-use crate::services::get_logged_user;
+use crate::services::{get_logged_user, get_value_field};
 
 use banner::Banner;
 // use main_view::MainView;
@@ -73,13 +73,13 @@ impl Component for Home {
                         </h1>
                         <div class="media">
                             <div class="media-left">
-                                <h2 class="subtitle"> { "engineer" } </h2>
+                                <h2 class="subtitle"> { get_value_field(&1) } </h2>
                             </div>
                             <div class="media-content">
-                                <h2 class="subtitle" style="text-align: center"> { "component" } </h2>
+                                <h2 class="subtitle" style="text-align: center"> { get_value_field(&3) } </h2>
                             </div>
                             <div class="media-right">
-                                <h2 class="subtitle"> { "supplier" } </h2>
+                                <h2 class="subtitle"> { get_value_field(&3) } </h2>
                             </div>
                         </div>
                     </div>

@@ -16,6 +16,7 @@ use crate::fragments::{
     list_errors::ListErrors,
     component::param::RegisterParamnameBlock,
 };
+use crate::services::get_value_field;
 use crate::types::{UUID, Param, ParamValue};
 
 #[derive(GraphQLQuery)]
@@ -399,8 +400,8 @@ impl ModificationTableItem {
         };
 
         let (double_click_text, double_click_icon) = match &self.props.show_manage_btn {
-            true => ("edit", "fas fa-pencil-ruler"),
-            false => ("info", "fas fa-info"),
+            true => (get_value_field(&127), "fas fa-pencil-ruler"), // edit
+            false => (get_value_field(&128), "fas fa-info"), // info
         };
 
         html!{<tr class={class_style}>
@@ -414,7 +415,7 @@ impl ModificationTableItem {
                             </span>
                         </>},
                         false => html!{<>
-                            <span>{"select"}</span>
+                            <span>{ get_value_field(&129) }</span> // select
                             <span class="icon is-small">
                                 <i class="far fa-hand-pointer" aria-hidden="true"></i>
                             </span>
@@ -511,7 +512,7 @@ impl ModificationTableItem {
           <div class="card">
             <div class="modal-content">
                 <header class="modal-card-head">
-                    <p class="modal-card-title">{"Add new parameter name"}</p>
+                    <p class="modal-card-title">{ get_value_field(&130) }</p> // Add new parameter name
                     <button class="delete" aria-label="close" onclick=onclick_close_param_card />
                 </header>
                 <div class="box itemBox">
@@ -549,19 +550,19 @@ impl ModificationTableItem {
           <div class="card">
             <div class="modal-content">
                 <header class="modal-card-head">
-                    <p class="modal-card-title">{"Add a parameter to modification"}</p>
+                    <p class="modal-card-title">{ get_value_field(&131) }</p> // Add a parameter to modification
                     <button class="delete" aria-label="close" onclick=onclick_close_add_param />
                 </header>
                 <div class="box itemBox">
                   <article class="media center-media">
                       <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
                       <div class="media-content">
-                          <label class="label">{"Set a value"}</label>
+                          <label class="label">{ get_value_field(&133) }</label> // Set a value
                           <input
                               id="change-modification-param-value"
                               class="input is-fullwidth"
                               type="text"
-                              placeholder={"enter a value"}
+                              placeholder={ get_value_field(&133) }
                               value={self.request_add_param.value.clone()}
                               oninput=oninput_param_value />
                       <br/>
@@ -570,7 +571,7 @@ impl ModificationTableItem {
                           class="button is-fullwidth"
                           disabled={!self.update_add_param}
                           onclick={onclick_param_add} >
-                          {"Add"}
+                          { get_value_field(&117) }
                       </button>
                     </div>
                   </article>
@@ -605,19 +606,19 @@ impl ModificationTableItem {
           <div class="card">
             <div class="modal-content">
                 <header class="modal-card-head">
-                    <p class="modal-card-title">{"Change the value"}</p>
+                    <p class="modal-card-title">{ get_value_field(&132) }</p> // Change the value
                     <button class="delete" aria-label="close" onclick=onclick_edit_param_card />
                 </header>
                 <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
                 <div class="box itemBox">
                   <article class="media center-media">
                       <div class="media-content">
-                          <label class="label">{"Change value"}</label>
+                          <label class="label">{ get_value_field(&134) }</label> // Change value
                           <input
                               id="change-modification-param-value"
                               class="input is-fullwidth"
                               type="text"
-                              placeholder={"enter a value"}
+                              placeholder={ get_value_field(&134) }
                               value={self.request_edit_param.value.clone()}
                               oninput=oninput_param_value />
                       <br/>
@@ -627,7 +628,7 @@ impl ModificationTableItem {
                                   id="delete-modification-param"
                                   class="button is-danger is-fullwidth"
                                   onclick={onclick_delete_param} >
-                                  {"Delete"}
+                                  { get_value_field(&135) }
                               </button>
                           </div>
                           <div class="column">
@@ -636,7 +637,7 @@ impl ModificationTableItem {
                                   class="button is-fullwidth"
                                   disabled={!self.update_edit_param}
                                   onclick={onclick_param_update} >
-                                  {"Update"}
+                                  { get_value_field(&46) }
                               </button>
                           </div>
                       </div>

@@ -17,6 +17,7 @@ use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
 use crate::gqls::make_query;
 use crate::types::{UUID, ShowFileInfo};
+use crate::services::get_value_field;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -139,12 +140,12 @@ impl FilesOfFilesetCard {
             <table class="table is-fullwidth is-striped">
               <thead>
                 <tr>
-                  <th>{"Filename"}</th>
-                  // <th>{"Content"}</th>
-                  <th>{"Filesize"}</th>
-                  <th>{"Program"}</th>
-                  <th>{"Upload by"}</th>
-                  <th>{"Upload at"}</th>
+                  <th>{ get_value_field(&120) }</th> // Filename
+                  // <th>{ get_value_field(&121) }</th> // Content
+                  <th>{ get_value_field(&122) }</th> // Filesize
+                  <th>{ get_value_field(&26) }</th> // Program
+                  <th>{ get_value_field(&124) }</th> // Upload by
+                  <th>{ get_value_field(&125) }</th> // Upload at
                 </tr>
               </thead>
               <tfoot>

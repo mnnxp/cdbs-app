@@ -14,6 +14,7 @@ use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
 use crate::gqls::make_query;
 use crate::types::{UUID, Supplier, ShowCompanyShort};
+use crate::services::get_value_field;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -249,11 +250,11 @@ impl ComponentSuppliersCard {
         html!{<div class="card column">
           <table class="table is-fullwidth">
             <tbody>
-               <th>{"Company"}</th>
-               <th>{"Description"}</th>
-               <th>{"Action"}</th>
+               <th>{ get_value_field(&109) }</th> // Company
+               <th>{ get_value_field(&61) }</th> // Description
+               <th>{ get_value_field(&111) }</th> // Action
                {match self.props.show_delete_btn {
-                   true => html!{<th>{"Delete"}</th>},
+                   true => html!{<th>{ get_value_field(&135) }</th>}, // Delete
                    false => html!{},
                }}
                {for self.component_suppliers.iter().map(|data| {
@@ -280,7 +281,7 @@ impl ComponentSuppliersCard {
               <span class="icon" >
                   <i class="fas fa-plus" aria-hidden="true"></i>
               </span>
-              <span>{"Add supplier for component"}</span>
+              <span>{ get_value_field(&166) }</span> // Add supplier for component
           </button>
         </div>}
     }
@@ -312,11 +313,11 @@ impl ComponentSuppliersCard {
                 <div class="modal-content">
                   <div class="card">
                     <header class="modal-card-head">
-                      <p class="modal-card-title">{"Set owner supplier"}</p>
+                      <p class="modal-card-title">{ get_value_field(&167) }</p> // Set owner supplier
                       <button class="delete" aria-label="close" onclick=onclick_hide_modal.clone() />
                     </header>
                     <section class="modal-card-body">
-                        <label class="label">{"Select supplier"}</label>
+                        <label class="label">{ get_value_field(&168) }</label> // Select supplier
                         <div class="select">
                           <select
                               id="set-main-supplier"
@@ -334,12 +335,12 @@ impl ComponentSuppliersCard {
                           </select>
                         </div>
                         <br/>
-                        <label class="label">{"Supplier description"}</label>
+                        <label class="label">{ get_value_field(&169) }</label> // Supplier description
                         <textarea
                             id="update-description"
                             class="textarea"
                             type="text"
-                            placeholder="description for supplier"
+                            placeholder=get_value_field(&169)
                             value={self.request_set_supplier_description.clone()}
                             oninput=oninput_supplier_description
                             />
@@ -349,7 +350,7 @@ impl ComponentSuppliersCard {
                             class="button is-fullwidth"
                             disabled={self.request_set_supplier_uuid.is_empty()}
                             onclick={onclick_set_owner_supplier} >
-                            {"Change"}
+                            { get_value_field(&210) } // Apply
                         </button>
                     </section>
                   </div>
@@ -385,11 +386,11 @@ impl ComponentSuppliersCard {
                 <div class="modal-content">
                   <div class="card">
                     <header class="modal-card-head">
-                      <p class="modal-card-title">{"Add a supplier for a component"}</p>
+                      <p class="modal-card-title">{ get_value_field(&123) }</p> // Add a supplier for the component
                       <button class="delete" aria-label="close" onclick=onclick_hide_modal.clone() />
                     </header>
                     <section class="modal-card-body">
-                        <label class="label">{"Select a supplier"}</label>
+                        <label class="label">{ get_value_field(&79) }</label> // Select a supplier
                         <div class="select">
                           <select
                               id="set-main-supplier"
@@ -412,7 +413,7 @@ impl ComponentSuppliersCard {
                         class="textarea"
                         // rows="10"
                         type="text"
-                        placeholder="description for supplier"
+                        placeholder=get_value_field(&169)
                         value={self.request_set_supplier_description.clone()}
                         oninput=oninput_supplier_description
                         />
@@ -421,7 +422,7 @@ impl ComponentSuppliersCard {
                         class="button is-fullwidth"
                         disabled={self.request_set_supplier_uuid.is_empty()}
                         onclick={onclick_add_supplier} >
-                        {"Add"}
+                        { get_value_field(&117) } // Add
                     </button>
                   </div>
                 </div>

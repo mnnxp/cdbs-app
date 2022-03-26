@@ -9,6 +9,7 @@ use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
 use crate::gqls::make_query;
 use crate::types::{UUID, DownloadFile};
+use crate::services::get_value_field;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -219,7 +220,7 @@ impl ManageFilesOfFilesetBlock {
             <button class=class_download_btn
                 disabled = self.select_fileset_uuid.len() != 36
                 onclick=onclick_download_fileset_btn >
-              <span class="has-text-weight-bold">{"Download"}</span>
+              <span class="has-text-weight-bold">{ get_value_field(&126) }</span>
             </button>
         </div>}
     }
@@ -238,7 +239,7 @@ impl ManageFilesOfFilesetBlock {
             <div class="card">
               <div class="modal-content">
                 <header class="modal-card-head">
-                    <p class="modal-card-title">{"Temp solution for download files"}</p>
+                    <p class="modal-card-title">{ get_value_field(&138) }</p> // Temp solution for download files
                     <button class="delete" aria-label="close" onclick=onclick_modal_download_btn.clone() />
                 </header>
                 <div class="box itemBox">
@@ -247,9 +248,9 @@ impl ManageFilesOfFilesetBlock {
                           <table class="table is-fullwidth">
                               <thead>
                                 <tr>
-                                  <th>{"Filename"}</th>
-                                  <th>{"Filesize"}</th>
-                                  <th>{"Download"}</th>
+                                  <th>{ get_value_field(&120) }</th>
+                                  <th>{ get_value_field(&122) }</th>
+                                  <th>{ get_value_field(&126) }</th>
                                 </tr>
                               </thead>
                             <tbody>

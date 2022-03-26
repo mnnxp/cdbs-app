@@ -1,5 +1,6 @@
 use yew::prelude::*;
 use crate::types::CompanyRepresentInfo;
+use crate::services::get_value_field;
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
@@ -59,7 +60,7 @@ impl ListItem {
             <article class="media center-media">
               // <div class="media-left">
               //   <figure class="image is-96x96">
-              //     // <div hidden={!is_supplier} class="top-tag" >{"supplier"}</div>
+              //     // <div hidden={!is_supplier} class="top-tag" >{ get_value_field(&3) }</div> // supplier
               //     <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
               //     // <img src={image_file.download_url.to_string()} alt="Favicon profile"/>
               //   </figure>
@@ -69,16 +70,17 @@ impl ListItem {
                   <p>
                   <div style="margin-bottom:0" >
                       <span class="title is-5">{name.to_string()}</span>
-                      {" from "} <span class="id-box has-text-grey-light has-text-weight-bold">{region.region.to_string()}</span>
+                      { get_value_field(&231) }
+                      <span class="id-box has-text-grey-light has-text-weight-bold">{region.region.to_string()}</span>
                     </div>
-                    {format!("address: {}", address.to_string())}
+                    {format!("{}: {}", get_value_field(&232), address)}
                   </p>
                 </div>
               </div>
               <div class="overflow-title media-right overflow-title">
-                  {format!("representation type: {}", representation_type.representation_type.to_string())}
+                  {format!("{}: {}", get_value_field(&235), representation_type.representation_type)}
                   <br/>
-                  {format!("phone: {}", phone.to_string())}
+                  {format!("{}: {}", get_value_field(&234), phone)}
               </div>
             </article>
           </div>
@@ -101,22 +103,23 @@ impl ListItem {
           <div class="boxItem" >
             <div class="innerBox" >
               // <div class="imgBox" >
-              //   // <div class="top-tag" hidden={!is_supplier} >{"supplier"}</div>
+              //   // <div class="top-tag" hidden={!is_supplier} >{ get_value_field(&3) }</div> // supplier
               //   <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
               //   // <img src={image_file.download_url.to_string()} alt="Favicon profile"/>
               // </div>
               <div style="margin-bottom:0" >
                   <span class="title is-5">{name.to_string()}</span>
-                  {" from "} <span class="id-box has-text-grey-light has-text-weight-bold">{region.region.to_string()}</span>
+                  { get_value_field(&231) }
+                  <span class="id-box has-text-grey-light has-text-weight-bold">{region.region.to_string()}</span>
               </div>
               <div class="overflow-title">{
-                  format!("address: {}", address.to_string())
+                  format!("{}: {}", get_value_field(&232), address)
               }</div>
               <div class="overflow-title">{
-                  format!("type: {}", representation_type.representation_type.to_string())
+                  format!("{}: {}", get_value_field(&233), representation_type.representation_type)
               }</div>
               <div class="overflow-title has-text-weight-bold">{
-                  format!("phone: {}", phone.to_string())
+                  format!("{}: {}", get_value_field(&234), phone)
               }</div>
             </div>
           </div>
