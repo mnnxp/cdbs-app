@@ -8,6 +8,7 @@ use yew_router::{
 };
 use crate::routes::AppRoute;
 use crate::fragments::switch_icon::res_btn;
+use crate::services::get_value_field;
 use super::ShowUserShort;
 
 pub enum Msg {
@@ -94,7 +95,7 @@ impl ListItemUser {
                 <button
                       class="button is-light is-fullwidth has-text-weight-bold"
                       onclick=onclick_open_profile >
-                    {"Show profile"}
+                    { get_value_field(&261) }
                 </button>
             },
         }

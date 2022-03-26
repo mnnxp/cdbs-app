@@ -10,7 +10,7 @@ use chrono::NaiveDateTime;
 use web_sys::FileList;
 
 use super::ModificationFileItem;
-use crate::services::{PutUploadFile, UploadData};
+use crate::services::{PutUploadFile, UploadData, get_value_field};
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
 use crate::gqls::make_query;
@@ -325,11 +325,11 @@ impl Component for ManageModificationFilesCard {
             <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
             <div class="columns">
                 <div class="column">
-                  <h2>{"Files for modification"}</h2>
+                  <h2>{ get_value_field(&203) }</h2> // Files for modification
                   {self.show_files_list()}
                 </div>
                 <div class="column">
-                  <h2>{"Upload modification files"}</h2>
+                  <h2>{ get_value_field(&202) }</h2> // Upload modification files
                   {self.show_frame_upload_files()}
                 </div>
             </div>
@@ -350,7 +350,7 @@ impl ManageModificationFilesCard {
                 }
             })}
             {match self.files_list.len() {
-                0 => html!{<span>{"Files not found"}</span>},
+                0 => html!{<span>{ get_value_field(&204) }</span>},
                 0..=3 => html!{},
                 _ => self.show_see_btn(),
             }}
@@ -386,12 +386,12 @@ impl ManageModificationFilesCard {
             true => html!{<>
               <button class="button is-white"
                   onclick=show_full_files_btn
-                >{"See less"}</button>
+                >{ get_value_field(&99) }</button>
             </>},
             false => html!{<>
               <button class="button is-white"
                   onclick=show_full_files_btn
-                >{"See more"}</button>
+                >{ get_value_field(&98) }</button>
             </>},
         }
     }
@@ -419,11 +419,11 @@ impl ManageModificationFilesCard {
                     <i class="fas fa-upload"></i>
                   </span>
                   <span class="file-label">
-                    {"Choose modification files…"}
+                    { get_value_field(&201) } // Choose modification files…
                   </span>
                 </span>
                 {match self.files.is_empty() {
-                    true => html!{<span class="file-name">{"No file uploaded"}</span>},
+                    true => html!{<span class="file-name">{ get_value_field(&194) }</span>}, // No file uploaded
                     false => html!{for self.files.iter().map(|f| html!{
                         <span class="file-name">{f.name().clone()}</span>
                     })}
@@ -448,7 +448,7 @@ impl ManageModificationFilesCard {
                 // <span class="icon" >
                 //     <i class="fas fa-boom" aria-hidden="true"></i>
                 // </span>
-                <span>{"Clear"}</span>
+                <span>{ get_value_field(&88) }</span>
             </button>
         }
     }
@@ -470,7 +470,7 @@ impl ManageModificationFilesCard {
                 // <span class="icon" >
                 //     <i class="fas fa-angle-double-up" aria-hidden="true"></i>
                 // </span>
-                <span>{"Upload"}</span>
+                <span>{ get_value_field(&87) }</span>
             </button>
         }
     }

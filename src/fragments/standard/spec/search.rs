@@ -12,6 +12,7 @@ use crate::gqls::make_query;
 // use crate::error::{get_error, Error};
 use crate::fragments::standard::{SpecsTags, SpecTagItem};
 use crate::types::{Spec, SpecPathInfo, UUID};
+use crate::services::get_value_field;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -242,7 +243,7 @@ impl SearchSpecsTags {
                     oninput=self.link.callback(|ev: InputData| Msg::SetIptTimer(ev.value))
                     class="input"
                     type="text"
-                    placeholder="Enter data for specifications search"
+                    placeholder=get_value_field(&192) // Enter data for specifications search
                   />
                 <span class="icon is-left">
                   <i class="fas fa-search" aria-hidden="true"></i>

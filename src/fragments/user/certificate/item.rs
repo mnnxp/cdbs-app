@@ -9,7 +9,7 @@ use crate::gqls::make_query;
 
 use crate::fragments::list_errors::ListErrors;
 use crate::error::{Error, get_error};
-use crate::services::image_detector;
+use crate::services::{image_detector, get_value_field};
 use crate::types::{UUID, UserCertificate};
 
 #[derive(GraphQLQuery)]
@@ -199,7 +199,7 @@ impl UserCertificateItem {
                   </div>
                   <div class="media-content" style="margin-right: 1rem;">
                     <div class="block" style="overflow-wrap: anywhere">
-                        <span class="overflow-title has-text-weight-bold">{"Filename: "}</span>
+                        <span class="overflow-title has-text-weight-bold">{ get_value_field(&262) }</span>
                         <span class="overflow-title">{self.props.certificate.file.filename.clone()}</span>
                     </div>
                     {self.show_update_block()}
@@ -208,7 +208,7 @@ impl UserCertificateItem {
                       <button id={"delete-cert"}
                           class="button is-danger is-fullwidth has-text-weight-bold"
                           onclick=onclick_delete_cert>
-                          { "Delete" }
+                          { get_value_field(&135) }
                       </button>
                       {self.show_download_btn()}
                     </div>
@@ -252,8 +252,8 @@ impl UserCertificateItem {
     fn show_delete_certificate(&self) -> Html {
         html!{<div class="card">
             <div class="message is-success">
-              <div class="message-header">{ "Success" }</div>
-              <div class="message-body">{"This certificate removed!"}</div>
+              <div class="message-header">{ get_value_field(&89) }</div>
+              <div class="message-body">{ get_value_field(&263) }</div>
             </div>
         </div>}
     }
@@ -262,7 +262,7 @@ impl UserCertificateItem {
         match self.get_result_update {
             true => html!{<div class="column">
                 <span id="remove-profile" class="tag is-info is-light">
-                    {"Description updated!"}
+                    { get_value_field(&140) }
                 </span>
             </div>},
             false => html!{},
@@ -299,7 +299,7 @@ impl UserCertificateItem {
         html!{<div class="block">
             <div class="columns" style="margin-bottom: 0px">
                 <div class="column">
-                    <label class="label">{"Description"}</label>
+                    <label class="label">{ get_value_field(&61) }</label>
                 </div>
                 {self.show_update_description()}
             </div>
@@ -309,7 +309,7 @@ impl UserCertificateItem {
                         id={"cert-description"}
                         class="input"
                         type="text"
-                        placeholder="certificate description"
+                        placeholder=get_value_field(&61)
                         value={ self.request_update.to_string() }
                         oninput=oninput_cert_description />
                 </div>
@@ -317,7 +317,7 @@ impl UserCertificateItem {
                     <button id={"change-cert"}
                         class="button is-light is-fullwidth has-text-weight-bold"
                         onclick=onclick_change_cert>
-                        { "Update" }
+                        { get_value_field(&46) }
                     </button>
                 </div>
             </div>
@@ -330,7 +330,7 @@ impl UserCertificateItem {
                 class="button is-light is-fullwidth has-text-weight-bold"
                 href={ self.props.certificate.file.download_url.clone() }
                 download={ self.props.certificate.file.filename.clone() }>
-                { "Download" }
+                { get_value_field(&126) }
             </button>},
             false => html!{},
         }

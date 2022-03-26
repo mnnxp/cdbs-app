@@ -8,6 +8,7 @@ use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
 use crate::gqls::make_query;
 use crate::types::{UUID, ShowFileInfo, DownloadFile};
+use crate::services::get_value_field;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -187,7 +188,7 @@ impl ComponentFileItem {
             true => match self.download_url.is_empty() {
                 true => html!{
                     <button class="button is-ghost" onclick=onclick_download_btn>
-                      <span>{"Get link"}</span>
+                      <span>{ get_value_field(&137) }</span>
                     </button>
                 },
                 false => html!{
@@ -235,19 +236,19 @@ impl ComponentFileItem {
                     <table class="table is-fullwidth">
                       <tbody>
                         <tr>
-                          <td>{"Filename:"}</td>
+                          <td>{ get_value_field(&236) }</td>
                           <td>{self.props.file.filename.clone()}</td>
                         </tr>
                         <tr>
-                          <td>{"Content type:"}</td>
+                          <td>{ get_value_field(&237) }</td>
                           <td>{self.props.file.content_type.clone()}</td>
                         </tr>
                         <tr>
-                          <td>{"Filesize:"}</td>
+                          <td>{ get_value_field(&238) }</td>
                           <td>{self.props.file.filesize.clone()}</td>
                         </tr>
                         <tr>
-                          <td>{"Program:"}</td>
+                          <td>{ get_value_field(&239) }</td>
                           <td>{self.props.file.program.name.clone()}</td>
                         </tr>
                         // <tr>
@@ -255,7 +256,7 @@ impl ComponentFileItem {
                         //   <td>{self.props.file.parent_file_uuid.clone()}</td>
                         // </tr>
                         <tr>
-                          <td>{"Upload by:"}</td>
+                          <td>{ get_value_field(&240) }</td>
                           <td>{format!("{} {} (@{})",
                             self.props.file.owner_user.firstname.clone(),
                             self.props.file.owner_user.lastname.clone(),
@@ -263,11 +264,11 @@ impl ComponentFileItem {
                           )}</td>
                         </tr>
                         // <tr>
-                        //   <td>{"Created at:"}</td>
+                        //   <td>{ get_value_field(&242) }</td>
                         //   <td>{format!("{:.*}", 19, self.props.file.created_at.to_string())}</td>
                         // </tr>
                         <tr>
-                          <td>{"Upload at:"}</td>
+                          <td>{ get_value_field(&241) }</td>
                           <td>{format!("{:.*}", 19, self.props.file.updated_at.to_string())}</td>
                         </tr>
                       </tbody>

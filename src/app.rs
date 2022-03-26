@@ -25,7 +25,7 @@ use crate::routes::{
     standard::{ShowStandard, StandardSettings, CreateStandard},
     AppRoute,
 };
-use crate::services::{is_authenticated, get_current_user};
+use crate::services::{is_authenticated, get_current_user, get_value_field};
 use crate::types::SlimUser;
 
 /// The root app component
@@ -157,7 +157,7 @@ impl Component for App {
                         }
                     } else {
                         // 404 when route matches no component
-                        html!{ "No child component available" }
+                        html!{ get_value_field(&294) }
                     }
                 }
                 <Footer />

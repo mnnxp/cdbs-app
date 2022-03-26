@@ -11,6 +11,7 @@ use crate::error::{get_error, Error};
 use crate::gqls::make_query;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, ComponentParam};
+use crate::services::get_value_field;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -233,17 +234,17 @@ impl ComponentParamTag {
                 <div class="modal-content">
                   <div class="card">
                     <header class="modal-card-head">
-                      <p class="modal-card-title">{"Changing the parameter value"}</p>
+                      <p class="modal-card-title">{ get_value_field(&211) }</p> // Changing the parameter value
                       <button class="delete" aria-label="close" onclick=onclick_hide_modal.clone() />
                     </header>
                     <section class="modal-card-body">
                         <div class="column">
-                            <label class="label">{"Set value"}</label>
+                            <label class="label">{ get_value_field(&133) }</label> // Set a value
                             <input
                                 id="param-value"
                                 class="input is-fullwidth"
                                 type="text"
-                                placeholder="paramname value"
+                                placeholder=get_value_field(&133)
                                 value={self.request_set_param_value.clone()}
                                 oninput=oninput_set_param_value
                                 />
@@ -255,7 +256,7 @@ impl ComponentParamTag {
                                 disabled={self.request_set_param_value.is_empty() ||
                                     self.current_param_value == self.request_set_param_value}
                                 onclick={onclick_change_param_value} >
-                                {"Change"}
+                                { get_value_field(&59) } // Change
                             </button>
                         </div>
                       </section>

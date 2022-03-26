@@ -9,7 +9,7 @@ use chrono::NaiveDateTime;
 use web_sys::FileList;
 
 use super::FilesetFilesBlock;
-use crate::services::{PutUploadFile, UploadData};
+use crate::services::{PutUploadFile, UploadData, get_value_field};
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
 use crate::gqls::make_query;
@@ -524,11 +524,11 @@ impl Component for ManageModificationFilesets {
             // <br/>
             <div class="columns">
                 <div class="column">
-                    <h2>{"Files of fileset"}</h2>
+                    <h2>{ get_value_field(&198) }</h2> // Files of fileset
                     {self.show_fileset_files()}
                 </div>
                 <div class="column">
-                    <h2>{"Upload files for fileset"}</h2>
+                    <h2>{ get_value_field(&197) }</h2> // Upload files for fileset
                     {self.show_frame_upload_files()}
                 </div>
             </div>
@@ -576,7 +576,7 @@ impl ManageModificationFilesets {
                         <span class="icon" >
                             <i class="fa fa-trash" aria-hidden="true"></i>
                         </span>
-                        <span>{"Delete"}</span>
+                        <span>{ get_value_field(&135) }</span>
                     </button>
                     <button
                       id="add-modification-fileset"
@@ -586,7 +586,7 @@ impl ManageModificationFilesets {
                         <span class="icon" >
                             <i class="fas fa-plus" aria-hidden="true"></i>
                         </span>
-                        <span>{"Add fileset"}</span>
+                        <span>{ get_value_field(&196) }</span> // Add fileset
                     </button>
                 </div>
             </div>
@@ -614,13 +614,13 @@ impl ManageModificationFilesets {
             <div class="card">
               <div class="modal-content">
                 <header class="modal-card-head">
-                    <p class="modal-card-title">{"Create new fileset"}</p>
+                    <p class="modal-card-title">{ get_value_field(&206) }</p> // Create new fileset
                     <button class="delete" aria-label="close" onclick=onclick_new_fileset_card.clone() />
                 </header>
                 <div class="box itemBox">
                   <article class="media center-media">
                       <div class="media-content">
-                      <label class="label">{"Program for fileset"}</label>
+                      <label class="label">{ get_value_field(&207) }</label> // Program for fileset
                       <div class="select">
                           <select
                               id="set-fileset-program"
@@ -643,7 +643,7 @@ impl ManageModificationFilesets {
                           class="button"
                           disabled={self.props.select_modification_uuid.is_empty()}
                           onclick={onclick_add_fileset_btn} >
-                          {"Add"}
+                          { get_value_field(&117) }
                       </button>
                     </div>
                   </article>
@@ -687,11 +687,11 @@ impl ManageModificationFilesets {
                     <i class="fas fa-upload"></i>
                   </span>
                   <span class="file-label">
-                    {"Choose fileset files…"}
+                    { get_value_field(&195) } // Choose fileset files…
                   </span>
                 </span>
                 {match self.files.is_empty() {
-                    true => html!{<span class="file-name">{"No file uploaded"}</span>},
+                    true => html!{<span class="file-name">{ get_value_field(&194) }</span>}, // No file uploaded
                     false => html!{for self.files.iter().map(|f| html!{
                         <span class="file-name">{f.name().clone()}</span>
                     })}
@@ -716,7 +716,7 @@ impl ManageModificationFilesets {
                 // <span class="icon" >
                 //     <i class="fas fa-boom" aria-hidden="true"></i>
                 // </span>
-                <span>{"Clear"}</span>
+                <span>{ get_value_field(&88) }</span>
             </button>
         }
     }
@@ -738,7 +738,7 @@ impl ManageModificationFilesets {
                 // <span class="icon" >
                 //     <i class="fas fa-angle-double-up" aria-hidden="true"></i>
                 // </span>
-                <span>{"Upload"}</span>
+                <span>{ get_value_field(&87) }</span>
             </button>
         }
     }

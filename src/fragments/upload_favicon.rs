@@ -13,7 +13,7 @@ use crate::gqls::make_query;
 
 use crate::fragments::list_errors::ListErrors;
 use crate::error::{Error, get_error};
-use crate::services::{PutUploadFile, UploadData};
+use crate::services::{PutUploadFile, UploadData, get_value_field};
 use crate::types::{UUID, UploadFile};
 
 type FileName = String;
@@ -309,18 +309,18 @@ impl UpdateFaviconBlock {
                           <span class="file-icon">
                             <i class="fas fa-upload"></i>
                           </span>
-                          <span class="file-label">{"Drop favicon file here"}</span>
+                          <span class="file-label">{ get_value_field(&93) }</span>
                         </span>
                       </label>
                     </div>
                 </div>
                 <div class="column">
                     <div class="has-text-grey-light" style="overflow-wrap: anywhere">
-                        {"It is recommended to upload the favicon in image format."}
+                        { get_value_field(&91) }
                     </div>
                     <br/>
                     <div id="select-file" style="overflow-wrap: anywhere">
-                        <span>{"Select file: "}</span>
+                        <span>{ get_value_field(&85) }</span>
                         <span class="overflow-title has-text-weight-bold">
                             {self.file.as_ref()
                                 .map(|f| f.name().to_string())
@@ -346,7 +346,7 @@ impl UpdateFaviconBlock {
                   class={class_upload_btn}
                   onclick=onclick_upload_favicon
                   disabled={self.dis_upload_btn} >
-                { "Upload" }
+                { get_value_field(&87) }
             </a>
         }
     }
@@ -362,7 +362,7 @@ impl UpdateFaviconBlock {
                   class="button"
                   onclick=onclick_clear_boxed
                   disabled={self.dis_upload_btn} >
-                { "Clear" }
+                { get_value_field(&88) }
             </a>
         }
     }
@@ -371,10 +371,10 @@ impl UpdateFaviconBlock {
         html!{
             <article class="message is-success">
               <div class="message-header">
-                <p>{ "Success" }</p>
+                <p>{ get_value_field(&88) }</p>
               </div>
               <div class="message-body">
-                { "This favicon upload!" }
+                { get_value_field(&92) }
               </div>
             </article>
         }

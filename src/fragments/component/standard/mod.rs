@@ -15,6 +15,7 @@ use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
 use crate::gqls::make_query;
 use crate::types::{UUID, ShowStandardShort};
+use crate::services::get_value_field;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -245,11 +246,11 @@ impl ComponentStandardsCard {
         html!{<div class="card column">
           <table class="table is-fullwidth">
             <tbody>
-               <th>{"Classifier"}</th>
-               <th>{"Specified tolerance"}</th>
-               <th>{"Action"}</th>
+               <th>{ get_value_field(&112) }</th> // Classifier
+               <th>{ get_value_field(&113) }</th> // Specified tolerance
+               <th>{ get_value_field(&111) }</th> // Action
                {match self.props.show_delete_btn {
-                   true => html!{<th>{"Delete"}</th>},
+                   true => html!{<th>{ get_value_field(&135) }</th>},
                    false => html!{},
                }}
                {for self.component_standards.iter().map(|data| {
@@ -273,7 +274,7 @@ impl ComponentStandardsCard {
               <span class="icon" >
                   <i class="fas fa-plus" aria-hidden="true"></i>
               </span>
-              <span>{"Add a standard to a component"}</span>
+              <span>{ get_value_field(&191) }</span> // Add a standard to a component
           </button>
         </div>}
     }
@@ -302,12 +303,12 @@ impl ComponentStandardsCard {
                 <div class="modal-content">
                   <div class="card">
                     <header class="modal-card-head">
-                      <p class="modal-card-title">{"Add a standard to a component"}</p>
+                      <p class="modal-card-title">{ get_value_field(&191) }</p> // Add a standard to a component
                       <button class="delete" aria-label="close" onclick=onclick_hide_modal.clone() />
                     </header>
                     <section class="modal-card-body">
-                        <label class="label">{"Select standard"}</label>
-                        <div class="columns">
+                        <label class="label">{ get_value_field(&212) }</label> // Select standard
+                        // <div class="columns">
                             <div class="column">
                                 <div class="select">
                                   <select
@@ -332,10 +333,10 @@ impl ComponentStandardsCard {
                                     class="button is-fullwidth"
                                     disabled={self.request_add_standard_uuid.is_empty()}
                                     onclick={onclick_add_standard} >
-                                    {"Add"}
+                                    { get_value_field(&117) }
                                 </button>
                             </div>
-                        </div>
+                        // </div>
                     </section>
                   </div>
                 </div>

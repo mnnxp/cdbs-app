@@ -7,6 +7,7 @@ use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
 // use log::debug;
 // use crate::error::{get_error, Error};
 use crate::types::{UUID, ShowFileInfo};
+use crate::services::get_value_field;
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
@@ -78,7 +79,7 @@ impl Component for ComponentFilesBlock {
                 }
             })}
             {match self.props.files.len() {
-                0 => html!{<span>{"Files not found"}</span>},
+                0 => html!{<span>{ get_value_field(&204) }</span>},
                 0..=3 => html!{},
                 _ => self.show_see_btn(),
             }}
@@ -116,12 +117,12 @@ impl ComponentFilesBlock {
             true => html!{<>
               <button class="button is-white"
                   onclick=show_full_files_btn
-                >{"See less"}</button>
+                >{ get_value_field(&99) }</button>
             </>},
             false => html!{<>
               <button class="button is-white"
                   onclick=show_full_files_btn
-                >{"See more"}</button>
+                >{ get_value_field(&98) }</button>
             </>},
         }
     }

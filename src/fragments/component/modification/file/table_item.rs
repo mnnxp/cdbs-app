@@ -9,6 +9,7 @@ use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
 use crate::gqls::make_query;
 use crate::types::{UUID, ShowFileInfo, DownloadFile};
+use crate::services::get_value_field;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -142,7 +143,7 @@ impl ModificationFileListItem {
         match self.download_url.is_empty() {
             true => html!{<td>
                 <button class="button is-ghost" onclick=onclick_download_btn>
-                  <span>{"Get link"}</span>
+                  <span>{ get_value_field(&137) }</span>
                 </button>
             </td>},
             false => html!{<td>

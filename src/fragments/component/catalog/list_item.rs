@@ -5,7 +5,7 @@ use yew_router::{
 };
 use graphql_client::GraphQLQuery;
 // use log::debug;
-
+use crate::services::get_value_field;
 use crate::routes::AppRoute;
 use crate::fragments::switch_icon::res_btn;
 use crate::types::{ShowComponentShort, UUID};
@@ -130,7 +130,7 @@ impl ListItem {
             <article class="media center-media">
               <div class="media-left">
                 <figure class="image is-96x96">
-                  <div hidden={!is_base} class="top-tag" >{"standard"}</div>
+                  <div hidden={!is_base} class="top-tag" >{ get_value_field(&157) }</div> // standard
                   <img src={image_file.download_url.clone()} alt="Image" />
                 </figure>
               </div>
@@ -139,13 +139,13 @@ impl ListItem {
                     <div class="column">
                         {match component_suppliers.first() {
                             Some(x) => html!{<>
-                                {"supplier "}
+                                { get_value_field(&158) } // supplier
                                 <span class="id-box has-text-grey-light has-text-weight-bold">
                                   {x.supplier.shortname.clone()}
                                 </span>
                             </>},
                             None => html!{<>
-                                {"uploaded from "}
+                                { get_value_field(&94) }
                                 <span class="id-box has-text-grey-light has-text-weight-bold">
                                   {format!("@{}",&owner_user.username)}
                                 </span>
@@ -153,9 +153,10 @@ impl ListItem {
                         }}
                     </div>
                     <div class="column">
-                        {"actual status "}<span class="id-box has-text-grey-light has-text-weight-bold">{
-                            actual_status.name.clone()
-                        }</span>
+                        { get_value_field(&159) } // actual status
+                        <span class="id-box has-text-grey-light has-text-weight-bold">
+                            {actual_status.name.clone()}
+                        </span>
                     </div>
                   </div>
                   <div class="columns" style="margin-bottom:0">
@@ -183,7 +184,7 @@ impl ListItem {
                       <div class="column">
                         // {format!("Component type: {}", component_type.component_type.to_string())}
                         {match licenses.first() {
-                            Some(l) => html!{format!("License: {}", &l.name)},
+                            Some(l) => html!{format!("{}: {}", get_value_field(&162), &l.name)}, // License
                             None => html!{},
                         }}
                         // <div class="tags">
@@ -193,7 +194,7 @@ impl ListItem {
                         // </div>
                       </div>
                       <div class="column">
-                        {format!("Updated at: {:.*}", 10, updated_at.to_string())}
+                        {format!("{} {:.*}", get_value_field(&161), 10, updated_at.to_string())}
                       </div>
                   </div>
                 </div>
@@ -210,6 +211,12 @@ impl ListItem {
             name,
             ..
         } = self.props.data.clone();
+
+        let component_supplier = self.props.data.component_suppliers
+            .first()
+            .map(|s| s.supplier.shortname.clone())
+            .unwrap_or_default();
+
         let onclick_open_component = self.link
             .callback(|_| Msg::OpenComponent);
 
@@ -231,17 +238,18 @@ impl ListItem {
           <div class="boxItem" >
             <div class="innerBox" >
               <div class="imgBox" >
-                <div class="top-tag" hidden={!is_base} >{"standart"}</div>
+                <div class="top-tag" hidden={!is_base} >{ get_value_field(&157) }</div> // standard
                 <img src={image_file.download_url.clone()} alt="Image" />
               </div>
               <div>
-                {"manufactured by "}<span class="id-box has-text-grey-light has-text-weight-bold">{"Alphametall"}</span>
+                { get_value_field(&160) } // manufactured by
+                <span class="id-box has-text-grey-light has-text-weight-bold">{component_supplier}</span>
               </div>
-              <div class="overflow-title has-text-weight-bold	is-size-4" >{name}</div>
+              <div class="overflow-title has-text-weight-bold is-size-4" >{name}</div>
                 <div class="btnBox">
                   <button class="button is-light is-fullwidth has-text-weight-bold"
                         onclick={onclick_open_component} >
-                    {"Open"}
+                    { get_value_field(&161) }
                   </button>
                   <div style="margin-left: 8px;">
                       {res_btn(

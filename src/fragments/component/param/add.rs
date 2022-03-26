@@ -8,6 +8,7 @@ use wasm_bindgen_futures::spawn_local;
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
 use crate::gqls::make_query;
+use crate::services::get_value_field;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -138,23 +139,23 @@ impl RegisterParamnameBlock {
 
         html!{<>
             <div class="column">
-                <label class="label">{"Set a paramname (letter case has matter)"}</label>
+                <label class="label">{ get_value_field(&205) }</label> // Set a paramname (letter case has matter)
                 <input
                     id="paramname"
                     class="input is-fullwidth"
                     type="text"
-                    placeholder="enter new paramname"
+                    placeholder=get_value_field(&205)
                     value={self.request_new_paramname.clone()}
                     oninput=oninput_set_paramname
                     />
             </div>
             <div class="column">
-                <label class="label">{"Set a value"}</label>
+                <label class="label">{ get_value_field(&133) }</label> // Set a value
                 <input
                     id="param-value"
                     class="input is-fullwidth"
                     type="text"
-                    placeholder="value"
+                    placeholder=get_value_field(&133)
                     value={self.set_param_value.clone()}
                     oninput=oninput_set_param_value
                     />
@@ -166,7 +167,7 @@ impl RegisterParamnameBlock {
                     disabled={self.disable_btn || self.request_new_paramname.is_empty() ||
                         self.set_param_value.is_empty()}
                     onclick={onclick_register_paramname} >
-                    {"Add"}
+                    { get_value_field(&117) }
                 </button>
             </div>
         </>}

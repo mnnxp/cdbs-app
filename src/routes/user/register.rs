@@ -388,17 +388,19 @@ impl Register {
           <div class="modal-background" onclick=onclick_show_conditions.clone() />
           <div class="modal-card">
             <header class="modal-card-head">
-              <p class="modal-card-title">{"CADBase conditions"}</p>
+              <p class="modal-card-title">{ get_value_field(&285) }</p>
               <button class="delete" aria-label="close" onclick=onclick_show_conditions.clone() />
             </header>
             <section class="modal-card-body">
-              <span>{"THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE."}</span>
+              <span>{ get_value_field(&251) }</span>
               <br/>
-              <span class="has-text-weight-bold">{"If you need support or help, please contact us: "}</span>
+              <span class="has-text-weight-bold">{ get_value_field(&287) }</span>
               <a href="mailto:support@cadbase.rs">{"support@cadbase.rs"}</a>
             </section>
             <footer class="modal-card-foot">
-              <button class="button is-fullwidth is-large" onclick=onclick_show_conditions>{"Great!"}</button>
+              <button class="button is-fullwidth is-large" onclick=onclick_show_conditions>
+                { get_value_field(&288) }
+              </button>
             </footer>
           </div>
         </div>}

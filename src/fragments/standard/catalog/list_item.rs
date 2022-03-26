@@ -15,6 +15,7 @@ use crate::fragments::{
     switch_icon::res_btn,
 };
 use crate::types::{UUID, ShowStandardShort};
+use crate::services::get_value_field;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -198,14 +199,12 @@ impl ListItemStandard {
                   <div class="media-content">
                     <div class="columns is-gapless" style="margin-bottom:0">
                       <div class="column">
-                          {"classifier "} <span class="id-box has-text-grey-light has-text-weight-bold">{
-                              classifier
-                          }</span>
+                          { get_value_field(&142) } // classifier
+                          <span class="id-box has-text-grey-light has-text-weight-bold">{classifier}</span>
                       </div>
                       <div class="column">
-                          {" specified tolerance "} <span class="id-box has-text-grey-light has-text-weight-bold">{
-                              specified_tolerance
-                          }</span>
+                          { get_value_field(&144) } // specified tolerance
+                          <span class="id-box has-text-grey-light has-text-weight-bold">{specified_tolerance}</span>
                       </div>
                     </div>
                     <div class="columns" style="margin-bottom:0">
@@ -217,11 +216,15 @@ impl ListItemStandard {
                                     _ => format!("{:.*}...", 50, description),
                                 }}
                             </div>
-                            <div class="overflow-title">{"design by: "}<span class="has-text-weight-bold">{
-                                format!("{} {}",
-                                    &owner_company.shortname,
-                                    &owner_company.company_type.shortname
-                            )}</span></div>
+                            <div class="overflow-title">
+                                { get_value_field(&141) } // design by
+                                <span class="has-text-weight-bold">
+                                    {format!("{} {}",
+                                            &owner_company.shortname,
+                                            &owner_company.company_type.shortname
+                                    )}
+                                </span>
+                            </div>
                         </div>
                         <div class="column buttons is-one-quarter flexBox" >
                           {res_btn(
@@ -238,10 +241,10 @@ impl ListItemStandard {
                     </div>
                     <div class="columns is-gapless" style="margin-bottom:0">
                         <div class="column">
-                          {format!("publication: {:.*}", 10, publication_at.to_string())}
+                          {format!("{}: {:.*}", get_value_field(&155), 10, publication_at.to_string())}
                         </div>
                         <div class="column">
-                          {format!("updated: {:.*}", 10, updated_at.to_string())}
+                          {format!("{}: {:.*}", get_value_field(&156), 10, updated_at.to_string())}
                         </div>
                     </div>
                   </div>
@@ -291,21 +294,25 @@ impl ListItemStandard {
                 />
               </div>
               <div>
-                {"classifier "} <span class="id-box has-text-grey-light has-text-weight-bold">{
-                    classifier
-                }</span>
+                { get_value_field(&142) } // classifier
+                <span class="id-box has-text-grey-light has-text-weight-bold">{classifier}</span>
                 <br/>
               </div>
               <div class="has-text-weight-bold is-size-4">{name}</div>
-              <div class="overflow-title">{"design by: "}<span class="has-text-weight-bold">{
-                  format!("{} {}",
+              <div class="overflow-title">
+                { get_value_field(&141) } // design by
+                  <span class="has-text-weight-bold">
+                    {format!("{} {}",
                       &owner_company.shortname,
                       &owner_company.company_type.shortname
-              )}</span></div>
+                    )}
+                  </span>
+                </div>
               <div class="btnBox">
                 <button class="button is-light is-fullwidth has-text-weight-bold"
-                    onclick=show_standard_btn
-                  >{"Show standard"}</button>
+                    onclick=show_standard_btn>
+                    { get_value_field(&143) } // Show standard
+                </button>
                 <div style="margin-left: 8px;">
                 {res_btn(
                     classes!(class_res_btn),

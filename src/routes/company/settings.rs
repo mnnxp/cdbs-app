@@ -21,7 +21,7 @@ use crate::fragments::{
     side_menu::{MenuItem, SideMenu},
     upload_favicon::UpdateFaviconBlock,
 };
-use crate::services::get_logged_user;
+use crate::services::{get_logged_user, get_value_field};
 use crate::types::{
     UUID, SlimUser, CompanyUpdateInfo, CompanyInfo, Region,
     CompanyType, TypeAccessInfo
@@ -423,10 +423,11 @@ impl CompanySettings {
         &self,
         id: &str,
         label: &str,
-        placeholder: &str,
+        // placeholder: &str,
         value: String,
         oninput: Callback<InputData>,
     ) -> Html {
+        let placeholder = label;
         let mut class = "input";
         let (input_tag, input_type) = match id {
             "email" => ("input", "email"),
@@ -460,7 +461,7 @@ impl CompanySettings {
         let menu_arr: Vec<MenuItem> = vec![
             // return company page MenuItem
             MenuItem {
-                title: "Open company".to_string(),
+                title: get_value_field(&265).to_string(), // Open company
                 action: self.link.callback(|_| Msg::OpenCompany),
                 item_class: classes!("has-background-white"),
                 icon_classes: vec![classes!("fas", "fa-angle-double-left")],
@@ -469,7 +470,7 @@ impl CompanySettings {
             },
             // Company MenuItem
             MenuItem {
-                title: "Company".to_string(),
+                title: get_value_field(&109).to_string(), // Company
                 action: self.cb_generator(Menu::Company),
                 item_class: classes!("has-background-white"),
                 icon_classes: vec![classes!("fas", "fa-building")],
@@ -478,7 +479,7 @@ impl CompanySettings {
             },
             // Favicon MenuItem
             MenuItem {
-                title: "Favicon".to_string(),
+                title: get_value_field(&78).to_string(), // Favicon
                 action: self.cb_generator(Menu::UpdateFavicon),
                 item_class: classes!("has-background-white"),
                 icon_classes: vec![classes!("fas", "fa-image")],
@@ -487,7 +488,7 @@ impl CompanySettings {
             },
             // Certificates MenuItem
             MenuItem {
-                title: "Certificates".to_string(),
+                title: get_value_field(&64).to_string(), // Certificates
                 action: self.cb_generator(Menu::Certificates),
                 item_class: classes!("has-background-white"),
                 icon_classes: vec![classes!("fas", "fa-certificate")],
@@ -496,7 +497,7 @@ impl CompanySettings {
             },
             // Represent MenuItem
             MenuItem {
-                title: "Represent".to_string(),
+                title: get_value_field(&256).to_string(), // Represent
                 action: self.cb_generator(Menu::Represent),
                 item_class: classes!("has-background-white"),
                 icon_classes: vec![classes!("fas", "fa-industry")],
@@ -505,7 +506,7 @@ impl CompanySettings {
             },
             // Spec MenuItem
             MenuItem {
-                title: "Spec".to_string(),
+                title: get_value_field(&104).to_string(), // Spec
                 action: self.cb_generator(Menu::Spec),
                 item_class: classes!("has-background-white"),
                 icon_classes: vec![classes!("fas", "fa-paperclip")],
@@ -514,7 +515,7 @@ impl CompanySettings {
             },
             // Access MenuItem
             MenuItem {
-                title: "Access".to_string(),
+                title: get_value_field(&65).to_string(), // Access
                 action: self.cb_generator(Menu::Access),
                 item_class: classes!("has-background-white"),
                 icon_classes: vec![classes!("fas", "fa-low-vision")],
@@ -523,7 +524,7 @@ impl CompanySettings {
             },
             // RemoveCompany MenuItem
             MenuItem {
-                title: "RemoveCompany".to_string(),
+                title: get_value_field(&267).to_string(), // Remove Company
                 action: self.cb_generator(Menu::RemoveCompany),
                 item_class: classes!("has-background-danger-light"),
                 icon_classes: vec![classes!("fas", "fa-trash")],
@@ -548,21 +549,21 @@ impl CompanySettings {
         match self.select_menu {
             // Show interface for change company data
             Menu::Company => html!{<>
-                <h4 id="updated-company" class="title is-4">{"Company"}</h4>
+                <h4 id="updated-company" class="title is-4">{ get_value_field(&109) }</h4> // Company
                 <div class="columns">
                     <div class="column">
-                        <span class=classes!("overflow-title", "has-text-weight-bold")>{"Updated rows: "}</span>
+                        <span class=classes!("overflow-title", "has-text-weight-bold")>{ get_value_field(&72) }</span>
                         <span class="overflow-title">{self.get_result_update.clone()}</span>
                     </div>
                     <div class="column">
-                        <span class=classes!("overflow-title", "has-text-weight-bold")>{"Last updated: "}</span>
+                        <span class=classes!("overflow-title", "has-text-weight-bold")>{ get_value_field(&73) }</span>
                         {match &self.current_data {
                             Some(data) => html!{
                                 <span class="overflow-title">
                                     {format!("{:.*}", 19, data.updated_at.to_string())}
                                 </span>
                             },
-                            None => html!{<span>{"not data"}</span>},
+                            None => html!{<span>{ get_value_field(&75) }</span>},
                         }}
                     </div>
                 </div>
@@ -573,42 +574,42 @@ impl CompanySettings {
                         class="button"
                         type="submit"
                         disabled=false>
-                        { "Update Company" }
+                        { get_value_field(&264) }
                     </button>
                 </form>
             </>},
             // Show interface for change favicon company
             Menu::UpdateFavicon => html!{<>
-                <h4 id="updated-favicon-company" class="title is-4">{"Favicon"}</h4>
+                <h4 id="updated-favicon-company" class="title is-4">{ get_value_field(&78) }</h4> // Favicon
                 { self.update_favicon_block() }
             </>},
             // Show interface for add and update Certificates
             Menu::Certificates => html!{<>
-                <h4 id="updated-certificates" class="title is-4">{"Certificates"}</h4>
+                <h4 id="updated-certificates" class="title is-4">{ get_value_field(&64) }</h4> // Certificates
                 { self.add_certificate_block() }
                 <br/>
                 { self.certificates_block() }
             </>},
             // Show interface for add and update Represents
             Menu::Represent => html!{<>
-                <h4 id="updated-represents" class="title is-4">{"Represents"}</h4>
+                <h4 id="updated-represents" class="title is-4">{ get_value_field(&266) }</h4> // Represents
                 <AddCompanyRepresentCard company_uuid = self.company_uuid.clone() />
                 <br/>
                 { self.represents_block() }
             </>},
             // Show interface for add and update company Specs
             Menu::Spec => html!{<>
-                <h4 id="updated-specs" class="title is-4">{"Specs"}</h4>
+                <h4 id="updated-specs" class="title is-4">{ get_value_field(&104) }</h4>
                 {self.manage_specs_block()}
             </>},
             // Show interface for manage Access
             Menu::Access => html!{<>
-                <h4 id="updated-represents" class="title is-4">{"Access"}</h4>
+                <h4 id="updated-represents" class="title is-4">{ get_value_field(&65) }</h4> // Access
                 { self.manage_access_block() }
             </>},
             // Show interface for remove company
             Menu::RemoveCompany => html!{<>
-                <h4 id="remove-company" class="title is-4">{"Delete company"}</h4>
+                <h4 id="remove-company" class="title is-4">{ get_value_field(&268) }</h4>
                 {self.remove_company_block()}
             </>},
         }
@@ -650,7 +651,7 @@ impl CompanySettings {
         html!{<>
             // first column
             {self.fileset_generator(
-                "orgname", "Orgname", "Orgname",
+                "orgname", get_value_field(&170), // Orgname
                 self.request_company.orgname.as_ref().map(|x| x.to_string()).unwrap_or_default(),
                 oninput_orgname.clone()
             )}
@@ -659,14 +660,14 @@ impl CompanySettings {
             <div class="columns">
                 <div class="column">
                     {self.fileset_generator(
-                        "shortname", "Shortname", "Shortname",
+                        "shortname", get_value_field(&171), // Shortname
                         self.request_company.shortname.as_ref().map(|x| x.to_string()).unwrap_or_default(),
                         oninput_shortname.clone()
                     )}
                 </div>
                 <div class="column">
                     {self.fileset_generator(
-                        "inn", "Inn", "Inn",
+                        "inn", get_value_field(&81), // Inn
                         self.request_company.inn.as_ref().map(|x| x.to_string()).unwrap_or_default(),
                         oninput_inn.clone()
                     )}
@@ -677,7 +678,7 @@ impl CompanySettings {
             <div class="columns">
                 <div class="column">
                     <fieldset class="field">
-                        <label class="label">{"Company type"}</label>
+                        <label class="label">{ get_value_field(&51) }</label>
                         <div class="control">
                             <div class="select">
                               <select
@@ -700,7 +701,7 @@ impl CompanySettings {
                 </div>
                 <div class="column">
                     {self.fileset_generator(
-                        "site_url", "Site", "Site",
+                        "site_url", get_value_field(&66), // Site
                         self.request_company.site_url.as_ref().map(|x| x.to_string()).unwrap_or_default(),
                         oninput_site_url.clone()
                     )}
@@ -711,14 +712,14 @@ impl CompanySettings {
             <div class="columns">
                 <div class="column">
                     {self.fileset_generator(
-                        "email", "Email", "Email",
+                        "email", get_value_field(&22), // Email
                         self.request_company.email.as_ref().map(|x| x.to_string()).unwrap_or_default(),
                         oninput_email.clone()
                     )}
                 </div>
                 <div class="column">
                     {self.fileset_generator(
-                        "phone", "Phone", "Phone",
+                        "phone", get_value_field(&56), // Phone
                         self.request_company.phone.as_ref().map(|x| x.to_string()).unwrap_or_default(),
                         oninput_phone.clone()
                     )}
@@ -729,7 +730,7 @@ impl CompanySettings {
             <div class="columns">
                 <div class="column">
                     <fieldset class="field">
-                        <label class="label">{"Region"}</label>
+                        <label class="label">{ get_value_field(&27) }</label>
                         <div class="control">
                             <div class="select">
                               <select
@@ -752,7 +753,7 @@ impl CompanySettings {
                 </div>
                 <div class="column">
                     {self.fileset_generator(
-                        "address", "Address", "Address",
+                        "address", get_value_field(&57), // Address
                         self.request_company.address.as_ref().map(|x| x.to_string()).unwrap_or_default(),
                         oninput_address.clone()
                     )}
@@ -761,7 +762,7 @@ impl CompanySettings {
 
             // sixth column
             {self.fileset_generator(
-                "description", "Description", "Description",
+                "description", get_value_field(&61), // Description
                 self.request_company.description.as_ref().map(|x| x.to_string()).unwrap_or_default(),
                 oninput_description.clone()
             )}
@@ -791,7 +792,7 @@ impl CompanySettings {
             },
             None => html!{
                 <div class="notification is-info">
-                    <span>{"Not fount certificates."}</span>
+                    <span>{ get_value_field(&74) }</span>
                 </div>
             },
         }
@@ -807,7 +808,7 @@ impl CompanySettings {
             },
             None => html!{
                 <div class="notification is-info">
-                    <span>{"Not company specs data."}</span>
+                    <span>{ get_value_field(&269) }</span>
                 </div>
             },
         }
@@ -840,7 +841,7 @@ impl CompanySettings {
             },
             None => html!{
                 <div class="notification is-info">
-                    <span>{"Company don't have representations."}</span>
+                    <span>{ get_value_field(&270) }</span>
                 </div>
             },
         }
@@ -860,7 +861,7 @@ impl CompanySettings {
                     class="button"
                     type="submit"
                     disabled=false>
-                    { "Update access" }
+                    { get_value_field(&271) }
                 </button>
             </form>
         }
@@ -879,7 +880,7 @@ impl CompanySettings {
                 // first column
                 <fieldset class="column">
                     <fieldset class="field">
-                        <label class="label">{"Type Access"}</label>
+                        <label class="label">{ get_value_field(&58) }</label>
                         <div class="control">
                             <div class="select">
                               <select
@@ -909,18 +910,21 @@ impl CompanySettings {
 
         html!{<>
             <span id="remove-company" class="tag is-info is-light">
-              {format!("Company delete: {}", self.get_result_remove_company)}
+              {format!("{}: {}", get_value_field(&274), self.get_result_remove_company)}
             </span>
             <br/>
             <div class="notification is-danger">
-                <span><strong>{"Warning: "}</strong>{"this removed all data related with company, it cannot be canceled!"}</span>
+                <span>
+                    <strong>{ get_value_field(&272) }</strong>
+                    { get_value_field(&273) }
+                </span>
             </div>
             <br/>
             <button
                 id="button-delete-company"
                 class="button is-danger"
                 onclick=onclick_delete_company>
-                { "Delete" }
+                { get_value_field(&135) }
             </button>
         </>}
     }

@@ -13,7 +13,7 @@ use crate::gqls::make_query;
 
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
-use crate::services::{PutUploadFile, UploadData};
+use crate::services::{PutUploadFile, UploadData, get_value_field};
 use crate::types::{UUID, UploadFile};
 
 type FileName = String;
@@ -244,7 +244,7 @@ impl Component for AddUserCertificateCard {
                   { self.show_success_upload() }
                 </div>},
                 false => html!{<div class="column">
-                  <label class="label">{"Upload new certificate"}</label>
+                  <label class="label">{ get_value_field(&83) }</label> // "Upload new certificate"
                   { self.show_frame_upload_file() }
                   { self.show_input_description() }
                   <div class="buttons">
@@ -301,18 +301,18 @@ impl AddUserCertificateCard {
                           <span class="file-icon">
                             <i class="fas fa-upload"></i>
                           </span>
-                          <span class="file-label">{"Drop certificate file here"}</span>
+                          <span class="file-label">{ get_value_field(&86) }</span>
                         </span>
                       </label>
                     </div>
                 </div>
                 <div class="column">
                     <div class="has-text-grey-light" style="overflow-wrap: anywhere">
-                        {"It is recommended to upload the certificate in image format."}
+                        { get_value_field(&84) }
                     </div>
                     <br/>
                     <div id="select-file" style="overflow-wrap: anywhere">
-                        <span>{"Select file: "}</span>
+                        <span>{ get_value_field(&85) }</span>
                         <span class="overflow-title has-text-weight-bold">
                             {self.file.as_ref()
                                 .map(|f| f.name().to_string())
@@ -329,13 +329,12 @@ impl AddUserCertificateCard {
             .callback(|ev: InputData| Msg::UpdateDescription(ev.value));
 
         html!{<div class="block">
-            <label class="label">{"Description"}</label>
-
+            <label class="label">{ get_value_field(&61) }</label> // "Description"
             <input
                 id={"new-cert-description"}
                 class="input"
                 type="text"
-                placeholder="certificate description"
+                placeholder=get_value_field(&61)
                 value={self.description.to_string()}
                 oninput=oninput_cert_description />
         </div>}
@@ -354,7 +353,7 @@ impl AddUserCertificateCard {
                   class={class_upload_btn}
                   onclick=onclick_upload_cert
                   disabled={self.dis_upload_btn} >
-                { "Upload" }
+                { get_value_field(&87) }
             </a>
         }
     }
@@ -368,7 +367,7 @@ impl AddUserCertificateCard {
                   class="button"
                   onclick=onclick_clear_boxed
                   disabled={self.dis_upload_btn} >
-                { "Clear" }
+                { get_value_field(&88) }
             </a>
         }
     }
@@ -379,11 +378,11 @@ impl AddUserCertificateCard {
         html!{
             <article class="message is-success">
               <div class="message-header">
-                <p>{ "Success" }</p>
+                <p>{ get_value_field(&89) }</p>
                 <button class="delete" aria-label="close" onclick=onclick_hide_notification.clone() />
               </div>
               <div class="message-body">
-                { "This certificate upload!" }
+                { get_value_field(&90) }
               </div>
             </article>
         }

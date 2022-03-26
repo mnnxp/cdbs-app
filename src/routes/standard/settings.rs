@@ -26,7 +26,7 @@ use crate::fragments::{
     },
 };
 use crate::gqls::make_query;
-use crate::services::{PutUploadFile, UploadData, get_logged_user};
+use crate::services::{PutUploadFile, UploadData, get_logged_user, get_value_field};
 use crate::types::{
     UUID, StandardInfo, SlimUser, Region, TypeAccessInfo, UploadFile, ShowFileInfo,
     ShowCompanyShort, StandardUpdatePreData, StandardUpdateData, StandardStatus,
@@ -743,7 +743,7 @@ impl StandardSettings {
                 <div class="control">
                     <div class="media">
                         <div class="media-content">
-                            <label class="label">{"Owner company "}</label>
+                            <label class="label">{ get_value_field(&223) }</label> // Owner company
                             <div class="select">
                               <select
                                   id="set-owner-company"
@@ -762,7 +762,7 @@ impl StandardSettings {
                             </div>
                         </div>
                         <div class="media-right" style="margin-right: 1rem">
-                            <label class="label">{"Type access "}</label>
+                            <label class="label">{ get_value_field(&114) }</label>
                             <div class="select">
                               <select
                                   id="set-type-access"
@@ -782,21 +782,21 @@ impl StandardSettings {
                         </div>
                     </div>
                 </div>
-                <label class="label">{"Name"}</label>
+                <label class="label">{ get_value_field(&110) }</label>
                 <input
                     id="update-name"
                     class="input"
                     type="text"
-                    placeholder="standard name"
+                    placeholder=get_value_field(&110)
                     value={self.request_standard.name.clone()}
                     oninput=oninput_name />
-                <label class="label">{"Description"}</label>
+                <label class="label">{ get_value_field(&61) }</label>
                 <textarea
                     id="update-description"
                     class="textarea"
                     // rows="10"
                     type="text"
-                    placeholder="standard description"
+                    placeholder=get_value_field(&61)
                     value={self.request_standard.description.clone()}
                     oninput=oninput_description />
             </div>
@@ -807,7 +807,7 @@ impl StandardSettings {
         let callback_update_favicon = self.link.callback(|_| Msg::Ignore);
 
         html!{<>
-            <h2 class="has-text-weight-bold">{"Update image for preview"}</h2>
+            <h2 class="has-text-weight-bold">{ get_value_field(&184) }</h2> // Update image for preview
             <div class="card column">
                 <UpdateStandardFaviconCard
                     standard_uuid=self.current_standard_uuid.clone()
@@ -844,48 +844,48 @@ impl StandardSettings {
 
         html!{
             <>
-              <h2 class="has-text-weight-bold">{"Manage standard characteristics"}</h2>
+              <h2 class="has-text-weight-bold">{ get_value_field(&224) }</h2> // Manage standard characteristics
               <div class="card column">
                 <table class="table is-fullwidth">
                     <tbody>
                       <tr>
-                        <td>{"classifier"}</td>
+                        <td>{ get_value_field(&146) }</td> // classifier
                         <td><input
                             id="update-classifier"
                             class="input"
                             type="text"
-                            placeholder="standard classifier"
+                            placeholder=get_value_field(&146)
                             value={self.request_standard.classifier.clone()}
                             oninput=oninput_classifier /></td>
                       </tr>
                       <tr>
-                        <td>{"specified_tolerance"}</td>
+                        <td>{ get_value_field(&147) }</td>
                         // <td>{self.request_standard.specified_tolerance.as_ref().map(|x| x.clone()).unwrap_or_default()}</td>
                         <td><input
                             id="update-specified-tolerance"
                             class="input"
                             type="text"
-                            placeholder="standard specified_tolerance"
+                            placeholder=get_value_field(&147)
                             value={self.request_standard.specified_tolerance.clone()}
                             oninput=oninput_specified_tolerance /></td>
                       </tr>
                       <tr>
-                        <td>{"technical_committee"}</td>
+                        <td>{ get_value_field(&148) }</td>
                         <td><input
                             id="update-technical-committee"
                             class="input"
                             type="text"
-                            placeholder="standard technical_committee"
+                            placeholder=get_value_field(&148)
                             value={self.request_standard.technical_committee.clone()}
                             oninput=oninput_technical_committee /></td>
                       </tr>
                       <tr>
-                        <td>{"publication_at"}</td>
+                        <td>{ get_value_field(&149) }</td>
                         <td><input
                             id="update-publication-at"
                             class="input"
                             type="date"
-                            placeholder="standard publication_at"
+                            placeholder=get_value_field(&149)
                             value={self.request_standard.publication_at
                                 .as_ref()
                                 .map(|x| format!("{:.*}", 10, x.to_string()))
@@ -894,7 +894,7 @@ impl StandardSettings {
                             /></td>
                       </tr>
                       <tr>
-                        <td>{"standard_status"}</td>
+                        <td>{ get_value_field(&150) }</td>
                         <td><div class="control">
                             <div class="select">
                               <select
@@ -915,7 +915,7 @@ impl StandardSettings {
                         </div></td>
                       </tr>
                       <tr>
-                        <td>{"region"}</td>
+                        <td>{ get_value_field(&151) }</td>
                         <td><div class="select">
                               <select
                                   id="region"
@@ -947,7 +947,7 @@ impl StandardSettings {
     ) -> Html {
         html!{
             <div class="column">
-              <h2 class="has-text-weight-bold">{"Files stadndard"}</h2>
+              <h2 class="has-text-weight-bold">{ get_value_field(&225) }</h2> // Files stadndard
               <div class="card column">
                   {self.show_frame_upload_files()}
                   <StandardFilesCard
@@ -966,7 +966,7 @@ impl StandardSettings {
         standard_data: &StandardInfo,
     ) -> Html {
         html!{<>
-            <h2 class="has-text-weight-bold">{"Specs"}</h2>
+            <h2 class="has-text-weight-bold">{ get_value_field(&104) }</h2>
             <div class="card">
               <SearchSpecsTags
                   standard_specs = standard_data.standard_specs.clone()
@@ -982,7 +982,7 @@ impl StandardSettings {
     ) -> Html {
         // debug!("Keywords: {:?}", &standard_data.uuid);
         html!{<>
-              <h2 class="has-text-weight-bold">{"Keywords"}</h2>
+              <h2 class="has-text-weight-bold">{ get_value_field(&105) }</h2>
               <div class="card">
                 <AddKeywordsTags
                     standard_keywords = standard_data.standard_keywords.clone()
@@ -1007,12 +1007,12 @@ impl StandardSettings {
                         id="open-standard"
                         class="button"
                         onclick={onclick_open_standard} >
-                        {"Open standard"}
+                        { get_value_field(&226) } // Open standard
                     </button>
                 </div>
                 <div class="media-content">
                     {if self.get_result_standard_data > 0 || self.get_result_access {
-                        html!{"Data updated"}
+                        html!{get_value_field(&214) } // Data updated
                     } else {
                         html!{}
                     }}
@@ -1024,14 +1024,14 @@ impl StandardSettings {
                             id="delete-standard"
                             class="button is-danger"
                             onclick={onclick_show_delete_modal} >
-                            {"Delete"}
+                            { get_value_field(&135) }
                         </button>
                         <button
                             id="update-data"
                             class="button"
                             onclick={onclick_save_changes}
                             disabled={self.disable_save_changes_btn} >
-                            {"Update"}
+                            {  get_value_field(&46) }
                         </button>
                     </div>
                 </div>
@@ -1058,14 +1058,14 @@ impl StandardSettings {
                 <div class="modal-content">
                   <div class="card">
                     <header class="modal-card-head">
-                      <p class="modal-card-title">{"Delete standard"}</p>
+                      <p class="modal-card-title">{ get_value_field(&227) }</p> // Delete standard
                       <button class="delete" aria-label="close" onclick=onclick_hide_modal.clone() />
                     </header>
                     <section class="modal-card-body">
                         <p class="is-size-6">
-                            {"For confirm deleted all data this "}
+                            { get_value_field(&218) }
                             <span class="has-text-danger-dark">{self.request_standard.name.clone()}</span>
-                            {" standard enter this uuid:"}
+                            { get_value_field(&228) }
                             <br/>
                             <span class="has-text-weight-bold is-size-6">{self.current_standard_uuid.clone()}</span>
                         </p>
@@ -1074,7 +1074,7 @@ impl StandardSettings {
                            id="delete-standard"
                            class="input"
                            type="text"
-                           placeholder="standard uuid"
+                           placeholder="uuid"
                            value={self.confirm_delete_standard.clone()}
                            oninput=oninput_delete_standard />
                     </section>
@@ -1083,8 +1083,8 @@ impl StandardSettings {
                             id="delete-standard"
                             class="button is-danger"
                             disabled={self.disable_delete_standard_btn}
-                            onclick={onclick_delete_standard} >{"Yes, delete"}</button>
-                        <button class="button" onclick=onclick_hide_modal.clone()>{"Cancel"}</button>
+                            onclick={onclick_delete_standard} >{ get_value_field(&220) }</button> // Yes, delete
+                        <button class="button" onclick=onclick_hide_modal.clone()>{ get_value_field(&221) }</button> // Cancel
                     </footer>
                 </div>
               </div>
@@ -1115,11 +1115,11 @@ impl StandardSettings {
                     <i class="fas fa-upload"></i>
                   </span>
                   <span class="file-label">
-                    {"Choose standard files…"}
+                    { get_value_field(&222) } // Choose standard files…
                   </span>
                 </span>
                 {match self.files.is_empty() {
-                    true => html!{<span class="file-name">{"No file uploaded"}</span>},
+                    true => html!{<span class="file-name">{ get_value_field(&194) }</span>}, // No file uploaded
                     false => html!{for self.files.iter().map(|f| html!{
                         <span class="file-name">{f.name().clone()}</span>
                     })}
@@ -1142,7 +1142,7 @@ impl StandardSettings {
               class="button"
               onclick=onclick_clear_boxed
               disabled={self.files.is_empty()} >
-                <span>{"Clear"}</span>
+                <span>{ get_value_field(&88) }</span>
             </button>
         }
     }
@@ -1164,7 +1164,7 @@ impl StandardSettings {
                 // <span class="icon" >
                 //     <i class="fas fa-angle-double-up" aria-hidden="true"></i>
                 // </span>
-                <span>{"Upload"}</span>
+                <span>{ get_value_field(&87) }</span>
             </button>
         }
     }

@@ -16,7 +16,7 @@ use crate::routes::AppRoute;
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
 use crate::gqls::make_query;
-use crate::services::get_logged_user;
+use crate::services::{get_logged_user, get_value_field};
 use crate::types::{
     UUID, StandardCreateData, SlimUser, Region, TypeAccessInfo,
     ShowCompanyShort, StandardStatus,
@@ -303,7 +303,7 @@ impl Component for CreateStandard {
                 <div class="container page">
                     <div class="row">
                         <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
-                        <h1 class="title">{ "Create standard" }</h1>
+                        <h1 class="title">{ get_value_field(&291) }</h1>
                         {self.show_main_card()}
                         <br/>
                         {self.show_standard_params()}
@@ -345,7 +345,7 @@ impl CreateStandard {
                 <div class="control">
                     <div class="media">
                         <div class="media-content">
-                            <label class="label">{"Owner company "}</label>
+                            <label class="label">{ get_value_field(&223) }</label> // Owner company
                             <div class="select">
                               <select
                                   id="set-owner-company"
@@ -364,7 +364,7 @@ impl CreateStandard {
                             </div>
                         </div>
                         <div class="media-right" style="margin-right: 1rem">
-                            <label class="label">{"Type access "}</label>
+                            <label class="label">{ get_value_field(&114) }</label>
                             <div class="select">
                               <select
                                   id="set-type-access"
@@ -384,21 +384,21 @@ impl CreateStandard {
                         </div>
                     </div>
                 </div>
-                <label class="label">{"Name"}</label>
+                <label class="label">{ get_value_field(&110) }</label>
                 <input
                     id="update-name"
                     class="input"
                     type="text"
-                    placeholder="standard name"
+                    placeholder=get_value_field(&110)
                     value={self.request_standard.name.clone()}
                     oninput=oninput_name />
-                <label class="label">{"Description"}</label>
+                <label class="label">{ get_value_field(&61) }</label>
                 <textarea
                     id="update-description"
                     class="textarea"
                     // rows="10"
                     type="text"
-                    placeholder="standard description"
+                    placeholder=get_value_field(&61)
                     value={self.request_standard.description.clone()}
                     oninput=oninput_description />
               </div>
@@ -433,48 +433,48 @@ impl CreateStandard {
 
         html!{
             <>
-              <h2 class="has-text-weight-bold">{"Set standard characteristics"}</h2>
+              <h2 class="has-text-weight-bold">{ get_value_field(&229) }</h2> // Set standard characteristics
               <div class="card column">
                 <table class="table is-fullwidth">
                     <tbody>
                       <tr>
-                        <td>{"classifier"}</td>
+                        <td>{ get_value_field(&146) }</td> // classifier
                         <td><input
                             id="update-classifier"
                             class="input"
                             type="text"
-                            placeholder="standard classifier"
+                            placeholder=get_value_field(&146)
                             value={self.request_standard.classifier.clone()}
                             oninput=oninput_classifier /></td>
                       </tr>
                       <tr>
-                        <td>{"specified_tolerance"}</td>
+                        <td>{ get_value_field(&147) }</td> // specified_tolerance
                         // <td>{self.request_standard.specified_tolerance.as_ref().map(|x| x.clone()).unwrap_or_default()}</td>
                         <td><input
                             id="update-specified-tolerance"
                             class="input"
                             type="text"
-                            placeholder="standard specified_tolerance"
+                            placeholder=get_value_field(&147)
                             value={self.request_standard.specified_tolerance.clone()}
                             oninput=oninput_specified_tolerance /></td>
                       </tr>
                       <tr>
-                        <td>{"technical_committee"}</td>
+                        <td>{ get_value_field(&148) }</td> // technical_committee
                         <td><input
                             id="update-technical-committee"
                             class="input"
                             type="text"
-                            placeholder="standard technical_committee"
+                            placeholder=get_value_field(&148)
                             value={self.request_standard.technical_committee.clone()}
                             oninput=oninput_technical_committee /></td>
                       </tr>
                       <tr>
-                        <td>{"publication_at"}</td>
+                        <td>{ get_value_field(&149) }</td> // publication_at
                         <td><input
                             id="update-publication-at"
                             class="input"
                             type="date"
-                            placeholder="standard publication_at"
+                            placeholder=get_value_field(&149)
                             value={format!("{:.*}", 10,
                                 self.request_standard.publication_at.to_string()
                             )}
@@ -482,7 +482,7 @@ impl CreateStandard {
                             /></td>
                       </tr>
                       <tr>
-                        <td>{"standard_status"}</td>
+                        <td>{ get_value_field(&150) }</td> // standard_status
                         <td><div class="control">
                             <div class="select">
                               <select
@@ -503,7 +503,7 @@ impl CreateStandard {
                         </div></td>
                       </tr>
                       <tr>
-                        <td>{"region"}</td>
+                        <td>{ get_value_field(&151) }</td> // region
                         <td><div class="select">
                               <select
                                   id="region"
@@ -541,7 +541,7 @@ impl CreateStandard {
                     class="button is-success is-medium is-fullwidth"
                     onclick={onclick_create_changes}
                     disabled={self.disable_create_btn} >
-                    {"Create"}
+                    { get_value_field(&45) } // Create
                 </button>
             },
         }}
