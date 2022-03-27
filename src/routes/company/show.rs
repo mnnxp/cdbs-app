@@ -515,7 +515,7 @@ impl ShowCompany {
         let menu_arr: Vec<MenuItem> = vec![
             // certificates MenuItem
             MenuItem {
-                title: "CERTIFICATES".to_string(),
+                title: get_value_field(&32).to_string(), // CERTIFICATES
                 action: self.cb_generator(CompanyTab::Certificates),
                 count: self.get_number_of_items(&CompanyTab::Certificates),
                 item_class: classes!("has-background-white"),
@@ -525,7 +525,7 @@ impl ShowCompany {
             },
             // representations MenuItem
             MenuItem {
-                title: "REPRESENTATIONS".to_string(),
+                title: get_value_field(&266).to_string(), // REPRESENTATIONS
                 action: self.cb_generator(CompanyTab::Represent),
                 count: self.get_number_of_items(&CompanyTab::Represent),
                 item_class: classes!("has-background-white"),
@@ -535,7 +535,7 @@ impl ShowCompany {
             },
             // components MenuItem
             MenuItem {
-                title: "COMPONENTS".to_string(),
+                title: get_value_field(&154).to_string(), // COMPONENTS
                 action: self.cb_generator(CompanyTab::Components),
                 count: self.get_number_of_items(&CompanyTab::Components),
                 item_class: classes!("has-background-white"),
@@ -545,7 +545,7 @@ impl ShowCompany {
             },
             // standards MenuItem
             MenuItem {
-                title: "STANDARDS".to_string(),
+                title: get_value_field(&103).to_string(), // STANDARDS
                 action: self.cb_generator(CompanyTab::Standards),
                 count: self.get_number_of_items(&CompanyTab::Standards),
                 item_class: classes!("has-background-white"),
@@ -555,7 +555,7 @@ impl ShowCompany {
             },
             // memebers MenuItem
             // MenuItem {
-            //     title: "MEMBERS".to_string(),
+            //     title: get_value_field(&286).to_string(), // MEMBERS
             //     action: self.cb_generator(CompanyTab::Members),
             //     count: self.get_number_of_items(&CompanyTab::Members),
             //     item_class: classes!("has-background-white"),

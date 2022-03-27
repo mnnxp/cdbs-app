@@ -497,7 +497,7 @@ impl CompanySettings {
             },
             // Represent MenuItem
             MenuItem {
-                title: get_value_field(&256).to_string(), // Represent
+                title: get_value_field(&266).to_string(), // Representations
                 action: self.cb_generator(Menu::Represent),
                 item_class: classes!("has-background-white"),
                 icon_classes: vec![classes!("fas", "fa-industry")],
