@@ -76,7 +76,7 @@ impl Component for Home {
                                 <h2 class="subtitle"> { get_value_field(&1) } </h2>
                             </div>
                             <div class="media-content">
-                                <h2 class="subtitle" style="text-align: center"> { get_value_field(&3) } </h2>
+                                <h2 class="subtitle" style="text-align: center"> { get_value_field(&2) } </h2>
                             </div>
                             <div class="media-right">
                                 <h2 class="subtitle"> { get_value_field(&3) } </h2>
