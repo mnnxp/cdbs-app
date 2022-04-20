@@ -14,28 +14,13 @@ use wasm_bindgen_futures::spawn_local;
 use crate::routes::AppRoute;
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
-use crate::gqls::make_query;
 use crate::services::{get_logged_user, get_value_field};
-use crate::types::{
-    UUID, ComponentCreateData, TypeAccessInfo,
-    ActualStatus, ComponentType
+use crate::types::{UUID, ComponentCreateData, TypeAccessInfo, ActualStatus, ComponentType};
+use crate::gqls::make_query;
+use crate::gqls::component::{
+    GetComponentDataOpt, get_component_data_opt,
+    RegisterComponent, register_component,
 };
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct GetComponentDataOpt;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct RegisterComponent;
 
 /// Component with relate data
 pub struct CreateComponent {

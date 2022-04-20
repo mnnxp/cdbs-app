@@ -10,7 +10,6 @@ use yew_router::{
     prelude::*,
 };
 use web_sys::FileList;
-use chrono::NaiveDateTime;
 use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
@@ -28,71 +27,24 @@ use crate::fragments::{
         ModificationsTableEdit, ComponentFilesBlock, SearchSpecsTags, AddKeywordsTags
     },
 };
-use crate::gqls::make_query;
 use crate::services::{PutUploadFile, UploadData, get_logged_user, get_value_field};
 use crate::types::{
     UUID, ComponentInfo, SlimUser, TypeAccessInfo, UploadFile, ActualStatus,
     ComponentUpdatePreData, ComponentUpdateData, ComponentType, ShowCompanyShort,
     ComponentModificationInfo, ShowFileInfo,
 };
+use crate::gqls::make_query;
+use crate::gqls::component::{
+    GetUpdateComponentDataOpt, get_update_component_data_opt,
+    PutComponentUpdate, put_component_update,
+    DeleteComponent, delete_component,
+    ChangeComponentAccess, change_component_access,
+    ComponentFilesList, component_files_list,
+    UploadComponentFiles, upload_component_files,
+    ConfirmUploadCompleted, confirm_upload_completed,
+};
 
 type FileName = String;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct GetUpdateComponentDataOpt;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct PutComponentUpdate;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct DeleteComponent;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct ChangeComponentAccess;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct ComponentFilesList;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct UploadComponentFiles;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/relate.graphql",
-    response_derives = "Debug"
-)]
-struct ConfirmUploadCompleted;
 
 pub struct ComponentSettings {
     error: Option<Error>,

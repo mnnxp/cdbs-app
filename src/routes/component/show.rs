@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use chrono::NaiveDateTime;
 use yew::{
     agent::Bridged, classes, html, Bridge, Component, Properties,
     ComponentLink, Html, ShouldRender
@@ -27,45 +26,15 @@ use crate::fragments::{
     },
     img_showcase::ImgShowcase,
 };
-use crate::gqls::make_query;
 use crate::services::{get_logged_user, get_value_field};
-use crate::types::{
-    UUID, ComponentInfo, SlimUser, ComponentParam,
-    ComponentModificationInfo,
-    DownloadFile
+use crate::types::{UUID, ComponentInfo, SlimUser, ComponentParam, ComponentModificationInfo, DownloadFile};
+use crate::gqls::make_query;
+use crate::gqls::component::{
+    ComponentFiles, component_files,
+    GetComponentData, get_component_data,
+    AddComponentFav, add_component_fav,
+    DeleteComponentFav, delete_component_fav,
 };
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-pub struct ComponentFiles;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct GetComponentData;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct AddComponentFav;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct DeleteComponentFav;
 
 /// Component with relate data
 pub struct ShowComponent {
