@@ -1,44 +1,21 @@
-use yew::{
-    agent::Bridged, html, Bridge, Component,
-    ComponentLink, Html, ShouldRender
-};
+use yew::{agent::Bridged, html, Bridge, Component, ComponentLink, Html, ShouldRender};
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
 use log::debug;
-use chrono::NaiveDateTime;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::routes::AppRoute;
-use crate::gqls::make_query;
 use crate::error::{Error, get_error};
 use crate::fragments::list_errors::ListErrors;
 use crate::services::{get_logged_user, get_value_field};
 use crate::types::{ShowNotification, DegreeImportanceTranslateList};
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/user.graphql",
-    response_derives = "Debug"
-)]
-struct GetNotifications;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/user.graphql",
-    response_derives = "Debug"
-)]
-struct SetReadNotifications;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/user.graphql",
-    response_derives = "Debug"
-)]
-struct DeleteNotifications;
+use crate::gqls::make_query;
+use crate::gqls::user::{
+    GetNotifications, get_notifications,
+    SetReadNotifications, set_read_notifications,
+    DeleteNotifications, delete_notifications,
+};
 
 pub enum Menu {
     GetAll,

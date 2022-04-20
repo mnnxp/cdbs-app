@@ -9,13 +9,15 @@ use yew::{
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
 use log::debug;
 
-use crate::gqls::make_query;
 use crate::routes::AppRoute;
 use crate::error::{Error, get_error};
 use crate::fragments::list_errors::ListErrors;
 use crate::services::{get_logged_user, get_value_field};
-use crate::types::{
-    UUID, RegisterInfo, Region, Program
+use crate::types::{RegisterInfo, Region, Program};
+use crate::gqls::make_query;
+use crate::gqls::user::{
+    RegisterOpt, register_opt,
+    RegUser, reg_user,
 };
 
 /// Register page
@@ -29,22 +31,6 @@ pub struct Register {
     link: ComponentLink<Self>,
     show_conditions: bool,
 }
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/register.graphql",
-    response_derives = "Debug"
-)]
-struct RegisterOpt;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/register.graphql",
-    response_derives = "Debug"
-)]
-struct RegUser;
 
 pub enum Msg {
     Request,

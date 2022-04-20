@@ -1,4 +1,3 @@
-use chrono::NaiveDateTime;
 use web_sys::MouseEvent;
 use graphql_client::GraphQLQuery;
 use log::debug;
@@ -25,44 +24,18 @@ use crate::fragments::{
     user::CatalogUsers,
     user::UserCertificatesCard,
 };
-use crate::gqls::make_query;
 use crate::services::{get_logged_user, get_value_field};
 use crate::types::{
     UserDataCard, CompaniesQueryArg, ComponentsQueryArg, SelfUserInfo, SlimUser,
     StandardsQueryArg, UserCertificate, UserInfo, UsersQueryArg, UUID,
 };
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/user.graphql",
-    response_derives = "Debug"
-)]
-struct AddUserFav;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/user.graphql",
-    response_derives = "Debug"
-)]
-struct DeleteUserFav;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/user.graphql",
-    response_derives = "Debug"
-)]
-struct GetSelfData;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/user.graphql",
-    response_derives = "Debug"
-)]
-struct GetUserData;
+use crate::gqls::make_query;
+use crate::gqls::user::{
+    AddUserFav, add_user_fav,
+    DeleteUserFav, delete_user_fav,
+    GetSelfData, get_self_data,
+    GetUserData, get_user_data,
+};
 
 /// Profile user with relate data
 pub struct Profile {

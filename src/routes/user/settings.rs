@@ -1,4 +1,3 @@
-use chrono::NaiveDateTime;
 use web_sys::MouseEvent;
 use yew::{
     agent::Bridged, classes, html, Bridge, Callback, ChangeData, Component, ComponentLink,
@@ -10,7 +9,6 @@ use log::debug;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
-use crate::gqls::make_query;
 use crate::error::{get_error, Error};
 use crate::fragments::{
     list_errors::ListErrors,
@@ -20,57 +18,16 @@ use crate::fragments::{
 };
 use crate::routes::AppRoute;
 use crate::services::{get_current_user, set_token, set_logged_user, get_logged_user, get_value_field};
-use crate::types::{
-    Program, Region, SelfUserInfo, TypeAccessInfo, UpdatePasswordInfo, UserUpdateInfo, UUID
+use crate::types::{Program, Region, SelfUserInfo, TypeAccessInfo, UpdatePasswordInfo, UserUpdateInfo};
+use crate::gqls::make_query;
+use crate::gqls::user::{
+    GetSettingDataOpt, get_setting_data_opt,
+    GetSelfData, get_self_data,
+    UserUpdate, user_update,
+    PutUpdatePassword, put_update_password,
+    ChangeTypeAccessUser, change_type_access_user,
+    DeleteUserData, delete_user_data,
 };
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/user.graphql",
-    response_derives = "Debug"
-)]
-struct GetSettingDataOpt;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/user.graphql",
-    response_derives = "Debug"
-)]
-struct GetSelfData;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/user.graphql",
-    response_derives = "Debug"
-)]
-struct UserUpdate;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/user.graphql",
-    response_derives = "Debug"
-)]
-struct PutUpdatePassword;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/user.graphql",
-    response_derives = "Debug"
-)]
-struct ChangeTypeAccessUser;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/user.graphql",
-    response_derives = "Debug"
-)]
-struct DeleteUserData;
 
 #[derive(Clone, PartialEq)]
 pub enum Menu {
