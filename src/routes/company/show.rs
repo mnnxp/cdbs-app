@@ -12,7 +12,6 @@ use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
-use chrono::NaiveDateTime;
 
 use crate::routes::AppRoute;
 use crate::error::{get_error, Error};
@@ -26,33 +25,12 @@ use crate::fragments::{
 };
 use crate::gqls::make_query;
 use crate::services::{get_logged_user, get_value_field};
-use crate::types::{
-    UUID, CompanyInfo, SlimUser, ComponentsQueryArg, StandardsQueryArg
+use crate::types::{UUID, CompanyInfo, SlimUser, ComponentsQueryArg, StandardsQueryArg};
+use crate::gqls::company::{
+    GetCompanyData, get_company_data,
+    AddCompanyFav, add_company_fav,
+    DeleteCompanyFav, delete_company_fav,
 };
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/companies.graphql",
-    response_derives = "Debug"
-)]
-struct GetCompanyData;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/companies.graphql",
-    response_derives = "Debug"
-)]
-struct AddCompanyFav;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/companies.graphql",
-    response_derives = "Debug"
-)]
-struct DeleteCompanyFav;
 
 /// Company with relate data
 pub struct ShowCompany {

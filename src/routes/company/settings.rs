@@ -3,7 +3,6 @@ use yew::{
     Callback, InputData, Properties, ShouldRender, MouseEvent
 };
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*, service::RouteService};
-use chrono::NaiveDateTime;
 use graphql_client::GraphQLQuery;
 use log::debug;
 use serde_json::Value;
@@ -26,46 +25,13 @@ use crate::types::{
     UUID, SlimUser, CompanyUpdateInfo, CompanyInfo, Region,
     CompanyType, TypeAccessInfo
 };
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/companies.graphql",
-    response_derives = "Debug"
-)]
-struct GetCompanySettingDataOpt;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/companies.graphql",
-    response_derives = "Debug"
-)]
-struct GetCompanyData;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/companies.graphql",
-    response_derives = "Debug"
-)]
-struct CompanyUpdate;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/companies.graphql",
-    response_derives = "Debug"
-)]
-struct ChangeCompanyAccess;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/companies.graphql",
-    response_derives = "Debug"
-)]
-struct DeleteCompany;
+use crate::gqls::company::{
+    GetCompanySettingDataOpt, get_company_setting_data_opt,
+    GetCompanyData, get_company_data,
+    CompanyUpdate, company_update,
+    ChangeCompanyAccess, change_company_access,
+    DeleteCompany, delete_company,
+};
 
 /// Get data current company
 impl From<CompanyInfo> for CompanyUpdateInfo {
