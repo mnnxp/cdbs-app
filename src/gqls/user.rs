@@ -145,3 +145,39 @@ pub(crate) struct DeleteUserData;
     response_derives = "Debug"
 )]
 pub(crate) struct UploadUserFavicon;
+
+/// Получение списка пользователей (краткая информация)
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/user.graphql",
+    response_derives = "Debug"
+)]
+pub(crate) struct GetUsersShortList;
+
+/// Добавление сертификата пользователя и получение presigned-url для загрузки файла
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/user.graphql",
+    response_derives = "Debug"
+)]
+pub(crate) struct UploadUserCertificate;
+
+/// Обновление описания сертификата пользователя
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/user.graphql",
+    response_derives = "Debug"
+)]
+pub(crate) struct UpdateUserCertificate;
+
+/// Удаление сертификата пользователя
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/user.graphql",
+    response_derives = "Debug"
+)]
+pub(crate) struct DeleteUserCertificate;
