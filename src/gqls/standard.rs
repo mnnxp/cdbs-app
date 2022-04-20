@@ -118,3 +118,66 @@ pub(crate) struct DeleteStandardFav;
     response_derives = "Debug"
 )]
 pub(crate) struct GetStandardsShortList;
+
+/// Удалить файлы стандарта
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/standards.graphql",
+    response_derives = "Debug"
+)]
+pub(crate) struct DeleteStandardFile;
+
+/// Получение ключевых слов (тегов) стандарта
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/standards.graphql",
+    response_derives = "Debug"
+)]
+pub(crate) struct GetStandardKeywords;
+
+/// Добавление ключевых слов (тегов) по наименованию
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/standards.graphql",
+    response_derives = "Debug"
+)]
+pub(crate) struct AddStandardKeywordsByNames;
+
+/// Удаление ключевых слов (тегов) стандарта
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/standards.graphql",
+    response_derives = "Debug"
+)]
+pub(crate) struct DeleteStandardKeywords;
+
+/// Добление связи стандарта с каталогами
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/standards.graphql",
+    response_derives = "Debug"
+)]
+pub(crate) struct AddStandardSpecs;
+
+/// Удаление связи каталога со стандартом
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/standards.graphql",
+    response_derives = "Debug"
+)]
+pub(crate) struct DeleteStandardSpecs;
+
+/// Обновление основного изображения стандарта (отображается в списке стандартов)
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/standards.graphql",
+    response_derives = "Debug"
+)]
+pub(crate) struct UploadStandardFavicon;

@@ -11,25 +11,13 @@ use crate::fragments::{
     list_errors::ListErrors,
     standard::{KeywordsTags, KeywordTagItem},
 };
-use crate::gqls::make_query;
 use crate::types::{UUID, Keyword};
 use crate::services::get_value_field;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/standards.graphql",
-    response_derives = "Debug"
-)]
-struct GetStandardKeywords;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/standards.graphql",
-    response_derives = "Debug"
-)]
-struct AddStandardKeywordsByNames;
+use crate::gqls::make_query;
+use crate::gqls::standard::{
+    GetStandardKeywords, get_standard_keywords,
+    AddStandardKeywordsByNames, add_standard_keywords_by_names,
+};
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
