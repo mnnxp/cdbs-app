@@ -3,7 +3,6 @@ mod standard_item;
 pub use standard_item::ComponentStandardItem;
 
 use std::collections::BTreeSet;
-use chrono::NaiveDateTime;
 use yew::prelude::*;
 use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
 use log::debug;
@@ -13,33 +12,16 @@ use wasm_bindgen_futures::spawn_local;
 
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
-use crate::gqls::make_query;
 use crate::types::{UUID, ShowStandardShort};
 use crate::services::get_value_field;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct AddStandardToComponent;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct GetComponentStandards;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/standards.graphql",
-    response_derives = "Debug"
-)]
-struct GetStandardsShortList;
+use crate::gqls::{
+    make_query,
+    component::{
+        AddStandardToComponent, add_standard_to_component,
+        GetComponentStandards, get_component_standards,
+    },
+    standard::{GetStandardsShortList, get_standards_short_list},
+};
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {

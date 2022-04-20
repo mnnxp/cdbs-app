@@ -6,25 +6,13 @@ use wasm_bindgen_futures::spawn_local;
 
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
-use crate::gqls::make_query;
 use crate::types::{UUID, ShowFileInfo, DownloadFile};
 use crate::services::get_value_field;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct ComModFilesetFiles;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct DeleteFilesFromFileset;
+use crate::gqls::make_query;
+use crate::gqls::component::{
+    ComModFilesetFiles, com_mod_fileset_files,
+    DeleteFilesFromFileset, delete_files_from_fileset,
+};
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {

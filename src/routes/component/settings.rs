@@ -29,19 +29,20 @@ use crate::fragments::{
 };
 use crate::services::{PutUploadFile, UploadData, get_logged_user, get_value_field};
 use crate::types::{
-    UUID, ComponentInfo, SlimUser, TypeAccessInfo, UploadFile, ActualStatus,
-    ComponentUpdatePreData, ComponentUpdateData, ComponentType, ShowCompanyShort,
-    ComponentModificationInfo, ShowFileInfo,
+    UUID, ComponentInfo, SlimUser, TypeAccessInfo, UploadFile, ActualStatus, ComponentUpdatePreData,
+    ComponentUpdateData, ComponentType, ShowCompanyShort, ComponentModificationInfo, ShowFileInfo,
 };
-use crate::gqls::make_query;
-use crate::gqls::component::{
-    GetUpdateComponentDataOpt, get_update_component_data_opt,
-    PutComponentUpdate, put_component_update,
-    DeleteComponent, delete_component,
-    ChangeComponentAccess, change_component_access,
-    ComponentFilesList, component_files_list,
-    UploadComponentFiles, upload_component_files,
-    ConfirmUploadCompleted, confirm_upload_completed,
+use crate::gqls::{
+    make_query,
+    relate::{ConfirmUploadCompleted, confirm_upload_completed},
+    component::{
+        GetUpdateComponentDataOpt, get_update_component_data_opt,
+        PutComponentUpdate, put_component_update,
+        DeleteComponent, delete_component,
+        ChangeComponentAccess, change_component_access,
+        ComponentFilesList, component_files_list,
+        UploadComponentFiles, upload_component_files,
+    },
 };
 
 type FileName = String;

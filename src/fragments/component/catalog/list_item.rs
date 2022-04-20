@@ -3,20 +3,11 @@ use yew_router::{
     agent::RouteRequest::ChangeRoute,
     prelude::*,
 };
-use graphql_client::GraphQLQuery;
 // use log::debug;
 use crate::services::get_value_field;
 use crate::routes::AppRoute;
 use crate::fragments::switch_icon::res_btn;
-use crate::types::{ShowComponentShort, UUID};
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-pub struct ComponentFiles;
+use crate::types::ShowComponentShort;
 
 pub enum Msg {
     OpenComponent,

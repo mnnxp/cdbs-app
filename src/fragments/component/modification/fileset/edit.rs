@@ -5,65 +5,28 @@ use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
-use chrono::NaiveDateTime;
 use web_sys::FileList;
 
 use super::FilesetFilesBlock;
 use crate::services::{PutUploadFile, UploadData, get_value_field};
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
-use crate::gqls::make_query;
 use crate::types::{UUID, ShowFileInfo, Program, UploadFile};
+use crate::gqls::{
+    make_query,
+    relate::{
+        GetPrograms, get_programs,
+        ConfirmUploadCompleted, confirm_upload_completed,
+    },
+    component::{
+        ComModFilesOfFileset, com_mod_files_of_fileset,
+        RegisterModificationFileset, register_modification_fileset,
+        DeleteModificationFileset, delete_modification_fileset,
+        UploadFilesToFileset, upload_files_to_fileset,
+    },
+};
 
 type FileName = String;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct ComModFilesOfFileset;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct RegisterModificationFileset;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct DeleteModificationFileset;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct UploadFilesToFileset;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/relate.graphql",
-    response_derives = "Debug"
-)]
-struct GetPrograms;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/relate.graphql",
-    response_derives = "Debug"
-)]
-struct ConfirmUploadCompleted;
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {

@@ -7,38 +7,16 @@ use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
 
-use crate::gqls::make_query;
 use crate::services::{is_authenticated, get_value_field};
 use crate::fragments::list_errors::ListErrors;
 use crate::error::{Error, get_error};
-use crate::types::{
-    UUID, Region, RepresentationType,
-    CompanyRepresentInfo, CompanyRepresentUpdateInfo
+use crate::types::{UUID, Region, RepresentationType, CompanyRepresentInfo, CompanyRepresentUpdateInfo};
+use crate::gqls::make_query;
+use crate::gqls::company::{
+    GetRepresentDataOpt, get_represent_data_opt,
+    UpdateCompanyRepresent, update_company_represent,
+    DeleteCompanyRepresent, delete_company_represent,
 };
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/companies.graphql",
-    response_derives = "Debug"
-)]
-struct GetRepresentDataOpt;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/companies.graphql",
-    response_derives = "Debug"
-)]
-struct UpdateCompanyRepresent;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/companies.graphql",
-    response_derives = "Debug"
-)]
-struct DeleteCompanyRepresent;
 
 pub enum Msg {
     RequestUpdateRepresent,

@@ -30,15 +30,17 @@ use crate::types::{
     UUID, StandardInfo, SlimUser, Region, TypeAccessInfo, UploadFile, ShowFileInfo,
     ShowCompanyShort, StandardUpdatePreData, StandardUpdateData, StandardStatus,
 };
-use crate::gqls::make_query;
-use crate::gqls::standard::{
-    GetUpdateStandardDataOpt, get_update_standard_data_opt,
-    PutStandardUpdate, put_standard_update,
-    DeleteStandard, delete_standard,
-    ChangeStandardAccess, change_standard_access,
-    UploadStandardFiles, upload_standard_files,
-    StandardFilesList, standard_files_list,
-    ConfirmUploadCompleted, confirm_upload_completed,
+use crate::gqls::{
+    make_query,
+    relate::{ConfirmUploadCompleted, confirm_upload_completed},
+    standard::{
+        GetUpdateStandardDataOpt, get_update_standard_data_opt,
+        PutStandardUpdate, put_standard_update,
+        DeleteStandard, delete_standard,
+        ChangeStandardAccess, change_standard_access,
+        UploadStandardFiles, upload_standard_files,
+        StandardFilesList, standard_files_list,
+    },
 };
 
 type FileName = String;

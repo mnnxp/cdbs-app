@@ -12,35 +12,14 @@ use wasm_bindgen_futures::spawn_local;
 
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
-use crate::gqls::make_query;
 use crate::types::{UUID, Supplier, ShowCompanyShort};
 use crate::services::get_value_field;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-
-struct SetCompanyOwnerSupplier;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-
-struct AddComponentSupplier;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct ComponentSuppliers;
+use crate::gqls::make_query;
+use crate::gqls::component::{
+    SetCompanyOwnerSupplier, set_company_owner_supplier,
+    AddComponentSupplier, add_component_supplier,
+    ComponentSuppliers, component_suppliers,
+};
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {

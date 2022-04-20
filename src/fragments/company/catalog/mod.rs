@@ -8,22 +8,14 @@ use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use log::debug;
-use chrono::NaiveDateTime;
 
-use crate::gqls::make_query;
 use crate::routes::AppRoute;
 use crate::error::{Error, get_error};
 use crate::fragments::list_errors::ListErrors;
-use crate::types::{UUID, ShowCompanyShort, CompaniesQueryArg};
+use crate::types::{ShowCompanyShort, CompaniesQueryArg};
 use crate::services::get_value_field;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/companies.graphql",
-    response_derives = "Debug"
-)]
-struct GetCompaniesShortList;
+use crate::gqls::make_query;
+use crate::gqls::company::{GetCompaniesShortList, get_companies_short_list};
 
 pub enum Msg {
     SwitchShowType,

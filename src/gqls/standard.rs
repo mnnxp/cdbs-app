@@ -74,15 +74,6 @@ pub(crate) struct UploadStandardFiles;
 )]
 pub(crate) struct StandardFilesList;
 
-/// Отправка подтверждения о загрузке файлов в хранилище
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/relate.graphql",
-    response_derives = "Debug"
-)]
-pub(crate) struct ConfirmUploadCompleted;
-
 /// Получение данных стандарта
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -118,3 +109,12 @@ pub(crate) struct AddStandardFav;
     response_derives = "Debug"
 )]
 pub(crate) struct DeleteStandardFav;
+
+/// Получение списка стандартов с краткой информацией
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/standards.graphql",
+    response_derives = "Debug"
+)]
+pub(crate) struct GetStandardsShortList;

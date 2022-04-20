@@ -82,3 +82,102 @@ pub(crate) struct AddCompanyFav;
     response_derives = "Debug"
 )]
 pub(crate) struct DeleteCompanyFav;
+
+/// Обновление аватара компании
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/companies.graphql",
+    response_derives = "Debug"
+)]
+pub(crate) struct UploadCompanyFavicon;
+
+/// Получение списка компаний
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/companies.graphql",
+    response_derives = "Debug"
+)]
+pub(crate) struct GetCompaniesShortList;
+
+/// Загрузка сертификата компании
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/companies.graphql",
+    response_derives = "Debug"
+)]
+pub(crate) struct UploadCompanyCertificate;
+
+/// Обновление описания сертификата компании
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/companies.graphql",
+    response_derives = "Debug"
+)]
+pub(crate) struct UpdateCompanyCertificate;
+
+/// Удаление сертификата компании
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/companies.graphql",
+    response_derives = "Debug"
+)]
+pub(crate) struct DeleteCompanyCertificate;
+
+/// Получение данных для добавления представительства компании
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/companies.graphql",
+    response_derives = "Debug"
+)]
+pub(crate) struct GetRepresentDataOpt;
+
+/// Добавление представительства компании
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/companies.graphql",
+    response_derives = "Debug"
+)]
+pub(crate) struct RegisterCompanyRepresent;
+
+/// Обновление представительства компании
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/companies.graphql",
+    response_derives = "Debug"
+)]
+pub(crate) struct UpdateCompanyRepresent;
+
+/// Удаление представительства компании
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/companies.graphql",
+    response_derives = "Debug"
+)]
+pub(crate) struct DeleteCompanyRepresent;
+
+/// Добавление спецификаций компании
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/companies.graphql",
+    response_derives = "Debug"
+)]
+pub(crate) struct AddCompanySpecs;
+
+/// Удаление спецификаций компании
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/companies.graphql",
+    response_derives = "Debug"
+)]
+pub(crate) struct DeleteCompanySpecs;

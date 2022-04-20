@@ -136,3 +136,12 @@ pub(crate) struct ChangeTypeAccessUser;
     response_derives = "Debug"
 )]
 pub(crate) struct DeleteUserData;
+
+/// Обновление аватара пользователя
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/user.graphql",
+    response_derives = "Debug"
+)]
+pub(crate) struct UploadUserFavicon;

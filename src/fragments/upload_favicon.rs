@@ -5,44 +5,20 @@ use yew::{
     Properties, ShouldRender, ChangeData, DragEvent
 };
 use graphql_client::GraphQLQuery;
-// use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
-
-use crate::gqls::make_query;
-
 use crate::fragments::list_errors::ListErrors;
 use crate::error::{Error, get_error};
 use crate::services::{PutUploadFile, UploadData, get_value_field};
-use crate::types::{UUID, UploadFile};
+use crate::types::UploadFile;
+use crate::gqls::{
+    make_query,
+    user::{UploadUserFavicon, upload_user_favicon},
+    company::{UploadCompanyFavicon, upload_company_favicon},
+    relate::{ConfirmUploadCompleted, confirm_upload_completed},
+};
 
 type FileName = String;
-// type Chunks = bool;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/user.graphql",
-    response_derives = "Debug"
-)]
-struct UploadUserFavicon;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/companies.graphql",
-    response_derives = "Debug"
-)]
-struct UploadCompanyFavicon;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/relate.graphql",
-    response_derives = "Debug"
-)]
-struct ConfirmUploadCompleted;
-
 
 #[derive(PartialEq, Clone, Debug, Properties)]
 pub struct Props {

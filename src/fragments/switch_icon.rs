@@ -1,7 +1,5 @@
 // use yew::prelude::*;
-use yew::{
-  html, Callback, MouseEvent, Html, Classes,
-};
+use yew::{html, Callback, MouseEvent, Html, Classes};
 // use yew_router::prelude::*;
 
 // #[derive(PartialEq, Properties, Clone)]

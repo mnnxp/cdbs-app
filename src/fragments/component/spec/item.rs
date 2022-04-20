@@ -9,33 +9,16 @@ use wasm_bindgen_futures::spawn_local;
 
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
-use crate::gqls::make_query;
 use crate::types::{UUID, Spec, SpecPathInfo};
 use crate::services::get_value_field;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/specs.graphql",
-    response_derives = "Debug"
-)]
-struct GetSpecsPaths;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct AddComponentSpecs;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct DeleteComponentSpecs;
+use crate::gqls::{
+    make_query,
+    relate::{GetSpecsPaths, get_specs_paths},
+    component::{
+        AddComponentSpecs, add_component_specs,
+        DeleteComponentSpecs, delete_component_specs,
+    },
+};
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {

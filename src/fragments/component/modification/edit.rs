@@ -3,7 +3,6 @@ use yew::{
     Component, ComponentLink, Html, Properties,
     ShouldRender, html, InputData, ChangeData
 };
-use chrono::NaiveDateTime;
 
 use log::debug;
 use graphql_client::GraphQLQuery;
@@ -15,61 +14,21 @@ use super::heads::ModificationTableHeads;
 use super::item::ModificationTableItem;
 use super::fileset::ManageModificationFilesets;
 use crate::error::{get_error, Error};
-use crate::gqls::make_query;
 use crate::fragments::list_errors::ListErrors;
+use crate::services::get_value_field;
 use crate::types::{
     UUID, ComponentModificationInfo, Param, ActualStatus,
     ModificationUpdatePreData, FilesetProgramInfo,
 };
-use crate::services::get_value_field;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct RegisterComponentModification;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct PutComponentModificationUpdate;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct DeleteComponentModification;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct GetComponentModifications;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct ComponentModificationFilesets;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct ComponentActualStatuses;
+use crate::gqls::make_query;
+use crate::gqls::component::{
+    RegisterComponentModification, register_component_modification,
+    PutComponentModificationUpdate, put_component_modification_update,
+    DeleteComponentModification, delete_component_modification,
+    GetComponentModifications, get_component_modifications,
+    ComponentModificationFilesets, component_modification_filesets,
+    ComponentActualStatuses, component_actual_statuses,
+};
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
