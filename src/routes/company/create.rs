@@ -16,26 +16,11 @@ use crate::routes::AppRoute;
 use crate::error::{Error, get_error};
 use crate::fragments::list_errors::ListErrors;
 use crate::services::{get_logged_user, get_value_field};
-use crate::types::{
-    UUID, SlimUser, CompanyCreateInfo, Region,
-    CompanyType, TypeAccessInfo,
+use crate::types::{UUID, SlimUser, CompanyCreateInfo, Region, CompanyType, TypeAccessInfo};
+use crate::gqls::company::{
+    GetCreateCompanyDataOpt, get_create_company_data_opt,
+    RegisterCompany, register_company
 };
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/companies.graphql",
-    response_derives = "Debug"
-)]
-struct GetCreateCompanyDataOpt;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/companies.graphql",
-    response_derives = "Debug"
-)]
-struct RegisterCompany;
 
 /// Update settings of the author or logout
 pub struct CreateCompany {

@@ -9,16 +9,9 @@ use wasm_bindgen_futures::spawn_local;
 
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
-use crate::gqls::make_query;
 use crate::types::{UUID, Keyword};
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct DeleteComponentKeywords;
+use crate::gqls::make_query;
+use crate::gqls::component::{DeleteComponentKeywords, delete_component_keywords};
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {

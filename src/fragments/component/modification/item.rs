@@ -11,37 +11,20 @@ use wasm_bindgen_futures::spawn_local;
 
 use super::ModificationTableItemModule;
 use crate::error::{get_error, Error};
-use crate::gqls::make_query;
 use crate::fragments::{
     list_errors::ListErrors,
     component::param::RegisterParamnameBlock,
 };
 use crate::services::get_value_field;
 use crate::types::{UUID, Param, ParamValue};
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct PutModificationParams;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct DeleteModificationParams;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/relate.graphql",
-    response_derives = "Debug"
-)]
-struct GetParams;
+use crate::gqls::{
+    make_query,
+    relate::{GetParams, get_params},
+    component::{
+        PutModificationParams, put_modification_params,
+        DeleteModificationParams, delete_modification_params,
+    },
+};
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {

@@ -5,29 +5,16 @@ use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
-use crate::gqls::make_query;
 
 use crate::fragments::list_errors::ListErrors;
 use crate::error::{Error, get_error};
 use crate::services::{image_detector, get_value_field};
 use crate::types::{UUID, CompanyCertificate};
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/companies.graphql",
-    response_derives = "Debug"
-)]
-struct UpdateCompanyCertificate;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/companies.graphql",
-    response_derives = "Debug"
-)]
-struct DeleteCompanyCertificate;
-
+use crate::gqls::make_query;
+use crate::gqls::company::{
+    UpdateCompanyCertificate, update_company_certificate,
+    DeleteCompanyCertificate, delete_company_certificate,
+};
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {

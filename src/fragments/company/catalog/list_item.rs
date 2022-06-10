@@ -7,7 +7,6 @@ use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use log::debug;
-use crate::gqls::make_query;
 use crate::error::{Error, get_error};
 use crate::routes::AppRoute;
 use crate::fragments::{
@@ -16,22 +15,11 @@ use crate::fragments::{
 };
 use crate::types::{UUID, ShowCompanyShort};
 use crate::services::get_value_field;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/companies.graphql",
-    response_derives = "Debug"
-)]
-struct AddCompanyFav;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/companies.graphql",
-    response_derives = "Debug"
-)]
-struct DeleteCompanyFav;
+use crate::gqls::make_query;
+use crate::gqls::company::{
+    AddCompanyFav, add_company_fav,
+    DeleteCompanyFav, delete_company_fav,
+};
 
 pub enum Msg {
     OpenCompany,

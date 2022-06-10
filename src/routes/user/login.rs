@@ -1,3 +1,4 @@
+use std::sync::{Arc,Mutex};
 use yew::services::fetch::FetchTask;
 use yew::{
     agent::Bridged, classes, html, Bridge, Callback, Component,
@@ -6,15 +7,15 @@ use yew::{
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
 use graphql_client::GraphQLQuery;
 use log::debug;
+use wasm_bindgen_futures::spawn_local;
 
 use crate::fragments::list_errors::ListErrors;
 use crate::error::Error;
 use crate::routes::AppRoute;
 use crate::services::{set_token, Auth, set_logged_user, get_logged_user, get_value_field};
-use crate::types::{UUID, LoginInfo, LoginInfoWrapper, SlimUser, UserToken};
+use crate::types::{LoginInfo, LoginInfoWrapper, SlimUser, UserToken};
 use crate::gqls::make_query;
-use wasm_bindgen_futures::spawn_local;
-use std::sync::{Arc,Mutex};
+use crate::gqls::user::{GetMySelf, get_my_self};
 
 #[derive(PartialEq, Properties, Clone)]
 pub struct Props {
@@ -41,14 +42,6 @@ pub enum Msg {
     UpdateUsername(String),
     UpdatePassword(String),
 }
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/user.graphql",
-    response_derives = "Debug"
-)]
-struct GetMySelf;
 
 impl Component for Login {
     type Message = Msg;

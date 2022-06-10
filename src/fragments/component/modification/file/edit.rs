@@ -6,41 +6,23 @@ use log::debug;
 use graphql_client::GraphQLQuery;
 // use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
-use chrono::NaiveDateTime;
 use web_sys::FileList;
 
 use super::ModificationFileItem;
 use crate::services::{PutUploadFile, UploadData, get_value_field};
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
-use crate::gqls::make_query;
 use crate::types::{UUID, ShowFileInfo, UploadFile};
+use crate::gqls::{
+    make_query,
+    relate::{ConfirmUploadCompleted, confirm_upload_completed},
+    component::{
+        ComponentModificationFilesList, component_modification_files_list,
+        UploadModificationFiles, upload_modification_files,
+    },
+};
 
 type FileName = String;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct ComponentModificationFilesList;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct UploadModificationFiles;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/relate.graphql",
-    response_derives = "Debug"
-)]
-struct ConfirmUploadCompleted;
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {

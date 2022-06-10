@@ -7,17 +7,10 @@ use log::debug;
 
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
-use crate::gqls::make_query;
 use crate::types::{UUID, ShowFileInfo, DownloadFile};
 use crate::services::get_value_field;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct ComponentModificationFiles;
+use crate::gqls::make_query;
+use crate::gqls::component::{ComponentModificationFiles, component_modification_files};
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {

@@ -3,30 +3,17 @@ use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use log::debug;
-use chrono::NaiveDateTime;
-use crate::gqls::make_query;
 use crate::error::{Error, get_error};
 use crate::fragments::{
     list_errors::ListErrors,
     company::ListItemCompany,
 };
 use crate::types::{UUID, Supplier, ShowCompanyShort};
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/companies.graphql",
-    response_derives = "Debug"
-)]
-struct GetCompaniesShortList;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct DeleteSuppliersComponent;
+use crate::gqls::{
+    make_query,
+    company::{GetCompaniesShortList, get_companies_short_list},
+    component::{DeleteSuppliersComponent, delete_suppliers_component},
+};
 
 /// Company card for show data on component page
 pub struct ComponentSupplierItem {

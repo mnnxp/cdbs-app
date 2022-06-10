@@ -11,21 +11,13 @@ use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
-use chrono::NaiveDateTime;
 
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
-use crate::gqls::make_query;
 use crate::types::{UUID, ShowFileInfo};
 use crate::services::get_value_field;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct ComModFilesOfFileset;
+use crate::gqls::make_query;
+use crate::gqls::component::{ComModFilesOfFileset, com_mod_files_of_fileset};
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {

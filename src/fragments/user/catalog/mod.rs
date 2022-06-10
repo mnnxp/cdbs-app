@@ -7,18 +7,11 @@ use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use log::debug;
-use crate::gqls::make_query;
 use crate::error::{Error, get_error};
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, ShowUserShort, UsersQueryArg};
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/user.graphql",
-    response_derives = "Debug"
-)]
-struct GetUsersShortList;
+use crate::gqls::make_query;
+use crate::gqls::user::{GetUsersShortList, get_users_short_list};
 
 #[derive(GraphQLQuery)]
 #[graphql(

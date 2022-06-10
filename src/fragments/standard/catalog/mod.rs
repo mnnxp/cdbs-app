@@ -9,22 +9,14 @@ use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use log::debug;
-use chrono::NaiveDateTime;
 
-use crate::gqls::make_query;
 use crate::routes::AppRoute;
 use crate::error::{Error, get_error};
 use crate::fragments::list_errors::ListErrors;
-use crate::types::{UUID, ShowStandardShort, StandardsQueryArg};
+use crate::types::{ShowStandardShort, StandardsQueryArg};
 use crate::services::get_value_field;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/standards.graphql",
-    response_derives = "Debug"
-)]
-struct GetStandardsShortList;
+use crate::gqls::make_query;
+use crate::gqls::standard::{GetStandardsShortList, get_standards_short_list};
 
 pub enum Msg {
     SwitchShowType,

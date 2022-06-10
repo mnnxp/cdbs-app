@@ -9,31 +9,17 @@ use yew::{
 use log::debug;
 use wasm_bindgen_futures::spawn_local;
 
-use crate::gqls::make_query;
-
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
 use crate::services::{PutUploadFile, UploadData, get_value_field};
-use crate::types::{UUID, UploadFile};
+use crate::types::UploadFile;
+use crate::gqls::{
+    make_query,
+    relate::{ConfirmUploadCompleted, confirm_upload_completed},
+    company::{UploadCompanyCertificate, upload_company_certificate},
+};
 
 type FileName = String;
-// type Chunks = bool;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/companies.graphql",
-    response_derives = "Debug"
-)]
-struct UploadCompanyCertificate;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/relate.graphql",
-    response_derives = "Debug"
-)]
-struct ConfirmUploadCompleted;
 
 #[derive(PartialEq, Clone, Debug, Properties)]
 pub struct Props {

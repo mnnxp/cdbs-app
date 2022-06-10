@@ -15,28 +15,16 @@ use wasm_bindgen_futures::spawn_local;
 use crate::routes::AppRoute;
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
-use crate::gqls::make_query;
 use crate::services::{get_logged_user, get_value_field};
 use crate::types::{
     UUID, StandardCreateData, SlimUser, Region, TypeAccessInfo,
     ShowCompanyShort, StandardStatus,
 };
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/standards.graphql",
-    response_derives = "Debug"
-)]
-struct GetStandardDataOpt;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/standards.graphql",
-    response_derives = "Debug"
-)]
-struct RegisterStandard;
+use crate::gqls::make_query;
+use crate::gqls::standard::{
+    GetStandardDataOpt, get_standard_data_opt,
+    RegisterStandard, register_standard,
+};
 
 /// Standard with relate data
 pub struct CreateStandard {

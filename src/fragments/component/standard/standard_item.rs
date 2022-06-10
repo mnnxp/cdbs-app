@@ -8,20 +8,13 @@ use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::error::{get_error, Error};
-use crate::gqls::make_query;
 use crate::fragments::{
     list_errors::ListErrors,
     standard::ListItemStandard,
 };
 use crate::types::{UUID, ShowStandardShort};
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct DeleteStandardsComponent;
+use crate::gqls::make_query;
+use crate::gqls::component::{DeleteStandardsComponent, delete_standards_component};
 
 /// Standard card for show data on component page
 pub struct ComponentStandardItem {

@@ -8,19 +8,12 @@ use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use std::time::Duration;
 use wasm_bindgen_futures::spawn_local;
-use crate::gqls::make_query;
 // use crate::error::{get_error, Error};
 use crate::fragments::standard::{SpecsTags, SpecTagItem};
 use crate::types::{Spec, SpecPathInfo, UUID};
 use crate::services::get_value_field;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/specs.graphql",
-    response_derives = "Debug"
-)]
-struct SearchSpecs;
+use crate::gqls::make_query;
+use crate::gqls::relate::{SearchSpecs, search_specs};
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {

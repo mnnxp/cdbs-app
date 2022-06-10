@@ -2,7 +2,6 @@ use yew::{
     agent::Bridged, classes, html, Bridge, Component,
     ComponentLink, Html, ShouldRender, Properties
 };
-use chrono::NaiveDateTime;
 use yew_router::{
     service::RouteService,
     agent::RouteRequest::ChangeRoute,
@@ -22,43 +21,15 @@ use crate::fragments::{
     standard::{StandardFilesCard, SpecsTags, KeywordsTags},
     img_showcase::ImgShowcase,
 };
-use crate::gqls::make_query;
 use crate::services::{get_logged_user, get_value_field};
-use crate::types::{
-    UUID, StandardInfo, SlimUser, DownloadFile, ComponentsQueryArg,
+use crate::types::{UUID, StandardInfo, SlimUser, DownloadFile, ComponentsQueryArg};
+use crate::gqls::make_query;
+use crate::gqls::standard::{
+    GetStandardData, get_standard_data,
+    StandardFiles, standard_files,
+    AddStandardFav, add_standard_fav,
+    DeleteStandardFav, delete_standard_fav,
 };
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/standards.graphql",
-    response_derives = "Debug"
-)]
-struct GetStandardData;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/standards.graphql",
-    response_derives = "Debug"
-)]
-struct StandardFiles;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/standards.graphql",
-    response_derives = "Debug"
-)]
-struct AddStandardFav;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/standards.graphql",
-    response_derives = "Debug"
-)]
-struct DeleteStandardFav;
 
 /// Standard with relate data
 pub struct ShowStandard {

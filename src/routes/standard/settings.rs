@@ -25,70 +25,25 @@ use crate::fragments::{
         AddKeywordsTags, UpdateStandardFaviconCard
     },
 };
-use crate::gqls::make_query;
 use crate::services::{PutUploadFile, UploadData, get_logged_user, get_value_field};
 use crate::types::{
     UUID, StandardInfo, SlimUser, Region, TypeAccessInfo, UploadFile, ShowFileInfo,
     ShowCompanyShort, StandardUpdatePreData, StandardUpdateData, StandardStatus,
 };
+use crate::gqls::{
+    make_query,
+    relate::{ConfirmUploadCompleted, confirm_upload_completed},
+    standard::{
+        GetUpdateStandardDataOpt, get_update_standard_data_opt,
+        PutStandardUpdate, put_standard_update,
+        DeleteStandard, delete_standard,
+        ChangeStandardAccess, change_standard_access,
+        UploadStandardFiles, upload_standard_files,
+        StandardFilesList, standard_files_list,
+    },
+};
 
 type FileName = String;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/standards.graphql",
-    response_derives = "Debug"
-)]
-struct GetUpdateStandardDataOpt;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/standards.graphql",
-    response_derives = "Debug"
-)]
-struct PutStandardUpdate;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/standards.graphql",
-    response_derives = "Debug"
-)]
-struct DeleteStandard;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/standards.graphql",
-    response_derives = "Debug"
-)]
-struct ChangeStandardAccess;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/standards.graphql",
-    response_derives = "Debug"
-)]
-struct UploadStandardFiles;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/standards.graphql",
-    response_derives = "Debug"
-)]
-struct StandardFilesList;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/relate.graphql",
-    response_derives = "Debug"
-)]
-struct ConfirmUploadCompleted;
 
 /// Standard with relate data
 pub struct StandardSettings {

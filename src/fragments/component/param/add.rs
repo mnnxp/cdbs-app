@@ -7,16 +7,9 @@ use wasm_bindgen_futures::spawn_local;
 
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
-use crate::gqls::make_query;
 use crate::services::get_value_field;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/relate.graphql",
-    response_derives = "Debug"
-)]
-struct RegisterParam;
+use crate::gqls::make_query;
+use crate::gqls::relate::{RegisterParam, register_param};
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {

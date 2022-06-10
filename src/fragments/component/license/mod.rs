@@ -3,7 +3,6 @@ mod item;
 pub use item::ComponentLicenseTag;
 
 use std::collections::BTreeSet;
-use chrono::NaiveDateTime;
 use yew::prelude::*;
 use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
 use log::debug;
@@ -13,33 +12,16 @@ use wasm_bindgen_futures::spawn_local;
 
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
-use crate::gqls::make_query;
 use crate::types::{UUID, LicenseInfo};
 use crate::services::get_value_field;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct AddComponentLicense;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct GetComponentLicenses;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/relate.graphql",
-    response_derives = "Debug"
-)]
-struct GetLicenses;
+use crate::gqls::{
+    make_query,
+    relate::{GetLicenses, get_licenses},
+    component::{
+        AddComponentLicense, add_component_license,
+        GetComponentLicenses, get_component_licenses,
+    },
+};
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {

@@ -8,17 +8,10 @@ use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::error::{get_error, Error};
-use crate::gqls::make_query;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, LicenseInfo};
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct DeleteComponentLicense;
+use crate::gqls::make_query;
+use crate::gqls::component::{DeleteComponentLicense, delete_component_license};
 
 /// License card for show data on component page
 pub struct ComponentLicenseTag {

@@ -1,32 +1,18 @@
-use yew::{
-    html, Component, Callback, ComponentLink, Html, Properties, ShouldRender, InputData,
-};
+use yew::{html, Component, Callback, ComponentLink, Html, Properties, ShouldRender, InputData};
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
-use crate::gqls::make_query;
 
 use crate::fragments::list_errors::ListErrors;
 use crate::error::{Error, get_error};
 use crate::services::{image_detector, get_value_field};
 use crate::types::{UUID, UserCertificate};
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/user.graphql",
-    response_derives = "Debug"
-)]
-struct UpdateUserCertificate;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/user.graphql",
-    response_derives = "Debug"
-)]
-struct DeleteUserCertificate;
+use crate::gqls::make_query;
+use crate::gqls::user::{
+    UpdateUserCertificate, update_user_certificate,
+    DeleteUserCertificate, delete_user_certificate,
+};
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {

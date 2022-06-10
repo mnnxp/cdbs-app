@@ -8,26 +8,14 @@ use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::error::{get_error, Error};
-use crate::gqls::make_query;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, ComponentParam};
 use crate::services::get_value_field;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct PutComponentParams;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct DeleteComponentParams;
+use crate::gqls::make_query;
+use crate::gqls::component::{
+    PutComponentParams, put_component_params,
+    DeleteComponentParams, delete_component_params,
+};
 
 /// Param card for show data on component page
 pub struct ComponentParamTag {

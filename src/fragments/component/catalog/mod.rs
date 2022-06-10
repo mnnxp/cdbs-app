@@ -4,7 +4,6 @@ pub use list_item::ListItem;
 
 use yew::{html, Component, ComponentLink, Html, ShouldRender, Properties};
 use yew_router::prelude::RouterAnchor;
-use chrono::NaiveDateTime;
 use graphql_client::GraphQLQuery;
 use log::debug;
 use serde_json::Value;
@@ -12,34 +11,15 @@ use wasm_bindgen_futures::spawn_local;
 
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
-use crate::gqls::make_query;
 use crate::routes::AppRoute;
 use crate::types::{ComponentsQueryArg, ShowComponentShort, UUID};
 use crate::services::get_value_field;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct GetComponentsShortList;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct AddComponentFav;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/components.graphql",
-    response_derives = "Debug"
-)]
-struct DeleteComponentFav;
+use crate::gqls::make_query;
+use crate::gqls::component::{
+    GetComponentsShortList, get_components_short_list,
+    AddComponentFav, add_component_fav,
+    DeleteComponentFav, delete_component_fav,
+};
 
 pub enum Msg {
     SwitchShowType,

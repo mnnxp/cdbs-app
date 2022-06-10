@@ -7,31 +7,19 @@ use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use log::debug;
-use crate::gqls::make_query;
 use crate::error::{Error, get_error};
 use crate::routes::AppRoute;
 use crate::fragments::{
     list_errors::ListErrors,
     switch_icon::res_btn,
 };
-use crate::types::{UUID, ShowStandardShort};
+use crate::types::ShowStandardShort;
 use crate::services::get_value_field;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/standards.graphql",
-    response_derives = "Debug"
-)]
-struct AddStandardFav;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/standards.graphql",
-    response_derives = "Debug"
-)]
-struct DeleteStandardFav;
+use crate::gqls::make_query;
+use crate::gqls::standard::{
+    AddStandardFav, add_standard_fav,
+    DeleteStandardFav, delete_standard_fav,
+};
 
 pub enum Msg {
     OpenStandard,
