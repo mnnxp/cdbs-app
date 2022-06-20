@@ -38,6 +38,7 @@ pub struct RegisterInfo {
     pub position: String,
     pub region_id: usize,
     pub program_id: usize,
+    pub type_access_id: usize,
 }
 
 impl Default for RegisterInfo {
@@ -56,6 +57,7 @@ impl Default for RegisterInfo {
             position: String::new(),
             region_id: 1,
             program_id: 1,
+            type_access_id: 1,
         }
     }
 }

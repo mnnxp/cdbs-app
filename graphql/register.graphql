@@ -9,6 +9,12 @@ query RegisterOpt {
     langId
     region
   }
+
+  typesAccess {
+    typeAccessId
+    langId
+    name
+  }
 }
 
 mutation RegUser($iptUserData: IptUserData!) {

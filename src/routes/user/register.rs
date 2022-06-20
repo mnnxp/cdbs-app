@@ -13,7 +13,7 @@ use crate::routes::AppRoute;
 use crate::error::{Error, get_error};
 use crate::fragments::list_errors::ListErrors;
 use crate::services::{get_logged_user, get_value_field};
-use crate::types::{RegisterInfo, Region, Program};
+use crate::types::{RegisterInfo, Region, Program, TypeAccessInfo};
 use crate::gqls::make_query;
 use crate::gqls::user::{
     RegisterOpt, register_opt,
@@ -28,20 +28,22 @@ pub struct Register {
     router_agent: Box<dyn Bridge<RouteAgent>>,
     regions: Vec<Region>,
     programs: Vec<Program>,
+    types_access: Vec<TypeAccessInfo>,
     link: ComponentLink<Self>,
     show_conditions: bool,
 }
 
 pub enum Msg {
     Request,
-    UpdateFirstname(String),
-    UpdateLastname(String),
-    UpdateSecondname(String),
+    // UpdateFirstname(String),
+    // UpdateLastname(String),
+    // UpdateSecondname(String),
     UpdateUsername(String),
     UpdateEmail(String),
     UpdatePassword(String),
     UpdateProgramId(String),
     UpdateRegionId(String),
+    UpdateTypeAccessId(String),
     UpdateList(String),
     GetRegister(String),
     ShowConditions,
@@ -61,6 +63,7 @@ impl Component for Register {
             link,
             programs: Vec::new(),
             regions: Vec::new(),
+            types_access: Vec::new(),
             show_conditions: false,
         }
     }
@@ -101,7 +104,7 @@ impl Component for Register {
                     position: Some(self.request.position.clone()),
                     regionId: Some(self.request.region_id as i64),
                     programId: Some(self.request.program_id as i64),
-                    typeAccessId: Some(1), // todo!(make interface for change in future)
+                    typeAccessId: Some(self.request.type_access_id as i64),
                 };
                 spawn_local(async move {
                     let res = make_query(RegUser::build_query(reg_user::Variables {
@@ -117,6 +120,8 @@ impl Component for Register {
                     serde_json::from_value(res.get("regions").unwrap().clone()).unwrap();
                 self.programs =
                     serde_json::from_value(res.get("programs").unwrap().clone()).unwrap();
+                self.types_access =
+                    serde_json::from_value(res.get("typesAccess").unwrap().clone()).unwrap();
                 debug!("Update: {:?}", self.programs);
             },
             Msg::GetRegister(res) => {
@@ -128,9 +133,9 @@ impl Component for Register {
                     true => self.error = Some(get_error(&data)),
                 }
             },
-            Msg::UpdateFirstname(firstname) => self.request.firstname = firstname,
-            Msg::UpdateLastname(lastname) => self.request.lastname = lastname,
-            Msg::UpdateSecondname(secondname) => self.request.secondname = secondname,
+            // Msg::UpdateFirstname(firstname) => self.request.firstname = firstname,
+            // Msg::UpdateLastname(lastname) => self.request.lastname = lastname,
+            // Msg::UpdateSecondname(secondname) => self.request.secondname = secondname,
             Msg::UpdateEmail(email) => self.request.email = email,
             Msg::UpdatePassword(password) => self.request.password = password,
             Msg::UpdateUsername(username) => self.request.username = username,
@@ -138,6 +143,8 @@ impl Component for Register {
                 self.request.program_id = program_id.parse::<usize>().unwrap_or(1),
             Msg::UpdateRegionId(region_id) =>
                 self.request.region_id = region_id.parse::<usize>().unwrap_or(1),
+            Msg::UpdateTypeAccessId(type_access_id) =>
+                self.request.type_access_id = type_access_id.parse::<usize>().unwrap_or(1),
             Msg::ShowConditions => self.show_conditions = !self.show_conditions,
             Msg::Ignore => {}
         }
@@ -195,9 +202,9 @@ impl Component for Register {
 
 impl Register {
     fn fieldset_profile(&self) -> Html {
-        let oninput_firstname = self.link.callback(|ev: InputData| Msg::UpdateFirstname(ev.value));
-        let oninput_lastname = self.link.callback(|ev: InputData| Msg::UpdateLastname(ev.value));
-        let oninput_secondname = self.link.callback(|ev: InputData| Msg::UpdateSecondname(ev.value));
+        // let oninput_firstname = self.link.callback(|ev: InputData| Msg::UpdateFirstname(ev.value));
+        // let oninput_lastname = self.link.callback(|ev: InputData| Msg::UpdateLastname(ev.value));
+        // let oninput_secondname = self.link.callback(|ev: InputData| Msg::UpdateSecondname(ev.value));
         let oninput_username = self.link.callback(|ev: InputData| Msg::UpdateUsername(ev.value));
         let oninput_email = self.link.callback(|ev: InputData| Msg::UpdateEmail(ev.value));
         let oninput_password = self.link.callback(|ev: InputData| Msg::UpdatePassword(ev.value));
@@ -212,6 +219,12 @@ impl Register {
             .callback(|ev: ChangeData| Msg::UpdateRegionId(match ev {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
+          }));
+        let onchange_type_access_id = self
+            .link
+            .callback(|ev: ChangeData| Msg::UpdateTypeAccessId(match ev {
+                ChangeData::Select(el) => el.value(),
+                _ => "1".to_string(),
           }));
 
         html! {<>
@@ -236,32 +249,32 @@ impl Register {
             </div>
 
             // second columns (fio)
-            <div class="columns">
-                <div class="column">
-                    {self.fileset_generator(
-                        "firstname", get_value_field(&23), // "Firstname (not required)",
-                        "", // no set icon for input
-                        self.request.firstname.clone(),
-                        oninput_firstname
-                    )}
-                </div>
-                <div class="column">
-                    {self.fileset_generator(
-                        "lastname", get_value_field(&24), // "Lastname (not required)",
-                        "", // no set icon for input
-                        self.request.lastname.clone(),
-                        oninput_lastname
-                    )}
-                </div>
-                <div class="column">
-                    {self.fileset_generator(
-                        "secondname", get_value_field(&25), // "Secondname (not required)",
-                        "", // no set icon for input
-                        self.request.secondname.clone(),
-                        oninput_secondname
-                    )}
-                </div>
-            </div>
+            // <div class="columns">
+            //     <div class="column">
+            //         {self.fileset_generator(
+            //             "firstname", get_value_field(&23), // "Firstname (not required)",
+            //             "", // no set icon for input
+            //             self.request.firstname.clone(),
+            //             oninput_firstname
+            //         )}
+            //     </div>
+            //     <div class="column">
+            //         {self.fileset_generator(
+            //             "lastname", get_value_field(&24), // "Lastname (not required)",
+            //             "", // no set icon for input
+            //             self.request.lastname.clone(),
+            //             oninput_lastname
+            //         )}
+            //     </div>
+            //     <div class="column">
+            //         {self.fileset_generator(
+            //             "secondname", get_value_field(&25), // "Secondname (not required)",
+            //             "", // no set icon for input
+            //             self.request.secondname.clone(),
+            //             oninput_secondname
+            //         )}
+            //     </div>
+            // </div>
 
             // third columns (password)
             {self.fileset_generator(
@@ -271,7 +284,7 @@ impl Register {
                 oninput_password
             )}
 
-            // fourth columns (program, region)
+            // fourth columns (program, region, access)
             <div class="columns">
                 <div class="column">
                     <label class="label">{ get_value_field(&26) }</label>
@@ -298,14 +311,35 @@ impl Register {
                               select=self.request.region_id.to_string()
                               onchange=onchange_region_id
                               >
-                              { for self.regions.iter().map(|x| html!{
+                              { for self.regions.iter().map(|x|
                                   html!{
                                       <option value={x.region_id.to_string()}
                                             selected={x.region_id == self.request.region_id} >
                                           {&x.region}
                                       </option>
                                   }
-                              }) }
+                              )}
+                          </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="column">
+                    <label class="label">{ get_value_field(&58) }</label> // "Type Access"
+                    <div class="control">
+                        <div class="select">
+                          <select
+                              id="types-access"
+                              select=self.request.type_access_id.to_string()
+                              onchange=onchange_type_access_id
+                              >
+                              { for self.types_access.iter().map(|x|
+                                  html!{
+                                      <option value={x.type_access_id.to_string()}
+                                        selected={x.type_access_id == self.request.type_access_id} >
+                                          {&x.name}
+                                      </option>
+                                  }
+                              )}
                           </select>
                         </div>
                     </div>
