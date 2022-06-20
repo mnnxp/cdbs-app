@@ -15,4 +15,4 @@ pub use requests::{
 };
 pub use tags::Tags;
 pub use upload_file::{PutUploadFile, UploadData};
-pub(crate) use util::image_detector;
+pub(crate) use util::{image_detector, url_decode};
