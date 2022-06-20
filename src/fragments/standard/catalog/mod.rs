@@ -17,17 +17,12 @@ use crate::types::{ShowStandardShort, StandardsQueryArg};
 use crate::services::get_value_field;
 use crate::gqls::make_query;
 use crate::gqls::standard::{GetStandardsShortList, get_standards_short_list};
+use crate::fragments::ListState;
 
 pub enum Msg {
     SwitchShowType,
     UpdateList(String),
     GetList,
-}
-
-#[derive(PartialEq, Eq)]
-pub enum ListState {
-    List,
-    Box,
 }
 
 pub struct CatalogStandards {
@@ -53,7 +48,7 @@ impl Component for CatalogStandards {
             error: None,
             link,
             props,
-            show_type: ListState::Box,
+            show_type: ListState::get_from_storage(),
             list: Vec::new()
         }
     }
@@ -72,6 +67,7 @@ impl Component for CatalogStandards {
                     ListState::Box => self.show_type = ListState::List,
                     _ => self.show_type = ListState::Box,
                 }
+                ListState::set_to_storage(&self.show_type);
             },
             Msg::GetList => {
                 let ipt_standards_arg = match &self.props.arguments {

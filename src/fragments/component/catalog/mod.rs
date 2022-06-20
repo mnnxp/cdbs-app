@@ -20,6 +20,7 @@ use crate::gqls::component::{
     AddComponentFav, add_component_fav,
     DeleteComponentFav, delete_component_fav,
 };
+use crate::fragments::ListState;
 
 pub enum Msg {
     SwitchShowType,
@@ -27,12 +28,6 @@ pub enum Msg {
     AddFav(UUID),
     DelFav(UUID),
     GetList,
-}
-
-#[derive(PartialEq, Eq)]
-pub enum ListState {
-    List,
-    Box,
 }
 
 pub struct CatalogComponents {
@@ -58,7 +53,7 @@ impl Component for CatalogComponents {
             error: None,
             link,
             props,
-            show_type: ListState::Box,
+            show_type: ListState::get_from_storage(),
             list: Vec::new(),
         }
     }
@@ -72,9 +67,12 @@ impl Component for CatalogComponents {
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         let link = self.link.clone();
         match msg {
-            Msg::SwitchShowType => match self.show_type {
-                ListState::Box => self.show_type = ListState::List,
-                _ => self.show_type = ListState::Box,
+            Msg::SwitchShowType => {
+                match self.show_type {
+                    ListState::Box => self.show_type = ListState::List,
+                    _ => self.show_type = ListState::Box,
+                }
+                ListState::set_to_storage(&self.show_type);
             },
             Msg::GetList => {
                 let ipt_components_arg = match &self.props.arguments {

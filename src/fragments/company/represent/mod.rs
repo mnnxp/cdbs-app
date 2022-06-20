@@ -11,15 +11,10 @@ use yew::{html, Component, ComponentLink, Html, Properties, ShouldRender};
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::CompanyRepresentInfo;
+use crate::fragments::ListState;
 
 pub enum Msg {
     SwitchShowType,
-}
-
-#[derive(PartialEq, Eq)]
-pub enum ListState {
-    List,
-    Box,
 }
 
 pub struct CompanyRepresents {
@@ -44,7 +39,7 @@ impl Component for CompanyRepresents {
             error: None,
             link,
             props,
-            show_type: ListState::Box,
+            show_type: ListState::get_from_storage(),
         }
     }
 
@@ -56,6 +51,7 @@ impl Component for CompanyRepresents {
                     ListState::Box => self.show_type = ListState::List,
                     _ => self.show_type = ListState::Box,
                 }
+                ListState::set_to_storage(&self.show_type);
             },
         }
         true

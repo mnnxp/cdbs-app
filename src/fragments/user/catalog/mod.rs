@@ -12,6 +12,7 @@ use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, ShowUserShort, UsersQueryArg};
 use crate::gqls::make_query;
 use crate::gqls::user::{GetUsersShortList, get_users_short_list};
+use crate::fragments::ListState;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -30,16 +31,9 @@ struct AddUserFav;
 struct DeleteUserFav;
 
 pub enum Msg {
-    AddOne,
     SwitchShowType,
     UpdateList(String),
     GetList
-}
-
-#[derive(PartialEq, Eq)]
-pub enum ListState {
-    List,
-    Box,
 }
 
 #[derive(Properties, Clone)]
@@ -51,7 +45,6 @@ pub struct CatalogUsers {
     error: Option<Error>,
     link: ComponentLink<Self>,
     props: Props,
-    value: i64,
     show_type: ListState,
     list: Vec<ShowUserShort>
 }
@@ -65,8 +58,7 @@ impl Component for CatalogUsers {
             error: None,
             link,
             props,
-            value: 0,
-            show_type: ListState::Box,
+            show_type: ListState::get_from_storage(),
             list: Vec::new()
         }
     }
@@ -81,16 +73,12 @@ impl Component for CatalogUsers {
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         let link = self.link.clone();
         match msg {
-            Msg::AddOne => {
-                self.value += 1;
-                // the value has changed so we need to
-                // re-render for it to appear on the page
-            },
             Msg::SwitchShowType => {
                 match self.show_type {
                     ListState::Box => self.show_type = ListState::List,
                     _ => self.show_type = ListState::Box,
                 }
+                ListState::set_to_storage(&self.show_type);
             },
             Msg::GetList => {
                 let ipt_users_arg = match &self.props.arguments {
