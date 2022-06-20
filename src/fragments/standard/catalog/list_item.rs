@@ -205,7 +205,7 @@ impl ListItemStandard {
                                 }}
                             </div>
                             <div class="overflow-title">
-                                { get_value_field(&141) } // design by
+                                { get_value_field(&141) } // owner
                                 <span class="has-text-weight-bold">
                                     {format!("{} {}",
                                             &owner_company.shortname,
@@ -288,7 +288,7 @@ impl ListItemStandard {
               </div>
               <div class="has-text-weight-bold is-size-4">{name}</div>
               <div class="overflow-title">
-                { get_value_field(&141) } // design by
+                { get_value_field(&141) } // owner
                   <span class="has-text-weight-bold">
                     {format!("{} {}",
                       &owner_company.shortname,

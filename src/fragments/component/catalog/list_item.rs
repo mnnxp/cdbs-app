@@ -136,7 +136,7 @@ impl ListItem {
                                 </span>
                             </>},
                             None => html!{<>
-                                { get_value_field(&94) }
+                                { get_value_field(&118) } // user uploaded
                                 <span class="id-box has-text-grey-light has-text-weight-bold">
                                   {format!("@{}",&owner_user.username)}
                                 </span>
@@ -185,7 +185,7 @@ impl ListItem {
                         // </div>
                       </div>
                       <div class="column">
-                        {format!("{} {:.*}", get_value_field(&161), 10, updated_at.to_string())}
+                        {format!("{}{:.*}", get_value_field(&30), 10, updated_at.to_string())}
                       </div>
                   </div>
                 </div>

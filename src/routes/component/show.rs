@@ -831,7 +831,7 @@ impl ShowComponent {
                             </div>
                             <div class="columns" style="margin-bottom:0">
                                 <div class="column">
-                                  {format!("{}: {}", get_value_field(&118), &mod_data.actual_status.name)}
+                                  {format!("{}: {}", get_value_field(&96), &mod_data.actual_status.name)}
                                 </div>
                                 <div class="column">
                                   {format!("{} {:.*}", get_value_field(&30), 10, mod_data.updated_at.to_string())}
