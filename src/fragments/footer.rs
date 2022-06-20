@@ -74,8 +74,11 @@ impl Component for Footer {
                     // left footer
                     <div class="column">
                         <div class="tags are-large">
-                            <a class=vec!("social-network") href="mailto:info@cadbase.rs" title="Email">
+                            <a class=vec!("social-network") href="mailto:info@cadbase.rs" title="Email"  style="margin-right: 0.1rem;">
                                 <i class=vec!("fas", "fa-lg", "fa-envelope")></i>
+                            </a>
+                            <a class=vec!("social-network") href="https://www.youtube.com/channel/UC-dHiTHBGV88ScxFKSC3srw" title="Youtube Channel" rel="noreferrer">
+                                <i class=vec!("fab", "fa-lg", "fa-youtube")></i>
                             </a>
                         </div>
                         <div class="buttons">
