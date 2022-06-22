@@ -172,6 +172,7 @@ impl Footer {
                         <p>{ get_value_field(&257) }</p>
                         <p>{ get_value_field(&258) }</p>
                         <p>{ get_value_field(&259) }</p>
+                        <p>{ get_value_field(&253) } <a href="mailto:info@cadbase.rs" title="Email">{"info@cadbase.rs"}</a></p>
                         <h4>{ get_value_field(&260) }</h4>
                     </div>
                 </section>
