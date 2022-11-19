@@ -543,28 +543,28 @@ impl ModificationsTableEdit {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
 
         html!{<div class="card">
-            <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
+            <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error.clone())}/>
             {self.modal_add_modification_card()}
             {self.modal_edit_modification_card()}
             <div class="table-container">
               <table class="table is-fullwidth is-striped">
                 <ModificationTableHeads
                   show_new_column = true
-                  component_uuid = self.component_uuid.clone()
-                  params = self.collect_heads.clone()
+                  component_uuid = {self.component_uuid.clone()}
+                  params = {self.collect_heads.clone()}
                 />
 
                 {for self.collect_items.iter().map(|(modification_uuid, item)|
                     match self.valid_modification_uuids.get(modification_uuid) {
                         Some(_) => html!{<ModificationTableItem
                             show_manage_btn = true
-                            modification_uuid = modification_uuid.clone()
-                            collect_heads = self.collect_heads.clone()
-                            collect_item = item.clone()
-                            select_item = &self.select_modification_uuid == modification_uuid
+                            modification_uuid = {modification_uuid.clone()}
+                            collect_heads = {self.collect_heads.clone()}
+                            collect_item = {item.clone()}
+                            select_item = {&self.select_modification_uuid == modification_uuid}
                             open_modification_files = false
-                            callback_new_modification_param = Some(onclick_new_modification_param.clone())
-                            callback_select_modification = Some(onclick_select_modification.clone())
+                            callback_new_modification_param = {Some(onclick_new_modification_param.clone())}
+                            callback_select_modification = {Some(onclick_select_modification.clone())}
                         />},
                         None => html!{},
                     }
@@ -589,7 +589,7 @@ impl ModificationsTableEdit {
             <div class="card column">
                 <ManageModificationFilesCard
                     show_download_btn = false
-                    modification_uuid = self.select_modification_uuid.clone()
+                    modification_uuid = {self.select_modification_uuid.clone()}
                   />
             </div>
         </>}
@@ -619,13 +619,13 @@ impl ModificationsTableEdit {
             false => "modal",
         };
 
-        html!{<div class=class_modal>
-          <div class="modal-background" onclick=onclick_add_modification_card.clone() />
+        html!{<div class={class_modal}>
+          <div class="modal-background" onclick={onclick_add_modification_card.clone()} />
             <div class="card">
               <div class="modal-content">
                 <header class="modal-card-head">
                     <p class="modal-card-title">{ get_value_field(&175) }</p> // Create new modification
-                    <button class="delete" aria-label="close" onclick=onclick_add_modification_card.clone() />
+                    <button class="delete" aria-label="close" onclick={onclick_add_modification_card.clone()} />
                 </header>
                 <div class="box itemBox">
                   <article class="media center-media">
@@ -636,9 +636,9 @@ impl ModificationsTableEdit {
                                   id="add-modification-name"
                                   class="input is-fullwidth"
                                   type="text"
-                                  placeholder=get_value_field(&176)
+                                  placeholder={get_value_field(&176)}
                                   value={self.request_add_modification.modification_name.clone()}
-                                  oninput=oninput_name />
+                                  oninput={oninput_name} />
                           </div>
                           <div class="column">
                               <label class="label">{ get_value_field(&61) }</label>
@@ -647,9 +647,9 @@ impl ModificationsTableEdit {
                                   class="textarea is-fullwidth"
                                   // rows="10"
                                   type="text"
-                                  placeholder=get_value_field(&61)
+                                  placeholder={get_value_field(&61)}
                                   value={self.request_add_modification.description.clone()}
-                                  oninput=oninput_description />
+                                  oninput={oninput_description} />
                           </div>
                           <div class="column">
                               <label class="label">{ get_value_field(&96) }</label>
@@ -657,7 +657,7 @@ impl ModificationsTableEdit {
                                   <select
                                       id="add-modification-actual-status"
                                       select={self.request_add_modification.actual_status_id.to_string()}
-                                      onchange=onchange_actual_status_id
+                                      onchange={onchange_actual_status_id}
                                       >
                                     { for self.actual_statuses.iter().map(|x|
                                         html!{
@@ -718,13 +718,13 @@ impl ModificationsTableEdit {
             .find(|x| x.uuid == self.select_modification_uuid);
 
         match modification_data {
-            Some(modification_data) => html!{<div class=class_modal>
-              <div class="modal-background" onclick=onclick_modification_card.clone() />
+            Some(modification_data) => html!{<div class={class_modal}>
+              <div class="modal-background" onclick={onclick_modification_card.clone()} />
                 <div class="card">
                   <div class="modal-content">
                     <header class="modal-card-head">
                         <p class="modal-card-title">{ get_value_field(&177) }</p> // Change modification data
-                        <button class="delete" aria-label="close" onclick=onclick_modification_card />
+                        <button class="delete" aria-label="close" onclick={onclick_modification_card} />
                     </header>
                     <div class="box itemBox">
                       <article class="media center-media">
@@ -736,7 +736,7 @@ impl ModificationsTableEdit {
                                   type="text"
                                   placeholder={modification_data.modification_name.clone()}
                                   value={self.request_edit_modification.modification_name.clone()}
-                                  oninput=oninput_modification_name />
+                                  oninput={oninput_modification_name} />
                               <label class="label">{ get_value_field(&61) }</label>
                               <textarea
                                   id="update-modification-description"
@@ -745,13 +745,13 @@ impl ModificationsTableEdit {
                                   type="text"
                                   placeholder={modification_data.description.clone()}
                                   value={self.request_edit_modification.description.clone()}
-                                  oninput=oninput_modification_description />
+                                  oninput={oninput_modification_description} />
                           <label class="label">{ get_value_field(&96) }</label>
                           <div class="select">
                               <select
                                   id="update-modification-actual-status"
                                   select={modification_data.actual_status.actual_status_id.to_string()}
-                                  onchange=onchange_modification_actual_status_id
+                                  onchange={onchange_modification_actual_status_id}
                                   >
                                 { for self.actual_statuses.iter().map(|x|
                                     html!{
@@ -811,11 +811,11 @@ impl ModificationsTableEdit {
             <h2 class="has-text-weight-bold">{ get_value_field(&173) }</h2> // Manage modification filesets
             <div class="card column">
                 <ManageModificationFilesets
-                    select_modification_uuid = self.select_modification_uuid.clone()
-                    filesets_program = self.modification_filesets
+                    select_modification_uuid = {self.select_modification_uuid.clone()}
+                    filesets_program = {self.modification_filesets
                         .get(&self.select_modification_uuid)
                         .map(|f| f.clone())
-                        .unwrap_or_default()
+                        .unwrap_or_default()}
                 />
             </div>
         </>}

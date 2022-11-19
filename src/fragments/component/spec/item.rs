@@ -204,8 +204,8 @@ impl Component for SpecTagItem {
 
         match &self.error {
             Some(err) => html!{
-                <ListErrors error=err.clone()
-                    clear_error=Some(onclick_clear_error.clone())
+                <ListErrors error={err.clone()}
+                    clear_error={Some(onclick_clear_error.clone())}
                   />
             },
             None => match self.get_result_delete {
@@ -265,8 +265,8 @@ impl SpecTagItem {
 
         match &self.spec_data {
             Some(data) => html!{
-                <div class=class_modal>
-                  <div class="modal-background" onclick=onclick_spec_info.clone() />
+                <div class={class_modal}>
+                  <div class="modal-background" onclick={onclick_spec_info.clone()} />
                   <div class="modal-content">
                       <div class="card column">
                         <table class="table is-fullwidth">
@@ -283,7 +283,7 @@ impl SpecTagItem {
                         </table>
                       </div>
                   </div>
-                  <button class="modal-close is-large" aria-label="close" onclick=onclick_spec_info />
+                  <button class="modal-close is-large" aria-label="close" onclick={onclick_spec_info} />
                 </div>
             },
             None => html!{},

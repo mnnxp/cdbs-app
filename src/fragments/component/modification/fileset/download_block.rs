@@ -156,7 +156,7 @@ impl Component for ManageFilesOfFilesetBlock {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
 
         html!{<>
-            <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
+            <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error.clone())}/>
             {self.modal_download_files()}
             {self.show_download_block()}
         </>}
@@ -194,7 +194,7 @@ impl ManageFilesOfFilesetBlock {
               <select
                     id="select-fileset-program"
                     select={self.select_fileset_uuid.clone()}
-                    onchange=onchange_select_fileset_btn >
+                    onchange={onchange_select_fileset_btn} >
                   {for self.props.current_filesets_program.iter().map(|(fileset_uuid, program_name)|
                       html!{
                           <option value={fileset_uuid.to_string()}
@@ -207,12 +207,12 @@ impl ManageFilesOfFilesetBlock {
             </div>
             <button class={class_fileset_btn}
                 // disabled = self.select_fileset_uuid.len() != 36
-                onclick = onclick_open_fileset_files_list_btn >
+                onclick = {onclick_open_fileset_files_list_btn} >
                 <span class="icon is-small"><i class="fa fa-list"></i></span>
             </button>
-            <button class=class_download_btn
-                disabled = self.select_fileset_uuid.len() != 36
-                onclick=onclick_download_fileset_btn >
+            <button class={class_download_btn}
+                disabled={self.select_fileset_uuid.len() != 36}
+                onclick={onclick_download_fileset_btn} >
               <span class="has-text-weight-bold">{ get_value_field(&126) }</span>
             </button>
         </div>}
@@ -227,13 +227,13 @@ impl ManageFilesOfFilesetBlock {
             false => "modal",
         };
 
-        html!{<div class=class_modal>
-          <div class="modal-background" onclick=onclick_modal_download_btn.clone() />
+        html!{<div class={class_modal}>
+          <div class="modal-background" onclick={onclick_modal_download_btn.clone()} />
             <div class="card">
               <div class="modal-content">
                 <header class="modal-card-head">
                     <p class="modal-card-title">{ get_value_field(&138) }</p> // Temp solution for download files
-                    <button class="delete" aria-label="close" onclick=onclick_modal_download_btn.clone() />
+                    <button class="delete" aria-label="close" onclick={onclick_modal_download_btn.clone()} />
                 </header>
                 <div class="box itemBox">
                   <article class="media center-media">

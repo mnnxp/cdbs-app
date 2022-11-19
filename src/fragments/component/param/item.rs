@@ -162,7 +162,7 @@ impl Component for ComponentParamTag {
 
     fn view(&self) -> Html {
         html!{<>
-            <ListErrors error=self.error.clone()/>
+            <ListErrors error={self.error.clone()}/>
             {self.modal_change_param_value()}
             {match self.get_result_delete {
                 true => html!{},
@@ -217,13 +217,13 @@ impl ComponentParamTag {
         };
 
         html!{
-            <div class=class_modal>
-              <div class="modal-background" onclick=onclick_hide_modal.clone() />
+            <div class={class_modal}>
+              <div class="modal-background" onclick={onclick_hide_modal.clone()} />
                 <div class="modal-content">
                   <div class="card">
                     <header class="modal-card-head">
                       <p class="modal-card-title">{ get_value_field(&211) }</p> // Changing the parameter value
-                      <button class="delete" aria-label="close" onclick=onclick_hide_modal.clone() />
+                      <button class="delete" aria-label="close" onclick={onclick_hide_modal.clone()} />
                     </header>
                     <section class="modal-card-body">
                         <div class="column">
@@ -232,9 +232,9 @@ impl ComponentParamTag {
                                 id="param-value"
                                 class="input is-fullwidth"
                                 type="text"
-                                placeholder=get_value_field(&133)
+                                placeholder={get_value_field(&133)}
                                 value={self.request_set_param_value.clone()}
-                                oninput=oninput_set_param_value
+                                oninput={oninput_set_param_value}
                                 />
                         </div>
                         <div class="column">

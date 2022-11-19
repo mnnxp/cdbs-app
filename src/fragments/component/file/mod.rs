@@ -99,11 +99,11 @@ impl ComponentFilesBlock {
             Some(_) => html!{}, // removed file
             None => html!{
                 <ComponentFileItem
-                  show_download_btn = self.props.show_download_btn
-                  show_delete_btn = self.props.show_delete_btn
-                  component_uuid = self.props.component_uuid.clone()
-                  file = file_info.clone()
-                  callback_delete_file = callback_delete_file.clone()
+                  show_download_btn = {self.props.show_download_btn}
+                  show_delete_btn = {self.props.show_delete_btn}
+                  component_uuid = {self.props.component_uuid.clone()}
+                  file = {file_info.clone()}
+                  callback_delete_file = {callback_delete_file.clone()}
                 />
             },
         }
@@ -116,12 +116,12 @@ impl ComponentFilesBlock {
         match self.show_full_files {
             true => html!{<>
               <button class="button is-white"
-                  onclick=show_full_files_btn
+                  onclick={show_full_files_btn}
                 >{ get_value_field(&99) }</button>
             </>},
             false => html!{<>
               <button class="button is-white"
-                  onclick=show_full_files_btn
+                  onclick={show_full_files_btn}
                 >{ get_value_field(&98) }</button>
             </>},
         }

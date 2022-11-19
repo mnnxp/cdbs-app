@@ -203,7 +203,7 @@ impl Component for ChangeItem {
         html!{<>
             <br/>
             <div class="card">
-                <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error) />
+                <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error)} />
                 {match &self.get_result_delete {
                     true => html!{
                         <article class="message is-success">
@@ -264,7 +264,7 @@ impl ChangeItem {
                     type={input_type}
                     placeholder={placeholder.to_string()}
                     value={value}
-                    oninput=oninput ></@>
+                    oninput={oninput} ></@>
             </fieldset>
         }
     }
@@ -314,7 +314,7 @@ impl ChangeItem {
                               <select
                                   id="representation_type_id"
                                   select={self.props.data.representation_type.representation_type_id.to_string()}
-                                  onchange=oninput_representation_type_id
+                                  onchange={oninput_representation_type_id}
                                   >
                                 { for self.represent_types.iter().map(|x|
                                     html!{
@@ -339,7 +339,7 @@ impl ChangeItem {
                           <select
                               id="region_id"
                               select={self.props.data.region.region_id.to_string()}
-                              onchange=oninput_region_id
+                              onchange={oninput_region_id}
                               >
                             { for self.regions.iter().map(|x|
                                 html!{
@@ -375,14 +375,14 @@ impl ChangeItem {
             <div class="column">
                 <button id={"btn-delete-represent"}
                     class="button is-danger is-fullwidth"
-                    onclick=onclick_delete_represent>
+                    onclick={onclick_delete_represent}>
                     { get_value_field(&135) }
                 </button>
             </div>
             <div class="column">
                 <button id={"btn-change-represent"}
                     class="button is-fullwidth"
-                    onclick=onclick_change_represent>
+                    onclick={onclick_change_represent}>
                     { get_value_field(&46) }
                 </button>
             </div>

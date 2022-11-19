@@ -481,7 +481,7 @@ impl Component for ManageModificationFilesets {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
 
         html!{<>
-            <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
+            <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error.clone())}/>
             {self.modal_add_fileset()}
             {self.show_manage()}
             // <br/>
@@ -517,7 +517,7 @@ impl ManageModificationFilesets {
                   <select
                         id="select-fileset-program"
                         select={self.select_fileset_uuid.clone()}
-                        onchange=onchange_select_fileset_btn >
+                        onchange={onchange_select_fileset_btn} >
                       {for self.filesets_program.iter().map(|(fileset_uuid, program_name)|
                           html!{
                               <option value={fileset_uuid.to_string()}
@@ -572,13 +572,13 @@ impl ManageModificationFilesets {
             false => "modal",
         };
 
-        html!{<div class=class_modal>
-          <div class="modal-background" onclick=onclick_new_fileset_card.clone() />
+        html!{<div class={class_modal}>
+          <div class="modal-background" onclick={onclick_new_fileset_card.clone()} />
             <div class="card">
               <div class="modal-content">
                 <header class="modal-card-head">
                     <p class="modal-card-title">{ get_value_field(&206) }</p> // Create new fileset
-                    <button class="delete" aria-label="close" onclick=onclick_new_fileset_card.clone() />
+                    <button class="delete" aria-label="close" onclick={onclick_new_fileset_card.clone()} />
                 </header>
                 <div class="box itemBox">
                   <article class="media center-media">
@@ -588,7 +588,7 @@ impl ManageModificationFilesets {
                           <select
                               id="set-fileset-program"
                               select={self.request_fileset_program_id.to_string()}
-                              onchange=onchange_select_program_id
+                              onchange={onchange_select_program_id}
                               >
                             {for self.programs.iter().map(|x|
                                 html!{
@@ -619,10 +619,10 @@ impl ManageModificationFilesets {
     fn show_fileset_files(&self) -> Html {
         html!{
             <FilesetFilesBlock
-                show_download_btn = false
-                show_delete_btn = true
-                select_fileset_uuid = self.select_fileset_uuid.clone()
-                files = self.files_list.clone()
+                show_download_btn = {false}
+                show_delete_btn = {true}
+                select_fileset_uuid = {self.select_fileset_uuid.clone()}
+                files = {self.files_list.clone()}
             />
         }
     }
@@ -674,7 +674,7 @@ impl ManageModificationFilesets {
         html!{
             <button id="clear-upload-fileset-files"
               class="button"
-              onclick=onclick_clear_boxed
+              onclick={onclick_clear_boxed}
               disabled={self.files.is_empty()} >
                 // <span class="icon" >
                 //     <i class="fas fa-boom" aria-hidden="true"></i>

@@ -127,12 +127,12 @@ impl Component for Login {
             <div class="auth-page">
                 <h1 class="title">{ get_value_field(&13) }</h1>
                 <h2 class="subtitle">
-                    <RouterAnchor<AppRoute> route=AppRoute::Register>
+                    <RouterAnchor<AppRoute> route={AppRoute::Register}>
                         { get_value_field(&18) }
                     </RouterAnchor<AppRoute>>
                 </h2>
-                <ListErrors error=self.error.clone() />
-                <form onsubmit=onsubmit>
+                <ListErrors error={self.error.clone()} />
+                <form onsubmit={onsubmit}>
                     <fieldset class="box">
                         <fieldset class="field">
                             <label class="label">{ get_value_field(&19) }</label>
@@ -142,8 +142,8 @@ impl Component for Login {
                                     class="input"
                                     type="text"
                                     placeholder={ get_value_field(&19) }
-                                    value=self.request.username.clone()
-                                    oninput=oninput_username
+                                    value={self.request.username.clone()}
+                                    oninput={oninput_username}
                                     />
                                 <span class="icon is-small is-left">
                                   <i class="fas fa-user"></i>
@@ -162,8 +162,8 @@ impl Component for Login {
                                     class="input"
                                     type="password"
                                     placeholder={ get_value_field(&20) }
-                                    value=self.request.password.clone()
-                                    oninput=oninput_password
+                                    value={self.request.password.clone()}
+                                    oninput={oninput_password}
                                     />
                                 <span class="icon is-small is-left">
                                   <i class="fas fa-lock"></i>
@@ -172,9 +172,9 @@ impl Component for Login {
                         </fieldset>
                         <button
                             id="submit-button"
-                            class=classes!("button", "is-fullwidth", "is-large")
+                            class={classes!("button", "is-fullwidth", "is-large")}
                             type="submit"
-                            disabled=false>
+                            disabled={false}>
                             { get_value_field(&44) }
                         </button>
                     </fieldset>

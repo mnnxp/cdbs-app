@@ -212,7 +212,7 @@ impl Component for ComponentSuppliersCard {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
 
         html!{<>
-            <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
+            <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error.clone())}/>
             {self.show_suppliers()}
         </>}
     }
@@ -239,10 +239,10 @@ impl ComponentSuppliersCard {
                {for self.component_suppliers.iter().map(|data| {
                    match self.company_uuids.get(&data.supplier.uuid) {
                        Some(_) => html!{<ComponentSupplierItem
-                           show_delete_btn = self.props.show_delete_btn
-                           component_uuid = self.props.component_uuid.clone()
-                           supplier_data = data.clone()
-                           delete_supplier = Some(onclick_delete_supplier.clone())
+                           show_delete_btn = {self.props.show_delete_btn}
+                           component_uuid = {self.props.component_uuid.clone()}
+                           supplier_data = {data.clone()}
+                           delete_supplier = {Some(onclick_delete_supplier.clone())}
                          />},
                        None => html!{},
                    }
@@ -287,13 +287,13 @@ impl ComponentSuppliersCard {
         };
 
         html!{
-            <div class=class_modal>
-              <div class="modal-background" onclick=onclick_hide_modal.clone() />
+            <div class={class_modal}>
+              <div class="modal-background" onclick={onclick_hide_modal.clone()} />
                 <div class="modal-content">
                   <div class="card">
                     <header class="modal-card-head">
                       <p class="modal-card-title">{ get_value_field(&167) }</p> // Set owner supplier
-                      <button class="delete" aria-label="close" onclick=onclick_hide_modal.clone() />
+                      <button class="delete" aria-label="close" onclick={onclick_hide_modal.clone()} />
                     </header>
                     <section class="modal-card-body">
                         <label class="label">{ get_value_field(&168) }</label> // Select supplier
@@ -301,7 +301,7 @@ impl ComponentSuppliersCard {
                           <select
                               id="set-main-supplier"
                               select={self.request_set_supplier_uuid.clone()}
-                              onchange=onchange_select_set_supplier
+                              onchange={onchange_select_set_supplier}
                             >
                           { for self.props.supplier_list.iter().map(|x|
                               html!{
@@ -319,9 +319,9 @@ impl ComponentSuppliersCard {
                             id="update-description"
                             class="textarea"
                             type="text"
-                            placeholder=get_value_field(&169)
+                            placeholder={get_value_field(&169)}
                             value={self.request_set_supplier_description.clone()}
-                            oninput=oninput_supplier_description
+                            oninput={oninput_supplier_description}
                             />
                         <br/>
                         <button
@@ -360,13 +360,13 @@ impl ComponentSuppliersCard {
         };
 
         html!{
-            <div class=class_modal>
-              <div class="modal-background" onclick=onclick_hide_modal.clone() />
+            <div class={class_modal}>
+              <div class="modal-background" onclick={onclick_hide_modal.clone()} />
                 <div class="modal-content">
                   <div class="card">
                     <header class="modal-card-head">
                       <p class="modal-card-title">{ get_value_field(&123) }</p> // Add a supplier for the component
-                      <button class="delete" aria-label="close" onclick=onclick_hide_modal.clone() />
+                      <button class="delete" aria-label="close" onclick={onclick_hide_modal.clone()} />
                     </header>
                     <section class="modal-card-body">
                         <label class="label">{ get_value_field(&79) }</label> // Select a supplier
@@ -374,7 +374,7 @@ impl ComponentSuppliersCard {
                           <select
                               id="set-main-supplier"
                               select={self.request_set_supplier_uuid.clone()}
-                              onchange=onchange_select_add_supplier
+                              onchange={onchange_select_add_supplier}
                             >
                           { for self.props.supplier_list.iter().map(|x|
                               html!{
@@ -392,9 +392,9 @@ impl ComponentSuppliersCard {
                         class="textarea"
                         // rows="10"
                         type="text"
-                        placeholder=get_value_field(&169)
+                        placeholder={get_value_field(&169)}
                         value={self.request_set_supplier_description.clone()}
-                        oninput=oninput_supplier_description
+                        oninput={oninput_supplier_description}
                         />
                     <button
                         id="supplier-component"

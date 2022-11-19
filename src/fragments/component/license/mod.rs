@@ -211,7 +211,7 @@ impl Component for ComponentLicensesTags {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
 
         html!{<>
-            <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
+            <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error.clone())}/>
             {self.modal_add_license()}
             {self.show_licenses()}
         </>}
@@ -237,10 +237,10 @@ impl ComponentLicensesTags {
                     {for self.component_licenses.iter().map(|data| html!{
                         match self.license_ids.get(&data.id) {
                             Some(_) => html!{<ComponentLicenseTag
-                                show_delete_btn = self.props.show_delete_btn
-                                component_uuid = self.props.component_uuid.clone()
-                                license_data = data.clone()
-                                delete_license = Some(onclick_delete_license.clone())
+                                show_delete_btn = {self.props.show_delete_btn}
+                                component_uuid = {self.props.component_uuid.clone()}
+                                license_data = {data.clone()}
+                                delete_license = {Some(onclick_delete_license.clone())}
                               />},
                             None => html!{},
                         }
@@ -282,13 +282,13 @@ impl ComponentLicensesTags {
         };
 
         html!{
-            <div class=class_modal>
-              <div class="modal-background" onclick=onclick_hide_modal.clone() />
+            <div class={class_modal}>
+              <div class="modal-background" onclick={onclick_hide_modal.clone()} />
                 <div class="modal-content">
                   <div class="card">
                     <header class="modal-card-head">
                       <p class="modal-card-title">{ get_value_field(&244) }</p> // Add a license for a component
-                      <button class="delete" aria-label="close" onclick=onclick_hide_modal.clone() />
+                      <button class="delete" aria-label="close" onclick={onclick_hide_modal.clone()} />
                     </header>
                     <section class="modal-card-body">
                         <label class="label">{ get_value_field(&245) }</label> // Select a license
@@ -298,7 +298,7 @@ impl ComponentLicensesTags {
                                   <select
                                       id="add-license"
                                       select={self.request_add_license_id.to_string()}
-                                      onchange=onchange_select_add_license
+                                      onchange={onchange_select_add_license}
                                     >
                                   { for self.license_list.iter().map(|x|
                                       match self.license_ids.get(&x.id) {

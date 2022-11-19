@@ -260,7 +260,7 @@ impl Component for ShowCompany {
         match &self.company {
             Some(company_data) => html!{
                 <div class="company-page">
-                    <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error) />
+                    <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error)} />
                     <div class="container page">
                         <div class="row">
                             <div class="card">
@@ -276,7 +276,7 @@ impl Component for ShowCompany {
                     </div>
                 </div>
             },
-            None => html!{<ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error) />},
+            None => html!{<ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error)} />},
         }
     }
 }
@@ -294,7 +294,7 @@ impl ShowCompany {
         match &self.company {
             Some(company_data) => html!{<div class="media">
                 <div class="media-left">
-                  <figure class=classes!("image", size_favicon)>
+                  <figure class={classes!("image", size_favicon)}>
                     // <div hidden={!company_data.is_supplier} class="top-tag" >{ get_value_field(&3) }</div>
                     // <img src="https://bulma.io/images/placeholders/96x96.png" alt="Placeholder image"/>
                     <img
@@ -377,7 +377,7 @@ impl ShowCompany {
             <button
                 id="following-button"
                 class="button"
-                onclick=onclick_following >
+                onclick={onclick_following} >
               <span class="icon is-small">
                 <i class={class_fav}></i>
               </span>
@@ -444,9 +444,9 @@ impl ShowCompany {
                         </div>
                         <div class="media-content">
                             <SpecsTags
-                                show_manage_btn = false
-                                company_uuid = company_data.uuid.clone()
-                                specs = company_data.company_specs.clone()
+                                show_manage_btn = {false}
+                                company_uuid = {company_data.uuid.clone()}
+                                specs = {company_data.company_specs.clone()}
                             />
                         </div>
                     </div>}
@@ -556,10 +556,10 @@ impl ShowCompany {
     ) -> Html {
         html!{<div class="profileBox" >
             <CompanyCertificatesCard
-                certificates = company_data.company_certificates.clone()
-                show_cert_btn = true
-                download_btn = false
-                manage_btn = false
+                certificates = {company_data.company_certificates.clone()}
+                show_cert_btn = {true}
+                download_btn = {false}
+                manage_btn = {false}
              />
         </div>}
     }
@@ -570,8 +570,8 @@ impl ShowCompany {
     ) -> Html {
         html!{
             <CompanyRepresents
-                show_manage_btn = false
-                list = company_data.company_represents.clone()
+                show_manage_btn = {false}
+                list = {company_data.company_represents.clone()}
             />
         }
     }
@@ -582,8 +582,8 @@ impl ShowCompany {
     ) -> Html {
         html!{
             <CatalogComponents
-                show_create_btn = false
-                arguments = ComponentsQueryArg::set_company_uuid(company_uuid)
+                show_create_btn = {false}
+                arguments = {ComponentsQueryArg::set_company_uuid(company_uuid)}
             />
         }
     }
@@ -595,8 +595,8 @@ impl ShowCompany {
     ) -> Html {
         html!{
             <CatalogStandards
-                show_create_btn = is_supplier.clone()
-                arguments = StandardsQueryArg::set_company_uuid(company_uuid)
+                show_create_btn = {is_supplier.clone()}
+                arguments = {StandardsQueryArg::set_company_uuid(company_uuid)}
             />
         }
     }

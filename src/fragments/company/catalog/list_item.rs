@@ -144,7 +144,7 @@ impl Component for ListItemCompany {
         // debug!("&self.props.data.shortname: {}", &self.props.data.shortname);
         // debug!("&self.props.data.is_followed: {}", &self.props.data.is_followed);
         html!{<>
-          <ListErrors error=self.error.clone()/>
+          <ListErrors error={self.error.clone()}/>
           {match self.props.show_list {
               true => { self.showing_in_list() },
               false => { self.showing_in_box() },
@@ -278,7 +278,7 @@ impl ListItemCompany {
               <div class="overflow-title has-text-weight-bold is-size-4">{shortname}</div>
               <div class="has-text-weight-bold">{company_type.shortname.to_string()}</div>
               <div class="btnBox">
-                <button class="button is-light is-fullwidth has-text-weight-bold" onclick=show_company_btn>
+                <button class="button is-light is-fullwidth has-text-weight-bold" onclick={show_company_btn}>
                     { get_value_field(&165) } // Show company
                 </button>
                 <div style="margin-left: 8px;">

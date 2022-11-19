@@ -103,7 +103,7 @@ impl Component for ModificationFileListItem {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
 
         html!{<>
-            <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
+            <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error.clone())}/>
             {self.show_full_info_file()}
         </>}
     }
@@ -135,7 +135,7 @@ impl ModificationFileListItem {
 
         match self.download_url.is_empty() {
             true => html!{<td>
-                <button class="button is-ghost" onclick=onclick_download_btn>
+                <button class="button is-ghost" onclick={onclick_download_btn}>
                   <span>{ get_value_field(&137) }</span>
                 </button>
             </td>},

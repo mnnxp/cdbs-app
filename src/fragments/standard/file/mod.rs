@@ -103,11 +103,11 @@ impl StandardFilesCard {
             Some(_) => html!{}, // removed file
             None => html!{
                 <FileItem
-                  show_download_btn = self.props.show_download_btn
-                  show_delete_btn = self.props.show_delete_btn
-                  standard_uuid = self.props.standard_uuid.clone()
-                  file = file.clone()
-                  callback_delete_file = Some(callback_delete_file.clone())
+                  show_download_btn = {self.props.show_download_btn}
+                  show_delete_btn = {self.props.show_delete_btn}
+                  standard_uuid = {self.props.standard_uuid.clone()}
+                  file = {file.clone()}
+                  callback_delete_file = {Some(callback_delete_file.clone())}
                 />
             },
         }
@@ -119,12 +119,12 @@ impl StandardFilesCard {
         match self.show_full_files {
             true => html!{<>
               <button class="button is-white"
-                  onclick=show_full_files_btn
+                  onclick={show_full_files_btn}
                 >{ get_value_field(&99) }</button>
             </>},
             false => html!{<>
               <button class="button is-white"
-                  onclick=show_full_files_btn
+                  onclick={show_full_files_btn}
                 >{ get_value_field(&98) }</button>
             </>},
         }

@@ -157,13 +157,13 @@ impl Component for AddCompanyRepresentCard {
         let onclick_hide_notification = self.link.callback(|_| Msg::ClearData);
 
         html!{<div class="card">
-            <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
+            <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error.clone())}/>
             {match &self.get_result_register {
                 true => html!{
                     <article class="message is-success">
                       <div class="message-header">
                         <p>{ get_value_field(&89) }</p>
-                        <button class="delete" aria-label="close" onclick=onclick_hide_notification.clone() />
+                        <button class="delete" aria-label="close" onclick={onclick_hide_notification.clone()} />
                       </div>
                       <div class="message-body">
                         { get_value_field(&293) }
@@ -210,7 +210,7 @@ impl AddCompanyRepresentCard {
                     type={input_type}
                     placeholder={placeholder.to_string()}
                     value={value}
-                    oninput=oninput ></@>
+                    oninput={oninput} ></@>
             </fieldset>
         }
     }
@@ -260,7 +260,7 @@ impl AddCompanyRepresentCard {
                               <select
                                   id="representation_type_id"
                                   select={self.request_register.representation_type_id.to_string()}
-                                  onchange=oninput_representation_type_id
+                                  onchange={oninput_representation_type_id}
                                   >
                                 { for self.represent_types.iter().map(|x|
                                     html!{
@@ -285,7 +285,7 @@ impl AddCompanyRepresentCard {
                               <select
                                   id="region_id"
                                   select={self.request_register.region_id.to_string()}
-                                  onchange=oninput_region_id
+                                  onchange={oninput_region_id}
                                   >
                                 { for self.regions.iter().map(|x|
                                     html!{
@@ -322,14 +322,14 @@ impl AddCompanyRepresentCard {
             <div class="column">
                 <button id={"btn-clear-represent"}
                     class="button is-fullwidth"
-                    onclick=onclick_clear_data>
+                    onclick={onclick_clear_data}>
                     { get_value_field(&88) }
                 </button>
             </div>
             <div class="column">
                 <button id={"btn-new-represent"}
                     class="button is-success is-fullwidth"
-                    onclick=onclick_create_represent>
+                    onclick={onclick_create_represent}>
                     { get_value_field(&45) } // Create
                 </button>
             </div>

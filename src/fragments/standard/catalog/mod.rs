@@ -125,7 +125,7 @@ impl Component for CatalogStandards {
 
         html!{
             <div class="standardsBox" >
-              <ListErrors error=self.error.clone()/>
+              <ListErrors error={self.error.clone()}/>
               <div class="level" >
                 <div class="level-left">
                 </div>
@@ -133,7 +133,7 @@ impl Component for CatalogStandards {
                     <div class="buttons">
                         {match &self.props.show_create_btn {
                             true => html!{
-                                <RouterAnchor<AppRoute> route=AppRoute::CreateStandard classes="button is-info">
+                                <RouterAnchor<AppRoute> route={AppRoute::CreateStandard} classes="button is-info">
                                     { get_value_field(&45) } // Create
                                 </RouterAnchor<AppRoute>>
                             },

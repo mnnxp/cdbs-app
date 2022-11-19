@@ -102,11 +102,11 @@ impl FilesetFilesBlock {
             Some(_) => html!{}, // removed file
             None => html!{
                 <FilesetFileItem
-                  show_download_btn = self.props.show_download_btn
-                  show_delete_btn = self.props.show_delete_btn
-                  select_fileset_uuid = self.props.select_fileset_uuid.clone()
-                  file = file_info.clone()
-                  callback_delete_file = callback_delete_file.clone()
+                  show_download_btn = {self.props.show_download_btn}
+                  show_delete_btn = {self.props.show_delete_btn}
+                  select_fileset_uuid = {self.props.select_fileset_uuid.clone()}
+                  file = {file_info.clone()}
+                  callback_delete_file = {callback_delete_file.clone()}
                 />
             },
         }
@@ -118,12 +118,12 @@ impl FilesetFilesBlock {
 
         match self.show_full_files {
             true => html!{
-              <button class="button is-white" onclick=show_full_files_btn>
+              <button class="button is-white" onclick={show_full_files_btn}>
                   { get_value_field(&99) }
               </button>
             },
             false => html!{
-              <button class="button is-white" onclick=show_full_files_btn>
+              <button class="button is-white" onclick={show_full_files_btn}>
                   { get_value_field(&98) }
               </button>
             },

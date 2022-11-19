@@ -113,7 +113,7 @@ impl Component for ComponentLicenseTag {
 
     fn view(&self) -> Html {
         html!{<>
-            <ListErrors error=self.error.clone()/>
+            <ListErrors error={self.error.clone()}/>
             {match self.get_result_delete {
                 true => html!{},
                 false => self.show_license(),
@@ -156,14 +156,14 @@ impl ComponentLicenseTag {
     //         false => "modal",
     //     };
     //
-    //     html!{<div class=class_modal>
-    //       <div class="modal-background" onclick=onclick_license_data_info.clone() />
+    //     html!{<div class={class_modal}>
+    //       <div class="modal-background" onclick={onclick_license_data_info.clone()} />
     //       <div class="modal-content">
     //           <div class="card">
     //
     //           </div>
     //       </div>
-    //       <button class="modal-close is-large" aria-label="close" onclick=onclick_license_data_info />
+    //       <button class="modal-close is-large" aria-label="close" onclick={onclick_license_data_info} />
     //     </div>}
     // }
 }

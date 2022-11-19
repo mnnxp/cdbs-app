@@ -104,7 +104,7 @@ impl Component for KeywordTagItem {
 
     fn view(&self) -> Html {
         html!{<>
-            <ListErrors error=self.error.clone()/>
+            <ListErrors error={self.error.clone()}/>
             {match self.get_result_delete {
                 true => html!{},
                 false => self.show_keyword(),

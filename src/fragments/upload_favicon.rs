@@ -224,7 +224,7 @@ impl Component for UpdateFaviconBlock {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
 
         html!{<>
-          <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
+          <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error.clone())}/>
           <div class="column">
               {match self.get_result_up_completed {
                   true => self.show_success_upload(),
@@ -281,7 +281,7 @@ impl UpdateFaviconBlock {
                             type="file"
                             accept="image/*"
                             onchange={onchange_favicon_file} />
-                        <span class="file-cta" ondrop=ondrop_favicon_file ondragover=ondragover_favicon_file >
+                        <span class="file-cta" ondrop={ondrop_favicon_file} ondragover={ondragover_favicon_file} >
                           <span class="file-icon">
                             <i class="fas fa-upload"></i>
                           </span>
@@ -320,7 +320,7 @@ impl UpdateFaviconBlock {
         html!{
             <a id="btn-new-favicon-upload"
                   class={class_upload_btn}
-                  onclick=onclick_upload_favicon
+                  onclick={onclick_upload_favicon}
                   disabled={self.dis_upload_btn} >
                 { get_value_field(&87) }
             </a>
@@ -336,7 +336,7 @@ impl UpdateFaviconBlock {
             <a id="btn-new-favicon-clear"
                   // class="button is-danger"
                   class="button"
-                  onclick=onclick_clear_boxed
+                  onclick={onclick_clear_boxed}
                   disabled={self.dis_upload_btn} >
                 { get_value_field(&88) }
             </a>

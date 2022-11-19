@@ -206,7 +206,7 @@ impl Component for UpdateStandardFaviconCard {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
 
         html!{<>
-          <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
+          <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error.clone())}/>
           {match self.get_result_up_completed {
               true => html!{self.show_success_upload()},
               false => html!{self.show_frame_upload_file()},
@@ -253,7 +253,7 @@ impl UpdateStandardFaviconCard {
                         type="file"
                         accept="image/*"
                         onchange={onchange_favicon_file} />
-                    <span class="file-cta" ondrop=ondrop_favicon_file ondragover=ondragover_favicon_file >
+                    <span class="file-cta" ondrop={ondrop_favicon_file} ondragover={ondragover_favicon_file} >
                       <span class="file-icon">
                         <i class="fas fa-upload"></i>
                       </span>
@@ -293,7 +293,7 @@ impl UpdateStandardFaviconCard {
         html!{
             <a id="btn-new-favicon-upload"
                   class={class_upload_btn}
-                  onclick=onclick_upload_favicon
+                  onclick={onclick_upload_favicon}
                   disabled={self.dis_upload_btn} >
                 { get_value_field(&87) }
             </a>
@@ -307,7 +307,7 @@ impl UpdateStandardFaviconCard {
             <a id="btn-new-favicon-clear"
                   // class="button is-danger"
                   class="button"
-                  onclick=onclick_clear_boxed
+                  onclick={onclick_clear_boxed}
                   disabled={self.dis_upload_btn} >
                 { get_value_field(&88) }
             </a>
@@ -321,7 +321,7 @@ impl UpdateStandardFaviconCard {
             <article class="message is-success">
               <div class="message-header">
                 <p>{ get_value_field(&89) }</p>
-                <button class="delete" aria-label="close" onclick=onclick_hide_notification.clone() />
+                <button class="delete" aria-label="close" onclick={onclick_hide_notification.clone()} />
               </div>
               <div class="message-body">
                 { get_value_field(&92) }

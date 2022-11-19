@@ -171,7 +171,7 @@ impl CompanyCertificateItem {
         html!{<>
             <br/>
             <div class="card">
-                <ListErrors error=self.error.clone() clear_error=onclick_clear_error.clone()/>
+                <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
                 <br/>
                 <div class="media" >
                   <div class="media-left">
@@ -195,7 +195,7 @@ impl CompanyCertificateItem {
                       {self.show_certificate_btn()}
                       <button id={"delete-cert"}
                           class="button is-danger is-fullwidth has-text-weight-bold"
-                          onclick=onclick_delete_cert>
+                          onclick={onclick_delete_cert}>
                           { get_value_field(&135) } // Delete
                       </button>
                       {self.show_download_btn()}
@@ -217,7 +217,7 @@ impl CompanyCertificateItem {
 
         html!{<div class="boxItem" >
           <div class="innerBox" >
-            <ListErrors error=self.error.clone() clear_error=onclick_clear_error.clone()/>
+            <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
             <div class="imgBox" >
                 <figure class="image is-256x256" >
                     <img
@@ -266,7 +266,7 @@ impl CompanyCertificateItem {
             true => html!{
                 <button id={"show-cert"}
                     class="button is-light is-fullwidth has-text-weight-bold"
-                    onclick=onclick_show_cert>
+                    onclick={onclick_show_cert}>
                     { text_btn }
                 </button>
             },
@@ -294,14 +294,14 @@ impl CompanyCertificateItem {
                         id={"cert-description"}
                         class="input"
                         type="text"
-                        placeholder=get_value_field(&61)
+                        placeholder={get_value_field(&61)}
                         value={ self.request_update.to_string() }
-                        oninput=oninput_cert_description />
+                        oninput={oninput_cert_description} />
                 </div>
                 <div class="column">
                     <button id={"change-cert"}
                         class="button is-light is-fullwidth has-text-weight-bold"
-                        onclick=onclick_change_cert>
+                        onclick={onclick_change_cert}>
                         { get_value_field(&46) } // Update
                     </button>
                 </div>
@@ -337,8 +337,8 @@ impl CompanyCertificateItem {
         };
 
         html!{
-            <div class=class_modal>
-              <div class="modal-background" onclick=onclick_show_cert.clone() />
+            <div class={class_modal}>
+              <div class="modal-background" onclick={onclick_show_cert.clone()} />
               <div class="modal-content">
                 <p class="image is-4by3">
                   // <img src="https://bulma.io/images/placeholders/1280x960.png" alt="" />
@@ -348,7 +348,7 @@ impl CompanyCertificateItem {
                   />
                 </p>
               </div>
-              <button class="modal-close is-large" aria-label="close" onclick=onclick_show_cert />
+              <button class="modal-close is-large" aria-label="close" onclick={onclick_show_cert} />
             </div>
         }
     }

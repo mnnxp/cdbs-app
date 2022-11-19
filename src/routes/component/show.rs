@@ -374,7 +374,7 @@ impl Component for ShowComponent {
         match &self.component {
             Some(component_data) => html!{
                 <div class="component-page">
-                    <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
+                    <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error.clone())}/>
                     <div class="container page">
                         <div class="row">
                             // modals cards
@@ -401,7 +401,7 @@ impl Component for ShowComponent {
                 </div>
             },
             None => html!{<div>
-                <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
+                <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error.clone())}/>
                 // <h1>{"Not data"}</h1>
             </div>},
         }
@@ -422,8 +422,8 @@ impl ShowComponent {
         html!{
             <div class="columns">
                 <ImgShowcase
-                    object_uuid=self.current_component_uuid.clone()
-                    file_arr=self.file_arr.clone()
+                    object_uuid={self.current_component_uuid.clone()}
+                    file_arr={self.file_arr.clone()}
                 />
                 // <img class="imgBox" src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
 
@@ -465,7 +465,7 @@ impl ShowComponent {
                               250.. => html!{<>
                                 <br/>
                                 <button class="button is-white"
-                                    onclick=show_description_btn >
+                                    onclick={show_description_btn} >
                                   { get_value_field(&99) }
                                 </button>
                               </>},
@@ -476,7 +476,7 @@ impl ShowComponent {
                           {format!("{:.*}", 200, component_data.description)}
                           <br/>
                           <button class="button is-white"
-                              onclick=show_description_btn >
+                              onclick={show_description_btn} >
                             { get_value_field(&98) }
                           </button>
                         </>},
@@ -502,10 +502,10 @@ impl ShowComponent {
                     {for component_data.licenses.iter().map(|data| html!{
                         // format!("{}; ", data.name)
                         <ComponentLicenseTag
-                            show_delete_btn = false
-                            component_uuid = self.current_component_uuid.clone()
-                            license_data = data.clone()
-                            delete_license = None
+                            show_delete_btn = {false}
+                            component_uuid = {self.current_component_uuid.clone()}
+                            license_data = {data.clone()}
+                            delete_license = {None}
                           />
                     })}
                 </div>
@@ -526,11 +526,11 @@ impl ShowComponent {
         html!{<>
             <h2 class="has-text-weight-bold">{ get_value_field(&100) }</h2> // Modifications
             <ModificationsTable
-                modifications = component_data.component_modifications.clone()
-                select_modification = self.select_modification_uuid.clone()
-                open_modification_files = self.open_modification_files_card
-                callback_select_modification = onclick_select_modification.clone()
-                callback_open_modification_files = callback_open_modification_uuid.clone()
+                modifications = {component_data.component_modifications.clone()}
+                select_modification = {self.select_modification_uuid.clone()}
+                open_modification_files = {self.open_modification_files_card}
+                callback_select_modification = {onclick_select_modification.clone()}
+                callback_open_modification_files = {callback_open_modification_uuid.clone()}
               />
         </>}
     }
@@ -540,8 +540,8 @@ impl ShowComponent {
             true => html!{<>
                 <br/>
                 <ModificationFilesTableCard
-                    show_download_btn = true
-                    modification_uuid = self.select_modification_uuid.clone()
+                    show_download_btn = {true}
+                    modification_uuid = {self.select_modification_uuid.clone()}
                   />
             </>},
             false => html!{},
@@ -606,10 +606,10 @@ impl ShowComponent {
         data: &ComponentParam,
     ) -> Html {
         html!{<ComponentParamTag
-            show_manage_btn = false
-            component_uuid = self.props.component_uuid.clone()
-            param_data = data.clone()
-            delete_param = None
+            show_manage_btn = {false}
+            component_uuid = {self.props.component_uuid.clone()}
+            param_data = {data.clone()}
+            delete_param = {None}
           />}
     }
 
@@ -620,12 +620,12 @@ impl ShowComponent {
         match self.show_full_characteristics {
             true => html!{<>
               <button class="button is-white"
-                  onclick=show_full_characteristics_btn
+                  onclick={show_full_characteristics_btn}
                 >{ get_value_field(&99) }</button>
             </>},
             false => html!{<>
               <button class="button is-white"
-                  onclick=show_full_characteristics_btn
+                  onclick={show_full_characteristics_btn}
                 >{ get_value_field(&98) }</button>
             </>},
         }
@@ -661,10 +661,10 @@ impl ShowComponent {
     ) -> Html {
         html!{<div id="files" class="card">
             <ComponentFilesBlock
-                  show_download_btn = true
-                  show_delete_btn = false
-                  component_uuid = component_data.uuid.clone()
-                  files = component_data.files.clone()
+                  show_download_btn = {true}
+                  show_delete_btn = {false}
+                  component_uuid = {component_data.uuid.clone()}
+                  files = {component_data.files.clone()}
                 />
         </div>}
     }
@@ -677,9 +677,9 @@ impl ShowComponent {
               <h2 class="has-text-weight-bold">{ get_value_field(&104) }</h2> // Specs
               <div class="card column">
                 <SpecsTags
-                    show_manage_btn = false
-                    component_uuid = component_data.uuid.clone()
-                    specs = component_data.component_specs.clone()
+                    show_manage_btn = {false}
+                    component_uuid = {component_data.uuid.clone()}
+                    specs = {component_data.component_specs.clone()}
                   />
               </div>
         </>}
@@ -693,9 +693,9 @@ impl ShowComponent {
               <h2 class="has-text-weight-bold">{ get_value_field(&105) }</h2> // Keywords
               <div class="card column">
                 <KeywordsTags
-                    show_delete_btn = false
-                    component_uuid = component_data.uuid.clone()
-                    keywords = component_data.component_keywords.clone()
+                    show_delete_btn = {false}
+                    component_uuid = {component_data.uuid.clone()}
+                    keywords = {component_data.component_keywords.clone()}
                   />
               </div>
         </>}
@@ -723,20 +723,20 @@ impl ShowComponent {
                            {for component_data.component_suppliers.iter().map(|data| {
                              match &data.supplier.is_supplier {
                                 true => html!{<ComponentSupplierItem
-                                    show_delete_btn = false
-                                    component_uuid = component_data.uuid.clone()
-                                    supplier_data = data.clone()
-                                    delete_supplier = None
+                                    show_delete_btn = {false}
+                                    component_uuid = {component_data.uuid.clone()}
+                                    supplier_data = {data.clone()}
+                                    delete_supplier = {None}
                                 />},
                                 false => html!{},
                             }})}
                        </>},
                        false => match component_data.component_suppliers.first() {
                            Some(data) => html!{<ComponentSupplierItem
-                               show_delete_btn = false
-                               component_uuid = component_data.uuid.clone()
-                               supplier_data = data.clone()
-                               delete_supplier = None
+                               show_delete_btn = {false}
+                               component_uuid = {component_data.uuid.clone()}
+                               supplier_data = {data.clone()}
+                               delete_supplier = {None}
                            />},
                            None => html!{},
                        },
@@ -759,10 +759,10 @@ impl ShowComponent {
                <th>{ get_value_field(&111) }</th> // Action
                {for component_data.component_standards.iter().map(|data| {
                    html!{<ComponentStandardItem
-                       show_delete_btn = false
-                       component_uuid = self.current_component_uuid.clone()
-                       standard_data = data.clone()
-                       delete_standard = None
+                       show_delete_btn = {false}
+                       component_uuid = {self.current_component_uuid.clone()}
+                       standard_data = {data.clone()}
+                       delete_standard = {None}
                      />}
                })}
             </tbody>
@@ -782,17 +782,17 @@ impl ShowComponent {
             false => "modal",
         };
 
-        html!{<div class=class_modal>
-          <div class="modal-background" onclick=onclick_owner_user_info.clone() />
+        html!{<div class={class_modal}>
+          <div class="modal-background" onclick={onclick_owner_user_info.clone()} />
           <div class="modal-content">
               <div class="card">
                 <ListItemUser
-                    data = component_data.owner_user.clone()
-                    show_list = true
+                    data = {component_data.owner_user.clone()}
+                    show_list = {true}
                   />
               </div>
           </div>
-          <button class="modal-close is-large" aria-label="close" onclick=onclick_owner_user_info />
+          <button class="modal-close is-large" aria-label="close" onclick={onclick_owner_user_info} />
         </div>}
     }
 
@@ -812,8 +812,8 @@ impl ShowComponent {
             .find(|x| x.uuid == self.select_modification_uuid);
 
         match modification_data {
-            Some(mod_data) => html!{<div class=class_modal>
-              <div class="modal-background" onclick=onclick_modification_card.clone() />
+            Some(mod_data) => html!{<div class={class_modal}>
+              <div class="modal-background" onclick={onclick_modification_card.clone()} />
               <div class="modal-content">
                   <div class="card">
                     <div class="box itemBox">
@@ -842,7 +842,7 @@ impl ShowComponent {
                     </div>
                   </div>
               </div>
-              <button class="modal-close is-large" aria-label="close" onclick=onclick_modification_card />
+              <button class="modal-close is-large" aria-label="close" onclick={onclick_modification_card} />
             </div>},
             None => html!{},
         }
@@ -854,8 +854,8 @@ impl ShowComponent {
                 <br/>
                 <h2 class="has-text-weight-bold">{ get_value_field(&106) }</h2> // Files of select fileset
                 <FilesOfFilesetCard
-                    show_download_btn = false
-                    select_fileset_uuid = self.select_fileset_uuid.clone()
+                    show_download_btn = {false}
+                    select_fileset_uuid = {self.select_fileset_uuid.clone()}
                 />
             </>},
             false => html!{},
@@ -871,10 +871,10 @@ impl ShowComponent {
 
         html!{
             <ManageFilesOfFilesetBlock
-                select_modification_uuid = self.select_modification_uuid.clone()
-                current_filesets_program = self.current_filesets_program.clone()
-                callback_select_fileset_uuid = callback_select_fileset_uuid.clone()
-                callback_open_fileset_uuid = callback_open_fileset_uuid.clone()
+                select_modification_uuid = {self.select_modification_uuid.clone()}
+                current_filesets_program = {self.current_filesets_program.clone()}
+                callback_select_fileset_uuid = {callback_select_fileset_uuid.clone()}
+                callback_open_fileset_uuid = {callback_open_fileset_uuid.clone()}
             />
         }
     }
@@ -902,7 +902,7 @@ impl ShowComponent {
             <button
                 id="following-button"
                 class="button"
-                onclick=onclick_following >
+                onclick={onclick_following} >
               <span class="icon is-small">
                 <i class={class_fav}></i>
               </span>

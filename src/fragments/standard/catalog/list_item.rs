@@ -131,7 +131,7 @@ impl Component for ListItemStandard {
 
     fn view(&self) -> Html {
       html!{<>
-        <ListErrors error=self.error.clone()/>
+        <ListErrors error={self.error.clone()}/>
         {match self.props.show_list {
             true => { self.showing_in_list() },
             false => { self.showing_in_box() },
@@ -298,7 +298,7 @@ impl ListItemStandard {
                 </div>
               <div class="btnBox">
                 <button class="button is-light is-fullwidth has-text-weight-bold"
-                    onclick=show_standard_btn>
+                    onclick={show_standard_btn}>
                     { get_value_field(&143) } // Show standard
                 </button>
                 <div style="margin-left: 8px;">

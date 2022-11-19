@@ -262,7 +262,7 @@ impl Component for AddKeywordsTags {
             .callback(|_| Msg::ClearError);
 
         html!{<>
-            <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
+            <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error.clone())}/>
             <br/>
             {self.add_standard_keyword()}
         </>}
@@ -291,12 +291,12 @@ impl AddKeywordsTags {
         html!{<>
             <div class="panel-block">
                 <input
-                    oninput=oninput_parse_keyword
-                    onkeypress=onkeypress_parse_keyword
+                    oninput={oninput_parse_keyword}
+                    onkeypress={onkeypress_parse_keyword}
                     class="input"
                     type="text"
                     value={self.ipt_keyword.clone()}
-                    placeholder=get_value_field(&193) // Emter keywords separated by spaces or commas
+                    placeholder={get_value_field(&193)} // Emter keywords separated by spaces or commas
                   />
             </div>
            {match self.bad_keyword {
@@ -313,11 +313,11 @@ impl AddKeywordsTags {
                       html!{}
                    } else {
                       html!{<KeywordTagItem
-                         show_delete_btn = true
-                         standard_uuid = self.props.standard_uuid.clone()
-                         keyword = keyword.clone()
-                         style_tag = Some("is-success".to_string())
-                         delete_keyword = Some(onclick_del_new_keyword.clone())
+                         show_delete_btn = {true}
+                         standard_uuid = {self.props.standard_uuid.clone()}
+                         keyword = {keyword.clone()}
+                         style_tag = {Some("is-success".to_string())}
+                         delete_keyword = {Some(onclick_del_new_keyword.clone())}
                         />}
                       }
                   })}
@@ -325,10 +325,10 @@ impl AddKeywordsTags {
             </div>
            <div class="panel-block">
                <KeywordsTags
-                  show_delete_btn = true
-                  standard_uuid = self.props.standard_uuid.clone()
-                  keywords = self.props.standard_keywords.clone()
-                  delete_keyword = Some(onclick_del_old_keyword.clone())
+                  show_delete_btn = {true}
+                  standard_uuid = {self.props.standard_uuid.clone()}
+                  keywords = {self.props.standard_keywords.clone()}
+                  delete_keyword = {Some(onclick_del_old_keyword.clone())}
                  />
            </div>
         </>}

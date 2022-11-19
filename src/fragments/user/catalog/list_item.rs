@@ -94,7 +94,7 @@ impl ListItemUser {
             false => html!{
                 <button
                       class="button is-light is-fullwidth has-text-weight-bold"
-                      onclick=onclick_open_profile >
+                      onclick={onclick_open_profile} >
                     { get_value_field(&261) }
                 </button>
             },

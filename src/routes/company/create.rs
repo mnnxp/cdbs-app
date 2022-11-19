@@ -208,7 +208,7 @@ impl Component for CreateCompany {
 
         html!{
             <div class="settings-page">
-                <ListErrors error=self.error.clone()/>
+                <ListErrors error={self.error.clone()}/>
                 <div class="container page">
                     <div class="row">
                         <h1 class="title">{ get_value_field(&289) }</h1>
@@ -221,7 +221,7 @@ impl Component for CreateCompany {
                             class="button is-success is-medium is-fullwidth"
                             type="submit"
                             disabled=false
-                            onclick=onclick_create_company
+                            onclick={onclick_create_company}
                             >
                             { get_value_field(&45) } // Create
                         </button>
@@ -260,7 +260,7 @@ impl CreateCompany {
                             type={input_type}
                             placeholder={placeholder.to_string()}
                             value={value}
-                            oninput=oninput />
+                            oninput={oninput} />
                     },
                     false => html!{
                         <div class="control has-icons-left">
@@ -270,7 +270,7 @@ impl CreateCompany {
                                 type={input_type}
                                 placeholder={placeholder.to_string()}
                                 value={value}
-                                oninput=oninput />
+                                oninput={oninput} />
                             <span class="icon is-small is-left">
                               <i class={icon_left.to_string()}></i>
                             </span>
@@ -355,7 +355,7 @@ impl CreateCompany {
                               <select
                                   id="company_type"
                                   select={self.request_company.company_type_id.to_string()}
-                                  onchange=onchange_company_type_id
+                                  onchange={onchange_company_type_id}
                                   >
                                 { for self.company_types.iter().map(|x|
                                     html!{
@@ -400,7 +400,7 @@ impl CreateCompany {
                               <select
                                   id="region"
                                   select={self.request_company.region_id.to_string()}
-                                  onchange=onchange_region_id
+                                  onchange={onchange_region_id}
                                   >
                                 { for self.regions.iter().map(|x|
                                     html!{
@@ -442,7 +442,7 @@ impl CreateCompany {
                               <select
                                   id="types-access"
                                   select={self.request_company.type_access_id.to_string()}
-                                  onchange=onchange_type_access_id
+                                  onchange={onchange_type_access_id}
                                   >
                                 { for self.types_access.iter().map(|x|
                                     html!{
@@ -467,7 +467,7 @@ impl CreateCompany {
                     type="text"
                     placeholder={ get_value_field(&61) }
                     value={self.request_company.description.clone()}
-                    oninput=oninput_description />
+                    oninput={oninput_description} />
             </fieldset>
         </>}
     }

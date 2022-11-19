@@ -202,7 +202,7 @@ impl Component for CreateComponent {
             <div class="component-page">
                 <div class="container page">
                     <div class="row">
-                        <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
+                        <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error.clone())}/>
                         <h1 class="title">{ get_value_field(&290) }</h1>
                         {self.show_main_card()}
                         <br/>
@@ -250,7 +250,7 @@ impl CreateComponent {
                               <select
                                   id="component-status-id"
                                   select={self.request_component.actual_status_id.to_string()}
-                                  onchange=onchange_actual_status_id
+                                  onchange={onchange_actual_status_id}
                                   >
                                 { for self.actual_statuses.iter().map(|x|
                                     html!{
@@ -269,7 +269,7 @@ impl CreateComponent {
                               <select
                                   id="set-component-type"
                                   select={self.request_component.component_type_id.to_string()}
-                                  onchange=onchange_change_component_type
+                                  onchange={onchange_change_component_type}
                                 >
                               { for self.component_types.iter().map(|x|
                                   html!{
@@ -288,7 +288,7 @@ impl CreateComponent {
                               <select
                                   id="set-type-access"
                                   select={self.request_component.type_access_id.to_string()}
-                                  onchange=onchange_change_type_access
+                                  onchange={onchange_change_type_access}
                                 >
                               { for self.types_access.iter().map(|x|
                                   html!{
@@ -309,18 +309,18 @@ impl CreateComponent {
                       id="update-name"
                       class="input"
                       type="text"
-                      placeholder=get_value_field(&110)
+                      placeholder={get_value_field(&110)}
                       value={self.request_component.name.clone()}
-                      oninput=oninput_name />
+                      oninput={oninput_name} />
                   <label class="label">{ get_value_field(&61) }</label>
                   <textarea
                       id="update-description"
                       class="textarea"
                       // rows="10"
                       type="text"
-                      placeholder=get_value_field(&61)
+                      placeholder={get_value_field(&61)}
                       value={self.request_component.description.clone()}
-                      oninput=oninput_description />
+                      oninput={oninput_description} />
                 </div>
             </div>
         }

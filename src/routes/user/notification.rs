@@ -197,7 +197,7 @@ impl Component for Notifications {
     fn view(&self) -> Html {
         html!{
             <div class="settings-page">
-                <ListErrors error=self.error.clone()/>
+                <ListErrors error={self.error.clone()}/>
                 <div class="container page">
                     <div class="row">
                         <h4 id="show-notifications" class="title is-4">{ get_value_field(&284) }</h4>
@@ -261,7 +261,7 @@ impl Notifications {
         html!{<>
             <div class="card">
                 <div class={class_degree}>
-                    <button class="delete" onclick=onclick_delete_notif />
+                    <button class="delete" onclick={onclick_delete_notif} />
                     <span class="icon">
                       <i class={class_icon}> </i>
                     </span>
@@ -286,7 +286,7 @@ impl Notifications {
                                 },
                                 false => html!{
                                     <button class="button is-ghost is-info"
-                                        onclick=onclick_set_read >
+                                        onclick={onclick_set_read} >
                                         <span class="icon">
                                             <i class="fas fa-envelope"></i>
                                         </span>

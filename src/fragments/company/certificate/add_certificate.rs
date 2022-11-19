@@ -208,7 +208,7 @@ impl Component for AddCompanyCertificateCard {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
 
         html!{<div class="card">
-          <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
+          <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error.clone())}/>
           <div class="block">
             {match self.get_result_up_completed {
                 true => html!{<div class="column">
@@ -268,7 +268,7 @@ impl AddCompanyCertificateCard {
                             type="file"
                             accept="image/*,.pdf"
                             onchange={onchange_cert_file} />
-                        <span class="file-cta" ondrop=ondrop_cert_file ondragover=ondragover_cert_file >
+                        <span class="file-cta" ondrop={ondrop_cert_file} ondragover={ondragover_cert_file} >
                           <span class="file-icon">
                             <i class="fas fa-upload"></i>
                           </span>
@@ -306,9 +306,9 @@ impl AddCompanyCertificateCard {
                 id={"new-cert-description"}
                 class="input"
                 type="text"
-                placeholder=get_value_field(&61)
+                placeholder={get_value_field(&61)}
                 value={self.description.to_string()}
-                oninput=oninput_cert_description />
+                oninput={oninput_cert_description} />
         </div>}
     }
 
@@ -323,7 +323,7 @@ impl AddCompanyCertificateCard {
         html!{
             <a id="btn-new-cert-upload"
                   class={class_upload_btn}
-                  onclick=onclick_upload_cert
+                  onclick={onclick_upload_cert}
                   disabled={self.dis_upload_btn} >
                 { get_value_field(&87) }
             </a>
@@ -337,7 +337,7 @@ impl AddCompanyCertificateCard {
             <a id="btn-new-cert-clear"
                   // class="button is-danger"
                   class="button"
-                  onclick=onclick_clear_boxed
+                  onclick={onclick_clear_boxed}
                   disabled={self.dis_upload_btn} >
                 { get_value_field(&88) }
             </a>
@@ -351,7 +351,7 @@ impl AddCompanyCertificateCard {
             <article class="message is-success">
               <div class="message-header">
                 <p>{ get_value_field(&89) }</p>
-                <button class="delete" aria-label="close" onclick=onclick_hide_notification.clone() />
+                <button class="delete" aria-label="close" onclick={onclick_hide_notification.clone()} />
               </div>
               <div class="message-body">
                 { get_value_field(&90) }

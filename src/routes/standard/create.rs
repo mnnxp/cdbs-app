@@ -290,7 +290,7 @@ impl Component for CreateStandard {
             <div class="standard-page">
                 <div class="container page">
                     <div class="row">
-                        <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
+                        <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error.clone())}/>
                         <h1 class="title">{ get_value_field(&291) }</h1>
                         {self.show_main_card()}
                         <br/>
@@ -338,7 +338,7 @@ impl CreateStandard {
                               <select
                                   id="set-owner-company"
                                   select={self.request_standard.company_uuid.clone()}
-                                  onchange=onchange_change_owner_company
+                                  onchange={onchange_change_owner_company}
                                 >
                               { for self.supplier_list.iter().map(|x|
                                   html!{
@@ -357,7 +357,7 @@ impl CreateStandard {
                               <select
                                   id="set-type-access"
                                   select={self.request_standard.type_access_id.to_string()}
-                                  onchange=onchange_change_type_access
+                                  onchange={onchange_change_type_access}
                                 >
                               { for self.types_access.iter().map(|x|
                                   html!{
@@ -377,18 +377,18 @@ impl CreateStandard {
                     id="update-name"
                     class="input"
                     type="text"
-                    placeholder=get_value_field(&110)
+                    placeholder={get_value_field(&110)}
                     value={self.request_standard.name.clone()}
-                    oninput=oninput_name />
+                    oninput={oninput_name} />
                 <label class="label">{ get_value_field(&61) }</label>
                 <textarea
                     id="update-description"
                     class="textarea"
                     // rows="10"
                     type="text"
-                    placeholder=get_value_field(&61)
+                    placeholder={get_value_field(&61)}
                     value={self.request_standard.description.clone()}
-                    oninput=oninput_description />
+                    oninput={oninput_description} />
               </div>
             </div>
         }
@@ -431,9 +431,9 @@ impl CreateStandard {
                             id="update-classifier"
                             class="input"
                             type="text"
-                            placeholder=get_value_field(&146)
+                            placeholder={get_value_field(&146)}
                             value={self.request_standard.classifier.clone()}
-                            oninput=oninput_classifier /></td>
+                            oninput={oninput_classifier} /></td>
                       </tr>
                       <tr>
                         <td>{ get_value_field(&147) }</td> // specified_tolerance
@@ -442,9 +442,9 @@ impl CreateStandard {
                             id="update-specified-tolerance"
                             class="input"
                             type="text"
-                            placeholder=get_value_field(&147)
+                            placeholder={get_value_field(&147)}
                             value={self.request_standard.specified_tolerance.clone()}
-                            oninput=oninput_specified_tolerance /></td>
+                            oninput={oninput_specified_tolerance} /></td>
                       </tr>
                       <tr>
                         <td>{ get_value_field(&148) }</td> // technical_committee
@@ -452,9 +452,9 @@ impl CreateStandard {
                             id="update-technical-committee"
                             class="input"
                             type="text"
-                            placeholder=get_value_field(&148)
+                            placeholder={get_value_field(&148)}
                             value={self.request_standard.technical_committee.clone()}
-                            oninput=oninput_technical_committee /></td>
+                            oninput={oninput_technical_committee} /></td>
                       </tr>
                       <tr>
                         <td>{ get_value_field(&149) }</td> // publication_at
@@ -462,11 +462,11 @@ impl CreateStandard {
                             id="update-publication-at"
                             class="input"
                             type="date"
-                            placeholder=get_value_field(&149)
+                            placeholder={get_value_field(&149)}
                             value={format!("{:.*}", 10,
                                 self.request_standard.publication_at.to_string()
                             )}
-                            oninput=oninput_publication_at
+                            oninput={oninput_publication_at}
                             /></td>
                       </tr>
                       <tr>
@@ -476,7 +476,7 @@ impl CreateStandard {
                               <select
                                   id="standard-status-id"
                                   select={self.request_standard.standard_status_id.to_string()}
-                                  onchange=onchange_standard_status_id
+                                  onchange={onchange_standard_status_id}
                                   >
                                 { for self.standard_statuses.iter().map(|x|
                                     html!{
@@ -496,7 +496,7 @@ impl CreateStandard {
                               <select
                                   id="region"
                                   select={self.request_standard.region_id.to_string()}
-                                  onchange=onchange_region_id
+                                  onchange={onchange_region_id}
                                   >
                                 { for self.regions.iter().map(|x|
                                     html!{

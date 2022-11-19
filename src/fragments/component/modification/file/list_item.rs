@@ -137,7 +137,7 @@ impl Component for ModificationFileItem {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
 
         html!{<>
-            <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
+            <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error.clone())}/>
             {match self.get_result_delete {
                 true => html!{},
                 false => html!{<>
@@ -155,7 +155,7 @@ impl ModificationFileItem {
 
         html!{
             <div class="buttons">
-                <div class="button is-white" onclick=onclick_file_info>
+                <div class="button is-white" onclick={onclick_file_info}>
                     <span class="icon">
                       <i class="fas fa-file"></i>
                     </span>
@@ -174,7 +174,7 @@ impl ModificationFileItem {
         match &self.props.show_download_btn {
             true => match self.download_url.is_empty() {
                 true => html!{
-                    <button class="button is-ghost" onclick=onclick_download_btn>
+                    <button class="button is-ghost" onclick={onclick_download_btn}>
                       <span>{ get_value_field(&137) }</span>
                     </button>
                 },
@@ -196,7 +196,7 @@ impl ModificationFileItem {
 
         match &self.props.show_delete_btn {
             true => html!{
-                <button class="button is-white" onclick=onclick_delete_btn >
+                <button class="button is-white" onclick={onclick_delete_btn} >
                   <span class="icon" >
                     <i class="fa fa-trash" aria-hidden="true"></i>
                   </span>
@@ -216,8 +216,8 @@ impl ModificationFileItem {
         };
 
         html!{
-            <div class=class_modal>
-              <div class="modal-background" onclick=onclick_file_info.clone() />
+            <div class={class_modal}>
+              <div class="modal-background" onclick={onclick_file_info.clone()} />
               <div class="modal-content">
                   <div class="card column">
                     <table class="table is-fullwidth">
@@ -262,7 +262,7 @@ impl ModificationFileItem {
                     </table>
                   </div>
               </div>
-              <button class="modal-close is-large" aria-label="close" onclick=onclick_file_info />
+              <button class="modal-close is-large" aria-label="close" onclick={onclick_file_info} />
             </div>
         }
     }

@@ -308,7 +308,7 @@ impl Component for Profile {
         match (&self.self_profile, &self.profile) {
             (Some(self_data), _) => self.self_user_card(self_data),
             (_, Some(user_data)) => self.other_user_card(user_data),
-            _ => html!{<ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error) />},
+            _ => html!{<ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error)} />},
         }
     }
 }
@@ -320,7 +320,7 @@ impl Profile {
     ) -> Html {
         html! {
             <div class="profile-page">
-                <ListErrors error=self.error.clone()/>
+                <ListErrors error={self.error.clone()}/>
                 <div class="container page">
                     <div class="row">
                         <div class="card">
@@ -359,7 +359,7 @@ impl Profile {
                             ProfileTab::FavoriteComponents => self.view_favorite_components(None),
                             ProfileTab::FavoriteCompanies => self.view_favorite_companies(None),
                             ProfileTab::FavoriteStandards => self.view_favorite_standards(),
-                            ProfileTab::FavoriteUsers => html!{<CatalogUsers arguments = UsersQueryArg::set_favorite() />},
+                            ProfileTab::FavoriteUsers => html!{<CatalogUsers arguments = {UsersQueryArg::set_favorite()} />},
                         }}
                     </div>
                 </div>
@@ -373,7 +373,7 @@ impl Profile {
     ) -> Html {
         html! {
             <div class="profile-page">
-                <ListErrors error=self.error.clone()/>
+                <ListErrors error={self.error.clone()}/>
                 <div class="container page">
                     <div class="row">
                         <div class="card">
@@ -491,7 +491,7 @@ impl Profile {
             <button
                 id="following-button"
                 class="button"
-                onclick=onclick_following >
+                onclick={onclick_following} >
               <span class="icon is-small">
                 <i class={class_fav}></i>
               </span>
@@ -647,11 +647,11 @@ impl Profile {
         html!{
           <div class="profileBox" >
             <UserCertificatesCard
-                  user_uuid = self.current_user_uuid.clone()
-                  certificates = certificates
-                  show_cert_btn = false
-                  download_btn = false
-                  manage_btn = false
+                  user_uuid = {self.current_user_uuid.clone()}
+                  certificates = {certificates}
+                  show_cert_btn = {false}
+                  download_btn = {false}
+                  manage_btn = {false}
              />
           </div>
         }
@@ -660,8 +660,8 @@ impl Profile {
     fn view_favorite_components(&self, user_uuid: Option<UUID>) -> Html {
         html! {
             <CatalogComponents
-                show_create_btn = self.self_profile.is_some()
-                arguments = ComponentsQueryArg::set_favorite(user_uuid)
+                show_create_btn = {self.self_profile.is_some()}
+                arguments = {ComponentsQueryArg::set_favorite(user_uuid)}
             />
         }
     }
@@ -669,8 +669,8 @@ impl Profile {
     fn view_components(&self, user_uuid: &UUID) -> Html {
         html! {
             <CatalogComponents
-                show_create_btn = self.self_profile.is_some()
-                arguments = ComponentsQueryArg::set_user_uuid(user_uuid)
+                show_create_btn = {self.self_profile.is_some()}
+                arguments = {ComponentsQueryArg::set_user_uuid(user_uuid)}
             />
         }
     }
@@ -678,8 +678,8 @@ impl Profile {
     fn view_favorite_companies(&self, user_uuid: Option<UUID>) -> Html {
         html! {
             <CatalogCompanies
-                show_create_btn = self.self_profile.is_some()
-                arguments = CompaniesQueryArg::set_favorite(user_uuid)
+                show_create_btn = {self.self_profile.is_some()}
+                arguments = {CompaniesQueryArg::set_favorite(user_uuid)}
             />
         }
     }
@@ -687,8 +687,8 @@ impl Profile {
     fn view_companies(&self, user_uuid: &UUID) -> Html {
         html! {
             <CatalogCompanies
-                show_create_btn = self.self_profile.is_some()
-                arguments = CompaniesQueryArg::set_user_uuid(user_uuid)
+                show_create_btn = {self.self_profile.is_some()}
+                arguments = {CompaniesQueryArg::set_user_uuid(user_uuid)}
             />
         }
     }
@@ -696,8 +696,8 @@ impl Profile {
     fn view_favorite_standards(&self) -> Html {
         html! {
             <CatalogStandards
-                show_create_btn = false
-                arguments = StandardsQueryArg::set_favorite()
+                show_create_btn = {false}
+                arguments = {StandardsQueryArg::set_favorite()}
             />
         }
     }

@@ -211,7 +211,7 @@ impl Component for ComponentStandardsCard {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
 
         html!{<>
-            <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
+            <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error.clone())}/>
             {self.show_standards()}
         </>}
     }
@@ -238,10 +238,10 @@ impl ComponentStandardsCard {
                {for self.component_standards.iter().map(|data| {
                    match self.standard_uuids.get(&data.uuid) {
                        Some(_) => html!{<ComponentStandardItem
-                           show_delete_btn = self.props.show_delete_btn
-                           component_uuid = self.props.component_uuid.clone()
-                           standard_data = data.clone()
-                           delete_standard = Some(onclick_delete_standard.clone())
+                           show_delete_btn = {self.props.show_delete_btn}
+                           component_uuid = {self.props.component_uuid.clone()}
+                           standard_data = {data.clone()}
+                           delete_standard = {Some(onclick_delete_standard.clone())}
                          />},
                        None => html!{},
                    }
@@ -280,13 +280,13 @@ impl ComponentStandardsCard {
         };
 
         html!{
-            <div class=class_modal>
-              <div class="modal-background" onclick=onclick_hide_modal.clone() />
+            <div class={class_modal}>
+              <div class="modal-background" onclick={onclick_hide_modal.clone()} />
                 <div class="modal-content">
                   <div class="card">
                     <header class="modal-card-head">
                       <p class="modal-card-title">{ get_value_field(&191) }</p> // Add a standard to a component
-                      <button class="delete" aria-label="close" onclick=onclick_hide_modal.clone() />
+                      <button class="delete" aria-label="close" onclick={onclick_hide_modal.clone()} />
                     </header>
                     <section class="modal-card-body">
                         <label class="label">{ get_value_field(&212) }</label> // Select standard
@@ -296,7 +296,7 @@ impl ComponentStandardsCard {
                                   <select
                                       id="add-standard"
                                       select={self.request_add_standard_uuid.clone()}
-                                      onchange=onchange_select_add_standard
+                                      onchange={onchange_select_add_standard}
                                     >
                                   { for self.standard_list.iter().map(|x|
                                       match self.standard_uuids.get(&x.uuid) {

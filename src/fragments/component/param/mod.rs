@@ -219,7 +219,7 @@ impl Component for ComponentParamsTags {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
 
         html!{<>
-            <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
+            <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error.clone())}/>
             {self.modal_add_param()}
             {self.show_params()}
         </>}
@@ -249,10 +249,10 @@ impl ComponentParamsTags {
                {for self.component_params.iter().map(|data| {
                    match self.param_ids.get(&data.param.param_id) {
                        Some(_) => html!{<ComponentParamTag
-                           show_manage_btn = self.props.show_manage_btn
-                           component_uuid = self.props.component_uuid.clone()
-                           param_data = data.clone()
-                           delete_param = Some(onclick_delete_param.clone())
+                           show_manage_btn = {self.props.show_manage_btn}
+                           component_uuid = {self.props.component_uuid.clone()}
+                           param_data = {data.clone()}
+                           delete_param = {Some(onclick_delete_param.clone())}
                          />},
                        None => html!{},
                    }
@@ -283,16 +283,16 @@ impl ComponentParamsTags {
         };
 
         html!{
-            <div class=class_modal>
-              <div class="modal-background" onclick=onclick_hide_modal.clone() />
+            <div class={class_modal}>
+              <div class="modal-background" onclick={onclick_hide_modal.clone()} />
                 <div class="modal-content">
                   <div class="card">
                     <header class="modal-card-head">
                       <p class="modal-card-title">{ get_value_field(&181) }</p> // Add a parameter to component
-                      <button class="delete" aria-label="close" onclick=onclick_hide_modal.clone() />
+                      <button class="delete" aria-label="close" onclick={onclick_hide_modal.clone()} />
                     </header>
                     <section class="modal-card-body">
-                        <RegisterParamnameBlock callback_add_param=onclick_add_param.clone() />
+                        <RegisterParamnameBlock callback_add_param={onclick_add_param.clone()} />
                     </section>
                   </div>
                 </div>

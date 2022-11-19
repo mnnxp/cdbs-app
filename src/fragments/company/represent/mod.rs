@@ -71,7 +71,7 @@ impl Component for CompanyRepresents {
     fn view(&self) -> Html {
         match &self.props.show_manage_btn {
             true => html!{<>
-                <ListErrors error=self.error.clone()/>
+                <ListErrors error={self.error.clone()}/>
                 <div class="representsBox">
                     {for self.props.list.iter().map(|represent|
                         html!{<ChangeItem data={represent.clone()} />}
@@ -79,7 +79,7 @@ impl Component for CompanyRepresents {
                 </div>
             </>},
             false => html!{<>
-                <ListErrors error=self.error.clone()/>
+                <ListErrors error={self.error.clone()}/>
                 <div class="representsBox" >
                     {self.show_card()}
                 </div>

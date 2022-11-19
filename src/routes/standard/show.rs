@@ -267,9 +267,9 @@ impl Component for ShowStandard {
             Msg::OpenStandardSetting => {
                 if let Some(standard_data) = &self.standard {
                     // Redirect to page for change and update standard
-                    self.router_agent.send(ChangeRoute(AppRoute::StandardSettings(
-                        standard_data.uuid.clone()
-                    ).into()));
+                    self.router_agent.send(
+                        ChangeRoute(AppRoute::StandardSettings(standard_data.uuid.clone()).into())
+                    );
                 }
             },
             Msg::Ignore => {}
@@ -290,7 +290,7 @@ impl Component for ShowStandard {
         match &self.standard {
             Some(standard_data) => html!{
                 <div class="standard-page">
-                    <ListErrors error=self.error.clone()/>
+                    <ListErrors error={self.error.clone()}/>
                     <div class="container page">
                         <div class="row">
                             <div class="card column">
@@ -314,7 +314,7 @@ impl Component for ShowStandard {
                 </div>
             },
             None => html!{<div>
-                <ListErrors error=self.error.clone()/>
+                <ListErrors error={self.error.clone()}/>
                 // <h1>{"Not data"}</h1>
             </div>},
         }
@@ -335,8 +335,8 @@ impl ShowStandard {
         html!{
             <div class="columns">
               <ImgShowcase
-                object_uuid=self.current_standard_uuid.clone()
-                file_arr=self.file_arr.clone()
+                object_uuid={self.current_standard_uuid.clone()}
+                file_arr={self.file_arr.clone()}
               />
               // <div class="column is-one-quarter">
               //   <img class="imgBox" src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
@@ -377,7 +377,7 @@ impl ShowStandard {
                           {match standard_data.description.len() {
                               250.. => html!{<>
                                 <br/>
-                                <button class="button is-white" onclick=show_description_btn>
+                                <button class="button is-white" onclick={show_description_btn}>
                                     { get_value_field(&99) }
                                 </button>
                               </>},
@@ -387,7 +387,7 @@ impl ShowStandard {
                         false => html!{<>
                           {format!("{:.*}", 200, standard_data.description)}
                           <br/>
-                          <button class="button is-white" onclick=show_description_btn>
+                          <button class="button is-white" onclick={show_description_btn}>
                             { get_value_field(&98) }
                           </button>
                         </>},
@@ -447,10 +447,10 @@ impl ShowStandard {
             <div class="column">
               <h2 class="has-text-weight-bold">{ get_value_field(&153) }</h2> // Files
               <StandardFilesCard
-                  show_download_btn = true
-                  show_delete_btn = false
-                  standard_uuid = standard_data.uuid.clone()
-                  files = standard_data.standard_files.clone()
+                  show_download_btn = {true}
+                  show_delete_btn = {false}
+                  standard_uuid = {standard_data.uuid.clone()}
+                  files = {standard_data.standard_files.clone()}
                 />
             </div>
         }
@@ -464,9 +464,9 @@ impl ShowStandard {
               <h2 class="has-text-weight-bold">{ get_value_field(&104) }</h2> // Specs
               <div class="card column">
                 <SpecsTags
-                    show_manage_btn = false
-                    standard_uuid = standard_data.uuid.clone()
-                    specs = standard_data.standard_specs.clone()
+                    show_manage_btn = {false}
+                    standard_uuid = {standard_data.uuid.clone()}
+                    specs = {standard_data.standard_specs.clone()}
                   />
               </div>
         </>}
@@ -480,9 +480,9 @@ impl ShowStandard {
               <h2 class="has-text-weight-bold">{ get_value_field(&105) }</h2> // Keywords
               <div class="card column">
                 <KeywordsTags
-                    show_delete_btn = false
-                    standard_uuid = standard_data.uuid.clone()
-                    keywords = standard_data.standard_keywords.clone()
+                    show_delete_btn = {false}
+                    standard_uuid = {standard_data.uuid.clone()}
+                    keywords = {standard_data.standard_keywords.clone()}
                   />
               </div>
         </>}
@@ -498,7 +498,7 @@ impl ShowStandard {
             <button
                 id="following-button"
                 class="button"
-                onclick=onclick_following >
+                onclick={onclick_following} >
               <span class="icon is-small">
                 <i class={class_fav}></i>
               </span>
@@ -531,8 +531,8 @@ impl ShowStandard {
         };
 
         html!{
-            <button class=classes_btn
-                onclick=onclick_related_components_btn >
+            <button class={classes_btn}
+                onclick={onclick_related_components_btn} >
               <span class="has-text-black">{text_btn}</span>
             </button>
         }
@@ -547,8 +547,8 @@ impl ShowStandard {
             <h2 class="has-text-weight-bold">{ get_value_field(&154) }</h2> // Components
             <div class="card">
               <CatalogComponents
-                  show_create_btn = false
-                  arguments = ComponentsQueryArg::set_standard_uuid(standard_uuid)
+                  show_create_btn = {false}
+                  arguments = {ComponentsQueryArg::set_standard_uuid(standard_uuid)}
                 />
             </div>
         </>}
@@ -560,7 +560,7 @@ impl ShowStandard {
     //
     //     html!{
     //         <button class="button is-info"
-    //             onclick=onclick_download_standard_btn >
+    //             onclick={onclick_download_standard_btn} >
     //           <span class="has-text-weight-bold">{ get_value_field(&126) }</span>
     //         </button>
     //     }

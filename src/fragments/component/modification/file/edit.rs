@@ -304,7 +304,7 @@ impl Component for ManageModificationFilesCard {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
 
         html!{<>
-            <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
+            <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error.clone())}/>
             <div class="columns">
                 <div class="column">
                   <h2>{ get_value_field(&203) }</h2> // Files for modification
@@ -350,11 +350,11 @@ impl ManageModificationFilesCard {
             Some(_) => html!{}, // removed file
             None => html!{
                 <ModificationFileItem
-                  show_download_btn = self.props.show_download_btn
+                  show_download_btn = {self.props.show_download_btn}
                   show_delete_btn = true
-                  modification_uuid = self.props.modification_uuid.clone()
-                  file = file_info.clone()
-                  callback_delete_file = callback_delete_file.clone()
+                  modification_uuid = {self.props.modification_uuid.clone()}
+                  file = {file_info.clone()}
+                  callback_delete_file = {callback_delete_file.clone()}
                 />
             },
         }
@@ -367,12 +367,12 @@ impl ManageModificationFilesCard {
         match self.show_full_files {
             true => html!{<>
               <button class="button is-white"
-                  onclick=show_full_files_btn
+                  onclick={show_full_files_btn}
                 >{ get_value_field(&99) }</button>
             </>},
             false => html!{<>
               <button class="button is-white"
-                  onclick=show_full_files_btn
+                  onclick={show_full_files_btn}
                 >{ get_value_field(&98) }</button>
             </>},
         }
@@ -425,7 +425,7 @@ impl ManageModificationFilesCard {
         html!{
             <button id="clear-upload-modification-files"
               class="button"
-              onclick=onclick_clear_boxed
+              onclick={onclick_clear_boxed}
               disabled={self.files.is_empty()} >
                 // <span class="icon" >
                 //     <i class="fas fa-boom" aria-hidden="true"></i>

@@ -139,7 +139,7 @@ impl Component for CatalogCompanies {
 
         html!{
             <div class="companiesBox" >
-              <ListErrors error=self.error.clone()/>
+              <ListErrors error={self.error.clone()}/>
               <div class="level" >
                 <div class="level-left">
                 </div>
@@ -147,7 +147,7 @@ impl Component for CatalogCompanies {
                     <div class="buttons">
                         {match &self.props.show_create_btn {
                             true => html!{
-                                <RouterAnchor<AppRoute> route=AppRoute::CreateCompany classes="button is-info">
+                                <RouterAnchor<AppRoute> route={AppRoute::CreateCompany} classes="button is-info">
                                     { get_value_field(&45) } // Create
                                 </RouterAnchor<AppRoute>>
                             },

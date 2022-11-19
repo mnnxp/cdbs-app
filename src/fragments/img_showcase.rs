@@ -106,7 +106,7 @@ impl Component for ImgShowcase {
                       </div>
                       <div class="mainImgBox">
                           {match self.img_arr.get(&self.selected_img) {
-                              Some(img_data) => html!{<img onclick=onclick_show_image src=img_data.download_url.clone() alt="" srcset="" />},
+                              Some(img_data) => html!{<img onclick={onclick_show_image} src={img_data.download_url.clone()} alt="" srcset="" />},
                               None => html!{}, // <-- not found image for display
                           }}
                       </div>
@@ -134,7 +134,7 @@ impl ImgShowcase {
             <div class={classes_img}
                 onclick={onclick_select_img}
             >
-              <img src=image.download_url.clone() alt="" srcset="" />
+              <img src={image.download_url.clone()} alt="" srcset="" />
             </div>
         )
     }
@@ -149,8 +149,8 @@ impl ImgShowcase {
 
         match self.img_arr.get(&self.selected_img) {
             Some(img_data) => html! {
-                <div class=class_modal>
-                  <div class="modal-background" onclick=onclick_show_image.clone() />
+                <div class={class_modal}>
+                  <div class="modal-background" onclick={onclick_show_image.clone()} />
                   <div class="modal-content">
                     <p class="image is-4by3">
                       // <img src="https://bulma.io/images/placeholders/1280x960.png" alt="" />
@@ -160,7 +160,7 @@ impl ImgShowcase {
                       />
                     </p>
                   </div>
-                  <button class="modal-close is-large" aria-label="close" onclick=onclick_show_image />
+                  <button class="modal-close is-large" aria-label="close" onclick={onclick_show_image} />
                 </div>
             },
             None => html!{}, // <-- not found image for shown in modal

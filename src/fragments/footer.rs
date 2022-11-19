@@ -74,18 +74,18 @@ impl Component for Footer {
                     // left footer
                     <div class="column">
                         <div class="tags are-large">
-                            <a class=vec!("social-network") href="mailto:info@cadbase.rs" title="Email"  style="margin-right: 0.1rem;">
-                                <i class=vec!("fas", "fa-lg", "fa-envelope")></i>
+                            <a class={vec!("social-network")} href="mailto:info@cadbase.rs" title="Email"  style="margin-right: 0.1rem;">
+                                <i class={vec!("fas", "fa-lg", "fa-envelope")}></i>
                             </a>
-                            <a class=vec!("social-network") href="https://www.youtube.com/channel/UC-dHiTHBGV88ScxFKSC3srw" title="Youtube Channel" rel="noreferrer">
-                                <i class=vec!("fab", "fa-lg", "fa-youtube")></i>
+                            <a class={vec!("social-network")} href="https://www.youtube.com/channel/UC-dHiTHBGV88ScxFKSC3srw" title="Youtube Channel" rel="noreferrer">
+                                <i class={vec!("fab", "fa-lg", "fa-youtube")}></i>
                             </a>
                         </div>
                         <div class="buttons">
-                            <a class=button_en onclick=onclick_lang_en>
+                            <a class={button_en} onclick={onclick_lang_en}>
                                 { get_value_field(&8) }
                             </a>
-                            <a class=button_ru onclick=onclick_lang_ru>
+                            <a class={button_ru} onclick={onclick_lang_ru}>
                                 { get_value_field(&9) }
                             </a>
                         </div>
@@ -95,11 +95,11 @@ impl Component for Footer {
                     </div>
                     // 2 center footer
                     <div class="column">
-                        <a onclick=onclick_show_about >
+                        <a onclick={onclick_show_about} >
                             { get_value_field(&11) }
                         </a>
                         <br/>
-                        <a onclick=onclick_show_terms >
+                        <a onclick={onclick_show_terms} >
                             { get_value_field(&10) }
                         </a>
                         <br/>
@@ -128,11 +128,11 @@ impl Footer {
 
         html!{
             <div class={class_modal}>
-              <div class="modal-background" onclick=onclick_show_terms.clone() />
+              <div class="modal-background" onclick={onclick_show_terms.clone()} />
               <div class="modal-card">
                 <header class="modal-card-head">
                   <p class="modal-card-title">{ get_value_field(&248) }</p> // Terms CADBase
-                  <button class="delete" aria-label="close" onclick=onclick_show_terms />
+                  <button class="delete" aria-label="close" onclick={onclick_show_terms} />
                 </header>
                 <section class="modal-card-body">
                     <div class="content">
@@ -158,11 +158,11 @@ impl Footer {
 
         html!{
             <div class={class_modal}>
-              <div class="modal-background" onclick=onclick_show_about.clone() />
+              <div class="modal-background" onclick={onclick_show_about.clone()} />
               <div class="modal-card">
                 <header class="modal-card-head">
                   <p class="modal-card-title">{ get_value_field(&11) }</p> // About us
-                  <button class="delete" aria-label="close" onclick=onclick_show_about />
+                  <button class="delete" aria-label="close" onclick={onclick_show_about} />
                 </header>
                 <section class="modal-card-body">
                     <div class="content">

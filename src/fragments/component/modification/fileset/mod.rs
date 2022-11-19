@@ -120,7 +120,7 @@ impl Component for FilesOfFilesetCard {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
 
         html!{<>
-            <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
+            <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error.clone())}/>
             {self.show_files_card()}
         </>}
     }
@@ -143,8 +143,8 @@ impl FilesOfFilesetCard {
               <tfoot>
                 {for self.files_list.iter().map(|file| html!{
                     <FileOfFilesetItem
-                        show_download_btn = self.props.show_download_btn
-                        file = file.clone()
+                        show_download_btn = {self.props.show_download_btn}
+                        file = {file.clone()}
                     />
                 })}
               </tfoot>
