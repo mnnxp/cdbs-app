@@ -1,7 +1,4 @@
-use yew::{
-    html, Callback, Component, ComponentLink,
-    Html, Properties, ShouldRender,
-};
+use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
 use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
@@ -24,8 +21,6 @@ pub struct Props {
 
 pub struct KeywordTagItem {
     error: Option<Error>,
-    props: Props,
-    link: ComponentLink<Self>,
     get_result_delete: bool,
 }
 
@@ -38,23 +33,21 @@ pub enum Msg {
 impl Component for KeywordTagItem {
     type Message = Msg;
     type Properties = Props;
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
 
         Self {
             error: None,
-            props,
-            link,
             get_result_delete: false,
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let link = ctx.link().clone();
 
         match msg {
             Msg::RequestDeleteKeyword => {
-                let component_uuid = self.props.component_uuid.clone();
-                let keyword_id = self.props.keyword.id as i64;
+                let component_uuid = ctx.props().component_uuid.clone();
+                let keyword_id = ctx.props().keyword.id as i64;
                 spawn_local(async move {
                     let ipt_component_keywords_data = delete_component_keywords::IptComponentKeywordsData{
                         componentUuid: component_uuid,
@@ -79,11 +72,11 @@ impl Component for KeywordTagItem {
                     false => {
                         let result: usize = serde_json::from_value(res.get("deleteComponentKeywords").unwrap().clone()).unwrap();
                         debug!("deleteComponentKeywords: {:?}", result);
-                        match &self.props.delete_keyword {
+                        match &ctx.props().delete_keyword {
                             Some(delete_keyword) => {
                                 if result > 0 {
                                     self.get_result_delete = true;
-                                    delete_keyword.emit(self.props.keyword.clone());
+                                    delete_keyword.emit(ctx.props().keyword.clone());
                                 };
                             },
                             None => self.get_result_delete = result > 0,
@@ -98,16 +91,16 @@ impl Component for KeywordTagItem {
         true
     }
 
-    fn change(&mut self, _props: Self::Properties) -> ShouldRender {
+    fn changed(&mut self, _ctx: &Context<Self>) -> bool {
         false
     }
 
-    fn view(&self) -> Html {
+    fn view(&self, ctx: &Context<Self>) -> Html {
         html!{<>
             <ListErrors error={self.error.clone()}/>
             {match self.get_result_delete {
                 true => html!{},
-                false => self.show_keyword(),
+                false => self.show_keyword(ctx.link(), ctx.props()),
             }}
         </>}
     }
@@ -116,21 +109,23 @@ impl Component for KeywordTagItem {
 impl KeywordTagItem {
     fn show_keyword(
         &self,
+        link: &Scope<Self>,
+        props: &Properties,
     ) -> Html {
-        let onclick_delete_keyword = self
-            .link
-            .callback(|_| Msg::RequestDeleteKeyword);
+        let onclick_delete_keyword = link.callback(|_| Msg::RequestDeleteKeyword);
 
-        let style_tag = match &self.props.style_tag {
+        let style_tag = match &props.style_tag {
             Some(style) => format!("tag is-light {}", style),
             None => "tag is-light".to_string(),
         };
 
         html!{<div class="control">
           <div class="tags has-addons">
-            <span class={style_tag}>{self.props.keyword.keyword.clone()}</span>
-            {match &self.props.show_delete_btn {
-                true => html!{<a class="tag is-delete is-small is-light" onclick={onclick_delete_keyword} />},
+            <span class={style_tag}>{props.keyword.keyword.clone()}</span>
+            {match &props.show_delete_btn {
+                true => html!{
+                    <a class="tag is-delete is-small is-light" onclick={onclick_delete_keyword} />
+                },
                 false => html!{},
             }}
           </div>

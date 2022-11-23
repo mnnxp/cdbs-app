@@ -2,14 +2,12 @@ use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 // use yew::services::fetch::FetchTask;
-use yew::{
-    agent::Bridged, classes, html, Bridge, Callback, Component, ComponentLink,
-    Html, InputData, ChangeData, ShouldRender,
-};
+// use yew::{agent::Bridged, Bridge};
+use yew::{Component, Callback, Context, html, html::Scope, Html, Event, classes};
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
 use log::debug;
 
-use crate::routes::AppRoute;
+use crate::routes::AppRoute::{self, Login, Profile};
 use crate::error::{Error, get_error};
 use crate::fragments::list_errors::ListErrors;
 use crate::services::{get_logged_user, get_value_field};
@@ -23,13 +21,11 @@ use crate::gqls::user::{
 /// Register page
 pub struct Register {
     error: Option<Error>,
-    // props: Props,
     request: RegisterInfo,
     router_agent: Box<dyn Bridge<RouteAgent>>,
     regions: Vec<Region>,
     programs: Vec<Program>,
     types_access: Vec<TypeAccessInfo>,
-    link: ComponentLink<Self>,
     show_conditions: bool,
 }
 
@@ -54,13 +50,11 @@ impl Component for Register {
     type Message = Msg;
     type Properties = ();
 
-    fn create(_props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        Register {
+    fn create(ctx: &Context<Self>) -> Self {
+        Self {
             error: None,
             request: RegisterInfo::default(),
-            // props,
-            router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
-            link,
+            router_agent: RouteAgent::bridge(ctx.link().callback(|_| Msg::Ignore)),
             programs: Vec::new(),
             regions: Vec::new(),
             types_access: Vec::new(),
@@ -68,15 +62,15 @@ impl Component for Register {
         }
     }
 
-    fn rendered(&mut self, first_render: bool) {
+    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
         if first_render {
+            let link = ctx.link().clone();
             if let Some(user) = get_logged_user() {
                 // route to profile page if user already logged
-                self.router_agent.send(ChangeRoute(AppRoute::Profile(user.username).into()));
+                self.router_agent.send(
+                    ChangeRoute(Profile { username: user.username }.into())
+                );
             };
-
-            let link = self.link.clone();
-
             spawn_local(async move {
                 let res = make_query(RegisterOpt::build_query(
                     register_opt::Variables
@@ -86,8 +80,8 @@ impl Component for Register {
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let link = ctx.link().clone();
         match msg {
             Msg::Request => {
                 let ipt_user_data = reg_user::IptUserData {
@@ -127,9 +121,8 @@ impl Component for Register {
             Msg::GetRegister(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res = data.as_object().unwrap().get("data").unwrap();
-
                 match res.is_null() {
-                    false => self.router_agent.send(ChangeRoute(AppRoute::Login.into())),
+                    false => self.router_agent.send(ChangeRoute(Login.into())),
                     true => self.error = Some(get_error(&data)),
                 }
             },
@@ -151,27 +144,26 @@ impl Component for Register {
         true
     }
 
-    fn change(&mut self, _props: Self::Properties) -> ShouldRender {
+    fn changed(&mut self, _ctx: &Context<Self>) -> bool {
         false
     }
 
-    fn view(&self) -> Html {
-        let onclick_show_conditions = self.link.callback(|_| Msg::ShowConditions);
-
-        let onclick_signup_btn = self.link.callback(|_| Msg::Request);
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let onclick_show_conditions = ctx.link().callback(|_| Msg::ShowConditions);
+        let onclick_signup_btn = ctx.link().callback(|_| Msg::Request);
 
         html!{<div class="container page">
             <div class="auth-page">
                 <h1 class="title">{ get_value_field(&14) }</h1>
                 <h2 class="subtitle">
-                    <RouterAnchor<AppRoute> route={AppRoute::Login}>
+                    <RouterAnchor<AppRoute> route={Login}>
                         { get_value_field(&21) }
                     </RouterAnchor<AppRoute>>
                 </h2>
                 <ListErrors error={self.error.clone()} />
-                {self.modal_conditions()}
+                {self.modal_conditions(ctx.link())}
                 <div class="card column">
-                    {self.fieldset_profile()}
+                    {self.fieldset_profile(ctx.link())}
                     <div class="columns">
                         <div class="column">
                             <button
@@ -201,29 +193,29 @@ impl Component for Register {
 }
 
 impl Register {
-    fn fieldset_profile(&self) -> Html {
-        // let oninput_firstname = self.link.callback(|ev: InputData| Msg::UpdateFirstname(ev.value));
-        // let oninput_lastname = self.link.callback(|ev: InputData| Msg::UpdateLastname(ev.value));
-        // let oninput_secondname = self.link.callback(|ev: InputData| Msg::UpdateSecondname(ev.value));
-        let oninput_username = self.link.callback(|ev: InputData| Msg::UpdateUsername(ev.value));
-        let oninput_email = self.link.callback(|ev: InputData| Msg::UpdateEmail(ev.value));
-        let oninput_password = self.link.callback(|ev: InputData| Msg::UpdatePassword(ev.value));
-        let oninput_program_id = self
-            .link
-            .callback(|ev: ChangeData| Msg::UpdateProgramId(match ev {
-              ChangeData::Select(el) => el.value(),
+    fn fieldset_profile(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        // let oninput_firstname = link.callback(|ev: Event| Msg::UpdateFirstname(ev.value));
+        // let oninput_lastname = link.callback(|ev: Event| Msg::UpdateLastname(ev.value));
+        // let oninput_secondname = link.callback(|ev: Event| Msg::UpdateSecondname(ev.value));
+        let oninput_username = link.callback(|ev: Event| Msg::UpdateUsername(ev.value));
+        let oninput_email = link.callback(|ev: Event| Msg::UpdateEmail(ev.value));
+        let oninput_password = link.callback(|ev: Event| Msg::UpdatePassword(ev.value));
+        let oninput_program_id =
+            link.callback(|ev: Event| Msg::UpdateProgramId(match ev {
+              Event::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
-        let onchange_region_id = self
-            .link
-            .callback(|ev: ChangeData| Msg::UpdateRegionId(match ev {
-              ChangeData::Select(el) => el.value(),
+        let onchange_region_id =
+            link.callback(|ev: Event| Msg::UpdateRegionId(match ev {
+              Event::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
-        let onchange_type_access_id = self
-            .link
-            .callback(|ev: ChangeData| Msg::UpdateTypeAccessId(match ev {
-                ChangeData::Select(el) => el.value(),
+        let onchange_type_access_id =
+            link.callback(|ev: Event| Msg::UpdateTypeAccessId(match ev {
+                Event::Select(el) => el.value(),
                 _ => "1".to_string(),
           }));
 
@@ -355,7 +347,7 @@ impl Register {
         // placeholder: &str,
         icon_left: &str,
         value: String,
-        oninput: Callback<InputData>,
+        oninput: Callback<Event>,
     ) -> Html {
         let placeholder = label;
         let input_type = match id {
@@ -396,8 +388,11 @@ impl Register {
         }
     }
 
-    fn modal_conditions(&self) -> Html {
-        let onclick_show_conditions = self.link.callback(|_| Msg::ShowConditions);
+    fn modal_conditions(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onclick_show_conditions = link.callback(|_| Msg::ShowConditions);
 
         let class_modal = match &self.show_conditions {
             true => "modal is-active",

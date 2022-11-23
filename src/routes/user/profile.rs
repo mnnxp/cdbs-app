@@ -3,17 +3,15 @@ use graphql_client::GraphQLQuery;
 use log::debug;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
-use yew::{
-    agent::Bridged, classes, html, Bridge, Callback, Component,
-    ComponentLink, Html, Properties, ShouldRender
-};
+// use yew::{agent::Bridged, Bridge};
+use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, classes};
 use yew_router::{
     service::RouteService,
     agent::RouteRequest::ChangeRoute,
     prelude::*
 };
 
-use crate::routes::AppRoute;
+use crate::routes::AppRoute::Login;
 use crate::error::{get_error, Error};
 use crate::fragments::{
     company::CatalogCompanies,
@@ -46,8 +44,6 @@ pub struct Profile {
     current_user_uuid: UUID,
     current_username: String,
     router_agent: Box<dyn Bridge<RouteAgent>>,
-    props: Props,
-    link: ComponentLink<Self>,
     subscribers: usize,
     is_followed: bool,
     profile_tab: ProfileTab,
@@ -90,16 +86,14 @@ impl Component for Profile {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         Profile {
             error: None,
             self_profile: None,
             profile: None,
             current_user_uuid: String::new(),
             current_username: String::new(),
-            router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
-            props,
-            link,
+            router_agent: RouteAgent::bridge(ctx.link().callback(|_| Msg::Ignore)),
             subscribers: 0,
             is_followed: false,
             profile_tab: ProfileTab::Certificates,
@@ -108,12 +102,12 @@ impl Component for Profile {
         }
     }
 
-    fn rendered(&mut self, first_render: bool) {
+    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
         let logged_username = match get_logged_user() {
             Some(cu) => cu.username,
             None => {
                 // route to login page if not found token
-                self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
+                self.router_agent.send(ChangeRoute(Login.into()));
                 String::new()
             },
         };
@@ -122,30 +116,25 @@ impl Component for Profile {
         let route_service: RouteService<()> = RouteService::new();
         // get and decode target user from route
         let target_username = url_decode(route_service.get_fragment().trim_start_matches("#/@"));
-
         // get flag changing current profile in route
         let not_matches_username = target_username != self.current_username;
         // debug!("self.current_username {:?}", self.current_username);
-
         // check get self data
         let get_self = logged_username == target_username;
         // debug!("get_self {:?}", get_self);
-
         if first_render || not_matches_username {
             // clear old data
             self.error = None;
             self.self_profile = None;
             self.profile = None;
-
             // update current_username for checking change profile in route
             self.current_username = target_username.to_string();
-
-            self.link.send_message(Msg::RequestProfileData(get_self))
+            ctx.link().send_message(Msg::RequestProfileData(get_self))
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let link = ctx.link().clone();
 
         match msg {
             Msg::RequestProfileData(get_self) => {
@@ -175,7 +164,7 @@ impl Component for Profile {
                 })
             },
             Msg::Follow => {
-                let link = self.link.clone();
+                let link = ctx.link().clone();
                 let user_uuid = self.profile.as_ref().unwrap().uuid.clone();
 
                 spawn_local(async move {
@@ -205,7 +194,7 @@ impl Component for Profile {
                 }
             },
             Msg::UnFollow => {
-                let link = self.link.clone();
+                let link = ctx.link().clone();
                 let user_uuid = self.profile.as_ref().unwrap().uuid.clone();
 
                 spawn_local(async move {
@@ -297,17 +286,16 @@ impl Component for Profile {
         true
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        self.props = props;
-        true
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+        false
     }
 
-    fn view(&self) -> Html {
-        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let onclick_clear_error = ctx.link().callback(|_| Msg::ClearError);
 
         match (&self.self_profile, &self.profile) {
-            (Some(self_data), _) => self.self_user_card(self_data),
-            (_, Some(user_data)) => self.other_user_card(user_data),
+            (Some(self_data), _) => self.self_user_card(ctx.link(), self_data),
+            (_, Some(user_data)) => self.other_user_card(ctx.link(), user_data),
             _ => html!{<ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error)} />},
         }
     }
@@ -316,6 +304,7 @@ impl Component for Profile {
 impl Profile {
     fn self_user_card(
         &self,
+        link: &Scope<Self>,
         self_data: &SelfUserInfo,
     ) -> Html {
         html! {
@@ -325,9 +314,10 @@ impl Profile {
                     <div class="row">
                         <div class="card">
                             <div class="card-content">
-                                {self.view_card()}
+                                {self.view_card(link)}
                                 <div class="content">
                                     { self.view_user_info(
+                                        link,
                                         self_data.description.as_str(),
                                         self_data.position.as_str(),
                                         self_data.region.region.as_str(),
@@ -335,7 +325,7 @@ impl Profile {
                                     ) }
                                 </div>
                             </div>
-                            {self.self_user_relate_object(self_data)}
+                            {self.self_user_relate_object(link, self_data)}
                         </div>
                     </div>
                 </div>
@@ -345,12 +335,13 @@ impl Profile {
 
     fn self_user_relate_object(
         &self,
+        link: &Scope<Self>,
         self_data: &SelfUserInfo,
     ) -> Html {
         html!{<div class="card">
             <div class="columns is-mobile">
                 <div class="column is-flex">
-                    { self.show_profile_action() }
+                    { self.show_profile_action(link) }
                     <div class="card-relate-data" style="flex:1;" >
                         {match self.profile_tab {
                             ProfileTab::Certificates => self.view_certificates(self_data.certificates.clone()),
@@ -369,6 +360,7 @@ impl Profile {
 
     fn other_user_card(
         &self,
+        link: &Scope<Self>,
         user_data: &UserInfo,
     ) -> Html {
         html! {
@@ -378,9 +370,10 @@ impl Profile {
                     <div class="row">
                         <div class="card">
                             <div class="card-content">
-                                {self.view_card()}
+                                {self.view_card(link)}
                                 <div class="content">
                                     { self.view_user_info(
+                                        link,
                                         user_data.description.as_str(),
                                         user_data.position.as_str(),
                                         user_data.region.region.as_str(),
@@ -388,7 +381,7 @@ impl Profile {
                                     ) }
                                 </div>
                             </div>
-                            {self.other_user_relate_object(user_data)}
+                            {self.other_user_relate_object(link, user_data)}
                         </div>
                     </div>
                 </div>
@@ -398,12 +391,13 @@ impl Profile {
 
     fn other_user_relate_object(
         &self,
+        link: &Scope<Self>,
         user_data: &UserInfo,
     ) -> Html {
         html!{<div class="card">
             <div class="columns is-mobile">
                 <div class="column is-flex">
-                  { self.show_profile_action() }
+                  { self.show_profile_action(link) }
                   <div class="card-relate-data" style="flex:1;">
                       {match self.profile_tab {
                           ProfileTab::Certificates => self.view_certificates(user_data.certificates.clone()),
@@ -419,7 +413,10 @@ impl Profile {
         </div>}
     }
 
-    fn view_card(&self) -> Html {
+    fn view_card(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
         let UserDataCard {
             image_file,
             firstname,
@@ -461,16 +458,19 @@ impl Profile {
                     },
                     false => html!{},
                 }}
-                { self.show_profile_followers() }
+                { self.show_profile_followers(link) }
             </div>
         </div>}
     }
 
-    fn show_profile_followers(&self) -> Html {
+    fn show_profile_followers(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
         html! {<>
             // for self user data not show button "following"
             {match &self.profile {
-                Some(_) => self.show_favorite_btn(),
+                Some(_) => self.show_favorite_btn(link),
                 None => html!{
                     <div>
                         <span>{ get_value_field(&31) }</span>
@@ -481,10 +481,13 @@ impl Profile {
         </>}
     }
 
-    fn show_favorite_btn(&self) -> Html {
+    fn show_favorite_btn(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
         let (class_fav, onclick_following) = match self.is_followed {
-            true => ("fas fa-bookmark", self.link.callback(|_| Msg::UnFollow)),
-            false => ("far fa-bookmark", self.link.callback(|_| Msg::Follow)),
+            true => ("fas fa-bookmark", link.callback(|_| Msg::UnFollow)),
+            false => ("far fa-bookmark", link.callback(|_| Msg::Follow)),
         };
 
         html!{
@@ -500,11 +503,18 @@ impl Profile {
         }
     }
 
-    fn cb_generator(&self, cb: ProfileTab) -> Callback<MouseEvent> {
-        self.link.callback(move |_| Msg::ChangeTab(cb.clone()))
+    fn cb_generator(
+        &self,
+        link: &Scope<Self>,
+        cb: ProfileTab,
+    ) -> Callback<MouseEvent> {
+        link.callback(move |_| Msg::ChangeTab(cb.clone()))
     }
 
-    fn check_extend(&self, tab: &ProfileTab) -> bool {
+    fn check_extend(
+        &self,
+        tab: &ProfileTab,
+    ) -> bool {
         if self.extend_tab.is_some() {
             self.extend_tab.clone().unwrap() == tab.clone()
         } else {
@@ -512,11 +522,14 @@ impl Profile {
         }
     }
 
-    fn show_profile_action(&self) -> Html {
+    fn show_profile_action(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
         let menu_arr: Vec<MenuItem> = vec![
             MenuItem {
                 title: get_value_field(&32).to_string(),
-                action: self.cb_generator(ProfileTab::Certificates),
+                action: self.cb_generator(link, ProfileTab::Certificates),
                 count: self.get_number_of_items(&ProfileTab::Certificates),
                 item_class: classes!("has-background-white"),
                 icon_classes: vec![classes!("fas", "fa-certificate")],
@@ -525,7 +538,7 @@ impl Profile {
             },
             MenuItem {
                 title: get_value_field(&33).to_string(),
-                action: self.cb_generator(ProfileTab::Components),
+                action: self.cb_generator(link, ProfileTab::Components),
                 count: self.get_number_of_items(&ProfileTab::Components),
                 item_class: classes!("has-background-white"),
                 icon_classes: vec![classes!("fas", "fa-cogs")],
@@ -534,7 +547,7 @@ impl Profile {
             },
             MenuItem {
                 title: get_value_field(&34).to_string(),
-                action: self.cb_generator(ProfileTab::FavoriteComponents),
+                action: self.cb_generator(link, ProfileTab::FavoriteComponents),
                 count: self.get_number_of_items(&ProfileTab::FavoriteComponents),
                 item_class: classes!("has-background-white"),
                 icon_classes: vec![classes!("fas", "fa-cogs"), classes!("fas", "fa-bookmark")],
@@ -544,7 +557,7 @@ impl Profile {
             // company MenuItem
             MenuItem {
                 title: get_value_field(&35).to_string(),
-                action: self.cb_generator(ProfileTab::Companies),
+                action: self.cb_generator(link, ProfileTab::Companies),
                 count: self.get_number_of_items(&ProfileTab::Companies),
                 item_class: classes!("has-background-white"),
                 icon_classes: vec![classes!("fas", "fa-building")],
@@ -554,7 +567,7 @@ impl Profile {
             // company fav MenuItem
             MenuItem {
                 title: get_value_field(&36).to_string(),
-                action: self.cb_generator(ProfileTab::FavoriteCompanies),
+                action: self.cb_generator(link, ProfileTab::FavoriteCompanies),
                 count: self.get_number_of_items(&ProfileTab::FavoriteCompanies),
                 item_class: classes!("has-background-white"),
                 icon_classes: vec![classes!("fas", "fa-building"), classes!("fas", "fa-bookmark")],
@@ -564,7 +577,7 @@ impl Profile {
             // standards MenuItem
             MenuItem {
                 title: get_value_field(&37).to_string(),
-                action: self.cb_generator(ProfileTab::FavoriteStandards),
+                action: self.cb_generator(link, ProfileTab::FavoriteStandards),
                 count: self.get_number_of_items(&ProfileTab::FavoriteStandards),
                 item_class: classes!("has-background-white"),
                 icon_classes: vec![classes!("fas", "fa-cube"), classes!("fas", "fa-bookmark")],
@@ -574,7 +587,7 @@ impl Profile {
             // user fav MenuItem
             MenuItem {
                 title: get_value_field(&38).to_string(),
-                action: self.cb_generator(ProfileTab::FavoriteUsers),
+                action: self.cb_generator(link, ProfileTab::FavoriteUsers),
                 count: self.get_number_of_items(&ProfileTab::FavoriteUsers),
                 item_class: classes!("has-background-white"),
                 icon_classes: vec![classes!("fas", "fa-user"), classes!("fas", "fa-bookmark")],
@@ -592,13 +605,13 @@ impl Profile {
 
     fn view_user_info(
         &self,
+        link: &Scope<Self>,
         description: &str,
         position: &str,
         region: &str,
         program: &str,
     ) -> Html {
-        let onclick_change_full_show =
-            self.link.callback(|_| Msg::ShowFullUserInfo);
+        let onclick_change_full_show = link.callback(|_| Msg::ShowFullUserInfo);
 
         match self.show_full_user_info {
             true => html! {<>

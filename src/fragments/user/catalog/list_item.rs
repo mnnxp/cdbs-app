@@ -1,15 +1,10 @@
-use yew::{
-  prelude::*, agent::Bridged, html, Bridge, Component, ComponentLink,
-  Html, Properties, ShouldRender,
-};
-use yew_router::{
-    agent::RouteRequest::ChangeRoute,
-    prelude::*,
-};
-use crate::routes::AppRoute;
+// use yew::{agent::Bridged, Bridge};
+use yew::{Component, Context, html, html::Scope, Html, Properties, classes};
+use yew_router::agent::RouteRequest::ChangeRoute;
+use crate::routes::AppRoute::Profile;
 use crate::fragments::switch_icon::res_btn;
 use crate::services::get_value_field;
-use super::ShowUserShort;
+use super::{UUID, ShowUserShort};
 
 pub enum Msg {
     ShowProfile,
@@ -24,52 +19,51 @@ pub struct Props {
 
 pub struct ListItemUser {
     router_agent: Box<dyn Bridge<RouteAgent>>,
-    link: ComponentLink<Self>,
+    user_uuid: UUID,
     username: String,
-    props: Props,
 }
 
 impl Component for ListItemUser {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         Self {
-            router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
-            link,
-            username: props.data.username.to_string(),
-            props,
+            router_agent: RouteAgent::bridge(ctx.link().callback(|_| Msg::Ignore)),
+            user_uuid: ctx.props().data.uuid.clone(),
+            username: ctx.props().data.username.clone(),
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::ShowProfile => {
                 // Redirect to profile page
-                self.router_agent.send(ChangeRoute(AppRoute::Profile(
-                    self.username.to_string()
-                ).into()));
+                self.router_agent.send(
+                    ChangeRoute(Profile { username: self.username.to_string() }.into())
+                );
             },
             Msg::Ignore => {},
         }
         true
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.show_list != props.show_list || self.props.data.uuid != props.data.uuid {
-            self.props.show_list = props.show_list;
-            self.username = props.data.username.to_string();
-            self.props.data = props.data;
-            true
-        } else {
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+        if self.show_list == ctx.props().show_list ||
+            self.user_uuid == ctx.props().data.uuid {
             false
+        } else {
+            self.show_list = ctx.props().show_list;
+            self.user_uuid = ctx.props().data.uuid.clone();
+            self.username = ctx.props().data.username.clone();
+            true
         }
     }
 
-    fn view(&self) -> Html {
-      match self.props.show_list {
-        true => { self.showing_in_list() },
-        false => { self.showing_in_box() },
+    fn view(&self, ctx: &Context<Self>) -> Html {
+      match ctx.props().show_list {
+        true => { self.showing_in_list(ctx.props(), ctx.link()) },
+        false => { self.showing_in_box(ctx.props(), ctx.link()) },
       }
     }
 }
@@ -77,11 +71,10 @@ impl Component for ListItemUser {
 impl ListItemUser {
     fn open_profile_page(
         &self,
+        link: &Scope<Self>,
         small_button: bool,
     ) -> Html {
-        let onclick_open_profile = self
-            .link
-            .callback(|_| Msg::ShowProfile);
+        let onclick_open_profile = link.callback(|_| Msg::ShowProfile);
 
         match small_button {
             true => html!{
@@ -101,14 +94,18 @@ impl ListItemUser {
         }
     }
 
-    fn showing_in_list(&self) -> Html {
+    fn showing_in_list(
+        &self,
+        link: &Scope<Self>,
+        props: &Properties,
+    ) -> Html {
         let ShowUserShort {
             firstname,
             lastname,
             username,
             image_file,
             ..
-        } = &self.props.data;
+        } = props.data;
 
         html!{
           <div class="box itemBox">
@@ -136,21 +133,25 @@ impl ListItemUser {
                 </div>
               </div>
               <div class="media-right flexBox " >
-                {self.open_profile_page(false)}
+                {self.open_profile_page(link, false)}
               </div>
             </article>
           </div>
         }
     }
 
-    fn showing_in_box(&self) -> Html {
+    fn showing_in_box(
+        &self,
+        link: &Scope<Self>,
+        props: &Properties,
+    ) -> Html {
         let ShowUserShort {
             firstname,
             lastname,
             username,
             image_file,
             ..
-        } = self.props.data.clone();
+        } = props.data.clone();
 
         html!{
           <div class="boxItem" >
@@ -170,7 +171,7 @@ impl ListItemUser {
             </div>
             // <div class="overflow-title has-text-weight-bold	is-size-4" >{username}</div>
             <div class="btnBox">
-                {self.open_profile_page(false)}
+                {self.open_profile_page(link, false)}
             </div>
           </div>
         }

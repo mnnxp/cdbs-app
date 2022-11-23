@@ -23,46 +23,46 @@ pub use crate::fragments::{
 use yew_router::prelude::*;
 
 /// App routes
-#[derive(Switch, Debug, Clone)]
+#[derive(Debug, Clone, Copy, PartialEq, Routable)]
 pub enum AppRoute {
-    #[to = "#/login"]
+    #[at("#/login")]
     Login,
-    #[to = "#/register"]
+    #[at("#/register")]
     Register,
-    // #[to = "#/components"]
+    // #[at("#/components")]
     // CatalogComponents,
-    #[to = "#/component/settings/{uuid}"]
-    ComponentSettings(String),
-    #[to = "#/component/create"]
+    #[at("#/component/settings/:uuid")]
+    ComponentSettings { uuid: String },
+    #[at("#/component/create")]
     CreateComponent,
-    #[to = "#/component/{uuid}"]
-    ShowComponent(String),
-    #[to = "#/notifications"]
+    #[at("#/component/:uuid")]
+    ShowComponent { uuid: String },
+    #[at("#/notifications")]
     Notifications,
-    #[to = "#/settings"]
+    #[at("#/settings")]
     Settings,
-    #[to = "#/company/settings/{uuid}"]
-    CompanySettings(String),
-    #[to = "#/company/create"]
+    #[at("#/company/settings/:uuid")]
+    CompanySettings { uuid: String },
+    #[at("#/company/create")]
     CreateCompany,
-    #[to = "#/company/{uuid}"]
-    ShowCompany(String),
-    #[to = "#/standard/settings/{uuid}"]
-    StandardSettings(String),
-    #[to = "#/standard/create"]
+    #[at("#/company/:uuid")]
+    ShowCompany { uuid: String },
+    #[at("#/standard/settings/:uuid")]
+    StandardSettings { uuid: String },
+    #[at("#/standard/create")]
     CreateStandard,
-    #[to = "#/standard/{uuid}"]
-    ShowStandard(String),
-    // #[to = "#/users"]
+    #[at("#/standard/:uuid")]
+    ShowStandard { uuid: String },
+    // #[at("#/users")]
     // CatalogUsers,
-    #[to = "#/@{username}"]
-    Profile(String),
-    #[to = "#/"]
+    #[at("#/@:username")]
+    Profile { username: String },
+    #[at("#/")]
     Home,
 }
 
 /// Fix fragment handling problem for yew_router
-pub fn fix_fragment_routes(route: &mut Route) {
+pub fn fix_fragment_routes(route: &mut Router) {
     let r = route.route.as_str();
     if let Some(index) = r.find('#') {
         route.route = r[index..].to_string();

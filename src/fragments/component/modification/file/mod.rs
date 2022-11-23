@@ -6,7 +6,7 @@ pub use edit::ManageModificationFilesCard;
 pub use list_item::ModificationFileItem;
 pub use table_item::ModificationFileListItem;
 
-use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
+use yew::{Component, Context, html, Html, Properties};
 use log::debug;
 use graphql_client::GraphQLQuery;
 // use serde_json::Value;
@@ -27,8 +27,7 @@ pub struct Props {
 
 pub struct ModificationFilesTableCard {
     error: Option<Error>,
-    link: ComponentLink<Self>,
-    props: Props,
+    modification_uuid: UUID,
     files_list: Vec<ShowFileInfo>,
     // show_full_files: bool,
 }
@@ -46,30 +45,29 @@ impl Component for ModificationFilesTableCard {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         Self {
             error: None,
-            link,
-            props,
+            modification_uuid: ctx.props().modification_uuid,
             files_list: Vec::new(),
             // show_full_files: false,
         }
     }
 
-    fn rendered(&mut self, first_render: bool) {
-        if first_render && self.props.modification_uuid.len() == 36 {
+    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
+        if first_render && ctx.props().modification_uuid.len() == 36 {
             debug!("First render modification files list");
             // self.clear_current_data();
-            self.link.send_message(Msg::RequestModificationFilesList);
+            ctx.link().send_message(Msg::RequestModificationFilesList);
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let link = ctx.link().clone();
 
         match msg {
             Msg::RequestModificationFilesList => {
-                let modification_uuid = self.props.modification_uuid.clone();
+                let modification_uuid = ctx.props().modification_uuid.clone();
                 spawn_local(async move {
                     let ipt_modification_files_arg = component_modification_files_list::IptModificationFilesArg{
                         filesUuids: None,
@@ -104,36 +102,37 @@ impl Component for ModificationFilesTableCard {
         true
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.modification_uuid == props.modification_uuid {
-            debug!("not update modification files {:?}", props.modification_uuid);
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+        if self.modification_uuid == ctx.props().modification_uuid {
+            debug!("not update modification files {:?}", self.modification_uuid);
             false
         } else {
-            debug!("update modification files {:?}", props.modification_uuid);
-            self.props = props;
-
+            debug!("update modification files {:?}", self.modification_uuid);
             self.files_list.clear();
-            if self.props.modification_uuid.len() == 36 {
-                self.link.send_message(Msg::RequestModificationFilesList);
+            if ctx.props().modification_uuid.len() == 36 {
+                ctx.link().send_message(Msg::RequestModificationFilesList);
             }
-
+            self.modification_uuid == ctx.props().modification_uuid;
             true
         }
     }
 
-    fn view(&self) -> Html {
-        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let onclick_clear_error = ctx.link().callback(|_| Msg::ClearError);
 
         html!{<>
             <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error.clone())}/>
             <h2 class="has-text-weight-bold">{ get_value_field(&119) }</h2> // Modification files
-            {self.show_files_card()}
+            {self.show_files_card(ctx.props())}
         </>}
     }
 }
 
 impl ModificationFilesTableCard {
-    fn show_files_card(&self) -> Html {
+    fn show_files_card(
+        &self,
+        props: &Properties,
+    ) -> Html {
         html!{<div class="card">
             <table class="table is-fullwidth is-striped">
               <thead>
@@ -144,7 +143,7 @@ impl ModificationFilesTableCard {
                   <th>{ get_value_field(&26) }</th> // Program
                   <th>{ get_value_field(&124) }</th> // Upload by
                   <th>{ get_value_field(&125) }</th> // Upload at
-                  {match &self.props.show_download_btn {
+                  {match &props.show_download_btn {
                       true => html!{<th>{ get_value_field(&126) }</th>}, // Download
                       false => html!{},
                   }}
@@ -153,8 +152,8 @@ impl ModificationFilesTableCard {
               <tfoot>
                 {for self.files_list.iter().map(|file| html!{
                     <ModificationFileListItem
-                        modification_uuid = {self.props.modification_uuid.clone()}
-                        show_download_tag = {self.props.show_download_btn}
+                        modification_uuid = {props.modification_uuid.clone()}
+                        show_download_tag = {props.show_download_btn}
                         file = {file.clone()}
                     />
                 })}

@@ -1,7 +1,4 @@
-use yew::{
-    html, Callback, Component, ComponentLink,
-    Html, Properties, ShouldRender,
-};
+use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
 // use log::debug;
 
 #[derive(Clone, Debug, Properties)]
@@ -12,8 +9,8 @@ pub struct Props {
 }
 
 pub struct ModificationTableItemModule {
-    props: Props,
-    link: ComponentLink<Self>,
+    param_id: usize,
+    value: Option<String>,
 }
 
 pub enum Msg {
@@ -23,48 +20,52 @@ pub enum Msg {
 impl Component for ModificationTableItemModule {
     type Message = Msg;
     type Properties = Props;
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         Self {
-            props,
-            link,
+            param_id: ctx.props().param_id,
+            value: ctx.props().value,
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::ChangeParam => {
-                if let Some(rollback) = &self.props.callback_change_param {
-                    rollback.emit(self.props.param_id);
+                if let Some(rollback) = &ctx.props().callback_change_param {
+                    rollback.emit(ctx.props().param_id);
                 }
             },
         }
         true
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.param_id == props.param_id &&
-              self.props.value == props.value {
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+        if self.param_id == ctx.props().param_id &&
+              self.value == ctx.props().value {
             false
         } else {
-            self.props = props;
+            self.param_id == ctx.props().param_id;
+            self.value == ctx.props().value;
             true
         }
     }
 
-    fn view(&self) -> Html {
-        match self.props.callback_change_param {
-            Some(_) => match self.props.param_id {
-                0 => self.show_column_for_add(),
-                _=> self.with_manage_btn(),
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        match ctx.props().callback_change_param {
+            Some(_) => match ctx.props().param_id {
+                0 => self.show_column_for_add(ctx.link()),
+                _=> self.with_manage_btn(ctx.link(), ctx.props()),
             },
-            None => self.without_manage_btn(),
+            None => self.without_manage_btn(ctx.props()),
         }
     }
 }
 
 impl ModificationTableItemModule {
-    fn show_column_for_add(&self) -> Html {
-        let onclick_new_param = self.link.callback(|_| Msg::ChangeParam);
+    fn show_column_for_add(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onclick_new_param = link.callback(|_| Msg::ChangeParam);
 
         html!{<td>
             <a class="button is-success is-rounded is-small is-light"
@@ -76,12 +77,16 @@ impl ModificationTableItemModule {
         </td>}
     }
 
-    fn with_manage_btn(&self) -> Html {
-        let onclick_change_param = self.link.callback(|_| Msg::ChangeParam);
+    fn with_manage_btn(
+        &self,
+        link: &Scope<Self>,
+        props: &Properties,
+    ) -> Html {
+        let onclick_change_param = link.callback(|_| Msg::ChangeParam);
 
         html!{<td>
             <a onclick={onclick_change_param.clone()}>
-                {match &self.props.value {
+                {match &props.value {
                     Some(value) => html!{<>
                         <span>{value.clone()}</span>
                         <span class="icon is-small" >
@@ -96,8 +101,11 @@ impl ModificationTableItemModule {
         </td>}
     }
 
-    fn without_manage_btn(&self) -> Html {
-        match &self.props.value {
+    fn without_manage_btn(
+        &self,
+        props: &Properties,
+    ) -> Html {
+        match &props.value {
             Some(value) => html!{<td>{value.clone()}</td>},
             None => html!{<td></td>},
         }

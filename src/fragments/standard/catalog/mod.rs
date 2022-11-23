@@ -2,7 +2,7 @@ mod list_item;
 
 pub use list_item::ListItemStandard;
 
-use yew::{html, Component, ComponentLink, Html, ShouldRender, Properties};
+use yew::{Component, Context, html, Html, Properties};
 use yew_router::prelude::RouterAnchor;
 
 use wasm_bindgen_futures::spawn_local;
@@ -10,7 +10,7 @@ use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use log::debug;
 
-use crate::routes::AppRoute;
+use crate::routes::AppRoute::{self, CreateStandard};
 use crate::error::{Error, get_error};
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{ShowStandardShort, StandardsQueryArg};
@@ -27,8 +27,6 @@ pub enum Msg {
 
 pub struct CatalogStandards {
     error: Option<Error>,
-    link: ComponentLink<Self>,
-    props: Props,
     show_type: ListState,
     list: Vec<ShowStandardShort>
 }
@@ -43,24 +41,22 @@ impl Component for CatalogStandards {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         Self {
             error: None,
-            link,
-            props,
             show_type: ListState::get_from_storage(),
             list: Vec::new()
         }
     }
 
-    fn rendered(&mut self, first_render: bool) {
+    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
         if first_render {
-            self.link.send_message(Msg::GetList);
+            ctx.link().send_message(Msg::GetList);
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let link = ctx.link().clone();
         match msg {
             Msg::SwitchShowType => {
                 match self.show_type {
@@ -70,7 +66,7 @@ impl Component for CatalogStandards {
                 ListState::set_to_storage(&self.show_type);
             },
             Msg::GetList => {
-                let ipt_standards_arg = match &self.props.arguments {
+                let ipt_standards_arg = match &ctx.props().arguments {
                     Some(ref arg) => Some(get_standards_short_list::IptStandardsArg {
                         standardsUuids: arg.standards_uuids.clone(),
                         companyUuid: arg.company_uuid.to_owned(),
@@ -90,15 +86,11 @@ impl Component for CatalogStandards {
             Msg::UpdateList(res) => {
               let data: Value = serde_json::from_str(res.as_str()).unwrap();
               let res_value = data.as_object().unwrap().get("data").unwrap();
-
               debug!("res value: {:#?}", res_value);
-
               match res_value.is_null() {
                   false => {
                       let result: Vec<ShowStandardShort> = serde_json::from_value(res_value.get("standards").unwrap().clone()).unwrap();
-
                       debug!("UpdateList result: {:?}", result);
-
                       self.list = result;
                   },
                   true => self.error = Some(get_error(&data)),
@@ -108,15 +100,15 @@ impl Component for CatalogStandards {
         true
     }
 
-    fn change(&mut self, _props: Self::Properties) -> ShouldRender {
+    fn changed(&mut self, _ctx: &Context<Self>) -> bool {
         // Should only return "true" if new properties are different to
         // previously received properties.
         // This standard has no properties so we will always return "false".
         false
     }
 
-    fn view(&self) -> Html {
-        let onclick_change_view = self.link.callback(|_|Msg::SwitchShowType);
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let onclick_change_view = ctx.link().callback(|_|Msg::SwitchShowType);
 
         let (class_for_icon, class_for_list) = match self.show_type {
             ListState::Box => ("fas fa-bars", "flex-box"),
@@ -131,9 +123,9 @@ impl Component for CatalogStandards {
                 </div>
                 <div class="level-right">
                     <div class="buttons">
-                        {match &self.props.show_create_btn {
+                        {match &ctx.props().show_create_btn {
                             true => html!{
-                                <RouterAnchor<AppRoute> route={AppRoute::CreateStandard} classes="button is-info">
+                                <RouterAnchor<AppRoute> route={CreateStandard} classes="button is-info">
                                     { get_value_field(&45) } // Create
                                 </RouterAnchor<AppRoute>>
                             },

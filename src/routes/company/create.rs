@@ -1,7 +1,5 @@
-use yew::{
-    agent::Bridged, html, Bridge, Callback, Component, ComponentLink,
-    Html, InputData, ChangeData, Properties, ShouldRender,
-};
+// use yew::{agent::Bridged, Bridge};
+use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, Event};
 use yew_router::{
     agent::RouteRequest::ChangeRoute,
     prelude::*
@@ -12,7 +10,7 @@ use wasm_bindgen_futures::spawn_local;
 use log::debug;
 
 use crate::gqls::make_query;
-use crate::routes::AppRoute;
+use crate::routes::AppRoute::{Login, ShowCompany};
 use crate::error::{Error, get_error};
 use crate::fragments::list_errors::ListErrors;
 use crate::services::{get_logged_user, get_value_field};
@@ -25,10 +23,9 @@ use crate::gqls::company::{
 /// Update settings of the author or logout
 pub struct CreateCompany {
     error: Option<Error>,
+    current_user_uuid: UUID,
     request_company: CompanyCreateInfo,
     router_agent: Box<dyn Bridge<RouteAgent>>,
-    props: Props,
-    link: ComponentLink<Self>,
     regions: Vec<Region>,
     company_types: Vec<CompanyType>,
     types_access: Vec<TypeAccessInfo>,
@@ -63,28 +60,26 @@ impl Component for CreateCompany {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         CreateCompany {
             error: None,
+            current_user_uuid: ctx.props().current_user.as_ref().map(|x| &x.uuid),
             request_company: CompanyCreateInfo::new(),
-            router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
-            props,
-            link,
+            router_agent: RouteAgent::bridge(ctx.link().callback(|_| Msg::Ignore)),
             regions: Vec::new(),
             company_types: Vec::new(),
             types_access: Vec::new(),
         }
     }
 
-    fn rendered(&mut self, first_render: bool) {
+    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
         if let None = get_logged_user() {
             // route to login page if not found token
-            self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
+            self.router_agent.send(ChangeRoute(Login.into()));
         };
 
         if first_render {
-            let link = self.link.clone();
-
+            let link = ctx.link().clone();
             spawn_local(async move {
                 let res = make_query(GetCreateCompanyDataOpt::build_query(
                     get_create_company_data_opt::Variables
@@ -94,9 +89,8 @@ impl Component for CreateCompany {
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
-
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let link = ctx.link().clone();
         match msg {
             Msg::RequestCreateCompany => {
                 let request_company = self.request_company.clone();
@@ -144,9 +138,10 @@ impl Component for CreateCompany {
                     false => {
                         let company_uuid: UUID = serde_json::from_value(res.get("registerCompany").unwrap().clone()).unwrap();
                         debug!("Company uuid: {:?}", company_uuid);
-                        self.router_agent.send(ChangeRoute(AppRoute::ShowCompany(
-                            company_uuid.clone()
-                        ).into()))
+                        // Redirect to company page
+                        self.router_agent.send(
+                            ChangeRoute(ShowCompany { uuid: company_uuid.clone() }.into())
+                        );
                     },
                     true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }
@@ -193,18 +188,17 @@ impl Component for CreateCompany {
         true
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.current_user.as_ref().map(|x| &x.uuid) == props.current_user.as_ref().map(|x| &x.uuid) {
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+        if self.current_user_uuid == ctx.props().current_user.as_ref().map(|x| &x.uuid) {
             false
         } else {
-            self.props = props;
+            self.current_user_uuid = ctx.props().current_user.as_ref().map(|x| &x.uuid);
             true
         }
     }
 
-    fn view(&self) -> Html {
-        let onclick_create_company =
-            self.link.callback(|_| Msg::RequestCreateCompany);
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let onclick_create_company = ctx.link().callback(|_| Msg::RequestCreateCompany);
 
         html!{
             <div class="settings-page">
@@ -213,14 +207,14 @@ impl Component for CreateCompany {
                     <div class="row">
                         <h1 class="title">{ get_value_field(&289) }</h1>
                         <div class="card column">
-                            { self.fieldset_company() }
+                            { self.fieldset_company(ctx.link()) }
                         </div>
                         <br/>
                         <button
-                            id="create-company"
-                            class="button is-success is-medium is-fullwidth"
-                            type="submit"
-                            disabled=false
+                            id={"create-company"}
+                            class={"button is-success is-medium is-fullwidth"}
+                            type={"submit"}
+                            disabled={false}
                             onclick={onclick_create_company}
                             >
                             { get_value_field(&45) } // Create
@@ -240,7 +234,7 @@ impl CreateCompany {
         // placeholder: &str,
         icon_left: &str,
         value: String,
-        oninput: Callback<InputData>,
+        oninput: Callback<Event>,
     ) -> Html {
         let placeholder = label;
         let input_type = match id {
@@ -256,7 +250,7 @@ impl CreateCompany {
                     true => html!{
                         <input
                             id={id.to_string()}
-                            class="input"
+                            class={"input"}
                             type={input_type}
                             placeholder={placeholder.to_string()}
                             value={value}
@@ -266,7 +260,7 @@ impl CreateCompany {
                         <div class="control has-icons-left">
                             <input
                                 id={id.to_string()}
-                                class="input"
+                                class={"input"}
                                 type={input_type}
                                 placeholder={placeholder.to_string()}
                                 value={value}
@@ -282,39 +276,31 @@ impl CreateCompany {
     }
 
     fn fieldset_company(
-        &self
+        &self,
+        link: &Scope<Self>,
     ) -> Html {
-        let oninput_orgname = self.link
-            .callback(|ev: InputData| Msg::UpdateOrgname(ev.value));
-        let oninput_shortname = self.link
-            .callback(|ev: InputData| Msg::UpdateShortname(ev.value));
-        let oninput_inn = self.link
-            .callback(|ev: InputData| Msg::UpdateInn(ev.value));
-        let oninput_email = self.link
-            .callback(|ev: InputData| Msg::UpdateEmail(ev.value));
-        let oninput_description = self.link
-            .callback(|ev: InputData| Msg::UpdateDescription(ev.value));
-        let oninput_phone = self.link
-            .callback(|ev: InputData| Msg::UpdatePhone(ev.value));
-        let oninput_address = self.link
-            .callback(|ev: InputData| Msg::UpdateAddress(ev.value));
-        let oninput_site_url = self.link
-            .callback(|ev: InputData| Msg::UpdateSiteUrl(ev.value));
-        // let oninput_time_zone = self.link
-        //     .callback(|ev: InputData| Msg::UpdateTimeZone(ev.value));
-        let onchange_region_id = self.link
-            .callback(|ev: ChangeData| Msg::UpdateRegionId(match ev {
-              ChangeData::Select(el) => el.value(),
-              _ => "1".to_string(),
-          }));
-        let onchange_company_type_id = self.link
-            .callback(|ev: ChangeData| Msg::UpdateCompanyTypeId(match ev {
-              ChangeData::Select(el) => el.value(),
+        let oninput_orgname = link.callback(|ev: Event| Msg::UpdateOrgname(ev.value));
+        let oninput_shortname = link.callback(|ev: Event| Msg::UpdateShortname(ev.value));
+        let oninput_inn = link.callback(|ev: Event| Msg::UpdateInn(ev.value));
+        let oninput_email = link.callback(|ev: Event| Msg::UpdateEmail(ev.value));
+        let oninput_description = link.callback(|ev: Event| Msg::UpdateDescription(ev.value));
+        let oninput_phone = link.callback(|ev: Event| Msg::UpdatePhone(ev.value));
+        let oninput_address = link.callback(|ev: Event| Msg::UpdateAddress(ev.value));
+        let oninput_site_url = link.callback(|ev: Event| Msg::UpdateSiteUrl(ev.value));
+        // let oninput_time_zone = link.callback(|ev: Event| Msg::UpdateTimeZone(ev.value));
+        let onchange_region_id =
+            link.callback(|ev: Event| Msg::UpdateRegionId(match ev {
+              Event::Select(el) => el.value(),
               _ => "1".to_string(),
             }));
-        let onchange_type_access_id = self.link
-              .callback(|ev: ChangeData| Msg::UpdateTypeAccessId(match ev {
-              ChangeData::Select(el) => el.value(),
+        let onchange_company_type_id =
+            link.callback(|ev: Event| Msg::UpdateCompanyTypeId(match ev {
+              Event::Select(el) => el.value(),
+              _ => "1".to_string(),
+            }));
+        let onchange_type_access_id =
+            link.callback(|ev: Event| Msg::UpdateTypeAccessId(match ev {
+              Event::Select(el) => el.value(),
               _ => "1".to_string(),
             }));
 
@@ -462,9 +448,9 @@ impl CreateCompany {
             <fieldset class="field">
                 <label class="label">{ get_value_field(&61) }</label>
                 <textarea
-                    id="description"
-                    class="textarea"
-                    type="text"
+                    id={"description"}
+                    class={"textarea"}
+                    type={"text"}
                     placeholder={ get_value_field(&61) }
                     value={self.request_company.description.clone()}
                     oninput={oninput_description} />

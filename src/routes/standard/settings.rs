@@ -1,7 +1,5 @@
-use yew::{
-    agent::Bridged, html, Bridge, Callback, Component, Properties,
-    ComponentLink, Html, ShouldRender, InputData, ChangeData
-};
+use yew::{agent::Bridged, Bridge};
+use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, Event};
 use yew::services::fetch::FetchTask;
 use yew::services::reader::{File, FileData, ReaderService, ReaderTask};
 use yew_router::{
@@ -16,7 +14,7 @@ use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
-use crate::routes::AppRoute;
+use crate::routes::AppRoute::{Login, Home, ShowCompany, ShowStandard};
 use crate::error::{get_error, Error};
 use crate::fragments::{
     list_errors::ListErrors,
@@ -58,8 +56,6 @@ pub struct StandardSettings {
     router_agent: Box<dyn Bridge<RouteAgent>>,
     task_read: Vec<(FileName, ReaderTask)>,
     task: Vec<FetchTask>,
-    props: Props,
-    link: ComponentLink<Self>,
     supplier_list: Vec<ShowCompanyShort>,
     standard_statuses: Vec<StandardStatus>,
     regions: Vec<Region>,
@@ -134,21 +130,19 @@ impl Component for StandardSettings {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         StandardSettings {
             error: None,
             current_standard: None,
             current_standard_uuid: String::new(),
             request_standard: StandardUpdatePreData::default(),
             request_upload_data: Vec::new(),
-            request_upload_file: link.callback(Msg::ResponseUploadFile),
+            request_upload_file: ctx.link().callback(Msg::ResponseUploadFile),
             request_upload_confirm: Vec::new(),
             request_access: 0,
-            router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
+            router_agent: RouteAgent::bridge(ctx.link().callback(|_| Msg::Ignore)),
             task_read: Vec::new(),
             task: Vec::new(),
-            props,
-            link,
             supplier_list: Vec::new(),
             standard_statuses: Vec::new(),
             regions: Vec::new(),
@@ -172,12 +166,12 @@ impl Component for StandardSettings {
         }
     }
 
-    fn rendered(&mut self, first_render: bool) {
+    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
         let logged_user_uuid = match get_logged_user() {
             Some(cu) => cu.uuid,
             None => {
                 // route to login page if not found token
-                self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
+                self.router_agent.send(ChangeRoute(Login.into()));
                 String::new()
             },
         };
@@ -201,7 +195,7 @@ impl Component for StandardSettings {
         }
 
         if first_render || not_matches_standard_uuid {
-            let link = self.link.clone();
+            let link = ctx.link().clone();
             // update current_standard_uuid for checking change standard in route
             self.current_standard_uuid = target_standard_uuid.clone();
 
@@ -225,26 +219,26 @@ impl Component for StandardSettings {
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let link = ctx.link().clone();
 
         match msg {
             Msg::OpenStandard => {
                 // Redirect to standard page
-                self.router_agent.send(ChangeRoute(
-                    AppRoute::ShowStandard(self.current_standard_uuid.clone()).into()
-                ));
+                self.router_agent.send(
+                    ChangeRoute(ShowStandard { uuid: self.current_standard_uuid.clone() }.into())
+                );
             },
             Msg::RequestManager => {
                 if self.update_standard {
-                    self.link.send_message(Msg::RequestUpdateStandardData)
+                    ctx.link().send_message(Msg::RequestUpdateStandardData)
                 }
                 if self.update_standard_access {
-                    self.link.send_message(Msg::RequestChangeAccess)
+                    ctx.link().send_message(Msg::RequestChangeAccess)
                 }
 
                 // if self.upload_standard_files && !self.files.is_empty() {
-                //     self.link.send_message(Msg::RequestUploadStandardFiles);
+                //     ctx.link().send_message(Msg::RequestUploadStandardFiles);
                 // }
 
                 self.update_standard = false;
@@ -255,7 +249,7 @@ impl Component for StandardSettings {
                 self.get_result_access = false;
             },
             Msg::RequestStandardFilesList => {
-                let standard_uuid = self.props.standard_uuid.clone();
+                let standard_uuid = ctx.props().standard_uuid.clone();
                 spawn_local(async move {
                     let res = make_query(StandardFilesList::build_query(
                         standard_files_list::Variables { standard_uuid }
@@ -394,7 +388,7 @@ impl Component for StandardSettings {
                                 let file_name = file.name().clone();
                                 debug!("file name: {:?}", file_name);
                                 let task = {
-                                    let callback = self.link
+                                    let callback = ctx.link()
                                         .callback(move |data: FileData| Msg::RequestUploadFile(data.content));
                                     ReaderService::read_file(file.clone(), callback).unwrap()
                                 };
@@ -531,10 +525,10 @@ impl Component for StandardSettings {
                         debug!("deleteStandard: {:?}", result);
                         if self.current_standard_uuid == result {
                             match &self.current_standard {
-                                Some(company) => self.router_agent.send(ChangeRoute(
-                                    AppRoute::ShowCompany(company.owner_company.uuid.clone()).into()
-                                )),
-                                None => self.router_agent.send(ChangeRoute(AppRoute::Home.into())),
+                                Some(company) => self.router_agent.send(
+                                    ChangeRoute(ShowCompany { uuid: company.owner_company.uuid.clone() }.into())
+                                ),
+                                None => self.router_agent.send(ChangeRoute(Home.into())),
                             }
                         }
                     },
@@ -625,18 +619,17 @@ impl Component for StandardSettings {
         true
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.standard_uuid == props.standard_uuid {
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+        if self.current_standard_uuid == ctx.props().standard_uuid {
             false
         } else {
-            self.props = props;
+            self.current_standard_uuid = ctx.props().standard_uuid;
             true
         }
     }
 
-    fn view(&self) -> Html {
-        let onclick_clear_error = self.link
-            .callback(|_| Msg::ClearError);
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let onclick_clear_error = ctx.link().callback(|_| Msg::ClearError);
 
         html!{
             <div class="standard-page">
@@ -644,19 +637,19 @@ impl Component for StandardSettings {
                     <div class="row">
                         <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error.clone())}/>
                         // <br/>
-                        {self.show_manage_btn()}
+                        {self.show_manage_btn(ctx.link())}
                         <br/>
-                        {self.show_main_card()}
+                        {self.show_main_card(ctx.link())}
                         {match &self.current_standard {
                             Some(standard_data) => html!{<>
                                 <br/>
                                 <div class="columns">
                                   <div class="column">
-                                    {self.update_standard_favicon()}
+                                    {self.update_standard_favicon(ctx.link())}
                                     <br/>
-                                    {self.show_standard_params()}
+                                    {self.show_standard_params(ctx.link())}
                                   </div>
-                                  {self.show_standard_files(standard_data)}
+                                  {self.show_standard_files(ctx.link(), standard_data)}
                                 </div>
                                 {self.show_standard_specs(standard_data)}
                                 <br/>
@@ -673,25 +666,23 @@ impl Component for StandardSettings {
 }
 
 impl StandardSettings {
-    fn show_main_card(&self) -> Html {
+    fn show_main_card(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
         // let default_company_uuid = self.current_standard.as_ref().map(|x| x.owner_company.uuid.clone()).unwrap_or_default();
-        let onchange_change_owner_company = self.link
-            .callback(|ev: ChangeData| Msg::UpdateCompanyUuid(match ev {
-              ChangeData::Select(el) => el.value(),
+        let onchange_change_owner_company =
+            link.callback(|ev: Event| Msg::UpdateCompanyUuid(match ev {
+              Event::Select(el) => el.value(),
               _ => String::new(),
           }));
-
-        let onchange_change_type_access = self.link
-            .callback(|ev: ChangeData| Msg::UpdateTypeAccessId(match ev {
-              ChangeData::Select(el) => el.value(),
+        let onchange_change_type_access =
+            link.callback(|ev: Event| Msg::UpdateTypeAccessId(match ev {
+              Event::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
-
-        let oninput_name = self.link
-            .callback(|ev: InputData| Msg::UpdateName(ev.value));
-
-        let oninput_description = self.link
-            .callback(|ev: InputData| Msg::UpdateDescription(ev.value));
+        let oninput_name = link.callback(|ev: Event| Msg::UpdateName(ev.value));
+        let oninput_description = link.callback(|ev: Event| Msg::UpdateDescription(ev.value));
 
         html!{<div class="card">
             <div class="column">
@@ -758,8 +749,11 @@ impl StandardSettings {
         </div>}
     }
 
-    fn update_standard_favicon(&self) -> Html {
-        let callback_update_favicon = self.link.callback(|_| Msg::Ignore);
+    fn update_standard_favicon(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let callback_update_favicon = link.callback(|_| Msg::Ignore);
 
         html!{<>
             <h2 class="has-text-weight-bold">{ get_value_field(&184) }</h2> // Update image for preview
@@ -772,28 +766,30 @@ impl StandardSettings {
         </>}
     }
 
-    fn show_standard_params(&self) -> Html {
-        let oninput_classifier = self.link
-            .callback(|ev: InputData| Msg::UpdateClassifier(ev.value));
+    fn show_standard_params(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let oninput_classifier = link.callback(|ev: Event| Msg::UpdateClassifier(ev.value));
 
-        let oninput_specified_tolerance = self.link
-            .callback(|ev: InputData| Msg::UpdateSpecifiedTolerance(ev.value));
+        let oninput_specified_tolerance =
+            link.callback(|ev: Event| Msg::UpdateSpecifiedTolerance(ev.value));
 
-        let oninput_technical_committee = self.link
-            .callback(|ev: InputData| Msg::UpdateTechnicalCommittee(ev.value));
+        let oninput_technical_committee =
+            link.callback(|ev: Event| Msg::UpdateTechnicalCommittee(ev.value));
 
-        let oninput_publication_at = self.link
-            .callback(|ev: InputData| Msg::UpdatePublicationAt(ev.value));
+        let oninput_publication_at =
+            link.callback(|ev: Event| Msg::UpdatePublicationAt(ev.value));
 
-        let onchange_standard_status_id = self.link
-            .callback(|ev: ChangeData| Msg::UpdateStandardStatusId(match ev {
-              ChangeData::Select(el) => el.value(),
+        let onchange_standard_status_id =
+            link.callback(|ev: Event| Msg::UpdateStandardStatusId(match ev {
+              Event::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
 
-        let onchange_region_id = self.link
-            .callback(|ev: ChangeData| Msg::UpdateRegionId(match ev {
-              ChangeData::Select(el) => el.value(),
+        let onchange_region_id =
+            link.callback(|ev: Event| Msg::UpdateRegionId(match ev {
+              Event::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
 
@@ -898,13 +894,14 @@ impl StandardSettings {
 
     fn show_standard_files(
         &self,
+        link: &Scope<Self>,
         standard_data: &StandardInfo,
     ) -> Html {
         html!{
             <div class="column">
               <h2 class="has-text-weight-bold">{ get_value_field(&225) }</h2> // Files stadndard
               <div class="card column">
-                  {self.show_frame_upload_files()}
+                  {self.show_frame_upload_files(link)}
                   <StandardFilesCard
                       show_download_btn = {false}
                       show_delete_btn = {true}
@@ -947,13 +944,13 @@ impl StandardSettings {
         </>}
     }
 
-    fn show_manage_btn(&self) -> Html {
-        let onclick_open_standard = self.link
-            .callback(|_| Msg::OpenStandard);
-        let onclick_show_delete_modal = self.link
-            .callback(|_| Msg::ChangeHideDeleteStandard);
-        let onclick_save_changes = self.link
-            .callback(|_| Msg::RequestManager);
+    fn show_manage_btn(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onclick_open_standard = link.callback(|_| Msg::OpenStandard);
+        let onclick_show_delete_modal = link.callback(|_| Msg::ChangeHideDeleteStandard);
+        let onclick_save_changes = link.callback(|_| Msg::RequestManager);
 
         html!{
             <div class="media">
@@ -973,7 +970,7 @@ impl StandardSettings {
                     }}
                 </div>
                 <div class="media-right">
-                    {self.modal_delete_standard()}
+                    {self.modal_delete_standard(link)}
                     <div class="buttons">
                         <button
                             id="delete-standard"
@@ -994,13 +991,14 @@ impl StandardSettings {
         }
     }
 
-    fn modal_delete_standard(&self) -> Html {
-        let onclick_hide_modal = self.link
-            .callback(|_| Msg::ChangeHideDeleteStandard);
-        let oninput_delete_standard = self.link
-            .callback(|ev: InputData| Msg::UpdateConfirmDelete(ev.value));
-        let onclick_delete_standard = self.link
-            .callback(|_| Msg::RequestDeleteStandard);
+    fn modal_delete_standard(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onclick_hide_modal = link.callback(|_| Msg::ChangeHideDeleteStandard);
+        let oninput_delete_standard =
+            link.callback(|ev: Event| Msg::UpdateConfirmDelete(ev.value));
+        let onclick_delete_standard = link.callback(|_| Msg::RequestDeleteStandard);
 
         let class_modal = match &self.hide_delete_modal {
             true => "modal",
@@ -1047,9 +1045,12 @@ impl StandardSettings {
         }
     }
 
-    fn show_frame_upload_files(&self) -> Html {
-        let onchange_upload_files = self.link.callback(move |value| {
-            if let ChangeData::Files(files) = value {
+    fn show_frame_upload_files(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onchange_upload_files = link.callback(move |value| {
+            if let Event::Files(files) = value {
                 Msg::UpdateFiles(files)
             } else {
                 Msg::Ignore
@@ -1082,15 +1083,17 @@ impl StandardSettings {
               </label>
             </div>
             <div class="buttons">
-                {self.show_clear_btn()}
-                {self.show_upload_files_btn()}
+                {self.show_clear_btn(link)}
+                {self.show_upload_files_btn(link)}
             </div>
         </>}
     }
 
-    fn show_clear_btn(&self) -> Html {
-        let onclick_clear_boxed =
-            self.link.callback(|_| Msg::ClearFilesBoxed);
+    fn show_clear_btn(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onclick_clear_boxed = link.callback(|_| Msg::ClearFilesBoxed);
 
         html!{
             <button id="clear-upload-standard-files"
@@ -1102,8 +1105,11 @@ impl StandardSettings {
         }
     }
 
-    fn show_upload_files_btn(&self) -> Html {
-        let onclick_upload_files = self.link.callback(|_| Msg::RequestUploadStandardFiles);
+    fn show_upload_files_btn(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onclick_upload_files = link.callback(|_| Msg::RequestUploadStandardFiles);
 
         let class_upload_btn = match self.active_loading_files_btn {
             true => "button is-loading",

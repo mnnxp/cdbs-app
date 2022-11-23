@@ -1,7 +1,4 @@
-use yew::{
-    html, Component, Callback, ComponentLink,
-    Html, InputData, ChangeData, Properties, ShouldRender,
-};
+use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, Event};
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
@@ -42,8 +39,6 @@ pub struct ChangeItem {
     company_uuid: UUID,
     company_represent_uuid: UUID,
     request_update: CompanyRepresentUpdateInfo,
-    props: Props,
-    link: ComponentLink<Self>,
     get_result_update: usize,
     regions: Vec<Region>,
     represent_types: Vec<RepresentationType>,
@@ -54,14 +49,12 @@ impl Component for ChangeItem {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         Self {
             error: None,
-            company_uuid: props.data.company_uuid.clone(),
-            company_represent_uuid: props.data.uuid.clone(),
+            company_uuid: ctx.props().data.company_uuid.clone(),
+            company_represent_uuid: ctx.props().data.uuid.clone(),
             request_update: CompanyRepresentUpdateInfo::default(),
-            props,
-            link,
             get_result_update: 0,
             regions: Vec::new(),
             represent_types: Vec::new(),
@@ -69,16 +62,16 @@ impl Component for ChangeItem {
         }
     }
 
-    fn rendered(&mut self, first_render: bool) {
-        let link = self.link.clone();
+    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
+        let link = ctx.link().clone();
 
         if first_render && is_authenticated() && !self.company_uuid.is_empty() {
             self.request_update = CompanyRepresentUpdateInfo {
-                region_id: Some(self.props.data.region.region_id as i64),
-                representation_type_id: Some(self.props.data.representation_type.representation_type_id as i64),
-                name: Some(self.props.data.name.clone()),
-                address: Some(self.props.data.address.clone()),
-                phone: Some(self.props.data.phone.clone()),
+                region_id: Some(ctx.props().data.region.region_id as i64),
+                representation_type_id: Some(ctx.props().data.representation_type.representation_type_id as i64),
+                name: Some(ctx.props().data.name.clone()),
+                address: Some(ctx.props().data.address.clone()),
+                phone: Some(ctx.props().data.phone.clone()),
             };
 
             spawn_local(async move {
@@ -90,8 +83,8 @@ impl Component for ChangeItem {
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let link = ctx.link().clone();
 
         match msg {
             Msg::RequestUpdateRepresent => {
@@ -192,13 +185,12 @@ impl Component for ChangeItem {
         true
     }
 
-    fn change(&mut self, _props: Self::Properties) -> ShouldRender {
-        // self.props = props;
+    fn changed(&mut self, _ctx: &Context<Self>) -> bool {
         false
     }
 
-    fn view(&self) -> Html {
-        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let onclick_clear_error = ctx.link().callback(|_| Msg::ClearError);
 
         html!{<>
             <br/>
@@ -225,8 +217,8 @@ impl Component for ChangeItem {
                                 </span>
                             }
                         } else { html!{} }}
-                        {self.change_represent_block()}
-                        {self.show_manage_buttons()}
+                        {self.change_represent_block(ctx.link(), ctx.props())}
+                        {self.show_manage_buttons(ctx.link())}
                     </div>}
                 }}
             </div>
@@ -241,7 +233,7 @@ impl ChangeItem {
         label: &str,
         // placeholder: &str,
         value: String,
-        oninput: Callback<InputData>,
+        oninput: Callback<Event>,
     ) -> Html {
         let placeholder = label;
         let mut class = "input";
@@ -269,25 +261,24 @@ impl ChangeItem {
         }
     }
 
-    fn change_represent_block(&self) -> Html {
-        let oninput_region_id = self
-            .link
-            .callback(|ev: ChangeData| Msg::UpdateRegionId(match ev {
-              ChangeData::Select(el) => el.value(),
+    fn change_represent_block(
+        &self,
+        link: &Scope<Self>,
+        props: &Properties,
+    ) -> Html {
+        let oninput_region_id =
+            link.callback(|ev: Event| Msg::UpdateRegionId(match ev {
+              Event::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
-        let oninput_representation_type_id = self
-            .link
-            .callback(|ev: ChangeData| Msg::UpdateRepresentationTypeId(match ev {
-              ChangeData::Select(el) => el.value(),
+        let oninput_representation_type_id =
+            link.callback(|ev: Event| Msg::UpdateRepresentationTypeId(match ev {
+              Event::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
-        let oninput_name =
-            self.link.callback(|ev: InputData| Msg::UpdateName(ev.value));
-        let oninput_address =
-            self.link.callback(|ev: InputData| Msg::UpdateAddress(ev.value));
-        let oninput_phone =
-            self.link.callback(|ev: InputData| Msg::UpdatePhone(ev.value));
+        let oninput_name = link.callback(|ev: Event| Msg::UpdateName(ev.value));
+        let oninput_address = link.callback(|ev: Event| Msg::UpdateAddress(ev.value));
+        let oninput_phone = link.callback(|ev: Event| Msg::UpdatePhone(ev.value));
 
         html!{<>
             {self.fileset_generator(
@@ -313,13 +304,13 @@ impl ChangeItem {
                             <div class="select">
                               <select
                                   id="representation_type_id"
-                                  select={self.props.data.representation_type.representation_type_id.to_string()}
+                                  select={props.data.representation_type.representation_type_id.to_string()}
                                   onchange={oninput_representation_type_id}
                                   >
                                 { for self.represent_types.iter().map(|x|
                                     html!{
                                         <option value={x.representation_type_id.to_string()}
-                                              selected={x.representation_type_id == self.props.data.representation_type.representation_type_id} >
+                                              selected={x.representation_type_id == props.data.representation_type.representation_type_id} >
                                             {&x.representation_type}
                                         </option>
                                     }
@@ -338,13 +329,13 @@ impl ChangeItem {
                         <div class="select">
                           <select
                               id="region_id"
-                              select={self.props.data.region.region_id.to_string()}
+                              select={props.data.region.region_id.to_string()}
                               onchange={oninput_region_id}
                               >
                             { for self.regions.iter().map(|x|
                                 html!{
                                     <option value={x.region_id.to_string()}
-                                          selected={x.region_id == self.props.data.region.region_id} >
+                                          selected={x.region_id == props.data.region.region_id} >
                                         {&x.region}
                                     </option>
                                 }
@@ -365,11 +356,12 @@ impl ChangeItem {
         </>}
     }
 
-    fn show_manage_buttons(&self) -> Html {
-        let onclick_change_represent =
-            self.link.callback(|_| Msg::RequestUpdateRepresent);
-        let onclick_delete_represent =
-            self.link.callback(|_| Msg::RequestDeleteRepresent);
+    fn show_manage_buttons(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onclick_change_represent = link.callback(|_| Msg::RequestUpdateRepresent);
+        let onclick_delete_represent = link.callback(|_| Msg::RequestDeleteRepresent);
 
         html!{<div class="columns">
             <div class="column">

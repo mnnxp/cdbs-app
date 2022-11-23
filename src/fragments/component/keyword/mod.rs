@@ -4,7 +4,7 @@ mod add;
 pub use item::KeywordTagItem;
 pub use add::AddKeywordsTags;
 
-use yew::{Callback, Component, ComponentLink, Html, Properties, ShouldRender, html};
+use yew::{Component, Context, html, Html, Properties, Callback};
 // use log::debug;
 // use crate::error::{get_error, Error};
 use crate::types::{UUID, Keyword};
@@ -18,42 +18,45 @@ pub struct Props {
 }
 
 pub struct KeywordsTags {
-    props: Props,
+    component_uuid: UUID,
+    keywords_len: usize,
 }
 
 impl Component for KeywordsTags {
     type Message = ();
     type Properties = Props;
 
-    fn create(props: Self::Properties, _link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         Self {
-            props,
+            component_uuid: ctx.props().component_uuid,
+            keywords_len: ctx.props().keywords_len,
         }
     }
 
-    fn update(&mut self, _msg: Self::Message) -> ShouldRender {
-        unimplemented!()
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        false
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.component_uuid == props.component_uuid &&
-                self.props.keywords.len() == props.keywords.len() {
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+        if self.component_uuid == ctx.props().component_uuid &&
+                self.keywords_len == ctx.props().keywords.len() {
             false
         } else {
-            self.props = props;
+            self.component_uuid == ctx.props().component_uuid;
+            self.keywords_len == ctx.props().keywords.len();
             true
         }
     }
 
-    fn view(&self) -> Html {
+    fn view(&self, ctx: &Context<Self>) -> Html {
         html!{
             <div id="keywords" class="field is-grouped is-grouped-multiline">
-                {for self.props.keywords.iter().map(|keyword| {
+                {for ctx.props().keywords.iter().map(|keyword| {
                     html!{<KeywordTagItem
-                        show_delete_btn = {self.props.show_delete_btn}
-                        component_uuid = {self.props.component_uuid.clone()}
+                        show_delete_btn = {ctx.props().show_delete_btn}
+                        component_uuid = {ctx.props().component_uuid.clone()}
                         keyword = {keyword.clone()}
-                        delete_keyword = {self.props.delete_keyword.clone()}
+                        delete_keyword = {ctx.props().delete_keyword.clone()}
                         />}
                 })}
             </div>

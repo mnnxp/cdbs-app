@@ -6,7 +6,7 @@ pub use add::RegisterParamnameBlock;
 
 use std::collections::BTreeSet;
 // use yew::prelude::*;
-use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
+use yew::{Component, Context, html, html::Scope, Html, Properties};
 use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
@@ -34,8 +34,8 @@ pub struct Props {
 
 pub struct ComponentParamsTags {
     error: Option<Error>,
-    props: Props,
-    link: ComponentLink<Self>,
+    component_uuid: UUID,
+    component_params_len: usize,
     param_ids: BTreeSet<usize>,
     component_params: Vec<ComponentParam>,
     param_list: Vec<Param>,
@@ -64,21 +64,18 @@ impl Component for ComponentParamsTags {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         let mut param_ids: BTreeSet<usize> = BTreeSet::new();
-
-        for param in props.component_params.clone() {
+        for param in ctx.props().component_params.clone() {
             param_ids.insert(param.param.param_id);
         };
 
-        let component_params = props.component_params.clone();
-
         Self {
             error: None,
-            props,
-            link,
+            component_uuid: ctx.props().component_uuid,
+            component_params_len: ctx.props().component_params.len(),
             param_ids,
-            component_params,
+            component_params: ctx.props().component_params.clone(),
             param_list: Vec::new(),
             request_add_param_id: 0,
             request_set_param_value: String::new(),
@@ -86,8 +83,8 @@ impl Component for ComponentParamsTags {
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let link = ctx.link().clone();
 
         match msg {
             Msg::DeleteComponentParam(param_id) => {
@@ -108,7 +105,7 @@ impl Component for ComponentParamsTags {
                     value: param_value,
                 };
                 let ipt_component_params_data = put_component_params::IptComponentParamsData{
-                    componentUuid: self.props.component_uuid.clone(),
+                    componentUuid: ctx.props().component_uuid.clone(),
                     params: vec![ipt_param_data],
                 };
                 spawn_local(async move {
@@ -119,7 +116,7 @@ impl Component for ComponentParamsTags {
                 })
             },
             Msg::RequestComponentParams => {
-                let component_uuid = self.props.component_uuid.clone();
+                let component_uuid = ctx.props().component_uuid.clone();
                 spawn_local(async move {
                     let res = make_query(GetComponentParams::build_query(
                         get_component_params::Variables { component_uuid }
@@ -200,46 +197,50 @@ impl Component for ComponentParamsTags {
         true
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.component_uuid == props.component_uuid &&
-             self.props.component_params.len() == props.component_params.len() {
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+        if self.component_uuid == ctx.props().component_uuid &&
+             self.component_params_len == ctx.props().component_params.len() {
             false
         } else {
             self.param_ids = BTreeSet::new();
-            for param in props.component_params.iter() {
+            for param in ctx.props().component_params.iter() {
                 self.param_ids.insert(param.param.param_id);
             };
             self.hide_add_param_modal = true;
-            self.props = props;
+            self.component_uuid = ctx.props().component_uuid;
+            self.component_params_len = ctx.props().component_params.len();
             true
         }
     }
 
-    fn view(&self) -> Html {
-        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let onclick_clear_error = ctx.link().callback(|_| Msg::ClearError);
 
         html!{<>
             <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error.clone())}/>
-            {self.modal_add_param()}
-            {self.show_params()}
+            {self.modal_add_param(ctx.link())}
+            {self.show_params(ctx.link(), ctx.props())}
         </>}
     }
 }
 
 impl ComponentParamsTags {
-    fn show_params(&self) -> Html {
-        let onclick_delete_param = self.link
-            .callback(|value: usize| Msg::DeleteComponentParam(value));
+    fn show_params(
+        &self,
+        link: &Scope<Self>,
+        props: &Properties,
+    ) -> Html {
+        let onclick_delete_param =
+            link.callback(|value: usize| Msg::DeleteComponentParam(value));
 
-        let onclick_action_btn = self.link
-            .callback(|_| Msg::ChangeHideAddParam);
+        let onclick_action_btn = link.callback(|_| Msg::ChangeHideAddParam);
 
         html!{<div class="card column">
           <table class="table is-fullwidth">
             <tbody>
                <th>{ get_value_field(&178) }</th> // Param
                <th>{ get_value_field(&179) }</th> // Value
-               {match self.props.show_manage_btn {
+               {match props.show_manage_btn {
                    true => html!{<>
                        <th>{ get_value_field(&59) }</th> // Change
                        <th>{ get_value_field(&135) }</th> // Delete
@@ -249,8 +250,8 @@ impl ComponentParamsTags {
                {for self.component_params.iter().map(|data| {
                    match self.param_ids.get(&data.param.param_id) {
                        Some(_) => html!{<ComponentParamTag
-                           show_manage_btn = {self.props.show_manage_btn}
-                           component_uuid = {self.props.component_uuid.clone()}
+                           show_manage_btn = {props.show_manage_btn}
+                           component_uuid = {props.component_uuid.clone()}
                            param_data = {data.clone()}
                            delete_param = {Some(onclick_delete_param.clone())}
                          />},
@@ -271,11 +272,14 @@ impl ComponentParamsTags {
         </div>}
     }
 
-    fn modal_add_param(&self) -> Html {
+    fn modal_add_param(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
         let onclick_add_param =
-            self.link.callback(|(param_id, param_value)| Msg::RequestAddParam(param_id, param_value));
+            link.callback(|(param_id, param_value)| Msg::RequestAddParam(param_id, param_value));
 
-        let onclick_hide_modal = self.link.callback(|_| Msg::ChangeHideAddParam);
+        let onclick_hide_modal = link.callback(|_| Msg::ChangeHideAddParam);
 
         let class_modal = match &self.hide_add_param_modal {
             true => "modal",

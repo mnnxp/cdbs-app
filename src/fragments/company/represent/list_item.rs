@@ -16,26 +16,26 @@ impl Component for ListItem {
     type Message = ();
     type Properties = Props;
 
-    fn create(props: Self::Properties, _link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         Self {props}
     }
 
-    fn update(&mut self, _msg: Self::Message) -> ShouldRender {
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         false
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.show_list != props.show_list || self.props.data.uuid != props.data.uuid {
-            self.props.show_list = props.show_list;
-            self.props.data = props.data;
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+        if ctx.props().show_list != props.show_list || ctx.props().data.uuid != props.data.uuid {
+            ctx.props().show_list = props.show_list;
+            ctx.props().data = props.data;
             true
         } else {
             false
         }
     }
 
-    fn view(&self) -> Html {
-      match self.props.show_list {
+    fn view(&self, ctx: &Context<Self>) -> Html {
+      match ctx.props().show_list {
         true => { self.showing_in_list() },
         false => { self.showing_in_box() },
       }
@@ -53,7 +53,7 @@ impl ListItem {
             address,
             phone,
             ..
-        } = &self.props.data;
+        } = &ctx.props().data;
 
         html!{
           <div class="box itemBox">
@@ -97,7 +97,7 @@ impl ListItem {
             address,
             phone,
             ..
-        } = self.props.data.clone();
+        } = ctx.props().data.clone();
 
         html!{
           <div class="boxItem" >

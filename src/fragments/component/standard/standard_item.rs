@@ -1,7 +1,4 @@
-use yew::{
-    html, Callback, Component, ComponentLink,
-    Html, Properties, ShouldRender,
-};
+use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
 use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
@@ -19,8 +16,7 @@ use crate::gqls::component::{DeleteStandardsComponent, delete_standards_componen
 /// Standard card for show data on component page
 pub struct ComponentStandardItem {
     error: Option<Error>,
-    props: Props,
-    link: ComponentLink<Self>,
+    standard_uuid: UUID,
     open_standard_info: bool,
     get_result_delete: bool,
 }
@@ -46,24 +42,23 @@ impl Component for ComponentStandardItem {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        ComponentStandardItem {
+    fn create(ctx: &Context<Self>) -> Self {
+        Self {
             error: None,
-            props,
-            link,
+            standard_uuid: ctx.props().standard_data.uuid,
             open_standard_info: false,
             get_result_delete: false,
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let link = ctx.link().clone();
 
         match msg {
             Msg::ShowStandardCard => self.open_standard_info = !self.open_standard_info,
             Msg::RequestDeleteStandard => {
-                let component_uuid = self.props.component_uuid.clone();
-                let standard_uuid = self.props.standard_data.uuid.clone();
+                let component_uuid = ctx.props().component_uuid.clone();
+                let standard_uuid = ctx.props().standard_data.uuid.clone();
                 spawn_local(async move {
                     let del_standard_to_component_data = delete_standards_component::DelStandardToComponentData{
                         componentUuid: component_uuid,
@@ -86,11 +81,11 @@ impl Component for ComponentStandardItem {
                     false => {
                         let result: usize = serde_json::from_value(res.get("deleteStandardsComponent").unwrap().clone()).unwrap();
                         debug!("deleteStandardsComponent: {:?}", result);
-                        match &self.props.delete_standard {
+                        match &ctx.props().delete_standard {
                             Some(delete_standard) => {
                                 if result > 0 {
                                     self.get_result_delete = true;
-                                    delete_standard.emit(self.props.standard_data.uuid.clone());
+                                    delete_standard.emit(ctx.props().standard_data.uuid.clone());
                                 };
                             },
                             None => self.get_result_delete = result > 0,
@@ -104,46 +99,48 @@ impl Component for ComponentStandardItem {
         true
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        match self.props.standard_data.uuid == props.standard_data.uuid {
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+        match self.standard_uuid == ctx.props().standard_data.uuid {
             true => false,
             false => {
-                self.props = props;
+                self.standard_uuid = ctx.props().standard_data.uuid;
                 true
             },
         }
     }
 
-    fn view(&self) -> Html {
+    fn view(&self, ctx: &Context<Self>) -> Html {
         html!{<>
             <ListErrors error={self.error.clone()}/>
             {match self.get_result_delete {
                 true => html!{},
-                false => self.show_standard(),
+                false => self.show_standard(ctx.link(), ctx.props()),
             }}
         </>}
     }
 }
 
 impl ComponentStandardItem {
-    fn show_standard(&self) -> Html {
-        let onclick_standard_data_info = self.link
-            .callback(|_| Msg::ShowStandardCard);
+    fn show_standard(
+        &self,
+        link: &Scope<Self>,
+        props: &Properties,
+    ) -> Html {
+        let onclick_standard_data_info = link.callback(|_| Msg::ShowStandardCard);
 
-        let onclick_delete_standard = self.link
-            .callback(|_| Msg::RequestDeleteStandard);
+        let onclick_delete_standard = link.callback(|_| Msg::RequestDeleteStandard);
 
         html!{<>
-            {self.show_modal_standard_info()}
+            {self.show_modal_standard_info(link, props)}
             <tr>
-                <td>{self.props.standard_data.classifier.clone()}</td>
-                <td>{self.props.standard_data.specified_tolerance.clone()}</td>
+                <td>{props.standard_data.classifier.clone()}</td>
+                <td>{props.standard_data.specified_tolerance.clone()}</td>
                 <td><a onclick={onclick_standard_data_info.clone()}>
                     <span class="icon" >
                         <i class="fas fa-info" aria-hidden="true"></i>
                     </span>
                 </a></td>
-                {match self.props.show_delete_btn {
+                {match props.show_delete_btn {
                     true => html!{<td><a onclick={onclick_delete_standard.clone()}>
                         <span class="icon" >
                           <i class="fa fa-trash" aria-hidden="true"></i>
@@ -154,9 +151,12 @@ impl ComponentStandardItem {
             </tr>
         </>}
     }
-    fn show_modal_standard_info(&self) -> Html {
-        let onclick_standard_data_info = self.link
-            .callback(|_| Msg::ShowStandardCard);
+    fn show_modal_standard_info(
+        &self,
+        link: &Scope<Self>,
+        props: &Properties,
+    ) -> Html {
+        let onclick_standard_data_info = link.callback(|_| Msg::ShowStandardCard);
 
         let class_modal = match &self.open_standard_info {
             true => "modal is-active",
@@ -168,7 +168,7 @@ impl ComponentStandardItem {
             // <div class="modal-content">
               <div class="card">
                 <ListItemStandard
-                    data = {self.props.standard_data.clone()}
+                    data = {props.standard_data.clone()}
                     show_list = {true}
                   />
               </div>

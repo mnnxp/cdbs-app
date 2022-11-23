@@ -1,8 +1,6 @@
 use std::collections::HashMap;
-use yew::{
-    agent::Bridged, classes, html, Bridge, Component, Properties,
-    ComponentLink, Html, ShouldRender
-};
+use yew::{agent::Bridged, Bridge};
+use yew::{Component, Context, html, html::Scope, Html, Properties, classes};
 use yew_router::{
     service::RouteService,
     agent::RouteRequest::ChangeRoute,
@@ -13,7 +11,7 @@ use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
-use crate::routes::AppRoute;
+use crate::routes::AppRoute::{Login, ComponentSettings};
 use crate::error::{get_error, Error};
 use crate::fragments::{
     switch_icon::res_btn,
@@ -44,8 +42,6 @@ pub struct ShowComponent {
     current_user_owner: bool,
     // task: Option<FetchTask>,
     router_agent: Box<dyn Bridge<RouteAgent>>,
-    props: Props,
-    link: ComponentLink<Self>,
     subscribers: usize,
     is_followed: bool,
     select_modification_uuid: UUID,
@@ -95,16 +91,14 @@ impl Component for ShowComponent {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         ShowComponent {
             error: None,
             component: None,
             current_component_uuid: String::new(),
             current_user_owner: false,
             // task: None,
-            router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
-            props,
-            link,
+            router_agent: RouteAgent::bridge(ctx.link().callback(|_| Msg::Ignore)),
             subscribers: 0,
             is_followed: false,
             select_modification_uuid: String::new(),
@@ -122,12 +116,11 @@ impl Component for ShowComponent {
         }
     }
 
-    fn rendered(&mut self, first_render: bool) {
+    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
         if let None = get_logged_user() {
             // route to login page if not found token
-            self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
+            self.router_agent.send(ChangeRoute(Login.into()));
         };
-
         // get component uuid for request component data
         let route_service: RouteService<()> = RouteService::new();
         // get target user from route
@@ -138,16 +131,12 @@ impl Component for ShowComponent {
         // get flag changing current component in route
         let not_matches_component_uuid = target_component_uuid != self.current_component_uuid;
         debug!("self.current_component_uuid {:#?}", self.current_component_uuid);
-
-        let link = self.link.clone();
-
+        let link = ctx.link().clone();
         // debug!("get_self {:?}", get_self);
-
         if first_render || not_matches_component_uuid {
             self.error = None;
             self.component = None;
             self.current_component_uuid = target_component_uuid.to_string();
-
             // update current_component_uuid for checking change component in route
             if not_matches_component_uuid {
                 self.current_user_owner = false;
@@ -159,7 +148,7 @@ impl Component for ShowComponent {
 
             {
               let target_component_uuid = target_component_uuid.clone();
-              let link = self.link.clone();
+              let link = ctx.link().clone();
               spawn_local(async move {
                 let res = make_query(GetComponentData::build_query(get_component_data::Variables{
                     component_uuid: target_component_uuid,
@@ -187,8 +176,8 @@ impl Component for ShowComponent {
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let link = ctx.link().clone();
 
         match msg {
             Msg::SelectFileset(fileset_uuid) => self.select_fileset_uuid = fileset_uuid,
@@ -212,7 +201,6 @@ impl Component for ShowComponent {
                     let res = make_query(AddComponentFav::build_query(add_component_fav::Variables {
                         component_uuid,
                     })).await.unwrap();
-
                     link.send_message(Msg::AddFollow(res));
                 })
             },
@@ -223,9 +211,7 @@ impl Component for ShowComponent {
                 match res_value.is_null() {
                     false => {
                         let result: bool =
-                            serde_json::from_value(res_value.get("addComponentFav").unwrap().clone())
-                                .unwrap();
-
+                            serde_json::from_value(res_value.get("addComponentFav").unwrap().clone()).unwrap();
                         if result {
                             self.subscribers += 1;
                             self.is_followed = true;
@@ -241,7 +227,6 @@ impl Component for ShowComponent {
                     let res = make_query(DeleteComponentFav::build_query(delete_component_fav::Variables {
                         component_uuid,
                     })).await.unwrap();
-
                     link.send_message(Msg::DelFollow(res));
                 })
             },
@@ -252,8 +237,7 @@ impl Component for ShowComponent {
                 match res_value.is_null() {
                     false => {
                         let result: bool =
-                            serde_json::from_value(res_value.get("deleteComponentFav").unwrap().clone())
-                                .unwrap();
+                            serde_json::from_value(res_value.get("deleteComponentFav").unwrap().clone()).unwrap();
 
                         if result {
                             self.subscribers -= 1;
@@ -348,9 +332,9 @@ impl Component for ShowComponent {
             Msg::OpenComponentSetting => {
                 if let Some(component_data) = &self.component {
                     // Redirect to page for change and update component
-                    self.router_agent.send(ChangeRoute(AppRoute::ComponentSettings(
-                        component_data.uuid.clone()
-                    ).into()));
+                    self.router_agent.send(
+                        ChangeRoute(ComponentSettings { uuid: component_data.uuid.to_string() }.into())
+                    );
                 }
             },
             Msg::ClearError => self.error = None,
@@ -359,17 +343,17 @@ impl Component for ShowComponent {
         true
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.component_uuid == props.component_uuid {
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+        if self.current_component_uuid == ctx.props().component_uuid {
             false
         } else {
-            self.props = props;
+            self.current_component_uuid = ctx.props().component_uuid;
             true
         }
     }
 
-    fn view(&self) -> Html {
-        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let onclick_clear_error = ctx.link().callback(|_| Msg::ClearError);
 
         match &self.component {
             Some(component_data) => html!{
@@ -378,24 +362,24 @@ impl Component for ShowComponent {
                     <div class="container page">
                         <div class="row">
                             // modals cards
-                            {self.show_modal_owner_user(component_data)}
+                            {self.show_modal_owner_user(ctx.link(), component_data)}
                             {match self.open_modification_card {
-                                true => self.show_modal_modification_card(component_data),
+                                true => self.show_modal_modification_card(ctx.link(), component_data),
                                 false => html!{},
                             }}
 
                             <div class="card column">
-                              {self.show_main_card(component_data)}
+                              {self.show_main_card(ctx.link(), component_data)}
                             </div>
                             {self.show_fileset_files_card()}
                             <br/>
-                            {self.show_modifications_table(component_data)}
+                            {self.show_modifications_table(ctx.link(), component_data)}
                             {self.show_modification_files()}
                             <br/>
-                            {self.show_cards(component_data)}
-                            {self.show_component_specs(component_data)}
+                            {self.show_cards(ctx.link(), ctx.props(), component_data)}
+                            {self.show_component_specs(ctx.link(), component_data)}
                             <br/>
-                            {self.show_component_keywords(component_data)}
+                            {self.show_component_keywords(ctx.link(), component_data)}
                         </div>
                     </div>
                 </div>
@@ -411,13 +395,12 @@ impl Component for ShowComponent {
 impl ShowComponent {
     fn show_main_card(
         &self,
+        link: &Scope<Self>,
         component_data: &ComponentInfo,
     ) -> Html {
-        let onclick_open_owner_company = self.link
-            .callback(|_| Msg::ShowOwnerUserCard);
+        let onclick_open_owner_company = link.callback(|_| Msg::ShowOwnerUserCard);
 
-        let show_description_btn = self.link
-            .callback(|_| Msg::ShowDescription);
+        let show_description_btn = link.callback(|_| Msg::ShowDescription);
 
         html!{
             <div class="columns">
@@ -447,9 +430,9 @@ impl ShowComponent {
                     component_data.name.clone()
                 }</div>
                 <div class="buttons flexBox">
-                    {self.show_download_block()}
-                    {self.show_setting_btn()}
-                    {self.show_followers_btn()}
+                    {self.show_download_block(link)}
+                    {self.show_setting_btn(link)}
+                    {self.show_followers_btn(link)}
                     // {self.show_share_btn()}
                     {match component_data.licenses.is_empty() {
                         true => html!{},
@@ -515,13 +498,11 @@ impl ShowComponent {
 
     fn show_modifications_table(
         &self,
+        link: &Scope<Self>,
         component_data: &ComponentInfo,
     ) -> Html {
-        let onclick_select_modification = self.link
-            .callback(|value: UUID| Msg::SelectModification(value));
-
-        let callback_open_modification_uuid = self.link
-            .callback(|_| Msg::ShowModificationFilesList);
+        let onclick_select_modification = link.callback(|value: UUID| Msg::SelectModification(value));
+        let callback_open_modification_uuid = link.callback(|_| Msg::ShowModificationFilesList);
 
         html!{<>
             <h2 class="has-text-weight-bold">{ get_value_field(&100) }</h2> // Modifications
@@ -572,6 +553,8 @@ impl ShowComponent {
 
     fn show_additional_params(
         &self,
+        link: &Scope<Self>,
+        props: &Properties,
         component_data: &ComponentInfo,
     ) -> Html {
         html!{
@@ -583,16 +566,16 @@ impl ShowComponent {
                       {for component_data.component_params.iter().enumerate().map(|(index, data)| {
                           match (index >= 3, self.show_full_characteristics) {
                               // show full list
-                              (_, true) => self.show_param_item(data),
+                              (_, true) => self.show_param_item(props, data),
                               // show full list or first 3 items
-                              (false, false) => self.show_param_item(data),
+                              (false, false) => self.show_param_item(props, data),
                               _ => html!{},
                           }
                       })}
                       {match component_data.component_params.len() {
                           0 => html!{<span>{ get_value_field(&136) }</span>},
                           0..=3 => html!{},
-                          _ => self.show_see_characteristic_btn(),
+                          _ => self.show_see_characteristic_btn(link),
                       }}
                     </tbody>
                   </table>
@@ -603,19 +586,22 @@ impl ShowComponent {
 
     fn show_param_item(
         &self,
+        props: &Properties,
         data: &ComponentParam,
     ) -> Html {
         html!{<ComponentParamTag
             show_manage_btn = {false}
-            component_uuid = {self.props.component_uuid.clone()}
+            component_uuid = {props.component_uuid.clone()}
             param_data = {data.clone()}
             delete_param = {None}
           />}
     }
 
-    fn show_see_characteristic_btn(&self) -> Html {
-        let show_full_characteristics_btn = self.link
-            .callback(|_| Msg::ShowFullCharacteristics);
+    fn show_see_characteristic_btn(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let show_full_characteristics_btn = link.callback(|_| Msg::ShowFullCharacteristics);
 
         match self.show_full_characteristics {
             true => html!{<>
@@ -633,11 +619,13 @@ impl ShowComponent {
 
     fn show_cards(
         &self,
+        link: &Scope<Self>,
+        props: &Properties,
         component_data: &ComponentInfo,
     ) -> Html {
         html!{<>
             <div class="columns">
-                {self.show_additional_params(component_data)}
+                {self.show_additional_params(link, props, component_data)}
                 <div class="column">
                     <h2 class="has-text-weight-bold">{ get_value_field(&102) }</h2> // Component files
                     {self.show_component_files(component_data)}
@@ -646,10 +634,10 @@ impl ShowComponent {
             <div class="columns">
                 <div class="column">
                     <h2 class="has-text-weight-bold">{ get_value_field(&103) }</h2> // Standards
-                    {self.show_component_standards(component_data)}
+                    {self.show_component_standards(link, component_data)}
                 </div>
                 <div class="column">
-                    {self.show_component_suppliers(component_data)}
+                    {self.show_component_suppliers(link, component_data)}
                 </div>
             </div>
         </>}
@@ -671,6 +659,7 @@ impl ShowComponent {
 
     fn show_component_specs(
         &self,
+        link: &Scope<Self>,
         component_data: &ComponentInfo,
     ) -> Html {
         html!{<>
@@ -687,6 +676,7 @@ impl ShowComponent {
 
     fn show_component_keywords(
         &self,
+        link: &Scope<Self>,
         component_data: &ComponentInfo,
     ) -> Html {
         html!{<>
@@ -703,6 +693,7 @@ impl ShowComponent {
 
     fn show_component_suppliers(
         &self,
+        link: &Scope<Self>,
         component_data: &ComponentInfo,
     ) -> Html {
         let table_label = match component_data.is_base {
@@ -749,6 +740,7 @@ impl ShowComponent {
 
     fn show_component_standards(
         &self,
+        link: &Scope<Self>,
         component_data: &ComponentInfo,
     ) -> Html {
         html!{<div class="card column">
@@ -772,10 +764,10 @@ impl ShowComponent {
 
     fn show_modal_owner_user(
         &self,
+        link: &Scope<Self>,
         component_data: &ComponentInfo,
     ) -> Html {
-        let onclick_owner_user_info = self.link
-            .callback(|_| Msg::ShowOwnerUserCard);
+        let onclick_owner_user_info = link.callback(|_| Msg::ShowOwnerUserCard);
 
         let class_modal = match &self.open_owner_user_info {
             true => "modal is-active",
@@ -798,18 +790,18 @@ impl ShowComponent {
 
     fn show_modal_modification_card(
         &self,
+        link: &Scope<Self>,
         component_data: &ComponentInfo,
     ) -> Html {
-        let onclick_modification_card = self.link
-            .callback(|_| Msg::ShowModificationCard);
+        let onclick_modification_card = link.callback(|_| Msg::ShowModificationCard);
 
         let class_modal = match &self.open_modification_card {
             true => "modal is-active",
             false => "modal",
         };
 
-        let modification_data: Option<&ComponentModificationInfo> = component_data.component_modifications.iter()
-            .find(|x| x.uuid == self.select_modification_uuid);
+        let modification_data: Option<&ComponentModificationInfo> =
+            component_data.component_modifications.iter().find(|x| x.uuid == self.select_modification_uuid);
 
         match modification_data {
             Some(mod_data) => html!{<div class={class_modal}>
@@ -862,12 +854,15 @@ impl ShowComponent {
         }
     }
 
-    fn show_download_block(&self) -> Html {
+    fn show_download_block(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
         let callback_select_fileset_uuid =
-            self.link.callback(|value: UUID| Msg::SelectFileset(value));
+            link.callback(|value: UUID| Msg::SelectFileset(value));
 
         let callback_open_fileset_uuid =
-            self.link.callback(|value: bool| Msg::ShowFilesetFilesBlock(value));
+            link.callback(|value: bool| Msg::ShowFilesetFilesBlock(value));
 
         html!{
             <ManageFilesOfFilesetBlock
@@ -879,9 +874,11 @@ impl ShowComponent {
         }
     }
 
-    fn show_setting_btn(&self) -> Html {
-        let onclick_setting_standard_btn =
-            self.link.callback(|_| Msg::OpenComponentSetting);
+    fn show_setting_btn(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onclick_setting_standard_btn = link.callback(|_| Msg::OpenComponentSetting);
 
         match &self.current_user_owner {
             true => {res_btn(
@@ -892,10 +889,13 @@ impl ShowComponent {
         }
     }
 
-    fn show_followers_btn(&self) -> Html {
+    fn show_followers_btn(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
         let (class_fav, onclick_following) = match self.is_followed {
-            true => ("fas fa-bookmark", self.link.callback(|_| Msg::UnFollow)),
-            false => ("far fa-bookmark", self.link.callback(|_| Msg::Follow)),
+            true => ("fas fa-bookmark", link.callback(|_| Msg::UnFollow)),
+            false => ("far fa-bookmark", link.callback(|_| Msg::Follow)),
         };
 
         html!{<>

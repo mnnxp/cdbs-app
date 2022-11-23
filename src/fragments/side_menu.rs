@@ -1,12 +1,7 @@
 use web_sys::MouseEvent;
-use yew::{
-    classes, html, Callback, Classes, Component, ComponentLink, Html, Properties, ShouldRender,
-};
+use yew::{Component, Callback, Context, html, Html, Properties, classes, Classes};
 
-pub struct SideMenu {
-    props: Props,
-    // link: ComponentLink<Self>,
-}
+pub struct SideMenu {}
 
 // #[derive(Properties, Clone)]
 // pub struct MenuBox {
@@ -62,24 +57,23 @@ impl Component for SideMenu {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, _link: ComponentLink<Self>) -> Self {
-        SideMenu { props }
+    fn create(ctx: &Context<Self>) -> Self {
+        SideMenu {}
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        self.props = props;
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
         true
     }
 
-    fn update(&mut self, _msg: Self::Message) -> ShouldRender {
-        unimplemented!()
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        false
     }
 
-    fn view(&self) -> Html {
+    fn view(&self, ctx: &Context<Self>) -> Html {
         html! {
           <nav class="side-menu">
             <ul>
-              {for self.props.menu_arr.as_ref().unwrap().iter().map(|x|
+              {for ctx.props().menu_arr.as_ref().unwrap().iter().map(|x|
                   self.li_generator(x)
               )}
             </ul>

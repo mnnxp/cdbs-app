@@ -4,7 +4,7 @@ use std::{
 };
 use wasm_bindgen::{prelude::*, JsCast};
 use wasm_bindgen_futures::JsFuture;
-use web_sys::{Request, RequestInit, RequestMode, Response};
+use web_sys::{window, Request, RequestInit, RequestMode, Response};
 use dotenv_codegen::dotenv;
 use serde::Serialize;
 // use log::debug;
@@ -50,7 +50,7 @@ where
         request.headers().set("Accept-Language", lang.as_str()).unwrap();
     }
 
-    let window = yew::utils::window();
+    let window = window();
     let resp_value = JsFuture::from(window.fetch_with_request(&request)).await?;
     let resp: Response = resp_value.dyn_into().unwrap();
 

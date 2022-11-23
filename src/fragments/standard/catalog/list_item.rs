@@ -1,4 +1,4 @@
-use yew::prelude::*;
+use yew::{Component, Context, html, html::Scope, Html, Properties, classes};
 use yew_router::{
     agent::RouteRequest::ChangeRoute,
     prelude::*,
@@ -8,12 +8,12 @@ use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use log::debug;
 use crate::error::{Error, get_error};
-use crate::routes::AppRoute;
+use crate::routes::AppRoute::ShowStandard;
 use crate::fragments::{
     list_errors::ListErrors,
     switch_icon::res_btn,
 };
-use crate::types::ShowStandardShort;
+use crate::types::{UUID, ShowStandardShort};
 use crate::services::get_value_field;
 use crate::gqls::make_query;
 use crate::gqls::standard::{
@@ -38,9 +38,9 @@ pub struct Props {
 
 pub struct ListItemStandard {
     error: Option<Error>,
+    standard_uuid: UUID,
+    show_list: bool,
     router_agent: Box<dyn Bridge<RouteAgent>>,
-    link: ComponentLink<Self>,
-    props: Props,
     is_followed: bool,
 }
 
@@ -48,26 +48,25 @@ impl Component for ListItemStandard {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        let is_followed = props.data.is_followed;
+    fn create(ctx: &Context<Self>) -> Self {
         Self {
             error: None,
-            router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
-            link,
-            props,
-            is_followed,
+            show_list: ctx.props().show_list,
+            standard_uuid: ctx.props().data.uuid,
+            router_agent: RouteAgent::bridge(ctx.link().callback(|_| Msg::Ignore)),
+            is_followed: ctx.props().data.is_followed,
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let link = ctx.link().clone();
 
         match msg {
             Msg::OpenStandard => {
-                // Redirect to profile page
-                self.router_agent.send(ChangeRoute(AppRoute::ShowStandard(
-                    self.props.data.uuid.to_string()
-                ).into()));
+                // Redirect to standard page
+                self.router_agent.send(
+                    ChangeRoute(ShowStandard { uuid: ctx.props().data.uuid.to_string() }.into())
+                );
             },
             Msg::TriggerFav => {
                 match &self.is_followed {
@@ -76,7 +75,7 @@ impl Component for ListItemStandard {
                 }
             },
             Msg::AddFav => {
-                let standard_uuid = self.props.data.uuid.clone();
+                let standard_uuid = ctx.props().data.uuid.clone();
                 spawn_local(async move {
                     let res = make_query(AddStandardFav::build_query(add_standard_fav::Variables{
                         standard_uuid
@@ -85,7 +84,7 @@ impl Component for ListItemStandard {
                 });
             },
             Msg::DelFav => {
-                let standard_uuid = self.props.data.uuid.clone();
+                let standard_uuid = ctx.props().data.uuid.clone();
                 spawn_local(async move {
                     let res = make_query(DeleteStandardFav::build_query(delete_standard_fav::Variables{
                       standard_uuid
@@ -118,30 +117,35 @@ impl Component for ListItemStandard {
         true
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.show_list != props.show_list || self.props.data.uuid != props.data.uuid {
-            self.props.show_list = props.show_list;
-            self.is_followed = props.data.is_followed;
-            self.props.data = props.data;
-            true
-        } else {
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+        if self.show_list = ctx.props().show_list ||
+            self.standard_uuid = ctx.props().data.uuid {
             false
+        } else {
+            self.is_followed = ctx.props().data.is_followed;
+            self.show_list = ctx.props().show_list;
+            self.standard_uuid = ctx.props().data.uuid;
+            true
         }
     }
 
-    fn view(&self) -> Html {
+    fn view(&self, ctx: &Context<Self>) -> Html {
       html!{<>
         <ListErrors error={self.error.clone()}/>
-        {match self.props.show_list {
-            true => { self.showing_in_list() },
-            false => { self.showing_in_box() },
+        {match ctx.props().show_list {
+            true => { self.showing_in_list(ctx.link(), ctx.props()) },
+            false => { self.showing_in_box(ctx.link(), ctx.props()) },
         }}
       </>}
     }
 }
 
 impl ListItemStandard {
-    fn showing_in_list(&self) -> Html {
+    fn showing_in_list(
+        &self,
+        link: &Scope<Self>,
+        props: &Properties,
+    ) -> Html {
         let ShowStandardShort {
             classifier,
             name,
@@ -154,10 +158,10 @@ impl ListItemStandard {
             updated_at,
             // is_followed,
             ..
-        } = &self.props.data;
+        } = &props.data;
 
-        let show_standard_btn = self.link.callback(|_| Msg::OpenStandard);
-        let trigger_fab_btn = self.link.callback(|_| Msg::TriggerFav);
+        let show_standard_btn = link.callback(|_| Msg::OpenStandard);
+        let trigger_fab_btn = link.callback(|_| Msg::TriggerFav);
 
         let mut class_res_btn = vec!["fa-bookmark"];
         let mut class_color_btn = "";
@@ -166,9 +170,7 @@ impl ListItemStandard {
                 class_res_btn.push("fas");
                 class_color_btn = "color: #1872F0;";
             },
-            false => {
-                class_res_btn.push("far");
-            },
+            false => class_res_btn.push("far"),
         }
 
         html!{
@@ -241,7 +243,11 @@ impl ListItemStandard {
         }
     }
 
-    fn showing_in_box(&self) -> Html {
+    fn showing_in_box(
+        &self,
+        link: &Scope<Self>,
+        props: &Properties,
+    ) -> Html {
         let ShowStandardShort {
             classifier,
             name,
@@ -252,10 +258,10 @@ impl ListItemStandard {
             standard_status,
             // is_followed,
             ..
-        } = self.props.data.clone();
+        } = props.data.clone();
 
-        let show_standard_btn = self.link.callback(|_| Msg::OpenStandard);
-        let trigger_fab_btn = self.link.callback(|_| Msg::TriggerFav);
+        let show_standard_btn = link.callback(|_| Msg::OpenStandard);
+        let trigger_fab_btn = link.callback(|_| Msg::TriggerFav);
 
         let mut class_res_btn = vec![];
         let mut class_color_btn = "";

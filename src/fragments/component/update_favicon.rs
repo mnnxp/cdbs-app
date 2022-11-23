@@ -1,10 +1,7 @@
 use graphql_client::GraphQLQuery;
 use yew::services::fetch::FetchTask;
 use yew::services::reader::{File, FileData, ReaderService, ReaderTask};
-use yew::{
-    html, Callback, ChangeData, Component, ComponentLink, DragEvent, Html,
-    Properties, ShouldRender
-};
+use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, Event, DragEvent};
 use log::debug;
 use wasm_bindgen_futures::spawn_local;
 
@@ -34,8 +31,6 @@ pub struct UpdateComponentFaviconCard {
     request_upload_file: Callback<Result<Option<String>, Error>>,
     task_read: Option<(FileName, ReaderTask)>,
     task: Option<FetchTask>,
-    props: Props,
-    link: ComponentLink<Self>,
     get_result_up_file: bool,
     get_result_up_completed: bool,
     put_upload_file: PutUploadFile,
@@ -63,15 +58,13 @@ impl Component for UpdateComponentFaviconCard {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         Self {
             error: None,
             request_upload_data: UploadFile::default(),
             request_upload_file: link.callback(Msg::ResponseUploadFile),
             task_read: None,
             task: None,
-            props,
-            link,
             get_result_up_file: false,
             get_result_up_completed: false,
             put_upload_file: PutUploadFile::new(),
@@ -81,8 +74,8 @@ impl Component for UpdateComponentFaviconCard {
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let link = ctx.link().clone();
 
         match msg {
             Msg::RequestUploadData => {
@@ -93,7 +86,7 @@ impl Component for UpdateComponentFaviconCard {
 
                         // debug!("RequestUploadData: {:?}", &self.request_update);
                         let ipt_component_favicon_data = upload_component_favicon::IptComponentFaviconData {
-                            componentUuid: self.props.component_uuid.clone(),
+                            componentUuid: ctx.props().component_uuid.clone(),
                             filename: file.name().to_string(),
                         };
                         spawn_local(async move {
@@ -151,7 +144,7 @@ impl Component for UpdateComponentFaviconCard {
                         if let Some(file) = self.file.clone() {
                             let file_name = file.name().clone();
                             let task = {
-                                let callback = self.link.callback(move |data: FileData| {
+                                let callback = ctx.link().callback(move |data: FileData| {
                                     Msg::RequestUploadFile(data.content)
                                 });
                                 ReaderService::read_file(file, callback).unwrap()
@@ -178,7 +171,7 @@ impl Component for UpdateComponentFaviconCard {
                             res_value.get("uploadCompleted").unwrap().clone()
                         ).unwrap();
                         self.get_result_up_completed = result > 0;
-                        self.props.callback.emit(());
+                        ctx.props().callback.emit(());
                         self.active_loading_files_btn = false;
                     },
                     true => self.error = Some(get_error(&data)),
@@ -198,34 +191,37 @@ impl Component for UpdateComponentFaviconCard {
         true
     }
 
-    fn change(&mut self, _props: Self::Properties) -> ShouldRender {
+    fn changed(&mut self, _ctx: &Context<Self>) -> bool {
         false
     }
 
-    fn view(&self) -> Html {
-        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let onclick_clear_error = ctx.link().callback(|_| Msg::ClearError);
 
         html!{<>
           <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error.clone())}/>
           {match self.get_result_up_completed {
-              true => html!{self.show_success_upload()},
-              false => html!{self.show_frame_upload_file()},
+              true => html!{self.show_success_upload(ctx.link())},
+              false => html!{self.show_frame_upload_file(ctx.link())},
           }}
         </>}
     }
 }
 
 impl UpdateComponentFaviconCard {
-    fn show_frame_upload_file(&self) -> Html {
-        let onchange_favicon_file = self.link.callback(move |value| {
-            if let ChangeData::Files(files) = value {
+    fn show_frame_upload_file(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onchange_favicon_file = link.callback(move |value| {
+            if let Event::Files(files) = value {
                 Msg::UpdateFile(files.get(0))
             } else {
                 Msg::Ignore
             }
         });
 
-        let ondrop_favicon_file = self.link.callback(move |value: DragEvent| {
+        let ondrop_favicon_file = link.callback(move |value: DragEvent| {
             value.prevent_default();
             if let Some(files) = value.data_transfer().unwrap().files() {
                 Msg::UpdateFile(files.get(0))
@@ -234,7 +230,7 @@ impl UpdateComponentFaviconCard {
             }
         });
 
-        let ondragover_favicon_file = self.link.callback(move |value: DragEvent| {
+        let ondragover_favicon_file = link.callback(move |value: DragEvent| {
             value.prevent_default();
             Msg::Ignore
         });
@@ -275,15 +271,18 @@ impl UpdateComponentFaviconCard {
                   </label>
                 </div>
                 <div class="buttons">
-                    { self.show_btn_clear() }
-                    { self.show_btn_upload() }
+                    { self.show_btn_clear(link) }
+                    { self.show_btn_upload(link) }
                 </div>
             </>
         }
     }
 
-    fn show_btn_upload(&self) -> Html {
-        let onclick_upload_favicon = self.link.callback(|_| Msg::RequestUploadData);
+    fn show_btn_upload(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onclick_upload_favicon = link.callback(|_| Msg::RequestUploadData);
 
         let class_upload_btn = match self.active_loading_files_btn {
             true => "button is-loading",
@@ -300,8 +299,11 @@ impl UpdateComponentFaviconCard {
         }
     }
 
-    fn show_btn_clear(&self) -> Html {
-        let onclick_clear_boxed = self.link.callback(|_| Msg::ClearFileBoxed);
+    fn show_btn_clear(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onclick_clear_boxed = link().callback(|_| Msg::ClearFileBoxed);
 
         html!{
             <a id="btn-new-favicon-clear"
@@ -314,8 +316,11 @@ impl UpdateComponentFaviconCard {
         }
     }
 
-    fn show_success_upload(&self) -> Html {
-        let onclick_hide_notification = self.link.callback(|_| Msg::HideNotificationSuccess);
+    fn show_success_upload(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onclick_hide_notification = link().callback(|_| Msg::HideNotificationSuccess);
 
         html!{
             <article class="message is-success">

@@ -1,7 +1,4 @@
-use yew::{
-    html, Callback, Component, ComponentLink,
-    Html, Properties, ShouldRender, InputData
-};
+use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, Event};
 use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
@@ -20,8 +17,7 @@ use crate::gqls::component::{
 /// Param card for show data on component page
 pub struct ComponentParamTag {
     error: Option<Error>,
-    props: Props,
-    link: ComponentLink<Self>,
+    param_id: usize,
     current_param_value: String,
     request_set_param_value: String,
     hide_edit_param_value: bool,
@@ -52,31 +48,29 @@ impl Component for ComponentParamTag {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        let request_set_param_value = props.param_data.value.clone();
-        ComponentParamTag {
+    fn create(ctx: &Context<Self>) -> Self {
+        Self {
             error: None,
-            props,
-            link,
-            current_param_value: request_set_param_value.clone(),
-            request_set_param_value,
+            param_id: ctx.props().param_data.param.param_id.clone(),
+            current_param_value: ctx.props().param_data.value.clone(),
+            request_set_param_value: ctx.props().param_data.value.clone(),
             hide_edit_param_value: true,
             get_result_delete: false,
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let link = ctx.link().clone();
 
         match msg {
             Msg::ChangeParamValue => self.hide_edit_param_value = !self.hide_edit_param_value,
             Msg::RequestChangeValue => {
                 let ipt_param_data = put_component_params::IptParamData{
-                    paramId: self.props.param_data.param.param_id as i64,
+                    paramId: ctx.props().param_data.param.param_id as i64,
                     value: self.request_set_param_value.clone(),
                 };
                 let ipt_component_params_data = put_component_params::IptComponentParamsData{
-                    componentUuid: self.props.component_uuid.clone(),
+                    componentUuid: ctx.props().component_uuid.clone(),
                     params: vec![ipt_param_data],
                 };
                 spawn_local(async move {
@@ -87,8 +81,8 @@ impl Component for ComponentParamTag {
                 })
             },
             Msg::RequestDeleteParam => {
-                let component_uuid = self.props.component_uuid.clone();
-                let param_id = self.props.param_data.param.param_id as i64;
+                let component_uuid = ctx.props().component_uuid.clone();
+                let param_id = ctx.props().param_data.param.param_id as i64;
                 spawn_local(async move {
                     let del_component_param_data = delete_component_params::DelComponentParamData{
                         componentUuid: component_uuid,
@@ -109,12 +103,12 @@ impl Component for ComponentParamTag {
                     false => {
                         let result: usize = serde_json::from_value(res.get("deleteComponentParams").unwrap().clone()).unwrap();
                         debug!("deleteComponentParams: {:?}", result);
-                        match &self.props.delete_param {
+                        match &ctx.props().delete_param {
                             Some(delete_param) => {
                                 if result > 0 {
                                     self.get_result_delete = true;
                                     self.hide_edit_param_value = true;
-                                    delete_param.emit(self.props.param_data.param.param_id);
+                                    delete_param.emit(ctx.props().param_data.param.param_id);
                                 };
                             },
                             None => self.get_result_delete = result > 0,
@@ -147,43 +141,44 @@ impl Component for ComponentParamTag {
         true
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.param_data.param.param_id == props.param_data.param.param_id &&
-              self.props.param_data.value == props.param_data.value {
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+        if self.param_id == ctx.props().param_data.param.param_id &&
+              self.current_param_value == ctx.props().param_data.value {
             false
         } else {
             self.hide_edit_param_value = true;
-            self.current_param_value = props.param_data.value.clone();
-            self.request_set_param_value = props.param_data.value.clone();
-            self.props = props;
+            self.current_param_value = ctx.props().param_data.value.clone();
+            self.request_set_param_value = ctx.props().param_data.value.clone();
             true
         }
     }
 
-    fn view(&self) -> Html {
+    fn view(&self, ctx: &Context<Self>) -> Html {
         html!{<>
             <ListErrors error={self.error.clone()}/>
-            {self.modal_change_param_value()}
+            {self.modal_change_param_value(ctx.link())}
             {match self.get_result_delete {
                 true => html!{},
-                false => self.show_param(),
+                false => self.show_param(ctx.link(), ctx.props()),
             }}
         </>}
     }
 }
 
 impl ComponentParamTag {
-    fn show_param(&self) -> Html {
-        let onclick_change_param = self.link
-            .callback(|_| Msg::ChangeParamValue);
+    fn show_param(
+        &self,
+        link: &Scope<Self>,
+        props: &Properties,
+    ) -> Html {
+        let onclick_change_param = link.callback(|_| Msg::ChangeParamValue);
 
-        let onclick_delete_param = self.link
-            .callback(|_| Msg::RequestDeleteParam);
+        let onclick_delete_param = link.callback(|_| Msg::RequestDeleteParam);
 
         html!{<tr>
-            <td>{self.props.param_data.param.paramname.clone()}</td>
+            <td>{props.param_data.param.paramname.clone()}</td>
             <td>{self.current_param_value.clone()}</td>
-            {match self.props.show_manage_btn {
+            {match props.show_manage_btn {
                 true => html!{<>
                     <td><a onclick={onclick_change_param.clone()}>
                         <span class="icon" >
@@ -201,15 +196,16 @@ impl ComponentParamTag {
         </tr>}
     }
 
-    fn modal_change_param_value(&self) -> Html {
-        let onclick_change_param_value = self.link
-            .callback(|_| Msg::RequestChangeValue);
+    fn modal_change_param_value(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onclick_change_param_value = link.callback(|_| Msg::RequestChangeValue);
 
-        let onclick_hide_modal = self.link
-            .callback(|_| Msg::ChangeParamValue);
+        let onclick_hide_modal = link.callback(|_| Msg::ChangeParamValue);
 
-        let oninput_set_param_value = self.link
-            .callback(|ev: InputData| Msg::UpdateParamValue(ev.value));
+        let oninput_set_param_value =
+            link.callback(|ev: Event| Msg::UpdateParamValue(ev.value));
 
         let class_modal = match &self.hide_edit_param_value {
             true => "modal",

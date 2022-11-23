@@ -1,7 +1,7 @@
 use std::collections::BTreeSet;
 use yew::services::fetch::FetchTask;
 use yew::services::reader::{File, FileData, ReaderService, ReaderTask};
-use yew::{Component, Callback, ComponentLink, Html, Properties, ShouldRender, html, ChangeData};
+use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, Event};
 use log::debug;
 use graphql_client::GraphQLQuery;
 // use serde_json::Value;
@@ -32,13 +32,12 @@ pub struct Props {
 
 pub struct ManageModificationFilesCard {
     error: Option<Error>,
+    modification_uuid: UUID,
     request_upload_data: Vec<UploadFile>,
     request_upload_file: Callback<Result<Option<String>, Error>>,
     request_upload_confirm: Vec<UUID>,
     task_read: Vec<(FileName, ReaderTask)>,
     task: Vec<FetchTask>,
-    link: ComponentLink<Self>,
-    props: Props,
     files_list: Vec<ShowFileInfo>,
     files_deleted_list: BTreeSet<UUID>,
     put_upload_file: PutUploadFile,
@@ -75,16 +74,15 @@ impl Component for ManageModificationFilesCard {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         Self {
             error: None,
+            modification_uuid: ctx.props().modification_uuid,
             request_upload_data: Vec::new(),
-            request_upload_file: link.callback(Msg::ResponseUploadFile),
+            request_upload_file: ctx.link().callback(Msg::ResponseUploadFile),
             request_upload_confirm: Vec::new(),
             task_read: Vec::new(),
             task: Vec::new(),
-            link,
-            props,
             files_list: Vec::new(),
             files_deleted_list: BTreeSet::new(),
             put_upload_file: PutUploadFile::new(),
@@ -97,20 +95,20 @@ impl Component for ManageModificationFilesCard {
         }
     }
 
-    fn rendered(&mut self, first_render: bool) {
-        if first_render && self.props.modification_uuid.len() == 36 {
+    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
+        if first_render && ctx.props().modification_uuid.len() == 36 {
             debug!("First render modification files list");
             // self.clear_current_data();
-            self.link.send_message(Msg::RequestModificationFilesList);
+            ctx.link().send_message(Msg::RequestModificationFilesList);
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let link = ctx.link().clone();
 
         match msg {
             Msg::RequestModificationFilesList => {
-                let modification_uuid = self.props.modification_uuid.clone();
+                let modification_uuid = ctx.props().modification_uuid.clone();
                 spawn_local(async move {
                     let ipt_modification_files_arg = component_modification_files_list::IptModificationFilesArg{
                         filesUuids: None,
@@ -125,7 +123,7 @@ impl Component for ManageModificationFilesCard {
                 })
             },
             Msg::RequestUploadModificationFiles => {
-                if !self.files.is_empty() && self.props.modification_uuid.len() == 36 {
+                if !self.files.is_empty() && ctx.props().modification_uuid.len() == 36 {
                     // see loading button
                     self.active_loading_files_btn = true;
 
@@ -134,7 +132,7 @@ impl Component for ManageModificationFilesCard {
                         filenames.push(file.name().clone());
                     }
                     debug!("filenames: {:?}", filenames);
-                    let modification_uuid = self.props.modification_uuid.clone();
+                    let modification_uuid = ctx.props().modification_uuid.clone();
 
                     spawn_local(async move {
                         let ipt_modification_files_data = upload_modification_files::IptModificationFilesData{
@@ -214,7 +212,7 @@ impl Component for ManageModificationFilesCard {
                                 let file_name = file.name().clone();
                                 debug!("file name: {:?}", file_name);
                                 let task = {
-                                    let callback = self.link
+                                    let callback = ctx.link()
                                         .callback(move |data: FileData| Msg::RequestUploadFile(data.content));
                                     ReaderService::read_file(file.clone(), callback).unwrap()
                                 };
@@ -283,36 +281,35 @@ impl Component for ManageModificationFilesCard {
         true
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.modification_uuid == props.modification_uuid {
-            debug!("not update modification files {:?}", props.modification_uuid);
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+        if self.modification_uuid == ctx.props().modification_uuid {
+            debug!("not update modification files {:?}", self.modification_uuid);
             false
         } else {
-            debug!("update modification files {:?}", props.modification_uuid);
-            self.props = props;
+            debug!("update modification files {:?}", ctx.props().modification_uuid);
             self.files_deleted_list.clear();
             self.files_list.clear();
-            if self.props.modification_uuid.len() == 36 {
-                self.link.send_message(Msg::RequestModificationFilesList);
+            if ctx.props().modification_uuid.len() == 36 {
+                ctx.link().send_message(Msg::RequestModificationFilesList);
             }
-
+            self.modification_uuid = ctx.props().modification_uuid;
             true
         }
     }
 
-    fn view(&self) -> Html {
-        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let onclick_clear_error = ctx.link().callback(|_| Msg::ClearError);
 
         html!{<>
             <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error.clone())}/>
             <div class="columns">
                 <div class="column">
                   <h2>{ get_value_field(&203) }</h2> // Files for modification
-                  {self.show_files_list()}
+                  {self.show_files_list(ctx.link(), ctx.props())}
                 </div>
                 <div class="column">
                   <h2>{ get_value_field(&202) }</h2> // Upload modification files
-                  {self.show_frame_upload_files()}
+                  {self.show_frame_upload_files(ctx.link(), ctx.props())}
                 </div>
             </div>
         </>}
@@ -320,39 +317,44 @@ impl Component for ManageModificationFilesCard {
 }
 
 impl ManageModificationFilesCard {
-    fn show_files_list(&self) -> Html {
+    fn show_files_list(
+        &self,
+        link: &Scope<Self>,
+        props: &Properties,
+    ) -> Html {
         html!{<>
             {for self.files_list.iter().enumerate().map(|(index, file)| {
                 match (index >= 3, self.show_full_files) {
                     // show full list
-                    (_, true) => self.show_file_info(&file),
+                    (_, true) => self.show_file_info(link, props, &file),
                     // show full list or first 3 items
-                    (false, false) => self.show_file_info(&file),
+                    (false, false) => self.show_file_info(link, props, &file),
                     _ => html!{},
                 }
             })}
             {match self.files_list.len() {
                 0 => html!{<span>{ get_value_field(&204) }</span>},
                 0..=3 => html!{},
-                _ => self.show_see_btn(),
+                _ => self.show_see_btn(link, props),
             }}
         </>}
     }
 
     fn show_file_info(
         &self,
+        link: &Scope<Self>,
+        props: &Properties,
         file_info: &ShowFileInfo,
     ) -> Html {
-        let callback_delete_file = self.link
-            .callback(|value: UUID| Msg::RemoveFile(value));
+        let callback_delete_file = link.callback(|value: UUID| Msg::RemoveFile(value));
 
         match self.files_deleted_list.get(&file_info.uuid) {
             Some(_) => html!{}, // removed file
             None => html!{
                 <ModificationFileItem
-                  show_download_btn = {self.props.show_download_btn}
-                  show_delete_btn = true
-                  modification_uuid = {self.props.modification_uuid.clone()}
+                  show_download_btn = {props.show_download_btn}
+                  show_delete_btn = {true}
+                  modification_uuid = {props.modification_uuid.clone()}
                   file = {file_info.clone()}
                   callback_delete_file = {callback_delete_file.clone()}
                 />
@@ -360,9 +362,12 @@ impl ManageModificationFilesCard {
         }
     }
 
-    fn show_see_btn(&self) -> Html {
-        let show_full_files_btn = self.link
-            .callback(|_| Msg::ShowFullList);
+    fn show_see_btn(
+        &self,
+        link: &Scope<Self>,
+        props: &Properties,
+    ) -> Html {
+        let show_full_files_btn = link.callback(|_| Msg::ShowFullList);
 
         match self.show_full_files {
             true => html!{<>
@@ -378,9 +383,13 @@ impl ManageModificationFilesCard {
         }
     }
 
-    fn show_frame_upload_files(&self) -> Html {
-        let onchange_upload_files = self.link.callback(move |value| {
-            if let ChangeData::Files(files) = value {
+    fn show_frame_upload_files(
+        &self,
+        link: &Scope<Self>,
+        props: &Properties,
+    ) -> Html {
+        let onchange_upload_files = link.callback(move |value| {
+            if let Event::Files(files) = value {
                 Msg::UpdateFiles(files)
             } else {
                 Msg::Ignore
@@ -395,7 +404,7 @@ impl ManageModificationFilesCard {
                   type="file"
                   // accept="image/*,application/vnd*,application/rtf,text/*,.pdf"
                   onchange={onchange_upload_files}
-                  multiple=true />
+                  multiple={true} />
                 <span class="file-cta">
                   <span class="file-icon">
                     <i class="fas fa-upload"></i>
@@ -413,14 +422,18 @@ impl ManageModificationFilesCard {
               </label>
             </div>
             <div class="buttons">
-                {self.show_clear_btn()}
-                {self.show_upload_files_btn()}
+                {self.show_clear_btn(link, props)}
+                {self.show_upload_files_btn(link, props)}
             </div>
         </>}
     }
 
-    fn show_clear_btn(&self) -> Html {
-        let onclick_clear_boxed = self.link.callback(|_| Msg::ClearFilesBoxed);
+    fn show_clear_btn(
+        &self,
+        link: &Scope<Self>,
+        props: &Properties,
+    ) -> Html {
+        let onclick_clear_boxed = link.callback(|_| Msg::ClearFilesBoxed);
 
         html!{
             <button id="clear-upload-modification-files"
@@ -435,8 +448,12 @@ impl ManageModificationFilesCard {
         }
     }
 
-    fn show_upload_files_btn(&self) -> Html {
-        let onclick_upload_files = self.link.callback(|_| Msg::RequestUploadModificationFiles);
+    fn show_upload_files_btn(
+        &self,
+        link: &Scope<Self>,
+        props: &Properties,
+    ) -> Html {
+        let onclick_upload_files = link.callback(|_| Msg::RequestUploadModificationFiles);
 
         let class_upload_btn = match self.active_loading_files_btn {
             true => "button is-loading",
@@ -447,7 +464,7 @@ impl ManageModificationFilesCard {
             <button
               id="upload-modification-files"
               class={class_upload_btn}
-              disabled={self.files.is_empty() || self.props.modification_uuid.len() != 36}
+              disabled={self.files.is_empty() || props.modification_uuid.len() != 36}
               onclick={onclick_upload_files} >
                 // <span class="icon" >
                 //     <i class="fas fa-angle-double-up" aria-hidden="true"></i>

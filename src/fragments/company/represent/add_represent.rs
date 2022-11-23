@@ -1,7 +1,4 @@
-use yew::{
-    html, Component, Callback, ComponentLink,
-    Html, InputData, ChangeData, Properties, ShouldRender,
-};
+use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, Event};
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
@@ -33,8 +30,6 @@ pub enum Msg {
 pub struct AddCompanyRepresentCard {
     error: Option<Error>,
     request_register: RegisterCompanyRepresentInfo,
-    props: Props,
-    link: ComponentLink<Self>,
     regions: Vec<Region>,
     represent_types: Vec<RepresentationType>,
     get_result_register: bool,
@@ -49,20 +44,18 @@ impl Component for AddCompanyRepresentCard {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         Self {
             error: None,
             request_register: RegisterCompanyRepresentInfo::default(),
-            props,
-            link,
             regions: Vec::new(),
             represent_types: Vec::new(),
             get_result_register: false,
         }
     }
 
-    fn rendered(&mut self, first_render: bool) {
-        let link = self.link.clone();
+    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
+        let link = ctx.link().clone();
 
         if first_render && is_authenticated() {
             spawn_local(async move {
@@ -74,14 +67,14 @@ impl Component for AddCompanyRepresentCard {
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let link = ctx.link().clone();
 
         match msg {
             Msg::RequestRegisterRepresent => {
                 debug!("Register company represent: {:?}", &self.request_register);
                 let ipt_company_represent_data = register_company_represent::IptCompanyRepresentData {
-                    companyUuid: self.props.company_uuid.clone(),
+                    companyUuid: ctx.props().company_uuid.clone(),
                     regionId: self.request_register.region_id as i64,
                     representationTypeId: self.request_register.representation_type_id as i64,
                     name: self.request_register.name.clone(),
@@ -108,21 +101,13 @@ impl Component for AddCompanyRepresentCard {
                     true => self.error = Some(get_error(&data)),
                 }
             },
-            Msg::UpdateRegionId(region_id) => {
-                self.request_register.region_id = region_id.parse::<usize>().unwrap_or_default();
-            },
-            Msg::UpdateRepresentationTypeId(representation_type_id) => {
-                self.request_register.representation_type_id = representation_type_id.parse::<usize>().unwrap_or_default();
-            },
-            Msg::UpdateName(name) => {
-                self.request_register.name = name;
-            },
-            Msg::UpdateAddress(address) => {
-                self.request_register.address = address;
-            },
-            Msg::UpdatePhone(phone) => {
-                self.request_register.phone = phone;
-            },
+            Msg::UpdateRegionId(region_id) =>
+                self.request_register.region_id = region_id.parse::<usize>().unwrap_or_default(),
+            Msg::UpdateRepresentationTypeId(representation_type_id) =>
+                self.request_register.representation_type_id = representation_type_id.parse::<usize>().unwrap_or_default(),
+            Msg::UpdateName(name) => self.request_register.name = name,
+            Msg::UpdateAddress(address) => self.request_register.address = address,
+            Msg::UpdatePhone(phone) => self.request_register.phone = phone,
             Msg::UpdateList(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
@@ -147,14 +132,13 @@ impl Component for AddCompanyRepresentCard {
         true
     }
 
-    fn change(&mut self, _props: Self::Properties) -> ShouldRender {
-        // self.props = props;
+    fn changed(&mut self, _ctx: &Context<Self>) -> bool {
         false
     }
 
-    fn view(&self) -> Html {
-        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
-        let onclick_hide_notification = self.link.callback(|_| Msg::ClearData);
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let onclick_clear_error = ctx.link().callback(|_| Msg::ClearError);
+        let onclick_hide_notification = ctx.link().callback(|_| Msg::ClearData);
 
         html!{<div class="card">
             <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error.clone())}/>
@@ -172,8 +156,8 @@ impl Component for AddCompanyRepresentCard {
                 },
                 false => html!{<div class="column">
                     <label class="label">{ get_value_field(&230) }</label> // New represent
-                    {self.new_represent_block()}
-                    {self.show_manage_buttons()}
+                    {self.new_represent_block(ctx.link())}
+                    {self.show_manage_buttons(ctx.link())}
                 </div>}
             }}
         </div>}
@@ -187,7 +171,7 @@ impl AddCompanyRepresentCard {
         label: &str,
         // placeholder: &str,
         value: String,
-        oninput: Callback<InputData>,
+        oninput: Callback<Event>,
     ) -> Html {
         let placeholder = label;
         let mut class = "input";
@@ -215,25 +199,23 @@ impl AddCompanyRepresentCard {
         }
     }
 
-    fn new_represent_block(&self) -> Html {
-        let oninput_region_id = self
-            .link
-            .callback(|ev: ChangeData| Msg::UpdateRegionId(match ev {
-              ChangeData::Select(el) => el.value(),
+    fn new_represent_block(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let oninput_region_id =
+            link.callback(|ev: Event| Msg::UpdateRegionId(match ev {
+              Event::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
-        let oninput_representation_type_id = self
-            .link
-            .callback(|ev: ChangeData| Msg::UpdateRepresentationTypeId(match ev {
-              ChangeData::Select(el) => el.value(),
+        let oninput_representation_type_id =
+            link.callback(|ev: Event| Msg::UpdateRepresentationTypeId(match ev {
+              Event::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
-        let oninput_name =
-            self.link.callback(|ev: InputData| Msg::UpdateName(ev.value));
-        let oninput_address =
-            self.link.callback(|ev: InputData| Msg::UpdateAddress(ev.value));
-        let oninput_phone =
-            self.link.callback(|ev: InputData| Msg::UpdatePhone(ev.value));
+        let oninput_name = link.callback(|ev: Event| Msg::UpdateName(ev.value));
+        let oninput_address = link.callback(|ev: Event| Msg::UpdateAddress(ev.value));
+        let oninput_phone = link.callback(|ev: Event| Msg::UpdatePhone(ev.value));
 
         html!{<>
             {self.fileset_generator(
@@ -311,12 +293,13 @@ impl AddCompanyRepresentCard {
         </>}
     }
 
-    fn show_manage_buttons(&self) -> Html {
-        let onclick_clear_data =
-            self.link.callback(|_| Msg::ClearData);
+    fn show_manage_buttons(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onclick_clear_data = link.callback(|_| Msg::ClearData);
 
-        let onclick_create_represent =
-            self.link.callback(|_| Msg::RequestRegisterRepresent);
+        let onclick_create_represent = link.callback(|_| Msg::RequestRegisterRepresent);
 
         html!{<div class="columns">
             <div class="column">

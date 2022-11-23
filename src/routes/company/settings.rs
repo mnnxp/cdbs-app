@@ -1,7 +1,5 @@
-use yew::{
-    agent::Bridged, html, classes, Bridge, ChangeData, Component, ComponentLink, FocusEvent, Html,
-    Callback, InputData, Properties, ShouldRender, MouseEvent
-};
+// use yew::{agent::Bridged, Bridge};
+use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, Event, classes, FocusEvent, MouseEvent};
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*, service::RouteService};
 use graphql_client::GraphQLQuery;
 use log::debug;
@@ -9,7 +7,7 @@ use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::gqls::make_query;
-use crate::routes::AppRoute;
+use crate::routes::AppRoute::{Login, Home, Profile, ShowCompany};
 use crate::error::{get_error, Error};
 use crate::fragments::{
     company::{
@@ -66,11 +64,10 @@ pub enum Menu {
 /// Update settings of the author or logout
 pub struct CompanySettings {
     error: Option<Error>,
+    company_uuid: UUID,
     request_company: CompanyUpdateInfo,
     request_access: i64,
     router_agent: Box<dyn Bridge<RouteAgent>>,
-    props: Props,
-    link: ComponentLink<Self>,
     company_uuid: String,
     current_data: Option<CompanyInfo>,
     regions: Vec<Region>,
@@ -120,14 +117,13 @@ impl Component for CompanySettings {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        CompanySettings {
+    fn create(ctx: &Context<Self>) -> Self {
+        Self {
             error: None,
+            company_uuid: ctx.props().company_uuid,
             request_company: CompanyUpdateInfo::default(),
             request_access: 0,
-            router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
-            props,
-            link,
+            router_agent: RouteAgent::bridge(ctx.link().callback(|_| Msg::Ignore)),
             company_uuid: String::new(),
             current_data: None,
             regions: Vec::new(),
@@ -140,10 +136,10 @@ impl Component for CompanySettings {
         }
     }
 
-    fn rendered(&mut self, first_render: bool) {
+    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
         if let None = get_logged_user() {
             // route to login page if not found token
-            self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
+            self.router_agent.send(ChangeRoute(Login.into()));
         };
 
         // get company uuid for request
@@ -158,7 +154,7 @@ impl Component for CompanySettings {
         let not_matches_company_uuid = target_company_uuid != self.company_uuid;
 
         if first_render || not_matches_company_uuid {
-            let link = self.link.clone();
+            let link = ctx.link().clone();
             self.company_uuid = target_company_uuid.clone();
 
             spawn_local(async move {
@@ -171,16 +167,16 @@ impl Component for CompanySettings {
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let link = ctx.link().clone();
 
         match msg {
             Msg::OpenCompany => {
                 // Redirect to user page
                 if let Some(company_data) = &self.current_data {
-                    self.router_agent.send(ChangeRoute(
-                        AppRoute::ShowCompany(company_data.uuid.clone()).into()
-                    ));
+                    self.router_agent.send(
+                        ChangeRoute(ShowCompany { uuid: company_data.uuid.clone() }.into())
+                    );
                 }
             },
             Msg::RequestUpdateCompany => {
@@ -265,7 +261,7 @@ impl Component for CompanySettings {
                         debug!("Company data: {:?}", company_data);
                         self.current_data = Some(company_data.clone());
                         self.request_company = company_data.into();
-                        self.rendered(false);
+                        self.rendered(false, ctx);
                     },
                     true => self.error = Some(get_error(&data)),
                 }
@@ -300,11 +296,11 @@ impl Component for CompanySettings {
                         ).unwrap();
                         debug!("Delete company: {:?}", delete_company_uuid);
                         self.get_result_remove_company = !delete_company_uuid.is_empty();
-                        match &self.props.current_user {
+                        match &ctx.props().current_user {
                             Some(user) => self
                                 .router_agent
-                                .send(ChangeRoute(AppRoute::Profile(user.username.clone()).into())),
-                            None => self.router_agent.send(ChangeRoute(AppRoute::Home.into())),
+                                .send(ChangeRoute(Profile { username: user.username.clone() }.into())),
+                            None => self.router_agent.send(ChangeRoute(Home.into())),
                         }
                     },
                     true => self.error = Some(get_error(&data)),
@@ -342,7 +338,7 @@ impl Component for CompanySettings {
                 self.request_company.company_type_id = Some(type_id.parse::<i64>().unwrap_or_default()),
             Msg::SelectMenu(value) => {
                 self.select_menu = value;
-                self.rendered(false);
+                self.rendered(false, ctx);
             },
             Msg::ClearError => self.error = None,
             Msg::Ignore => {},
@@ -350,17 +346,17 @@ impl Component for CompanySettings {
         true
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.company_uuid == props.company_uuid {
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+        if self.company_uuid == ctx.props().company_uuid {
             false
         } else {
-            self.props = props;
+            self.company_uuid = ctx.props().company_uuid;
             true
         }
     }
 
-    fn view(&self) -> Html {
-        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let onclick_clear_error = ctx.link().callback(|_| Msg::ClearError);
 
         html!{
             <div class="settings-page">
@@ -369,10 +365,10 @@ impl Component for CompanySettings {
                     <div class="row">
                         <div class="columns">
                             <div class="column is-flex">
-                                { self.view_menu() }
+                                { self.view_menu(ctx.link()) }
                                 <div class="card is-flex-grow-1" >
                                     <div class="card-content">
-                                        {self.select_content()}
+                                        {self.select_content(ctx.link())}
                                     </div>
                                 </div>
                             </div>
@@ -391,7 +387,7 @@ impl CompanySettings {
         label: &str,
         // placeholder: &str,
         value: String,
-        oninput: Callback<InputData>,
+        oninput: Callback<Event>,
     ) -> Html {
         let placeholder = label;
         let mut class = "input";
@@ -419,16 +415,23 @@ impl CompanySettings {
         }
     }
 
-    fn cb_generator(&self, cb: Menu) -> Callback<MouseEvent> {
-        self.link.callback(move |_| Msg::SelectMenu(cb.clone()))
+    fn cb_generator(
+        &self,
+        link: &Scope<Self>,
+        cb: Menu,
+    ) -> Callback<MouseEvent> {
+        link.callback(move |_| Msg::SelectMenu(cb.clone()))
     }
 
-    fn view_menu(&self) -> Html {
+    fn view_menu(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
         let menu_arr: Vec<MenuItem> = vec![
             // return company page MenuItem
             MenuItem {
                 title: get_value_field(&265).to_string(), // Open company
-                action: self.link.callback(|_| Msg::OpenCompany),
+                action: link.callback(|_| Msg::OpenCompany),
                 item_class: classes!("has-background-white"),
                 icon_classes: vec![classes!("fas", "fa-angle-double-left")],
                 is_active: false,
@@ -437,7 +440,7 @@ impl CompanySettings {
             // Company MenuItem
             MenuItem {
                 title: get_value_field(&109).to_string(), // Company
-                action: self.cb_generator(Menu::Company),
+                action: self.cb_generator(link, Menu::Company),
                 item_class: classes!("has-background-white"),
                 icon_classes: vec![classes!("fas", "fa-building")],
                 is_active: self.select_menu == Menu::Company,
@@ -446,7 +449,7 @@ impl CompanySettings {
             // Favicon MenuItem
             MenuItem {
                 title: get_value_field(&78).to_string(), // Favicon
-                action: self.cb_generator(Menu::UpdateFavicon),
+                action: self.cb_generator(link, Menu::UpdateFavicon),
                 item_class: classes!("has-background-white"),
                 icon_classes: vec![classes!("fas", "fa-image")],
                 is_active: self.select_menu == Menu::UpdateFavicon,
@@ -455,7 +458,7 @@ impl CompanySettings {
             // Certificates MenuItem
             MenuItem {
                 title: get_value_field(&64).to_string(), // Certificates
-                action: self.cb_generator(Menu::Certificates),
+                action: self.cb_generator(link, Menu::Certificates),
                 item_class: classes!("has-background-white"),
                 icon_classes: vec![classes!("fas", "fa-certificate")],
                 is_active: self.select_menu == Menu::Certificates,
@@ -464,7 +467,7 @@ impl CompanySettings {
             // Represent MenuItem
             MenuItem {
                 title: get_value_field(&266).to_string(), // Representations
-                action: self.cb_generator(Menu::Represent),
+                action: self.cb_generator(link, Menu::Represent),
                 item_class: classes!("has-background-white"),
                 icon_classes: vec![classes!("fas", "fa-industry")],
                 is_active: self.select_menu == Menu::Represent,
@@ -473,7 +476,7 @@ impl CompanySettings {
             // Spec MenuItem
             MenuItem {
                 title: get_value_field(&104).to_string(), // Spec
-                action: self.cb_generator(Menu::Spec),
+                action: self.cb_generator(link, Menu::Spec),
                 item_class: classes!("has-background-white"),
                 icon_classes: vec![classes!("fas", "fa-paperclip")],
                 is_active: self.select_menu == Menu::Spec,
@@ -482,7 +485,7 @@ impl CompanySettings {
             // Access MenuItem
             MenuItem {
                 title: get_value_field(&65).to_string(), // Access
-                action: self.cb_generator(Menu::Access),
+                action: self.cb_generator(link, Menu::Access),
                 item_class: classes!("has-background-white"),
                 icon_classes: vec![classes!("fas", "fa-low-vision")],
                 is_active: self.select_menu == Menu::Access,
@@ -491,7 +494,7 @@ impl CompanySettings {
             // RemoveCompany MenuItem
             MenuItem {
                 title: get_value_field(&267).to_string(), // Remove Company
-                action: self.cb_generator(Menu::RemoveCompany),
+                action: self.cb_generator(link, Menu::RemoveCompany),
                 item_class: classes!("has-background-danger-light"),
                 icon_classes: vec![classes!("fas", "fa-trash")],
                 is_active: self.select_menu == Menu::RemoveCompany,
@@ -506,8 +509,11 @@ impl CompanySettings {
         }
     }
 
-    fn select_content(&self) -> Html {
-        let onsubmit_update_company = self.link.callback(|ev: FocusEvent| {
+    fn select_content(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onsubmit_update_company = link.callback(|ev: FocusEvent| {
             ev.prevent_default();
             Msg::RequestUpdateCompany
         });
@@ -534,7 +540,7 @@ impl CompanySettings {
                     </div>
                 </div>
                 <form onsubmit={onsubmit_update_company} >
-                    { self.fieldset_company() }
+                    { self.fieldset_company(link) }
                     <button
                         id="update-settings"
                         class="button"
@@ -547,14 +553,14 @@ impl CompanySettings {
             // Show interface for change favicon company
             Menu::UpdateFavicon => html!{<>
                 <h4 id="updated-favicon-company" class="title is-4">{ get_value_field(&78) }</h4> // Favicon
-                { self.update_favicon_block() }
+                { self.update_favicon_block(link) }
             </>},
             // Show interface for add and update Certificates
             Menu::Certificates => html!{<>
                 <h4 id="updated-certificates" class="title is-4">{ get_value_field(&64) }</h4> // Certificates
-                { self.add_certificate_block() }
+                { self.add_certificate_block(link) }
                 <br/>
-                { self.certificates_block() }
+                { self.certificates_block(link) }
             </>},
             // Show interface for add and update Represents
             Menu::Represent => html!{<>
@@ -571,48 +577,43 @@ impl CompanySettings {
             // Show interface for manage Access
             Menu::Access => html!{<>
                 <h4 id="updated-represents" class="title is-4">{ get_value_field(&65) }</h4> // Access
-                { self.manage_access_block() }
+                { self.manage_access_block(link) }
             </>},
             // Show interface for remove company
             Menu::RemoveCompany => html!{<>
                 <h4 id="remove-company" class="title is-4">{ get_value_field(&268) }</h4>
-                {self.remove_company_block()}
+                {self.remove_company_block(link)}
             </>},
         }
     }
 
-    fn fieldset_company(&self) -> Html {
-        let oninput_orgname =
-            self.link.callback(|ev: InputData| Msg::UpdateOrgname(ev.value));
-        let oninput_shortname =
-            self.link.callback(|ev: InputData| Msg::UpdateShortname(ev.value));
-        let oninput_inn =
-            self.link.callback(|ev: InputData| Msg::UpdateInn(ev.value));
-        let oninput_email =
-            self.link.callback(|ev: InputData| Msg::UpdateEmail(ev.value));
-        let oninput_description =
-            self.link.callback(|ev: InputData| Msg::UpdateDescription(ev.value));
-        let oninput_phone =
-            self.link.callback(|ev: InputData| Msg::UpdatePhone(ev.value));
-        let oninput_address =
-            self.link.callback(|ev: InputData| Msg::UpdateAddress(ev.value));
-        let oninput_site_url =
-            self.link.callback(|ev: InputData| Msg::UpdateSiteUrl(ev.value));
-        // let oninput_time_zone =
-        //     self.link.callback(|ev: InputData| Msg::UpdateTimeZone(ev.value));
-
-        let onchange_region_id = self.link.callback(|ev: ChangeData| {
-            Msg::UpdateRegionId(match ev {
-                ChangeData::Select(el) => el.value(),
-                _ => "1".to_string(),
-            })
-        });
-        let onchange_company_type_id = self.link.callback(|ev: ChangeData| {
-            Msg::UpdateCompanyTypeId(match ev {
-                ChangeData::Select(el) => el.value(),
-                _ => "1".to_string(),
-            })
-        });
+    fn fieldset_company(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let oninput_orgname = link.callback(|ev: Event| Msg::UpdateOrgname(ev.value));
+        let oninput_shortname = link.callback(|ev: Event| Msg::UpdateShortname(ev.value));
+        let oninput_inn = link.callback(|ev: Event| Msg::UpdateInn(ev.value));
+        let oninput_email = link.callback(|ev: Event| Msg::UpdateEmail(ev.value));
+        let oninput_description = link.callback(|ev: Event| Msg::UpdateDescription(ev.value));
+        let oninput_phone = link.callback(|ev: Event| Msg::UpdatePhone(ev.value));
+        let oninput_address = link.callback(|ev: Event| Msg::UpdateAddress(ev.value));
+        let oninput_site_url = link.callback(|ev: Event| Msg::UpdateSiteUrl(ev.value));
+        // let oninput_time_zone = link.callback(|ev: Event| Msg::UpdateTimeZone(ev.value));
+        let onchange_region_id =
+            link.callback(|ev: Event| {
+                Msg::UpdateRegionId(match ev {
+                    Event::Select(el) => el.value(),
+                    _ => "1".to_string(),
+                })
+            });
+        let onchange_company_type_id =
+            link.callback(|ev: Event| {
+                Msg::UpdateCompanyTypeId(match ev {
+                    Event::Select(el) => el.value(),
+                    _ => "1".to_string(),
+                })
+            });
 
         html!{<>
             // first column
@@ -735,8 +736,11 @@ impl CompanySettings {
         </>}
     }
 
-    fn update_favicon_block(&self) -> Html {
-        let callback_update_favicon = self.link.callback(|_| Msg::ReguestCompanyData);
+    fn update_favicon_block(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let callback_update_favicon = link.callback(|_| Msg::ReguestCompanyData);
 
         html!{
             <UpdateFaviconBlock
@@ -746,7 +750,10 @@ impl CompanySettings {
         }
     }
 
-    fn certificates_block(&self) -> Html {
+    fn certificates_block(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
         match &self.current_data {
             Some(current_data) => html!{
                 <CompanyCertificatesCard
@@ -780,14 +787,17 @@ impl CompanySettings {
         }
     }
 
-    fn add_certificate_block(&self) -> Html {
+    fn add_certificate_block(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
         let company_uuid = self
             .current_data
             .as_ref()
             .map(|company| company.uuid.to_string())
             .unwrap_or_default();
 
-        let callback_upload_cert = self.link.callback(|_| Msg::ReguestCompanyData);
+        let callback_upload_cert = link.callback(|_| Msg::ReguestCompanyData);
 
         html!{
             <AddCompanyCertificateCard
@@ -813,19 +823,22 @@ impl CompanySettings {
         }
     }
 
-    fn manage_access_block(&self) -> Html {
-        let onsubmit_update_access = self.link.callback(|ev: FocusEvent| {
+    fn manage_access_block(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onsubmit_update_access = link.callback(|ev: FocusEvent| {
             ev.prevent_default();
             Msg::RequestChangeAccess
         });
 
         html!{
             <form onsubmit={onsubmit_update_access}>
-                { self.fieldset_access() }
+                { self.fieldset_access(link) }
                 <button
-                    id="update-access"
-                    class="button"
-                    type="submit"
+                    id={"update-access"}
+                    class={"button"}
+                    type={"submit"}
                     disabled={false}>
                     { get_value_field(&271) }
                 </button>
@@ -833,13 +846,17 @@ impl CompanySettings {
         }
     }
 
-    fn fieldset_access(&self) -> Html {
-        let onchange_type_access_id = self.link.callback(|ev: ChangeData| {
-            Msg::UpdateTypeAccessId(match ev {
-                ChangeData::Select(el) => el.value(),
-                _ => "1".to_string(),
-            })
-        });
+    fn fieldset_access(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onchange_type_access_id =
+            link.callback(|ev: Event| {
+                Msg::UpdateTypeAccessId(match ev {
+                    Event::Select(el) => el.value(),
+                    _ => "1".to_string(),
+                })
+            });
 
         html!{
             <fieldset class="columns">
@@ -871,8 +888,11 @@ impl CompanySettings {
         }
     }
 
-    fn remove_company_block(&self) -> Html {
-        let onclick_delete_company = self.link.callback(|_| Msg::RequestRemoveCompany);
+    fn remove_company_block(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onclick_delete_company = link.callback(|_| Msg::RequestRemoveCompany);
 
         html!{<>
             <span id="remove-company" class="tag is-info is-light">
@@ -887,8 +907,8 @@ impl CompanySettings {
             </div>
             <br/>
             <button
-                id="button-delete-company"
-                class="button is-danger"
+                id={"button-delete-company"}
+                class={"button is-danger"}
                 onclick={onclick_delete_company}>
                 { get_value_field(&135) }
             </button>

@@ -1,6 +1,6 @@
 use yew::{
     agent::Bridged, html, Bridge, Component,
-    ComponentLink, Html, ShouldRender, InputData, ChangeData
+    ComponentLink, Html, InputData, Event
 };
 use yew_router::{
     agent::RouteRequest::ChangeRoute,
@@ -11,7 +11,7 @@ use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
-use crate::routes::AppRoute;
+use crate::routes::AppRoute::{self, Login, ComponentSettings};
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
 use crate::services::{get_logged_user, get_value_field};
@@ -66,14 +66,14 @@ impl Component for CreateComponent {
         }
     }
 
-    fn rendered(&mut self, first_render: bool) {
+    fn rendered(&mut self, _ctx: &Context<Self>, first_render: bool) {
         if let None = get_logged_user() {
             // route to login page if not found token
-            self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
+            self.router_agent.send(ChangeRoute(Login.into()));
         };
 
         if first_render {
-            let link = self.link.clone();
+            let link = ctx.link().clone();
 
             spawn_local(async move {
                 let res = make_query(GetComponentDataOpt::build_query(
@@ -85,8 +85,8 @@ impl Component for CreateComponent {
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let link = ctx.link().clone();
 
         match msg {
             Msg::RequestManager => {
@@ -164,9 +164,9 @@ impl Component for CreateComponent {
                         debug!("registerComponent: {:?}", result);
                         // Redirect to setting component page
                         if !result.is_empty() {
-                            self.router_agent.send(ChangeRoute(
-                                AppRoute::ComponentSettings(result).into()
-                            ));
+                            self.router_agent.send(
+                                ChangeRoute(ComponentSettings { uuid: result }.into())
+                            );
                         }
 
                     },
@@ -190,12 +190,12 @@ impl Component for CreateComponent {
         true
     }
 
-    fn change(&mut self, _props: Self::Properties) -> ShouldRender {
+    fn changed(&mut self, _ctx: &Context<Self>) -> bool {
         false
     }
 
-    fn view(&self) -> Html {
-        let onclick_clear_error = self.link
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let onclick_clear_error = ctx.link()
             .callback(|_| Msg::ClearError);
 
         html!{
@@ -216,28 +216,28 @@ impl Component for CreateComponent {
 
 impl CreateComponent {
     fn show_main_card(&self) -> Html {
-        let onchange_actual_status_id = self.link
-            .callback(|ev: ChangeData| Msg::UpdateActualStatusId(match ev {
-              ChangeData::Select(el) => el.value(),
+        let onchange_actual_status_id = ctx.link()
+            .callback(|ev: Event| Msg::UpdateActualStatusId(match ev {
+              Event::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
 
-        let onchange_change_component_type = self.link
-            .callback(|ev: ChangeData| Msg::UpdateComponentTypeId(match ev {
-              ChangeData::Select(el) => el.value(),
+        let onchange_change_component_type = ctx.link()
+            .callback(|ev: Event| Msg::UpdateComponentTypeId(match ev {
+              Event::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
 
-        let onchange_change_type_access = self.link
-            .callback(|ev: ChangeData| Msg::UpdateTypeAccessId(match ev {
-              ChangeData::Select(el) => el.value(),
+        let onchange_change_type_access = ctx.link()
+            .callback(|ev: Event| Msg::UpdateTypeAccessId(match ev {
+              Event::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
 
-        let oninput_name = self.link
+        let oninput_name = ctx.link()
             .callback(|ev: InputData| Msg::UpdateName(ev.value));
 
-        let oninput_description = self.link
+        let oninput_description = ctx.link()
             .callback(|ev: InputData| Msg::UpdateDescription(ev.value));
 
         html!{
@@ -327,7 +327,7 @@ impl CreateComponent {
     }
 
     fn show_manage_btn(&self) -> Html {
-        let onclick_create_changes = self.link
+        let onclick_create_changes = ctx.link()
             .callback(|_| Msg::RequestManager);
 
         html!{

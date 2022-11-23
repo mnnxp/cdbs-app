@@ -1,7 +1,5 @@
-use yew::{
-    agent::Bridged, html, Bridge, Callback, Component, Properties,
-    ComponentLink, Html, ShouldRender, InputData, ChangeData
-};
+// use yew::{agent::Bridged, Bridge};
+use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, Event};
 use yew::services::fetch::FetchTask;
 use yew::services::reader::{File, FileData, ReaderService, ReaderTask};
 use yew_router::{
@@ -15,7 +13,7 @@ use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
-use crate::routes::AppRoute;
+use crate::routes::AppRoute::{Login, Home, ShowComponent};
 use crate::error::{get_error, Error};
 use crate::fragments::{
     // switch_icon::res_btn,
@@ -61,8 +59,6 @@ pub struct ComponentSettings {
     router_agent: Box<dyn Bridge<RouteAgent>>,
     task_read: Vec<(FileName, ReaderTask)>,
     task: Vec<FetchTask>,
-    props: Props,
-    link: ComponentLink<Self>,
     supplier_list: Vec<ShowCompanyShort>,
     component_types: Vec<ComponentType>,
     actual_statuses: Vec<ActualStatus>,
@@ -136,7 +132,7 @@ impl Component for ComponentSettings {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         ComponentSettings {
             error: None,
             current_component: None,
@@ -145,14 +141,12 @@ impl Component for ComponentSettings {
             current_modifications: Vec::new(),
             request_component: ComponentUpdatePreData::default(),
             request_upload_data: Vec::new(),
-            request_upload_file: link.callback(Msg::ResponseUploadFile),
+            request_upload_file: ctx.link().callback(Msg::ResponseUploadFile),
             request_upload_confirm: Vec::new(),
             request_access: 0,
-            router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
+            router_agent: RouteAgent::bridge(ctx.link().callback(|_| Msg::Ignore)),
             task_read: Vec::new(),
             task: Vec::new(),
-            props,
-            link,
             supplier_list: Vec::new(),
             component_types: Vec::new(),
             actual_statuses: Vec::new(),
@@ -178,16 +172,15 @@ impl Component for ComponentSettings {
         }
     }
 
-    fn rendered(&mut self, first_render: bool) {
+    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
         let logged_user_uuid = match get_logged_user() {
             Some(cu) => cu.uuid,
             None => {
                 // route to login page if not found token
-                self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
+                self.router_agent.send(ChangeRoute(Login.into()));
                 String::new()
             },
         };
-
         // get component uuid for request component data
         let route_service: RouteService<()> = RouteService::new();
         // get target user from route
@@ -198,7 +191,6 @@ impl Component for ComponentSettings {
         // get flag changing current component in route
         let not_matches_component_uuid = target_component_uuid != self.current_component_uuid;
         // debug!("self.current_component_uuid {:#?}", self.current_component_uuid);
-
         if not_matches_component_uuid {
             // clear old data
             self.current_component = None;
@@ -210,8 +202,7 @@ impl Component for ComponentSettings {
         }
 
         if first_render || not_matches_component_uuid {
-            let link = self.link.clone();
-
+            let link = ctx.link().clone();
             // update current_component_uuid for checking change component in route
             self.current_component_uuid = target_component_uuid.clone();
 
@@ -228,32 +219,29 @@ impl Component for ComponentSettings {
                     component_uuid: target_component_uuid,
                     ipt_companies_arg,
                 })).await.unwrap();
-
                 link.send_message(Msg::GetComponentData(res.clone()));
                 link.send_message(Msg::GetListOpt(res));
             })
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let link = ctx.link().clone();
 
         match msg {
             Msg::OpenComponent => {
                 // Redirect to component page
-                self.router_agent.send(ChangeRoute(
-                    AppRoute::ShowComponent(self.current_component_uuid.clone()).into()
-                ));
+                self.router_agent.send(
+                    ChangeRoute(ShowComponent { uuid: self.current_component_uuid.clone() }.into())
+                );
             },
             Msg::RequestManager => {
                 if self.update_component {
-                    self.link.send_message(Msg::RequestUpdateComponentData)
+                    ctx.link().send_message(Msg::RequestUpdateComponentData)
                 }
-
                 if self.update_component_access {
-                    self.link.send_message(Msg::RequestChangeAccess)
+                    ctx.link().send_message(Msg::RequestChangeAccess)
                 }
-
                 self.update_component = false;
                 self.update_component_access = false;
                 self.update_component_supplier = false;
@@ -263,7 +251,7 @@ impl Component for ComponentSettings {
                 self.get_result_access = false;
             },
             Msg::RequestComponentFilesList => {
-                let component_uuid = self.props.component_uuid.clone();
+                let component_uuid = ctx.props().component_uuid.clone();
                 spawn_local(async move {
                     let ipt_component_files_arg = component_files_list::IptComponentFilesArg{
                         filesUuids: None,
@@ -400,7 +388,7 @@ impl Component for ComponentSettings {
                                 let file_name = file.name().clone();
                                 debug!("file name: {:?}", file_name);
                                 let task = {
-                                    let callback = self.link
+                                    let callback = ctx.link()
                                         .callback(move |data: FileData| Msg::RequestUploadFile(data.content));
                                     ReaderService::read_file(file.clone(), callback).unwrap()
                                 };
@@ -438,10 +426,10 @@ impl Component for ComponentSettings {
                         self.current_component_uuid = component_data.uuid.clone();
                         self.current_component_is_base = component_data.is_base;
                         self.current_component = Some(component_data.clone());
-                        // if let Some(user) = &self.props.current_user {
+                        // if let Some(user) = &ctx.props().current_user {
                         //     self.current_user_owner = component_data.owner_user.uuid == user.uuid;
                         // }
-                        self.current_modifications = {component_data.component_modifications.clone()};
+                        self.current_modifications = component_data.component_modifications.clone();
                         self.files_list = component_data.files.clone();
                         self.request_component = component_data.into();
                     },
@@ -543,7 +531,7 @@ impl Component for ComponentSettings {
                         let result: UUID = serde_json::from_value(res_value.get("deleteComponent").unwrap().clone()).unwrap();
                         debug!("deleteComponent: {:?}", result);
                         if self.current_component_uuid == result {
-                            self.router_agent.send(ChangeRoute(AppRoute::Home.into()))
+                            self.router_agent.send(ChangeRoute(Home.into()))
                         }
                     },
                     true => link.send_message(Msg::ResponseError(get_error(&data))),
@@ -610,17 +598,17 @@ impl Component for ComponentSettings {
         true
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.component_uuid == props.component_uuid {
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+        if self.current_component_uuid == ctx.props().component_uuid {
             false
         } else {
-            self.props = props;
+            self.current_component_uuid = ctx.props().component_uuid;
             true
         }
     }
 
-    fn view(&self) -> Html {
-        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let onclick_clear_error = ctx.link().callback(|_| Msg::ClearError);
 
         html!{
             <div class="component-page">
@@ -628,20 +616,20 @@ impl Component for ComponentSettings {
                     <div class="row">
                         <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error.clone())}/>
                         // <br/>
-                        {self.show_manage_btn()}
+                        {self.show_manage_btn(ctx.link())}
                         <br/>
-                        {self.show_main_card()}
+                        {self.show_main_card(ctx.link())}
                         {match &self.current_component {
                             Some(component_data) => html!{<>
                                 <br/>
                                 {self.show_modifications_table()}
                                 <br/>
                                 <div class="columns">
-                                    {self.update_component_favicon()}
+                                    {self.update_component_favicon(ctx.link())}
                                     {self.show_additional_params(component_data)}
                                 </div>
                                 // <br/>
-                                {self.show_component_files()}
+                                {self.show_component_files(ctx.link())}
                                 <br/>
                                 <div class="columns">
                                   {self.show_component_standards(component_data)}
@@ -663,12 +651,12 @@ impl Component for ComponentSettings {
 }
 
 impl ComponentSettings {
-    fn show_main_card(&self) -> Html {
-        let oninput_name = self.link
-            .callback(|ev: InputData| Msg::UpdateName(ev.value));
-
-        let oninput_description = self.link
-            .callback(|ev: InputData| Msg::UpdateDescription(ev.value));
+    fn show_main_card(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let oninput_name = link.callback(|ev: Event| Msg::UpdateName(ev.value));
+        let oninput_description = link.callback(|ev: Event| Msg::UpdateDescription(ev.value));
 
         html!{<div class="card">
             <div class="column">
@@ -701,7 +689,7 @@ impl ComponentSettings {
                         Some(component_data) => self.show_component_licenses(component_data),
                         None => html!{},
                     }}
-                    {self.show_component_params()}
+                    {self.show_component_params(link)}
                 </div>
             </div>
         </div>}
@@ -718,22 +706,25 @@ impl ComponentSettings {
         />}
     }
 
-    fn show_component_params(&self) -> Html {
-        let onchange_actual_status_id = self.link
-            .callback(|ev: ChangeData| Msg::UpdateActualStatusId(match ev {
-              ChangeData::Select(el) => el.value(),
+    fn show_component_params(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onchange_actual_status_id =
+            link.callback(|ev: Event| Msg::UpdateActualStatusId(match ev {
+              Event::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
 
-        let onchange_change_component_type = self.link
-            .callback(|ev: ChangeData| Msg::UpdateComponentTypeId(match ev {
-              ChangeData::Select(el) => el.value(),
+        let onchange_change_component_type =
+            link.callback(|ev: Event| Msg::UpdateComponentTypeId(match ev {
+              Event::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
 
-        let onchange_change_type_access = self.link
-            .callback(|ev: ChangeData| Msg::UpdateTypeAccessId(match ev {
-              ChangeData::Select(el) => el.value(),
+        let onchange_change_type_access =
+            link.callback(|ev: Event| Msg::UpdateTypeAccessId(match ev {
+              Event::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
 
@@ -824,8 +815,11 @@ impl ComponentSettings {
         </div>}
     }
 
-    fn update_component_favicon(&self) -> Html {
-        let callback_update_favicon = self.link.callback(|_| Msg::Ignore);
+    fn update_component_favicon(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let callback_update_favicon = link.callback(|_| Msg::Ignore);
 
         html!{<div class="column">
             <h2 class="has-text-weight-bold">{ get_value_field(&184) }</h2> // Update image for preview
@@ -838,7 +832,10 @@ impl ComponentSettings {
         </div>}
     }
 
-    fn show_component_files(&self) -> Html {
+    fn show_component_files(
+        self,
+        link: &Scope<Self>,
+    ) -> Html {
         html!{<>
             <h2 class="has-text-weight-bold">{ get_value_field(&187) }</h2> // Manage component files
             <div class="card column">
@@ -854,7 +851,7 @@ impl ComponentSettings {
                     </div>
                     <div class="column">
                       <h2 class="has-text-weight-bold">{ get_value_field(&186) }</h2> // Upload component files
-                      {self.show_frame_upload_files()}
+                      {self.show_frame_upload_files(link)}
                     </div>
                 </div>
             </div>
@@ -923,13 +920,13 @@ impl ComponentSettings {
         </>}
     }
 
-    fn show_manage_btn(&self) -> Html {
-        let onclick_open_component =
-            self.link.callback(|_| Msg::OpenComponent);
-        let onclick_show_delete_modal =
-            self.link.callback(|_| Msg::ChangeHideDeleteComponent);
-        let onclick_save_changes =
-            self.link.callback(|_| Msg::RequestManager);
+    fn show_manage_btn(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onclick_open_component = link.callback(|_| Msg::OpenComponent);
+        let onclick_show_delete_modal = link.callback(|_| Msg::ChangeHideDeleteComponent);
+        let onclick_save_changes = link.callback(|_| Msg::RequestManager);
 
         html!{
             <div class="media">
@@ -949,7 +946,7 @@ impl ComponentSettings {
                     }}
                 </div>
                 <div class="media-right">
-                    {self.modal_delete_component()}
+                    {self.modal_delete_component(link)}
                     <div class="buttons">
                         <button
                             id="delete-component"
@@ -970,13 +967,13 @@ impl ComponentSettings {
         }
     }
 
-    fn modal_delete_component(&self) -> Html {
-        let onclick_hide_modal = self.link
-            .callback(|_| Msg::ChangeHideDeleteComponent);
-        let oninput_delete_component = self.link
-            .callback(|ev: InputData| Msg::UpdateConfirmDelete(ev.value));
-        let onclick_delete_component = self.link
-            .callback(|_| Msg::RequestDeleteComponent);
+    fn modal_delete_component(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onclick_hide_modal = link.callback(|_| Msg::ChangeHideDeleteComponent);
+        let oninput_delete_component = link.callback(|ev: Event| Msg::UpdateConfirmDelete(ev.value));
+        let onclick_delete_component = link.callback(|_| Msg::RequestDeleteComponent);
 
         let class_modal = match &self.hide_delete_modal {
             true => "modal",
@@ -1023,9 +1020,12 @@ impl ComponentSettings {
         }
     }
 
-    fn show_frame_upload_files(&self) -> Html {
-        let onchange_upload_files = self.link.callback(move |value| {
-            if let ChangeData::Files(files) = value {
+    fn show_frame_upload_files(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onchange_upload_files = link.callback(move |value| {
+            if let Event::Files(files) = value {
                 Msg::UpdateFiles(files)
             } else {
                 Msg::Ignore
@@ -1058,14 +1058,17 @@ impl ComponentSettings {
               </label>
             </div>
             <div class="buttons">
-                {self.show_clear_btn()}
-                {self.show_upload_files_btn()}
+                {self.show_clear_btn(link)}
+                {self.show_upload_files_btn(link)}
             </div>
         </>}
     }
 
-    fn show_clear_btn(&self) -> Html {
-        let onclick_clear_boxed = self.link.callback(|_| Msg::ClearFilesBoxed);
+    fn show_clear_btn(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onclick_clear_boxed = link.callback(|_| Msg::ClearFilesBoxed);
 
         html!{
             <button id="clear-upload-component-files"
@@ -1080,8 +1083,11 @@ impl ComponentSettings {
         }
     }
 
-    fn show_upload_files_btn(&self) -> Html {
-        let onclick_upload_files = self.link.callback(|_| Msg::RequestUploadComponentFiles);
+    fn show_upload_files_btn(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onclick_upload_files = link.callback(|_| Msg::RequestUploadComponentFiles);
 
         let class_upload_btn = match self.active_loading_files_btn {
             true => "button is-loading",

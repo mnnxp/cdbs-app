@@ -1,12 +1,10 @@
-use yew::{agent::Bridged, html, Bridge, Callback, Component, ComponentLink, Html, Properties, ShouldRender};
+use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, Event};
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
-use crate::routes::AppRoute;
+use crate::routes::AppRoute::Login;
 use crate::error::Error;
 
 pub struct ListErrors {
     router_agent: Box<dyn Bridge<RouteAgent>>,
-    link: ComponentLink<Self>,
-    props: Props,
 }
 
 #[derive(Properties, Clone)]
@@ -25,43 +23,38 @@ impl Component for ListErrors {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         ListErrors {
-            router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
-            link,
-            props
+            router_agent: RouteAgent::bridge(ctx.link().callback(|_| Msg::Ignore)),
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::CloseError => {
-                self.props.error = None;
-                if let Some(clear) = &self.props.clear_error {
+                ctx.props().error = None;
+                if let Some(clear) = &ctx.props().clear_error {
                     clear.emit(());
                 };
             },
             Msg::RedirectToLogin => {
                 // Redirect to login page
-                self.router_agent.send(ChangeRoute(
-                    AppRoute::Login.into()
-                ));
+                self.router_agent.send(ChangeRoute(Login.into()));
             },
             Msg::Ignore => {},
         }
         true
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        self.props = props;
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
         true
     }
 
-    fn view(&self) -> Html {
-        let onclick_close_error = self.link.callback(|_| Msg::CloseError);
-        let onclick_route_to_login = self.link.callback(|_| Msg::RedirectToLogin);
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let onclick_close_error = ctx.link().callback(|_| Msg::CloseError);
+        let onclick_route_to_login = ctx.link().callback(|_| Msg::RedirectToLogin);
 
-        if let Some(error) = &self.props.error {
+        if let Some(error) = &ctx.props().error {
             match error {
                 Error::UnprocessableEntity(error_info) => {
                     html!{<div class={vec!("notification", "is-danger")}>

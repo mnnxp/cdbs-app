@@ -1,9 +1,9 @@
 mod banner;
 mod main_view;
 
-use yew::{Bridged, classes, html, Bridge, Component, ComponentLink, Html, ShouldRender};
+use yew::{Bridged, classes, html, Bridge, Component, ComponentLink, Html};
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
-use crate::routes::AppRoute;
+use crate::routes::AppRoute::{self, Profile};
 use crate::services::{get_logged_user, get_value_field};
 
 use banner::Banner;
@@ -27,24 +27,26 @@ impl Component for Home {
         Home { router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)) }
     }
 
-    fn rendered(&mut self, first_render: bool) {
+    fn rendered(&mut self, _ctx: &Context<Self>, first_render: bool) {
         if first_render {
             if let Some(user) = get_logged_user() {
                 // route to profile page if user already logged
-                self.router_agent.send(ChangeRoute(AppRoute::Profile(user.username).into()));
+                self.router_agent.send(
+                    ChangeRoute(Profile { username: user.username }.into())
+                );
             };
         }
     }
 
-    fn update(&mut self, _msg: Self::Message) -> ShouldRender {
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         false
     }
 
-    fn change(&mut self, _props: Self::Properties) -> ShouldRender {
+    fn changed(&mut self, _ctx: &Context<Self>) -> bool {
         false
     }
 
-    fn view(&self) -> Html {
+    fn view(&self, ctx: &Context<Self>) -> Html {
         html!{
             <div class={classes!("tile", "is-ancestor", "is-vertical")}>
                 <div class="tile is-child hero">

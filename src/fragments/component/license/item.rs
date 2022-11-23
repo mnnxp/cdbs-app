@@ -1,7 +1,4 @@
-use yew::{
-    html, Callback, Component, ComponentLink,
-    Html, Properties, ShouldRender,
-};
+use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
 use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
@@ -16,10 +13,9 @@ use crate::gqls::component::{DeleteComponentLicense, delete_component_license};
 /// License card for show data on component page
 pub struct ComponentLicenseTag {
     error: Option<Error>,
-    props: Props,
-    link: ComponentLink<Self>,
     open_license_info: bool,
     get_result_delete: bool,
+    license_data_id: usize,
 }
 
 #[derive(Properties, Clone)]
@@ -43,24 +39,23 @@ impl Component for ComponentLicenseTag {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         ComponentLicenseTag {
             error: None,
-            props,
-            link,
             open_license_info: false,
             get_result_delete: false,
+            license_data_id: ctx.props().license_data.id,
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let link = ctx.link().clone();
 
         match msg {
             Msg::ShowLicenseCard => self.open_license_info = !self.open_license_info,
             Msg::RequestDeleteLicense => {
-                let component_uuid = self.props.component_uuid.clone();
-                let license_id = self.props.license_data.id as i64;
+                let component_uuid = ctx.props().component_uuid.clone();
+                let license_id = ctx.props().license_data.id as i64;
                 spawn_local(async move {
                     let ipt_component_license_data = delete_component_license::IptComponentLicenseData{
                         componentUuid: component_uuid,
@@ -83,11 +78,11 @@ impl Component for ComponentLicenseTag {
                     false => {
                         let result: usize = serde_json::from_value(res.get("deleteComponentLicense").unwrap().clone()).unwrap();
                         debug!("deleteComponentLicense: {:?}", result);
-                        match &self.props.delete_license {
+                        match &ctx.props().delete_license {
                             Some(delete_license) => {
                                 if result > 0 {
                                     self.get_result_delete = true;
-                                    delete_license.emit(self.props.license_data.id);
+                                    delete_license.emit(ctx.props().license_data.id);
                                 };
                             },
                             None => self.get_result_delete = result > 0,
@@ -101,55 +96,58 @@ impl Component for ComponentLicenseTag {
         true
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        match self.props.license_data.id == props.license_data.id {
-            true => false,
-            false => {
-                self.props = props;
-                true
-            },
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+        if self.license_data_id == ctx.props().license_data.id {
+            false
+        } else {
+            self.license_data_id = ctx.props().license_data.id;
+            true
         }
     }
 
-    fn view(&self) -> Html {
+    fn view(&self, ctx: &Context<Self>) -> Html {
         html!{<>
             <ListErrors error={self.error.clone()}/>
             {match self.get_result_delete {
                 true => html!{},
-                false => self.show_license(),
+                false => self.show_license(ctx.link(), ctx.props()),
             }}
         </>}
     }
 }
 
 impl ComponentLicenseTag {
-    fn show_license(&self) -> Html {
-        let onclick_license_data_info = self.link
-            .callback(|_| Msg::ShowLicenseCard);
+    fn show_license(
+        &self,
+        link: &Scope<Self>,
+        props: &Properties,
+    ) -> Html {
+        let onclick_license_data_info = link.callback(|_| Msg::ShowLicenseCard);
 
-        let onclick_delete_license = self.link
-            .callback(|_| Msg::RequestDeleteLicense);
+        let onclick_delete_license = link.callback(|_| Msg::RequestDeleteLicense);
 
         html!{<>
             // {self.show_modal_license_info()}
-            {match self.props.show_delete_btn {
+            {match props.show_delete_btn {
                 true => html!{<div class="tags has-addons" style="margin-left: 1rem" >
                   <span class="tag is-light" onclick={onclick_license_data_info}>
-                    {self.props.license_data.keyword.clone()}
+                    {props.license_data.keyword.clone()}
                   </span>
                   <a class="tag is-delete is-small is-light" onclick={onclick_delete_license} />
                 </div>},
                 false => html!{<span class="tag is-light"
                     style="margin-left: 1rem"
                     onclick={onclick_license_data_info} >
-                  {self.props.license_data.keyword.clone()}
+                  {props.license_data.keyword.clone()}
                 </span>},
             }}
         </>}
     }
-    // fn show_modal_license_info(&self) -> Html {
-    //     let onclick_license_data_info = self.link
-    //         .callback(|_| Msg::ShowLicenseCard);
+    // fn show_modal_license_info(
+    //     &self,
+    //     link: &Scope<Self>,=
+    // ) -> Html {
+    //     let onclick_license_data_info = link.callback(|_| Msg::ShowLicenseCard);
     //
     //     let class_modal = match &self.open_license_info {
     //         true => "modal is-active",

@@ -1,5 +1,4 @@
-use yew::prelude::*;
-use yew::{Component, Callback, ComponentLink, Html, Properties, ShouldRender, html};
+use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, Event};
 use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
@@ -18,8 +17,6 @@ pub struct Props {
 
 pub struct RegisterParamnameBlock {
     error: Option<Error>,
-    props: Props,
-    link: ComponentLink<Self>,
     request_new_paramname: String,
     set_param_value: String,
     active_loading_btn: bool,
@@ -40,11 +37,9 @@ impl Component for RegisterParamnameBlock {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         Self {
             error: None,
-            props,
-            link,
             request_new_paramname: String::new(),
             set_param_value: String::new(),
             active_loading_btn: false,
@@ -52,8 +47,8 @@ impl Component for RegisterParamnameBlock {
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let link = ctx.link().clone();
 
         match msg {
             Msg::RequestRegisterParamname => {
@@ -79,7 +74,7 @@ impl Component for RegisterParamnameBlock {
                         let value: usize =
                             serde_json::from_value(res_value.get("registerParam").unwrap().clone()).unwrap();
                         debug!("registerParam: {:?}", value);
-                        self.props.callback_add_param.emit((value, self.set_param_value.clone()));
+                        ctx.props().callback_add_param.emit((value, self.set_param_value.clone()));
                         self.active_loading_btn = false;
 
                         // clear old data
@@ -100,31 +95,29 @@ impl Component for RegisterParamnameBlock {
         true
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        self.props = props;
-        true
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+        false
     }
 
-    fn view(&self) -> Html {
-        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let onclick_clear_error = ctx.link().callback(|_| Msg::ClearError);
 
         html!{<>
             <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error.clone())}/>
-            {self.add_paramname()}
+            {self.add_paramname(ctx.link(), ctx.props())}
         </>}
     }
 }
 
 impl RegisterParamnameBlock {
-    fn add_paramname(&self) -> Html {
-        let onclick_register_paramname = self.link.callback(|_| Msg::RequestRegisterParamname);
-
-        let oninput_set_paramname =
-            self.link.callback(|ev: InputData| Msg::UpdateParamname(ev.value));
-
-        let oninput_set_param_value =
-            self.link.callback(|ev: InputData| Msg::UpdateParamValue(ev.value));
-
+    fn add_paramname(
+        &self,
+        link: &Scope<Self>,
+        props: &Properties,
+    ) -> Html {
+        let onclick_register_paramname = link.callback(|_| Msg::RequestRegisterParamname);
+        let oninput_set_paramname = link.callback(|ev: Event| Msg::UpdateParamname(ev.value));
+        let oninput_set_param_value = link.callback(|ev: Event| Msg::UpdateParamValue(ev.value));
         let class_btn = match self.active_loading_btn {
             true => "button is-loading is-fullwidth",
             false => "button is-fullwidth",
@@ -157,7 +150,8 @@ impl RegisterParamnameBlock {
                 <button
                     id="add-paramname"
                     class={class_btn}
-                    disabled={self.disable_btn || self.request_new_paramname.is_empty() ||
+                    disabled={self.disable_btn ||
+                        self.request_new_paramname.is_empty() ||
                         self.set_param_value.is_empty()}
                     onclick={onclick_register_paramname} >
                     { get_value_field(&117) }

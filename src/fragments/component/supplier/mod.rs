@@ -3,8 +3,7 @@ mod supplier_item;
 pub use supplier_item::ComponentSupplierItem;
 
 use std::collections::BTreeSet;
-use yew::prelude::*;
-use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
+use yew::{Component, Context, html, html::Scope, Html, Properties, Event};
 use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
@@ -33,9 +32,10 @@ pub struct Props {
 
 pub struct ComponentSuppliersCard {
     error: Option<Error>,
-    props: Props,
-    link: ComponentLink<Self>,
     company_uuids: BTreeSet<UUID>,
+    component_uuid: UUID,
+    component_suppliers_len: usize,
+    supplier_list_len: usize,
     component_suppliers: Vec<Supplier>,
     request_set_supplier_uuid: UUID,
     request_set_supplier_description: String,
@@ -63,33 +63,28 @@ impl Component for ComponentSuppliersCard {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         let mut company_uuids: BTreeSet<UUID> = BTreeSet::new();
-
-        for company in props.component_suppliers.iter() {
+        for company in ctx.props().component_suppliers.iter() {
             company_uuids.insert(company.supplier.uuid.clone());
         };
 
-        let request_set_supplier_uuid =
-            props.supplier_list.first().map(|s| s.uuid.clone()).unwrap_or_default();
-
-        let component_suppliers = props.component_suppliers.clone();
-
         Self {
             error: None,
-            props,
-            link,
             company_uuids,
-            component_suppliers,
-            request_set_supplier_uuid,
+            component_uuid: ctx.props().component_uuid,
+            component_suppliers_len: ctx.props().component_suppliers.len(),
+            supplier_list_len: ctx.props().supplier_list.len(),
+            component_suppliers: ctx.props().component_suppliers.clone(),
+            request_set_supplier_uuid: ctx.props().supplier_list.first().map(|s| s.uuid.clone()).unwrap_or_default(),
             request_set_supplier_description: String::new(),
             hide_set_supplier_modal: true,
             // get_result_supplier: false,
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let link = ctx.link().clone();
 
         match msg {
             Msg::DeleteComponentCompany(company_uuid) => {
@@ -97,7 +92,7 @@ impl Component for ComponentSuppliersCard {
             },
             Msg::RequestChangeOwnerSupplier => {
                 let ipt_supplier_component_data = set_company_owner_supplier::IptSupplierComponentData{
-                    componentUuid: self.props.component_uuid.clone(),
+                    componentUuid: ctx.props().component_uuid.clone(),
                     companyUuid: self.request_set_supplier_uuid.clone(),
                     description: self.request_set_supplier_description.clone(),
                 };
@@ -110,7 +105,7 @@ impl Component for ComponentSuppliersCard {
             },
             Msg::RequestAddSupplier => {
                 let ipt_supplier_component_data = add_component_supplier::IptSupplierComponentData{
-                    componentUuid: self.props.component_uuid.clone(),
+                    componentUuid: ctx.props().component_uuid.clone(),
                     companyUuid: self.request_set_supplier_uuid.clone(),
                     description: self.request_set_supplier_description.clone(),
                 };
@@ -122,7 +117,7 @@ impl Component for ComponentSuppliersCard {
                 })
             },
             Msg::RequestComponentSuppliers => {
-                let component_uuid = self.props.component_uuid.clone();
+                let component_uuid = ctx.props().component_uuid.clone();
                 spawn_local(async move {
                     let res = make_query(ComponentSuppliers::build_query(
                         component_suppliers::Variables { component_uuid }
@@ -189,42 +184,46 @@ impl Component for ComponentSuppliersCard {
         true
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.component_uuid == props.component_uuid &&
-             self.props.component_suppliers.len() == props.component_suppliers.len() &&
-               self.props.supplier_list.len() == props.supplier_list.len() {
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+        if self.component_uuid == ctx.props().component_uuid &&
+             self.component_suppliers_len == ctx.props().component_suppliers.len() &&
+               self.supplier_list_len == ctx.props().supplier_list.len() {
             false
         } else {
             self.company_uuids = BTreeSet::new();
-            for company in props.component_suppliers.iter() {
+            for company in ctx.props().component_suppliers.iter() {
                 self.company_uuids.insert(company.supplier.uuid.clone());
             };
             self.request_set_supplier_uuid =
-                props.supplier_list.first().map(|s| s.uuid.clone()).unwrap_or_default();
+                ctx.props().supplier_list.first().map(|s| s.uuid.clone()).unwrap_or_default();
             self.request_set_supplier_description = String::new();
             self.hide_set_supplier_modal = true;
-            self.props = props;
+            self.component_uuid == ctx.props().component_uuid;
+            self.component_suppliers_len == ctx.props().component_suppliers.len();
+            self.supplier_list_len == ctx.props().supplier_list.len();
             true
         }
     }
 
-    fn view(&self) -> Html {
-        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let onclick_clear_error = ctx.link().callback(|_| Msg::ClearError);
 
         html!{<>
             <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error.clone())}/>
-            {self.show_suppliers()}
+            {self.show_suppliers(ctx.link(), ctx.props())}
         </>}
     }
 }
 
 impl ComponentSuppliersCard {
-    fn show_suppliers(&self) -> Html {
-        let onclick_delete_supplier = self.link
-            .callback(|value: UUID| Msg::DeleteComponentCompany(value));
-
-        let onclick_action_btn = self.link
-            .callback(|_| Msg::ChangeHideSetSupplier);
+    fn show_suppliers(
+        &self,
+        link: &Scope<Self>,
+        props: &Properties,
+    ) -> Html {
+        let onclick_delete_supplier =
+            link.callback(|value: UUID| Msg::DeleteComponentCompany(value));
+        let onclick_action_btn = link.callback(|_| Msg::ChangeHideSetSupplier);
 
         html!{<div class="card column">
           <table class="table is-fullwidth">
@@ -232,15 +231,15 @@ impl ComponentSuppliersCard {
                <th>{ get_value_field(&109) }</th> // Company
                <th>{ get_value_field(&61) }</th> // Description
                <th>{ get_value_field(&111) }</th> // Action
-               {match self.props.show_delete_btn {
+               {match props.show_delete_btn {
                    true => html!{<th>{ get_value_field(&135) }</th>}, // Delete
                    false => html!{},
                }}
                {for self.component_suppliers.iter().map(|data| {
                    match self.company_uuids.get(&data.supplier.uuid) {
                        Some(_) => html!{<ComponentSupplierItem
-                           show_delete_btn = {self.props.show_delete_btn}
-                           component_uuid = {self.props.component_uuid.clone()}
+                           show_delete_btn = {props.show_delete_btn}
+                           component_uuid = {props.component_uuid.clone()}
                            supplier_data = {data.clone()}
                            delete_supplier = {Some(onclick_delete_supplier.clone())}
                          />},
@@ -249,9 +248,9 @@ impl ComponentSuppliersCard {
                })}
             </tbody>
           </table>
-          {match self.props.is_base {
-              true => self.modal_add_supplier(),
-              false => self.modal_set_owner_supplier(),
+          {match props.is_base {
+              true => self.modal_add_supplier(link, props),
+              false => self.modal_set_owner_supplier(link, props),
           }}
           <button
                 id="set-supplier-component"
@@ -265,22 +264,20 @@ impl ComponentSuppliersCard {
         </div>}
     }
 
-    fn modal_set_owner_supplier(&self) -> Html {
-        let onclick_set_owner_supplier = self.link
-            .callback(|_| Msg::RequestChangeOwnerSupplier);
-
-        let onclick_hide_modal = self.link
-            .callback(|_| Msg::ChangeHideSetSupplier);
-
-        let onchange_select_set_supplier = self.link
-            .callback(|ev: ChangeData| Msg::UpdateSetSupplier(match ev {
-              ChangeData::Select(el) => el.value(),
+    fn modal_set_owner_supplier(
+        &self,
+        link: &Scope<Self>,
+        props: &Properties,
+    ) -> Html {
+        let onclick_set_owner_supplier = link.callback(|_| Msg::RequestChangeOwnerSupplier);
+        let onclick_hide_modal = link.callback(|_| Msg::ChangeHideSetSupplier);
+        let onchange_select_set_supplier =
+            link.callback(|ev: Event| Msg::UpdateSetSupplier(match ev {
+              Event::Select(el) => el.value(),
               _ => String::new(),
           }));
-
-        let oninput_supplier_description = self.link
-            .callback(|ev: InputData| Msg::UpdateSupplierDescription(ev.value));
-
+        let oninput_supplier_description =
+            link.callback(|ev: Event| Msg::UpdateSupplierDescription(ev.value));
         let class_modal = match &self.hide_set_supplier_modal {
             true => "modal",
             false => "modal is-active",
@@ -303,7 +300,7 @@ impl ComponentSuppliersCard {
                               select={self.request_set_supplier_uuid.clone()}
                               onchange={onchange_select_set_supplier}
                             >
-                          { for self.props.supplier_list.iter().map(|x|
+                          { for props.supplier_list.iter().map(|x|
                               html!{
                                   <option value={x.uuid.to_string()}
                                         selected={x.uuid == self.request_set_supplier_uuid} >
@@ -338,22 +335,20 @@ impl ComponentSuppliersCard {
         }
     }
 
-    fn modal_add_supplier(&self) -> Html {
-        let onclick_add_supplier = self.link
-            .callback(|_| Msg::RequestAddSupplier);
-
-        let onclick_hide_modal = self.link
-            .callback(|_| Msg::ChangeHideSetSupplier);
-
-        let onchange_select_add_supplier = self.link
-            .callback(|ev: ChangeData| Msg::UpdateSetSupplier(match ev {
-              ChangeData::Select(el) => el.value(),
+    fn modal_add_supplier(
+        &self,
+        link: &Scope<Self>,
+        props: &Properties,
+    ) -> Html {
+        let onclick_add_supplier = link.callback(|_| Msg::RequestAddSupplier);
+        let onclick_hide_modal = link.callback(|_| Msg::ChangeHideSetSupplier);
+        let onchange_select_add_supplier =
+            link.callback(|ev: Event| Msg::UpdateSetSupplier(match ev {
+              Event::Select(el) => el.value(),
               _ => String::new(),
           }));
-
-        let oninput_supplier_description = self.link
-            .callback(|ev: InputData| Msg::UpdateSupplierDescription(ev.value));
-
+        let oninput_supplier_description =
+            link.callback(|ev: Event| Msg::UpdateSupplierDescription(ev.value));
         let class_modal = match &self.hide_set_supplier_modal {
             true => "modal",
             false => "modal is-active",
@@ -376,7 +371,7 @@ impl ComponentSuppliersCard {
                               select={self.request_set_supplier_uuid.clone()}
                               onchange={onchange_select_add_supplier}
                             >
-                          { for self.props.supplier_list.iter().map(|x|
+                          { for props.supplier_list.iter().map(|x|
                               html!{
                                   <option value={x.uuid.to_string()}
                                         selected={x.uuid == self.request_set_supplier_uuid} >

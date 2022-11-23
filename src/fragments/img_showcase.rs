@@ -1,15 +1,15 @@
 use std::collections::BTreeMap;
-use yew::{classes, html, Component, ComponentLink, Html, Properties, ShouldRender};
+use yew::{Component, Context, html, html::Scope, Html, Properties, classes};
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
 use crate::services::image_detector;
 use crate::types::{DownloadFile, UUID};
 
 pub struct ImgShowcase {
-    props: Props,
+    object_uuid: UUID,
+    file_arr_len: usize,
     selected_img: usize,
     show_image: bool,
-    link: ComponentLink<Self>,
     img_arr: BTreeMap<usize, DownloadFile>,
 }
 
@@ -32,28 +32,28 @@ impl Component for ImgShowcase {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         ImgShowcase {
-            props,
+            object_uuid: ctx.props().object_uuid,
+            file_arr_len: ctx.props().file_arr.len(),
             selected_img: 0,
-            link,
             show_image: false,
             img_arr: BTreeMap::new(),
         }
     }
 
-    fn rendered(&mut self, first_render: bool) {
+    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
         if first_render {
-            self.link.send_message(Msg::ParsingFiles);
+            ctx.link().send_message(Msg::ParsingFiles);
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let link = ctx.link().clone();
 
         match msg {
             Msg::ParsingFiles => {
-                let file_arr = self.props.file_arr.clone();
+                let file_arr = ctx.props().file_arr.clone();
                 spawn_local(async move {
                     let mut img_arr: BTreeMap<usize, DownloadFile> = BTreeMap::new();
                     let mut key = 0;
@@ -76,21 +76,22 @@ impl Component for ImgShowcase {
         true
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.object_uuid == props.object_uuid &&
-              self.props.file_arr.len() == props.file_arr.len() {
-            debug!("no change: {:?}", self.props.file_arr.len());
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+        if self.object_uuid == ctx.props().object_uuid &&
+              self.file_arr_len == ctx.props().file_arr.len() {
+            debug!("no change: {:?}", ctx.props().file_arr.len());
             false
         } else {
-            self.props = props;
-            self.link.send_message(Msg::ParsingFiles);
-            debug!("change: {:?}", self.props.file_arr.len());
+            self.object_uuid == ctx.props().object_uuid;
+            self.file_arr_len == ctx.props().file_arr.len();
+            ctx.link().send_message(Msg::ParsingFiles);
+            debug!("change: {:?}", ctx.props().file_arr.len());
             true
         }
     }
 
-    fn view(&self) -> Html {
-        let onclick_show_image = self.link.callback(|_| Msg::ShowImg);
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let onclick_show_image = ctx.link().callback(|_| Msg::ShowImg);
 
         match self.img_arr.is_empty() {
             true => html!{<div style="padding-left: 0.75rem;" />}, // <-- not found images for display
@@ -100,17 +101,19 @@ impl Component for ImgShowcase {
                       <div class="outBox">
                         <div class="itemBox">
                           {for self.img_arr.iter().map(|x|
-                            {self.item_generator(x.clone())}
+                            {self.item_generator(ctx.link(), x.clone())}
                           )}
                         </div>
                       </div>
                       <div class="mainImgBox">
                           {match self.img_arr.get(&self.selected_img) {
-                              Some(img_data) => html!{<img onclick={onclick_show_image} src={img_data.download_url.clone()} alt="" srcset="" />},
+                              Some(img_data) => html!{
+                                  <img onclick={onclick_show_image} src={img_data.download_url.clone()} alt="" srcset="" />
+                              },
                               None => html!{}, // <-- not found image for display
                           }}
                       </div>
-                      {self.modal_full_image()}
+                      {self.modal_full_image(ctx.link())}
                     </div>
                 </div>
             }
@@ -121,27 +124,29 @@ impl Component for ImgShowcase {
 impl ImgShowcase {
     fn item_generator(
         &self,
+        link: &Scope<Self>,
         img_item: (&usize, &DownloadFile)
     ) -> Html {
         let (idx, image) = img_item;
         let saved_idx = *idx;
-        let onclick_select_img = self.link.callback(move |_| Msg::SetSelectImg(saved_idx));
-
+        let onclick_select_img = link.callback(move |_| Msg::SetSelectImg(saved_idx));
         let mut classes_img = classes!("item");
-        if self.selected_img == saved_idx { classes_img.push("active") };
+        if self.selected_img == saved_idx {
+            classes_img.push("active")
+        };
 
         html!(
-            <div class={classes_img}
-                onclick={onclick_select_img}
-            >
+            <div class={classes_img} onclick={onclick_select_img}>
               <img src={image.download_url.clone()} alt="" srcset="" />
             </div>
         )
     }
 
-    fn modal_full_image(&self) -> Html {
-        let onclick_show_image = self.link.callback(|_| Msg::ShowImg);
-
+    fn modal_full_image(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onclick_show_image = link.callback(|_| Msg::ShowImg);
         let class_modal = match &self.show_image {
             true => "modal is-active",
             false => "modal",
@@ -154,10 +159,7 @@ impl ImgShowcase {
                   <div class="modal-content">
                     <p class="image is-4by3">
                       // <img src="https://bulma.io/images/placeholders/1280x960.png" alt="" />
-                      <img
-                        src={img_data.download_url.clone()}
-                        loading="lazy"
-                      />
+                      <img src={img_data.download_url.clone()} loading="lazy"/>
                     </p>
                   </div>
                   <button class="modal-close is-large" aria-label="close" onclick={onclick_show_image} />

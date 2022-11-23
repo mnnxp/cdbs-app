@@ -13,7 +13,7 @@ pub use fileset::{FilesOfFilesetCard, FileOfFilesetItem, ManageFilesOfFilesetBlo
 pub use item_module::ModificationTableItemModule;
 
 use std::collections::HashMap;
-use yew::{Callback, Component, ComponentLink, Html, Properties, ShouldRender, html};
+use yew::{Component, Context, html, Html, Properties, Callback};
 use log::debug;
 use crate::types::{UUID, ComponentModificationInfo, Param};
 
@@ -27,8 +27,6 @@ pub struct Props {
 }
 
 pub struct ModificationsTable {
-    props: Props,
-    link: ComponentLink<Self>,
     component_uuid: UUID,
     collect_heads: Vec<Param>,
     collect_items: Vec<(UUID, HashMap<usize, String>)>,
@@ -43,10 +41,8 @@ impl Component for ModificationsTable {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         Self {
-            props,
-            link,
             component_uuid: String::new(),
             collect_heads: Vec::new(),
             collect_items: Vec::new(),
@@ -54,8 +50,8 @@ impl Component for ModificationsTable {
         }
     }
 
-    fn rendered(&mut self, first_render: bool) {
-        let props_component_uuid = match self.props.modifications.first().map(|x| x.component_uuid.clone()) {
+    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
+        let props_component_uuid = match ctx.props().modifications.first().map(|x| x.component_uuid.clone()) {
             Some(component_uuid) => component_uuid,
             None => String::new(),
         };
@@ -69,19 +65,19 @@ impl Component for ModificationsTable {
             self.collect_items.clear();
             self.collect_columns.clear();
 
-            self.link.send_message(Msg::ParseParams);
+            ctx.link().send_message(Msg::ParseParams);
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        // let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        // let link = ctx.link().clone();
 
         match msg {
             Msg::ParseParams => {
                 let mut set_heads: Vec<usize> = vec![0];
                 let mut collect_heads: Vec<Param> = Vec::new();
 
-                for modification in &self.props.modifications {
+                for modification in &ctx.props().modifications {
                     self.collect_columns.clear();
                     self.collect_columns.insert(
                         0, modification.modification_name.clone(),
@@ -119,26 +115,20 @@ impl Component for ModificationsTable {
         true
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.select_modification == props.select_modification {
-            match self.props.open_modification_files == props.open_modification_files {
-                true => false,
-                false => {
-                    self.props = props;
-                    true
-                },
-            }
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+        if self.select_modification == ctx.props().select_modification {
+            self.open_modification_files = !ctx.props().open_modification_files;
         } else {
-            self.component_uuid = match props.modifications.first().map(|x| x.component_uuid.clone()) {
+            self.select_modification = ctx.props().select_modification;
+            self.component_uuid = match self.modifications.first().map(|x| x.component_uuid.clone()) {
                 Some(component_uuid) => component_uuid,
                 None => String::new(),
             };
-            self.props = props;
             true
         }
     }
 
-    fn view(&self) -> Html {
+    fn view(&self, ctx: &Context<Self>) -> Html {
         html!{<div class="card">
             <div class="table-container">
               <table class="table is-fullwidth is-striped">
@@ -154,11 +144,11 @@ impl Component for ModificationsTable {
                       modification_uuid = {modification_uuid.clone()}
                       collect_heads = {self.collect_heads.clone()}
                       collect_item = {item.clone()}
-                      select_item = {&self.props.select_modification == modification_uuid}
-                      open_modification_files = {self.props.open_modification_files}
+                      select_item = {&ctx.props().select_modification == modification_uuid}
+                      open_modification_files = {ctx.props().open_modification_files}
                       callback_new_modification_param = {None}
-                      callback_select_modification = {self.props.callback_select_modification.clone()}
-                      callback_open_modification_files = {self.props.callback_open_modification_files.clone()}
+                      callback_select_modification = {ctx.props().callback_select_modification.clone()}
+                      callback_open_modification_files = {ctx.props().callback_open_modification_files.clone()}
                       />}
                  })}
               </table>

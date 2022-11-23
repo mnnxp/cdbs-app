@@ -1,11 +1,11 @@
-use yew::prelude::*;
+use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, classes};
 use yew_router::{
     agent::RouteRequest::ChangeRoute,
     prelude::*,
 };
 // use log::debug;
 use crate::services::get_value_field;
-use crate::routes::AppRoute;
+use crate::routes::AppRoute::ShowComponent;
 use crate::fragments::switch_icon::res_btn;
 use crate::types::ShowComponentShort;
 
@@ -25,36 +25,37 @@ pub struct Props {
 
 pub struct ListItem {
     router_agent: Box<dyn Bridge<RouteAgent>>,
-    link: ComponentLink<Self>,
-    props: Props,
+    component_uuid: UUID,
+    is_followed: bool,
 }
 
 impl Component for ListItem {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         Self {
-            router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
-            link,
-            props,
+            router_agent: RouteAgent::bridge(ctx.link().callback(|_| Msg::Ignore)),
+            component_uuid: ctx.props().data.uuid,
+            is_followed: ctx.props().is_followed,
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::OpenComponent => {
-                // Redirect to profile page
-                self.router_agent.send(ChangeRoute(AppRoute::ShowComponent(
-                    self.props.data.uuid.to_string()
-                ).into()));
+                // Redirect to component page
+                self.router_agent.send(
+                    ChangeRoute(ShowComponent { uuid: ctx.props().data.uuid.to_string() }.into())
+                );
+
                 // debug!("OpenComponent");
             },
             Msg::TriggerFav => {
-                if !self.props.data.is_followed {
-                    self.props.add_fav.emit(String::new());
+                if !ctx.props().data.is_followed {
+                    ctx.props().add_fav.emit(String::new());
                 } else {
-                    self.props.del_fav.emit(String::new());
+                    ctx.props().del_fav.emit(String::new());
                 }
             },
             Msg::Ignore => (),
@@ -62,26 +63,33 @@ impl Component for ListItem {
         true
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.show_list != props.show_list || self.props.data.is_followed != props.data.is_followed || self.props.data.uuid != props.data.uuid {
-            self.props.show_list = props.show_list;
-            self.props.data = props.data;
-            true
-        } else {
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+        if self.show_list == ctx.props().show_list ||
+            self.component_uuid == ctx.props().data.uuid ||
+            self.is_followed == ctx.props().data.is_followed {
             false
+        } else {
+            self.show_list = ctx.props().show_list;
+            self.component_uuid = ctx.props().data.uuid;
+            self.is_followed = ctx.props().is_followed;
+            true
         }
     }
 
-    fn view(&self) -> Html {
-      match self.props.show_list {
-        true => self.showing_in_list(),
-        false => self.showing_in_box(),
+    fn view(&self, ctx: &Context<Self>) -> Html {
+      match ctx.props().show_list {
+        true => self.showing_in_list(ctx.link(), ctx.props()),
+        false => self.showing_in_box(ctx.link(), ctx.props()),
       }
     }
 }
 
 impl ListItem {
-    fn showing_in_list(&self) -> Html {
+    fn showing_in_list(
+        &self,
+        link: &Scope<Self>,
+        props: &Properties,
+    ) -> Html {
         let ShowComponentShort {
             // uuid,
             name,
@@ -98,12 +106,11 @@ impl ListItem {
             // files,
             component_suppliers,
             ..
-        } = &self.props.data;
+        } = &props.data;
 
-        let onclick_open_component = self.link
-            .callback(|_| Msg::OpenComponent);
+        let onclick_open_component = link.callback(|_| Msg::OpenComponent);
 
-        let trigger_fab_btn = self.link.callback(|_| Msg::TriggerFav);
+        let trigger_fab_btn = link.callback(|_| Msg::TriggerFav);
 
         let mut class_res_btn = vec!["fa-bookmark"];
         let mut class_color_btn = "";
@@ -194,25 +201,27 @@ impl ListItem {
         }
     }
 
-    fn showing_in_box(&self) -> Html {
+    fn showing_in_box(
+        &self,
+        link: &Scope<Self>,
+        props: &Properties,
+    ) -> Html {
         let ShowComponentShort {
             is_base,
             is_followed,
             image_file,
             name,
             ..
-        } = self.props.data.clone();
+        } = props.data.clone();
 
-        let component_supplier = self.props.data.component_suppliers
+        let component_supplier = props.data.component_suppliers
             .first()
             .map(|s| s.supplier.shortname.clone())
             .unwrap_or_default();
 
-        let onclick_open_component = self.link
-            .callback(|_| Msg::OpenComponent);
+        let onclick_open_component = link.callback(|_| Msg::OpenComponent);
 
-        let trigger_fab_btn = self.link
-            .callback(|_| Msg::TriggerFav);
+        let trigger_fab_btn = link.callback(|_| Msg::TriggerFav);
 
         let mut class_res_btn = vec![];
         let mut class_color_btn = "";

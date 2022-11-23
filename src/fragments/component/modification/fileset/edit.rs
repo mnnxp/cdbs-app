@@ -1,6 +1,6 @@
 use yew::services::fetch::FetchTask;
 use yew::services::reader::{File, FileData, ReaderService, ReaderTask};
-use yew::{Component, Callback, ComponentLink, Html, Properties, ShouldRender, html, ChangeData};
+use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, Event};
 use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
@@ -42,8 +42,6 @@ pub struct ManageModificationFilesets {
     request_fileset_program_id: usize,
     task_read: Vec<(FileName, ReaderTask)>,
     task: Vec<FetchTask>,
-    props: Props,
-    link: ComponentLink<Self>,
     filesets_program: Vec<(UUID, String)>,
     select_fileset_uuid: UUID,
     files_list: Vec<ShowFileInfo>,
@@ -88,9 +86,8 @@ impl Component for ManageModificationFilesets {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        let filesets_program = props.filesets_program.clone();
-        let select_fileset_uuid = props.filesets_program
+    fn create(ctx: &Context<Self>) -> Self {
+        let select_fileset_uuid = ctx.props().filesets_program
             .first()
             .map(|(fileset_uuid, program_name)| {
                 debug!("mod fileset_uuid: {:?}", fileset_uuid);
@@ -102,14 +99,12 @@ impl Component for ManageModificationFilesets {
         Self {
             error: None,
             request_upload_data: Vec::new(),
-            request_upload_file: link.callback(Msg::ResponseUploadFile),
+            request_upload_file: ctx.link().callback(Msg::ResponseUploadFile),
             request_upload_confirm: Vec::new(),
             request_fileset_program_id: 1,
             task_read: Vec::new(),
             task: Vec::new(),
-            props,
-            link,
-            filesets_program,
+            filesets_program: ctx.props().filesets_program.clone(),
             select_fileset_uuid,
             files_list: Vec::new(),
             programs: Vec::new(),
@@ -123,14 +118,14 @@ impl Component for ManageModificationFilesets {
         }
     }
 
-    fn rendered(&mut self, first_render: bool) {
+    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
         if first_render {
-            self.link.send_message(Msg::RequestFilesOfFileset);
+            ctx.link().send_message(Msg::RequestFilesOfFileset);
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let link = ctx.link().clone();
 
         match msg {
             Msg::RequestProgramsList => {
@@ -144,7 +139,7 @@ impl Component for ManageModificationFilesets {
             },
             Msg::RequestNewFileset => {
                 let ipt_fileset_program_data = register_modification_fileset::IptFilesetProgramData{
-                    modificationUuid: self.props.select_modification_uuid.clone(),
+                    modificationUuid: ctx.props().select_modification_uuid.clone(),
                     programId: self.request_fileset_program_id as i64,
                 };
                 spawn_local(async move {
@@ -157,7 +152,7 @@ impl Component for ManageModificationFilesets {
             },
             Msg::RequestDeleteFileset => {
                 let del_fileset_program_data = delete_modification_fileset::DelFilesetProgramData{
-                    modificationUuid: self.props.select_modification_uuid.clone(),
+                    modificationUuid: ctx.props().select_modification_uuid.clone(),
                     filesetUuid: self.select_fileset_uuid.clone(),
                 };
                 spawn_local(async move {
@@ -337,7 +332,7 @@ impl Component for ManageModificationFilesets {
 
                             self.filesets_program = update_filesets;
 
-                            self.link.send_message(Msg::RequestFilesOfFileset);
+                            ctx.link().send_message(Msg::RequestFilesOfFileset);
                         }
                     },
                     true => link.send_message(Msg::ResponseError(get_error(&data))),
@@ -371,7 +366,7 @@ impl Component for ManageModificationFilesets {
                                 let file_name = file.name().clone();
                                 debug!("file name: {:?}", file_name);
                                 let task = {
-                                    let callback = self.link
+                                    let callback = ctx.link()
                                         .callback(move |data: FileData| Msg::RequestUploadFile(data.content));
                                     ReaderService::read_file(file.clone(), callback).unwrap()
                                 };
@@ -431,7 +426,7 @@ impl Component for ManageModificationFilesets {
                 debug!("SelectFileset: {:?}", fileset_uuid);
                 self.select_fileset_uuid = fileset_uuid;
                 self.files_list.clear();
-                self.link.send_message(Msg::RequestFilesOfFileset);
+                ctx.link().send_message(Msg::RequestFilesOfFileset);
             },
             Msg::UpdateSelectProgramId(data) =>
                 self.request_fileset_program_id = data.parse::<usize>().unwrap_or_default(),
@@ -452,15 +447,15 @@ impl Component for ManageModificationFilesets {
         true
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.select_modification_uuid == props.select_modification_uuid &&
-              self.props.filesets_program.len() == props.filesets_program.len() {
-            debug!("no change filesets: {:?}", props.filesets_program.len());
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+        if ctx.props().select_modification_uuid == self.select_modification_uuid &&
+              ctx.props().filesets_program.len() == self.filesets_program.len() {
+            debug!("no change filesets: {:?}", self.filesets_program.len());
             false
         } else {
-            debug!("change filesets: {:?}", props.filesets_program.len());
-            self.filesets_program = props.filesets_program.clone();
-            self.select_fileset_uuid = props.filesets_program
+            debug!("change filesets: {:?}", ctx.props().filesets_program.len());
+            self.filesets_program = ctx.props().filesets_program.clone();
+            self.select_fileset_uuid = ctx.props().filesets_program
                 .first()
                 .map(|(fileset_uuid, program_name)| {
                     debug!("mod fileset_uuid: {:?}", fileset_uuid);
@@ -470,20 +465,18 @@ impl Component for ManageModificationFilesets {
                 .unwrap_or_default();
 
             self.files_list.clear();
-            self.link.send_message(Msg::RequestFilesOfFileset);
-
-            self.props = props;
+            ctx.link().send_message(Msg::RequestFilesOfFileset);
             true
         }
     }
 
-    fn view(&self) -> Html {
-        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let onclick_clear_error = ctx.link().callback(|_| Msg::ClearError);
 
         html!{<>
             <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error.clone())}/>
-            {self.modal_add_fileset()}
-            {self.show_manage()}
+            {self.modal_add_fileset(ctx.link(), ctx.props())}
+            {self.show_manage(ctx.link(), ctx.props())}
             // <br/>
             <div class="columns">
                 <div class="column">
@@ -492,7 +485,7 @@ impl Component for ManageModificationFilesets {
                 </div>
                 <div class="column">
                     <h2>{ get_value_field(&197) }</h2> // Upload files for fileset
-                    {self.show_frame_upload_files()}
+                    {self.show_frame_upload_files(ctx.link())}
                 </div>
             </div>
         </>}
@@ -500,16 +493,20 @@ impl Component for ManageModificationFilesets {
 }
 
 impl ManageModificationFilesets {
-    fn show_manage(&self) -> Html {
-        let onchange_select_fileset_btn = self.link
-            .callback(|ev: ChangeData| Msg::SelectFileset(match ev {
-              ChangeData::Select(el) => el.value(),
+    fn show_manage(
+        &self,
+        link: &Scope<Self>,
+        props: &Properties,
+    ) -> Html {
+        let onchange_select_fileset_btn = link
+            .callback(|ev: Event| Msg::SelectFileset(match ev {
+              Event::Select(el) => el.value(),
               _ => String::new(),
           }));
 
-        let onclick_new_fileset_card = self.link.callback(|_| Msg::ShowAddFilesetCard);
+        let onclick_new_fileset_card = link.callback(|_| Msg::ShowAddFilesetCard);
 
-        let onclick_delete_fileset_btn = self.link.callback(|_| Msg::RequestDeleteFileset);
+        let onclick_delete_fileset_btn = link.callback(|_| Msg::RequestDeleteFileset);
 
         html!{<div class="columns">
             <div class="column">
@@ -544,7 +541,7 @@ impl ManageModificationFilesets {
                     <button
                       id="add-modification-fileset"
                       class="button is-success"
-                      disabled={self.props.select_modification_uuid.is_empty()}
+                      disabled={props.select_modification_uuid.is_empty()}
                       onclick={onclick_new_fileset_card} >
                         <span class="icon" >
                             <i class="fas fa-plus" aria-hidden="true"></i>
@@ -556,14 +553,18 @@ impl ManageModificationFilesets {
         </div>}
     }
 
-    fn modal_add_fileset(&self) -> Html {
-        let onclick_new_fileset_card = self.link.callback(|_| Msg::ShowAddFilesetCard);
+    fn modal_add_fileset(
+        &self,
+        link: &Scope<Self>,
+        props: &Properties,
+    ) -> Html {
+        let onclick_new_fileset_card = link.callback(|_| Msg::ShowAddFilesetCard);
 
-        let onclick_add_fileset_btn = self.link.callback(|_| Msg::RequestNewFileset);
+        let onclick_add_fileset_btn = link.callback(|_| Msg::RequestNewFileset);
 
-        let onchange_select_program_id = self.link
-            .callback(|ev: ChangeData| Msg::UpdateSelectProgramId(match ev {
-              ChangeData::Select(el) => el.value(),
+        let onchange_select_program_id = link
+            .callback(|ev: Event| Msg::UpdateSelectProgramId(match ev {
+              Event::Select(el) => el.value(),
               _ => String::new(),
           }));
 
@@ -604,7 +605,7 @@ impl ManageModificationFilesets {
                       <button
                           id="add-fileset-program"
                           class="button"
-                          disabled={self.props.select_modification_uuid.is_empty()}
+                          disabled={props.select_modification_uuid.is_empty()}
                           onclick={onclick_add_fileset_btn} >
                           { get_value_field(&117) }
                       </button>
@@ -627,9 +628,12 @@ impl ManageModificationFilesets {
         }
     }
 
-    fn show_frame_upload_files(&self) -> Html {
-        let onchange_upload_files = self.link.callback(move |value| {
-            if let ChangeData::Files(files) = value {
+    fn show_frame_upload_files(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onchange_upload_files = link.callback(move |value| {
+            if let Event::Files(files) = value {
                 Msg::UpdateFiles(files)
             } else {
                 Msg::Ignore
@@ -662,14 +666,17 @@ impl ManageModificationFilesets {
               </label>
             </div>
             <div class="buttons">
-                {self.show_clear_btn()}
-                {self.show_upload_files_btn()}
+                {self.show_clear_btn(link)}
+                {self.show_upload_files_btn(link)}
             </div>
         </div>}
     }
 
-    fn show_clear_btn(&self) -> Html {
-        let onclick_clear_boxed = self.link.callback(|_| Msg::ClearFilesBoxed);
+    fn show_clear_btn(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onclick_clear_boxed = link.callback(|_| Msg::ClearFilesBoxed);
 
         html!{
             <button id="clear-upload-fileset-files"
@@ -684,8 +691,11 @@ impl ManageModificationFilesets {
         }
     }
 
-    fn show_upload_files_btn(&self) -> Html {
-        let onclick_upload_files = self.link.callback(|_| Msg::RequestUploadFilesOfFileset);
+    fn show_upload_files_btn(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onclick_upload_files = link.callback(|_| Msg::RequestUploadFilesOfFileset);
 
         let class_upload_btn = match self.active_loading_files_btn {
             true => "button is-loading",

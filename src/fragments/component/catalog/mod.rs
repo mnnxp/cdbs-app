@@ -2,7 +2,7 @@ mod list_item;
 
 pub use list_item::ListItem;
 
-use yew::{html, Component, ComponentLink, Html, ShouldRender, Properties};
+use yew::{Component, Context, html, html::Scope, Html, Properties};
 use yew_router::prelude::RouterAnchor;
 use graphql_client::GraphQLQuery;
 use log::debug;
@@ -11,7 +11,7 @@ use wasm_bindgen_futures::spawn_local;
 
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
-use crate::routes::AppRoute;
+use crate::routes::AppRoute::{self, CreateComponent};
 use crate::types::{ComponentsQueryArg, ShowComponentShort, UUID};
 use crate::services::get_value_field;
 use crate::gqls::make_query;
@@ -32,10 +32,10 @@ pub enum Msg {
 
 pub struct CatalogComponents {
     error: Option<Error>,
-    link: ComponentLink<Self>,
-    props: Props,
     show_type: ListState,
     list: Vec<ShowComponentShort>,
+    show_create_btn: bool,
+    arguments: Option<ComponentsQueryArg>,
 }
 
 #[derive(Properties, Clone)]
@@ -48,24 +48,24 @@ impl Component for CatalogComponents {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         Self {
             error: None,
-            link,
-            props,
             show_type: ListState::get_from_storage(),
             list: Vec::new(),
+            show_create_btn: ctx.props().show_create_btn,
+            arguments: ctx.props().arguments,
         }
     }
 
-    fn rendered(&mut self, first_render: bool) {
+    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
         if first_render {
-            self.link.send_message(Msg::GetList);
+            ctx.link().send_message(Msg::GetList);
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let link = ctx.link().clone();
         match msg {
             Msg::SwitchShowType => {
                 match self.show_type {
@@ -75,7 +75,7 @@ impl Component for CatalogComponents {
                 ListState::set_to_storage(&self.show_type);
             },
             Msg::GetList => {
-                let ipt_components_arg = match &self.props.arguments {
+                let ipt_components_arg = match &ctx.props().arguments {
                     Some(ref arg) => Some(get_components_short_list::IptComponentsArg {
                         componentsUuids: arg.components_uuids.clone(),
                         companyUuid: arg.company_uuid.to_owned(),
@@ -137,8 +137,8 @@ impl Component for CatalogComponents {
         true
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        let flag_change = match (&self.props.arguments, &props.arguments) {
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+        let flag_change = match (&self.arguments, &ctx.props().arguments) {
             (Some(self_arg), Some(arg)) => self_arg == arg,
             (None, None) => true,
             _ => false,
@@ -146,20 +146,19 @@ impl Component for CatalogComponents {
 
         debug!("self_arg == arg: {}", flag_change);
 
-        if self.props.show_create_btn == props.show_create_btn && flag_change {
+        if self.show_create_btn == ctx.props().show_create_btn && flag_change {
             // debug!("if change");
             false
         } else {
-            self.props.show_create_btn = props.show_create_btn;
-            self.props.arguments = props.arguments;
-            self.link.send_message(Msg::GetList);
+            self.show_create_btn = ctx.props().show_create_btn;
+            ctx.link().send_message(Msg::GetList);
             // debug!("else change");
             true
         }
     }
 
-    fn view(&self) -> Html {
-        let onclick_change_view = self.link.callback(|_| Msg::SwitchShowType);
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let onclick_change_view = ctx.link().callback(|_| Msg::SwitchShowType);
 
         let (class_for_icon, class_for_list) = match self.show_type {
             ListState::Box => ("fas fa-bars", "flex-box"),
@@ -174,9 +173,9 @@ impl Component for CatalogComponents {
                 </div>
                 <div class="level-right">
                     <div class="buttons">
-                        {match &self.props.show_create_btn {
+                        {match &ctx.props().show_create_btn {
                           true => html!{
-                              <RouterAnchor<AppRoute> route={AppRoute::CreateComponent} classes="button is-info">
+                              <RouterAnchor<AppRoute> route={CreateComponent} classes="button is-info">
                                   { get_value_field(&45) } // Create
                               </RouterAnchor<AppRoute>>
                           },
@@ -197,7 +196,7 @@ impl Component for CatalogComponents {
                 </div>
               </div>
               <div class={class_for_list}>
-                {for self.list.iter().map(|x| self.show_card(&x))}
+                {for self.list.iter().map(|x| self.show_card(ctx.link(), &x))}
               </div>
             </div>
         }
@@ -205,17 +204,15 @@ impl Component for CatalogComponents {
 }
 
 impl CatalogComponents {
-    fn show_card(&self, show_comp: &ShowComponentShort) -> Html {
+    fn show_card(
+        &self,
+        link: &Scope<Self>,
+        show_comp: &ShowComponentShort
+    ) -> Html {
         let target_uuid_add = show_comp.uuid.clone();
+        let onclick_add_fav = link.callback(move |_| Msg::AddFav(target_uuid_add.clone()));
         let target_uuid_del = show_comp.uuid.clone();
-
-        let onclick_add_fav = self
-            .link
-            .callback(move |_| Msg::AddFav(target_uuid_add.clone()));
-
-        let onclick_del_fav = self
-            .link
-            .callback(move |_| Msg::DelFav(target_uuid_del.clone()));
+        let onclick_del_fav = link.callback(move |_| Msg::DelFav(target_uuid_del.clone()));
 
         html! {
             <ListItem data={show_comp.clone()}

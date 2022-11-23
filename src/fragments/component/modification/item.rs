@@ -1,9 +1,5 @@
 use std::collections::{HashMap, BTreeMap};
-use yew::{
-    html, Callback, Component, ComponentLink,
-    Html, Properties, ShouldRender, InputData,
-    // ChangeData,
-};
+use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, Event};
 use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
@@ -41,8 +37,7 @@ pub struct Props {
 
 pub struct ModificationTableItem {
     error: Option<Error>,
-    props: Props,
-    link: ComponentLink<Self>,
+    open_modification_files: UUID,
     modification_uuid: UUID,
     collect_item: HashMap<usize, String>,
     select_item: bool,
@@ -81,17 +76,13 @@ pub enum Msg {
 impl Component for ModificationTableItem {
     type Message = Msg;
     type Properties = Props;
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        let modification_uuid = props.modification_uuid.clone();
-        let collect_item = props.collect_item.clone();
-        let select_item = props.select_item;
+    fn create(ctx: &Context<Self>) -> Self {
         Self {
             error: None,
-            props,
-            link,
-            modification_uuid,
-            collect_item,
-            select_item,
+            open_modification_files: ctx.props().open_modification_files.clone(),
+            modification_uuid: ctx.props().modification_uuid.clone(),
+            collect_item: ctx.props().collect_item.clone(),
+            select_item: ctx.props().select_item,
             params_list: BTreeMap::new(),
             request_add_param: ParamValue::default(),
             request_edit_param: ParamValue::default(),
@@ -105,8 +96,8 @@ impl Component for ModificationTableItem {
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let link = ctx.link().clone();
 
         match msg {
             Msg::RequestParamsListData => {
@@ -130,7 +121,7 @@ impl Component for ModificationTableItem {
                     value: self.request_add_param.value.clone(),
                 };
                 let ipt_modification_param_data = put_modification_params::IptModificationParamData{
-                    modificationUuid: self.props.modification_uuid.clone(),
+                    modificationUuid: ctx.props().modification_uuid.clone(),
                     params: vec![ipt_param_data],
                 };
                 spawn_local(async move {
@@ -147,7 +138,7 @@ impl Component for ModificationTableItem {
                     value: self.request_edit_param.value.clone(),
                 };
                 let ipt_modification_param_data = put_modification_params::IptModificationParamData{
-                    modificationUuid: self.props.modification_uuid.clone(),
+                    modificationUuid: ctx.props().modification_uuid.clone(),
                     params: vec![ipt_param_data],
                 };
                 spawn_local(async move {
@@ -160,7 +151,7 @@ impl Component for ModificationTableItem {
             Msg::RequestDeleteParamData => {
                 debug!("RequestDeleteParamData");
                 let del_modification_param_data = delete_modification_params::DelModificationParamData{
-                    modificationUuid: self.props.modification_uuid.clone(),
+                    modificationUuid: ctx.props().modification_uuid.clone(),
                     paramIds: vec![self.request_edit_param.param_id as i64],
                 };
                 spawn_local(async move {
@@ -183,7 +174,7 @@ impl Component for ModificationTableItem {
                         for x in result.iter() {
                             self.params_list.insert(x.param_id, x.clone());
                         }
-                        for y in self.props.collect_heads.iter() {
+                        for y in ctx.props().collect_heads.iter() {
                             self.params_list.remove(&y.param_id);
                         }
                         debug!("params: {:?}", self.params_list);
@@ -217,8 +208,8 @@ impl Component for ModificationTableItem {
                                 false => {
                                     self.params_list.remove(&self.request_add_param.param_id);
                                     self.open_new_param_card = false;
-                                    if let Some(rollback) = &self.props.callback_new_modification_param {
-                                        rollback.emit(self.props.modification_uuid.clone());
+                                    if let Some(rollback) = &ctx.props().callback_new_modification_param {
+                                        rollback.emit(ctx.props().modification_uuid.clone());
                                     }
                                 },
                             }
@@ -273,12 +264,12 @@ impl Component for ModificationTableItem {
                 }
             },
             Msg::SelectModification => {
-                if let Some(select_modification) = &self.props.callback_select_modification {
-                    select_modification.emit(self.props.modification_uuid.clone());
+                if let Some(select_modification) = &ctx.props().callback_select_modification {
+                    select_modification.emit(ctx.props().modification_uuid.clone());
                 }
             },
             Msg::ShowModificationFilesList => {
-                if let Some(open_files) = &self.props.callback_open_modification_files {
+                if let Some(open_files) = &ctx.props().callback_open_modification_files {
                     open_files.emit(());
                 }
             },
@@ -338,51 +329,55 @@ impl Component for ModificationTableItem {
         true
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.modification_uuid == props.modification_uuid &&
-              self.select_item == props.select_item &&
-                self.props.open_modification_files == props.open_modification_files {
-            debug!("no change open_modification_files {:?}", props.open_modification_files);
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+        if self.modification_uuid == ctx.props().modification_uuid &&
+              self.select_item == ctx.props().select_item &&
+                self.open_modification_files == ctx.props().open_modification_files {
+            debug!("no change open_modification_files {:?}", self.open_modification_files);
             false
         } else {
-            debug!("change open_modification_files {:?}", props.open_modification_files);
-            self.modification_uuid = props.modification_uuid.clone();
-            self.collect_item = props.collect_item.clone();
-            self.select_item = props.select_item;
-            self.props = props;
+            debug!("change open_modification_files {:?}", ctx.props().open_modification_files);
+            self.open_modification_files = ctx.props().open_modification_files;
+            self.modification_uuid = ctx.props().modification_uuid.clone();
+            self.collect_item = ctx.props().collect_item.clone();
+            self.select_item = ctx.props().select_item;
             true
         }
     }
 
-    fn view(&self) -> Html {
+    fn view(&self, ctx: &Context<Self>) -> Html {
         html!{<>
-            {self.modal_new_value()}
-            {self.modal_add_value()}
-            {self.modal_change_value()}
-            {self.show_modification_row()}
+            {self.modal_new_value(ctx.link(), ctx.props())}
+            {self.modal_add_value(ctx.link(), ctx.props())}
+            {self.modal_change_value(ctx.link(), ctx.props())}
+            {self.show_modification_row(ctx.link(), ctx.props())}
         </>}
     }
 }
 
 impl ModificationTableItem {
-    fn show_modification_row(&self) -> Html {
-        let onclick_select_modification = self.link
+    fn show_modification_row(
+        &self,
+        link: &Scope<Self>,
+        props: &Properties,
+    ) -> Html {
+        let onclick_select_modification = link
             .callback(|_| Msg::SelectModification);
 
-        let onclick_show_modification_files = self.link
+        let onclick_show_modification_files = link
             .callback(|_| Msg::ShowModificationFilesList);
 
-        let class_style = match &self.props.select_item {
+        let class_style = match &props.select_item {
             true => "is-selected",
             false => "",
         };
 
-        let files_click_icon = match &self.props.open_modification_files {
+        let files_click_icon = match &props.open_modification_files {
             true => "far fa-folder-open",
             false => "far fa-folder",
         };
 
-        let (double_click_text, double_click_icon) = match &self.props.show_manage_btn {
+        let (double_click_text, double_click_icon) = match &props.show_manage_btn {
             true => (get_value_field(&127), "fas fa-pencil-ruler"), // edit
             false => (get_value_field(&128), "fas fa-info"), // info
         };
@@ -390,7 +385,7 @@ impl ModificationTableItem {
         html!{<tr class={class_style}>
             <td>
                 <a onclick={onclick_select_modification}>
-                    {match &self.props.select_item {
+                    {match &props.select_item {
                         true => html!{<>
                             <span>{double_click_text}</span>
                             <span class="icon">
@@ -405,7 +400,7 @@ impl ModificationTableItem {
                         </>},
                     }}
                 </a>
-                {match self.props.select_item && !self.props.show_manage_btn {
+                {match props.select_item && !props.show_manage_btn {
                     true => html!{<>
                         <span>{" | "}</span>
                         <a onclick={onclick_show_modification_files}>
@@ -422,22 +417,26 @@ impl ModificationTableItem {
                 Some(value) => html!{<td>{value.clone()}</td>},
                 None => html!{<td></td>},
             }}
-            {self.show_items()}
+            {self.show_items(ctx.link(), ctx.props())}
         </tr>}
     }
 
-    fn show_items(&self) -> Html {
-        let onclick_new_param_card = self.link.callback(|_| Msg::ShowNewParamCard);
+    fn show_items(
+        &self,
+        link: &Scope<Self>,
+        props: &Properties,
+    ) -> Html {
+        let onclick_new_param_card = link.callback(|_| Msg::ShowNewParamCard);
 
-        let onclick_add_param_card = self.link
-            .callback(|value: usize| Msg::ShowAddParamCard(value));
+        let onclick_add_param_card =
+            link.callback(|value: usize| Msg::ShowAddParamCard(value));
 
-        let onclick_edit_param_card = self.link
-            .callback(|value: usize| Msg::ShowEditParamCard(value));
+        let onclick_edit_param_card =
+            link.callback(|value: usize| Msg::ShowEditParamCard(value));
 
-        match self.props.show_manage_btn {
+        match props.show_manage_btn {
             true => html!{<>
-                {for self.props.collect_heads.iter().map(|param| {
+                {for props.collect_heads.iter().map(|param| {
                     match self.collect_item.get(&param.param_id) {
                         Some(value) => html!{<ModificationTableItemModule
                             param_id = {param.param_id}
@@ -459,7 +458,7 @@ impl ModificationTableItem {
                 />
             </>},
             false => html!{<>
-                {for self.props.collect_heads.iter().map(|param| {
+                {for props.collect_heads.iter().map(|param| {
                     match self.collect_item.get(&param.param_id) {
                         Some(value) => html!{<ModificationTableItemModule
                             param_id = {param.param_id}
@@ -477,13 +476,17 @@ impl ModificationTableItem {
         }
     }
 
-    fn modal_new_value(&self) -> Html {
-        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+    fn modal_new_value(
+        &self,
+        link: &Scope<Self>,
+        props: &Properties,
+    ) -> Html {
+        let onclick_clear_error = link.callback(|_| Msg::ClearError);
 
         let onclick_add_new_param =
-            self.link.callback(|(param_id, param_value)| Msg::RequestAddNewParam(param_id, param_value));
+            link.callback(|(param_id, param_value)| Msg::RequestAddNewParam(param_id, param_value));
 
-        let onclick_close_param_card = self.link.callback(|_| Msg::ShowNewParamCard);
+        let onclick_close_param_card = link.callback(|_| Msg::ShowNewParamCard);
 
         let class_modal = match &self.open_new_param_card {
             true => "modal is-active",
@@ -511,16 +514,20 @@ impl ModificationTableItem {
         </div>}
     }
 
-    fn modal_add_value(&self) -> Html {
-        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+    fn modal_add_value(
+        &self,
+        link: &Scope<Self>,
+        props: &Properties,
+    ) -> Html {
+        let onclick_clear_error = link.callback(|_| Msg::ClearError);
 
-        let oninput_param_value = self.link
-            .callback(|ev: InputData| Msg::UpdateValue(ev.value));
+        let oninput_param_value = link
+            .callback(|ev: Event| Msg::UpdateValue(ev.value));
 
-        let onclick_close_add_param = self.link
+        let onclick_close_add_param = link
             .callback(|_| Msg::ShowAddParamCard(0));
 
-        let onclick_param_add = self.link
+        let onclick_param_add = link
             .callback(|_| Msg::RequestAddParamData);
 
         let class_modal = match &self.open_add_param_card {
@@ -564,19 +571,23 @@ impl ModificationTableItem {
         </div>}
     }
 
-    fn modal_change_value(&self) -> Html {
-        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+    fn modal_change_value(
+        &self,
+        link: &Scope<Self>,
+        props: &Properties,
+    ) -> Html {
+        let onclick_clear_error = link.callback(|_| Msg::ClearError);
 
-        let oninput_param_value = self.link
-            .callback(|ev: InputData| Msg::UpdateValue(ev.value));
+        let oninput_param_value = link
+            .callback(|ev: Event| Msg::UpdateValue(ev.value));
 
-        let onclick_edit_param_card = self.link
+        let onclick_edit_param_card = link
             .callback(|_| Msg::ShowEditParamCard(0));
 
-        let onclick_param_update = self.link
+        let onclick_param_update = link
             .callback(|_| Msg::RequestUpdateParamData);
 
-        let onclick_delete_param = self.link
+        let onclick_delete_param = link
             .callback(|_| Msg::RequestDeleteParamData);
 
         let class_modal = match &self.open_edit_param_card {

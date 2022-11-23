@@ -5,7 +5,7 @@ pub use add_certificate::AddCompanyCertificateCard;
 pub use item::CompanyCertificateItem;
 
 use std::collections::BTreeSet;
-use yew::{html, Component, ComponentLink, Html, Properties, ShouldRender};
+use yew::{Component, Context, html, Html, Properties};
 // use log::debug;
 
 use crate::types::{UUID, CompanyCertificate};
@@ -22,9 +22,9 @@ pub struct Props {
 /// For viewing certificate data on page
 #[derive(Debug)]
 pub struct CompanyCertificatesCard {
-    props: Props,
-    link: ComponentLink<Self>,
     deleted_cert_list: BTreeSet<UUID>,
+    certificates_first_uuid: UUID,
+    certificates_len: UUID,
 }
 
 pub enum Msg {
@@ -36,47 +36,46 @@ impl Component for CompanyCertificatesCard {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         Self {
-            props,
-            link,
             deleted_cert_list: BTreeSet::new(),
+            certificates_first_uuid: ctx.props().certificates.first().map(|x| &x.company_uuid),
+            certificates_len: ctx.props().certificates.len(),
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        // let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        // let link = ctx.link().clone();
         match msg {
-            Msg::RemoveCertificate(cart_uuid) => {
-                self.deleted_cert_list.insert(cart_uuid);
-            },
+            Msg::RemoveCertificate(cart_uuid) => self.deleted_cert_list.insert(cart_uuid),
             Msg::Ignore => {},
         }
         true
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.certificates.first().map(|x| &x.company_uuid) == props.certificates.first().map(|x| &x.company_uuid) &&
-              self.props.certificates.len() == props.certificates.len() {
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+        if self.certificates_first_uuid == ctx.props().certificates.first().map(|x| &x.company_uuid) &&
+              self.certificates_len == ctx.props().certificates.len() {
             false
         } else {
-            self.props = props;
+            self.certificates_first_uuid = ctx.props().certificates.first().map(|x| &x.company_uuid);
+            self.certificates_len = ctx.props().certificates.len();
             false
         }
     }
 
-    fn view(&self) -> Html {
-        let callback_delete_cert = self.link.callback(|value: UUID| Msg::RemoveCertificate(value));
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let callback_delete_cert = ctx.link().callback(|value: UUID| Msg::RemoveCertificate(value));
 
-        html!{{ for self.props.certificates.iter().map(|certificate|
+        html!{{ for ctx.props().certificates.iter().map(|certificate|
             match self.deleted_cert_list.get(&certificate.file.uuid) {
                 Some(_) => html!{}, // deleted certificate
                 None => html!{
                     <CompanyCertificateItem
                         certificate = {certificate.clone()}
-                        show_cert_btn = {self.props.show_cert_btn}
-                        download_btn = {self.props.download_btn}
-                        manage_btn = {self.props.manage_btn}
+                        show_cert_btn = {ctx.props().show_cert_btn}
+                        download_btn = {ctx.props().download_btn}
+                        manage_btn = {ctx.props().manage_btn}
                         callback_delete_cert = {callback_delete_cert.clone()}
                     />
                 },

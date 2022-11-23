@@ -43,8 +43,6 @@ pub struct Props {
 
 pub struct CatalogUsers {
     error: Option<Error>,
-    link: ComponentLink<Self>,
-    props: Props,
     show_type: ListState,
     list: Vec<ShowUserShort>
 }
@@ -53,25 +51,22 @@ impl Component for CatalogUsers {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         Self {
             error: None,
-            link,
-            props,
             show_type: ListState::get_from_storage(),
             list: Vec::new()
         }
     }
 
-    fn rendered(&mut self, first_render: bool) {
-        let link = self.link.clone();
+    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
         if first_render {
-            link.send_message(Msg::GetList);
+            ctx.link().send_message(Msg::GetList);
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let link = ctx.link().clone();
         match msg {
             Msg::SwitchShowType => {
                 match self.show_type {
@@ -81,7 +76,7 @@ impl Component for CatalogUsers {
                 ListState::set_to_storage(&self.show_type);
             },
             Msg::GetList => {
-                let ipt_users_arg = match &self.props.arguments {
+                let ipt_users_arg = match &ctx.props().arguments {
                     Some(ref arg) => Some(get_users_short_list::IptUsersArg {
                         usersUuids: arg.users_uuids.clone(),
                         subscribers: arg.subscribers,
@@ -102,38 +97,25 @@ impl Component for CatalogUsers {
             Msg::UpdateList(res) => {
               let data: Value = serde_json::from_str(res.as_str()).unwrap();
               let res_value = data.as_object().unwrap().get("data").unwrap();
-
               match res_value.is_null() {
-                  false => {
-                      let result: Vec<ShowUserShort> = serde_json::from_value(res_value.get("users").unwrap().clone()).unwrap();
-
-                      debug!("users list: {:?}", result);
-
-                      self.list = result;
-                  },
-                  true => {
-                      self.error = Some(get_error(&data));
-                  },
+                  false => self.list = serde_json::from_value(res_value.get("users").unwrap().clone()).unwrap(),
+                  true => self.error = Some(get_error(&data)),
               }
+              debug!("users list: {:?}", self.list);
           }
         }
         true
     }
 
-    fn change(&mut self, _props: Self::Properties) -> ShouldRender {
+    fn changed(&mut self, _ctx: &Context<Self>) -> bool {
         // Should only return "true" if new properties are different to
         // previously received properties.
         // This component has no properties so we will always return "false".
         false
     }
 
-    fn view(&self) -> Html {
-        // let list = self.list.clone();
-
-        let onclick_change_view = self
-            .link
-            .callback(|_|Msg::SwitchShowType);
-
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let onclick_change_view = link.callback(|_|Msg::SwitchShowType);
         let class_for_icon: &str;
         let mut class_for_list = "";
         match self.show_type {
@@ -141,9 +123,7 @@ impl Component for CatalogUsers {
                 class_for_icon = "fas fa-bars";
                 class_for_list = "flex-box";
             },
-            ListState::List => {
-                class_for_icon = "fas fa-th-large";
-            },
+            ListState::List => class_for_icon = "fas fa-th-large",
         };
 
         html!{
@@ -180,9 +160,7 @@ impl CatalogUsers {
         show_comp: &ShowUserShort,
     ) -> Html {
         html!{
-            <ListItemUser data={show_comp.clone()}
-                show_list={self.show_type == ListState::List}
-                />
+            <ListItemUser data={show_comp.clone()} show_list={self.show_type == ListState::List} />
         }
     }
 }

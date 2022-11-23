@@ -1,7 +1,5 @@
-use yew::{
-    agent::Bridged, classes, html, Bridge, Callback, Component, Properties,
-    ComponentLink, Html, ShouldRender
-};
+// use yew::{agent::Bridged, Bridge};
+use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, classes};
 use yew_router::{
     service::RouteService,
     agent::RouteRequest::ChangeRoute,
@@ -13,7 +11,7 @@ use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
-use crate::routes::AppRoute;
+use crate::routes::AppRoute::{Login, Profile, CompanySettings};
 use crate::error::{get_error, Error};
 use crate::fragments::{
     switch_icon::res_btn,
@@ -39,8 +37,6 @@ pub struct ShowCompany {
     current_company_uuid: UUID,
     current_user_owner: bool,
     router_agent: Box<dyn Bridge<RouteAgent>>,
-    props: Props,
-    link: ComponentLink<Self>,
     subscribers: usize,
     is_followed: bool,
     company_tab: CompanyTab,
@@ -82,15 +78,13 @@ impl Component for ShowCompany {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         ShowCompany {
             error: None,
             company: None,
-            current_company_uuid: String::new(),
+            current_company_uuid: ctx.props().company_uuid,
             current_user_owner: false,
-            router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
-            props,
-            link,
+            router_agent: RouteAgent::bridge(ctx.link().callback(|_| Msg::Ignore)),
             subscribers: 0,
             is_followed: false,
             company_tab: CompanyTab::Certificates,
@@ -99,10 +93,10 @@ impl Component for ShowCompany {
         }
     }
 
-    fn rendered(&mut self, first_render: bool) {
+    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
         if let None = get_logged_user() {
             // route to login page if not found token
-            self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
+            self.router_agent.send(ChangeRoute(Login.into()));
         };
 
         // get company uuid for request company data
@@ -117,12 +111,10 @@ impl Component for ShowCompany {
         // debug!("self.current_company_uuid {:#?}", self.current_company_uuid);
 
         if first_render || not_matches_company_uuid {
-            let link = self.link.clone();
-
+            let link = ctx.link().clone();
             // clear old data
             self.error = None;
             self.company = None;
-
             // update current_company_uuid for checking change company in route
             self.current_company_uuid = target_company_uuid.clone();
 
@@ -130,25 +122,22 @@ impl Component for ShowCompany {
                 let res = make_query(GetCompanyData::build_query(get_company_data::Variables {
                     company_uuid: target_company_uuid,
                 })).await.unwrap();
-
                 link.send_message(Msg::GetCompanyResult(res.clone()));
             })
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        // let link = self.link.clone();
-
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        // let link = ctx.link().clone();
         match msg {
             Msg::Follow => {
-                let link = self.link.clone();
+                let link = ctx.link().clone();
                 let company_uuid = self.company.as_ref().unwrap().uuid.clone();
 
                 spawn_local(async move {
                     let res = make_query(AddCompanyFav::build_query(add_company_fav::Variables{
                         company_uuid
                     })).await.unwrap();
-
                     link.send_message(Msg::AddFollow(res.clone()));
                 })
             },
@@ -159,9 +148,7 @@ impl Component for ShowCompany {
                 match res_value.is_null() {
                     false => {
                         let result: bool =
-                            serde_json::from_value(res_value.get("addCompanyFav").unwrap().clone())
-                                .unwrap();
-
+                            serde_json::from_value(res_value.get("addCompanyFav").unwrap().clone()).unwrap();
                         if result {
                             self.subscribers += 1;
                             self.is_followed = true;
@@ -171,14 +158,13 @@ impl Component for ShowCompany {
                 }
             },
             Msg::UnFollow => {
-                let link = self.link.clone();
+                let link = ctx.link().clone();
                 let company_uuid = self.company.as_ref().unwrap().uuid.clone();
 
                 spawn_local(async move {
                     let res = make_query(DeleteCompanyFav::build_query(
                         delete_company_fav::Variables{ company_uuid }
                     )).await.unwrap();
-
                     link.send_message(Msg::DelFollow(res));
                 })
             },
@@ -188,9 +174,8 @@ impl Component for ShowCompany {
 
                 match res_value.is_null() {
                     false => {
-                        let result: bool = serde_json::from_value(
-                            res_value.get("deleteCompanyFav").unwrap().clone()
-                        ).unwrap();
+                        let result: bool =
+                            serde_json::from_value(res_value.get("deleteCompanyFav").unwrap().clone()).unwrap();
 
                         if result {
                             self.subscribers -= 1;
@@ -213,7 +198,7 @@ impl Component for ShowCompany {
                         self.subscribers = company_data.subscribers.to_owned();
                         self.is_followed = company_data.is_followed.to_owned();
                         self.current_company_uuid = company_data.uuid.to_owned();
-                        if let Some(user) = &self.props.current_user {
+                        if let Some(user) = &ctx.props().current_user {
                             self.current_user_owner = company_data.owner_user.uuid == user.uuid;
                         }
                         self.company = Some(company_data);
@@ -224,18 +209,18 @@ impl Component for ShowCompany {
             Msg::ChangeTab(set_tab) => self.company_tab = set_tab,
             Msg::OpenOwnerCompany => {
                 if let Some(company_data) = &self.company {
-                    // Redirect to owner company page
-                    self.router_agent.send(ChangeRoute(AppRoute::Profile(
-                        company_data.owner_user.username.to_string()
-                    ).into()));
+                    // Redirect to owneruser company page
+                    self.router_agent.send(
+                        ChangeRoute(Profile { username: company_data.owner_user.username.to_string() }.into())
+                    );
                 }
             },
             Msg::OpenSettingCompany => {
                 if let Some(company_data) = &self.company {
-                    // Redirect to owner company page
-                    self.router_agent.send(ChangeRoute(AppRoute::CompanySettings(
-                        company_data.uuid.to_string()
-                    ).into()));
+                    // Redirect to company settings page
+                    self.router_agent.send(
+                        ChangeRoute(CompanySettings { uuid: company_data.uuid.to_string() }.into())
+                    );
                 }
             },
             Msg::ShowFullCompanyInfo => self.show_full_company_info = !self.show_full_company_info,
@@ -245,17 +230,17 @@ impl Component for ShowCompany {
         true
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.company_uuid == props.company_uuid {
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+        if self.current_company_uuid == ctx.props().company_uuid {
             false
         } else {
-            self.props = props;
+            self.current_company_uuid = ctx.props().company_uuid;
             true
         }
     }
 
-    fn view(&self) -> Html {
-        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let onclick_clear_error = ctx.link().callback(|_| Msg::ClearError);
 
         match &self.company {
             Some(company_data) => html!{
@@ -265,13 +250,13 @@ impl Component for ShowCompany {
                         <div class="row">
                             <div class="card">
                               <div class="card-content">
-                                {self.view_card()}
+                                {self.view_card(ctx.link())}
                                 <div class="content">
-                                    {self.view_content(company_data)}
+                                    {self.view_content(ctx.link(), company_data)}
                                 </div>
                             </div>
                           </div>
-                          {self.company_relate_object(company_data)}
+                          {self.company_relate_object(ctx.link(), company_data)}
                         </div>
                     </div>
                 </div>
@@ -282,10 +267,12 @@ impl Component for ShowCompany {
 }
 
 impl ShowCompany {
-    fn view_card(&self) -> Html {
-        let onclick_owner_company_btn = self.link.callback(|_| Msg::OpenOwnerCompany);
-        let onclick_setting_company_btn = self.link.callback(|_| Msg::OpenSettingCompany);
-
+    fn view_card(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onclick_owner_company_btn = link.callback(|_| Msg::OpenOwnerCompany);
+        let onclick_setting_company_btn = link.callback(|_| Msg::OpenSettingCompany);
         let size_favicon = match self.show_full_company_info {
             true => "is-128x128",
             false => "is-48x48",
@@ -350,7 +337,7 @@ impl ShowCompany {
                               String::new())},
                           false => html!{},
                       }}
-                      {self.show_company_followers()}
+                      {self.show_company_followers(link)}
                     </div>
                 </div>
             </div>},
@@ -358,27 +345,33 @@ impl ShowCompany {
         }
     }
 
-    fn show_company_followers(&self) -> Html {
+    fn show_company_followers(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
         html!{<>
             {match &self.company {
-                Some(_) => self.show_favorite_btn(),
+                Some(_) => self.show_favorite_btn(link),
                 None => html!{<span>{self.subscribers}</span>},
             }}
         </>}
     }
 
-    fn show_favorite_btn(&self) -> Html {
+    fn show_favorite_btn(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
         let (class_fav, onclick_following) = match self.is_followed {
-            true => ("fas fa-bookmark", self.link.callback(|_| Msg::UnFollow)),
-            false => ("far fa-bookmark", self.link.callback(|_| Msg::Follow)),
+            true => ("fas fa-bookmark", link.callback(|_| Msg::UnFollow)),
+            false => ("far fa-bookmark", link.callback(|_| Msg::Follow)),
         };
 
         html!{
             <button
-                id="following-button"
-                class="button"
+                id={"following-button"}
+                class={"button"}
                 onclick={onclick_following} >
-              <span class="icon is-small">
+              <span class={"icon is-small"}>
                 <i class={class_fav}></i>
               </span>
               <span>{self.subscribers}</span>
@@ -388,9 +381,10 @@ impl ShowCompany {
 
     fn view_content(
         &self,
+        link: &Scope<Self>,
         company_data: &CompanyInfo,
     ) -> Html {
-        let onclick_change_full_show = self.link.callback(|_| Msg::ShowFullCompanyInfo);
+        let onclick_change_full_show = link.callback(|_| Msg::ShowFullCompanyInfo);
 
         match self.show_full_company_info {
             true => html! {<>
@@ -465,12 +459,13 @@ impl ShowCompany {
 
     fn company_relate_object(
         &self,
+        link: &Scope<Self>,
         company_data: &CompanyInfo,
     ) -> Html {
         html!{<div class="card">
             <div class="columns is-mobile">
                 <div class="column is-flex">
-                    { self.show_company_action() }
+                    { self.show_company_action(link) }
                     <div class="card-relate-data" style="flex:1;" >
                         {match self.company_tab {
                             CompanyTab::Certificates =>
@@ -489,12 +484,15 @@ impl ShowCompany {
         </div>}
     }
 
-    fn show_company_action(&self) -> Html {
+    fn show_company_action(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
         let menu_arr: Vec<MenuItem> = vec![
             // certificates MenuItem
             MenuItem {
                 title: get_value_field(&32).to_string(), // CERTIFICATES
-                action: self.cb_generator(CompanyTab::Certificates),
+                action: self.cb_generator(link, CompanyTab::Certificates),
                 count: self.get_number_of_items(&CompanyTab::Certificates),
                 item_class: classes!("has-background-white"),
                 icon_classes: vec![classes!("fas", "fa-certificate")],
@@ -504,7 +502,7 @@ impl ShowCompany {
             // representations MenuItem
             MenuItem {
                 title: get_value_field(&266).to_string(), // REPRESENTATIONS
-                action: self.cb_generator(CompanyTab::Represent),
+                action: self.cb_generator(link, CompanyTab::Represent),
                 count: self.get_number_of_items(&CompanyTab::Represent),
                 item_class: classes!("has-background-white"),
                 icon_classes: vec![classes!("fas", "fa-industry")],
@@ -514,7 +512,7 @@ impl ShowCompany {
             // components MenuItem
             MenuItem {
                 title: get_value_field(&154).to_string(), // COMPONENTS
-                action: self.cb_generator(CompanyTab::Components),
+                action: self.cb_generator(link, CompanyTab::Components),
                 count: self.get_number_of_items(&CompanyTab::Components),
                 item_class: classes!("has-background-white"),
                 icon_classes: vec![classes!("fas", "fa-cogs")],
@@ -524,7 +522,7 @@ impl ShowCompany {
             // standards MenuItem
             MenuItem {
                 title: get_value_field(&103).to_string(), // STANDARDS
-                action: self.cb_generator(CompanyTab::Standards),
+                action: self.cb_generator(link, CompanyTab::Standards),
                 count: self.get_number_of_items(&CompanyTab::Standards),
                 item_class: classes!("has-background-white"),
                 icon_classes: vec![classes!("fas", "fa-cube")],
@@ -534,7 +532,7 @@ impl ShowCompany {
             // memebers MenuItem
             // MenuItem {
             //     title: get_value_field(&286).to_string(), // MEMBERS
-            //     action: self.cb_generator(CompanyTab::Members),
+            //     action: self.cb_generator(link, CompanyTab::Members),
             //     count: self.get_number_of_items(&CompanyTab::Members),
             //     item_class: classes!("has-background-white"),
             //     icon_classes: vec![classes!("fas", "fa-user")],
@@ -601,8 +599,12 @@ impl ShowCompany {
         }
     }
 
-    fn cb_generator(&self, cb: CompanyTab) -> Callback<MouseEvent> {
-        self.link.callback(move |_| Msg::ChangeTab(cb.clone()))
+    fn cb_generator(
+        &self,
+        link: &Scope<Self>,
+        cb: CompanyTab,
+    ) -> Callback<MouseEvent> {
+        link.callback(move |_| Msg::ChangeTab(cb.clone()))
     }
 
     fn check_extend(&self, tab: &CompanyTab) -> bool {

@@ -1,8 +1,6 @@
 use web_sys::MouseEvent;
-use yew::{
-    agent::Bridged, classes, html, Bridge, Callback, ChangeData, Component, ComponentLink,
-    FocusEvent, Html, InputData, ShouldRender,
-};
+// use yew::{agent::Bridged, Bridge};
+use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, Event, FocusEvent, classes};
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
 use graphql_client::GraphQLQuery;
 use log::debug;
@@ -16,7 +14,7 @@ use crate::fragments::{
     upload_favicon::UpdateFaviconBlock,
     user::{AddUserCertificateCard, UserCertificatesCard},
 };
-use crate::routes::AppRoute;
+use crate::routes::AppRoute::{self, Login, Home, Profile};
 use crate::services::{get_current_user, set_token, set_logged_user, get_logged_user, get_value_field};
 use crate::types::{Program, Region, SelfUserInfo, TypeAccessInfo, UpdatePasswordInfo, UserUpdateInfo};
 use crate::gqls::make_query;
@@ -47,8 +45,6 @@ pub struct Settings {
     request_password: UpdatePasswordInfo,
     request_user_password: String,
     router_agent: Box<dyn Bridge<RouteAgent>>,
-    // props: Props,
-    link: ComponentLink<Self>,
     current_data: Option<SelfUserInfo>,
     current_username: String,
     programs: Vec<Program>,
@@ -108,8 +104,6 @@ impl Component for Settings {
             request_password: UpdatePasswordInfo::default(),
             request_user_password: String::new(),
             router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
-            // props,
-            link,
             current_data: None,
             current_username: String::new(),
             programs: Vec::new(),
@@ -123,14 +117,13 @@ impl Component for Settings {
         }
     }
 
-    fn rendered(&mut self, first_render: bool) {
+    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
         if first_render {
+            let link = ctx.link().clone();
             if let None = get_logged_user() {
                 // route to login page if not found token
-                self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
+                self.router_agent.send(ChangeRoute(Login.into()));
             };
-
-            let link = self.link.clone();
 
             spawn_local(async move {
                 let res = make_query(GetSettingDataOpt::build_query(
@@ -142,16 +135,16 @@ impl Component for Settings {
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let link = ctx.link().clone();
 
         match msg {
             Msg::OpenProfile => {
                 // Redirect to user page
                 if let Some(user_data) = &self.current_data {
-                    self.router_agent.send(ChangeRoute(
-                        AppRoute::Profile(user_data.username.clone()).into()
-                    ));
+                    self.router_agent.send(
+                        ChangeRoute(Profile { username: user_data.username.clone() }.into())
+                    );
                 }
             },
             Msg::RequestCurrentData => {
@@ -260,7 +253,7 @@ impl Component for Settings {
                         self.current_data = Some(user_data.clone());
                         self.current_username = user_data.username.clone();
                         self.request_profile = user_data.into();
-                        self.rendered(false);
+                        self.rendered(false, ctx);
                     },
                     true => self.error = Some(get_error(&data)),
                 }
@@ -316,7 +309,7 @@ impl Component for Settings {
                             set_token(None);
                             set_logged_user(None);
 
-                            self.router_agent.send(ChangeRoute(AppRoute::Home.into()));
+                            self.router_agent.send(ChangeRoute(Home.into()));
                         }
                     },
                     true => self.error = Some(get_error(&data)),
@@ -344,7 +337,7 @@ impl Component for Settings {
                 self.request_user_password = user_password,
             Msg::SelectMenu(value) => {
                 self.select_menu = value;
-                self.rendered(false);
+                self.rendered(false, ctx);
             },
             Msg::ClearError => self.error = None,
             Msg::Ignore => {}
@@ -352,29 +345,25 @@ impl Component for Settings {
         true
     }
 
-    fn change(&mut self, _props: Self::Properties) -> ShouldRender {
+    fn changed(&mut self, _ctx: &Context<Self>) -> bool {
         false
     }
 
-    fn view(&self) -> Html {
-        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
-
-        let onsubmit_update_profile = self.link.callback(|ev: FocusEvent| {
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let onclick_clear_error = ctx.link().callback(|_| Msg::ClearError);
+        let onsubmit_update_profile = ctx.link().callback(|ev: FocusEvent| {
             ev.prevent_default();
             Msg::RequestUpdateProfile
         });
-
-        let onsubmit_update_access = self.link.callback(|ev: FocusEvent| {
+        let onsubmit_update_access = ctx.link().callback(|ev: FocusEvent| {
             ev.prevent_default();
             Msg::RequestChangeAccess
         });
-
-        let onsubmit_update_password = self.link.callback(|ev: FocusEvent| {
+        let onsubmit_update_password = ctx.link().callback(|ev: FocusEvent| {
             ev.prevent_default();
             Msg::RequestUpdatePassword
         });
-
-        let onsubmit_remove_profile = self.link.callback(|ev: FocusEvent| {
+        let onsubmit_remove_profile = ctx.link().callback(|ev: FocusEvent| {
             ev.prevent_default();
             Msg::RequestRemoveProfile
         });
@@ -489,7 +478,7 @@ impl Settings {
         label: &str,
         // placeholder: &str,
         value: String,
-        oninput: Callback<InputData>,
+        oninput: Callback<Event>,
     ) -> Html {
         let placeholder = label;
         let mut class = "input";
@@ -539,16 +528,23 @@ impl Settings {
         }
     }
 
-    fn cb_generator(&self, cb: Menu) -> Callback<MouseEvent> {
-        self.link.callback(move |_| Msg::SelectMenu(cb.clone()))
+    fn cb_generator(
+        &self,
+        link: &Scope<Self>,
+        cb: Menu
+    ) -> Callback<MouseEvent> {
+        link.callback(move |_| Msg::SelectMenu(cb.clone()))
     }
 
-    fn view_menu(&self) -> Html {
+    fn view_menu(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
         let menu_arr: Vec<MenuItem> = vec![
             // return profile page MenuItem
             MenuItem {
                 title: get_value_field(&76).to_string(),
-                action: self.link.callback(|_| Msg::OpenProfile),
+                action: link.callback(|_| Msg::OpenProfile),
                 item_class: classes!("has-background-white"),
                 icon_classes: vec![classes!("fas", "fa-angle-double-left")],
                 is_active: false,
@@ -557,7 +553,7 @@ impl Settings {
             // profile MenuItem
             MenuItem {
                 title: get_value_field(&77).to_string(),
-                action: self.cb_generator(Menu::Profile),
+                action: self.cb_generator(link, Menu::Profile),
                 item_class: classes!("has-background-white"),
                 icon_classes: vec![classes!("fas", "fa-address-card")],
                 is_active: self.select_menu == Menu::Profile,
@@ -566,7 +562,7 @@ impl Settings {
             // favicon MenuItem
             MenuItem {
                 title: get_value_field(&78).to_string(),
-                action: self.cb_generator(Menu::UpdateFavicon),
+                action: self.cb_generator(link, Menu::UpdateFavicon),
                 item_class: classes!("has-background-white"),
                 icon_classes: vec![classes!("fas", "fa-image")],
                 is_active: self.select_menu == Menu::UpdateFavicon,
@@ -575,7 +571,7 @@ impl Settings {
             // certificates MenuItem
             MenuItem {
                 title: get_value_field(&64).to_string(),
-                action: self.cb_generator(Menu::Certificates),
+                action: self.cb_generator(link, Menu::Certificates),
                 item_class: classes!("has-background-white"),
                 icon_classes: vec![classes!("fas", "fa-certificate")],
                 is_active: self.select_menu == Menu::Certificates,
@@ -584,7 +580,7 @@ impl Settings {
             // access MenuItem
             MenuItem {
                 title: get_value_field(&80).to_string(),
-                action: self.cb_generator(Menu::Access),
+                action: self.cb_generator(link, Menu::Access),
                 item_class: classes!("has-background-white"),
                 icon_classes: vec![classes!("fas", "fa-low-vision")],
                 is_active: self.select_menu == Menu::Access,
@@ -593,7 +589,7 @@ impl Settings {
             // password MenuItem
             MenuItem {
                 title: get_value_field(&20).to_string(),
-                action: self.cb_generator(Menu::Password),
+                action: self.cb_generator(link, Menu::Password),
                 item_class: classes!("has-background-white"),
                 icon_classes: vec![classes!("fas", "fa-key")],
                 is_active: self.select_menu == Menu::Password,
@@ -602,7 +598,7 @@ impl Settings {
             // remove profile MenuItem
             MenuItem {
                 title: get_value_field(&82).to_string(),
-                action: self.cb_generator(Menu::RemoveProfile),
+                action: self.cb_generator(link, Menu::RemoveProfile),
                 item_class: classes!("has-background-danger-light"),
                 icon_classes: vec![classes!("fas", "fa-trash")],
                 is_active: self.select_menu == Menu::RemoveProfile,
@@ -617,9 +613,11 @@ impl Settings {
         }
     }
 
-    fn update_favicon_card(&self) -> Html {
-        let callback_update_favicon = self.link.callback(|_| Msg::RequestCurrentData);
-
+    fn update_favicon_card(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let callback_update_favicon = link.callback(|_| Msg::RequestCurrentData);
         html! {
             <UpdateFaviconBlock
                 company_uuid = {None}
@@ -647,14 +645,16 @@ impl Settings {
         }
     }
 
-    fn add_certificate_card(&self) -> Html {
+    fn add_certificate_card(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
         let user_uuid = self
             .current_data
             .as_ref()
             .map(|user| user.uuid.to_string())
             .unwrap_or_default();
-
-        let callback_upload_cert = self.link.callback(|_| Msg::RequestCurrentData);
+        let callback_upload_cert = link.callback(|_| Msg::RequestCurrentData);
 
         html! {
             <AddUserCertificateCard
@@ -664,10 +664,13 @@ impl Settings {
         }
     }
 
-    fn change_access_card(&self) -> Html {
-        let onchange_type_access_id = self.link.callback(|ev: ChangeData| {
+    fn change_access_card(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onchange_type_access_id = link.callback(|ev: Event| {
             Msg::UpdateTypeAccessId(match ev {
-                ChangeData::Select(el) => el.value(),
+                Event::Select(el) => el.value(),
                 _ => "1".to_string(),
             })
         });
@@ -703,9 +706,12 @@ impl Settings {
         }
     }
 
-    fn update_password_card(&self) -> Html {
-        let oninput_old_password = self.link.callback(|ev: InputData| Msg::UpdateOldPassword(ev.value));
-        let oninput_new_password = self.link.callback(|ev: InputData| Msg::UpdateNewPassword(ev.value));
+    fn update_password_card(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let oninput_old_password = link.callback(|ev: Event| Msg::UpdateOldPassword(ev.value));
+        let oninput_new_password = link.callback(|ev: Event| Msg::UpdateNewPassword(ev.value));
 
         html! {
             <fieldset class="columns">
@@ -726,25 +732,28 @@ impl Settings {
         }
     }
 
-    fn change_profile_card(&self) -> Html {
-        let oninput_firstname = self.link.callback(|ev: InputData| Msg::UpdateFirstname(ev.value));
-        let oninput_lastname = self.link.callback(|ev: InputData| Msg::UpdateLastname(ev.value));
-        let oninput_secondname = self.link.callback(|ev: InputData| Msg::UpdateSecondname(ev.value));
-        let oninput_username = self.link.callback(|ev: InputData| Msg::UpdateUsername(ev.value));
-        let oninput_email = self.link.callback(|ev: InputData| Msg::UpdateEmail(ev.value));
-        let oninput_description = self.link.callback(|ev: InputData| Msg::UpdateDescription(ev.value));
-        let oninput_position = self.link.callback(|ev: InputData| Msg::UpdatePosition(ev.value));
-        let oninput_phone = self.link.callback(|ev: InputData| Msg::UpdatePhone(ev.value));
-        let oninput_address = self.link.callback(|ev: InputData| Msg::UpdateAddress(ev.value));
-        let oninput_program_id = self.link.callback(|ev: ChangeData| {
+    fn change_profile_card(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let oninput_firstname = link.callback(|ev: Event| Msg::UpdateFirstname(ev.value));
+        let oninput_lastname = link.callback(|ev: Event| Msg::UpdateLastname(ev.value));
+        let oninput_secondname = link.callback(|ev: Event| Msg::UpdateSecondname(ev.value));
+        let oninput_username = link.callback(|ev: Event| Msg::UpdateUsername(ev.value));
+        let oninput_email = link.callback(|ev: Event| Msg::UpdateEmail(ev.value));
+        let oninput_description = link.callback(|ev: Event| Msg::UpdateDescription(ev.value));
+        let oninput_position = link.callback(|ev: Event| Msg::UpdatePosition(ev.value));
+        let oninput_phone = link.callback(|ev: Event| Msg::UpdatePhone(ev.value));
+        let oninput_address = link.callback(|ev: Event| Msg::UpdateAddress(ev.value));
+        let oninput_program_id = link.callback(|ev: Event| {
             Msg::UpdateProgramId(match ev {
-                ChangeData::Select(el) => el.value(),
+                Event::Select(el) => el.value(),
                 _ => "1".to_string(),
             })
         });
-        let onchange_region_id = self.link.callback(|ev: ChangeData| {
+        let onchange_region_id = link.callback(|ev: Event| {
             Msg::UpdateRegionId(match ev {
-                ChangeData::Select(el) => el.value(),
+                Event::Select(el) => el.value(),
                 _ => "1".to_string(),
             })
         });
@@ -874,8 +883,11 @@ impl Settings {
         </>}
     }
 
-    fn remove_profile_card(&self) -> Html {
-        let oninput_user_password = self.link.callback(|ev: InputData| Msg::UpdateUserPassword(ev.value));
+    fn remove_profile_card(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let oninput_user_password = link.callback(|ev: Event| Msg::UpdateUserPassword(ev.value));
 
         self.fileset_generator(
             "password", get_value_field(&62), // "your password"

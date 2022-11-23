@@ -4,7 +4,7 @@ pub use item::ComponentLicenseTag;
 
 use std::collections::BTreeSet;
 use yew::prelude::*;
-use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
+use yew::{Component, Context, html, html::Scope, Html, Properties};
 use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
@@ -32,10 +32,10 @@ pub struct Props {
 
 pub struct ComponentLicensesTags {
     error: Option<Error>,
-    props: Props,
-    link: ComponentLink<Self>,
     license_ids: BTreeSet<usize>,
     component_licenses: Vec<LicenseInfo>,
+    component_uuid: UUID,
+    component_licenses_len: usize,
     license_list: Vec<LicenseInfo>,
     request_add_license_id: usize,
     hide_add_license_modal: bool,
@@ -61,29 +61,26 @@ impl Component for ComponentLicensesTags {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         let mut license_ids: BTreeSet<usize> = BTreeSet::new();
-
-        for license in props.component_licenses.clone() {
+        for license in ctx.props().component_licenses.clone() {
             license_ids.insert(license.id);
         };
 
-        let component_licenses = props.component_licenses.clone();
-
         Self {
             error: None,
-            props,
-            link,
             license_ids,
-            component_licenses,
+            component_licenses: ctx.props().component_licenses.clone(),
+            component_uuid: ctx.props().component_uuid,
+            component_licenses_len: ctx.props().component_licenses.len(),
             license_list: Vec::new(),
             request_add_license_id: 0,
             hide_add_license_modal: true,
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let link = ctx.link().clone();
 
         match msg {
             Msg::DeleteComponentLicense(license_id) => {
@@ -100,7 +97,7 @@ impl Component for ComponentLicensesTags {
             },
             Msg::RequestAddLicense => {
                 let ipt_component_license_data = add_component_license::IptComponentLicenseData{
-                    componentUuid: self.props.component_uuid.clone(),
+                    componentUuid: ctx.props().component_uuid.clone(),
                     licenseId: self.request_add_license_id as i64,
                 };
                 spawn_local(async move {
@@ -111,7 +108,7 @@ impl Component for ComponentLicensesTags {
                 })
             },
             Msg::RequestComponentLicenses => {
-                let component_uuid = self.props.component_uuid.clone();
+                let component_uuid = ctx.props().component_uuid.clone();
                 spawn_local(async move {
                     let res = make_query(GetComponentLicenses::build_query(
                         get_component_licenses::Variables { component_uuid }
@@ -192,39 +189,41 @@ impl Component for ComponentLicensesTags {
         true
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.component_uuid == props.component_uuid &&
-             self.props.component_licenses.len() == props.component_licenses.len() {
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+        if self.component_uuid == ctx.props().component_uuid &&
+             self.component_licenses_len == ctx.props().component_licenses.len() {
             false
         } else {
+            self.component_uuid = ctx.props().component_uuid;
+            self.component_licenses_len = ctx.props().component_licenses.len();
             self.license_ids = BTreeSet::new();
-            for license in props.component_licenses.iter() {
+            for license in ctx.props().component_licenses.iter() {
                 self.license_ids.insert(license.id);
             };
             self.hide_add_license_modal = true;
-            self.props = props;
             true
         }
     }
 
-    fn view(&self) -> Html {
-        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let onclick_clear_error = ctx.link().callback(|_| Msg::ClearError);
 
         html!{<>
             <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error.clone())}/>
-            {self.modal_add_license()}
-            {self.show_licenses()}
+            {self.modal_add_license(ctx.link(), ctx.props())}
+            {self.show_licenses(ctx.link(), ctx.props())}
         </>}
     }
 }
 
 impl ComponentLicensesTags {
-    fn show_licenses(&self) -> Html {
-        let onclick_delete_license = self.link
-            .callback(|value: usize| Msg::DeleteComponentLicense(value));
-
-        let onclick_action_btn = self.link
-            .callback(|_| Msg::ChangeHideAddLicense);
+    fn show_licenses(
+        &self,
+        link: &Scope<Self>,
+        props: &Properties,
+    ) -> Html {
+        let onclick_delete_license = link.callback(|value: usize| Msg::DeleteComponentLicense(value));
+        let onclick_action_btn = link.callback(|_| Msg::ChangeHideAddLicense);
 
         html!{<div class="media" style="margin-bottom: 0rem">
             <div class="media-right" style="margin-left: 0rem">
@@ -237,15 +236,15 @@ impl ComponentLicensesTags {
                     {for self.component_licenses.iter().map(|data| html!{
                         match self.license_ids.get(&data.id) {
                             Some(_) => html!{<ComponentLicenseTag
-                                show_delete_btn = {self.props.show_delete_btn}
-                                component_uuid = {self.props.component_uuid.clone()}
+                                show_delete_btn = {props.show_delete_btn}
+                                component_uuid = {props.component_uuid.clone()}
                                 license_data = {data.clone()}
                                 delete_license = {Some(onclick_delete_license.clone())}
                               />},
                             None => html!{},
                         }
                     })}
-                    {match self.props.show_delete_btn {
+                    {match props.show_delete_btn {
                         true => html!{<div class="tags has-addons"
                                 style="margin-left: 1rem; margin-bottom: 1rem" >
                             <span class="tag is-light is-success" onclick={onclick_action_btn}>
@@ -263,16 +262,16 @@ impl ComponentLicensesTags {
         </div>}
     }
 
-    fn modal_add_license(&self) -> Html {
-        let onclick_add_license = self.link
-            .callback(|_| Msg::RequestAddLicense);
-
-        let onclick_hide_modal = self.link
-            .callback(|_| Msg::ChangeHideAddLicense);
-
-        let onchange_select_add_license = self.link
-            .callback(|ev: ChangeData| Msg::UpdateSelectLicense(match ev {
-              ChangeData::Select(el) => el.value(),
+    fn modal_add_license(
+        &self,
+        link: &Scope<Self>,
+        props: &Properties,
+    ) -> Html {
+        let onclick_add_license = link.callback(|_| Msg::RequestAddLicense);
+        let onclick_hide_modal = link.callback(|_| Msg::ChangeHideAddLicense);
+        let onchange_select_add_license =
+            link.callback(|ev: Event| Msg::UpdateSelectLicense(match ev {
+              Event::Select(el) => el.value(),
               _ => String::new(),
           }));
 

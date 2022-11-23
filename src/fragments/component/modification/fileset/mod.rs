@@ -6,12 +6,11 @@ pub use file::{FilesetFilesBlock, FileOfFilesetItem};
 pub use edit::ManageModificationFilesets;
 pub use download_block::ManageFilesOfFilesetBlock;
 
-use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
+use yew::{Component, Context, html, Html, Properties};
 // use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
-
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, ShowFileInfo};
@@ -27,8 +26,6 @@ pub struct Props {
 
 pub struct FilesOfFilesetCard {
     error: Option<Error>,
-    props: Props,
-    link: ComponentLink<Self>,
     select_fileset_uuid: UUID,
     files_list: Vec<ShowFileInfo>,
 }
@@ -44,25 +41,22 @@ impl Component for FilesOfFilesetCard {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        let select_fileset_uuid = props.select_fileset_uuid.clone();
+    fn create(ctx: &Context<Self>) -> Self {
         Self {
             error: None,
-            props,
-            link,
-            select_fileset_uuid,
+            select_fileset_uuid: ctx.props().select_fileset_uuid.clone(),
             files_list: Vec::new(),
         }
     }
 
-    fn rendered(&mut self, first_render: bool) {
+    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
         if first_render && self.select_fileset_uuid.len() == 36 {
-            self.link.send_message(Msg::RequestFilesOfFileset);
+            ctx.link().send_message(Msg::RequestFilesOfFileset);
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let link = ctx.link().clone();
 
         match msg {
             Msg::RequestFilesOfFileset => {
@@ -100,34 +94,34 @@ impl Component for FilesOfFilesetCard {
         true
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.select_fileset_uuid == props.select_fileset_uuid {
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+        if self.select_fileset_uuid == ctx.props().select_fileset_uuid {
             false
         } else {
-            self.select_fileset_uuid = props.select_fileset_uuid.clone();
-            self.props = props;
-
+            self.select_fileset_uuid = ctx.props().select_fileset_uuid.clone();
             self.files_list.clear();
             if self.select_fileset_uuid.len() == 36 {
-                self.link.send_message(Msg::RequestFilesOfFileset);
+                ctx.link().send_message(Msg::RequestFilesOfFileset);
             }
-
             true
         }
     }
 
-    fn view(&self) -> Html {
-        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let onclick_clear_error = ctx.link().callback(|_| Msg::ClearError);
 
         html!{<>
             <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error.clone())}/>
-            {self.show_files_card()}
+            {self.show_files_card(ctx.props())}
         </>}
     }
 }
 
 impl FilesOfFilesetCard {
-    fn show_files_card(&self) -> Html {
+    fn show_files_card(
+        &self,
+        props: &Properties,
+    ) -> Html {
         html!{<div class="card">
             <table class="table is-fullwidth is-striped">
               <thead>
@@ -143,7 +137,7 @@ impl FilesOfFilesetCard {
               <tfoot>
                 {for self.files_list.iter().map(|file| html!{
                     <FileOfFilesetItem
-                        show_download_btn = {self.props.show_download_btn}
+                        show_download_btn = {props.show_download_btn}
                         file = {file.clone()}
                     />
                 })}

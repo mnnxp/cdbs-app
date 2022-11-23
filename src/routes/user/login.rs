@@ -1,9 +1,7 @@
 use std::sync::{Arc,Mutex};
 use yew::services::fetch::FetchTask;
-use yew::{
-    agent::Bridged, classes, html, Bridge, Callback, Component,
-    ComponentLink, FocusEvent, Html, InputData, Properties, ShouldRender
-};
+// use yew::{agent::Bridged, Bridge};
+use yew::{Component, Callback, Context, html, Html, Properties, Event, classes};
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
 use graphql_client::GraphQLQuery;
 use log::debug;
@@ -11,7 +9,7 @@ use wasm_bindgen_futures::spawn_local;
 
 use crate::fragments::list_errors::ListErrors;
 use crate::error::Error;
-use crate::routes::AppRoute;
+use crate::routes::AppRoute::{self, Register, Profile};
 use crate::services::{set_token, Auth, set_logged_user, get_logged_user, get_value_field};
 use crate::types::{LoginInfo, LoginInfoWrapper, SlimUser, UserToken};
 use crate::gqls::make_query;
@@ -30,9 +28,7 @@ pub struct Login {
     request: LoginInfo,
     response: Callback<Result<UserToken, Error>>,
     task: Option<FetchTask>,
-    props: Props,
     router_agent: Arc<Mutex<Box<dyn Bridge<RouteAgent>>>>,
-    link: ComponentLink<Self>,
 }
 
 pub enum Msg {
@@ -47,30 +43,30 @@ impl Component for Login {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         Login {
             auth: Auth::new(),
             error: None,
-            props,
             request: LoginInfo::default(),
-            response: link.callback(Msg::Response),
-            router_agent: Arc::new(Mutex::new(RouteAgent::bridge(link.callback(|_| Msg::Ignore)))) ,
+            response: ctx.link().callback(Msg::Response),
+            router_agent: Arc::new(Mutex::new(RouteAgent::bridge(ctx.link().callback(|_| Msg::Ignore)))) ,
             task: None,
-            link,
         }
     }
 
-    fn rendered(&mut self, first_render: bool) {
+    fn rendered(&mut self, _ctx: &Context<Self>, first_render: bool) {
         if first_render {
             if let Some(user) = get_logged_user() {
                 // route to profile page if user already logged
-                self.router_agent.lock().unwrap().send(ChangeRoute(AppRoute::Profile(user.username).into()));
+                self.router_agent.lock().unwrap().send(
+                    ChangeRoute(Profile { username: user.username }.into())
+                );
             };
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let props = self.props.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let props = ctx.props().clone();
         let router_agent = self.router_agent.clone();
         match msg {
             Msg::Request => {
@@ -92,7 +88,7 @@ impl Component for Login {
                     debug!("user.username: {}", user.username);
                     let username = user.username.clone();
                     props.callback.emit(user);
-                    router_agent.lock().unwrap().send(ChangeRoute(AppRoute::Profile(username).into()));
+                    router_agent.lock().unwrap().send(ChangeRoute(Profile { username }.into()));
                 });
                 // debug!("get_token().unwrap(): {:?}", get_token().unwrap());
             },
@@ -107,27 +103,23 @@ impl Component for Login {
         true
     }
 
-    fn change(&mut self, _props: Self::Properties) -> ShouldRender {
+    fn changed(&mut self, _ctx: &Context<Self>) -> bool {
         false
     }
 
-    fn view(&self) -> Html {
-        let onsubmit = self.link.callback(|ev: FocusEvent| {
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let onsubmit = ctx.link().callback(|ev: FocusEvent| {
             ev.prevent_default(); /* Prevent event propagation */
             Msg::Request
         });
-        let oninput_username = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateUsername(ev.value));
-        let oninput_password = self
-            .link
-            .callback(|ev: InputData| Msg::UpdatePassword(ev.value));
+        let oninput_username = ctx.link().callback(|ev: Event| Msg::UpdateUsername(ev.value));
+        let oninput_password = ctx.link().callback(|ev: Event| Msg::UpdatePassword(ev.value));
 
         html!{<div class="container page">
             <div class="auth-page">
                 <h1 class="title">{ get_value_field(&13) }</h1>
                 <h2 class="subtitle">
-                    <RouterAnchor<AppRoute> route={AppRoute::Register}>
+                    <RouterAnchor<AppRoute> route={Register}>
                         { get_value_field(&18) }
                     </RouterAnchor<AppRoute>>
                 </h2>

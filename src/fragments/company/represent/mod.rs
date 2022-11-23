@@ -6,7 +6,7 @@ pub use add_represent::AddCompanyRepresentCard;
 use list_item::ListItem;
 use change_item::ChangeItem;
 
-use yew::{html, Component, ComponentLink, Html, Properties, ShouldRender};
+use yew::{Component, Context, html, html::Scope, Html, Properties};
 // use log::debug;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
@@ -19,9 +19,8 @@ pub enum Msg {
 
 pub struct CompanyRepresents {
     error: Option<Error>,
-    link: ComponentLink<Self>,
-    props: Props,
     show_type: ListState,
+    show_manage_btn: bool,
 }
 
 #[derive(Properties, Clone)]
@@ -34,17 +33,16 @@ impl Component for CompanyRepresents {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         Self {
             error: None,
-            link,
-            props,
             show_type: ListState::get_from_storage(),
+            show_manage_btn: ctx.props().show_manage_btn,
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        // let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        // let link = ctx.link().clone();
         match msg {
             Msg::SwitchShowType => {
                 match self.show_type {
@@ -57,23 +55,23 @@ impl Component for CompanyRepresents {
         true
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.show_manage_btn == props.show_manage_btn {
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+        if self.show_manage_btn == ctx.props().show_manage_btn {
             // debug!("if change");
             false
         } else {
-            self.props.show_manage_btn = props.show_manage_btn;
+            self.show_manage_btn = ctx.props().show_manage_btn;
             // debug!("else change");
             true
         }
     }
 
-    fn view(&self) -> Html {
-        match &self.props.show_manage_btn {
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        match &ctx.props().show_manage_btn {
             true => html!{<>
                 <ListErrors error={self.error.clone()}/>
                 <div class="representsBox">
-                    {for self.props.list.iter().map(|represent|
+                    {for ctx.props().list.iter().map(|represent|
                         html!{<ChangeItem data={represent.clone()} />}
                     )}
                 </div>
@@ -81,7 +79,7 @@ impl Component for CompanyRepresents {
             false => html!{<>
                 <ListErrors error={self.error.clone()}/>
                 <div class="representsBox" >
-                    {self.show_card()}
+                    {self.show_card(ctx.link(), ctx.props())}
                 </div>
             </>},
         }
@@ -89,8 +87,12 @@ impl Component for CompanyRepresents {
 }
 
 impl CompanyRepresents {
-    fn show_card(&self) -> Html {
-        let onclick_change_view = self.link.callback(|_|Msg::SwitchShowType);
+    fn show_card(
+        &self,
+        link: &Scope<Self>,
+        props: &Properties,
+    ) -> Html {
+        let onclick_change_view = link.callback(|_|Msg::SwitchShowType);
 
         let (class_for_icon, class_for_list) = match self.show_type {
             ListState::Box => ("fas fa-bars", "flex-box"),
@@ -110,7 +112,7 @@ impl CompanyRepresents {
               </div>
             </div>
             <div class={class_for_list}>
-              {for self.props.list.iter().map(|represent|
+              {for props.list.iter().map(|represent|
                   html!{
                       <ListItem
                           data={represent.clone()}

@@ -1,11 +1,11 @@
-use yew::{agent::Bridged, html, Bridge, Component, ComponentLink, Html, ShouldRender};
+use yew::{Component, Context, html, html::Scope, Html};
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
 use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
-use crate::routes::AppRoute;
+use crate::routes::AppRoute::Login;
 use crate::error::{Error, get_error};
 use crate::fragments::list_errors::ListErrors;
 use crate::services::{get_logged_user, get_value_field};
@@ -33,8 +33,6 @@ pub struct Notifications {
     error: Option<Error>,
     notifications: Vec<ShowNotification>,
     router_agent: Box<dyn Bridge<RouteAgent>>,
-    // props: Props,
-    link: ComponentLink<Self>,
     read_notification: Vec<i64>,
     delete_notification: Vec<i64>,
     select_menu: Menu,
@@ -59,27 +57,23 @@ impl Component for Notifications {
     type Message = Msg;
     type Properties = ();
 
-    fn create(_props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        Notifications {
+    fn create(ctx: &Context<Self>) -> Self {
+        Self {
             error: None,
             notifications: Vec::new(),
-            router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
-            // props,
-            link,
+            router_agent: RouteAgent::bridge(ctx.link().callback(|_| Msg::Ignore)),
             read_notification: Vec::new(),
             delete_notification: Vec::new(),
             select_menu: Menu::GetAll,
         }
     }
 
-    fn rendered(&mut self, first_render: bool) {
-        let link = self.link.clone();
-
+    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
+        let link = ctx.link().clone();
         if let None = get_logged_user() {
             // route to login page if not found token
-            self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
+            self.router_agent.send(ChangeRoute(Login.into()));
         };
-
         if first_render {
             spawn_local(async move {
                 let res = make_query(GetNotifications::build_query(
@@ -92,13 +86,13 @@ impl Component for Notifications {
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let link = ctx.link().clone();
 
         match msg {
             Msg::SelectMenu(value) => {
                 self.select_menu = value;
-                self.rendered(false);
+                self.rendered(false, ctx);
             },
             Msg::RequestReadNotification => {
                 let read_notifications_ids = self.read_notification.clone();
@@ -121,13 +115,11 @@ impl Component for Notifications {
             Msg::ReadOneNotificationIds(id) => {
                 debug!("ReadOneNotificationIds: {}", id);
                 self.read_notification.push(id);
-
                 link.send_message(Msg::RequestReadNotification);
             },
             Msg::RemoveOneNotificationIds(id) => {
                 debug!("RemoveOneNotificationIds: {}", id);
                 self.delete_notification.push(id);
-
                 link.send_message(Msg::RequestRemoveNotification);
             },
             Msg::GetAllNotification(res) => {
@@ -138,12 +130,9 @@ impl Component for Notifications {
                     false => {
                         let notifications_data: Vec<ShowNotification> = serde_json::from_value(res_value.get("notifications").unwrap().clone()).unwrap();
                         debug!("User notifications data: {:?}", notifications_data);
-
                         self.notifications = notifications_data;
                     },
-                    true => {
-                        self.error = Some(get_error(&data));
-                    },
+                    true => self.error = Some(get_error(&data)),
                 }
             },
             // Msg::GetNotificationByDegree(res) => {},
@@ -156,14 +145,11 @@ impl Component for Notifications {
                     false => {
                         let read_notification: usize = serde_json::from_value(res_value.get("readNotifications").unwrap().clone()).unwrap();
                         debug!("Read notifications data: {:?}", read_notification);
-
                         if read_notification > 0 {
-                            self.rendered(true);
+                            self.rendered(true, ctx);
                         }
                     },
-                    true => {
-                        self.error = Some(get_error(&data));
-                    },
+                    true => self.error = Some(get_error(&data)),
                 }
             },
             Msg::GetRemoveNotification(res) => {
@@ -176,12 +162,10 @@ impl Component for Notifications {
                         debug!("Read notifications data: {:?}", delete_notification);
 
                         if delete_notification > 0 {
-                            self.rendered(true);
+                            self.rendered(true, ctx);
                         }
                     },
-                    true => {
-                        self.error = Some(get_error(&data));
-                    },
+                    true => self.error = Some(get_error(&data)),
                 }
             },
             Msg::Ignore => {},
@@ -190,11 +174,11 @@ impl Component for Notifications {
         true
     }
 
-    fn change(&mut self, _props: Self::Properties) -> ShouldRender {
+    fn changed(&mut self, _ctx: &Context<Self>) -> bool {
         false
     }
 
-    fn view(&self) -> Html {
+    fn view(&self, ctx: &Context<Self>) -> Html {
         html!{
             <div class="settings-page">
                 <ListErrors error={self.error.clone()}/>
@@ -204,7 +188,7 @@ impl Component for Notifications {
                         <div class="card">
                             <div class="column">
                                 <>{for self.notifications.iter().rev().map(|notif_data|
-                                    {self.notification_card(notif_data)}
+                                    {self.notification_card(ctx.link(), notif_data)}
                                 )}</>
                             </div>
                         </div>
@@ -219,6 +203,7 @@ impl Component for Notifications {
 impl Notifications {
     fn notification_card(
         &self,
+        link: &Scope<Self>,
         notification_data: &ShowNotification,
     ) -> Html {
         let ShowNotification {
@@ -228,23 +213,17 @@ impl Notifications {
             created_at,
             is_read,
         } = notification_data;
-
         let DegreeImportanceTranslateList {
             degree_importance_id,
             degree,
             ..
         } = degree_importance;
-
         let notif_id: i64 = *id as i64;
-
         debug!("onclick_set_read: {}", notif_id);
-
         let onclick_set_read =
-            self.link.callback(move |_| Msg::ReadOneNotificationIds(notif_id.clone()));
-
+            link.callback(move |_| Msg::ReadOneNotificationIds(notif_id.clone()));
         let onclick_delete_notif =
-            self.link.callback(move |_| Msg::RemoveOneNotificationIds(notif_id.clone()));
-
+            link.callback(move |_| Msg::RemoveOneNotificationIds(notif_id.clone()));
         let (class_degree, class_icon) = match degree_importance_id {
             1..=2 => ("notification is-danger", "fas fa-ban"),
             3 =>  ("notification is-warning", "fas fa-exclamation-triangle"),
@@ -252,7 +231,6 @@ impl Notifications {
             5 => ("notification is-info", "fas fa-info-circle"),
             _ => ("", ""),
         };
-
         let class_degree = match is_read {
             true => format!("{} is-light", class_degree),
             false => class_degree.to_string(),

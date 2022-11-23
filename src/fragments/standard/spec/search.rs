@@ -1,7 +1,4 @@
-use yew::{
-    classes, NodeRef, html, Component, ComponentLink,
-    InputData, Properties, ShouldRender, Html,
-};
+use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, Event, classes, NodeRef};
 use yew::services::timeout::{TimeoutService, TimeoutTask};
 use log::debug;
 use graphql_client::GraphQLQuery;
@@ -22,8 +19,7 @@ pub struct Props {
 }
 
 pub struct SearchSpecsTags {
-    props: Props,
-    link: ComponentLink<Self>,
+    standard_uuid: UUID,
     ipt_timer: Option<TimeoutTask>,
     ipt_ref: NodeRef,
     specs_search_loading: bool,
@@ -46,10 +42,9 @@ impl Component for SearchSpecsTags {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         Self {
-            props,
-            link,
+            standard_uuid: ctx.props().standard_uuid,
             ipt_timer: None,
             ipt_ref: NodeRef::default(),
             specs_search_loading: false,
@@ -59,8 +54,8 @@ impl Component for SearchSpecsTags {
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let link = ctx.link().clone();
 
         match msg {
             Msg::ParseSpecs => {
@@ -68,7 +63,7 @@ impl Component for SearchSpecsTags {
                 let count_old_found = self.found_specs.len(); // calculate and used twice
                 let mut temp_found: Vec<Spec> = Vec::new(); // for save size found_specs array
                 temp_found.resize(count_old_found, Spec::default());
-                for spec in &self.props.standard_specs {
+                for spec in &ctx.props().standard_specs {
                     del_specs_ids.push(spec.spec_id);
                 }
                 // debug!("self.added_specs: {:?}", self.added_specs);
@@ -184,14 +179,14 @@ impl Component for SearchSpecsTags {
             },
             Msg::DeleteCurrentSpec(spec_id) => {
                 let mut props_specs: Vec<Spec> = Vec::new();
-                for spec in self.props.standard_specs.iter() {
+                for spec in ctx.props().standard_specs.iter() {
                     if spec.spec_id == spec_id {
                         props_specs.push(Spec::default());
                     } else {
                         props_specs.push(spec.clone());
                     }
                 }
-                self.props.standard_specs = props_specs;
+                ctx.props().standard_specs = props_specs;
             },
             Msg::Ignore => {},
         }
@@ -199,31 +194,30 @@ impl Component for SearchSpecsTags {
         true
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.standard_uuid == props.standard_uuid {
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+        if self.standard_uuid == ctx.props().standard_uuid {
             false
         } else {
-            self.props = props;
+            self.standard_uuid = ctx.props().standard_uuid;
             true
         }
     }
 
-    fn view(&self) -> Html {
-        html!{
-            {self.fieldset_manage_specs()}
-        }
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        html!{ self.fieldset_manage_specs() }
     }
 }
 
 impl SearchSpecsTags {
-    fn fieldset_manage_specs(&self) -> Html {
+    fn fieldset_manage_specs(
+        &self,
+        link: &Scope<Self>,
+        props: &Properties,
+    ) -> Html {
         let ipt_ref = self.ipt_ref.clone();
-        let onclick_added_spec = self.link
-            .callback(|value: usize| Msg::AddedSpec(value));
-        let onclick_del_new_spec = self.link
-            .callback(|value: usize| Msg::DeleteNewSpec(value));
-        let onclick_del_old_spec = self.link
-            .callback(|value: usize| Msg::DeleteCurrentSpec(value));
+        let onclick_added_spec = link.callback(|value: usize| Msg::AddedSpec(value));
+        let onclick_del_new_spec = link.callback(|value: usize| Msg::DeleteNewSpec(value));
+        let onclick_del_old_spec = link.callback(|value: usize| Msg::DeleteCurrentSpec(value));
 
         let mut class_p = classes!("control", "has-icons-left");
         if self.specs_search_loading {
@@ -234,7 +228,7 @@ impl SearchSpecsTags {
             <div class="panel-block">
               <p class={class_p} >
                 <input ref={ipt_ref}
-                    oninput={self.link.callback(|ev: InputData| Msg::SetIptTimer(ev.value))}
+                    oninput={link.callback(|ev: Event| Msg::SetIptTimer(ev.value))}
                     class="input"
                     type="text"
                     placeholder={get_value_field(&192)} // Enter data for specifications search
@@ -253,7 +247,7 @@ impl SearchSpecsTags {
                             html!{<SpecTagItem
                                 show_manage_btn = {true}
                                 active_info_btn = {false}
-                                standard_uuid = {self.props.standard_uuid.clone()}
+                                standard_uuid = {props.standard_uuid.clone()}
                                 spec = {spec.clone()}
                                 is_added = {false}
                                 style_tag = {"is-success".to_string()}
@@ -269,7 +263,7 @@ impl SearchSpecsTags {
                         html!{<SpecTagItem
                             show_manage_btn = true
                             active_info_btn = false
-                            standard_uuid = {self.props.standard_uuid.clone()}
+                            standard_uuid = {props.standard_uuid.clone()}
                             spec = {st_spec.clone()}
                             is_added = true
                             style_tag = {"is-info".to_string()}
@@ -282,8 +276,8 @@ impl SearchSpecsTags {
             <div class="panel-block">
                 <SpecsTags
                     show_manage_btn = true
-                    standard_uuid = {self.props.standard_uuid.clone()}
-                    specs = {self.props.standard_specs.clone()}
+                    standard_uuid = {props.standard_uuid.clone()}
+                    specs = {props.standard_specs.clone()}
                     delete_spec = {Some(onclick_del_old_spec.clone())}
                     />
             </div>

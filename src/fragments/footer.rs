@@ -1,4 +1,4 @@
-use yew::{html, classes, Component, ComponentLink, Html, ShouldRender};
+use yew::{html, classes, Component, ComponentLink, Html};
 use crate::services::{set_lang, get_lang};
 use crate::services::get_value_field;
 
@@ -35,7 +35,7 @@ impl Component for Footer {
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::ShowTerms => self.show_terms = !self.show_terms,
             Msg::ShowAbout => self.show_about = !self.show_about,
@@ -50,16 +50,16 @@ impl Component for Footer {
         true
     }
 
-    fn change(&mut self, _: Self::Properties) -> ShouldRender {
+    fn changed(&mut self, _ctx: &Context<Self>) -> bool {
         false
     }
 
-    fn view(&self) -> Html {
+    fn view(&self, ctx: &Context<Self>) -> Html {
         let current_info = "© CADBase 2022";
-        let onclick_lang_en = self.link.callback(|_| Msg::ChangeLanguage(1));
-        let onclick_lang_ru = self.link.callback(|_| Msg::ChangeLanguage(2));
-        let onclick_show_terms = self.link.callback(|_| Msg::ShowTerms);
-        let onclick_show_about = self.link.callback(|_| Msg::ShowAbout);
+        let onclick_lang_en = ctx.link().callback(|_| Msg::ChangeLanguage(1));
+        let onclick_lang_ru = ctx.link().callback(|_| Msg::ChangeLanguage(2));
+        let onclick_show_terms = ctx.link().callback(|_| Msg::ShowTerms);
+        let onclick_show_about = ctx.link().callback(|_| Msg::ShowAbout);
 
         let (button_en, button_ru) = match self.current_lang {
             2 => (classes!("button"), classes!("button", "is-info")),
@@ -119,7 +119,7 @@ impl Component for Footer {
 
 impl Footer {
     fn modal_terms(&self) -> Html {
-        let onclick_show_terms = self.link.callback(|_| Msg::ShowTerms);
+        let onclick_show_terms = ctx.link().callback(|_| Msg::ShowTerms);
 
         let class_modal = match &self.show_terms {
             true => "modal is-active",
@@ -149,7 +149,7 @@ impl Footer {
     }
 
     fn modal_about_us(&self) -> Html {
-        let onclick_show_about = self.link.callback(|_| Msg::ShowAbout);
+        let onclick_show_about = ctx.link().callback(|_| Msg::ShowAbout);
 
         let class_modal = match &self.show_about {
             true => "modal is-active",

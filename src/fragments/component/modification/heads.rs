@@ -1,4 +1,4 @@
-use yew::{html, Component, ComponentLink, Html, Properties, ShouldRender};
+use yew::{Component, Context, html, Html, Properties};
 use log::debug;
 use crate::types::{UUID, Param};
 use crate::services::get_value_field;
@@ -11,48 +11,53 @@ pub struct Props {
 }
 
 pub struct ModificationTableHeads {
-    props: Props,
+    component_uuid: UUID,
 }
 
 impl Component for ModificationTableHeads {
     type Message = ();
     type Properties = Props;
-    fn create(props: Self::Properties, _link: ComponentLink<Self>) -> Self {
-        Self { props }
+    fn create(ctx: &Context<Self>) -> Self {
+        Self {
+            component_uuid: ctx.props().component_uuid,
+        }
     }
 
-    fn update(&mut self, _msg: Self::Message) -> ShouldRender {
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         false
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.component_uuid == props.component_uuid {
-            debug!("no change self.props.params: {:?}", self.props.params);
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+        if self.component_uuid == ctx.props().component_uuid {
+            debug!("no change ctx.props().params: {:?}", ctx.props().params);
             false
         } else {
-            debug!("change self.props.params: {:?}", self.props.params);
-            self.props = props;
+            debug!("change ctx.props().params: {:?}", ctx.props().params);
+            self.component_uuid = ctx.props().component_uuid;
             true
         }
     }
 
-    fn view(&self) -> Html {
-        self.show_modification_head()
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        self.show_modification_head(ctx.props())
     }
 }
 
 impl ModificationTableHeads {
-    fn show_modification_head(&self) -> Html {
+    fn show_modification_head(
+        &self,
+        props: &Properties,
+    ) -> Html {
         html!{<>
-            {match self.props.show_new_column {
+            {match props.show_new_column {
                 true => html!{<th>{ get_value_field(&111) }</th>}, // Action
                 false => html!{<th>{ get_value_field(&115) }</th>}, // Action | files
             }}
             <th>{ get_value_field(&116) }</th> // modification
-            {for self.props.params.iter().map(|head| {
+            {for props.params.iter().map(|head| {
                 html!{<th>{ head.paramname.clone() }</th>}
             })}
-            {match self.props.show_new_column {
+            {match props.show_new_column {
                 true => html!{<th>{ get_value_field(&117) }</th>}, // add
                 false => html!{},
             }}

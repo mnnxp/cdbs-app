@@ -1,4 +1,4 @@
-use yew::{Component, Callback, ComponentLink, Html, Properties, ShouldRender, html, ChangeData};
+use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, Event};
 use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
@@ -22,8 +22,7 @@ pub struct Props {
 
 pub struct ManageFilesOfFilesetBlock {
     error: Option<Error>,
-    props: Props,
-    link: ComponentLink<Self>,
+    select_modification_uuid: UUID,
     select_fileset_uuid: UUID,
     open_fileset_files_card: bool,
     open_modal_download_files: bool,
@@ -47,8 +46,8 @@ impl Component for ManageFilesOfFilesetBlock {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        let select_fileset_uuid = props.current_filesets_program
+    fn create(ctx: &Context<Self>) -> Self {
+        let select_fileset_uuid = ctx.props().current_filesets_program
             .first()
             .map(|(fileset_uuid, program_name)| {
                 debug!("create block mod fileset_uuid: {:?}", fileset_uuid);
@@ -59,8 +58,7 @@ impl Component for ManageFilesOfFilesetBlock {
 
         Self {
             error: None,
-            props,
-            link,
+            select_modification_uuid: ctx.props().select_modification_uuid,
             select_fileset_uuid,
             open_fileset_files_card: false,
             open_modal_download_files: false,
@@ -70,8 +68,8 @@ impl Component for ManageFilesOfFilesetBlock {
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let link = ctx.link().clone();
 
         match msg {
             Msg::RequestDownloadFilesetFiles => {
@@ -114,7 +112,7 @@ impl Component for ManageFilesOfFilesetBlock {
                 }
             },
             Msg::ParseFirstFilesetUuid => {
-                self.select_fileset_uuid = self.props.current_filesets_program
+                self.select_fileset_uuid = ctx.props().current_filesets_program
                     .first()
                     .map(|(fileset_uuid, program_name)| {
                         debug!("mod fileset_uuid: {:?}", fileset_uuid);
@@ -122,10 +120,10 @@ impl Component for ManageFilesOfFilesetBlock {
                         fileset_uuid.clone()
                     })
                     .unwrap_or_default();
-                self.props.callback_select_fileset_uuid.emit(self.select_fileset_uuid.clone());
+                ctx.props().callback_select_fileset_uuid.emit(self.select_fileset_uuid.clone());
             },
             Msg::SelectFilesetUuid(fileset_uuid) => {
-                self.props.callback_select_fileset_uuid.emit(fileset_uuid.clone());
+                ctx.props().callback_select_fileset_uuid.emit(fileset_uuid.clone());
                 self.select_fileset_uuid = fileset_uuid;
                 // for get new download urls
                 self.flag_get_dowload_url = false;
@@ -133,50 +131,54 @@ impl Component for ManageFilesOfFilesetBlock {
             Msg::ShowModalDownloadFiles => self.open_modal_download_files = !self.open_modal_download_files,
             Msg::OpenFilesetFilesBlock => {
                 self.open_fileset_files_card = !self.open_fileset_files_card;
-                self.props.callback_open_fileset_uuid.emit(self.open_fileset_files_card);
+                ctx.props().callback_open_fileset_uuid.emit(self.open_fileset_files_card);
             },
             Msg::ClearError => self.error = None,
         }
         true
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.select_modification_uuid == props.select_modification_uuid {
-            debug!("no change download block: {:?}", props.select_modification_uuid);
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+        if self.select_modification_uuid == ctx.props().select_modification_uuid {
+            debug!("no change download block: {:?}", ctx.props().select_modification_uuid);
             false
         } else {
-            debug!("change download block: {:?}", props.select_modification_uuid);
-            self.props = props;
-            self.link.send_message(Msg::ParseFirstFilesetUuid);
+            debug!("change download block: {:?}", ctx.props().select_modification_uuid);
+            self.select_modification_uuid = ctx.props().select_modification_uuid;
+            ctx.link().send_message(Msg::ParseFirstFilesetUuid);
             true
         }
     }
 
-    fn view(&self) -> Html {
-        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let onclick_clear_error = ctx.link().callback(|_| Msg::ClearError);
 
         html!{<>
             <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error.clone())}/>
-            {self.modal_download_files()}
-            {self.show_download_block()}
+            {self.modal_download_files(ctx.link())}
+            {self.show_download_block(ctx.link(), ctx.props())}
         </>}
     }
 }
 
 impl ManageFilesOfFilesetBlock {
-    fn show_download_block(&self) -> Html {
-        let onchange_select_fileset_btn = self.link
-            .callback(|ev: ChangeData| Msg::SelectFilesetUuid(match ev {
-              ChangeData::Select(el) => el.value(),
+    fn show_download_block(
+        &self,
+        link: &Scope<Self>,
+        props: &Properties,
+    ) -> Html {
+        let onchange_select_fileset_btn = link
+            .callback(|ev: Event| Msg::SelectFilesetUuid(match ev {
+              Event::Select(el) => el.value(),
               _ => String::new(),
           }));
 
-        let onclick_open_fileset_files_list_btn = self.link
+        let onclick_open_fileset_files_list_btn = link
             .callback(|_| Msg::OpenFilesetFilesBlock);
 
         let onclick_download_fileset_btn = match self.flag_get_dowload_url {
-            true => self.link.callback(|_| Msg::ShowModalDownloadFiles),
-            false => self.link.callback(|_| Msg::RequestDownloadFilesetFiles),
+            true => link.callback(|_| Msg::ShowModalDownloadFiles),
+            false => link.callback(|_| Msg::RequestDownloadFilesetFiles),
         };
 
         let class_fileset_btn = match self.open_fileset_files_card {
@@ -195,7 +197,7 @@ impl ManageFilesOfFilesetBlock {
                     id="select-fileset-program"
                     select={self.select_fileset_uuid.clone()}
                     onchange={onchange_select_fileset_btn} >
-                  {for self.props.current_filesets_program.iter().map(|(fileset_uuid, program_name)|
+                  {for props.current_filesets_program.iter().map(|(fileset_uuid, program_name)|
                       html!{
                           <option value={fileset_uuid.to_string()}
                                 selected={fileset_uuid == &self.select_fileset_uuid} >
@@ -218,9 +220,11 @@ impl ManageFilesOfFilesetBlock {
         </div>}
     }
 
-    fn modal_download_files(&self) -> Html {
-        let onclick_modal_download_btn =
-            self.link.callback(|_| Msg::ShowModalDownloadFiles);
+    fn modal_download_files(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onclick_modal_download_btn = link.callback(|_| Msg::ShowModalDownloadFiles);
 
         let class_modal = match &self.open_modal_download_files {
             true => "modal is-active",

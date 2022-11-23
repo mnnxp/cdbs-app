@@ -1,7 +1,5 @@
-use yew::{
-    agent::Bridged, classes, html, Bridge, Component,
-    ComponentLink, Html, ShouldRender, Properties
-};
+// use yew::{agent::Bridged, classes, Bridge};
+use yew::{Component, Context, html, html::Scope, Html, Properties, classes};
 use yew_router::{
     service::RouteService,
     agent::RouteRequest::ChangeRoute,
@@ -12,7 +10,7 @@ use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
-use crate::routes::AppRoute;
+use crate::routes::AppRoute::{Login, ShowCompany, StandardSettings};
 use crate::error::{get_error, Error};
 use crate::fragments::{
     switch_icon::res_btn,
@@ -39,8 +37,6 @@ pub struct ShowStandard {
     current_user_owner: bool,
     // task: Option<FetchTask>,
     router_agent: Box<dyn Bridge<RouteAgent>>,
-    props: Props,
-    link: ComponentLink<Self>,
     subscribers: usize,
     is_followed: bool,
     show_full_description: bool,
@@ -74,16 +70,14 @@ impl Component for ShowStandard {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         ShowStandard {
             error: None,
             standard: None,
             current_standard_uuid: String::new(),
             current_user_owner: false,
             // task: None,
-            router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
-            props,
-            link,
+            router_agent: RouteAgent::bridge(ctx.link().callback(|_| Msg::Ignore)),
             subscribers: 0,
             is_followed: false,
             show_full_description: false,
@@ -92,10 +86,10 @@ impl Component for ShowStandard {
         }
     }
 
-    fn rendered(&mut self, first_render: bool) {
+    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
         if let None = get_logged_user() {
             // route to login page if not found token
-            self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
+            self.router_agent.send(ChangeRoute(Login.into()));
         };
 
         // get standard uuid for request standard data
@@ -110,7 +104,7 @@ impl Component for ShowStandard {
         // debug!("self.current_standard_uuid {:#?}", self.current_standard_uuid);
 
         if first_render || not_matches_standard_uuid {
-            let link = self.link.clone();
+            let link = ctx.link().clone();
 
             // update current_standard_uuid for checking change standard in route
             self.current_standard_uuid = target_standard_uuid.to_string();
@@ -125,12 +119,12 @@ impl Component for ShowStandard {
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let link = ctx.link().clone();
 
         match msg {
             Msg::RequestDownloadFiles => {
-                let standard_uuid = self.props.standard_uuid.clone();
+                let standard_uuid = ctx.props().standard_uuid.clone();
                 spawn_local(async move {
                     let ipt_standard_files_arg = standard_files::IptStandardFilesArg{
                         filesUuids: None,
@@ -232,7 +226,6 @@ impl Component for ShowStandard {
                         let standard_data: StandardInfo =
                             serde_json::from_value(res_value.get("standard").unwrap().clone()).unwrap();
                         debug!("Standard data: {:?}", standard_data);
-
                         self.subscribers = standard_data.subscribers;
                         self.is_followed = standard_data.is_followed;
                         self.current_standard_uuid = standard_data.uuid.clone();
@@ -241,34 +234,28 @@ impl Component for ShowStandard {
                         }
                         // description length check for show
                         self.show_full_description = standard_data.description.len() < 250;
-
                         // add main image
                         self.file_arr.push(standard_data.image_file.clone());
-
                         self.standard = Some(standard_data);
                     },
                     true => self.error = Some(get_error(&data)),
                 }
             },
-            Msg::ShowDescription => {
-                self.show_full_description = !self.show_full_description;
-            },
-            Msg::ShowComponentsList => {
-                self.show_related_components = !self.show_related_components;
-            },
+            Msg::ShowDescription => self.show_full_description = !self.show_full_description,
+            Msg::ShowComponentsList => self.show_related_components = !self.show_related_components,
             Msg::OpenStandardOwner => {
                 if let Some(standard_data) = &self.standard {
-                    // Redirect to owner standard page
-                    self.router_agent.send(ChangeRoute(AppRoute::ShowCompany(
-                        standard_data.owner_company.uuid.to_string()
-                    ).into()));
+                    // Redirect to ownercompany standard page
+                    self.router_agent.send(
+                        ChangeRoute(ShowCompany { uuid: standard_data.owner_company.uuid.to_string() }.into())
+                    );
                 }
             },
             Msg::OpenStandardSetting => {
                 if let Some(standard_data) = &self.standard {
                     // Redirect to page for change and update standard
                     self.router_agent.send(
-                        ChangeRoute(AppRoute::StandardSettings(standard_data.uuid.clone()).into())
+                        ChangeRoute(StandardSettings { uuid: standard_data.uuid.to_string() }.into())
                     );
                 }
             },
@@ -277,16 +264,16 @@ impl Component for ShowStandard {
         true
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.standard_uuid == props.standard_uuid {
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+        if self.current_standard_uuid == ctx.props().standard_uuid {
             false
         } else {
-            self.props = props;
+            self.current_standard_uuid = ctx.props().standard_uuid;
             true
         }
     }
 
-    fn view(&self) -> Html {
+    fn view(&self, ctx: &Context<Self>) -> Html {
         match &self.standard {
             Some(standard_data) => html!{
                 <div class="standard-page">
@@ -294,7 +281,7 @@ impl Component for ShowStandard {
                     <div class="container page">
                         <div class="row">
                             <div class="card column">
-                              {self.show_main_card(standard_data)}
+                              {self.show_main_card(ctx.link(), standard_data)}
                             </div>
                             {match &self.show_related_components {
                                 true => {self.show_related_components(&standard_data.uuid)},
@@ -324,13 +311,11 @@ impl Component for ShowStandard {
 impl ShowStandard {
     fn show_main_card(
         &self,
+        link: &Scope<Self>,
         standard_data: &StandardInfo,
     ) -> Html {
-        let onclick_open_owner_company = self.link
-            .callback(|_| Msg::OpenStandardOwner);
-
-        let show_description_btn = self.link
-            .callback(|_| Msg::ShowDescription);
+        let onclick_open_owner_company = link.callback(|_| Msg::OpenStandardOwner);
+        let show_description_btn = link.callback(|_| Msg::ShowDescription);
 
         html!{
             <div class="columns">
@@ -364,10 +349,10 @@ impl ShowStandard {
                     {standard_data.name.clone()}
                 </div>
                 <div class="buttons flexBox">
-                    {self.show_related_components_btn()}
+                    {self.show_related_components_btn(link)}
                     // {self.show_download_btn()}
-                    {self.show_setting_btn()}
-                    {self.show_followers_btn()}
+                    {self.show_setting_btn(link)}
+                    {self.show_followers_btn(link)}
                     // {self.show_share_btn()}
                 </div>
                 <div class="standard-description">{
@@ -488,10 +473,13 @@ impl ShowStandard {
         </>}
     }
 
-    fn show_followers_btn(&self) -> Html {
+    fn show_followers_btn(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
         let (class_fav, onclick_following) = match self.is_followed {
-            true => ("fas fa-bookmark", self.link.callback(|_| Msg::UnFollow)),
-            false => ("far fa-bookmark", self.link.callback(|_| Msg::Follow)),
+            true => ("fas fa-bookmark", link.callback(|_| Msg::UnFollow)),
+            false => ("far fa-bookmark", link.callback(|_| Msg::Follow)),
         };
 
         html!{<>
@@ -521,10 +509,11 @@ impl ShowStandard {
     //     }
     // }
 
-    fn show_related_components_btn(&self) -> Html {
-        let onclick_related_components_btn = self.link
-            .callback(|_| Msg::ShowComponentsList);
-
+    fn show_related_components_btn(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onclick_related_components_btn = link.callback(|_| Msg::ShowComponentsList);
         let (text_btn, classes_btn) = match &self.show_related_components {
             true => (get_value_field(&295), "button"),
             false => (get_value_field(&296), "button is-info is-light"),
@@ -555,8 +544,7 @@ impl ShowStandard {
     }
 
     // fn show_download_btn(&self) -> Html {
-    //     let onclick_download_standard_btn =
-    //         self.link.callback(|_| Msg::RequestDownloadFiles);
+    //     let onclick_download_standard_btn = link.callback(|_| Msg::RequestDownloadFiles);
     //
     //     html!{
     //         <button class="button is-info"
@@ -566,9 +554,11 @@ impl ShowStandard {
     //     }
     // }
 
-    fn show_setting_btn(&self) -> Html {
-        let onclick_setting_standard_btn = self.link
-            .callback(|_| Msg::OpenStandardSetting);
+    fn show_setting_btn(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onclick_setting_standard_btn = link.callback(|_| Msg::OpenStandardSetting);
 
         match &self.current_user_owner {
             true => {res_btn(

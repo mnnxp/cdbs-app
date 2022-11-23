@@ -1,7 +1,7 @@
 //! The root app contains initial authentication and url routes
 
 use yew::services::fetch::FetchTask;
-use yew::{agent::Bridged, html, Bridge, Component, ComponentLink, Html, ShouldRender};
+use yew::prelude::*;
 use yew_router::prelude::*;
 
 use wasm_bindgen_futures::spawn_local;
@@ -41,7 +41,7 @@ pub struct App {
 
 pub enum Msg {
     CurrentUserResponse(Result<SlimUser, Error>),
-    Route(Route),
+    Route(Router),
     Authenticated(SlimUser),
     Logout,
 }
@@ -50,7 +50,7 @@ impl Component for App {
     type Message = Msg;
     type Properties = ();
 
-    fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         let router_agent = RouteAgent::bridge(link.callback(Msg::Route));
         let route_service: RouteService = RouteService::new();
         let mut route = route_service.get_route();
@@ -65,10 +65,10 @@ impl Component for App {
         }
     }
 
-    fn rendered(&mut self, first_render: bool) {
+    fn rendered(&mut self, _ctx: &Context<Self>, first_render: bool) {
         // Get current user info if a token is available when mounted
         if first_render && is_authenticated() {
-            let link = self.link.clone();
+            let link = ctx.link().clone();
             // let task = self.auth.current(self.current_user_response.clone());
             // self.current_user_task = Some(task);
             spawn_local(async move {
@@ -78,7 +78,7 @@ impl Component for App {
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::CurrentUserResponse(res) => {
                 match res {
@@ -105,14 +105,14 @@ impl Component for App {
         true
     }
 
-    fn change(&mut self, _: Self::Properties) -> ShouldRender {
+    fn changed(&mut self, _ctx: &Context<Self>) -> bool {
         false
     }
 
-    fn view(&self) -> Html {
-        let callback_login = self.link.callback(Msg::Authenticated);
-        // let callback_register = self.link.callback(Msg::Authenticated);
-        let callback_logout = self.link.callback(|_| Msg::Logout);
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let callback_login = ctx.link().callback(Msg::Authenticated);
+        // let callback_register = ctx.link().callback(Msg::Authenticated);
+        let callback_logout = ctx.link().callback(|_| Msg::Logout);
 
         html!{
             <>
@@ -126,32 +126,34 @@ impl Component for App {
                             AppRoute::Home => html!{<Home />},
                             AppRoute::Notifications => html!{<Notifications />},
                             AppRoute::Settings => html!{<Settings />},
-                            AppRoute::Profile(_username) => html!{<Profile current_user={self.current_user.clone()}/>},
-                            AppRoute::CompanySettings(company_uuid) => html!{<CompanySettings
+                            AppRoute::Profile { username } => html!{<Profile
                                 current_user={self.current_user.clone()}
-                                company_uuid={company_uuid.to_string()}
-                            />},
-                            AppRoute::ShowCompany(company_uuid) => html!{<ShowCompany
+                                />},
+                            AppRoute::CompanySettings { uuid } => html!{<CompanySettings
                                 current_user={self.current_user.clone()}
-                                company_uuid={company_uuid.to_string()}
-                            />},
+                                company_uuid={ uuid.clone() }
+                                />},
+                            AppRoute::ShowCompany { uuid } => html!{<ShowCompany
+                                current_user={self.current_user.clone()}
+                                company_uuid={ uuid.clone() }
+                                />},
                             AppRoute::CreateCompany => html!{<CreateCompany />},
-                            AppRoute::StandardSettings(standard_uuid) => html!{<StandardSettings
+                            AppRoute::StandardSettings { uuid } => html!{<StandardSettings
                                 current_user={self.current_user.clone()}
-                                standard_uuid={standard_uuid.to_string()}
-                            />},
-                            AppRoute::ShowStandard(standard_uuid) => html!{<ShowStandard
+                                standard_uuid={ uuid.clone() }
+                                />},
+                            AppRoute::ShowStandard { uuid } => html!{<ShowStandard
                                 current_user={self.current_user.clone()}
-                                standard_uuid={standard_uuid.to_string()}
+                                standard_uuid={ uuid.clone() }
                                 />},
                             AppRoute::CreateStandard => html!{<CreateStandard />},
-                            AppRoute::ComponentSettings(component_uuid) => html!{<ComponentSettings
+                            AppRoute::ComponentSettings { uuid } => html!{<ComponentSettings
                                 current_user={self.current_user.clone()}
-                                component_uuid={component_uuid.to_string()}
-                            />},
-                            AppRoute::ShowComponent(component_uuid) => html!{<ShowComponent
+                                component_uuid={ uuid.clone()}
+                                />},
+                            AppRoute::ShowComponent { uuid } => html!{<ShowComponent
                                 current_user={self.current_user.clone()}
-                                component_uuid={component_uuid.to_string()}
+                                component_uuid={ uuid.clone()}
                                 />},
                             AppRoute::CreateComponent => html!{<CreateComponent />},
                         }

@@ -1,4 +1,4 @@
-use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
+use yew::{Component, Context, html, html::Scope, Html, Properties};
 
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
@@ -21,8 +21,7 @@ pub struct Props {
 
 pub struct ModificationFileListItem {
     error: Option<Error>,
-    props: Props,
-    link: ComponentLink<Self>,
+    modification_uuid: UUID,
     file_uuid: UUID,
     download_url: String,
 }
@@ -37,23 +36,22 @@ pub enum Msg {
 impl Component for ModificationFileListItem {
     type Message = Msg;
     type Properties = Props;
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         Self {
             error: None,
-            props,
-            link,
+            modification_uuid: String::new(),
             file_uuid: String::new(),
             download_url: String::new(),
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let link = ctx.link().clone();
 
         match msg {
             Msg::RequestDownloadFile => {
-                let modification_uuid = self.props.modification_uuid.clone();
-                let file_uuid = self.props.file.uuid.clone();
+                let modification_uuid = ctx.props().modification_uuid.clone();
+                let file_uuid = ctx.props().file.uuid.clone();
                 spawn_local(async move {
                     let ipt_modification_files_arg = component_modification_files::IptModificationFilesArg{
                         filesUuids: Some(vec![file_uuid]),
@@ -88,50 +86,56 @@ impl Component for ModificationFileListItem {
         true
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.file_uuid == props.file.uuid &&
-              self.props.modification_uuid == props.modification_uuid {
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+        if self.modification_uuid == ctx.props().modification_uuid &&
+            self.file_uuid == ctx.props().file.uuid {
             false
         } else {
-            self.file_uuid = props.file.uuid.clone();
-            self.props = props;
+            self.modification_uuid = ctx.props().modification_uuid.clone();
+            self.file_uuid = ctx.props().file.uuid.clone();
             true
         }
     }
 
-    fn view(&self) -> Html {
-        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let onclick_clear_error = ctx.link().callback(|_| Msg::ClearError);
 
         html!{<>
             <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error.clone())}/>
-            {self.show_full_info_file()}
+            {self.show_full_info_file(ctx.link(), ctx.props())}
         </>}
     }
 }
 
 impl ModificationFileListItem {
-    fn show_full_info_file(&self) -> Html {
+    fn show_full_info_file(
+        &self,
+        link: &Scope<Self>,
+        props: &Properties,
+    ) -> Html {
         html!{<tr>
-          <td>{self.props.file.filename.clone()}</td>
-          // <td>{self.props.file.content_type.clone()}</td>
-          <td>{self.props.file.filesize.clone()}</td>
-          <td>{self.props.file.program.name.clone()}</td>
+          <td>{props.file.filename.clone()}</td>
+          // <td>{props.file.content_type.clone()}</td>
+          <td>{props.file.filesize.clone()}</td>
+          <td>{props.file.program.name.clone()}</td>
           <td>{format!("{} {} (@{})",
-            self.props.file.owner_user.firstname.clone(),
-            self.props.file.owner_user.lastname.clone(),
-            self.props.file.owner_user.username.clone(),
+            props.file.owner_user.firstname.clone(),
+            props.file.owner_user.lastname.clone(),
+            props.file.owner_user.username.clone(),
           )}</td>
-          <td>{format!("{:.*}", 19, self.props.file.updated_at.to_string())}</td>
-          {match &self.props.show_download_tag {
-              true => self.show_download_tag(),
+          <td>{format!("{:.*}", 19, props.file.updated_at.to_string())}</td>
+          {match &props.show_download_tag {
+              true => self.show_download_tag(link),
               false => html!{},
           }}
         </tr>}
     }
 
-    fn show_download_tag(&self) -> Html {
-        let onclick_download_btn =
-            self.link.callback(|_| Msg::RequestDownloadFile);
+    fn show_download_tag(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onclick_download_btn = link.callback(|_| Msg::RequestDownloadFile);
 
         match self.download_url.is_empty() {
             true => html!{<td>

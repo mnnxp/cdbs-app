@@ -1,4 +1,4 @@
-use yew::{html, Component, ComponentLink, InputData, KeyboardEvent, Html, Properties, ShouldRender};
+use yew::{Component, Context, html, html::Scope, Html, Properties, Event, KeyboardEvent};
 use log::debug;
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
@@ -25,8 +25,6 @@ pub struct Props {
 pub struct AddKeywordsTags {
     error: Option<Error>,
     // current_keywords: Vec<Keyword>,
-    props: Props,
-    link: ComponentLink<Self>,
     ipt_index: usize,
     ipt_keyword: String,
     add_keywords: Vec<Keyword>,
@@ -55,12 +53,10 @@ impl Component for AddKeywordsTags {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         Self {
             error: None,
             // current_keywords: props.component_keywords.clone(),
-            props,
-            link,
             ipt_index: 0,
             ipt_keyword: String::new(),
             add_keywords: Vec::new(),
@@ -70,10 +66,10 @@ impl Component for AddKeywordsTags {
         }
     }
 
-    // fn rendered(&mut self, first_render: bool) {}
+    // fn rendered(&mut self, _ctx: &Context<Self>, first_render: bool) {}
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let link = ctx.link().clone();
 
         match msg {
             Msg::GetString(keyword) => {
@@ -121,7 +117,7 @@ impl Component for AddKeywordsTags {
                 }
             },
             Msg::RequestGetComponentKeywords => {
-                let component_uuid = self.props.component_uuid.clone();
+                let component_uuid = ctx.props().component_uuid.clone();
                 spawn_local(async move {
                     let ipt_component_keywords_arg = get_component_keywords::IptComponentKeywordsArg{
                         componentUuid: component_uuid,
@@ -144,7 +140,7 @@ impl Component for AddKeywordsTags {
                             res_value.get("componentKeywords").unwrap().clone()
                         ).unwrap();
                         debug!("GetComponentKeywords before: {:?}", result);
-                        if self.props.component_keywords.is_empty() {
+                        if ctx.props().component_keywords.is_empty() {
                             for k_res in &result {
                                 match self.new_keywords.iter().find(|k| k.keyword == k_res.keyword) {
                                     Some(dup) => debug!("dup {:?}", dup),
@@ -153,7 +149,7 @@ impl Component for AddKeywordsTags {
                             }
                         } else {
                             for k_res in &result {
-                                match self.props.component_keywords.iter().find(|k| k.keyword == k_res.keyword) {
+                                match ctx.props().component_keywords.iter().find(|k| k.keyword == k_res.keyword) {
                                     Some(k) => debug!("k_res.keyword {:?} != k_props.keyword {:?}", k_res.keyword, k),
                                     None => {
                                         match self.new_keywords.iter().find(|k| k.keyword == k_res.keyword) {
@@ -171,7 +167,7 @@ impl Component for AddKeywordsTags {
                 }
             },
             Msg::RequestAddKeywords => {
-                let component_uuid = self.props.component_uuid.clone();
+                let component_uuid = ctx.props().component_uuid.clone();
                 let mut keywords: Vec<String> = Vec::new();
                 for value in self.add_keywords.iter() {
                     if !value.keyword.is_empty() {
@@ -214,14 +210,14 @@ impl Component for AddKeywordsTags {
             Msg::HideNotification => self.bad_keyword = false,
             Msg::DeleteCurrentKeyword(keyword_id) => {
                 let mut props_keywords: Vec<Keyword> = Vec::new();
-                for k in self.props.component_keywords.iter() {
+                for k in ctx.props().component_keywords.iter() {
                     if k.id == keyword_id {
                         props_keywords.push(Keyword::default());
                     } else {
                         props_keywords.push(k.clone());
                     }
                 }
-                self.props.component_keywords = props_keywords;
+                ctx.props().component_keywords = props_keywords;
             },
             Msg::DeleteNewKeyword(keyword) => {
                 // debug!("self.new_keywords before delete: {:?}", self.new_keywords);
@@ -250,39 +246,43 @@ impl Component for AddKeywordsTags {
         true
     }
 
-    fn change(&mut self, _props: Self::Properties) -> ShouldRender {
+    fn changed(&mut self, _ctx: &Context<Self>) -> bool {
         false
     }
 
-    fn view(&self) -> Html {
-        let onclick_clear_error = self.link
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let onclick_clear_error = ctx.link()
             .callback(|_| Msg::ClearError);
 
         html!{<>
             <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error.clone())}/>
             <br/>
-            {self.add_component_keyword()}
+            {self.add_component_keyword(ctx.link(), ctx.props())}
         </>}
     }
 }
 
 impl AddKeywordsTags {
-    fn add_component_keyword(&self) -> Html {
-        let oninput_parse_keyword = self.link
-            .callback(|ev: InputData| Msg::GetString(ev.value));
-        let onkeypress_parse_keyword = self.link
+    fn add_component_keyword(
+        &self,
+        link: &Scope<Self>,
+        props: &Properties,
+    ) -> Html {
+        let oninput_parse_keyword = link
+            .callback(|ev: Event| Msg::GetString(ev.value));
+        let onkeypress_parse_keyword = link
             .callback(|ev: KeyboardEvent| {
-                debug!("ev.key(): {:?}, ev.key(): {:?}", ev.key_code(), ev.key());
+                debug!("ev.key_code(): {:?}, ev.key(): {:?}", ev.key_code(), ev.key());
                 match ev.key_code() {
                     13 => Msg::PressKeyEnter,
                     _ => Msg::Ignore,
                 }
             });
-        let onclick_hide_notification = self.link
+        let onclick_hide_notification = link
             .callback(|_| Msg::HideNotification);
-        let onclick_del_new_keyword = self.link
+        let onclick_del_new_keyword = link
             .callback(|value: Keyword| Msg::DeleteNewKeyword(value.keyword));
-        let onclick_del_old_keyword = self.link
+        let onclick_del_old_keyword = link
             .callback(|value: Keyword| Msg::DeleteCurrentKeyword(value.id));
 
         html!{<>
@@ -311,7 +311,7 @@ impl AddKeywordsTags {
                    } else {
                       html!{<KeywordTagItem
                          show_delete_btn = true
-                         component_uuid = {self.props.component_uuid.clone()}
+                         component_uuid = {props.component_uuid.clone()}
                          keyword = {keyword.clone()}
                          style_tag = {Some("is-success".to_string())}
                          delete_keyword = {Some(onclick_del_new_keyword.clone())}
@@ -323,8 +323,8 @@ impl AddKeywordsTags {
            <div class="panel-block">
                <KeywordsTags
                   show_delete_btn = true
-                  component_uuid = {self.props.component_uuid.clone()}
-                  keywords = {self.props.component_keywords.clone()}
+                  component_uuid = {props.component_uuid.clone()}
+                  keywords = {props.component_keywords.clone()}
                   delete_keyword = {Some(onclick_del_old_keyword.clone())}
                  />
            </div>

@@ -1,7 +1,5 @@
-use yew::{
-    agent::Bridged, html, Bridge, Component, Properties,
-    ComponentLink, Html, ShouldRender, InputData, ChangeData
-};
+// use yew::{agent::Bridged, Bridge};
+use yew::{Component, Context, html, html::Scope, Html, Properties, Event};
 use yew_router::{
     agent::RouteRequest::ChangeRoute,
     prelude::*,
@@ -12,7 +10,7 @@ use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
-use crate::routes::AppRoute;
+use crate::routes::AppRoute::{Login, StandardSettings};
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
 use crate::services::{get_logged_user, get_value_field};
@@ -29,10 +27,9 @@ use crate::gqls::standard::{
 /// Standard with relate data
 pub struct CreateStandard {
     error: Option<Error>,
+    current_user_uuid: UUID,
     request_standard: StandardCreateData,
     router_agent: Box<dyn Bridge<RouteAgent>>,
-    props: Props,
-    link: ComponentLink<Self>,
     supplier_list: Vec<ShowCompanyShort>,
     standard_statuses: Vec<StandardStatus>,
     regions: Vec<Region>,
@@ -71,13 +68,12 @@ impl Component for CreateStandard {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         CreateStandard {
             error: None,
+            current_user_uuid: ctx.props().current_user.as_ref().map(|x| &x.uuid),
             request_standard: StandardCreateData::new(),
-            router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
-            props,
-            link,
+            router_agent: RouteAgent::bridge(ctx.link().callback(|_| Msg::Ignore)),
             supplier_list: Vec::new(),
             standard_statuses: Vec::new(),
             regions: Vec::new(),
@@ -87,18 +83,18 @@ impl Component for CreateStandard {
         }
     }
 
-    fn rendered(&mut self, first_render: bool) {
+    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
         let logged_user_uuid = match get_logged_user() {
             Some(cu) => cu.uuid,
             None => {
                 // route to login page if not found token
-                self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
+                self.router_agent.send(ChangeRoute(Login.into()));
                 String::new()
             },
         };
 
         if first_render {
-            let link = self.link.clone();
+            let link = ctx.link().clone();
 
             spawn_local(async move {
                 let ipt_companies_arg = get_standard_data_opt::IptCompaniesArg{
@@ -118,8 +114,8 @@ impl Component for CreateStandard {
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let link = ctx.link().clone();
 
         match msg {
             Msg::RequestManager => {
@@ -231,9 +227,9 @@ impl Component for CreateStandard {
                         // Redirect to setting standard page
                         if !result.is_empty() {
                             // self.get_result_created_standard = result;
-                            self.router_agent.send(ChangeRoute(
-                                AppRoute::StandardSettings(result).into()
-                            ));
+                            self.router_agent.send(
+                                ChangeRoute(StandardSettings { uuid: result }.into())
+                            );
                         }
 
                     },
@@ -241,16 +237,11 @@ impl Component for CreateStandard {
                 }
             },
             // items request create main standard data
-            Msg::UpdateClassifier(data) =>
-                self.request_standard.classifier = data,
-            Msg::UpdateName(data) =>
-                self.request_standard.name = data,
-            Msg::UpdateDescription(data) =>
-                self.request_standard.description = data,
-            Msg::UpdateSpecifiedTolerance(data) =>
-                self.request_standard.specified_tolerance = data,
-            Msg::UpdateTechnicalCommittee(data) =>
-                self.request_standard.technical_committee = data,
+            Msg::UpdateClassifier(data) => self.request_standard.classifier = data,
+            Msg::UpdateName(data) => self.request_standard.name = data,
+            Msg::UpdateDescription(data) => self.request_standard.description = data,
+            Msg::UpdateSpecifiedTolerance(data) => self.request_standard.specified_tolerance = data,
+            Msg::UpdateTechnicalCommittee(data) => self.request_standard.technical_committee = data,
             Msg::UpdatePublicationAt(data) => {
                 let date = NaiveDateTime::parse_from_str(&format!("{} 00:00:00", data), "%Y-%m-%d %H:%M:%S");
                 debug!("new date: {:?}", date);
@@ -260,8 +251,7 @@ impl Component for CreateStandard {
             },
             Msg::UpdateTypeAccessId(data) =>
                 self.request_standard.type_access_id = data.parse::<usize>().unwrap_or_default(),
-            Msg::UpdateCompanyUuid(data) =>
-                self.request_standard.company_uuid = data,
+            Msg::UpdateCompanyUuid(data) => self.request_standard.company_uuid = data,
             Msg::UpdateStandardStatusId(data) =>
                 self.request_standard.standard_status_id = data.parse::<usize>().unwrap_or_default(),
             Msg::UpdateRegionId(data) =>
@@ -273,18 +263,17 @@ impl Component for CreateStandard {
         true
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.current_user.as_ref().map(|x| &x.uuid) == props.current_user.as_ref().map(|x| &x.uuid) {
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+        if self.current_user_uuid == ctx.props().current_user.as_ref().map(|x| &x.uuid) {
             false
         } else {
-            self.props = props;
+            self.current_user_uuid = ctx.props().current_user.as_ref().map(|x| &x.uuid);
             true
         }
     }
 
-    fn view(&self) -> Html {
-        let onclick_clear_error = self.link
-            .callback(|_| Msg::ClearError);
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let onclick_clear_error = ctx.link().callback(|_| Msg::ClearError);
 
         html!{
             <div class="standard-page">
@@ -292,11 +281,11 @@ impl Component for CreateStandard {
                     <div class="row">
                         <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error.clone())}/>
                         <h1 class="title">{ get_value_field(&291) }</h1>
-                        {self.show_main_card()}
+                        {self.show_main_card(ctx.link())}
                         <br/>
-                        {self.show_standard_params()}
+                        {self.show_standard_params(ctx.link())}
                         <br/>
-                        {self.show_manage_btn()}
+                        {self.show_manage_btn(ctx.link())}
                     </div>
                 </div>
             </div>
@@ -305,27 +294,23 @@ impl Component for CreateStandard {
 }
 
 impl CreateStandard {
-    fn show_main_card(&self) -> Html {
+    fn show_main_card(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
         // let default_company_uuid = self.current_standard.as_ref().map(|x| x.owner_company.uuid.clone()).unwrap_or_default();
-        let onchange_change_owner_company = self.link
-            .callback(|ev: ChangeData| Msg::UpdateCompanyUuid(match ev {
-              ChangeData::Select(el) => el.value(),
+        let onchange_change_owner_company =
+            link.callback(|ev: Event| Msg::UpdateCompanyUuid(match ev {
+              Event::Select(el) => el.value(),
               _ => String::new(),
           }));
-
-        let onchange_change_type_access = self.link
-            .callback(|ev: ChangeData| Msg::UpdateTypeAccessId(match ev {
-              ChangeData::Select(el) => el.value(),
+        let onchange_change_type_access =
+            link.callback(|ev: Event| Msg::UpdateTypeAccessId(match ev {
+              Event::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
-
-        let oninput_name = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateName(ev.value));
-
-        let oninput_description = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateDescription(ev.value));
+        let oninput_name = link.callback(|ev: Event| Msg::UpdateName(ev.value));
+        let oninput_description = link.callback(|ev: Event| Msg::UpdateDescription(ev.value));
 
         html!{
             <div class="card">
@@ -394,28 +379,23 @@ impl CreateStandard {
         }
     }
 
-    fn show_standard_params(&self) -> Html {
-        let oninput_classifier = self.link
-            .callback(|ev: InputData| Msg::UpdateClassifier(ev.value));
-
-        let oninput_specified_tolerance = self.link
-            .callback(|ev: InputData| Msg::UpdateSpecifiedTolerance(ev.value));
-
-        let oninput_technical_committee = self.link
-            .callback(|ev: InputData| Msg::UpdateTechnicalCommittee(ev.value));
-
-        let oninput_publication_at = self.link
-            .callback(|ev: InputData| Msg::UpdatePublicationAt(ev.value));
-
-        let onchange_standard_status_id = self.link
-            .callback(|ev: ChangeData| Msg::UpdateStandardStatusId(match ev {
-              ChangeData::Select(el) => el.value(),
+    fn show_standard_params(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let oninput_classifier = link.callback(|ev: Event| Msg::UpdateClassifier(ev.value));
+        let oninput_specified_tolerance = link.callback(|ev: Event| Msg::UpdateSpecifiedTolerance(ev.value));
+        let oninput_technical_committee = link.callback(|ev: Event| Msg::UpdateTechnicalCommittee(ev.value));
+        let oninput_publication_at = link.callback(|ev: Event| Msg::UpdatePublicationAt(ev.value));
+        let onchange_standard_status_id =
+            link.callback(|ev: Event| Msg::UpdateStandardStatusId(match ev {
+              Event::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
 
-        let onchange_region_id = self.link
-            .callback(|ev: ChangeData| Msg::UpdateRegionId(match ev {
-              ChangeData::Select(el) => el.value(),
+        let onchange_region_id =
+            link.callback(|ev: Event| Msg::UpdateRegionId(match ev {
+              Event::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
 
@@ -517,9 +497,11 @@ impl CreateStandard {
         }
     }
 
-    fn show_manage_btn(&self) -> Html {
-        let onclick_create_changes =
-            self.link.callback(|_| Msg::RequestManager);
+    fn show_manage_btn(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onclick_create_changes = link.callback(|_| Msg::RequestManager);
 
         {match self.supplier_list.is_empty() {
             true => html!{},

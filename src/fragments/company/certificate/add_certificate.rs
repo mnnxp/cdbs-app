@@ -1,10 +1,7 @@
 use graphql_client::GraphQLQuery;
 use yew::services::fetch::FetchTask;
 use yew::services::reader::{File, FileData, ReaderService, ReaderTask};
-use yew::{
-    html, Callback, ChangeData, Component, ComponentLink, DragEvent, Html,
-    InputData, Properties, ShouldRender
-};
+use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, Event, DragEvent};
 // use serde_json::Value;
 use log::debug;
 use wasm_bindgen_futures::spawn_local;
@@ -35,8 +32,6 @@ pub struct AddCompanyCertificateCard {
     request_upload_file: Callback<Result<Option<String>, Error>>,
     task_read: Option<(FileName, ReaderTask)>,
     task: Option<FetchTask>,
-    props: Props,
-    link: ComponentLink<Self>,
     get_result_up_file: bool,
     get_result_up_completed: bool,
     put_upload_file: PutUploadFile,
@@ -66,15 +61,13 @@ impl Component for AddCompanyCertificateCard {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         Self {
             error: None,
             request_upload_data: UploadFile::default(),
-            request_upload_file: link.callback(Msg::ResponseUploadFile),
+            request_upload_file: ctx.link().callback(Msg::ResponseUploadFile),
             task_read: None,
             task: None,
-            props,
-            link,
             get_result_up_file: false,
             get_result_up_completed: false,
             put_upload_file: PutUploadFile::new(),
@@ -85,8 +78,8 @@ impl Component for AddCompanyCertificateCard {
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let link = ctx.link().clone();
 
         match msg {
             Msg::RequestUploadData => {
@@ -96,7 +89,7 @@ impl Component for AddCompanyCertificateCard {
                 if let Some(file) = &self.file {
                     // debug!("RequestUploadData: {:?}", &self.request_update);
                     let cert_data = upload_company_certificate::IptCompanyCertificateData {
-                        companyUuid: self.props.company_uuid.clone(),
+                        companyUuid: ctx.props().company_uuid.clone(),
                         filename: file.name().to_string(),
                         description: self.description.clone(),
                     };
@@ -151,7 +144,7 @@ impl Component for AddCompanyCertificateCard {
                         if let Some(file) = self.file.clone() {
                             let file_name = file.name().clone();
                             let task = {
-                                let callback = self.link.callback(move |data: FileData| {
+                                let callback = ctx.link().callback(move |data: FileData| {
                                     Msg::RequestUploadFile(data.content)
                                 });
                                 ReaderService::read_file(file, callback).unwrap()
@@ -178,7 +171,7 @@ impl Component for AddCompanyCertificateCard {
                             res_value.get("uploadCompleted").unwrap().clone()
                         ).unwrap();
                         self.get_result_up_completed = result > 0;
-                        self.props.callback.emit(());
+                        ctx.props().callback.emit(());
                         self.active_loading_files_btn = false;
                     },
                     true => self.error = Some(get_error(&data)),
@@ -200,27 +193,27 @@ impl Component for AddCompanyCertificateCard {
         true
     }
 
-    fn change(&mut self, _props: Self::Properties) -> ShouldRender {
+    fn changed(&mut self, _ctx: &Context<Self>) -> bool {
         false
     }
 
-    fn view(&self) -> Html {
-        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let onclick_clear_error = ctx.link().callback(|_| Msg::ClearError);
 
         html!{<div class="card">
           <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error.clone())}/>
           <div class="block">
             {match self.get_result_up_completed {
                 true => html!{<div class="column">
-                  { self.show_success_upload() }
+                  { self.show_success_upload(ctx.link()) }
                 </div>},
                 false => html!{<div class="column">
                   <label class="label">{ get_value_field(&83) }</label> // Upload new certificate
-                  { self.show_frame_upload_file() }
-                  { self.show_input_description() }
+                  { self.show_frame_upload_file(ctx.link()) }
+                  { self.show_input_description(ctx.link()) }
                   <div class="buttons">
-                      { self.show_btn_clear() }
-                      { self.show_btn_upload() }
+                      { self.show_btn_clear(ctx.link()) }
+                      { self.show_btn_upload(ctx.link()) }
                   </div>
                 </div>},
             }}
@@ -230,16 +223,19 @@ impl Component for AddCompanyCertificateCard {
 }
 
 impl AddCompanyCertificateCard {
-    fn show_frame_upload_file(&self) -> Html {
-        let onchange_cert_file = self.link.callback(move |value| {
-            if let ChangeData::Files(files) = value {
+    fn show_frame_upload_file(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onchange_cert_file = link.callback(move |value| {
+            if let Event::Files(files) = value {
                 Msg::UpdateFile(files.get(0))
             } else {
                 Msg::Ignore
             }
         });
 
-        let ondrop_cert_file = self.link.callback(move |value: DragEvent| {
+        let ondrop_cert_file = link.callback(move |value: DragEvent| {
             value.prevent_default();
             if let Some(files) = value.data_transfer().unwrap().files() {
                 Msg::UpdateFile(files.get(0))
@@ -248,7 +244,7 @@ impl AddCompanyCertificateCard {
             }
         });
 
-        let ondragover_cert_file = self.link.callback(move |value: DragEvent| {
+        let ondragover_cert_file = link.callback(move |value: DragEvent| {
             value.prevent_default();
             Msg::Ignore
         });
@@ -295,9 +291,12 @@ impl AddCompanyCertificateCard {
         </div>}
     }
 
-    fn show_input_description(&self) -> Html {
-        let oninput_cert_description = self.link
-            .callback(|ev: InputData| Msg::UpdateDescription(ev.value));
+    fn show_input_description(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let oninput_cert_description =
+            link.callback(|ev: Event| Msg::UpdateDescription(ev.value));
 
         html!{<div class="block">
             <label class="label">{ get_value_field(&61) }</label>
@@ -312,8 +311,11 @@ impl AddCompanyCertificateCard {
         </div>}
     }
 
-    fn show_btn_upload(&self) -> Html {
-        let onclick_upload_cert = self.link.callback(|_| Msg::RequestUploadData);
+    fn show_btn_upload(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onclick_upload_cert = link.callback(|_| Msg::RequestUploadData);
 
         let class_upload_btn = match self.active_loading_files_btn {
             true => "button is-loading",
@@ -330,8 +332,11 @@ impl AddCompanyCertificateCard {
         }
     }
 
-    fn show_btn_clear(&self) -> Html {
-        let onclick_clear_boxed = self.link.callback(|_| Msg::ClearFileBoxed);
+    fn show_btn_clear(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onclick_clear_boxed = link.callback(|_| Msg::ClearFileBoxed);
 
         html!{
             <a id="btn-new-cert-clear"
@@ -344,8 +349,11 @@ impl AddCompanyCertificateCard {
         }
     }
 
-    fn show_success_upload(&self) -> Html {
-        let onclick_hide_notification = self.link.callback(|_| Msg::HideNotification);
+    fn show_success_upload(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onclick_hide_notification = link.callback(|_| Msg::HideNotification);
 
         html!{
             <article class="message is-success">

@@ -1,8 +1,5 @@
 use std::collections::{HashMap, BTreeSet};
-use yew::{
-    Component, ComponentLink, Html, Properties,
-    ShouldRender, html, InputData, ChangeData
-};
+use yew::{Component, Context, html, html::Scope, Html, Properties, Event};
 
 use log::debug;
 use graphql_client::GraphQLQuery;
@@ -38,8 +35,6 @@ pub struct Props {
 
 pub struct ModificationsTableEdit {
     error: Option<Error>,
-    props: Props,
-    link: ComponentLink<Self>,
     component_uuid: UUID,
     current_modifications: Vec<ComponentModificationInfo>,
     select_modification_uuid: UUID,
@@ -94,18 +89,18 @@ impl Component for ModificationsTableEdit {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        let component_uuid = props.current_component_uuid.clone();
+    fn create(ctx: &Context<Self>) -> Self {
+        let component_uuid = ctx.props().current_component_uuid.clone();
 
-        let current_modifications = props.component_modifications.clone();
+        let current_modifications = ctx.props().component_modifications.clone();
 
-        let select_modification_uuid = props.component_modifications
+        let select_modification_uuid = ctx.props().component_modifications
             .first()
             .map(|m| m.uuid.clone())
             .unwrap_or_default();
 
         let mut modification_filesets: HashMap<UUID, Vec<(UUID, String)>> = HashMap::new();
-        for component_modification in &props.component_modifications {
+        for component_modification in &ctx.props().component_modifications {
             let mut fileset_data: Vec<(UUID, String)> = Vec::new();
             for fileset in &component_modification.filesets_for_program {
                 fileset_data.push((fileset.uuid.clone(), fileset.program.name.clone()));
@@ -119,8 +114,6 @@ impl Component for ModificationsTableEdit {
 
         Self {
             error: None,
-            props,
-            link,
             component_uuid,
             current_modifications,
             select_modification_uuid,
@@ -140,18 +133,18 @@ impl Component for ModificationsTableEdit {
         }
     }
 
-    fn rendered(&mut self, first_render: bool) {
-        if first_render || self.component_uuid != self.props.current_component_uuid {
-            self.component_uuid = self.props.current_component_uuid.clone();
+    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
+        if first_render || self.component_uuid != ctx.props().current_component_uuid {
+            self.component_uuid = ctx.props().current_component_uuid.clone();
             debug!("Clear modification data");
             self.clear_current_data();
-            self.link.send_message(Msg::ParseParams);
-            self.link.send_message(Msg::ParseFilesets);
+            ctx.link().send_message(Msg::ParseParams);
+            ctx.link().send_message(Msg::ParseFilesets);
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let link = ctx.link().clone();
 
         match msg {
             Msg::ParseParams => {
@@ -212,7 +205,7 @@ impl Component for ModificationsTableEdit {
             },
             Msg::RequestAddModificationData => {
                 let ipt_component_modification_data = register_component_modification::IptComponentModificationData{
-                    componentUuid: self.props.current_component_uuid.clone(),
+                    componentUuid: ctx.props().current_component_uuid.clone(),
                     parentModificationUuid: None,
                     modificationName: self.request_add_modification.modification_name.clone(),
                     description: self.request_add_modification.description.clone(),
@@ -254,7 +247,7 @@ impl Component for ModificationsTableEdit {
             },
             Msg::RequestDeleteModificationData => {
                 let del_component_modification_data = delete_component_modification::DelComponentModificationData{
-                    componentUuid: self.props.current_component_uuid.clone(),
+                    componentUuid: ctx.props().current_component_uuid.clone(),
                     modificationUuid: self.select_modification_uuid.clone(),
                 };
                 spawn_local(async move {
@@ -268,7 +261,7 @@ impl Component for ModificationsTableEdit {
             },
             Msg::RequestComponentModificationsData => {
                 let ipt_component_modification_arg = get_component_modifications::IptComponentModificationArg{
-                    componentUuid: self.props.current_component_uuid.clone(),
+                    componentUuid: ctx.props().current_component_uuid.clone(),
                     limit: None,
                     offset: None,
                 };
@@ -503,22 +496,21 @@ impl Component for ModificationsTableEdit {
         true
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.current_component_uuid == props.current_component_uuid {
-            debug!("not update modifications {:?}", props.component_modifications.len());
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+        if self.current_modifications == ctx.props().current_component_uuid {
+            debug!("not update modifications {:?}", self.component_modifications.len());
             false
         } else {
-            debug!("update modifications {:?}", props.component_modifications.len());
-            self.current_modifications = props.component_modifications.clone();
-            self.props = props;
+            debug!("update modifications {:?}", ctx.props().component_modifications.len());
+            self.current_modifications = ctx.props().component_modifications.clone();
             true
         }
     }
 
-    fn view(&self) -> Html {
+    fn view(&self, ctx: &Context<Self>) -> Html {
         match self.finish_parsing_heads {
             true => html!{<>
-                {self.show_modifications_table()}
+                {self.show_modifications_table(ctx.link())}
                 <br/>
                 {self.show_modification_files()}
                 <br/>
@@ -530,22 +522,24 @@ impl Component for ModificationsTableEdit {
 }
 
 impl ModificationsTableEdit {
-    fn show_modifications_table(&self) -> Html {
-        let onclick_new_modification_param = self.link
-            .callback(|value: UUID| Msg::ChangeNewModificationParam(value));
+    fn show_modifications_table(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onclick_new_modification_param =
+            link.callback(|value: UUID| Msg::ChangeNewModificationParam(value));
 
-        let onclick_select_modification = self.link
-            .callback(|value: UUID| Msg::ChangeSelectModification(value));
+        let onclick_select_modification =
+            link.callback(|value: UUID| Msg::ChangeSelectModification(value));
 
-        let onclick_add_modification_card = self.link
-            .callback(|_| Msg::ShowAddModificationCard);
+        let onclick_add_modification_card = link.callback(|_| Msg::ShowAddModificationCard);
 
-        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+        let onclick_clear_error = link.callback(|_| Msg::ClearError);
 
         html!{<div class="card">
             <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error.clone())}/>
-            {self.modal_add_modification_card()}
-            {self.modal_edit_modification_card()}
+            {self.modal_add_modification_card(link)}
+            {self.modal_edit_modification_card(link)}
             <div class="table-container">
               <table class="table is-fullwidth is-striped">
                 <ModificationTableHeads
@@ -595,24 +589,27 @@ impl ModificationsTableEdit {
         </>}
     }
 
-    fn modal_add_modification_card(&self) -> Html {
-        let oninput_name = self.link
-            .callback(|ev: InputData| Msg::UpdateAddName(ev.value));
+    fn modal_add_modification_card(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let oninput_name =
+            link.callback(|ev: Event| Msg::UpdateAddName(ev.value));
 
-        let oninput_description = self.link
-            .callback(|ev: InputData| Msg::UpdateAddDescription(ev.value));
+        let oninput_description =
+            link.callback(|ev: Event| Msg::UpdateAddDescription(ev.value));
 
-        let onchange_actual_status_id = self.link
-            .callback(|ev: ChangeData| Msg::UpdateAddActualStatusId(match ev {
-              ChangeData::Select(el) => el.value(),
+        let onchange_actual_status_id = link
+            .callback(|ev: Event| Msg::UpdateAddActualStatusId(match ev {
+              Event::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
 
-        let onclick_add_modification_card = self.link
-            .callback(|_| Msg::ShowAddModificationCard);
+        let onclick_add_modification_card =
+            link.callback(|_| Msg::ShowAddModificationCard);
 
-        let onclick_add_component_modification = self.link
-            .callback(|_| Msg::RequestAddModificationData);
+        let onclick_add_component_modification =
+            link.callback(|_| Msg::RequestAddModificationData);
 
         let class_modal = match &self.open_add_modification_card {
             true => "modal is-active",
@@ -687,35 +684,38 @@ impl ModificationsTableEdit {
         </div>}
     }
 
-    fn modal_edit_modification_card(&self) -> Html {
-        let oninput_modification_name = self.link
-            .callback(|ev: InputData| Msg::UpdateEditName(ev.value));
+    fn modal_edit_modification_card(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let oninput_modification_name =
+            link.callback(|ev: Event| Msg::UpdateEditName(ev.value));
 
-        let oninput_modification_description = self.link
-            .callback(|ev: InputData| Msg::UpdateEditDescription(ev.value));
+        let oninput_modification_description =
+            link.callback(|ev: Event| Msg::UpdateEditDescription(ev.value));
 
-        let onchange_modification_actual_status_id = self.link
-            .callback(|ev: ChangeData| Msg::UpdateEditActualStatusId(match ev {
-              ChangeData::Select(el) => el.value(),
+        let onchange_modification_actual_status_id = link
+            .callback(|ev: Event| Msg::UpdateEditActualStatusId(match ev {
+              Event::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
 
-        let onclick_modification_card = self.link
-            .callback(|_| Msg::ShowEditModificationCard);
+        let onclick_modification_card =
+            link.callback(|_| Msg::ShowEditModificationCard);
 
-        let onclick_delete_component_modification = self.link
-            .callback(|_| Msg::RequestDeleteModificationData);
+        let onclick_delete_component_modification =
+            link.callback(|_| Msg::RequestDeleteModificationData);
 
-        let onclick_component_modification_update = self.link
-            .callback(|_| Msg::RequestUpdateModificationData);
+        let onclick_component_modification_update =
+            link.callback(|_| Msg::RequestUpdateModificationData);
 
         let class_modal = match &self.open_edit_modification_card {
             true => "modal is-active",
             false => "modal",
         };
 
-        let modification_data: Option<&ComponentModificationInfo> = self.current_modifications.iter()
-            .find(|x| x.uuid == self.select_modification_uuid);
+        let modification_data: Option<&ComponentModificationInfo> =
+            self.current_modifications.iter().find(|x| x.uuid == self.select_modification_uuid);
 
         match modification_data {
             Some(modification_data) => html!{<div class={class_modal}>

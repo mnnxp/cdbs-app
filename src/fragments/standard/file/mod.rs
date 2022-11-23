@@ -3,7 +3,7 @@ mod item;
 pub use item::FileItem;
 
 use std::collections::BTreeSet;
-use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
+use yew::{Component, Context, html, html::Scope, Html, Properties};
 // use log::debug;
 // use crate::error::{get_error, Error};
 use crate::types::{UUID, ShowFileInfo};
@@ -18,8 +18,10 @@ pub struct Props {
 }
 
 pub struct StandardFilesCard {
-    link: ComponentLink<Self>,
-    props: Props,
+    standard_uuid: UUID,
+    show_download_btn: bool,
+    show_delete_btn: bool,
+    files_len: usize,
     show_full_files: bool,
     files_deleted_list: BTreeSet<UUID>,
 }
@@ -35,17 +37,19 @@ impl Component for StandardFilesCard {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         Self {
-            link,
-            props,
+            standard_uuid: ctx.props().standard_uuid,
+            show_download_btn: ctx.props().show_download_btn,
+            show_delete_btn: ctx.props().show_delete_btn,
+            files_len: ctx.props().files.len(),
             show_full_files: false,
             files_deleted_list: BTreeSet::new(),
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        // let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        // let link = ctx.link().clone();
         match msg {
             Msg::ShowFullList => self.show_full_files = !self.show_full_files,
             Msg::RemoveFile(file_uuid) => {
@@ -56,35 +60,38 @@ impl Component for StandardFilesCard {
         true
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.standard_uuid == props.standard_uuid &&
-            self.props.show_download_btn == props.show_download_btn &&
-                self.props.show_delete_btn == props.show_delete_btn &&
-                    self.props.files.len() == props.files.len() {
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+        if self.standard_uuid == ctx.props().standard_uuid &&
+            self.show_download_btn == ctx.props().show_download_btn &&
+                self.show_delete_btn == ctx.props().show_delete_btn &&
+                    self.files_len == ctx.props().files.len() {
             false
         } else {
             self.files_deleted_list.clear();
-            self.props = props;
+            self.standard_uuid == ctx.props().standard_uuid;
+            self.show_download_btn == ctx.props().show_download_btn;
+            self.show_delete_btn == ctx.props().show_delete_btn;
+            self.files_len == ctx.props().files.len();
             true
         }
     }
 
-    fn view(&self) -> Html {
+    fn view(&self, ctx: &Context<Self>) -> Html {
         html!{
             <div id="files" class="card">
-                {for self.props.files.iter().enumerate().map(|(index, file)| {
+                {for ctx.props().files.iter().enumerate().map(|(index, file)| {
                     match (index >= 3, self.show_full_files) {
                         // show full list
-                        (_, true) => self.show_file_info(file),
+                        (_, true) => self.show_file_info(ctx.link(), ctx.props(), file),
                         // show full list or first 3 items
-                        (false, false) => self.show_file_info(file),
+                        (false, false) => self.show_file_info(ctx.link(), ctx.props(), file),
                         _ => html!{},
                     }
                 })}
-                {match self.props.files.len() {
+                {match ctx.props().files.len() {
                     0 => html!{<span>{ get_value_field(&204) }</span>},
                     0..=3 => html!{},
-                    _ => self.show_see_btn(),
+                    _ => self.show_see_btn(ctx.link()),
                 }}
             </div>
         }
@@ -94,18 +101,19 @@ impl Component for StandardFilesCard {
 impl StandardFilesCard {
     fn show_file_info(
         &self,
+        link: &Scope<Self>,
+        props: &Properties,
         file: &ShowFileInfo
     ) -> Html {
-        let callback_delete_file =
-            self.link.callback(|value: UUID| Msg::RemoveFile(value));
+        let callback_delete_file = link.callback(|value: UUID| Msg::RemoveFile(value));
 
         match self.files_deleted_list.get(&file.uuid) {
             Some(_) => html!{}, // removed file
             None => html!{
                 <FileItem
-                  show_download_btn = {self.props.show_download_btn}
-                  show_delete_btn = {self.props.show_delete_btn}
-                  standard_uuid = {self.props.standard_uuid.clone()}
+                  show_download_btn = {props.show_download_btn}
+                  show_delete_btn = {props.show_delete_btn}
+                  standard_uuid = {props.standard_uuid.clone()}
                   file = {file.clone()}
                   callback_delete_file = {Some(callback_delete_file.clone())}
                 />
@@ -113,8 +121,11 @@ impl StandardFilesCard {
         }
     }
 
-    fn show_see_btn(&self) -> Html {
-        let show_full_files_btn = self.link.callback(|_| Msg::ShowFullList);
+    fn show_see_btn(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let show_full_files_btn = link.callback(|_| Msg::ShowFullList);
 
         match self.show_full_files {
             true => html!{<>

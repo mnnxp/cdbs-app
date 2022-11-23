@@ -1,4 +1,4 @@
-use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
+use yew::{Component, Context, html, Html, Properties};
 // use log::debug;
 
 use crate::types::{UUID, ShowFileInfo};
@@ -10,52 +10,53 @@ pub struct Props {
 }
 
 pub struct FileOfFilesetItem {
-    props: Props,
     file_uuid: UUID,
 }
 
 impl Component for FileOfFilesetItem {
     type Message = ();
     type Properties = Props;
-    fn create(props: Self::Properties, _link: ComponentLink<Self>) -> Self {
+
+    fn create(ctx: &Context<Self>) -> Self {
         Self {
-            props,
             file_uuid: String::new(),
         }
     }
 
-    fn update(&mut self, _msg: Self::Message) -> ShouldRender {
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         false
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.file_uuid == props.file.uuid {
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+        if self.file_uuid == ctx.props().file.uuid {
             false
         } else {
-            self.file_uuid = props.file.uuid.clone();
-            self.props = props;
+            self.file_uuid = ctx.props().file.uuid.clone();
             true
         }
     }
 
-    fn view(&self) -> Html {
-        html!{self.show_full_info_file()}
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        html!{self.show_full_info_file(ctx.props())}
     }
 }
 
 impl FileOfFilesetItem {
-    fn show_full_info_file(&self) -> Html {
+    fn show_full_info_file(
+        &self,
+        props: &Properties,
+    ) -> Html {
         html!{<tr>
-          <td>{self.props.file.filename.clone()}</td>
-          // <td>{self.props.file.content_type.clone()}</td>
-          <td>{self.props.file.filesize.clone()}</td>
-          <td>{self.props.file.program.name.clone()}</td>
+          <td>{props.file.filename.clone()}</td>
+          // <td>{props.file.content_type.clone()}</td>
+          <td>{props.file.filesize.clone()}</td>
+          <td>{props.file.program.name.clone()}</td>
           <td>{format!("{} {} (@{})",
-            self.props.file.owner_user.firstname.clone(),
-            self.props.file.owner_user.lastname.clone(),
-            self.props.file.owner_user.username.clone(),
+            props.file.owner_user.firstname.clone(),
+            props.file.owner_user.lastname.clone(),
+            props.file.owner_user.username.clone(),
           )}</td>
-          <td>{format!("{:.*}", 19, self.props.file.updated_at.to_string())}</td>
+          <td>{format!("{:.*}", 19, props.file.updated_at.to_string())}</td>
         </tr>}
     }
 }

@@ -1,7 +1,4 @@
-use yew::{
-    html, Callback, Component, ComponentLink,
-    Html, Properties, ShouldRender,
-};
+use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
 use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
@@ -34,8 +31,6 @@ pub struct Props {
 
 pub struct SpecTagItem {
     error: Option<Error>,
-    props: Props,
-    link: ComponentLink<Self>,
     spec_data: Option<SpecPathInfo>,
     open_spec_info: bool,
     is_added: bool,
@@ -58,25 +53,21 @@ pub enum Msg {
 impl Component for SpecTagItem {
     type Message = Msg;
     type Properties = Props;
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        let is_added = props.is_added;
+    fn create(ctx: &Context<Self>) -> Self {
         Self {
             error: None,
-            props,
-            link,
             spec_data: None,
             open_spec_info: false,
-            is_added,
+            is_added: ctx.props().is_added,
             get_result_delete: false,
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
-
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let link = ctx.link().clone();
         match msg {
             Msg::RequestSpecInfo => {
-                let spec_id = self.props.spec.spec_id as i64;
+                let spec_id = ctx.props().spec.spec_id as i64;
                 spawn_local(async move {
                     let arguments = get_specs_paths::IptSpecPathArg{
                         specIds: Some(vec![spec_id]),
@@ -92,8 +83,8 @@ impl Component for SpecTagItem {
                 })
             },
             Msg::RequestDeleteSpec => {
-                let standard_uuid = self.props.standard_uuid.clone();
-                let spec_id = self.props.spec.spec_id as i64;
+                let standard_uuid = ctx.props().standard_uuid.clone();
+                let spec_id = ctx.props().spec.spec_id as i64;
                 spawn_local(async move {
                     let ipt_standard_specs_data = delete_standard_specs::IptStandardSpecsData{
                         standardUuid: standard_uuid,
@@ -106,8 +97,8 @@ impl Component for SpecTagItem {
                 })
             },
             Msg::RequestAddSpec => {
-                let standard_uuid = self.props.standard_uuid.clone();
-                let spec_id = self.props.spec.spec_id as i64;
+                let standard_uuid = ctx.props().standard_uuid.clone();
+                let spec_id = ctx.props().spec.spec_id as i64;
                 spawn_local(async move {
                     let ipt_standard_specs_data = add_standard_specs::IptStandardSpecsData {
                         standardUuid: standard_uuid,
@@ -147,12 +138,12 @@ impl Component for SpecTagItem {
                         let result: usize = serde_json::from_value(res.get("addStandardSpecs").unwrap().clone()).unwrap();
                         debug!("addStandardSpecs: {:?}", result);
                         // self.get_result_delete = result > 0;
-                        match &self.props.added_spec {
+                        match &ctx.props().added_spec {
                             Some(added_spec) => {
                                 if result > 0 {
                                     self.is_added = true;
                                     self.get_result_delete = false;
-                                    added_spec.emit(self.props.spec.spec_id);
+                                    added_spec.emit(ctx.props().spec.spec_id);
                                 };
                             },
                             None => self.is_added = result > 0,
@@ -170,12 +161,12 @@ impl Component for SpecTagItem {
                         let result: usize = serde_json::from_value(res.get("deleteStandardSpecs").unwrap().clone()).unwrap();
                         debug!("deleteStandardSpecs: {:?}", result);
                         // self.get_result_delete = result > 0;
-                        match &self.props.delete_spec {
+                        match &ctx.props().delete_spec {
                             Some(delete_spec) => {
                                 if result > 0 {
                                     self.is_added = false;
                                     self.get_result_delete = true;
-                                    delete_spec.emit(self.props.spec.spec_id);
+                                    delete_spec.emit(ctx.props().spec.spec_id);
                                 };
                             },
                             None => self.get_result_delete = result > 0,
@@ -196,25 +187,21 @@ impl Component for SpecTagItem {
         true
     }
 
-    fn change(&mut self, _props: Self::Properties) -> ShouldRender {
+    fn changed(&mut self, _ctx: &Context<Self>) -> bool {
         false
     }
 
-    fn view(&self) -> Html {
-        let onclick_clear_error = self.link
-            .callback(|_| Msg::ClearError);
-
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let onclick_clear_error = ctx.link().callback(|_| Msg::ClearError);
         match &self.error {
             Some(err) => html!{
-                <ListErrors error={err.clone()}
-                    clear_error={Some(onclick_clear_error.clone())}
-                  />
+                <ListErrors error={err.clone()} clear_error={Some(onclick_clear_error.clone())} />
             },
             None => match self.get_result_delete {
                 true => html!{},
                 false => html!{<>
-                    {self.show_spec_info()}
-                    {self.show_spec()}
+                    {self.show_spec_info(ctx.link())}
+                    {self.show_spec(ctx.link(), ctx.props())}
                 </>},
             }
         }
@@ -222,30 +209,33 @@ impl Component for SpecTagItem {
 }
 
 impl SpecTagItem {
-    fn show_spec(&self) -> Html {
-        let onclick_open_spec_info = match self.props.active_info_btn {
-            true => self.link.callback(|_| Msg::ClickSpecInfo),
-            false => self.link.callback(|_| Msg::Ignore),
+    fn show_spec(
+        &self,
+        link: &Scope<Self>,
+        props: &Properties,
+    ) -> Html {
+        let onclick_open_spec_info = match props.active_info_btn {
+            true => link.callback(|_| Msg::ClickSpecInfo),
+            false => link.callback(|_| Msg::Ignore),
         };
-        let onclick_delete_spec = self.link.callback(|_| Msg::RequestDeleteSpec);
-        let onclick_add_spec = self.link.callback(|_| Msg::RequestAddSpec);
+        let onclick_delete_spec = link.callback(|_| Msg::RequestDeleteSpec);
+        let onclick_add_spec = link.callback(|_| Msg::RequestAddSpec);
 
-        let mut style_tag = match &self.props.style_tag {
+        let mut style_tag = match &props.style_tag {
             Some(style) => format!("tag is-light {}", style),
             None => "tag is-light".to_string(),
         };
-
-        if self.props.active_info_btn {
+        if props.active_info_btn {
             style_tag += " button";
         }
 
         html!{<div class="control">
           <div class="tags has-addons">
             <span class={style_tag} onclick={onclick_open_spec_info} >
-                {self.props.spec.spec.clone()}
+                {props.spec.spec.clone()}
             </span>
-            {if self.props.show_manage_btn {
-                match &self.props.is_added {
+            {if props.show_manage_btn {
+                match &props.is_added {
                     true => html!{<a class="tag is-delete is-small is-light" onclick={onclick_delete_spec} />},
                     false => html!{<a class="tag is-small is-light is-success" onclick={onclick_add_spec}>
                         <i class="fas fa-plus" />
@@ -256,9 +246,11 @@ impl SpecTagItem {
         </div>}
     }
 
-    fn show_spec_info(&self) -> Html {
-        let onclick_spec_info = self.link
-            .callback(|_| Msg::ClickSpecInfo);
+    fn show_spec_info(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onclick_spec_info = link.callback(|_| Msg::ClickSpecInfo);
 
         let class_modal = match &self.open_spec_info {
             true => "modal is-active",

@@ -1,4 +1,4 @@
-use yew::{Component, Callback, ComponentLink, Html, Properties, ShouldRender, html};
+use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
 use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
@@ -25,8 +25,6 @@ pub struct Props {
 
 pub struct ModificationFileItem {
     error: Option<Error>,
-    props: Props,
-    link: ComponentLink<Self>,
     open_full_info_file: bool,
     get_result_delete: bool,
     download_url: String,
@@ -45,24 +43,22 @@ pub enum Msg {
 impl Component for ModificationFileItem {
     type Message = Msg;
     type Properties = Props;
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         Self {
             error: None,
-            props,
-            link,
             open_full_info_file: false,
             get_result_delete: false,
             download_url: String::new(),
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let link = ctx.link().clone();
 
         match msg {
             Msg::RequestDownloadFile => {
-                let modification_uuid = self.props.modification_uuid.clone();
-                let file_uuid = self.props.file.uuid.clone();
+                let modification_uuid = ctx.props().modification_uuid.clone();
+                let file_uuid = ctx.props().file.uuid.clone();
                 spawn_local(async move {
                     let ipt_modification_files_arg = component_modification_files::IptModificationFilesArg{
                         filesUuids: Some(vec![file_uuid]),
@@ -79,8 +75,8 @@ impl Component for ModificationFileItem {
                 })
             },
             Msg::RequestDeleteFile => {
-                let modification_uuid = self.props.modification_uuid.clone();
-                let file_uuid = self.props.file.uuid.clone();
+                let modification_uuid = ctx.props().modification_uuid.clone();
+                let file_uuid = ctx.props().file.uuid.clone();
                 spawn_local(async move {
                     let delete_modification_file_data = delete_modification_file::DelModificationFileData{
                         fileUuid: file_uuid,
@@ -115,8 +111,8 @@ impl Component for ModificationFileItem {
                         self.get_result_delete = serde_json::from_value(res.get("deleteModificationFile").unwrap().clone()).unwrap();
                         debug!("deleteModificationFile: {:?}", self.get_result_delete);
                         if self.get_result_delete {
-                            if let Some(rollback) = &self.props.callback_delete_file {
-                                rollback.emit(self.props.file.uuid.clone());
+                            if let Some(rollback) = &ctx.props().callback_delete_file {
+                                rollback.emit(ctx.props().file.uuid.clone());
                             }
                         }
                     },
@@ -129,20 +125,20 @@ impl Component for ModificationFileItem {
         true
     }
 
-    fn change(&mut self, _props: Self::Properties) -> ShouldRender {
+    fn changed(&mut self, _ctx: &Context<Self>) -> bool {
         false
     }
 
-    fn view(&self) -> Html {
-        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let onclick_clear_error = ctx.link().callback(|_| Msg::ClearError);
 
         html!{<>
             <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error.clone())}/>
             {match self.get_result_delete {
                 true => html!{},
                 false => html!{<>
-                    {self.show_full_info_file()}
-                    {self.show_file()}
+                    {self.show_full_info_file(ctx.link(), ctx.props())}
+                    {self.show_file(ctx.link(), ctx.props())}
                 </>},
             }}
         </>}
@@ -150,8 +146,12 @@ impl Component for ModificationFileItem {
 }
 
 impl ModificationFileItem {
-    fn show_file(&self) -> Html {
-        let onclick_file_info = self.link.callback(|_| Msg::ClickFileInfo);
+    fn show_file(
+        &self,
+        link: &Scope<Self>,
+        props: &Properties,
+    ) -> Html {
+        let onclick_file_info = link.callback(|_| Msg::ClickFileInfo);
 
         html!{
             <div class="buttons">
@@ -159,19 +159,22 @@ impl ModificationFileItem {
                     <span class="icon">
                       <i class="fas fa-file"></i>
                     </span>
-                    <span>{self.props.file.filename.clone()}</span>
+                    <span>{props.file.filename.clone()}</span>
                 </div>
-                {self.show_download_btn()}
-                {self.show_delete_btn()}
+                {self.show_download_btn(link, props)}
+                {self.show_delete_btn(link, props)}
             </div>
         }
     }
 
-    fn show_download_btn(&self) -> Html {
-        let onclick_download_btn = self.link
-            .callback(|_| Msg::RequestDownloadFile);
+    fn show_download_btn(
+        &self,
+        link: &Scope<Self>,
+        props: &Properties,
+    ) -> Html {
+        let onclick_download_btn = link.callback(|_| Msg::RequestDownloadFile);
 
-        match &self.props.show_download_btn {
+        match &props.show_download_btn {
             true => match self.download_url.is_empty() {
                 true => html!{
                     <button class="button is-ghost" onclick={onclick_download_btn}>
@@ -190,11 +193,14 @@ impl ModificationFileItem {
         }
     }
 
-    fn show_delete_btn(&self) -> Html {
-        let onclick_delete_btn = self.link
-            .callback(|_| Msg::RequestDeleteFile);
+    fn show_delete_btn(
+        &self,
+        link: &Scope<Self>,
+        props: &Properties,
+    ) -> Html {
+        let onclick_delete_btn = link.callback(|_| Msg::RequestDeleteFile);
 
-        match &self.props.show_delete_btn {
+        match &props.show_delete_btn {
             true => html!{
                 <button class="button is-white" onclick={onclick_delete_btn} >
                   <span class="icon" >
@@ -206,10 +212,12 @@ impl ModificationFileItem {
         }
     }
 
-    fn show_full_info_file(&self) -> Html {
-        let onclick_file_info = self.link
-            .callback(|_| Msg::ClickFileInfo);
-
+    fn show_full_info_file(
+        &self,
+        link: &Scope<Self>,
+        props: &Properties,
+    ) -> Html {
+        let onclick_file_info = link.callback(|_| Msg::ClickFileInfo);
         let class_modal = match &self.open_full_info_file {
             true => "modal is-active",
             false => "modal",
@@ -224,39 +232,39 @@ impl ModificationFileItem {
                       <tbody>
                         <tr>
                           <td>{ get_value_field(&236) }</td> // Filename
-                          <td>{self.props.file.filename.clone()}</td>
+                          <td>{props.file.filename.clone()}</td>
                         </tr>
                         <tr>
                           <td>{ get_value_field(&237) }</td> // Content type
-                          <td>{self.props.file.content_type.clone()}</td>
+                          <td>{props.file.content_type.clone()}</td>
                         </tr>
                         <tr>
                           <td>{ get_value_field(&238) }</td> // Filesize
-                          <td>{self.props.file.filesize.clone()}</td>
+                          <td>{props.file.filesize.clone()}</td>
                         </tr>
                         <tr>
                           <td>{ get_value_field(&239) }</td> // Program
-                          <td>{self.props.file.program.name.clone()}</td>
+                          <td>{props.file.program.name.clone()}</td>
                         </tr>
                         // <tr>
                         //   <td>{"parent_file_uuid"}</td>
-                        //   <td>{self.props.file.parent_file_uuid.clone()}</td>
+                        //   <td>{props.file.parent_file_uuid.clone()}</td>
                         // </tr>
                         <tr>
                           <td>{ get_value_field(&240) }</td> // Upload by
                           <td>{format!("{} {} (@{})",
-                            self.props.file.owner_user.firstname.clone(),
-                            self.props.file.owner_user.lastname.clone(),
-                            self.props.file.owner_user.username.clone(),
+                            props.file.owner_user.firstname.clone(),
+                            props.file.owner_user.lastname.clone(),
+                            props.file.owner_user.username.clone(),
                           )}</td>
                         </tr>
                         // <tr>
                         //   <td>{ get_value_field(&242) }</td> // Created at
-                        //   <td>{format!("{:.*}", 19, self.props.file.created_at.to_string())}</td>
+                        //   <td>{format!("{:.*}", 19, props.file.created_at.to_string())}</td>
                         // </tr>
                         <tr>
                           <td>{ get_value_field(&241) }</td> // Upload at
-                          <td>{format!("{:.*}", 19, self.props.file.updated_at.to_string())}</td>
+                          <td>{format!("{:.*}", 19, props.file.updated_at.to_string())}</td>
                         </tr>
                       </tbody>
                     </table>

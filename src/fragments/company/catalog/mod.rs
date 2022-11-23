@@ -2,14 +2,14 @@ mod list_item;
 
 pub use list_item::ListItemCompany;
 
-use yew::{html, Component, ComponentLink, Html, ShouldRender, Properties};
+use yew::{Component, Context, html, Html, Properties};
 use yew_router::prelude::RouterAnchor;
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use log::debug;
 
-use crate::routes::AppRoute;
+use crate::routes::AppRoute::{self, CreateCompany};
 use crate::error::{Error, get_error};
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{ShowCompanyShort, CompaniesQueryArg};
@@ -26,10 +26,9 @@ pub enum Msg {
 
 pub struct CatalogCompanies {
     error: Option<Error>,
-    link: ComponentLink<Self>,
-    props: Props,
     show_type: ListState,
-    list: Vec<ShowCompanyShort>
+    list: Vec<ShowCompanyShort>,
+    arguments: Option<CompaniesQueryArg>,
 }
 
 #[derive(Properties, Clone)]
@@ -42,24 +41,23 @@ impl Component for CatalogCompanies {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         Self {
             error: None,
-            link,
-            props,
             show_type: ListState::get_from_storage(),
-            list: Vec::new()
+            list: Vec::new(),
+            arguments: ctx.props().arguments,
         }
     }
 
-    fn rendered(&mut self, first_render: bool) {
+    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
         if first_render {
-            self.link.send_message(Msg::GetList);
+            ctx.link().send_message(Msg::GetList);
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let link = ctx.link().clone();
         match msg {
             Msg::SwitchShowType => {
                 match self.show_type {
@@ -69,7 +67,7 @@ impl Component for CatalogCompanies {
                 ListState::set_to_storage(&self.show_type);
             },
             Msg::GetList => {
-                let ipt_companies_arg = match &self.props.arguments {
+                let ipt_companies_arg = match &ctx.props().arguments {
                     Some(ref arg) => Some(get_companies_short_list::IptCompaniesArg {
                         companiesUuids: arg.companies_uuids.clone(),
                         userUuid: arg.user_uuid.to_owned(),
@@ -108,8 +106,8 @@ impl Component for CatalogCompanies {
         true
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        let flag_change = match (&self.props.arguments, &props.arguments) {
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+        let flag_change = match (&self.arguments, &ctx.props().arguments) {
             (Some(self_arg), Some(arg)) => self_arg == arg,
             (None, None) => true,
             _ => false,
@@ -117,20 +115,20 @@ impl Component for CatalogCompanies {
 
         // debug!("self_arg == arg: {}", flag_change);
 
-        if self.props.show_create_btn == props.show_create_btn && flag_change {
+        if self.show_create_btn == ctx.props().show_create_btn && flag_change{
             // debug!("if change");
             false
         } else {
-            self.props.show_create_btn = props.show_create_btn;
-            self.props.arguments = props.arguments;
-            self.link.send_message(Msg::GetList);
+            self.show_create_btn = ctx.props().show_create_btn;
+            self.arguments = ctx.props().arguments;
+            ctx.link().send_message(Msg::GetList);
             // debug!("else change");
             true
         }
     }
 
-    fn view(&self) -> Html {
-        let onclick_change_view = self.link.callback(|_|Msg::SwitchShowType);
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let onclick_change_view = ctx.link().callback(|_|Msg::SwitchShowType);
 
         let (class_for_icon, class_for_list) = match self.show_type {
             ListState::Box => ("fas fa-bars", "flex-box"),
@@ -145,9 +143,9 @@ impl Component for CatalogCompanies {
                 </div>
                 <div class="level-right">
                     <div class="buttons">
-                        {match &self.props.show_create_btn {
+                        {match &ctx.props().show_create_btn {
                             true => html!{
-                                <RouterAnchor<AppRoute> route={AppRoute::CreateCompany} classes="button is-info">
+                                <RouterAnchor<AppRoute> route={CreateCompany} classes="button is-info">
                                     { get_value_field(&45) } // Create
                                 </RouterAnchor<AppRoute>>
                             },

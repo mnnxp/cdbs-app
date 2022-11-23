@@ -1,4 +1,4 @@
-use yew::prelude::*;
+use yew::{Component, Context, html, html::Scope, Html, Properties, classes};
 use yew_router::{
     agent::RouteRequest::ChangeRoute,
     prelude::*,
@@ -8,7 +8,7 @@ use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use log::debug;
 use crate::error::{Error, get_error};
-use crate::routes::AppRoute;
+use crate::routes::AppRoute::ShowCompany;
 use crate::fragments::{
     list_errors::ListErrors,
     switch_icon::res_btn,
@@ -39,8 +39,6 @@ pub struct Props {
 pub struct ListItemCompany {
     error: Option<Error>,
     router_agent: Box<dyn Bridge<RouteAgent>>,
-    link: ComponentLink<Self>,
-    props: Props,
     company_uuid: UUID,
     is_followed: bool,
 }
@@ -49,34 +47,31 @@ impl Component for ListItemCompany {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        let is_followed = props.data.is_followed;
+    fn create(ctx: &Context<Self>) -> Self {
         Self {
             error: None,
-            router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
-            link,
-            props,
+            router_agent: RouteAgent::bridge(ctx.link().callback(|_| Msg::Ignore)),
             company_uuid: String::new(),
-            is_followed,
+            is_followed: ctx.props().data.is_followed,
         }
     }
 
-    fn rendered(&mut self, first_render: bool) {
-        if first_render || self.company_uuid != self.props.data.uuid {
-            self.company_uuid = self.props.data.uuid.clone();
-            self.is_followed = self.props.data.is_followed;
+    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
+        if first_render || self.company_uuid != ctx.props().data.uuid {
+            self.company_uuid = ctx.props().data.uuid.clone();
+            self.is_followed = ctx.props().data.is_followed;
         }
     }
 
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        let link = self.link.clone();
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+        let link = ctx.link().clone();
 
         match msg {
             Msg::OpenCompany => {
-                // Redirect to profile page
-                self.router_agent.send(ChangeRoute(AppRoute::ShowCompany(
-                    self.props.data.uuid.to_string()
-                ).into()));
+                // Redirect to company page
+                self.router_agent.send(
+                    ChangeRoute(ShowCompany { uuid: ctx.props().data.uuid.to_string() }.into())
+                );
             },
             Msg::TriggerFav => {
                 match &self.is_followed {
@@ -85,7 +80,7 @@ impl Component for ListItemCompany {
                 }
             },
             Msg::AddFav => {
-                let company_uuid = self.props.data.uuid.clone();
+                let company_uuid = ctx.props().data.uuid.clone();
                 spawn_local(async move {
                     let res = make_query(AddCompanyFav::build_query(add_company_fav::Variables{
                       company_uuid
@@ -94,7 +89,7 @@ impl Component for ListItemCompany {
                 });
             },
             Msg::DelFav => {
-                let company_uuid = self.props.data.uuid.clone();
+                let company_uuid = ctx.props().data.uuid.clone();
                 spawn_local(async move {
                     let res = make_query(DeleteCompanyFav::build_query(delete_company_fav::Variables{
                       company_uuid
@@ -127,34 +122,35 @@ impl Component for ListItemCompany {
         true
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.show_list != props.show_list ||
-            // self.is_followed != props.data.is_followed ||
-                self.props.data.uuid != props.data.uuid {
-            self.props.show_list = props.show_list;
-            self.is_followed = props.data.is_followed;
-            self.props.data = props.data;
+    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+        if self.show_list != ctx.props().show_list || self.data.uuid != ctx.props().data.uuid {
+            self.show_list = ctx.props().show_list;
+            self.data = ctx.props().data;
             true
         } else {
             false
         }
     }
 
-    fn view(&self) -> Html {
-        // debug!("&self.props.data.shortname: {}", &self.props.data.shortname);
-        // debug!("&self.props.data.is_followed: {}", &self.props.data.is_followed);
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        // debug!("&ctx.props().data.shortname: {}", &ctx.props().data.shortname);
+        // debug!("&ctx.props().data.is_followed: {}", &ctx.props().data.is_followed);
         html!{<>
           <ListErrors error={self.error.clone()}/>
-          {match self.props.show_list {
-              true => { self.showing_in_list() },
-              false => { self.showing_in_box() },
+          {match ctx.props().show_list {
+              true => { self.showing_in_list(ctx.list(), ctx.props()) },
+              false => { self.showing_in_box(ctx.list(), ctx.props()) },
           }}
         </>}
     }
 }
 
 impl ListItemCompany {
-    fn showing_in_list(&self) -> Html {
+    fn showing_in_list(
+        &self,
+        link: &Scope<Self>,
+        props: &Properties,
+    ) -> Html {
         let ShowCompanyShort {
             shortname,
             inn,
@@ -166,10 +162,10 @@ impl ListItemCompany {
             // is_followed,
             updated_at,
             ..
-        } = &self.props.data;
+        } = &props.data;
 
-        let show_company_btn = self.link.callback(|_| Msg::OpenCompany);
-        let trigger_fab_btn = self.link.callback(|_| Msg::TriggerFav);
+        let show_company_btn = link.callback(|_| Msg::OpenCompany);
+        let trigger_fab_btn = link.callback(|_| Msg::TriggerFav);
 
         let mut class_res_btn = vec!["fa-bookmark"];
         let mut class_color_btn = "";
@@ -236,7 +232,11 @@ impl ListItemCompany {
         }
     }
 
-    fn showing_in_box(&self) -> Html {
+    fn showing_in_box(
+        &self,
+        link: &Scope<Self>,
+        props: &Properties,
+    ) -> Html {
         let ShowCompanyShort {
             shortname,
             image_file,
@@ -245,10 +245,10 @@ impl ListItemCompany {
             is_supplier,
             // is_followed,
             ..
-        } = self.props.data.clone();
+        } = props.data.clone();
 
-        let show_company_btn = self.link.callback(|_| Msg::OpenCompany);
-        let trigger_fab_btn = self.link.callback(|_| Msg::TriggerFav);
+        let show_company_btn = link.callback(|_| Msg::OpenCompany);
+        let trigger_fab_btn = link.callback(|_| Msg::TriggerFav);
 
         let mut class_res_btn = vec![];
         let mut class_color_btn = "";
