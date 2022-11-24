@@ -1,13 +1,8 @@
-// use yew::{
-//   agent::Bridged, html, Bridge, Callback, Component, ComponentLink,
-//   classes, MouseEvent, Html, Properties,
-// };
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, classes, MouseEvent};
-use yew_router::{
-    service::RouteService,
-    agent::RouteRequest::ChangeRoute,
-    prelude::*
-};
+use yew_agent::utils::store::{Bridgeable, StoreWrapper};
+use yew_agent::Bridge;
+use yew_router::prelude::Link;
+use yew_router::hooks::use_route;
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
 
@@ -16,7 +11,7 @@ use crate::routes::AppRoute::{self, Login, Home, Register, Notifications, Profil
 use crate::types::SlimUser;
 
 pub struct Header {
-    router_agent: Box<dyn Bridge<RouteAgent>>,
+    router_agent: Box<dyn Bridge<StoreWrapper<AppRoute>>>,
     current_path: String,
     current_user: Option<SlimUser>,
     open_notifications_page: bool,
@@ -45,7 +40,7 @@ impl Component for Header {
 
     fn create(ctx: &Context<Self>) -> Self {
         Header {
-            router_agent: RouteAgent::bridge(ctx.link().callback(|_| Msg::Ignore)),
+            router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             current_path: String::new(),
             current_user: None,
             open_notifications_page: false,
@@ -81,32 +76,25 @@ impl Component for Header {
               // Notify app to clear current user info
               ctx.props().callback.emit(());
               // Redirect to home page
-              self.router_agent.send(ChangeRoute(Home.into()));
+              self.router_agent.send(Home);
           },
-          Msg::TriggerMenu => {
-              self.is_active = !self.is_active;
-          },
-          Msg::SetActive(active) => {
-              self.is_active = active;
-          },
+          Msg::TriggerMenu => self.is_active = !self.is_active,
+          Msg::SetActive(active) => self.is_active = active,
           Msg::CheckPath => {
+              let current_path = use_route().unwrap_or_default();
               // debug!("route_service: {:?}", route_service.get_fragment().as_str());
-              // get current url
-              let route_service: RouteService<()> = RouteService::new();
               // check open home page
-              self.open_home_page = route_service.get_fragment().len() < 3;
+              self.open_home_page = current_path < 3;
               // check open notifications page
-              self.open_notifications_page = "#/notifications" == route_service.get_fragment().as_str();
-          }
-          Msg::Ignore => {}
+              self.open_notifications_page = "#/notifications" == current_path.as_str();
+          },
+          Msg::Ignore => {},
         }
-
         true
     }
 
     fn changed(&mut self, ctx: &Context<Self>) -> bool {
-        let route_service: RouteService<()> = RouteService::new();
-        let current_path = route_service.get_fragment();
+        let current_path = use_route().unwrap_or_default();
         if self.current_path == current_path {
             false
         } else {
@@ -137,9 +125,9 @@ impl Component for Header {
             <nav class="navbar" role="navigation" aria-label="main navigation">
                 <div class="navbar-brand">
                     <h1 class={logo_classes}>
-                        <RouterAnchor<AppRoute> route={Home}>
+                        <Link<AppRoute> route={Home}>
                             {self.show_logo()}
-                        </RouterAnchor<AppRoute>>
+                        </Link<AppRoute>>
                     </h1>
                     <div role="button" class={classes!("navbar-burger", active_menu)} onclick={triggrt_menu} aria-label="menu" aria-expanded="false">
                       <span aria-hidden="true"></span>
@@ -202,12 +190,12 @@ impl Header {
     fn logged_out_view(&self) -> Html {
         html!{
           <div class="navbar-item">
-            <RouterAnchor<AppRoute> route={Login} classes="button">
+            <Link<AppRoute> route={Login} classes="button">
               { get_value_field(&13) }
-            </RouterAnchor<AppRoute>>
-            <RouterAnchor<AppRoute> route={Register} classes="button">
+            </Link<AppRoute>>
+            <Link<AppRoute> route={Register} classes="button">
               { get_value_field(&14) }
-            </RouterAnchor<AppRoute>>
+            </Link<AppRoute>>
           </div>
         }
     }
@@ -235,11 +223,11 @@ impl Header {
                          </button>
                      },
                      false => html!{
-                         <RouterAnchor<AppRoute> route={Notifications} classes="button navbar-item" >
+                         <Link<AppRoute> route={Notifications} classes="button navbar-item" >
                              <span class="icon is-small" >
                                <i class="far fa-bell"></i>
                              </span>
-                         </RouterAnchor<AppRoute>>
+                         </Link<AppRoute>>
                      },
                  }}
                  <div class={classes!("navbar-item", "has-dropdown", active_menu)} onmouseover={triggrt_menu} onmouseout={out_menu} >
@@ -250,12 +238,12 @@ impl Header {
                       <span>{ &user_info.username }</span>
                   </a>
                   <div class="navbar-dropdown is-boxed is-right" id="dropdown-menu" role="menu">
-                    <RouterAnchor<AppRoute> classes="navbar-item" route={Profile { username: user_info.username.clone() } } >
+                    <Link<AppRoute> classes="navbar-item" route={Profile { username: user_info.username.clone() } } >
                         { get_value_field(&15) }
-                    </RouterAnchor<AppRoute>>
-                    <RouterAnchor<AppRoute> classes="navbar-item" route={Settings}>
+                    </Link<AppRoute>>
+                    <Link<AppRoute> classes="navbar-item" route={Settings}>
                         { get_value_field(&16) }
-                    </RouterAnchor<AppRoute>>
+                    </Link<AppRoute>>
                     <hr class="navbar-divider" />
                     <a class="navbar-item" onclick={logout} >
                         { get_value_field(&17) }

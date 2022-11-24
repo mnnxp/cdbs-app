@@ -25,6 +25,7 @@ use app::App;
 // This is the entry point for the web app
 fn main() {
     // wasm_logger::init(wasm_logger::Config::default());
-    wasm_logger::init(wasm_logger::Config::new(log::Level::Error));
-    yew::start_app::<App>();
+    wasm_logger::init(wasm_logger::Config::new(log::Level::Debug));
+    // wasm_logger::init(wasm_logger::Config::new(log::Level::Error));
+    yew::Renderer::<App>::new().render();
 }

@@ -1,20 +1,17 @@
-use yew::{agent::Bridged, Bridge};
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, Event};
+use yew_agent::utils::store::{Bridgeable, StoreWrapper};
+use yew_agent::Bridge;
+use yew_router::hooks::use_route;
 use yew::services::fetch::FetchTask;
 use yew::services::reader::{File, FileData, ReaderService, ReaderTask};
-use yew_router::{
-    service::RouteService,
-    agent::RouteRequest::ChangeRoute,
-    prelude::*,
-};
 use web_sys::FileList;
+use wasm_bindgen_futures::spawn_local;
+use serde_json::Value;
+use graphql_client::GraphQLQuery;
 use chrono::NaiveDateTime;
 use log::debug;
-use graphql_client::GraphQLQuery;
-use serde_json::Value;
-use wasm_bindgen_futures::spawn_local;
 
-use crate::routes::AppRoute::{Login, Home, ShowCompany, ShowStandard};
+use crate::routes::AppRoute::{self, Login, Home, ShowCompany, ShowStandard};
 use crate::error::{get_error, Error};
 use crate::fragments::{
     list_errors::ListErrors,
@@ -53,7 +50,7 @@ pub struct StandardSettings {
     request_upload_file: Callback<Result<Option<String>, Error>>,
     request_upload_confirm: Vec<UUID>,
     request_access: i64,
-    router_agent: Box<dyn Bridge<RouteAgent>>,
+    router_agent: Box<dyn Bridge<StoreWrapper<AppRoute>>>,
     task_read: Vec<(FileName, ReaderTask)>,
     task: Vec<FetchTask>,
     supplier_list: Vec<ShowCompanyShort>,
@@ -140,7 +137,7 @@ impl Component for StandardSettings {
             request_upload_file: ctx.link().callback(Msg::ResponseUploadFile),
             request_upload_confirm: Vec::new(),
             request_access: 0,
-            router_agent: RouteAgent::bridge(ctx.link().callback(|_| Msg::Ignore)),
+            router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             task_read: Vec::new(),
             task: Vec::new(),
             supplier_list: Vec::new(),
@@ -171,34 +168,26 @@ impl Component for StandardSettings {
             Some(cu) => cu.uuid,
             None => {
                 // route to login page if not found token
-                self.router_agent.send(ChangeRoute(Login.into()));
+                self.router_agent.send(Login);
                 String::new()
             },
         };
-
-        // get standard uuid for request standard data
-        let route_service: RouteService<()> = RouteService::new();
         // get target user from route
-        let target_standard_uuid = route_service
-            .get_fragment()
-            .trim_start_matches("#/standard/settings/")
-            .to_string();
+        let target_standard_uuid =
+            use_route().unwrap_or_default().trim_start_matches("#/standard/settings/").to_string();
         // get flag changing current standard in route
         let not_matches_standard_uuid = target_standard_uuid != self.current_standard_uuid;
         // debug!("self.current_standard_uuid {:#?}", self.current_standard_uuid);
-
         if not_matches_standard_uuid {
             // clear old data
             self.current_standard = None;
             self.current_standard_uuid = String::new();
             self.request_standard = StandardUpdatePreData::default();
         }
-
         if first_render || not_matches_standard_uuid {
             let link = ctx.link().clone();
             // update current_standard_uuid for checking change standard in route
             self.current_standard_uuid = target_standard_uuid.clone();
-
             spawn_local(async move {
                 let ipt_companies_arg = get_update_standard_data_opt::IptCompaniesArg{
                     companiesUuids: None,
@@ -212,7 +201,6 @@ impl Component for StandardSettings {
                     standard_uuid: target_standard_uuid,
                     ipt_companies_arg,
                 })).await.unwrap();
-
                 link.send_message(Msg::GetStandardData(res.clone()));
                 link.send_message(Msg::GetListOpt(res));
             })
@@ -225,9 +213,7 @@ impl Component for StandardSettings {
         match msg {
             Msg::OpenStandard => {
                 // Redirect to standard page
-                self.router_agent.send(
-                    ChangeRoute(ShowStandard { uuid: self.current_standard_uuid.clone() }.into())
-                );
+                self.router_agent.send(ShowStandard { uuid: self.current_standard_uuid.clone() });
             },
             Msg::RequestManager => {
                 if self.update_standard {
@@ -236,11 +222,9 @@ impl Component for StandardSettings {
                 if self.update_standard_access {
                     ctx.link().send_message(Msg::RequestChangeAccess)
                 }
-
                 // if self.upload_standard_files && !self.files.is_empty() {
                 //     ctx.link().send_message(Msg::RequestUploadStandardFiles);
                 // }
-
                 self.update_standard = false;
                 self.update_standard_access = false;
                 // self.upload_standard_files = false;
@@ -525,10 +509,9 @@ impl Component for StandardSettings {
                         debug!("deleteStandard: {:?}", result);
                         if self.current_standard_uuid == result {
                             match &self.current_standard {
-                                Some(company) => self.router_agent.send(
-                                    ChangeRoute(ShowCompany { uuid: company.owner_company.uuid.clone() }.into())
-                                ),
-                                None => self.router_agent.send(ChangeRoute(Home.into())),
+                                Some(company) =>
+                                    self.router_agent.send(ShowCompany { uuid: company.owner_company.uuid.clone() }),
+                                None => self.router_agent.send(Home),
                             }
                         }
                     },

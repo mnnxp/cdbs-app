@@ -59,6 +59,9 @@ pub enum AppRoute {
     Profile { username: String },
     #[at("#/")]
     Home,
+    #[not_found]
+    #[at("/404")]
+    NotFound,
 }
 
 /// Fix fragment handling problem for yew_router

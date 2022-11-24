@@ -1,17 +1,14 @@
+use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, classes};
+use yew_agent::utils::store::{Bridgeable, StoreWrapper};
+use yew_agent::Bridge;
+use yew_router::hooks::use_route;
 use web_sys::MouseEvent;
 use graphql_client::GraphQLQuery;
 use log::debug;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
-// use yew::{agent::Bridged, Bridge};
-use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, classes};
-use yew_router::{
-    service::RouteService,
-    agent::RouteRequest::ChangeRoute,
-    prelude::*
-};
 
-use crate::routes::AppRoute::Login;
+use crate::routes::AppRoute::{self, Login};
 use crate::error::{get_error, Error};
 use crate::fragments::{
     company::CatalogCompanies,
@@ -22,7 +19,7 @@ use crate::fragments::{
     user::CatalogUsers,
     user::UserCertificatesCard,
 };
-use crate::services::{get_logged_user, get_value_field};
+use crate::services::{url_decode, get_logged_user, get_value_field};
 use crate::types::{
     UserDataCard, CompaniesQueryArg, ComponentsQueryArg, SelfUserInfo, SlimUser,
     StandardsQueryArg, UserCertificate, UserInfo, UsersQueryArg, UUID,
@@ -34,7 +31,6 @@ use crate::gqls::user::{
     GetSelfData, get_self_data,
     GetUserData, get_user_data,
 };
-use crate::services::url_decode;
 
 /// Profile user with relate data
 pub struct Profile {
@@ -43,7 +39,7 @@ pub struct Profile {
     profile: Option<UserInfo>,
     current_user_uuid: UUID,
     current_username: String,
-    router_agent: Box<dyn Bridge<RouteAgent>>,
+    router_agent: Box<dyn Bridge<StoreWrapper<AppRoute>>>,
     subscribers: usize,
     is_followed: bool,
     profile_tab: ProfileTab,
@@ -93,7 +89,7 @@ impl Component for Profile {
             profile: None,
             current_user_uuid: String::new(),
             current_username: String::new(),
-            router_agent: RouteAgent::bridge(ctx.link().callback(|_| Msg::Ignore)),
+            router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             subscribers: 0,
             is_followed: false,
             profile_tab: ProfileTab::Certificates,
@@ -107,15 +103,12 @@ impl Component for Profile {
             Some(cu) => cu.username,
             None => {
                 // route to login page if not found token
-                self.router_agent.send(ChangeRoute(Login.into()));
+                self.router_agent.send(Login);
                 String::new()
             },
         };
-
-        // get username for request user data
-        let route_service: RouteService<()> = RouteService::new();
         // get and decode target user from route
-        let target_username = url_decode(route_service.get_fragment().trim_start_matches("#/@"));
+        let target_username = url_decode(use_route().unwrap_or_default().trim_start_matches("#/@"));
         // get flag changing current profile in route
         let not_matches_username = target_username != self.current_username;
         // debug!("self.current_username {:?}", self.current_username);
@@ -143,10 +136,8 @@ impl Component for Profile {
                 spawn_local(async move {
                     match get_self {
                         true => {
-                            let res = make_query(GetSelfData::build_query(
-                                get_self_data::Variables
-                            )).await.unwrap();
-
+                            let res =
+                                make_query(GetSelfData::build_query(get_self_data::Variables)).await.unwrap();
                             link.send_message(Msg::GetSelfProfileResult(res));
                         }
                         false => {

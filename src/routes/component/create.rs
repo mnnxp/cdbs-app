@@ -1,11 +1,6 @@
-use yew::{
-    agent::Bridged, html, Bridge, Component,
-    ComponentLink, Html, InputData, Event
-};
-use yew_router::{
-    agent::RouteRequest::ChangeRoute,
-    prelude::*,
-};
+use yew::{Component, Context, html, html::Scope, Html, Event};
+use yew_agent::utils::store::{Bridgeable, StoreWrapper};
+use yew_agent::Bridge;
 use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
@@ -26,8 +21,7 @@ use crate::gqls::component::{
 pub struct CreateComponent {
     error: Option<Error>,
     request_component: ComponentCreateData,
-    router_agent: Box<dyn Bridge<RouteAgent>>,
-    link: ComponentLink<Self>,
+    router_agent: Box<dyn Bridge<StoreWrapper<AppRoute>>>,
     component_types: Vec<ComponentType>,
     actual_statuses: Vec<ActualStatus>,
     types_access: Vec<TypeAccessInfo>,
@@ -53,12 +47,11 @@ impl Component for CreateComponent {
     type Message = Msg;
     type Properties = ();
 
-    fn create(_props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         CreateComponent {
             error: None,
             request_component: ComponentCreateData::new(),
-            router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
-            link,
+            router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             component_types: Vec::new(),
             actual_statuses: Vec::new(),
             types_access: Vec::new(),
@@ -66,20 +59,17 @@ impl Component for CreateComponent {
         }
     }
 
-    fn rendered(&mut self, _ctx: &Context<Self>, first_render: bool) {
+    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
         if let None = get_logged_user() {
             // route to login page if not found token
-            self.router_agent.send(ChangeRoute(Login.into()));
+            self.router_agent.send(Login);
         };
-
         if first_render {
             let link = ctx.link().clone();
-
             spawn_local(async move {
                 let res = make_query(GetComponentDataOpt::build_query(
                     get_component_data_opt::Variables
                 )).await.unwrap();
-
                 link.send_message(Msg::GetListOpt(res));
             })
         }
@@ -139,15 +129,12 @@ impl Component for CreateComponent {
 
                 match res_value.is_null() {
                     false => {
-                        self.component_types = serde_json::from_value(
-                            res_value.get("componentTypes").unwrap().clone()
-                        ).unwrap();
-                        self.actual_statuses = serde_json::from_value(
-                            res_value.get("componentActualStatuses").unwrap().clone()
-                        ).unwrap();
-                        self.types_access = serde_json::from_value(
-                            res_value.get("typesAccess").unwrap().clone()
-                        ).unwrap();
+                        self.component_types =
+                            serde_json::from_value(res_value.get("componentTypes").unwrap().clone()).unwrap();
+                        self.actual_statuses =
+                            serde_json::from_value(res_value.get("componentActualStatuses").unwrap().clone()).unwrap();
+                        self.types_access =
+                            serde_json::from_value(res_value.get("typesAccess").unwrap().clone()).unwrap();
                     },
                     true => self.error = Some(get_error(&data)),
                 }
@@ -164,9 +151,7 @@ impl Component for CreateComponent {
                         debug!("registerComponent: {:?}", result);
                         // Redirect to setting component page
                         if !result.is_empty() {
-                            self.router_agent.send(
-                                ChangeRoute(ComponentSettings { uuid: result }.into())
-                            );
+                            self.router_agent.send(ComponentSettings { uuid: result });
                         }
 
                     },
@@ -195,8 +180,7 @@ impl Component for CreateComponent {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
-        let onclick_clear_error = ctx.link()
-            .callback(|_| Msg::ClearError);
+        let onclick_clear_error = ctx.link().callback(|_| Msg::ClearError);
 
         html!{
             <div class="component-page">
@@ -204,9 +188,9 @@ impl Component for CreateComponent {
                     <div class="row">
                         <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error.clone())}/>
                         <h1 class="title">{ get_value_field(&290) }</h1>
-                        {self.show_main_card()}
+                        {self.show_main_card(ctx.link())}
                         <br/>
-                        {self.show_manage_btn()}
+                        {self.show_manage_btn(ctx.link())}
                     </div>
                 </div>
             </div>
@@ -215,30 +199,27 @@ impl Component for CreateComponent {
 }
 
 impl CreateComponent {
-    fn show_main_card(&self) -> Html {
-        let onchange_actual_status_id = ctx.link()
-            .callback(|ev: Event| Msg::UpdateActualStatusId(match ev {
+    fn show_main_card(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onchange_actual_status_id =
+            link.callback(|ev: Event| Msg::UpdateActualStatusId(match ev {
               Event::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
-
-        let onchange_change_component_type = ctx.link()
-            .callback(|ev: Event| Msg::UpdateComponentTypeId(match ev {
+        let onchange_change_component_type =
+            link.callback(|ev: Event| Msg::UpdateComponentTypeId(match ev {
               Event::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
-
-        let onchange_change_type_access = ctx.link()
-            .callback(|ev: Event| Msg::UpdateTypeAccessId(match ev {
+        let onchange_change_type_access =
+            link.callback(|ev: Event| Msg::UpdateTypeAccessId(match ev {
               Event::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
-
-        let oninput_name = ctx.link()
-            .callback(|ev: InputData| Msg::UpdateName(ev.value));
-
-        let oninput_description = ctx.link()
-            .callback(|ev: InputData| Msg::UpdateDescription(ev.value));
+        let oninput_name = link.callback(|ev: Event| Msg::UpdateName(ev.value));
+        let oninput_description = link.callback(|ev: Event| Msg::UpdateDescription(ev.value));
 
         html!{
             <div class="card">
@@ -326,9 +307,11 @@ impl CreateComponent {
         }
     }
 
-    fn show_manage_btn(&self) -> Html {
-        let onclick_create_changes = ctx.link()
-            .callback(|_| Msg::RequestManager);
+    fn show_manage_btn(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onclick_create_changes = link.callback(|_| Msg::RequestManager);
 
         html!{
             <button

@@ -1,16 +1,12 @@
-// use yew::{agent::Bridged, classes, Bridge};
 use yew::{Component, Context, html, html::Scope, Html, Properties, classes};
-use yew_router::{
-    service::RouteService,
-    agent::RouteRequest::ChangeRoute,
-    prelude::*,
-};
+use yew_agent::utils::store::{Bridgeable, StoreWrapper};
+use yew_agent::Bridge;
 use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
-use crate::routes::AppRoute::{Login, ShowCompany, StandardSettings};
+use crate::routes::AppRoute::{self, Login, ShowCompany, StandardSettings};
 use crate::error::{get_error, Error};
 use crate::fragments::{
     switch_icon::res_btn,
@@ -36,7 +32,7 @@ pub struct ShowStandard {
     current_standard_uuid: UUID,
     current_user_owner: bool,
     // task: Option<FetchTask>,
-    router_agent: Box<dyn Bridge<RouteAgent>>,
+    router_agent: Box<dyn Bridge<StoreWrapper<AppRoute>>>,
     subscribers: usize,
     is_followed: bool,
     show_full_description: bool,
@@ -77,7 +73,7 @@ impl Component for ShowStandard {
             current_standard_uuid: String::new(),
             current_user_owner: false,
             // task: None,
-            router_agent: RouteAgent::bridge(ctx.link().callback(|_| Msg::Ignore)),
+            router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             subscribers: 0,
             is_followed: false,
             show_full_description: false,
@@ -89,7 +85,7 @@ impl Component for ShowStandard {
     fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
         if let None = get_logged_user() {
             // route to login page if not found token
-            self.router_agent.send(ChangeRoute(Login.into()));
+            self.router_agent.send(Login);
         };
 
         // get standard uuid for request standard data
@@ -246,17 +242,13 @@ impl Component for ShowStandard {
             Msg::OpenStandardOwner => {
                 if let Some(standard_data) = &self.standard {
                     // Redirect to ownercompany standard page
-                    self.router_agent.send(
-                        ChangeRoute(ShowCompany { uuid: standard_data.owner_company.uuid.to_string() }.into())
-                    );
+                    self.router_agent.send(ShowCompany { uuid: standard_data.owner_company.uuid.to_string() });
                 }
             },
             Msg::OpenStandardSetting => {
                 if let Some(standard_data) = &self.standard {
                     // Redirect to page for change and update standard
-                    self.router_agent.send(
-                        ChangeRoute(StandardSettings { uuid: standard_data.uuid.to_string() }.into())
-                    );
+                    self.router_agent.send(StandardSettings { uuid: standard_data.uuid.to_string() });
                 }
             },
             Msg::Ignore => {}

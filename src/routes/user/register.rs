@@ -1,10 +1,11 @@
+use yew::{Component, Callback, Context, html, html::Scope, Html, Event, classes};
+use yew_agent::utils::store::{Bridgeable, StoreWrapper};
+use yew_agent::Bridge;
+use yew_router::prelude::Link;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 // use yew::services::fetch::FetchTask;
-// use yew::{agent::Bridged, Bridge};
-use yew::{Component, Callback, Context, html, html::Scope, Html, Event, classes};
-use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
 use log::debug;
 
 use crate::routes::AppRoute::{self, Login, Profile};
@@ -22,7 +23,7 @@ use crate::gqls::user::{
 pub struct Register {
     error: Option<Error>,
     request: RegisterInfo,
-    router_agent: Box<dyn Bridge<RouteAgent>>,
+    router_agent: Box<dyn Bridge<StoreWrapper<AppRoute>>>,
     regions: Vec<Region>,
     programs: Vec<Program>,
     types_access: Vec<TypeAccessInfo>,
@@ -54,7 +55,7 @@ impl Component for Register {
         Self {
             error: None,
             request: RegisterInfo::default(),
-            router_agent: RouteAgent::bridge(ctx.link().callback(|_| Msg::Ignore)),
+            router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             programs: Vec::new(),
             regions: Vec::new(),
             types_access: Vec::new(),
@@ -67,9 +68,7 @@ impl Component for Register {
             let link = ctx.link().clone();
             if let Some(user) = get_logged_user() {
                 // route to profile page if user already logged
-                self.router_agent.send(
-                    ChangeRoute(Profile { username: user.username }.into())
-                );
+                self.router_agent.send(Profile { username: user.username });
             };
             spawn_local(async move {
                 let res = make_query(RegisterOpt::build_query(
@@ -122,7 +121,7 @@ impl Component for Register {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res = data.as_object().unwrap().get("data").unwrap();
                 match res.is_null() {
-                    false => self.router_agent.send(ChangeRoute(Login.into())),
+                    false => self.router_agent.send(Login),
                     true => self.error = Some(get_error(&data)),
                 }
             },
@@ -156,9 +155,9 @@ impl Component for Register {
             <div class="auth-page">
                 <h1 class="title">{ get_value_field(&14) }</h1>
                 <h2 class="subtitle">
-                    <RouterAnchor<AppRoute> route={Login}>
+                    <Link<AppRoute> route={Login}>
                         { get_value_field(&21) }
-                    </RouterAnchor<AppRoute>>
+                    </Link<AppRoute>>
                 </h2>
                 <ListErrors error={self.error.clone()} />
                 {self.modal_conditions(ctx.link())}

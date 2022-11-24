@@ -1,13 +1,11 @@
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, classes};
-use yew_router::{
-    agent::RouteRequest::ChangeRoute,
-    prelude::*,
-};
+use yew_agent::utils::store::{Bridgeable, StoreWrapper};
+use yew_agent::Bridge;
 // use log::debug;
 use crate::services::get_value_field;
-use crate::routes::AppRoute::ShowComponent;
+use crate::routes::AppRoute::{self, ShowComponent};
 use crate::fragments::switch_icon::res_btn;
-use crate::types::ShowComponentShort;
+use crate::types::{UUID, ShowComponentShort};
 
 pub enum Msg {
     OpenComponent,
@@ -24,7 +22,7 @@ pub struct Props {
 }
 
 pub struct ListItem {
-    router_agent: Box<dyn Bridge<RouteAgent>>,
+    router_agent: Box<dyn Bridge<StoreWrapper<AppRoute>>>,
     component_uuid: UUID,
     is_followed: bool,
 }
@@ -35,7 +33,7 @@ impl Component for ListItem {
 
     fn create(ctx: &Context<Self>) -> Self {
         Self {
-            router_agent: RouteAgent::bridge(ctx.link().callback(|_| Msg::Ignore)),
+            router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             component_uuid: ctx.props().data.uuid,
             is_followed: ctx.props().is_followed,
         }
@@ -45,17 +43,14 @@ impl Component for ListItem {
         match msg {
             Msg::OpenComponent => {
                 // Redirect to component page
-                self.router_agent.send(
-                    ChangeRoute(ShowComponent { uuid: ctx.props().data.uuid.to_string() }.into())
-                );
-
+                self.router_agent.send(ShowComponent { uuid: ctx.props().data.uuid.to_string() });
                 // debug!("OpenComponent");
             },
             Msg::TriggerFav => {
-                if !ctx.props().data.is_followed {
-                    ctx.props().add_fav.emit(String::new());
-                } else {
+                if ctx.props().data.is_followed {
                     ctx.props().del_fav.emit(String::new());
+                } else {
+                    ctx.props().add_fav.emit(String::new());
                 }
             },
             Msg::Ignore => (),

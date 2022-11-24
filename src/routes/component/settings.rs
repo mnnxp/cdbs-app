@@ -1,19 +1,17 @@
 // use yew::{agent::Bridged, Bridge};
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, Event};
-use yew::services::fetch::FetchTask;
-use yew::services::reader::{File, FileData, ReaderService, ReaderTask};
-use yew_router::{
-    service::RouteService,
-    agent::RouteRequest::ChangeRoute,
-    prelude::*,
-};
+use yew_agent::utils::store::{Bridgeable, StoreWrapper};
+use yew_agent::Bridge;
+use yew_router::hooks::use_route;
+// use yew::services::fetch::FetchTask;
+// use yew::services::reader::{File, FileData, ReaderService, ReaderTask};
 use web_sys::FileList;
 use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
-use crate::routes::AppRoute::{Login, Home, ShowComponent};
+use crate::routes::AppRoute::{self, Login, Home, ShowComponent};
 use crate::error::{get_error, Error};
 use crate::fragments::{
     // switch_icon::res_btn,
@@ -56,7 +54,7 @@ pub struct ComponentSettings {
     request_upload_file: Callback<Result<Option<String>, Error>>,
     request_upload_confirm: Vec<UUID>,
     request_access: i64,
-    router_agent: Box<dyn Bridge<RouteAgent>>,
+    router_agent: Box<dyn Bridge<StoreWrapper<AppRoute>>>,
     task_read: Vec<(FileName, ReaderTask)>,
     task: Vec<FetchTask>,
     supplier_list: Vec<ShowCompanyShort>,
@@ -144,7 +142,7 @@ impl Component for ComponentSettings {
             request_upload_file: ctx.link().callback(Msg::ResponseUploadFile),
             request_upload_confirm: Vec::new(),
             request_access: 0,
-            router_agent: RouteAgent::bridge(ctx.link().callback(|_| Msg::Ignore)),
+            router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             task_read: Vec::new(),
             task: Vec::new(),
             supplier_list: Vec::new(),
@@ -177,17 +175,13 @@ impl Component for ComponentSettings {
             Some(cu) => cu.uuid,
             None => {
                 // route to login page if not found token
-                self.router_agent.send(ChangeRoute(Login.into()));
+                self.router_agent.send(Login);
                 String::new()
             },
         };
-        // get component uuid for request component data
-        let route_service: RouteService<()> = RouteService::new();
         // get target user from route
-        let target_component_uuid = route_service
-            .get_fragment()
-            .trim_start_matches("#/component/settings/")
-            .to_string();
+        let target_component_uuid =
+            use_route().unwrap_or_default().trim_start_matches("#/component/settings/").to_string();
         // get flag changing current component in route
         let not_matches_component_uuid = target_component_uuid != self.current_component_uuid;
         // debug!("self.current_component_uuid {:#?}", self.current_component_uuid);
@@ -232,7 +226,7 @@ impl Component for ComponentSettings {
             Msg::OpenComponent => {
                 // Redirect to component page
                 self.router_agent.send(
-                    ChangeRoute(ShowComponent { uuid: self.current_component_uuid.clone() }.into())
+                    ShowComponent { uuid: self.current_component_uuid.clone() }
                 );
             },
             Msg::RequestManager => {
@@ -442,18 +436,14 @@ impl Component for ComponentSettings {
 
                 match res_value.is_null() {
                     false => {
-                        self.supplier_list = serde_json::from_value(
-                            res_value.get("companies").unwrap().clone()
-                        ).unwrap();
-                        self.component_types = serde_json::from_value(
-                            res_value.get("componentTypes").unwrap().clone()
-                        ).unwrap();
-                        self.actual_statuses = serde_json::from_value(
-                            res_value.get("componentActualStatuses").unwrap().clone()
-                        ).unwrap();
-                        self.types_access = serde_json::from_value(
-                            res_value.get("typesAccess").unwrap().clone()
-                        ).unwrap();
+                        self.supplier_list =
+                            serde_json::from_value(res_value.get("companies").unwrap().clone()).unwrap();
+                        self.component_types =
+                            serde_json::from_value(res_value.get("componentTypes").unwrap().clone()).unwrap();
+                        self.actual_statuses =
+                            serde_json::from_value(res_value.get("componentActualStatuses").unwrap().clone()).unwrap();
+                        self.types_access =
+                            serde_json::from_value(res_value.get("typesAccess").unwrap().clone()).unwrap();
                     },
                     true => self.error = Some(get_error(&data)),
                 }
@@ -531,7 +521,7 @@ impl Component for ComponentSettings {
                         let result: UUID = serde_json::from_value(res_value.get("deleteComponent").unwrap().clone()).unwrap();
                         debug!("deleteComponent: {:?}", result);
                         if self.current_component_uuid == result {
-                            self.router_agent.send(ChangeRoute(Home.into()))
+                            self.router_agent.send(Home)
                         }
                     },
                     true => link.send_message(Msg::ResponseError(get_error(&data))),

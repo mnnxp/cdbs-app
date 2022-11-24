@@ -1,7 +1,7 @@
-// use yew::{agent::Bridged, Bridge};
 use yew::{Component, Context, html, html::Scope, Html, Properties, classes};
-use yew_router::agent::RouteRequest::ChangeRoute;
-use crate::routes::AppRoute::Profile;
+use yew_agent::utils::store::{Bridgeable, StoreWrapper};
+use yew_agent::Bridge;
+use crate::routes::AppRoute::{self, Profile};
 use crate::fragments::switch_icon::res_btn;
 use crate::services::get_value_field;
 use super::{UUID, ShowUserShort};
@@ -18,7 +18,7 @@ pub struct Props {
 }
 
 pub struct ListItemUser {
-    router_agent: Box<dyn Bridge<RouteAgent>>,
+    router_agent: Box<dyn Bridge<StoreWrapper<AppRoute>>>,
     user_uuid: UUID,
     username: String,
 }
@@ -29,7 +29,7 @@ impl Component for ListItemUser {
 
     fn create(ctx: &Context<Self>) -> Self {
         Self {
-            router_agent: RouteAgent::bridge(ctx.link().callback(|_| Msg::Ignore)),
+            router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             user_uuid: ctx.props().data.uuid.clone(),
             username: ctx.props().data.username.clone(),
         }
@@ -39,9 +39,7 @@ impl Component for ListItemUser {
         match msg {
             Msg::ShowProfile => {
                 // Redirect to profile page
-                self.router_agent.send(
-                    ChangeRoute(Profile { username: self.username.to_string() }.into())
-                );
+                self.router_agent.send(Profile { username: self.username.to_string() });
             },
             Msg::Ignore => {},
         }

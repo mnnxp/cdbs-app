@@ -1,17 +1,14 @@
-// use yew::{agent::Bridged, Bridge};
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, classes};
-use yew_router::{
-    service::RouteService,
-    agent::RouteRequest::ChangeRoute,
-    prelude::*,
-};
+use yew_agent::utils::store::{Bridgeable, StoreWrapper};
+use yew_agent::Bridge;
+use yew_router::hooks::use_route;
 use web_sys::MouseEvent;
 use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
-use crate::routes::AppRoute::{Login, Profile, CompanySettings};
+use crate::routes::AppRoute::{self, Login, Profile, CompanySettings};
 use crate::error::{get_error, Error};
 use crate::fragments::{
     switch_icon::res_btn,
@@ -36,7 +33,7 @@ pub struct ShowCompany {
     company: Option<CompanyInfo>,
     current_company_uuid: UUID,
     current_user_owner: bool,
-    router_agent: Box<dyn Bridge<RouteAgent>>,
+    router_agent: Box<dyn Bridge<StoreWrapper<AppRoute>>>,
     subscribers: usize,
     is_followed: bool,
     company_tab: CompanyTab,
@@ -84,7 +81,7 @@ impl Component for ShowCompany {
             company: None,
             current_company_uuid: ctx.props().company_uuid,
             current_user_owner: false,
-            router_agent: RouteAgent::bridge(ctx.link().callback(|_| Msg::Ignore)),
+            router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             subscribers: 0,
             is_followed: false,
             company_tab: CompanyTab::Certificates,
@@ -96,20 +93,14 @@ impl Component for ShowCompany {
     fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
         if let None = get_logged_user() {
             // route to login page if not found token
-            self.router_agent.send(ChangeRoute(Login.into()));
+            self.router_agent.send(Login);
         };
-
-        // get company uuid for request company data
-        let route_service: RouteService<()> = RouteService::new();
         // get target user from route
-        let target_company_uuid = route_service
-            .get_fragment()
-            .trim_start_matches("#/company/")
-            .to_string();
+        let target_company_uuid =
+            use_route().unwrap_or_default().trim_start_matches("#/company/").to_string();
         // get flag changing current company in route
         let not_matches_company_uuid = target_company_uuid != self.current_company_uuid;
         // debug!("self.current_company_uuid {:#?}", self.current_company_uuid);
-
         if first_render || not_matches_company_uuid {
             let link = ctx.link().clone();
             // clear old data
@@ -117,7 +108,6 @@ impl Component for ShowCompany {
             self.company = None;
             // update current_company_uuid for checking change company in route
             self.current_company_uuid = target_company_uuid.clone();
-
             spawn_local(async move {
                 let res = make_query(GetCompanyData::build_query(get_company_data::Variables {
                     company_uuid: target_company_uuid,
@@ -210,17 +200,13 @@ impl Component for ShowCompany {
             Msg::OpenOwnerCompany => {
                 if let Some(company_data) = &self.company {
                     // Redirect to owneruser company page
-                    self.router_agent.send(
-                        ChangeRoute(Profile { username: company_data.owner_user.username.to_string() }.into())
-                    );
+                    self.router_agent.send(Profile { username: company_data.owner_user.username.to_string() });
                 }
             },
             Msg::OpenSettingCompany => {
                 if let Some(company_data) = &self.company {
                     // Redirect to company settings page
-                    self.router_agent.send(
-                        ChangeRoute(CompanySettings { uuid: company_data.uuid.to_string() }.into())
-                    );
+                    self.router_agent.send(CompanySettings { uuid: company_data.uuid.to_string() });
                 }
             },
             Msg::ShowFullCompanyInfo => self.show_full_company_info = !self.show_full_company_info,

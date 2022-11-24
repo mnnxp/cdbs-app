@@ -1,16 +1,13 @@
-// use yew::{agent::Bridged, Bridge};
 use yew::{Component, Context, html, html::Scope, Html, Properties, Event};
-use yew_router::{
-    agent::RouteRequest::ChangeRoute,
-    prelude::*,
-};
+use yew_agent::utils::store::{Bridgeable, StoreWrapper};
+use yew_agent::Bridge;
 use chrono::NaiveDateTime;
 use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
-use crate::routes::AppRoute::{Login, StandardSettings};
+use crate::routes::AppRoute::{self, Login, StandardSettings};
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
 use crate::services::{get_logged_user, get_value_field};
@@ -29,7 +26,7 @@ pub struct CreateStandard {
     error: Option<Error>,
     current_user_uuid: UUID,
     request_standard: StandardCreateData,
-    router_agent: Box<dyn Bridge<RouteAgent>>,
+    router_agent: Box<dyn Bridge<StoreWrapper<AppRoute>>>,
     supplier_list: Vec<ShowCompanyShort>,
     standard_statuses: Vec<StandardStatus>,
     regions: Vec<Region>,
@@ -73,7 +70,7 @@ impl Component for CreateStandard {
             error: None,
             current_user_uuid: ctx.props().current_user.as_ref().map(|x| &x.uuid),
             request_standard: StandardCreateData::new(),
-            router_agent: RouteAgent::bridge(ctx.link().callback(|_| Msg::Ignore)),
+            router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             supplier_list: Vec::new(),
             standard_statuses: Vec::new(),
             regions: Vec::new(),
@@ -88,7 +85,7 @@ impl Component for CreateStandard {
             Some(cu) => cu.uuid,
             None => {
                 // route to login page if not found token
-                self.router_agent.send(ChangeRoute(Login.into()));
+                self.router_agent.send(Login);
                 String::new()
             },
         };
@@ -227,9 +224,7 @@ impl Component for CreateStandard {
                         // Redirect to setting standard page
                         if !result.is_empty() {
                             // self.get_result_created_standard = result;
-                            self.router_agent.send(
-                                ChangeRoute(StandardSettings { uuid: result }.into())
-                            );
+                            self.router_agent.send(StandardSettings { uuid: result });
                         }
 
                     },

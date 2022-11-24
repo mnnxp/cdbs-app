@@ -1,11 +1,11 @@
-use web_sys::MouseEvent;
-// use yew::{agent::Bridged, Bridge};
-use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, Event, FocusEvent, classes};
-use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
-use graphql_client::GraphQLQuery;
-use log::debug;
-use serde_json::Value;
+use yew::{Component, Callback, Context, html, html::Scope, Html, Event, FocusEvent, classes};
+use yew_agent::utils::store::{Bridgeable, StoreWrapper};
+use yew_agent::Bridge;
 use wasm_bindgen_futures::spawn_local;
+use web_sys::MouseEvent;
+use graphql_client::GraphQLQuery;
+use serde_json::Value;
+use log::debug;
 
 use crate::error::{get_error, Error};
 use crate::fragments::{
@@ -44,7 +44,7 @@ pub struct Settings {
     request_access: i64,
     request_password: UpdatePasswordInfo,
     request_user_password: String,
-    router_agent: Box<dyn Bridge<RouteAgent>>,
+    router_agent: Box<dyn Bridge<StoreWrapper<AppRoute>>>,
     current_data: Option<SelfUserInfo>,
     current_username: String,
     programs: Vec<Program>,
@@ -96,14 +96,14 @@ impl Component for Settings {
     type Message = Msg;
     type Properties = ();
 
-    fn create(_props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         Settings {
             error: None,
             request_profile: UserUpdateInfo::default(),
             request_access: 0,
             request_password: UpdatePasswordInfo::default(),
             request_user_password: String::new(),
-            router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
+            router_agent: AppRoute::bridge(link.callback(|_| Msg::Ignore)),
             current_data: None,
             current_username: String::new(),
             programs: Vec::new(),
@@ -122,7 +122,7 @@ impl Component for Settings {
             let link = ctx.link().clone();
             if let None = get_logged_user() {
                 // route to login page if not found token
-                self.router_agent.send(ChangeRoute(Login.into()));
+                self.router_agent.send(Login);
             };
 
             spawn_local(async move {
@@ -142,9 +142,7 @@ impl Component for Settings {
             Msg::OpenProfile => {
                 // Redirect to user page
                 if let Some(user_data) = &self.current_data {
-                    self.router_agent.send(
-                        ChangeRoute(Profile { username: user_data.username.clone() }.into())
-                    );
+                    self.router_agent.send(Profile { username: user_data.username.clone() });
                 }
             },
             Msg::RequestCurrentData => {
@@ -308,8 +306,7 @@ impl Component for Settings {
                             // Clear global token and logged user after delete profile
                             set_token(None);
                             set_logged_user(None);
-
-                            self.router_agent.send(ChangeRoute(Home.into()));
+                            self.router_agent.send(Home);
                         }
                     },
                     true => self.error = Some(get_error(&data)),
@@ -333,8 +330,7 @@ impl Component for Settings {
                 self.request_profile.program_id = Some(program_id.parse::<i64>().unwrap_or_default()),
             Msg::UpdateRegionId(region_id) =>
                 self.request_profile.region_id = Some(region_id.parse::<i64>().unwrap_or_default()),
-            Msg::UpdateUserPassword(user_password) =>
-                self.request_user_password = user_password,
+            Msg::UpdateUserPassword(user_password) => self.request_user_password = user_password,
             Msg::SelectMenu(value) => {
                 self.select_menu = value;
                 self.rendered(false, ctx);
@@ -375,16 +371,18 @@ impl Component for Settings {
                     <div class="row">
                         <div class="columns">
                             <div class="column is-flex">
-                                { self.view_menu() }
+                                { self.view_menu(ctx.link()) }
                                 <div class="card is-flex-grow-1" >
                                   <div class="card-content">
                                     {match self.select_menu {
                                         // Show interface for change profile data
                                         Menu::Profile => html!{<>
-                                            <h4 id="change-profile" class="title is-4">{ get_value_field(&63) }</h4> // "Profile"
+                                            <h4 id="change-profile" class="title is-4">
+                                                { get_value_field(&63) } // "Profile"
+                                            </h4>
                                             {self.show_update_profile_info()}
                                             <form onsubmit={onsubmit_update_profile}>
-                                                { self.change_profile_card() }
+                                                { self.change_profile_card(ctx.link()) }
                                                 <button
                                                     id="update-settings"
                                                     class={classes!("button", "is-fullwidth")}
@@ -395,21 +393,25 @@ impl Component for Settings {
                                             </form>
                                         </>},
                                         // Show interface for change favicon user
-                                        Menu::UpdateFavicon => {self.update_favicon_card()},
+                                        Menu::UpdateFavicon => {self.update_favicon_card(ctx.link())},
                                         // Show interface for add and update Certificates
                                         Menu::Certificates => html!{<>
-                                            <h4 id="change-certificates" class="title is-4">{ get_value_field(&64) }</h4> // "Certificates"
-                                            { self.add_certificate_card() }
+                                            <h4 id="change-certificates" class="title is-4">
+                                                { get_value_field(&64) } // "Certificates"
+                                            </h4>
+                                            { self.add_certificate_card(ctx.link()) }
                                             { self.change_certificates_card() }
                                         </>},
                                         // Show interface for change access
                                         Menu::Access => html!{<>
-                                            <h4 id="change-access" class="title is-4">{ get_value_field(&65) }</h4> // "Access"
+                                            <h4 id="change-access" class="title is-4">
+                                                { get_value_field(&65) } // "Access"
+                                            </h4>
                                             <span id="tag-info-updated-access" class={classes!("tag", "is-info", "is-light")}>
                                                 { format!("{}: {}", get_value_field(&68), self.get_result_access.clone()) } // Updated access
                                             </span>
                                             <form onsubmit={onsubmit_update_access}>
-                                                { self.change_access_card() }
+                                                { self.change_access_card(ctx.link()) }
                                                 <button
                                                     id="update-access"
                                                     class={classes!("button", "is-fullwidth")}
@@ -427,12 +429,14 @@ impl Component for Settings {
                                         </>},
                                         // Show interface for change password
                                         Menu::Password => html!{<>
-                                            <h4 id="change-password" class="title is-4">{ get_value_field(&20) }</h4> // "Password"
+                                            <h4 id="change-password" class="title is-4">
+                                                { get_value_field(&20) } // "Password"
+                                            </h4>
                                             <span id="tag-info-updated-pwd" class={classes!("tag", "is-info", "is-light")}>
                                               { format!("{}: {}", get_value_field(&69), self.get_result_pwd.clone()) } // Updated password
                                             </span>
                                             <form onsubmit={onsubmit_update_password}>
-                                                { self.update_password_card() }
+                                                { self.update_password_card(ctx.link()) }
                                                 <button
                                                     id="update-password"
                                                     class={classes!("button", "is-fullwidth")}
@@ -444,12 +448,14 @@ impl Component for Settings {
                                         </>},
                                         // Show interface for remove profile
                                         Menu::RemoveProfile => html!{<>
-                                            <h4 id="remove-profile" class="title is-4">{ get_value_field(&67) }</h4> // "Remove profile"
+                                            <h4 id="remove-profile" class="title is-4">
+                                                { get_value_field(&67) } // "Remove profile"
+                                            </h4>
                                             <div id="tag-danger-remove-profile" class={classes!("notification", "is-danger", "is-light")}>
                                               { get_value_field(&71) }
                                             </div>
                                             <form onsubmit={onsubmit_remove_profile}>
-                                                { self.remove_profile_card() }
+                                                { self.remove_profile_card(ctx.link()) }
                                                 <button
                                                     id="button-remove-profile"
                                                     class={classes!("button", "is-fullwidth", "is-danger")}
@@ -510,11 +516,15 @@ impl Settings {
         html!{
             <div class="columns">
                 <div id="updated-rows" class="column">
-                    <span class={classes!("overflow-title", "has-text-weight-bold")}>{ get_value_field(&72) }</span> // "Updated rows: "
+                    <span class={classes!("overflow-title", "has-text-weight-bold")}>
+                        { get_value_field(&72) } // "Updated rows: "
+                    </span>
                     <span class="overflow-title">{self.get_result_profile.clone()}</span>
                 </div>
                 <div id="updated-date" class="column">
-                    <span class={classes!("overflow-title", "has-text-weight-bold")}>{ get_value_field(&73) }</span> // "Last updated: "
+                    <span class={classes!("overflow-title", "has-text-weight-bold")}>
+                        { get_value_field(&73) } // "Last updated: "
+                    </span>
                     {match &self.current_data {
                         Some(data) => html!{
                             <span class="overflow-title">

@@ -1,9 +1,8 @@
-use yew::{html, classes, Component, ComponentLink, Html};
+use yew::{Component, Context, html, html::Scope, Html, classes};
 use crate::services::{set_lang, get_lang};
 use crate::services::get_value_field;
 
 pub struct Footer {
-    link: ComponentLink<Self>,
     show_terms: bool,
     show_about: bool,
     current_lang: u8,
@@ -19,7 +18,7 @@ impl Component for Footer {
     type Message = Msg;
     type Properties = ();
 
-    fn create(_props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
         let current_lang = get_lang().map(|lang|
             match lang.as_str() {
                 "ru" => 2,
@@ -28,7 +27,6 @@ impl Component for Footer {
         ).unwrap_or(1);
 
         Footer {
-            link,
             show_terms: false,
             show_about: false,
             current_lang,
@@ -68,8 +66,8 @@ impl Component for Footer {
 
         html!{
             <footer class="footer">
-                {self.modal_terms()}
-                {self.modal_about_us()}
+                {self.modal_terms(ctx.link())}
+                {self.modal_about_us(ctx.link())}
                 <div class="columns">
                     // left footer
                     <div class="column">
@@ -118,8 +116,11 @@ impl Component for Footer {
 }
 
 impl Footer {
-    fn modal_terms(&self) -> Html {
-        let onclick_show_terms = ctx.link().callback(|_| Msg::ShowTerms);
+    fn modal_terms(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onclick_show_terms = link.callback(|_| Msg::ShowTerms);
 
         let class_modal = match &self.show_terms {
             true => "modal is-active",
@@ -148,8 +149,11 @@ impl Footer {
         }
     }
 
-    fn modal_about_us(&self) -> Html {
-        let onclick_show_about = ctx.link().callback(|_| Msg::ShowAbout);
+    fn modal_about_us(
+        &self,
+        link: &Scope<Self>,
+    ) -> Html {
+        let onclick_show_about = link.callback(|_| Msg::ShowAbout);
 
         let class_modal = match &self.show_about {
             true => "modal is-active",

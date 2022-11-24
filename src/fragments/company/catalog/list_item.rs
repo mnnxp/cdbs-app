@@ -1,14 +1,12 @@
 use yew::{Component, Context, html, html::Scope, Html, Properties, classes};
-use yew_router::{
-    agent::RouteRequest::ChangeRoute,
-    prelude::*,
-};
+use yew_agent::utils::store::{Bridgeable, StoreWrapper};
+use yew_agent::Bridge;
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use log::debug;
 use crate::error::{Error, get_error};
-use crate::routes::AppRoute::ShowCompany;
+use crate::routes::AppRoute::{self, ShowCompany};
 use crate::fragments::{
     list_errors::ListErrors,
     switch_icon::res_btn,
@@ -38,7 +36,7 @@ pub struct Props {
 
 pub struct ListItemCompany {
     error: Option<Error>,
-    router_agent: Box<dyn Bridge<RouteAgent>>,
+    router_agent: Box<dyn Bridge<StoreWrapper<AppRoute>>>,
     company_uuid: UUID,
     is_followed: bool,
 }
@@ -50,7 +48,7 @@ impl Component for ListItemCompany {
     fn create(ctx: &Context<Self>) -> Self {
         Self {
             error: None,
-            router_agent: RouteAgent::bridge(ctx.link().callback(|_| Msg::Ignore)),
+            router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             company_uuid: String::new(),
             is_followed: ctx.props().data.is_followed,
         }
@@ -69,9 +67,7 @@ impl Component for ListItemCompany {
         match msg {
             Msg::OpenCompany => {
                 // Redirect to company page
-                self.router_agent.send(
-                    ChangeRoute(ShowCompany { uuid: ctx.props().data.uuid.to_string() }.into())
-                );
+                self.router_agent.send(ShowCompany { uuid: ctx.props().data.uuid.clone() });
             },
             Msg::TriggerFav => {
                 match &self.is_followed {
@@ -123,12 +119,13 @@ impl Component for ListItemCompany {
     }
 
     fn changed(&mut self, ctx: &Context<Self>) -> bool {
-        if self.show_list != ctx.props().show_list || self.data.uuid != ctx.props().data.uuid {
+        if self.show_list == ctx.props().show_list ||
+            self.data.uuid == ctx.props().data.uuid {
+            false
+        } else {
             self.show_list = ctx.props().show_list;
             self.data = ctx.props().data;
             true
-        } else {
-            false
         }
     }
 

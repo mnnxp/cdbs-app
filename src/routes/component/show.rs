@@ -1,17 +1,14 @@
 use std::collections::HashMap;
-use yew::{agent::Bridged, Bridge};
 use yew::{Component, Context, html, html::Scope, Html, Properties, classes};
-use yew_router::{
-    service::RouteService,
-    agent::RouteRequest::ChangeRoute,
-    prelude::*,
-};
+use yew_agent::utils::store::{Bridgeable, StoreWrapper};
+use yew_agent::Bridge;
+use yew_router::hooks::use_route;
 use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
-use crate::routes::AppRoute::{Login, ComponentSettings};
+use crate::routes::AppRoute::{self, Login, ComponentSettings};
 use crate::error::{get_error, Error};
 use crate::fragments::{
     switch_icon::res_btn,
@@ -41,7 +38,7 @@ pub struct ShowComponent {
     current_component_uuid: UUID,
     current_user_owner: bool,
     // task: Option<FetchTask>,
-    router_agent: Box<dyn Bridge<RouteAgent>>,
+    router_agent: Box<dyn Bridge<StoreWrapper<AppRoute>>>,
     subscribers: usize,
     is_followed: bool,
     select_modification_uuid: UUID,
@@ -98,7 +95,7 @@ impl Component for ShowComponent {
             current_component_uuid: String::new(),
             current_user_owner: false,
             // task: None,
-            router_agent: RouteAgent::bridge(ctx.link().callback(|_| Msg::Ignore)),
+            router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             subscribers: 0,
             is_followed: false,
             select_modification_uuid: String::new(),
@@ -119,15 +116,11 @@ impl Component for ShowComponent {
     fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
         if let None = get_logged_user() {
             // route to login page if not found token
-            self.router_agent.send(ChangeRoute(Login.into()));
+            self.router_agent.send(Login);
         };
-        // get component uuid for request component data
-        let route_service: RouteService<()> = RouteService::new();
         // get target user from route
-        let target_component_uuid = route_service
-            .get_fragment()
-            .trim_start_matches("#/component/")
-            .to_string();
+        let target_component_uuid =
+            use_route().unwrap_or_default().trim_start_matches("#/component/").to_string();
         // get flag changing current component in route
         let not_matches_component_uuid = target_component_uuid != self.current_component_uuid;
         debug!("self.current_component_uuid {:#?}", self.current_component_uuid);
@@ -332,9 +325,7 @@ impl Component for ShowComponent {
             Msg::OpenComponentSetting => {
                 if let Some(component_data) = &self.component {
                     // Redirect to page for change and update component
-                    self.router_agent.send(
-                        ChangeRoute(ComponentSettings { uuid: component_data.uuid.to_string() }.into())
-                    );
+                    self.router_agent.send(ComponentSettings { uuid: component_data.uuid.to_string() });
                 }
             },
             Msg::ClearError => self.error = None,

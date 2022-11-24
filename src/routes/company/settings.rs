@@ -1,13 +1,15 @@
 // use yew::{agent::Bridged, Bridge};
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, Event, classes, FocusEvent, MouseEvent};
-use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*, service::RouteService};
+use yew_agent::utils::store::{Bridgeable, StoreWrapper};
+use yew_agent::Bridge;
+use yew_router::hooks::use_route;
 use graphql_client::GraphQLQuery;
 use log::debug;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::gqls::make_query;
-use crate::routes::AppRoute::{Login, Home, Profile, ShowCompany};
+use crate::routes::AppRoute::{self, Login, Home, Profile, ShowCompany};
 use crate::error::{get_error, Error};
 use crate::fragments::{
     company::{
@@ -67,7 +69,7 @@ pub struct CompanySettings {
     company_uuid: UUID,
     request_company: CompanyUpdateInfo,
     request_access: i64,
-    router_agent: Box<dyn Bridge<RouteAgent>>,
+    router_agent: Box<dyn Bridge<StoreWrapper<AppRoute>>>,
     company_uuid: String,
     current_data: Option<CompanyInfo>,
     regions: Vec<Region>,
@@ -123,7 +125,7 @@ impl Component for CompanySettings {
             company_uuid: ctx.props().company_uuid,
             request_company: CompanyUpdateInfo::default(),
             request_access: 0,
-            router_agent: RouteAgent::bridge(ctx.link().callback(|_| Msg::Ignore)),
+            router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             company_uuid: String::new(),
             current_data: None,
             regions: Vec::new(),
@@ -139,24 +141,16 @@ impl Component for CompanySettings {
     fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
         if let None = get_logged_user() {
             // route to login page if not found token
-            self.router_agent.send(ChangeRoute(Login.into()));
+            self.router_agent.send(Login);
         };
-
-        // get company uuid for request
-        let route_service: RouteService<()> = RouteService::new();
         // get target company from route
-        let target_company_uuid = route_service
-            .get_fragment()
-            .trim_start_matches("#/company/settings/")
-            .to_string();
-
+        let target_company_uuid =
+            use_route().unwrap_or_default().trim_start_matches("#/company/settings/").to_string();
         // get flag changing current company in route
         let not_matches_company_uuid = target_company_uuid != self.company_uuid;
-
         if first_render || not_matches_company_uuid {
             let link = ctx.link().clone();
             self.company_uuid = target_company_uuid.clone();
-
             spawn_local(async move {
                 let res = make_query(GetCompanySettingDataOpt::build_query(get_company_setting_data_opt::Variables{
                     company_uuid: target_company_uuid
@@ -174,9 +168,7 @@ impl Component for CompanySettings {
             Msg::OpenCompany => {
                 // Redirect to user page
                 if let Some(company_data) = &self.current_data {
-                    self.router_agent.send(
-                        ChangeRoute(ShowCompany { uuid: company_data.uuid.clone() }.into())
-                    );
+                    self.router_agent.send(ShowCompany { uuid: company_data.uuid.clone() });
                 }
             },
             Msg::RequestUpdateCompany => {
@@ -297,10 +289,9 @@ impl Component for CompanySettings {
                         debug!("Delete company: {:?}", delete_company_uuid);
                         self.get_result_remove_company = !delete_company_uuid.is_empty();
                         match &ctx.props().current_user {
-                            Some(user) => self
-                                .router_agent
-                                .send(ChangeRoute(Profile { username: user.username.clone() }.into())),
-                            None => self.router_agent.send(ChangeRoute(Home.into())),
+                            Some(user) =>
+                                self.router_agent.send(Profile { username: user.username.clone() }),
+                            None => self.router_agent.send(Home),
                         }
                     },
                     true => self.error = Some(get_error(&data)),

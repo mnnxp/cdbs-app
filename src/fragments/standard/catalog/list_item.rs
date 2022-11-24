@@ -1,14 +1,12 @@
 use yew::{Component, Context, html, html::Scope, Html, Properties, classes};
-use yew_router::{
-    agent::RouteRequest::ChangeRoute,
-    prelude::*,
-};
+use yew_agent::utils::store::{Bridgeable, StoreWrapper};
+use yew_agent::Bridge;
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use log::debug;
 use crate::error::{Error, get_error};
-use crate::routes::AppRoute::ShowStandard;
+use crate::routes::AppRoute::{self, ShowStandard};
 use crate::fragments::{
     list_errors::ListErrors,
     switch_icon::res_btn,
@@ -40,7 +38,7 @@ pub struct ListItemStandard {
     error: Option<Error>,
     standard_uuid: UUID,
     show_list: bool,
-    router_agent: Box<dyn Bridge<RouteAgent>>,
+    router_agent: Box<dyn Bridge<StoreWrapper<AppRoute>>>,
     is_followed: bool,
 }
 
@@ -53,7 +51,7 @@ impl Component for ListItemStandard {
             error: None,
             show_list: ctx.props().show_list,
             standard_uuid: ctx.props().data.uuid,
-            router_agent: RouteAgent::bridge(ctx.link().callback(|_| Msg::Ignore)),
+            router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             is_followed: ctx.props().data.is_followed,
         }
     }
@@ -64,9 +62,7 @@ impl Component for ListItemStandard {
         match msg {
             Msg::OpenStandard => {
                 // Redirect to standard page
-                self.router_agent.send(
-                    ChangeRoute(ShowStandard { uuid: ctx.props().data.uuid.to_string() }.into())
-                );
+                self.router_agent.send(ShowStandard { uuid: ctx.props().data.uuid.to_string() });
             },
             Msg::TriggerFav => {
                 match &self.is_followed {
@@ -118,8 +114,8 @@ impl Component for ListItemStandard {
     }
 
     fn changed(&mut self, ctx: &Context<Self>) -> bool {
-        if self.show_list = ctx.props().show_list ||
-            self.standard_uuid = ctx.props().data.uuid {
+        if self.show_list == ctx.props().show_list ||
+            self.standard_uuid == ctx.props().data.uuid {
             false
         } else {
             self.is_followed = ctx.props().data.is_followed;

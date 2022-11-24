@@ -1,11 +1,13 @@
 use std::sync::{Arc,Mutex};
 use yew::services::fetch::FetchTask;
-// use yew::{agent::Bridged, Bridge};
 use yew::{Component, Callback, Context, html, Html, Properties, Event, classes};
-use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
+use yew_agent::utils::store::{Bridgeable, StoreWrapper};
+use yew_agent::Bridge;
+use yew_router::prelude::Link;
 use graphql_client::GraphQLQuery;
 use log::debug;
 use wasm_bindgen_futures::spawn_local;
+use web_sys::FocusEvent;
 
 use crate::fragments::list_errors::ListErrors;
 use crate::error::Error;
@@ -28,7 +30,7 @@ pub struct Login {
     request: LoginInfo,
     response: Callback<Result<UserToken, Error>>,
     task: Option<FetchTask>,
-    router_agent: Arc<Mutex<Box<dyn Bridge<RouteAgent>>>>,
+    router_agent: Arc<Mutex<Box<dyn Bridge<StoreWrapper<AppRoute>>>>>,
 }
 
 pub enum Msg {
@@ -44,12 +46,13 @@ impl Component for Login {
     type Properties = Props;
 
     fn create(ctx: &Context<Self>) -> Self {
+        let router_agent = Arc::new(Mutex::new(AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore))));
         Login {
             auth: Auth::new(),
             error: None,
             request: LoginInfo::default(),
             response: ctx.link().callback(Msg::Response),
-            router_agent: Arc::new(Mutex::new(RouteAgent::bridge(ctx.link().callback(|_| Msg::Ignore)))) ,
+            router_agent,
             task: None,
         }
     }
@@ -58,9 +61,7 @@ impl Component for Login {
         if first_render {
             if let Some(user) = get_logged_user() {
                 // route to profile page if user already logged
-                self.router_agent.lock().unwrap().send(
-                    ChangeRoute(Profile { username: user.username }.into())
-                );
+                self.router_agent.lock().unwrap().send(Profile { username: user.username });
             };
         }
     }
@@ -70,9 +71,7 @@ impl Component for Login {
         let router_agent = self.router_agent.clone();
         match msg {
             Msg::Request => {
-                let request = LoginInfoWrapper {
-                    user: self.request.clone(),
-                };
+                let request = LoginInfoWrapper { user: self.request.clone() };
                 self.task = Some(self.auth.login(request, self.response.clone()));
             },
             Msg::Response(Ok(user_info)) => {
@@ -88,7 +87,7 @@ impl Component for Login {
                     debug!("user.username: {}", user.username);
                     let username = user.username.clone();
                     props.callback.emit(user);
-                    router_agent.lock().unwrap().send(ChangeRoute(Profile { username }.into()));
+                    router_agent.lock().unwrap().send(Profile { username });
                 });
                 // debug!("get_token().unwrap(): {:?}", get_token().unwrap());
             },
@@ -119,9 +118,9 @@ impl Component for Login {
             <div class="auth-page">
                 <h1 class="title">{ get_value_field(&13) }</h1>
                 <h2 class="subtitle">
-                    <RouterAnchor<AppRoute> route={Register}>
+                    <Link<AppRoute> route={Register}>
                         { get_value_field(&18) }
-                    </RouterAnchor<AppRoute>>
+                    </Link<AppRoute>>
                 </h2>
                 <ListErrors error={self.error.clone()} />
                 <form onsubmit={onsubmit}>

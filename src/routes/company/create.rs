@@ -1,16 +1,14 @@
 // use yew::{agent::Bridged, Bridge};
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, Event};
-use yew_router::{
-    agent::RouteRequest::ChangeRoute,
-    prelude::*
-};
+use yew_agent::utils::store::{Bridgeable, StoreWrapper};
+use yew_agent::Bridge;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
 
 use crate::gqls::make_query;
-use crate::routes::AppRoute::{Login, ShowCompany};
+use crate::routes::AppRoute::{self, Login, ShowCompany};
 use crate::error::{Error, get_error};
 use crate::fragments::list_errors::ListErrors;
 use crate::services::{get_logged_user, get_value_field};
@@ -25,7 +23,7 @@ pub struct CreateCompany {
     error: Option<Error>,
     current_user_uuid: UUID,
     request_company: CompanyCreateInfo,
-    router_agent: Box<dyn Bridge<RouteAgent>>,
+    router_agent: Box<dyn Bridge<StoreWrapper<AppRoute>>>,
     regions: Vec<Region>,
     company_types: Vec<CompanyType>,
     types_access: Vec<TypeAccessInfo>,
@@ -65,7 +63,7 @@ impl Component for CreateCompany {
             error: None,
             current_user_uuid: ctx.props().current_user.as_ref().map(|x| &x.uuid),
             request_company: CompanyCreateInfo::new(),
-            router_agent: RouteAgent::bridge(ctx.link().callback(|_| Msg::Ignore)),
+            router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             regions: Vec::new(),
             company_types: Vec::new(),
             types_access: Vec::new(),
@@ -75,7 +73,7 @@ impl Component for CreateCompany {
     fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
         if let None = get_logged_user() {
             // route to login page if not found token
-            self.router_agent.send(ChangeRoute(Login.into()));
+            self.router_agent.send(Login);
         };
 
         if first_render {
@@ -139,9 +137,7 @@ impl Component for CreateCompany {
                         let company_uuid: UUID = serde_json::from_value(res.get("registerCompany").unwrap().clone()).unwrap();
                         debug!("Company uuid: {:?}", company_uuid);
                         // Redirect to company page
-                        self.router_agent.send(
-                            ChangeRoute(ShowCompany { uuid: company_uuid.clone() }.into())
-                        );
+                        self.router_agent.send(ShowCompany { uuid: company_uuid.clone() });
                     },
                     true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }
@@ -189,10 +185,11 @@ impl Component for CreateCompany {
     }
 
     fn changed(&mut self, ctx: &Context<Self>) -> bool {
-        if self.current_user_uuid == ctx.props().current_user.as_ref().map(|x| &x.uuid) {
+        let current_user_uuid = ctx.props().current_user.as_ref().map(|x| &x.uuid);
+        if self.current_user_uuid == current_user_uuid {
             false
         } else {
-            self.current_user_uuid = ctx.props().current_user.as_ref().map(|x| &x.uuid);
+            self.current_user_uuid = current_user_uuid;
             true
         }
     }
