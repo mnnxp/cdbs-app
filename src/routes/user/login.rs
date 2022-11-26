@@ -1,5 +1,4 @@
 use std::sync::{Arc,Mutex};
-use yew::services::fetch::FetchTask;
 use yew::{Component, Callback, Context, html, Html, Properties, Event, classes};
 use yew_agent::utils::store::{Bridgeable, StoreWrapper};
 use yew_agent::Bridge;
@@ -29,7 +28,7 @@ pub struct Login {
     error: Option<Error>,
     request: LoginInfo,
     response: Callback<Result<UserToken, Error>>,
-    task: Option<FetchTask>,
+    task: Option<()>,
     router_agent: Arc<Mutex<Box<dyn Bridge<StoreWrapper<AppRoute>>>>>,
 }
 

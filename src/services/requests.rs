@@ -1,9 +1,12 @@
+use reqwest::blocking::{Client, Response};
+// use reqwest::header::{AUTHORIZATION, CONTENT_TYPE};
+use reqwest::header::CONTENT_TYPE;
 use dotenv_codegen::dotenv;
 use log::debug;
 use serde::{Deserialize, Serialize};
 use yew::callback::Callback;
-use yew::format::{Json, Nothing, Text, Binary};
-use yew::services::fetch::{FetchService, FetchTask, Request, Response};
+// use yew::format::{Json, Nothing, Text, Binary};
+// use yew::services::fetch::{FetchService, FetchTask, Request, Response};
 
 use crate::error::Error;
 use crate::services::get_token;
@@ -24,159 +27,162 @@ impl Requests {
     pub fn builder<B, T>(
         &mut self,
         method: &str,
-        url: String,
-        body: B,
+        path: &str,
+        body_data: Option<&B>,
+        body_json: bool,
         callback: Callback<Result<T, Error>>,
-    ) -> FetchTask
+    ) -> Result<Response, Error>
     where
         for<'de> T: Deserialize<'de> + 'static + std::fmt::Debug,
-        B: Into<Text> + std::fmt::Debug,
+        B: std::fmt::Display,
     {
-        let handler = move |response: Response<Text>| {
-            if let (meta, Ok(data)) = response.into_parts() {
-                debug!("Response: {:?}", data);
-                if meta.status.is_success() {
-                    let data: Result<T, _> = serde_json::from_str(&data);
-                    if let Ok(data) = data {
-                        callback.emit(Ok(data))
-                    } else {
-                        callback.emit(Err(Error::DeserializeError))
-                    }
-                } else {
-                    match meta.status.as_u16() {
-                        401 => callback.emit(Err(Error::Unauthorized)),
-                        403 => callback.emit(Err(Error::Forbidden)),
-                        404 => callback.emit(Err(Error::NotFound)),
-                        500 => callback.emit(Err(Error::InternalServerError)),
-                        422 => {
-                            let data: Result<ErrorInfo, _> = serde_json::from_str(&data);
-                            if let Ok(data) = data {
-                                callback.emit(Err(Error::UnprocessableEntity(data)))
-                            } else {
-                                callback.emit(Err(Error::DeserializeError))
-                            }
-                        }
-                        _ => callback.emit(Err(Error::RequestError)),
-                    }
-                }
-            } else {
-                callback.emit(Err(Error::RequestError))
-            }
+        let url = match path.get("0..4") {
+            Some("http") => path,
+            _ => format!("{}{}", API_BACKEND, path).as_str(),
         };
-
-        let url = format!("{}{}", API_BACKEND, url);
         debug!("complect url: {}", url);
-        let mut builder = Request::builder()
-            .method(method)
-            .uri(url.as_str())
-            .header("Content-Type", "application/json");
+        let client = Client::new();
+        let mut req = match method {
+            "POST" => client.post(url),
+            "PUT" => client.put(url),
+            "DELETE" => client.delete(url),
+            _ => client.get(url),
+        };
+        req.header(CONTENT_TYPE, "application/json");
         if let Some(token) = get_token() {
-            builder = builder.header("Authorization", format!("Token {}", token));
+            // req.header(AUTHORIZATION, format!("Token {}", token));
+            req.bearer_auth(token);
         }
-        let request = builder.body(body).unwrap();
-        debug!("Request: {:?}", request);
-
-        FetchService::fetch(request, handler.into()).unwrap()
+        if let Some(body) = body_data {
+            if body_json {
+                req.json(body);
+            } else {
+                req.body(body);
+            }
+        }
+        debug!("Request: {:?}", req);
+        req.send()
     }
 
     /// Delete request
-    pub fn delete<T>(&mut self, url: String, callback: Callback<Result<T, Error>>) -> FetchTask
+    pub fn delete<T>(&mut self, path: String, callback: Callback<Result<T, Error>>)
     where
         for<'de> T: Deserialize<'de> + 'static + std::fmt::Debug,
     {
-        self.builder("DELETE", url, Nothing, callback)
+        let mut resp = self.builder("DELETE", path.as_str(), None, false, callback);
+        self.handler(&mut resp, true, callback);
     }
 
     /// Get request
-    pub fn get<T>(&mut self, url: String, callback: Callback<Result<T, Error>>) -> FetchTask
+    pub fn get<T>(&mut self, path: &str, callback: Callback<Result<T, Error>>)
     where
         for<'de> T: Deserialize<'de> + 'static + std::fmt::Debug,
     {
-        self.builder("GET", url, Nothing, callback)
+        let mut resp = self.builder("GET", path, None, false, callback);
+        self.handler(&mut resp, true, callback);
     }
 
     /// Post request with a body
     pub fn post<B, T>(
         &mut self,
-        url: String,
+        path: &str,
         body: B,
         callback: Callback<Result<T, Error>>,
-    ) -> FetchTask
+    )
     where
         for<'de> T: Deserialize<'de> + 'static + std::fmt::Debug,
         B: Serialize,
     {
-        let body: Text = Json(&body).into();
-        self.builder("POST", url, body, callback)
+        let mut resp = self.builder("POST", path, Some(&body), true, callback);
+        self.handler(&mut resp, true, callback);
     }
 
     /// Put request with a body
     pub fn put<B, T>(
         &mut self,
-        url: String,
+        path: String,
         body: B,
         callback: Callback<Result<T, Error>>,
-    ) -> FetchTask
+    )
     where
         for<'de> T: Deserialize<'de> + 'static + std::fmt::Debug,
         B: Serialize,
     {
-        let body: Text = Json(&body).into();
-        self.builder("PUT", url, body, callback)
+        let mut resp = self.builder("PUT", path.as_str(), Some(&body), true, callback);
+        self.handler(&mut resp, true, callback);
     }
 
     /// Put request for send file to storage
-    pub fn put_f<T>(
+    pub fn put_file<B, T>(
         &mut self,
-        url: String,
-        body: Vec<u8>,
-        callback: Callback<Result<Option<T>, Error>>,
-    ) -> FetchTask
+        url: &str,
+        body: &B,
+        callback: Callback<Result<T, Error>>,
+    )
+    where
+        for<'de> T: Deserialize<'de> + 'static + std::fmt::Debug,
+        B: std::fmt::Display,
+    {
+        let resp = self.builder("PUT", url, Some(body), false, callback);
+        self.handler(resp, false, callback);
+    }
+
+    fn handler<T>(
+        &mut self,
+        response: Result<Response, Error>,
+        get_body: bool,
+        callback: Callback<Result<T, Error>>,
+    )
     where
         for<'de> T: Deserialize<'de> + 'static + std::fmt::Debug,
     {
-        let handler = move |response: Response<Binary>| {
-            if let (meta, Ok(data)) = response.into_parts() {
-                debug!("Response: {:?}", data);
-                debug!("Meta status: {:?}", meta.status.is_success());
-                if meta.status.is_success() {
-                    debug!("Data: {:?}", data);
-                    if data.is_empty() {
-                        callback.emit(Ok(None))
+        if let Ok(resp) = response {
+            let handler = move |resp: Response| {
+                if resp.status().is_success() {
+                    debug!("success!");
+                    if get_body {
+                        let data: Result<T, _> = resp.json();
+                        if let Ok(data) = data {
+                            callback.emit(Ok(data))
+                        } else {
+                            callback.emit(Err(Error::DeserializeError))
+                        }
                     } else {
-                        callback.emit(Err(Error::InternalServerError))
+                        let data = resp.text();
+                        debug!("Data: {:?}", data);
+                        match data {
+                            Ok(_d) if _d.is_empty() => callback.emit(Ok(())),
+                            Ok(_) => callback.emit(Err(Error::InternalServerError)),
+                            Err(err) => {
+                                debug!("Error processing response: {:?}", err);
+                                callback.emit(Err(Error::InternalServerError))
+                            },
+                        }
                     }
                 } else {
-                    match meta.status.as_u16() {
+                    match resp.status().as_u16() {
                         401 => callback.emit(Err(Error::Unauthorized)),
                         403 => callback.emit(Err(Error::Forbidden)),
                         404 => callback.emit(Err(Error::NotFound)),
-                        500 => callback.emit(Err(Error::InternalServerError)),
                         422 => {
-                            let data: Result<ErrorInfo, _> = serde_json::from_slice(&data);
+                            let data: Result<ErrorInfo, _> = resp.json();
                             if let Ok(data) = data {
                                 callback.emit(Err(Error::UnprocessableEntity(data)))
                             } else {
                                 callback.emit(Err(Error::DeserializeError))
                             }
                         }
-                        _ => callback.emit(Err(Error::RequestError)),
+                        500 => callback.emit(Err(Error::InternalServerError)),
+                        _ => {
+                            debug!("Something else happened. Status: {:?}", resp.status());
+                            callback.emit(Err(Error::RequestError))
+                        },
                     }
                 }
-            } else {
-                callback.emit(Err(Error::RequestError))
-            }
-        };
-
-        let body: Binary = Ok(body);
-
-        let builder = Request::builder()
-            .method("PUT")
-            .uri(url.as_str());
-
-        let request = builder.body(body).unwrap();
-        debug!("Request: {:?}", request);
-
-        FetchService::fetch_binary(request, handler.into()).unwrap()
+            };
+        } else {
+            debug!("Something happened...: {:?}", response);
+            callback.emit(Err(Error::RequestError))
+        }
     }
 }

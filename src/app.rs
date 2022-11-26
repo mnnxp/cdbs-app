@@ -1,6 +1,6 @@
 //! The root app contains initial authentication and url routes
 use yew::{Component, Context, html, html::Scope, Html};
-use yew_router::history::Location;
+// use yew_router::history::Location;
 // use yew::prelude::*;
 use yew_router::prelude::*;
 use wasm_bindgen_futures::spawn_local;

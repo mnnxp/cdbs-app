@@ -6,12 +6,12 @@
 // extern crate log;
 
 pub mod app;
-pub mod fragments;
 pub mod error;
+pub mod fragments;
+pub mod gqls;
 pub mod routes;
 pub mod services;
 pub mod types;
-pub mod gqls;
 // pub mod utils;
 
 // use wasm_bindgen::prelude::*;

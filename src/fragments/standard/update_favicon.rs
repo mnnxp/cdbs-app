@@ -1,21 +1,19 @@
+use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
 use graphql_client::GraphQLQuery;
-use yew::services::fetch::FetchTask;
-use yew::services::reader::{File, FileData, ReaderService, ReaderTask};
-use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, Event, DragEvent};
-use log::debug;
+use gloo::file::File;
+use web_sys::{DragEvent, Event};
 use wasm_bindgen_futures::spawn_local;
-
+use log::debug;
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
-use crate::services::{PutUploadFile, UploadData, image_detector, get_value_field};
+use crate::services::storage_upload::StorageUpload;
+use crate::services::{image_detector, get_value_field};
 use crate::types::UploadFile;
 use crate::gqls::{
     make_query,
     relate::{ConfirmUploadCompleted, confirm_upload_completed},
     standard::{UploadStandardFavicon, upload_standard_favicon},
 };
-
-type FileName = String;
 
 #[derive(PartialEq, Clone, Debug, Properties)]
 pub struct Props {
@@ -28,12 +26,12 @@ pub struct Props {
 pub struct UpdateStandardFaviconCard {
     error: Option<Error>,
     request_upload_data: UploadFile,
-    request_upload_file: Callback<Result<Option<String>, Error>>,
-    task_read: Option<(FileName, ReaderTask)>,
-    task: Option<FetchTask>,
+    // request_upload_file: Callback<Result <(), Error>>,
+    // task_read: Option<(FileName, ReaderTask)>,
+    // task: Option<FetchTask>,
     get_result_up_file: bool,
     get_result_up_completed: bool,
-    put_upload_file: PutUploadFile,
+    // put_upload_file: PutUploadFile,
     file: Option<File>,
     active_loading_files_btn: bool,
     dis_upload_btn: bool,
@@ -41,13 +39,13 @@ pub struct UpdateStandardFaviconCard {
 
 pub enum Msg {
     RequestUploadData,
-    RequestUploadFile(Vec<u8>),
-    ResponseUploadFile(Result<Option<String>, Error>),
+    // RequestUploadFile(Vec<u8>),
+    ResponseUploadFile(Result<(), Error>),
     RequestUploadCompleted,
     UpdateFile(Option<File>),
     GetUploadData(String),
-    GetUploadFile(Option<String>),
-    GetUploadCompleted(String),
+    // GetUploadFile(Option<String>),
+    GetUploadCompleted(Result<usize, Error>),
     HideNotificationSuccess,
     ClearFileBoxed,
     ClearError,
@@ -62,12 +60,12 @@ impl Component for UpdateStandardFaviconCard {
         Self {
             error: None,
             request_upload_data: UploadFile::default(),
-            request_upload_file: ctx.link().callback(Msg::ResponseUploadFile),
-            task_read: None,
-            task: None,
+            // request_upload_file: ctx.link().callback(Msg::ResponseUploadFile),
+            // task_read: None,
+            // task: None,
             get_result_up_file: false,
             get_result_up_completed: false,
-            put_upload_file: PutUploadFile::new(),
+            // put_upload_file: PutUploadFile::new(),
             file: None,
             active_loading_files_btn: false,
             dis_upload_btn: true,
@@ -101,13 +99,13 @@ impl Component for UpdateStandardFaviconCard {
                     }
                 }
             },
-            Msg::RequestUploadFile(data) => {
-                let request = UploadData {
-                    upload_url: self.request_upload_data.upload_url.to_string(),
-                    file_data: data,
-                };
-                self.task = Some(self.put_upload_file.put_file(request, self.request_upload_file.clone()));
-            },
+            // Msg::RequestUploadFile(data) => {
+            //     let request = UploadData {
+            //         upload_url: self.request_upload_data.upload_url.to_string(),
+            //         file_data: data,
+            //     };
+            //     self.task = Some(self.put_upload_file.put_file(request, self.request_upload_file.clone()));
+            // },
             Msg::ResponseUploadFile(Ok(res)) => link.send_message(Msg::GetUploadFile(res)),
             Msg::ResponseUploadFile(Err(err)) => {
                 self.error = Some(err);
@@ -137,19 +135,21 @@ impl Component for UpdateStandardFaviconCard {
 
                 match res_value.is_null() {
                     false => {
-                        self.request_upload_data = serde_json::from_value(
-                            res_value.get("uploadStandardFavicon").unwrap().clone(),
-                        ).unwrap();
+                        self.request_upload_data =
+                            serde_json::from_value(res_value.get("uploadStandardFavicon").unwrap().clone()).unwrap();
 
                         if let Some(file) = self.file.clone() {
-                            let file_name = file.name().clone();
-                            let task = {
-                                let callback = ctx.link().callback(move |data: FileData| {
-                                    Msg::RequestUploadFile(data.content)
-                                });
-                                ReaderService::read_file(file, callback).unwrap()
-                            };
-                            self.task_read = Some((file_name, task));
+                            // let file_name = file.name().clone();
+                            // let task = {
+                            //     let callback = ctx.link().callback(move |data: FileData| {
+                            //         Msg::RequestUploadFile(data.content)
+                            //     });
+                            //     ReaderService::read_file(file, callback).unwrap()
+                            // };
+                            // self.task_read = Some((file_name, task));
+                            let callback_confirm =
+                                link.callback(|res: Result<usize, Error>| Msg::GetUploadCompleted(res));
+                            self.storage_upload(vec![(self.request_upload_data, file)], callback_confirm)
                         }
                         debug!("file: {:?}", self.file);
                     }
@@ -332,6 +332,19 @@ impl UpdateStandardFaviconCard {
                 { get_value_field(&92) }
               </div>
             </article>
+        }
+    }
+
+    fn storage_upload(
+        &self,
+        data_upload: Vec<(UploadFile, File)>,
+        callback_confirm: Callback<Result<usize, Error>>,
+    ) -> Html {
+        html!{
+            <StorageUpload
+                {data_upload}
+                {callback_confirm}
+            />
         }
     }
 }

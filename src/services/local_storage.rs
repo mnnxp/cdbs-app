@@ -2,8 +2,7 @@ use dotenv_codegen::dotenv;
 use lazy_static::lazy_static;
 // use log::debug;
 use parking_lot::RwLock;
-use yew::services::storage::{Area, StorageService};
-
+use web_sys::Storage;
 use crate::types::SlimUser;
 
 const TOKEN_KEY: &str = dotenv!("TOKEN_KEY");
@@ -14,8 +13,8 @@ const LIST_VIEW_TYPE: &str = dotenv!("LIST_VIEW_TYPE");
 lazy_static! {
     /// Jwt token read from local storage.
     pub static ref TOKEN: RwLock<Option<String>> = {
-        let storage = StorageService::new(Area::Local).expect("storage was disabled by the user");
-        if let Ok(token) = storage.restore(TOKEN_KEY) {
+        let storage = storage_service();
+        if let Ok(token) = storage.get(TOKEN_KEY) {
             RwLock::new(Some(token))
         } else {
             RwLock::new(None)
@@ -24,8 +23,8 @@ lazy_static! {
 
     /// Read SlimUser data from local storage.
     pub static ref LOGGED_USER: RwLock<Option<String>> = {
-        let storage = StorageService::new(Area::Local).expect("storage was disabled by the user");
-        if let Ok(logged_user) = storage.restore(LOGGED_USER_KEY) {
+        let storage = storage_service();
+        if let Ok(logged_user) = storage.get(LOGGED_USER_KEY) {
             RwLock::new(Some(logged_user))
         } else {
             RwLock::new(None)
@@ -34,8 +33,8 @@ lazy_static! {
 
     /// Read accept language data from local storage.
     pub static ref LANGUAGE: RwLock<Option<String>> = {
-        let storage = StorageService::new(Area::Local).expect("storage was disabled by the user");
-        if let Ok(accept_language) = storage.restore(ACCEPT_LANGUAGE) {
+        let storage = storage_service();
+        if let Ok(accept_language) = storage.get(ACCEPT_LANGUAGE) {
             RwLock::new(Some(accept_language))
         } else {
             RwLock::new(None)
@@ -44,8 +43,8 @@ lazy_static! {
 
     /// Read list view type from local storage.
     pub static ref LISTVIEWTYPE: RwLock<Option<String>> = {
-        let storage = StorageService::new(Area::Local).expect("storage was disabled by the user");
-        if let Ok(list_view) = storage.restore(LIST_VIEW_TYPE) {
+        let storage = storage_service();
+        if let Ok(list_view) = storage.get(LIST_VIEW_TYPE) {
             RwLock::new(Some(list_view))
         } else {
             RwLock::new(None)
@@ -55,11 +54,11 @@ lazy_static! {
 
 /// Set jwt token to local storage.
 pub fn set_token(token: Option<String>) {
-    let mut storage = StorageService::new(Area::Local).expect("storage was disabled by the user");
+    let mut storage = storage_service();
     if let Some(t) = token.clone() {
-        storage.store(TOKEN_KEY, Ok(t));
+        storage.set_item(TOKEN_KEY, Ok(t));
     } else {
-        storage.remove(TOKEN_KEY);
+        storage.remove_item(TOKEN_KEY);
     }
     let mut token_lock = TOKEN.write();
     *token_lock = token;
@@ -78,11 +77,11 @@ pub fn is_authenticated() -> bool {
 
 /// Set current user to local storage.
 pub fn set_logged_user(logged_user: Option<String>) {
-    let mut storage = StorageService::new(Area::Local).expect("storage was disabled by the user");
+    let mut storage = storage_service();
     if let Some(u) = logged_user.clone() {
-        storage.store(LOGGED_USER_KEY, Ok(u));
+        storage.set_item(LOGGED_USER_KEY, Ok(u));
     } else {
-        storage.remove(LOGGED_USER_KEY);
+        storage.remove_item(LOGGED_USER_KEY);
     }
     let mut logged_user_lock = LOGGED_USER.write();
     *logged_user_lock = logged_user;
@@ -99,11 +98,11 @@ pub fn get_logged_user() -> Option<SlimUser> {
 
 /// Set language to local storage.
 pub fn set_lang(lang: Option<String>) {
-    let mut storage = StorageService::new(Area::Local).expect("storage was disabled by the user");
+    let mut storage = storage_service();
     if let Some(l) = lang.clone() {
-        storage.store(ACCEPT_LANGUAGE, Ok(l));
+        storage.set_item(ACCEPT_LANGUAGE, Ok(l));
     } else {
-        storage.remove(ACCEPT_LANGUAGE);
+        storage.remove_item(ACCEPT_LANGUAGE);
     }
     let mut lang_lock = LANGUAGE.write();
     *lang_lock = lang;
@@ -117,11 +116,11 @@ pub fn get_lang() -> Option<String> {
 
 /// Set list view type to local storage.
 pub fn set_list_view(list_view: Option<String>) {
-    let mut storage = StorageService::new(Area::Local).expect("storage was disabled by the user");
+    let mut storage = storage_service();
     if let Some(l) = list_view.clone() {
-        storage.store(LIST_VIEW_TYPE, Ok(l));
+        storage.set_item(LIST_VIEW_TYPE, Ok(l));
     } else {
-        storage.remove(LIST_VIEW_TYPE);
+        storage.remove_item(LIST_VIEW_TYPE);
     }
     let mut list_view_lock = LISTVIEWTYPE.write();
     *list_view_lock = list_view;
@@ -131,4 +130,13 @@ pub fn set_list_view(list_view: Option<String>) {
 pub fn get_list_view() -> Option<String> {
     let list_view_lock = LISTVIEWTYPE.read();
     list_view_lock.clone()
+}
+
+/// Доступ к локальному хранилищу браузера
+pub fn storage_service() -> Storage {
+    web_sys::window()
+        .expect("no window")
+        .local_storage()
+        .expect("storage was disabled")
+        .expect("no session storage")
 }

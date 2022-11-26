@@ -1,6 +1,4 @@
 use yew::callback::Callback;
-use yew::services::fetch::FetchTask;
-
 use super::Requests;
 use crate::error::Error;
 use crate::types::*;
@@ -19,8 +17,7 @@ impl Tags {
     }
 
     /// Get all tags
-    pub fn get_all(&mut self, callback: Callback<Result<TagListInfo, Error>>) -> FetchTask {
-        self.requests
-            .get::<TagListInfo>("/tags".to_string(), callback)
+    pub fn get_all(&mut self, callback: Callback<Result<TagListInfo, Error>>) -> () {
+        self.requests.get::<TagListInfo>("/tags", callback)
     }
 }

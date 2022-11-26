@@ -1,4 +1,3 @@
-// use yew::{agent::Bridged, Bridge};
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, Event, classes, FocusEvent, MouseEvent};
 use yew_agent::utils::store::{Bridgeable, StoreWrapper};
 use yew_agent::Bridge;
@@ -70,7 +69,6 @@ pub struct CompanySettings {
     request_company: CompanyUpdateInfo,
     request_access: i64,
     router_agent: Box<dyn Bridge<StoreWrapper<AppRoute>>>,
-    company_uuid: String,
     current_data: Option<CompanyInfo>,
     regions: Vec<Region>,
     types_access: Vec<TypeAccessInfo>,
@@ -126,7 +124,6 @@ impl Component for CompanySettings {
             request_company: CompanyUpdateInfo::default(),
             request_access: 0,
             router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
-            company_uuid: String::new(),
             current_data: None,
             regions: Vec::new(),
             types_access: Vec::new(),

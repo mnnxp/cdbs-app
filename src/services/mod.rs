@@ -5,8 +5,8 @@ mod localisation;
 mod local_storage;
 mod requests;
 mod tags;
-mod upload_file;
 mod util;
+pub mod storage_upload;
 
 pub use auth::{Auth, get_current_user, logout};
 pub use localisation::get_value_field;
@@ -16,5 +16,5 @@ pub use local_storage::{
 };
 pub use requests::Requests;
 pub use tags::Tags;
-pub use upload_file::{PutUploadFile, UploadData};
+// pub use storage_upload::StorageUpload;
 pub(crate) use util::{image_detector, url_decode};

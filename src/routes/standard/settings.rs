@@ -1,10 +1,12 @@
-use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, Event};
+use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
 use yew_agent::utils::store::{Bridgeable, StoreWrapper};
 use yew_agent::Bridge;
 use yew_router::hooks::use_route;
-use yew::services::fetch::FetchTask;
-use yew::services::reader::{File, FileData, ReaderService, ReaderTask};
-use web_sys::FileList;
+use gloo::file::callbacks::FileReader;
+use gloo::file::File;
+use web_sys::{DragEvent, Event, FileList, HtmlInputElement};
+// use yew::services::fetch::FetchTask;
+// use yew::services::reader::{File, FileData, ReaderService, ReaderTask};
 use wasm_bindgen_futures::spawn_local;
 use serde_json::Value;
 use graphql_client::GraphQLQuery;
@@ -20,7 +22,8 @@ use crate::fragments::{
         AddKeywordsTags, UpdateStandardFaviconCard
     },
 };
-use crate::services::{PutUploadFile, UploadData, get_logged_user, get_value_field};
+use crate::services::storage_upload::StorageUpload;
+use crate::services::{get_logged_user, get_value_field};
 use crate::types::{
     UUID, StandardInfo, SlimUser, Region, TypeAccessInfo, UploadFile, ShowFileInfo,
     ShowCompanyShort, StandardUpdatePreData, StandardUpdateData, StandardStatus,
@@ -38,7 +41,7 @@ use crate::gqls::{
     },
 };
 
-type FileName = String;
+// type FileName = String;
 
 /// Standard with relate data
 pub struct StandardSettings {
@@ -46,13 +49,13 @@ pub struct StandardSettings {
     current_standard: Option<StandardInfo>,
     current_standard_uuid: UUID,
     request_standard: StandardUpdatePreData,
-    request_upload_data: Vec<UploadFile>,
-    request_upload_file: Callback<Result<Option<String>, Error>>,
-    request_upload_confirm: Vec<UUID>,
+    // request_upload_data: Vec<UploadFile>,
+    // request_upload_file: Callback<Result<Option<String>, Error>>,
+    // request_upload_confirm: Vec<UUID>,
     request_access: i64,
     router_agent: Box<dyn Bridge<StoreWrapper<AppRoute>>>,
-    task_read: Vec<(FileName, ReaderTask)>,
-    task: Vec<FetchTask>,
+    // task_read: Vec<(FileName, ReaderTask)>,
+    // task: Vec<FetchTask>,
     supplier_list: Vec<ShowCompanyShort>,
     standard_statuses: Vec<StandardStatus>,
     regions: Vec<Region>,
@@ -60,7 +63,7 @@ pub struct StandardSettings {
     update_standard: bool,
     update_standard_access: bool,
     upload_standard_files: bool,
-    put_upload_file: PutUploadFile,
+    // put_upload_file: PutUploadFile,
     files: Vec<File>,
     files_index: u32,
     files_list: Vec<ShowFileInfo>,
@@ -70,7 +73,7 @@ pub struct StandardSettings {
     disable_save_changes_btn: bool,
     get_result_standard_data: usize,
     get_result_access: bool,
-    get_result_up_file: bool,
+    // get_result_up_file: bool,
     get_result_up_completed: usize,
     active_loading_files_btn: bool,
 }
@@ -90,17 +93,17 @@ pub enum Msg {
     RequestChangeAccess,
     RequestDeleteStandard,
     RequestUploadStandardFiles,
-    RequestUploadFile(Vec<u8>),
-    ResponseUploadFile(Result<Option<String>, Error>),
-    RequestUploadCompleted,
+    // RequestUploadFile(Vec<u8>),
+    // ResponseUploadFile(Result<Option<String>, Error>),
+    // RequestUploadCompleted,
     GetStandardFilesList(String),
     GetStandardData(String),
     GetListOpt(String),
     GetUpdateStandardResult(String),
     GetUpdateAccessResult(String),
     GetUploadData(String),
-    GetUploadFile,
-    GetUploadCompleted(String),
+    // GetUploadFile,
+    // GetUploadCompleted(String),
     FinishUploadFiles,
     GetDeleteStandard(String),
     EditFiles,
@@ -133,13 +136,13 @@ impl Component for StandardSettings {
             current_standard: None,
             current_standard_uuid: String::new(),
             request_standard: StandardUpdatePreData::default(),
-            request_upload_data: Vec::new(),
-            request_upload_file: ctx.link().callback(Msg::ResponseUploadFile),
-            request_upload_confirm: Vec::new(),
+            // request_upload_data: Vec::new(),
+            // request_upload_file: ctx.link().callback(Msg::ResponseUploadFile),
+            // request_upload_confirm: Vec::new(),
             request_access: 0,
             router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
-            task_read: Vec::new(),
-            task: Vec::new(),
+            // task_read: Vec::new(),
+            // task: Vec::new(),
             supplier_list: Vec::new(),
             standard_statuses: Vec::new(),
             regions: Vec::new(),
@@ -147,7 +150,7 @@ impl Component for StandardSettings {
             update_standard: false,
             update_standard_access: false,
             upload_standard_files: false,
-            put_upload_file: PutUploadFile::new(),
+            // put_upload_file: PutUploadFile::new(),
             files: Vec::new(),
             files_index: 0,
             files_list: Vec::new(),
@@ -157,7 +160,7 @@ impl Component for StandardSettings {
             disable_save_changes_btn: true,
             get_result_standard_data: 0,
             get_result_access: false,
-            get_result_up_file: false,
+            // get_result_up_file: false,
             get_result_up_completed: 0,
             active_loading_files_btn: false,
         }
@@ -304,7 +307,9 @@ impl Component for StandardSettings {
 
                 if !self.files.is_empty() {
                     let mut filenames: Vec<String> = Vec::new();
-                    for file in &self.files {filenames.push(file.name().clone());}
+                    for file in &self.files {
+                        filenames.push(file.name().clone());
+                    }
                     debug!("filenames: {:?}", filenames);
                     let standard_uuid = self.current_standard_uuid.clone();
 
@@ -322,14 +327,14 @@ impl Component for StandardSettings {
             },
             Msg::RequestUploadFile(data) => {
                 if let Some(upload_data) = self.request_upload_data.pop() {
-                    let request = UploadData {
-                        upload_url: upload_data.upload_url.to_string(),
-                        file_data: data,
-                    };
-                    debug!("request: {:?}", request);
-
-                    self.task.push(self.put_upload_file.put_file(request, self.request_upload_file.clone()));
-                    self.request_upload_confirm.push(upload_data.file_uuid.clone());
+                    // let request = UploadData {
+                    //     upload_url: upload_data.upload_url.to_string(),
+                    //     file_data: data,
+                    // };
+                    // debug!("request: {:?}", request);
+                    //
+                    // self.task.push(self.put_upload_file.put_file(request, self.request_upload_file.clone()));
+                    // self.request_upload_confirm.push(upload_data.file_uuid.clone());
                 };
             },
             Msg::RequestUploadCompleted => {
@@ -365,19 +370,21 @@ impl Component for StandardSettings {
                     false => {
                         let result: Vec<UploadFile> = serde_json::from_value(res_value.get("uploadStandardFiles").unwrap().clone()).unwrap();
                         debug!("uploadStandardFiles {:?}", result);
-                        self.request_upload_data = result;
-
+                        // self.request_upload_data = result;
+                        let mut temp: Vec<(UploadFile, File)> = Vec::new();
                         if !self.files.is_empty() {
-                            for file in self.files.iter().rev() {
-                                let file_name = file.name().clone();
-                                debug!("file name: {:?}", file_name);
-                                let task = {
-                                    let callback = ctx.link()
-                                        .callback(move |data: FileData| Msg::RequestUploadFile(data.content));
-                                    ReaderService::read_file(file.clone(), callback).unwrap()
-                                };
-                                self.task_read.push((file_name, task));
-                            }
+                            result.iter().rev().zip(self.files).map(|value| temp.push(value));
+                            self.storage_upload(&link, temp);
+                            // for file in self.files.iter().rev() {
+                            //     let file_name = file.name().clone();
+                            //     debug!("file name: {:?}", file_name);
+                            //     let task = {
+                            //         let callback = ctx.link()
+                            //             .callback(move |data: FileData| Msg::RequestUploadFile(data.content));
+                            //         ReaderService::read_file(file.clone(), callback).unwrap()
+                            //     };
+                            //     self.task_read.push((file_name, task));
+                            // }
                         }
                         debug!("file: {:#?}", self.files);
                     },
@@ -1110,6 +1117,23 @@ impl StandardSettings {
                 // </span>
                 <span>{ get_value_field(&87) }</span>
             </button>
+        }
+    }
+
+    fn storage_upload(
+        &self,
+        link: &Scope<Self>,
+        upload_data: Vec<(UploadFile, File)>,
+    ) -> Html {
+        let callback_confirm = link.callback(|res: Result<usize, Error>| {
+            debug!("Res: {:?}", res);
+            Msg::FinishUploadFiles
+        });
+        html!{
+            <StorageUpload
+                upload_data = {upload_data}
+                callback_confirm = {callback_confirm}
+            />
         }
     }
 }

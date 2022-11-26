@@ -1,6 +1,6 @@
 [package]
 authors = ["mnnxp <mananaxep@gmail.com>"]
-edition = "2018"
+edition = "2021"
 name = "cdbs-app"
 version = "0.1.0"
 
@@ -12,11 +12,13 @@ version = "0.1.0"
 # crate-type = ["rlib", "cdylib"]
 
 [dependencies]
-yew = "0.19.3"
-yew-router = "0.16.0"
+# yew = { git = "https://github.com/yewstack/yew/", features = ["csr"] }
+yew = { version = "0.20.0", features = ["csr"] }
+yew-router = "0.17.0"
 yew-agent = "0.1.0"
-yewtil = "0.4.0"
+# yewtil = "0.4.0"
 gloo = "0.8.0"
+# gloo-storage = "0.2.2"
 
 console_error_panic_hook = "0.1.7"
 wasm-bindgen = "0.2.83"
@@ -29,6 +31,7 @@ instant = {version = "0.1.12", features = ["wasm-bindgen"]}
 lipsum = "0.8.2"
 rand = "0.8.5"
 regex = "1.7.0"
+base64 = "0.13.1"
 
 chrono = {version = "0.4.23", features = ["serde"]}
 log = "0.4.17"
@@ -40,9 +43,9 @@ anyhow = "1.0.66"
 graphql_client = "0.11.0"
 serde = {version = "1.0.147", features = ["derive"]}
 serde_json = "1.0.88"
+reqwest = { version = "0.11.13", features = ["blocking", "json"] }
 
 dotenv_codegen = "0.15.0"
-
 lazy_static = "1.4.0"
 toml = "0.5.9"
 

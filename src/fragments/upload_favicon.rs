@@ -1,21 +1,22 @@
-use yew::services::fetch::FetchTask;
-use yew::services::reader::{File, FileData, ReaderService, ReaderTask};
-use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, Event, DragEvent};
+use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
 use graphql_client::GraphQLQuery;
+// use gloo::file::callbacks::FileReader;
+use gloo::file::File;
+// use web_sys::{DragEvent, Event, FileList, HtmlInputElement};
+use web_sys::{DragEvent, Event};
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
 use crate::fragments::list_errors::ListErrors;
 use crate::error::{Error, get_error};
-use crate::services::{PutUploadFile, UploadData, get_value_field};
+use crate::services::storage_upload::StorageUpload;
+use crate::services::get_value_field;
 use crate::types::UploadFile;
 use crate::gqls::{
     make_query,
     user::{UploadUserFavicon, upload_user_favicon},
     company::{UploadCompanyFavicon, upload_company_favicon},
-    relate::{ConfirmUploadCompleted, confirm_upload_completed},
+    // relate::{ConfirmUploadCompleted, confirm_upload_completed},
 };
-
-type FileName = String;
 
 #[derive(PartialEq, Clone, Debug, Properties)]
 pub struct Props {
@@ -28,12 +29,12 @@ pub struct Props {
 pub struct UpdateFaviconBlock {
     error: Option<Error>,
     request_upload_data: UploadFile,
-    request_upload_file: Callback<Result<Option<String>, Error>>,
-    task_read: Option<(FileName, ReaderTask)>,
-    task: Option<FetchTask>,
+    // request_upload_file: Callback<Result<(), Error>>,
+    // task_read: Option<(FileName, ReaderTask)>,
+    // task: Option<FetchTask>,
     get_result_up_file: bool,
     get_result_up_completed: bool,
-    put_upload_file: PutUploadFile,
+    // put_upload_file: PutUploadFile,
     file: Option<File>,
     dis_upload_btn: bool,
     active_loading_files_btn: bool,
@@ -43,14 +44,14 @@ pub enum Msg {
     RequestUploadData,
     RequestUploadUserData,
     RequestUploadCompanyData,
-    RequestUploadFile(Vec<u8>),
-    ResponseUploadFile(Result<Option<String>, Error>),
-    RequestUploadCompleted,
+    // RequestUploadFile(Vec<u8>),
+    ResponseUploadFile(Result<(), Error>),
+    // RequestUploadCompleted,
     ResponseError(Error),
     UpdateFile(Option<File>),
     GetUploadData(String),
-    GetUploadFile(Option<String>),
-    GetUploadCompleted(String),
+    // GetUploadFile(Option<String>),
+    GetUploadCompleted(Result<usize, Error>),
     ClearFileBoxed,
     ClearError,
     Ignore,
@@ -64,12 +65,12 @@ impl Component for UpdateFaviconBlock {
         Self {
             error: None,
             request_upload_data: UploadFile::default(),
-            request_upload_file: ctx.link().callback(Msg::ResponseUploadFile),
-            task_read: None,
-            task: None,
+            // request_upload_file: ctx.link().callback(Msg::ResponseUploadFile),
+            // task_read: None,
+            // task: None,
             get_result_up_file: false,
             get_result_up_completed: false,
-            put_upload_file: PutUploadFile::new(),
+            // put_upload_file: PutUploadFile::new(),
             file: None,
             dis_upload_btn: true,
             active_loading_files_btn: false,
@@ -98,8 +99,8 @@ impl Component for UpdateFaviconBlock {
                             upload_user_favicon::Variables {
                                 filename_upload_favicon,
                             }
-                        )).await;
-                        link.send_message(Msg::GetUploadData(res.unwrap()));
+                        )).await.unwrap();
+                        link.send_message(Msg::GetUploadData(res));
                     })
                 }
             },
@@ -119,29 +120,29 @@ impl Component for UpdateFaviconBlock {
                 }
             },
             Msg::RequestUploadFile(data) => {
-                let request = UploadData {
-                    upload_url: self.request_upload_data.upload_url.to_string(),
-                    file_data: data,
-                };
-                self.task = Some(self.put_upload_file.put_file(request, self.request_upload_file.clone()));
+                // let request = UploadData {
+                //     upload_url: self.request_upload_data.upload_url.to_string(),
+                //     file_data: data,
+                // };
+                // self.task = Some(self.put_upload_file.put_file(request, self.request_upload_file.clone()));
             },
-            Msg::ResponseUploadFile(Ok(res)) => {
-                link.send_message(Msg::GetUploadFile(res))
+            Msg::ResponseUploadFile(Ok(())) => {
+                // link.send_message(Msg::GetUploadFile(()))
             },
             Msg::ResponseUploadFile(Err(err)) => {
                 self.error = Some(err);
-                self.task = None;
-                self.task_read = None;
+                // self.task = None;
+                // self.task_read = None;
             },
-            Msg::RequestUploadCompleted => {
-                let file_uuids = vec![self.request_upload_data.file_uuid.clone()];
-                spawn_local(async move {
-                    let res = make_query(ConfirmUploadCompleted::build_query(confirm_upload_completed::Variables {
-                        file_uuids,
-                    })).await.unwrap();
-                    link.send_message(Msg::GetUploadCompleted(res));
-                });
-            },
+            // Msg::RequestUploadCompleted => {
+            //     let file_uuids = vec![self.request_upload_data.file_uuid.clone()];
+            //     spawn_local(async move {
+            //         let res = make_query(ConfirmUploadCompleted::build_query(confirm_upload_completed::Variables {
+            //             file_uuids,
+            //         })).await.unwrap();
+            //         link.send_message(Msg::GetUploadCompleted(res));
+            //     });
+            // },
             Msg::ResponseError(err) => {
                 self.error = Some(err);
             },
@@ -164,39 +165,34 @@ impl Component for UpdateFaviconBlock {
                         };
 
                         if let Some(file) = self.file.clone() {
-                            let file_name = file.name().clone();
-                            let task = {
-                                let callback = self
-                                    .link
-                                    .callback(move |data: FileData| Msg::RequestUploadFile(data.content));
-                                ReaderService::read_file(file, callback).unwrap()
-                            };
-                            self.task_read = Some((file_name, task));
+                            // let file_name = file.name().clone();
+                            // let task = {
+                            //     let callback = self
+                            //         .link
+                            //         .callback(move |data: FileData| Msg::RequestUploadFile(data.content));
+                            //     ReaderService::read_file(file, callback).unwrap()
+                            // };
+                            // self.task_read = Some((file_name, task));
+                            let callback_confirm =
+                                link.callback(|res: Result<usize, Error>| Msg::GetUploadCompleted(res));
+                            self.storage_upload(vec![(self.request_upload_data, file)], callback_confirm)
                         }
                         debug!("file: {:?}", self.file);
                     },
                     true => self.error = Some(get_error(&data)),
                 }
             },
-            Msg::GetUploadFile(res) => {
-                debug!("res: {:?}", res);
-                self.get_result_up_file = true;
-                link.send_message(Msg::RequestUploadCompleted)
-            },
+            // Msg::GetUploadFile(res) => {
+            //     debug!("res: {:?}", res);
+            //     self.get_result_up_file = true;
+            //     link.send_message(Msg::RequestUploadCompleted)
+            // },
             Msg::GetUploadCompleted(res) => {
-                let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: usize = serde_json::from_value(
-                            res_value.get("uploadCompleted").unwrap().clone()
-                        ).unwrap();
-                        self.get_result_up_completed = result > 0;
-                        self.active_loading_files_btn = false;
-                    },
-                    true => self.error = Some(get_error(&data)),
+                match res {
+                    Ok(value) => self.get_result_up_completed = value > 0,
+                    Err(err) => self.error = Some(err),
                 }
+                self.active_loading_files_btn = false;
             },
             Msg::ClearFileBoxed => {
                 self.file = None;
@@ -205,7 +201,6 @@ impl Component for UpdateFaviconBlock {
             Msg::ClearError => self.error = None,
             Msg::Ignore => {},
         }
-
         true
     }
 
@@ -240,23 +235,23 @@ impl UpdateFaviconBlock {
         &self,
         link: &Scope<Self>,
     )  -> Html {
-        let onchange_favicon_file = link.callback(move |value| {
-            if let Event::Files(files) = value {
+        let onchange_favicon_file = link.callback(move |event| {
+            if let Event::Files(file) = event {
+                Msg::UpdateFile(file)
+            } else {
+                Msg::Ignore
+            }
+        });
+        let ondrop_favicon_file = link.callback(move |event: DragEvent| {
+            event.prevent_default();
+            if let Some(files) = event.data_transfer().unwrap().files() {
                 Msg::UpdateFile(files.get(0))
             } else {
                 Msg::Ignore
             }
         });
-        let ondrop_favicon_file = link.callback(move |value: DragEvent| {
-            value.prevent_default();
-            if let Some(files) = value.data_transfer().unwrap().files() {
-                Msg::UpdateFile(files.get(0))
-            } else {
-                Msg::Ignore
-            }
-        });
-        let ondragover_favicon_file = link.callback(move |value: DragEvent| {
-            value.prevent_default();
+        let ondragover_favicon_file = link.callback(move |event: DragEvent| {
+            event.prevent_default();
             Msg::Ignore
         });
 
@@ -350,6 +345,19 @@ impl UpdateFaviconBlock {
                 { get_value_field(&92) }
               </div>
             </article>
+        }
+    }
+
+    fn storage_upload(
+        &self,
+        data_upload: Vec<(UploadFile, File)>,
+        callback_confirm: Callback<Result<usize, Error>>,
+    ) -> Html {
+        html!{
+            <StorageUpload
+                {data_upload}
+                {callback_confirm}
+            />
         }
     }
 }
