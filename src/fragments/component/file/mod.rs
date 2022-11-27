@@ -9,7 +9,7 @@ use yew::{Component, Context, html, html::Scope, Html, Properties};
 use crate::types::{UUID, ShowFileInfo};
 use crate::services::get_value_field;
 
-#[derive(Clone, Debug, Properties)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub show_download_btn: bool,
     pub show_delete_btn: bool,
@@ -56,7 +56,7 @@ impl Component for ComponentFilesBlock {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         if self.component_uuid == ctx.props().component_uuid &&
              self.first_file_uuid == ctx.props().files.first().map(|x| &x.uuid) {
             false
@@ -92,7 +92,7 @@ impl ComponentFilesBlock {
     fn show_file_info(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
         file_info: &ShowFileInfo,
     ) -> Html {
         let callback_delete_file = link
@@ -115,7 +115,7 @@ impl ComponentFilesBlock {
     fn show_see_btn(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let show_full_files_btn = link.callback(|_| Msg::ShowFullList);
 

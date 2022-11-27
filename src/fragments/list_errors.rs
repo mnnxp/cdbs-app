@@ -1,14 +1,14 @@
 use yew::{Component, Callback, Context, html, Html, Properties};
-use yew_agent::utils::store::{Bridgeable, StoreWrapper};
+use yew_agent::utils::store::Bridgeable;
 use yew_agent::Bridge;
 use crate::routes::AppRoute::{self, Login};
 use crate::error::Error;
 
 pub struct ListErrors {
-    router_agent: Box<dyn Bridge<StoreWrapper<AppRoute>>>,
+    router_agent: Box<dyn Bridge<AppRoute>>,
 }
 
-#[derive(Properties, Clone)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub error: Option<Error>,
     pub clear_error: Option<Callback<()>>,
@@ -44,7 +44,7 @@ impl Component for ListErrors {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         true
     }
 

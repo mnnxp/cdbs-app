@@ -2,7 +2,7 @@ use yew::{function_component, html, Html};
 use crate::services::get_value_field;
 
 #[function_component]
-fn Banner() -> Html {
+pub fn Banner() -> Html {
     html!{
         <div class="tile is-parent container">
             <div class="tile is-parent">

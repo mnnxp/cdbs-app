@@ -1,5 +1,5 @@
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, classes};
-use yew_agent::utils::store::{Bridgeable, StoreWrapper};
+use yew_agent::utils::store::Bridgeable;
 use yew_agent::Bridge;
 // use log::debug;
 use crate::services::get_value_field;
@@ -13,7 +13,7 @@ pub enum Msg {
     Ignore,
 }
 
-#[derive(Clone, Debug, Properties)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub data: ShowComponentShort,
     pub show_list: bool,
@@ -22,7 +22,7 @@ pub struct Props {
 }
 
 pub struct ListItem {
-    router_agent: Box<dyn Bridge<StoreWrapper<AppRoute>>>,
+    router_agent: Box<dyn Bridge<AppRoute>>,
     component_uuid: UUID,
     is_followed: bool,
 }
@@ -58,7 +58,7 @@ impl Component for ListItem {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         if self.show_list == ctx.props().show_list ||
             self.component_uuid == ctx.props().data.uuid ||
             self.is_followed == ctx.props().data.is_followed {
@@ -83,7 +83,7 @@ impl ListItem {
     fn showing_in_list(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let ShowComponentShort {
             // uuid,
@@ -199,7 +199,7 @@ impl ListItem {
     fn showing_in_box(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let ShowComponentShort {
             is_base,

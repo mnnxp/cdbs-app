@@ -10,7 +10,7 @@ use crate::types::{UUID, Keyword};
 use crate::gqls::make_query;
 use crate::gqls::standard::{DeleteStandardKeywords, delete_standard_keywords};
 
-#[derive(Clone, Debug, Properties)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub show_delete_btn: bool,
     pub standard_uuid: UUID,
@@ -88,7 +88,7 @@ impl Component for KeywordTagItem {
         true
     }
 
-    fn changed(&mut self, _ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, _ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         false
     }
 
@@ -107,7 +107,7 @@ impl KeywordTagItem {
     fn show_keyword(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let onclick_delete_keyword = link.callback(|_| Msg::RequestDeleteKeyword);
 

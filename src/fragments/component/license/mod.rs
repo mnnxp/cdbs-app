@@ -23,7 +23,7 @@ use crate::gqls::{
     },
 };
 
-#[derive(Clone, Debug, Properties)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub show_delete_btn: bool,
     pub component_uuid: UUID,
@@ -189,7 +189,7 @@ impl Component for ComponentLicensesTags {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         if self.component_uuid == ctx.props().component_uuid &&
              self.component_licenses_len == ctx.props().component_licenses.len() {
             false
@@ -220,7 +220,7 @@ impl ComponentLicensesTags {
     fn show_licenses(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let onclick_delete_license = link.callback(|value: usize| Msg::DeleteComponentLicense(value));
         let onclick_action_btn = link.callback(|_| Msg::ChangeHideAddLicense);
@@ -265,7 +265,7 @@ impl ComponentLicensesTags {
     fn modal_add_license(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let onclick_add_license = link.callback(|_| Msg::RequestAddLicense);
         let onclick_hide_modal = link.callback(|_| Msg::ChangeHideAddLicense);

@@ -1,4 +1,4 @@
-use reqwest::blocking::{Client, Response};
+use reqwest::{Client, Response};
 // use reqwest::header::{AUTHORIZATION, CONTENT_TYPE};
 use reqwest::header::CONTENT_TYPE;
 use dotenv_codegen::dotenv;
@@ -70,7 +70,7 @@ impl Requests {
         for<'de> T: Deserialize<'de> + 'static + std::fmt::Debug,
     {
         let mut resp = self.builder("DELETE", path.as_str(), None, false, callback);
-        self.handler(&mut resp, true, callback);
+        self.handler(resp, true, callback);
     }
 
     /// Get request
@@ -79,7 +79,7 @@ impl Requests {
         for<'de> T: Deserialize<'de> + 'static + std::fmt::Debug,
     {
         let mut resp = self.builder("GET", path, None, false, callback);
-        self.handler(&mut resp, true, callback);
+        self.handler(resp, true, callback);
     }
 
     /// Post request with a body
@@ -94,7 +94,7 @@ impl Requests {
         B: Serialize,
     {
         let mut resp = self.builder("POST", path, Some(&body), true, callback);
-        self.handler(&mut resp, true, callback);
+        self.handler(resp, true, callback);
     }
 
     /// Put request with a body
@@ -109,7 +109,7 @@ impl Requests {
         B: Serialize,
     {
         let mut resp = self.builder("PUT", path.as_str(), Some(&body), true, callback);
-        self.handler(&mut resp, true, callback);
+        self.handler(resp, true, callback);
     }
 
     /// Put request for send file to storage

@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use yew::{Component, Context, html, html::Scope, Html, Properties, classes};
-use yew_agent::utils::store::{Bridgeable, StoreWrapper};
+use yew_agent::utils::store::Bridgeable;
 use yew_agent::Bridge;
 use yew_router::hooks::use_route;
 use log::debug;
@@ -38,7 +38,7 @@ pub struct ShowComponent {
     current_component_uuid: UUID,
     current_user_owner: bool,
     // task: Option<FetchTask>,
-    router_agent: Box<dyn Bridge<StoreWrapper<AppRoute>>>,
+    router_agent: Box<dyn Bridge<AppRoute>>,
     subscribers: usize,
     is_followed: bool,
     select_modification_uuid: UUID,
@@ -55,7 +55,7 @@ pub struct ShowComponent {
     file_arr: Vec<DownloadFile>,
 }
 
-#[derive(Properties, Clone)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub current_user: Option<SlimUser>,
     pub component_uuid: UUID,
@@ -118,9 +118,9 @@ impl Component for ShowComponent {
             // route to login page if not found token
             self.router_agent.send(Login);
         };
-        // get target user from route
+        
         let target_component_uuid =
-            use_route().unwrap_or_default().trim_start_matches("#/component/").to_string();
+            use_route().unwrap_or_default().trim_start_matches("/component/").to_string();
         // get flag changing current component in route
         let not_matches_component_uuid = target_component_uuid != self.current_component_uuid;
         debug!("self.current_component_uuid {:#?}", self.current_component_uuid);
@@ -334,7 +334,7 @@ impl Component for ShowComponent {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         if self.current_component_uuid == ctx.props().component_uuid {
             false
         } else {
@@ -545,7 +545,7 @@ impl ShowComponent {
     fn show_additional_params(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
         component_data: &ComponentInfo,
     ) -> Html {
         html!{
@@ -577,7 +577,7 @@ impl ShowComponent {
 
     fn show_param_item(
         &self,
-        props: &Properties,
+        props: &Props,
         data: &ComponentParam,
     ) -> Html {
         html!{<ComponentParamTag
@@ -611,7 +611,7 @@ impl ShowComponent {
     fn show_cards(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
         component_data: &ComponentInfo,
     ) -> Html {
         html!{<>

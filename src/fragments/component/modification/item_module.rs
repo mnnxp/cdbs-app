@@ -1,7 +1,7 @@
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
 // use log::debug;
 
-#[derive(Clone, Debug, Properties)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub param_id: usize,
     pub value: Option<String>,
@@ -38,13 +38,13 @@ impl Component for ModificationTableItemModule {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         if self.param_id == ctx.props().param_id &&
               self.value == ctx.props().value {
             false
         } else {
-            self.param_id == ctx.props().param_id;
-            self.value == ctx.props().value;
+            self.param_id = ctx.props().param_id;
+            self.value = ctx.props().value;
             true
         }
     }
@@ -80,7 +80,7 @@ impl ModificationTableItemModule {
     fn with_manage_btn(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let onclick_change_param = link.callback(|_| Msg::ChangeParam);
 
@@ -103,7 +103,7 @@ impl ModificationTableItemModule {
 
     fn without_manage_btn(
         &self,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         match &props.value {
             Some(value) => html!{<td>{value.clone()}</td>},

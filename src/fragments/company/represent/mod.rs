@@ -23,7 +23,7 @@ pub struct CompanyRepresents {
     show_manage_btn: bool,
 }
 
-#[derive(Properties, Clone)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub show_manage_btn: bool,
     pub list: Vec<CompanyRepresentInfo>,
@@ -55,7 +55,7 @@ impl Component for CompanyRepresents {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         if self.show_manage_btn == ctx.props().show_manage_btn {
             // debug!("if change");
             false
@@ -90,7 +90,7 @@ impl CompanyRepresents {
     fn show_card(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let onclick_change_view = link.callback(|_|Msg::SwitchShowType);
 

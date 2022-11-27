@@ -14,7 +14,7 @@ use crate::gqls::component::{
     DeleteComponentFile, delete_component_file,
 };
 
-#[derive(Clone, Debug, Properties)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub show_download_btn: bool,
     pub show_delete_btn: bool,
@@ -127,7 +127,7 @@ impl Component for ComponentFileItem {
         true
     }
 
-    fn changed(&mut self, _ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, _ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         false
     }
 
@@ -149,7 +149,7 @@ impl ComponentFileItem {
     fn show_file(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let onclick_file_info = link.callback(|_| Msg::ClickFileInfo);
 
@@ -170,7 +170,7 @@ impl ComponentFileItem {
     fn show_download_btn(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let onclick_download_btn =
             link.callback(|_| Msg::RequestDownloadFile);
@@ -197,7 +197,7 @@ impl ComponentFileItem {
     fn show_delete_btn(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let onclick_delete_btn = link.callback(|_| Msg::RequestDeleteFile);
 
@@ -216,7 +216,7 @@ impl ComponentFileItem {
     fn show_full_info_file(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let onclick_file_info = link.callback(|_| Msg::ClickFileInfo);
 

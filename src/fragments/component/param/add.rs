@@ -10,7 +10,7 @@ use crate::services::get_value_field;
 use crate::gqls::make_query;
 use crate::gqls::relate::{RegisterParam, register_param};
 
-#[derive(Clone, Debug, Properties)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub callback_add_param: Callback<(usize, String)>,
 }
@@ -95,7 +95,7 @@ impl Component for RegisterParamnameBlock {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         false
     }
 
@@ -113,7 +113,7 @@ impl RegisterParamnameBlock {
     fn add_paramname(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let onclick_register_paramname = link.callback(|_| Msg::RequestRegisterParamname);
         let oninput_set_paramname = link.callback(|ev: Event| Msg::UpdateParamname(ev.value));

@@ -25,7 +25,7 @@ use crate::gqls::{
     },
 };
 
-#[derive(Clone, Debug, Properties)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub show_manage_btn: bool,
     pub component_uuid: UUID,
@@ -197,7 +197,7 @@ impl Component for ComponentParamsTags {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         if self.component_uuid == ctx.props().component_uuid &&
              self.component_params_len == ctx.props().component_params.len() {
             false
@@ -228,7 +228,7 @@ impl ComponentParamsTags {
     fn show_params(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let onclick_delete_param =
             link.callback(|value: usize| Msg::DeleteComponentParam(value));

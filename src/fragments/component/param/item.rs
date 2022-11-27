@@ -24,7 +24,7 @@ pub struct ComponentParamTag {
     get_result_delete: bool,
 }
 
-#[derive(Properties, Clone)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub show_manage_btn: bool,
     pub component_uuid: UUID,
@@ -141,7 +141,7 @@ impl Component for ComponentParamTag {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         if self.param_id == ctx.props().param_data.param.param_id &&
               self.current_param_value == ctx.props().param_data.value {
             false
@@ -169,7 +169,7 @@ impl ComponentParamTag {
     fn show_param(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let onclick_change_param = link.callback(|_| Msg::ChangeParamValue);
 

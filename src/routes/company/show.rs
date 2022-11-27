@@ -1,5 +1,5 @@
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, classes};
-use yew_agent::utils::store::{Bridgeable, StoreWrapper};
+use yew_agent::utils::store::Bridgeable;
 use yew_agent::Bridge;
 use yew_router::hooks::use_route;
 use web_sys::MouseEvent;
@@ -33,7 +33,7 @@ pub struct ShowCompany {
     company: Option<CompanyInfo>,
     current_company_uuid: UUID,
     current_user_owner: bool,
-    router_agent: Box<dyn Bridge<StoreWrapper<AppRoute>>>,
+    router_agent: Box<dyn Bridge<AppRoute>>,
     subscribers: usize,
     is_followed: bool,
     company_tab: CompanyTab,
@@ -41,7 +41,7 @@ pub struct ShowCompany {
     show_full_company_info: bool,
 }
 
-#[derive(Properties, Clone)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub current_user: Option<SlimUser>,
     pub company_uuid: UUID,
@@ -95,9 +95,9 @@ impl Component for ShowCompany {
             // route to login page if not found token
             self.router_agent.send(Login);
         };
-        // get target user from route
+        
         let target_company_uuid =
-            use_route().unwrap_or_default().trim_start_matches("#/company/").to_string();
+            use_route().unwrap_or_default().trim_start_matches("/company/").to_string();
         // get flag changing current company in route
         let not_matches_company_uuid = target_company_uuid != self.current_company_uuid;
         // debug!("self.current_company_uuid {:#?}", self.current_company_uuid);
@@ -216,7 +216,7 @@ impl Component for ShowCompany {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         if self.current_company_uuid == ctx.props().company_uuid {
             false
         } else {

@@ -3,7 +3,7 @@ mod list_item;
 pub use list_item::ListItem;
 
 use yew::{Component, Context, html, html::Scope, Html, Properties};
-use yew_router::prelude::RouterAnchor;
+use yew_router::prelude::Link;
 use graphql_client::GraphQLQuery;
 use log::debug;
 use serde_json::Value;
@@ -38,7 +38,7 @@ pub struct CatalogComponents {
     arguments: Option<ComponentsQueryArg>,
 }
 
-#[derive(Properties, Clone)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub show_create_btn: bool,
     pub arguments: Option<ComponentsQueryArg>,
@@ -137,7 +137,7 @@ impl Component for CatalogComponents {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         let flag_change = match (&self.arguments, &ctx.props().arguments) {
             (Some(self_arg), Some(arg)) => self_arg == arg,
             (None, None) => true,
@@ -175,9 +175,9 @@ impl Component for CatalogComponents {
                     <div class="buttons">
                         {match &ctx.props().show_create_btn {
                           true => html!{
-                              <RouterAnchor<AppRoute> route={CreateComponent} classes="button is-info">
+                              <Link<AppRoute> route={CreateComponent} classes="button is-info">
                                   { get_value_field(&45) } // Create
-                              </RouterAnchor<AppRoute>>
+                              </Link<AppRoute>>
                           },
                           false => html!{},
                         }}

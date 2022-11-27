@@ -3,7 +3,7 @@ use yew::{Component, Context, html, Html, Properties};
 
 use crate::types::{UUID, ShowFileInfo};
 
-#[derive(Clone, Debug, Properties)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub show_download_btn: bool,
     pub file: ShowFileInfo,
@@ -27,7 +27,7 @@ impl Component for FileOfFilesetItem {
         false
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         if self.file_uuid == ctx.props().file.uuid {
             false
         } else {
@@ -44,7 +44,7 @@ impl Component for FileOfFilesetItem {
 impl FileOfFilesetItem {
     fn show_full_info_file(
         &self,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         html!{<tr>
           <td>{props.file.filename.clone()}</td>

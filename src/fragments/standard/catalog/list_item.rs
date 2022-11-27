@@ -1,5 +1,5 @@
 use yew::{Component, Context, html, html::Scope, Html, Properties, classes};
-use yew_agent::utils::store::{Bridgeable, StoreWrapper};
+use yew_agent::utils::store::Bridgeable;
 use yew_agent::Bridge;
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
@@ -28,7 +28,7 @@ pub enum Msg {
     Ignore,
 }
 
-#[derive(Clone, Debug, Properties)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub data: ShowStandardShort,
     pub show_list: bool,
@@ -38,7 +38,7 @@ pub struct ListItemStandard {
     error: Option<Error>,
     standard_uuid: UUID,
     show_list: bool,
-    router_agent: Box<dyn Bridge<StoreWrapper<AppRoute>>>,
+    router_agent: Box<dyn Bridge<AppRoute>>,
     is_followed: bool,
 }
 
@@ -113,7 +113,7 @@ impl Component for ListItemStandard {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         if self.show_list == ctx.props().show_list ||
             self.standard_uuid == ctx.props().data.uuid {
             false
@@ -140,7 +140,7 @@ impl ListItemStandard {
     fn showing_in_list(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let ShowStandardShort {
             classifier,
@@ -242,7 +242,7 @@ impl ListItemStandard {
     fn showing_in_box(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let ShowStandardShort {
             classifier,

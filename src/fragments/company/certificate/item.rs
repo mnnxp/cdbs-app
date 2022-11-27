@@ -14,7 +14,7 @@ use crate::gqls::company::{
     DeleteCompanyCertificate, delete_company_certificate,
 };
 
-#[derive(Clone, Debug, Properties)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub certificate: CompanyCertificate,
     pub show_cert_btn: bool,
@@ -128,7 +128,7 @@ impl Component for CompanyCertificateItem {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         if self.current_file_uuid == ctx.props().certificate.file.uuid {
             false
         } else {
@@ -157,7 +157,7 @@ impl CompanyCertificateItem {
     fn show_certificate_update(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let onclick_clear_error = link.callback(|_| Msg::ClearError);
 
@@ -210,7 +210,7 @@ impl CompanyCertificateItem {
     fn show_certificate_data(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let onclick_clear_error = link.callback(|_| Msg::ClearError);
 
@@ -241,7 +241,7 @@ impl CompanyCertificateItem {
     fn show_delete_certificate(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         html!{<div class="card">
             <div class="message is-success">
@@ -254,7 +254,7 @@ impl CompanyCertificateItem {
     fn show_update_description(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         match self.get_result_update {
             true => html!{<div class="column">
@@ -269,7 +269,7 @@ impl CompanyCertificateItem {
     fn show_certificate_btn(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let onclick_show_cert = link.callback(|_| Msg::ShowCert);
 
@@ -293,7 +293,7 @@ impl CompanyCertificateItem {
     fn show_update_block(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let oninput_cert_description =
             link.callback(|ev: Event| Msg::UpdateDescription(ev.value));
@@ -331,7 +331,7 @@ impl CompanyCertificateItem {
     fn show_download_btn(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         match props.download_btn {
             true => html!{
@@ -349,7 +349,7 @@ impl CompanyCertificateItem {
     fn modal_full_certificate(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let onclick_show_cert = link.callback(|_| Msg::ShowCert);
 

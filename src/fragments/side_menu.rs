@@ -3,13 +3,13 @@ use yew::{Component, Callback, Context, html, Html, Properties, classes, Classes
 
 pub struct SideMenu {}
 
-// #[derive(Properties, Clone)]
+// #[derive(Properties, Clone, Debug, PartialEq)]
 // pub struct MenuBox {
 //     pub title: String,
 //     pub children: Vec<MenuItem>,
 // }
 
-#[derive(Properties, Clone)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct MenuItem {
     pub title: String,
     pub action: Callback<MouseEvent>,
@@ -36,7 +36,7 @@ impl Default for MenuItem {
     }
 }
 
-#[derive(Properties, Clone)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub menu_arr: Option<Vec<MenuItem>>,
 }
@@ -61,7 +61,7 @@ impl Component for SideMenu {
         SideMenu {}
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         true
     }
 

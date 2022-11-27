@@ -16,7 +16,7 @@ use crate::gqls::component::{
     AddComponentKeywordsByNames, add_component_keywords_by_names,
 };
 
-#[derive(Clone, Debug, Properties)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub component_keywords: Vec<Keyword>,
     pub component_uuid: UUID,
@@ -246,7 +246,7 @@ impl Component for AddKeywordsTags {
         true
     }
 
-    fn changed(&mut self, _ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, _ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         false
     }
 
@@ -266,7 +266,7 @@ impl AddKeywordsTags {
     fn add_component_keyword(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let oninput_parse_keyword = link
             .callback(|ev: Event| Msg::GetString(ev.value));

@@ -29,7 +29,7 @@ pub enum Msg {
     ClearError,
 }
 
-#[derive(Clone, Debug, Properties)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub data: CompanyRepresentInfo,
 }
@@ -185,7 +185,7 @@ impl Component for ChangeItem {
         true
     }
 
-    fn changed(&mut self, _ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, _ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         false
     }
 
@@ -264,7 +264,7 @@ impl ChangeItem {
     fn change_represent_block(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let oninput_region_id =
             link.callback(|ev: Event| Msg::UpdateRegionId(match ev {

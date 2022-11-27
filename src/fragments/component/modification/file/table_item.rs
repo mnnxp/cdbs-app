@@ -12,7 +12,7 @@ use crate::services::get_value_field;
 use crate::gqls::make_query;
 use crate::gqls::component::{ComponentModificationFiles, component_modification_files};
 
-#[derive(Clone, Debug, Properties)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub modification_uuid: UUID,
     pub show_download_tag: bool,
@@ -86,7 +86,7 @@ impl Component for ModificationFileListItem {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         if self.modification_uuid == ctx.props().modification_uuid &&
             self.file_uuid == ctx.props().file.uuid {
             false
@@ -111,7 +111,7 @@ impl ModificationFileListItem {
     fn show_full_info_file(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         html!{<tr>
           <td>{props.file.filename.clone()}</td>

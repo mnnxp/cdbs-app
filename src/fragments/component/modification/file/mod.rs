@@ -19,7 +19,7 @@ use crate::services::get_value_field;
 use crate::gqls::make_query;
 use crate::gqls::component::{ComponentModificationFilesList, component_modification_files_list};
 
-#[derive(Clone, Debug, Properties)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub show_download_btn: bool,
     pub modification_uuid: UUID,
@@ -102,7 +102,7 @@ impl Component for ModificationFilesTableCard {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         if self.modification_uuid == ctx.props().modification_uuid {
             debug!("not update modification files {:?}", self.modification_uuid);
             false
@@ -112,7 +112,7 @@ impl Component for ModificationFilesTableCard {
             if ctx.props().modification_uuid.len() == 36 {
                 ctx.link().send_message(Msg::RequestModificationFilesList);
             }
-            self.modification_uuid == ctx.props().modification_uuid;
+            self.modification_uuid = ctx.props().modification_uuid;
             true
         }
     }
@@ -131,7 +131,7 @@ impl Component for ModificationFilesTableCard {
 impl ModificationFilesTableCard {
     fn show_files_card(
         &self,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         html!{<div class="card">
             <table class="table is-fullwidth is-striped">

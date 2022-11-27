@@ -1,12 +1,11 @@
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
 use graphql_client::GraphQLQuery;
-use gloo::file::File;
-use web_sys::{DragEvent, Event};
+use web_sys::{DragEvent, Event, File};
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
-use crate::services::storage_upload::StorageUpload;
+use crate::services::storage_upload::{StorageUpload, storage_upload};
 use crate::services::{image_detector, get_value_field};
 use crate::types::UploadFile;
 use crate::gqls::{
@@ -135,10 +134,13 @@ impl Component for UpdateStandardFaviconCard {
 
                 match res_value.is_null() {
                     false => {
-                        self.request_upload_data =
+                        let result =
                             serde_json::from_value(res_value.get("uploadStandardFavicon").unwrap().clone()).unwrap();
 
                         if let Some(file) = self.file.clone() {
+                            let callback_confirm =
+                                link.callback(|res: Result<usize, Error>| Msg::GetUploadCompleted(res));
+                            storage_upload(&result, &vec![file], callback_confirm);
                             // let file_name = file.name().clone();
                             // let task = {
                             //     let callback = ctx.link().callback(move |data: FileData| {
@@ -147,35 +149,23 @@ impl Component for UpdateStandardFaviconCard {
                             //     ReaderService::read_file(file, callback).unwrap()
                             // };
                             // self.task_read = Some((file_name, task));
-                            let callback_confirm =
-                                link.callback(|res: Result<usize, Error>| Msg::GetUploadCompleted(res));
-                            self.storage_upload(vec![(self.request_upload_data, file)], callback_confirm)
                         }
                         debug!("file: {:?}", self.file);
                     }
                     true => self.error = Some(get_error(&data)),
                 }
             },
-            Msg::GetUploadFile(res) => {
-                debug!("res: {:?}", res);
-                self.get_result_up_file = true;
-                link.send_message(Msg::RequestUploadCompleted)
-            },
+            // Msg::GetUploadFile(res) => {
+            //     debug!("res: {:?}", res);
+            //     self.get_result_up_file = true;
+            //     link.send_message(Msg::RequestUploadCompleted)
+            // },
             Msg::GetUploadCompleted(res) => {
-                let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: usize = serde_json::from_value(
-                            res_value.get("uploadCompleted").unwrap().clone()
-                        ).unwrap();
-                        self.get_result_up_completed = result > 0;
-                        ctx.props().callback.emit(());
-                        self.active_loading_files_btn = false;
-                    },
-                    true => self.error = Some(get_error(&data)),
+                match res {
+                    Ok(value) => self.get_result_up_completed = value,
+                    Err(err) => self.error = Some(err),
                 }
+                self.active_loading_files_btn = false;
             },
             Msg::HideNotificationSuccess => {
                 link.send_message(Msg::ClearFileBoxed);
@@ -191,7 +181,7 @@ impl Component for UpdateStandardFaviconCard {
         true
     }
 
-    fn changed(&mut self, _ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, _ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         false
     }
 
@@ -332,19 +322,6 @@ impl UpdateStandardFaviconCard {
                 { get_value_field(&92) }
               </div>
             </article>
-        }
-    }
-
-    fn storage_upload(
-        &self,
-        data_upload: Vec<(UploadFile, File)>,
-        callback_confirm: Callback<Result<usize, Error>>,
-    ) -> Html {
-        html!{
-            <StorageUpload
-                {data_upload}
-                {callback_confirm}
-            />
         }
     }
 }

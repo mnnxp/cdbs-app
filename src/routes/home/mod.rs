@@ -2,7 +2,7 @@ mod banner;
 mod main_view;
 
 use yew::{Component, Context, html, Html, classes};
-use yew_agent::utils::store::{Bridgeable, StoreWrapper};
+use yew_agent::utils::store::Bridgeable;
 use yew_agent::Bridge;
 use crate::routes::AppRoute::{self, Profile};
 use crate::services::{get_logged_user, get_value_field};
@@ -12,7 +12,7 @@ use banner::Banner;
 
 /// Home page with an article list and a tag list.
 pub struct Home {
-    router_agent: Box<dyn Bridge<StoreWrapper<AppRoute>>>,
+    router_agent: Box<dyn Bridge<AppRoute>>,
 }
 
 pub enum Msg {
@@ -42,7 +42,7 @@ impl Component for Home {
         false
     }
 
-    fn changed(&mut self, _ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, _ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         false
     }
 

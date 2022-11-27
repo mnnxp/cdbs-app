@@ -11,7 +11,7 @@ use yew::{Component, Context, html, Html, Properties};
 use crate::types::{UUID, CompanyCertificate};
 
 
-#[derive(Clone, Debug, Properties)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub certificates: Vec<CompanyCertificate>,
     pub show_cert_btn: bool,
@@ -53,7 +53,7 @@ impl Component for CompanyCertificatesCard {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         if self.certificates_first_uuid == ctx.props().certificates.first().map(|x| &x.company_uuid) &&
               self.certificates_len == ctx.props().certificates.len() {
             false

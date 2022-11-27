@@ -3,7 +3,7 @@ mod list_item;
 pub use list_item::ListItemCompany;
 
 use yew::{Component, Context, html, Html, Properties};
-use yew_router::prelude::RouterAnchor;
+use yew_router::prelude::Link;
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
@@ -31,7 +31,7 @@ pub struct CatalogCompanies {
     arguments: Option<CompaniesQueryArg>,
 }
 
-#[derive(Properties, Clone)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub show_create_btn: bool,
     pub arguments: Option<CompaniesQueryArg>,
@@ -106,7 +106,7 @@ impl Component for CatalogCompanies {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         let flag_change = match (&self.arguments, &ctx.props().arguments) {
             (Some(self_arg), Some(arg)) => self_arg == arg,
             (None, None) => true,
@@ -145,9 +145,9 @@ impl Component for CatalogCompanies {
                     <div class="buttons">
                         {match &ctx.props().show_create_btn {
                             true => html!{
-                                <RouterAnchor<AppRoute> route={CreateCompany} classes="button is-info">
+                                <Link<AppRoute> route={CreateCompany} classes="button is-info">
                                     { get_value_field(&45) } // Create
-                                </RouterAnchor<AppRoute>>
+                                </Link<AppRoute>>
                             },
                             false => html!{},
                         }}

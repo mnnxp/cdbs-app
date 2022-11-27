@@ -18,7 +18,7 @@ use crate::services::get_value_field;
 use crate::gqls::make_query;
 use crate::gqls::component::{ComModFilesOfFileset, com_mod_files_of_fileset};
 
-#[derive(Clone, Debug, Properties)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub show_download_btn: bool,
     pub select_fileset_uuid: UUID,
@@ -94,7 +94,7 @@ impl Component for FilesOfFilesetCard {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         if self.select_fileset_uuid == ctx.props().select_fileset_uuid {
             false
         } else {
@@ -120,7 +120,7 @@ impl Component for FilesOfFilesetCard {
 impl FilesOfFilesetCard {
     fn show_files_card(
         &self,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         html!{<div class="card">
             <table class="table is-fullwidth is-striped">

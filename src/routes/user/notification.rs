@@ -1,5 +1,5 @@
 use yew::{Component, Context, html, html::Scope, Html};
-use yew_agent::utils::store::{Bridgeable, StoreWrapper};
+use yew_agent::utils::store::Bridgeable;
 use yew_agent::Bridge;
 use log::debug;
 use graphql_client::GraphQLQuery;
@@ -33,7 +33,7 @@ pub enum Menu {
 pub struct Notifications {
     error: Option<Error>,
     notifications: Vec<ShowNotification>,
-    router_agent: Box<dyn Bridge<StoreWrapper<AppRoute>>>,
+    router_agent: Box<dyn Bridge<AppRoute>>,
     read_notification: Vec<i64>,
     delete_notification: Vec<i64>,
     select_menu: Menu,
@@ -175,7 +175,7 @@ impl Component for Notifications {
         true
     }
 
-    fn changed(&mut self, _ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, _ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         false
     }
 

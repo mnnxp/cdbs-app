@@ -1,8 +1,7 @@
 use std::collections::HashMap;
 use base64::encode;
 use gloo::file::callbacks::FileReader;
-use gloo::file::File;
-use web_sys::{DragEvent, Event, FileList, HtmlInputElement};
+use web_sys::{DragEvent, Event, File, FileList, HtmlInputElement};
 use wasm_bindgen_futures::spawn_local;
 use yew::{Component, Callback, Context, html, Html, Properties};
 use yew::html::TargetCast;
@@ -44,7 +43,7 @@ pub struct StorageUpload {
     noconfirm_files: usize,
 }
 
-#[derive(Properties, Clone)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub data_upload: Vec<(UploadFile, File)>,
     pub callback_confirm: Callback<Result<usize, Error>>,
@@ -151,11 +150,28 @@ impl Component for StorageUpload {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         false
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         html! {}
+    }
+}
+
+pub fn storage_upload(
+    // &self,
+    info_data: &Vec<UploadFile>,
+    files: &Vec<File>,
+    callback_confirm: Callback<Result<usize, Error>>,
+) -> Html {
+    let mut data_upload: Vec<(UploadFile, File)> = Vec::new();
+    info_data.into_iter().rev().zip(files).map(|value| data_upload.push(value));
+
+    html!{
+        <StorageUpload
+            {data_upload}
+            {callback_confirm}
+        />
     }
 }

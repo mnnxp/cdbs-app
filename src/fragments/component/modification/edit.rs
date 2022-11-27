@@ -27,7 +27,7 @@ use crate::gqls::component::{
     ComponentActualStatuses, component_actual_statuses,
 };
 
-#[derive(Clone, Debug, Properties)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub current_component_uuid: UUID,
     pub component_modifications: Vec<ComponentModificationInfo>,
@@ -496,7 +496,7 @@ impl Component for ModificationsTableEdit {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         if self.current_modifications == ctx.props().current_component_uuid {
             debug!("not update modifications {:?}", self.component_modifications.len());
             false

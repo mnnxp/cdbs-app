@@ -20,7 +20,7 @@ use crate::gqls::component::{
     ComponentSuppliers, component_suppliers,
 };
 
-#[derive(Clone, Debug, Properties)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub show_delete_btn: bool,
     pub component_uuid: UUID,
@@ -184,7 +184,7 @@ impl Component for ComponentSuppliersCard {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         if self.component_uuid == ctx.props().component_uuid &&
              self.component_suppliers_len == ctx.props().component_suppliers.len() &&
                self.supplier_list_len == ctx.props().supplier_list.len() {
@@ -198,9 +198,9 @@ impl Component for ComponentSuppliersCard {
                 ctx.props().supplier_list.first().map(|s| s.uuid.clone()).unwrap_or_default();
             self.request_set_supplier_description = String::new();
             self.hide_set_supplier_modal = true;
-            self.component_uuid == ctx.props().component_uuid;
-            self.component_suppliers_len == ctx.props().component_suppliers.len();
-            self.supplier_list_len == ctx.props().supplier_list.len();
+            self.component_uuid = ctx.props().component_uuid;
+            self.component_suppliers_len = ctx.props().component_suppliers.len();
+            self.supplier_list_len = ctx.props().supplier_list.len();
             true
         }
     }
@@ -219,7 +219,7 @@ impl ComponentSuppliersCard {
     fn show_suppliers(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let onclick_delete_supplier =
             link.callback(|value: UUID| Msg::DeleteComponentCompany(value));
@@ -267,7 +267,7 @@ impl ComponentSuppliersCard {
     fn modal_set_owner_supplier(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let onclick_set_owner_supplier = link.callback(|_| Msg::RequestChangeOwnerSupplier);
         let onclick_hide_modal = link.callback(|_| Msg::ChangeHideSetSupplier);
@@ -338,7 +338,7 @@ impl ComponentSuppliersCard {
     fn modal_add_supplier(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let onclick_add_supplier = link.callback(|_| Msg::RequestAddSupplier);
         let onclick_hide_modal = link.callback(|_| Msg::ChangeHideSetSupplier);

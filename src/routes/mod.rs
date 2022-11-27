@@ -14,7 +14,7 @@ pub use user::{
     profile,
 };
 
-// for test, in future this routes be delete and use #/search
+// for test, in future this routes be delete and use /search
 pub use crate::fragments::{
     user as other_user,
     component as other_component
@@ -23,41 +23,41 @@ pub use crate::fragments::{
 use yew_router::prelude::*;
 
 /// App routes
-#[derive(Debug, Clone, Copy, PartialEq, Routable)]
+#[derive(Debug, Clone, PartialEq, Routable)]
 pub enum AppRoute {
-    #[at("#/login")]
+    #[at("/login")]
     Login,
-    #[at("#/register")]
+    #[at("/register")]
     Register,
-    // #[at("#/components")]
+    // #[at("/components")]
     // CatalogComponents,
-    #[at("#/component/settings/:uuid")]
+    #[at("/component/settings/:uuid")]
     ComponentSettings { uuid: String },
-    #[at("#/component/create")]
+    #[at("/component/create")]
     CreateComponent,
-    #[at("#/component/:uuid")]
+    #[at("/component/:uuid")]
     ShowComponent { uuid: String },
-    #[at("#/notifications")]
+    #[at("/notifications")]
     Notifications,
-    #[at("#/settings")]
+    #[at("/settings")]
     Settings,
-    #[at("#/company/settings/:uuid")]
+    #[at("/company/settings/:uuid")]
     CompanySettings { uuid: String },
-    #[at("#/company/create")]
+    #[at("/company/create")]
     CreateCompany,
-    #[at("#/company/:uuid")]
+    #[at("/company/:uuid")]
     ShowCompany { uuid: String },
-    #[at("#/standard/settings/:uuid")]
+    #[at("/standard/settings/:uuid")]
     StandardSettings { uuid: String },
-    #[at("#/standard/create")]
+    #[at("/standard/create")]
     CreateStandard,
-    #[at("#/standard/:uuid")]
+    #[at("/standard/:uuid")]
     ShowStandard { uuid: String },
-    // #[at("#/users")]
+    // #[at("/users")]
     // CatalogUsers,
-    #[at("#/@:username")]
+    #[at("/@:username")]
     Profile { username: String },
-    #[at("#/")]
+    #[at("/")]
     Home,
     #[not_found]
     #[at("/404")]
@@ -70,6 +70,6 @@ pub fn fix_fragment_routes(route: &mut Router) {
     if let Some(index) = r.find('#') {
         route.route = r[index..].to_string();
     } else {
-        route.route = "#/".to_string();
+        route.route = "/".to_string();
     }
 }

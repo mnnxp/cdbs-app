@@ -1,15 +1,16 @@
 use yew::prelude::*;
-use crate::types::CompanyRepresentInfo;
+use crate::types::{UUID, CompanyRepresentInfo};
 use crate::services::get_value_field;
 
-#[derive(Clone, Debug, Properties)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub data: CompanyRepresentInfo,
     pub show_list: bool,
 }
 
 pub struct ListItem {
-    props: Props
+    pub data_uuid: UUID,
+    pub show_list: bool,
 }
 
 impl Component for ListItem {
@@ -17,33 +18,40 @@ impl Component for ListItem {
     type Properties = Props;
 
     fn create(ctx: &Context<Self>) -> Self {
-        Self {props}
+        Self {
+            data_uuid: ctx.props().data.uuid,
+            show_list: ctx.props().show_list,
+        }
     }
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         false
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
-        if ctx.props().show_list != props.show_list || ctx.props().data.uuid != props.data.uuid {
-            ctx.props().show_list = props.show_list;
-            ctx.props().data = props.data;
-            true
-        } else {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
+        if self.show_list == ctx.props().show_list ||
+            self.data_uuid == ctx.props().data.uuid {
             false
+        } else {
+            ctx.props().show_list = self.show_list;
+            ctx.props().data.uuid = self.data_uuid;
+            true
         }
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
       match ctx.props().show_list {
-        true => { self.showing_in_list() },
-        false => { self.showing_in_box() },
+        true => { self.showing_in_list(ctx.props()) },
+        false => { self.showing_in_box(ctx.props()) },
       }
     }
 }
 
 impl ListItem {
-    fn showing_in_list(&self) -> Html {
+    fn showing_in_list(
+        &self,
+        props: &Props,
+    ) -> Html {
         let CompanyRepresentInfo {
             // uuid,
             // company_uuid,
@@ -53,7 +61,7 @@ impl ListItem {
             address,
             phone,
             ..
-        } = &ctx.props().data;
+        } = &props.data;
 
         html!{
           <div class="box itemBox">
@@ -87,7 +95,10 @@ impl ListItem {
         }
     }
 
-    fn showing_in_box(&self) -> Html {
+    fn showing_in_box(
+        &self,
+        props: &Props,
+    ) -> Html {
         let CompanyRepresentInfo {
             // uuid,
             // company_uuid,
@@ -97,7 +108,7 @@ impl ListItem {
             address,
             phone,
             ..
-        } = ctx.props().data.clone();
+        } = props.data.clone();
 
         html!{
           <div class="boxItem" >

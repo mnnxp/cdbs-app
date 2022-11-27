@@ -1,6 +1,6 @@
 use std::sync::{Arc,Mutex};
 use yew::{Component, Callback, Context, html, Html, Properties, Event, classes};
-use yew_agent::utils::store::{Bridgeable, StoreWrapper};
+// use yew_agent::utils::store::Bridgeable;
 use yew_agent::Bridge;
 use yew_router::prelude::Link;
 use graphql_client::GraphQLQuery;
@@ -29,7 +29,7 @@ pub struct Login {
     request: LoginInfo,
     response: Callback<Result<UserToken, Error>>,
     task: Option<()>,
-    router_agent: Arc<Mutex<Box<dyn Bridge<StoreWrapper<AppRoute>>>>>,
+    router_agent: Arc<Mutex<Box<dyn Bridge<AppRoute>>>>,
 }
 
 pub enum Msg {
@@ -101,7 +101,7 @@ impl Component for Login {
         true
     }
 
-    fn changed(&mut self, _ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, _ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         false
     }
 

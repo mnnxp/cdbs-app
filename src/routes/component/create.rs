@@ -1,5 +1,5 @@
 use yew::{Component, Context, html, html::Scope, Html, Event};
-use yew_agent::utils::store::{Bridgeable, StoreWrapper};
+use yew_agent::utils::store::Bridgeable;
 use yew_agent::Bridge;
 use log::debug;
 use graphql_client::GraphQLQuery;
@@ -21,7 +21,7 @@ use crate::gqls::component::{
 pub struct CreateComponent {
     error: Option<Error>,
     request_component: ComponentCreateData,
-    router_agent: Box<dyn Bridge<StoreWrapper<AppRoute>>>,
+    router_agent: Box<dyn Bridge<AppRoute>>,
     component_types: Vec<ComponentType>,
     actual_statuses: Vec<ActualStatus>,
     types_access: Vec<TypeAccessInfo>,
@@ -175,7 +175,7 @@ impl Component for CreateComponent {
         true
     }
 
-    fn changed(&mut self, _ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, _ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         false
     }
 

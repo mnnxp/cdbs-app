@@ -13,7 +13,7 @@ pub struct ImgShowcase {
     img_arr: BTreeMap<usize, DownloadFile>,
 }
 
-#[derive(Properties, Clone)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub object_uuid: UUID,
     pub file_arr: Vec<DownloadFile>,
@@ -76,14 +76,14 @@ impl Component for ImgShowcase {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         if self.object_uuid == ctx.props().object_uuid &&
               self.file_arr_len == ctx.props().file_arr.len() {
             debug!("no change: {:?}", ctx.props().file_arr.len());
             false
         } else {
-            self.object_uuid == ctx.props().object_uuid;
-            self.file_arr_len == ctx.props().file_arr.len();
+            self.object_uuid = ctx.props().object_uuid;
+            self.file_arr_len = ctx.props().file_arr.len();
             ctx.link().send_message(Msg::ParsingFiles);
             debug!("change: {:?}", ctx.props().file_arr.len());
             true

@@ -12,7 +12,7 @@ use crate::services::get_value_field;
 use crate::gqls::make_query;
 use crate::gqls::component::{ComModFilesetFiles, com_mod_fileset_files};
 
-#[derive(Clone, Debug, Properties)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub select_modification_uuid: UUID,
     pub current_filesets_program: Vec<(UUID, String)>,
@@ -138,7 +138,7 @@ impl Component for ManageFilesOfFilesetBlock {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         if self.select_modification_uuid == ctx.props().select_modification_uuid {
             debug!("no change download block: {:?}", ctx.props().select_modification_uuid);
             false
@@ -165,7 +165,7 @@ impl ManageFilesOfFilesetBlock {
     fn show_download_block(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let onchange_select_fileset_btn = link
             .callback(|ev: Event| Msg::SelectFilesetUuid(match ev {

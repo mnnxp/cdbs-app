@@ -1,5 +1,5 @@
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, classes};
-use yew_agent::utils::store::{Bridgeable, StoreWrapper};
+use yew_agent::utils::store::Bridgeable;
 use yew_agent::Bridge;
 use yew_router::hooks::use_route;
 use web_sys::MouseEvent;
@@ -39,7 +39,7 @@ pub struct Profile {
     profile: Option<UserInfo>,
     current_user_uuid: UUID,
     current_username: String,
-    router_agent: Box<dyn Bridge<StoreWrapper<AppRoute>>>,
+    router_agent: Box<dyn Bridge<AppRoute>>,
     subscribers: usize,
     is_followed: bool,
     profile_tab: ProfileTab,
@@ -47,7 +47,7 @@ pub struct Profile {
     show_full_user_info: bool,
 }
 
-#[derive(Properties, Clone)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub current_user: Option<SlimUser>,
 }
@@ -108,7 +108,7 @@ impl Component for Profile {
             },
         };
         // get and decode target user from route
-        let target_username = url_decode(use_route().unwrap_or_default().trim_start_matches("#/@"));
+        let target_username = url_decode(use_route().unwrap_or_default().trim_start_matches("/@"));
         // get flag changing current profile in route
         let not_matches_username = target_username != self.current_username;
         // debug!("self.current_username {:?}", self.current_username);
@@ -277,7 +277,7 @@ impl Component for Profile {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         false
     }
 

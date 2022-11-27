@@ -21,7 +21,7 @@ pub struct ComponentStandardItem {
     get_result_delete: bool,
 }
 
-#[derive(Properties, Clone)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub show_delete_btn: bool,
     pub component_uuid: UUID,
@@ -99,7 +99,7 @@ impl Component for ComponentStandardItem {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         match self.standard_uuid == ctx.props().standard_data.uuid {
             true => false,
             false => {
@@ -124,7 +124,7 @@ impl ComponentStandardItem {
     fn show_standard(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let onclick_standard_data_info = link.callback(|_| Msg::ShowStandardCard);
 
@@ -154,7 +154,7 @@ impl ComponentStandardItem {
     fn show_modal_standard_info(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let onclick_standard_data_info = link.callback(|_| Msg::ShowStandardCard);
 

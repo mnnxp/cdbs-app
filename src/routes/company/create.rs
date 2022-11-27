@@ -1,6 +1,6 @@
 // use yew::{agent::Bridged, Bridge};
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, Event};
-use yew_agent::utils::store::{Bridgeable, StoreWrapper};
+use yew_agent::utils::store::Bridgeable;
 use yew_agent::Bridge;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
@@ -23,13 +23,13 @@ pub struct CreateCompany {
     error: Option<Error>,
     current_user_uuid: UUID,
     request_company: CompanyCreateInfo,
-    router_agent: Box<dyn Bridge<StoreWrapper<AppRoute>>>,
+    router_agent: Box<dyn Bridge<AppRoute>>,
     regions: Vec<Region>,
     company_types: Vec<CompanyType>,
     types_access: Vec<TypeAccessInfo>,
 }
 
-#[derive(Properties, Clone)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub current_user: Option<SlimUser>,
 }
@@ -184,7 +184,7 @@ impl Component for CreateCompany {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         let current_user_uuid = ctx.props().current_user.as_ref().map(|x| &x.uuid);
         if self.current_user_uuid == current_user_uuid {
             false

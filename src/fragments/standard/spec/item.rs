@@ -17,7 +17,7 @@ use crate::gqls::{
     },
 };
 
-#[derive(Clone, Debug, Properties)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub show_manage_btn: bool,
     pub active_info_btn: bool,
@@ -187,7 +187,7 @@ impl Component for SpecTagItem {
         true
     }
 
-    fn changed(&mut self, _ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, _ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         false
     }
 
@@ -212,7 +212,7 @@ impl SpecTagItem {
     fn show_spec(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let onclick_open_spec_info = match props.active_info_btn {
             true => link.callback(|_| Msg::ClickSpecInfo),

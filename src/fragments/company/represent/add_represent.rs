@@ -35,7 +35,7 @@ pub struct AddCompanyRepresentCard {
     get_result_register: bool,
 }
 
-#[derive(Clone, Debug, Properties)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub company_uuid: UUID,
 }
@@ -132,7 +132,7 @@ impl Component for AddCompanyRepresentCard {
         true
     }
 
-    fn changed(&mut self, _ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, _ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         false
     }
 

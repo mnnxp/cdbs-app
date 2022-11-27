@@ -3,7 +3,7 @@ use log::debug;
 use crate::types::{UUID, Param};
 use crate::services::get_value_field;
 
-#[derive(Clone, Debug, Properties)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub show_new_column: bool,
     pub component_uuid: UUID,
@@ -27,7 +27,7 @@ impl Component for ModificationTableHeads {
         false
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         if self.component_uuid == ctx.props().component_uuid {
             debug!("no change ctx.props().params: {:?}", ctx.props().params);
             false
@@ -46,7 +46,7 @@ impl Component for ModificationTableHeads {
 impl ModificationTableHeads {
     fn show_modification_head(
         &self,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         html!{<>
             {match props.show_new_column {

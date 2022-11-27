@@ -1,5 +1,5 @@
 use yew::{Component, Context, html, html::Scope, Html, Properties, classes};
-use yew_agent::utils::store::{Bridgeable, StoreWrapper};
+use yew_agent::utils::store::Bridgeable;
 use yew_agent::Bridge;
 use crate::routes::AppRoute::{self, Profile};
 use crate::fragments::switch_icon::res_btn;
@@ -11,14 +11,14 @@ pub enum Msg {
     Ignore,
 }
 
-#[derive(Clone, Debug, Properties)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub data: ShowUserShort,
     pub show_list: bool,
 }
 
 pub struct ListItemUser {
-    router_agent: Box<dyn Bridge<StoreWrapper<AppRoute>>>,
+    router_agent: Box<dyn Bridge<AppRoute>>,
     user_uuid: UUID,
     username: String,
 }
@@ -46,7 +46,7 @@ impl Component for ListItemUser {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         if self.show_list == ctx.props().show_list ||
             self.user_uuid == ctx.props().data.uuid {
             false
@@ -95,7 +95,7 @@ impl ListItemUser {
     fn showing_in_list(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let ShowUserShort {
             firstname,
@@ -141,7 +141,7 @@ impl ListItemUser {
     fn showing_in_box(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let ShowUserShort {
             firstname,

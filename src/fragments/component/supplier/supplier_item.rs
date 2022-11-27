@@ -25,7 +25,7 @@ pub struct ComponentSupplierItem {
     get_result_delete: bool,
 }
 
-#[derive(Properties, Clone)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub show_delete_btn: bool,
     pub component_uuid: UUID,
@@ -141,7 +141,7 @@ impl Component for ComponentSupplierItem {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         if self.supplier_uuid == ctx.props().supplier_data.supplier.uuid &&
                 self.supplier_description == ctx.props().supplier_data.description {
             false

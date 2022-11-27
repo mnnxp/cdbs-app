@@ -8,7 +8,7 @@ const baseUsername = "asd";
 const basePassword = "asd";
 
 fixture `Check login`// declare the fixture
-    .page `${url}/#/login`;  // specify the start page
+    .page `${url}//login`;  // specify the start page
 
 // authentication with bad username
 test('Unauthorized', async t => {

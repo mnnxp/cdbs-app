@@ -25,9 +25,9 @@ const goodAddress = "City, Street, home, appart 1";
 const goodProgram = "Creo";
 const goodRegion = "Altai Republic";
 
-const registerButton = Selector('a').withAttribute('href', '#/register');
-const settingButton = Selector('a').withAttribute('href', '#/settings');
-const profileButton = Selector('a').withAttribute('href', `#/@${goodUsername}`);
+const registerButton = Selector('a').withAttribute('href', '/register');
+const settingButton = Selector('a').withAttribute('href', '/settings');
+const profileButton = Selector('a').withAttribute('href', `/@${goodUsername}`);
 
 fixture `Check update user data`// declare the fixture
     .page `${url}`;  // specify the start page

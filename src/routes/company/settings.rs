@@ -1,5 +1,5 @@
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, Event, classes, FocusEvent, MouseEvent};
-use yew_agent::utils::store::{Bridgeable, StoreWrapper};
+use yew_agent::utils::store::Bridgeable;
 use yew_agent::Bridge;
 use yew_router::hooks::use_route;
 use graphql_client::GraphQLQuery;
@@ -68,7 +68,7 @@ pub struct CompanySettings {
     company_uuid: UUID,
     request_company: CompanyUpdateInfo,
     request_access: i64,
-    router_agent: Box<dyn Bridge<StoreWrapper<AppRoute>>>,
+    router_agent: Box<dyn Bridge<AppRoute>>,
     current_data: Option<CompanyInfo>,
     regions: Vec<Region>,
     types_access: Vec<TypeAccessInfo>,
@@ -79,7 +79,7 @@ pub struct CompanySettings {
     select_menu: Menu,
 }
 
-#[derive(Properties, Clone)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub current_user: Option<SlimUser>,
     pub company_uuid: UUID,
@@ -142,7 +142,7 @@ impl Component for CompanySettings {
         };
         // get target company from route
         let target_company_uuid =
-            use_route().unwrap_or_default().trim_start_matches("#/company/settings/").to_string();
+            use_route().unwrap_or_default().trim_start_matches("/company/settings/").to_string();
         // get flag changing current company in route
         let not_matches_company_uuid = target_company_uuid != self.company_uuid;
         if first_render || not_matches_company_uuid {
@@ -334,7 +334,7 @@ impl Component for CompanySettings {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         if self.company_uuid == ctx.props().company_uuid {
             false
         } else {

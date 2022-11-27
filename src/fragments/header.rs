@@ -1,5 +1,5 @@
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, classes, MouseEvent};
-use yew_agent::utils::store::{Bridgeable, StoreWrapper};
+use yew_agent::utils::store::Bridgeable;
 use yew_agent::Bridge;
 use yew_router::prelude::Link;
 use yew_router::hooks::use_route;
@@ -11,7 +11,7 @@ use crate::routes::AppRoute::{self, Login, Home, Register, Notifications, Profil
 use crate::types::SlimUser;
 
 pub struct Header {
-    router_agent: Box<dyn Bridge<StoreWrapper<AppRoute>>>,
+    router_agent: Box<dyn Bridge<AppRoute>>,
     current_path: String,
     current_user: Option<SlimUser>,
     open_notifications_page: bool,
@@ -19,7 +19,7 @@ pub struct Header {
     is_active: bool,
 }
 
-#[derive(Properties, Clone)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub current_user: Option<SlimUser>,
     pub callback: Callback<()>,
@@ -86,14 +86,14 @@ impl Component for Header {
               // check open home page
               self.open_home_page = current_path < 3;
               // check open notifications page
-              self.open_notifications_page = "#/notifications" == current_path.as_str();
+              self.open_notifications_page = "/notifications" == current_path.as_str();
           },
           Msg::Ignore => {},
         }
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         let current_path = use_route().unwrap_or_default();
         if self.current_path == current_path {
             false

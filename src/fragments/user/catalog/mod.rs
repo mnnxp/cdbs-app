@@ -36,7 +36,7 @@ pub enum Msg {
     GetList
 }
 
-#[derive(Properties, Clone)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub arguments: Option<UsersQueryArg>,
 }
@@ -107,7 +107,7 @@ impl Component for CatalogUsers {
         true
     }
 
-    fn changed(&mut self, _ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, _ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         // Should only return "true" if new properties are different to
         // previously received properties.
         // This component has no properties so we will always return "false".
@@ -115,7 +115,7 @@ impl Component for CatalogUsers {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
-        let onclick_change_view = link.callback(|_|Msg::SwitchShowType);
+        let onclick_change_view = ctx.link().callback(|_|Msg::SwitchShowType);
         let class_for_icon: &str;
         let mut class_for_list = "";
         match self.show_type {

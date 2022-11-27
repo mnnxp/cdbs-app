@@ -22,7 +22,7 @@ use crate::gqls::{
     },
 };
 
-#[derive(Clone, Debug, Properties)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub show_manage_btn: bool,
     pub modification_uuid: UUID,
@@ -329,7 +329,7 @@ impl Component for ModificationTableItem {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         if self.modification_uuid == ctx.props().modification_uuid &&
               self.select_item == ctx.props().select_item &&
                 self.open_modification_files == ctx.props().open_modification_files {
@@ -359,7 +359,7 @@ impl ModificationTableItem {
     fn show_modification_row(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let onclick_select_modification = link
             .callback(|_| Msg::SelectModification);
@@ -417,14 +417,14 @@ impl ModificationTableItem {
                 Some(value) => html!{<td>{value.clone()}</td>},
                 None => html!{<td></td>},
             }}
-            {self.show_items(ctx.link(), ctx.props())}
+            {self.show_items(link, props)}
         </tr>}
     }
 
     fn show_items(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let onclick_new_param_card = link.callback(|_| Msg::ShowNewParamCard);
 
@@ -479,7 +479,7 @@ impl ModificationTableItem {
     fn modal_new_value(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let onclick_clear_error = link.callback(|_| Msg::ClearError);
 
@@ -517,7 +517,7 @@ impl ModificationTableItem {
     fn modal_add_value(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let onclick_clear_error = link.callback(|_| Msg::ClearError);
 
@@ -574,7 +574,7 @@ impl ModificationTableItem {
     fn modal_change_value(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let onclick_clear_error = link.callback(|_| Msg::ClearError);
 

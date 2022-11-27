@@ -18,7 +18,7 @@ pub struct ComponentLicenseTag {
     license_data_id: usize,
 }
 
-#[derive(Properties, Clone)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub show_delete_btn: bool,
     pub component_uuid: UUID,
@@ -96,7 +96,7 @@ impl Component for ComponentLicenseTag {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         if self.license_data_id == ctx.props().license_data.id {
             false
         } else {
@@ -120,7 +120,7 @@ impl ComponentLicenseTag {
     fn show_license(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let onclick_license_data_info = link.callback(|_| Msg::ShowLicenseCard);
 

@@ -14,7 +14,7 @@ use crate::gqls::user::{
     DeleteUserCertificate, delete_user_certificate,
 };
 
-#[derive(Clone, Debug, Properties)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub certificate: UserCertificate,
     pub show_cert_btn: bool,
@@ -127,7 +127,7 @@ impl Component for UserCertificateItem {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         if self.file_uuid == ctx.props().certificate.file.uuid {
             false
         } else {
@@ -156,7 +156,7 @@ impl UserCertificateItem {
     fn show_certificate_update(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let onclick_clear_error = link.callback(|_| Msg::ClearError);
         let onclick_delete_cert = link.callback(|_| Msg::RequestDeleteCert);
@@ -207,7 +207,7 @@ impl UserCertificateItem {
     fn show_certificate_data(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let onclick_clear_error = link.callback(|_| Msg::ClearError);
         let onclick_show_cert = link.callback(|_| Msg::ShowCert);
@@ -261,7 +261,7 @@ impl UserCertificateItem {
     fn show_certificate_btn(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let onclick_show_cert = link.callback(|_| Msg::ShowCert);
 
@@ -285,7 +285,7 @@ impl UserCertificateItem {
     fn show_update_block(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let oninput_cert_description =
             link.callback(|ev: Event| Msg::UpdateDescription(ev.value));
@@ -322,7 +322,7 @@ impl UserCertificateItem {
 
     fn show_download_btn(
         &self,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         match props.download_btn {
             true => html!{<button id={"down-cert"}
@@ -338,7 +338,7 @@ impl UserCertificateItem {
     fn modal_full_certificate(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let onclick_show_cert = link.callback(|_| Msg::ShowCert);
 

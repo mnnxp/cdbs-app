@@ -1,5 +1,5 @@
 use yew::{Component, Callback, Context, html, html::Scope, Html, Event, FocusEvent, classes};
-use yew_agent::utils::store::{Bridgeable, StoreWrapper};
+use yew_agent::utils::store::Bridgeable;
 use yew_agent::Bridge;
 use wasm_bindgen_futures::spawn_local;
 use web_sys::MouseEvent;
@@ -44,7 +44,7 @@ pub struct Settings {
     request_access: i64,
     request_password: UpdatePasswordInfo,
     request_user_password: String,
-    router_agent: Box<dyn Bridge<StoreWrapper<AppRoute>>>,
+    router_agent: Box<dyn Bridge<AppRoute>>,
     current_data: Option<SelfUserInfo>,
     current_username: String,
     programs: Vec<Program>,
@@ -103,7 +103,7 @@ impl Component for Settings {
             request_access: 0,
             request_password: UpdatePasswordInfo::default(),
             request_user_password: String::new(),
-            router_agent: AppRoute::bridge(link.callback(|_| Msg::Ignore)),
+            router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             current_data: None,
             current_username: String::new(),
             programs: Vec::new(),
@@ -341,7 +341,7 @@ impl Component for Settings {
         true
     }
 
-    fn changed(&mut self, _ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, _ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         false
     }
 

@@ -1,5 +1,6 @@
 use yew::{Component, Context, html, html::Scope, Html, Properties, classes};
-use yew_agent::utils::store::{Bridgeable, StoreWrapper};
+use yew_router::hooks::use_route;
+use yew_agent::utils::store::Bridgeable;
 use yew_agent::Bridge;
 use log::debug;
 use graphql_client::GraphQLQuery;
@@ -32,7 +33,7 @@ pub struct ShowStandard {
     current_standard_uuid: UUID,
     current_user_owner: bool,
     // task: Option<FetchTask>,
-    router_agent: Box<dyn Bridge<StoreWrapper<AppRoute>>>,
+    router_agent: Box<dyn Bridge<AppRoute>>,
     subscribers: usize,
     is_followed: bool,
     show_full_description: bool,
@@ -40,7 +41,7 @@ pub struct ShowStandard {
     file_arr: Vec<DownloadFile>,
 }
 
-#[derive(Properties, Clone)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub current_user: Option<SlimUser>,
     pub standard_uuid: UUID,
@@ -89,12 +90,9 @@ impl Component for ShowStandard {
         };
 
         // get standard uuid for request standard data
-        let route_service: RouteService<()> = RouteService::new();
-        // get target user from route
-        let target_standard_uuid = route_service
-            .get_fragment()
-            .trim_start_matches("#/standard/")
-            .to_string();
+        let target_standard_uuid =
+            use_route().unwrap_or_default().trim_start_matches("/standard/").to_string();
+        // get flag changing current standard in route
         // get flag changing current standard in route
         let not_matches_standard_uuid = target_standard_uuid != self.current_standard_uuid;
         // debug!("self.current_standard_uuid {:#?}", self.current_standard_uuid);
@@ -256,7 +254,7 @@ impl Component for ShowStandard {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         if self.current_standard_uuid == ctx.props().standard_uuid {
             false
         } else {

@@ -14,7 +14,7 @@ const regionTarget2 = 'Talas region';
 const regionSelect = Selector('#region');
 const regionOption = regionSelect.find('option');
 
-const registerButton = Selector('a').withAttribute('href', '#/register');
+const registerButton = Selector('a').withAttribute('href', '/register');
 
 const busyUsername = "usernameeee";
 

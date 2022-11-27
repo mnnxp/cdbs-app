@@ -1,10 +1,10 @@
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
-use yew_agent::utils::store::{Bridgeable, StoreWrapper};
+use yew_agent::utils::store::Bridgeable;
 use yew_agent::Bridge;
 use yew_router::hooks::use_route;
 use gloo::file::callbacks::FileReader;
-use gloo::file::File;
-use web_sys::{DragEvent, Event, FileList, HtmlInputElement};
+// use gloo::file::File;
+use web_sys::{DragEvent, Event, File, FileList, HtmlInputElement};
 // use yew::services::fetch::FetchTask;
 // use yew::services::reader::{File, FileData, ReaderService, ReaderTask};
 use wasm_bindgen_futures::spawn_local;
@@ -22,7 +22,7 @@ use crate::fragments::{
         AddKeywordsTags, UpdateStandardFaviconCard
     },
 };
-use crate::services::storage_upload::StorageUpload;
+use crate::services::storage_upload::{StorageUpload, storage_upload};
 use crate::services::{get_logged_user, get_value_field};
 use crate::types::{
     UUID, StandardInfo, SlimUser, Region, TypeAccessInfo, UploadFile, ShowFileInfo,
@@ -53,7 +53,7 @@ pub struct StandardSettings {
     // request_upload_file: Callback<Result<Option<String>, Error>>,
     // request_upload_confirm: Vec<UUID>,
     request_access: i64,
-    router_agent: Box<dyn Bridge<StoreWrapper<AppRoute>>>,
+    router_agent: Box<dyn Bridge<AppRoute>>,
     // task_read: Vec<(FileName, ReaderTask)>,
     // task: Vec<FetchTask>,
     supplier_list: Vec<ShowCompanyShort>,
@@ -78,7 +78,7 @@ pub struct StandardSettings {
     active_loading_files_btn: bool,
 }
 
-#[derive(Properties, Clone)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub current_user: Option<SlimUser>,
     pub standard_uuid: UUID,
@@ -103,7 +103,7 @@ pub enum Msg {
     GetUpdateAccessResult(String),
     GetUploadData(String),
     // GetUploadFile,
-    // GetUploadCompleted(String),
+    GetUploadCompleted(Result<usize, Error>),
     FinishUploadFiles,
     GetDeleteStandard(String),
     EditFiles,
@@ -175,9 +175,9 @@ impl Component for StandardSettings {
                 String::new()
             },
         };
-        // get target user from route
+
         let target_standard_uuid =
-            use_route().unwrap_or_default().trim_start_matches("#/standard/settings/").to_string();
+            use_route().unwrap_or_default().trim_start_matches("/standard/settings/").to_string();
         // get flag changing current standard in route
         let not_matches_standard_uuid = target_standard_uuid != self.current_standard_uuid;
         // debug!("self.current_standard_uuid {:#?}", self.current_standard_uuid);
@@ -337,16 +337,16 @@ impl Component for StandardSettings {
                     // self.request_upload_confirm.push(upload_data.file_uuid.clone());
                 };
             },
-            Msg::RequestUploadCompleted => {
-                let file_uuids = self.request_upload_confirm.clone();
-                spawn_local(async move {
-                    let res = make_query(ConfirmUploadCompleted::build_query(
-                        confirm_upload_completed::Variables { file_uuids }
-                    )).await.unwrap();
-                    // debug!("ConfirmUploadCompleted: {:?}", res);
-                    link.send_message(Msg::GetUploadCompleted(res));
-                });
-            },
+            // Msg::RequestUploadCompleted => {
+            //     let file_uuids = self.request_upload_confirm.clone();
+            //     spawn_local(async move {
+            //         let res = make_query(ConfirmUploadCompleted::build_query(
+            //             confirm_upload_completed::Variables { file_uuids }
+            //         )).await.unwrap();
+            //         // debug!("ConfirmUploadCompleted: {:?}", res);
+            //         link.send_message(Msg::GetUploadCompleted(res));
+            //     });
+            // },
             Msg::GetStandardFilesList(res) => {
                 let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
@@ -371,10 +371,10 @@ impl Component for StandardSettings {
                         let result: Vec<UploadFile> = serde_json::from_value(res_value.get("uploadStandardFiles").unwrap().clone()).unwrap();
                         debug!("uploadStandardFiles {:?}", result);
                         // self.request_upload_data = result;
-                        let mut temp: Vec<(UploadFile, File)> = Vec::new();
                         if !self.files.is_empty() {
-                            result.iter().rev().zip(self.files).map(|value| temp.push(value));
-                            self.storage_upload(&link, temp);
+                            let callback_confirm =
+                                link.callback(|res: Result<usize, Error>| Msg::GetUploadCompleted(res));
+                            storage_upload(&result, &self.files, callback_confirm);
                             // for file in self.files.iter().rev() {
                             //     let file_name = file.name().clone();
                             //     debug!("file name: {:?}", file_name);
@@ -479,22 +479,15 @@ impl Component for StandardSettings {
                 if self.files_index == 0 {
                     self.get_result_up_file = true;
                     debug!("finish: {:?}", self.request_upload_confirm.len());
-                    link.send_message(Msg::RequestUploadCompleted);
+                    // link.send_message(Msg::RequestUploadCompleted);
                 }
             },
             Msg::GetUploadCompleted(res) => {
-                let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        self.get_result_up_completed = serde_json::from_value(res_value.get("uploadCompleted").unwrap().clone()).unwrap();
-                        debug!("uploadCompleted: {:?}", self.get_result_up_completed);
-
-                        link.send_message(Msg::FinishUploadFiles);
-                    },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                match res {
+                    Ok(value) => self.get_result_up_completed = value,
+                    Err(err) => self.error = Some(err),
                 }
+                self.active_loading_files_btn = false;
             },
             Msg::FinishUploadFiles => {
                 self.files_list.clear();
@@ -609,7 +602,7 @@ impl Component for StandardSettings {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         if self.current_standard_uuid == ctx.props().standard_uuid {
             false
         } else {
@@ -1117,23 +1110,6 @@ impl StandardSettings {
                 // </span>
                 <span>{ get_value_field(&87) }</span>
             </button>
-        }
-    }
-
-    fn storage_upload(
-        &self,
-        link: &Scope<Self>,
-        upload_data: Vec<(UploadFile, File)>,
-    ) -> Html {
-        let callback_confirm = link.callback(|res: Result<usize, Error>| {
-            debug!("Res: {:?}", res);
-            Msg::FinishUploadFiles
-        });
-        html!{
-            <StorageUpload
-                upload_data = {upload_data}
-                callback_confirm = {callback_confirm}
-            />
         }
     }
 }

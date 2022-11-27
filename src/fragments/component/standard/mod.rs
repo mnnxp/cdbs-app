@@ -22,7 +22,7 @@ use crate::gqls::{
     standard::{GetStandardsShortList, get_standards_short_list},
 };
 
-#[derive(Clone, Debug, Properties)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub show_delete_btn: bool,
     pub component_uuid: UUID,
@@ -188,7 +188,7 @@ impl Component for ComponentStandardsCard {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         if self.component_uuid == ctx.props().component_uuid &&
              self.component_standards.len() == ctx.props().component_standards.len() {
             false
@@ -218,7 +218,7 @@ impl ComponentStandardsCard {
     fn show_standards(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let onclick_delete_standard =
             link.callback(|value: UUID| Msg::DeleteComponentStandard(value));

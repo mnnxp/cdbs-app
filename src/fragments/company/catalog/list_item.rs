@@ -1,5 +1,5 @@
 use yew::{Component, Context, html, html::Scope, Html, Properties, classes};
-use yew_agent::utils::store::{Bridgeable, StoreWrapper};
+use yew_agent::utils::store::Bridgeable;
 use yew_agent::Bridge;
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
@@ -28,7 +28,7 @@ pub enum Msg {
     Ignore,
 }
 
-#[derive(Clone, Debug, Properties)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub data: ShowCompanyShort,
     pub show_list: bool,
@@ -36,7 +36,7 @@ pub struct Props {
 
 pub struct ListItemCompany {
     error: Option<Error>,
-    router_agent: Box<dyn Bridge<StoreWrapper<AppRoute>>>,
+    router_agent: Box<dyn Bridge<AppRoute>>,
     company_uuid: UUID,
     is_followed: bool,
 }
@@ -118,7 +118,7 @@ impl Component for ListItemCompany {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         if self.show_list == ctx.props().show_list ||
             self.data.uuid == ctx.props().data.uuid {
             false
@@ -146,7 +146,7 @@ impl ListItemCompany {
     fn showing_in_list(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let ShowCompanyShort {
             shortname,
@@ -232,7 +232,7 @@ impl ListItemCompany {
     fn showing_in_box(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let ShowCompanyShort {
             shortname,

@@ -87,7 +87,7 @@ pub struct TypeAccessInfo {
     pub type_access_id: usize,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct LicenseInfo {
     pub id: usize,

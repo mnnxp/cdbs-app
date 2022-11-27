@@ -17,7 +17,7 @@ use yew::{Component, Context, html, Html, Properties, Callback};
 use log::debug;
 use crate::types::{UUID, ComponentModificationInfo, Param};
 
-#[derive(Clone, Debug, Properties)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub modifications: Vec<ComponentModificationInfo>,
     pub select_modification: UUID,
@@ -115,7 +115,7 @@ impl Component for ModificationsTable {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         if self.select_modification == ctx.props().select_modification {
             self.open_modification_files = !ctx.props().open_modification_files;
         } else {

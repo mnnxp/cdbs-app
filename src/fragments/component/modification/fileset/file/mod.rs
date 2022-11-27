@@ -11,7 +11,7 @@ use log::debug;
 use crate::types::{UUID, ShowFileInfo};
 use crate::services::get_value_field;
 
-#[derive(Clone, Debug, Properties)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub show_download_btn: bool,
     pub show_delete_btn: bool,
@@ -52,7 +52,7 @@ impl Component for FilesetFilesBlock {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         if ctx.props().select_fileset_uuid == self.props.select_fileset_uuid &&
              ctx.props().files.first().map(|x| &x.uuid) == self.props.files.first().map(|x| &x.uuid) {
             debug!("no change fileset uuid: {:?}", self.props.select_fileset_uuid);
@@ -90,7 +90,7 @@ impl FilesetFilesBlock {
     fn show_file_info(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
         file_info: &ShowFileInfo,
     ) -> Html {
         let callback_delete_file = link.callback(|value: UUID| Msg::RemoveFile(value));

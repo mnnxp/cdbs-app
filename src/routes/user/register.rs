@@ -1,5 +1,5 @@
 use yew::{Component, Callback, Context, html, html::Scope, Html, Event, classes};
-use yew_agent::utils::store::{Bridgeable, StoreWrapper};
+use yew_agent::utils::store::Bridgeable;
 use yew_agent::Bridge;
 use yew_router::prelude::Link;
 use graphql_client::GraphQLQuery;
@@ -23,7 +23,7 @@ use crate::gqls::user::{
 pub struct Register {
     error: Option<Error>,
     request: RegisterInfo,
-    router_agent: Box<dyn Bridge<StoreWrapper<AppRoute>>>,
+    router_agent: Box<dyn Bridge<AppRoute>>,
     regions: Vec<Region>,
     programs: Vec<Program>,
     types_access: Vec<TypeAccessInfo>,
@@ -143,7 +143,7 @@ impl Component for Register {
         true
     }
 
-    fn changed(&mut self, _ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, _ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         false
     }
 

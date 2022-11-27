@@ -1,5 +1,5 @@
 use yew::{Component, Context, html, html::Scope, Html, Properties, Event};
-use yew_agent::utils::store::{Bridgeable, StoreWrapper};
+use yew_agent::utils::store::Bridgeable;
 use yew_agent::Bridge;
 use chrono::NaiveDateTime;
 use log::debug;
@@ -26,7 +26,7 @@ pub struct CreateStandard {
     error: Option<Error>,
     current_user_uuid: UUID,
     request_standard: StandardCreateData,
-    router_agent: Box<dyn Bridge<StoreWrapper<AppRoute>>>,
+    router_agent: Box<dyn Bridge<AppRoute>>,
     supplier_list: Vec<ShowCompanyShort>,
     standard_statuses: Vec<StandardStatus>,
     regions: Vec<Region>,
@@ -35,7 +35,7 @@ pub struct CreateStandard {
     // get_result_created_standard: UUID,
 }
 
-#[derive(Properties, Clone)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub current_user: Option<SlimUser>,
 }
@@ -258,7 +258,7 @@ impl Component for CreateStandard {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         if self.current_user_uuid == ctx.props().current_user.as_ref().map(|x| &x.uuid) {
             false
         } else {

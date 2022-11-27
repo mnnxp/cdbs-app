@@ -1,16 +1,13 @@
-// use yew::{agent::Bridged, Bridge};
-use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, Event};
-use yew_agent::utils::store::{Bridgeable, StoreWrapper};
+use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
+use yew_agent::utils::store::Bridgeable;
 use yew_agent::Bridge;
 use yew_router::hooks::use_route;
-// use yew::services::fetch::FetchTask;
-// use yew::services::reader::{File, FileData, ReaderService, ReaderTask};
-use web_sys::FileList;
-use log::debug;
+use gloo::file::File;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
+use web_sys::{DragEvent, Event, FileList};
 use wasm_bindgen_futures::spawn_local;
-
+use log::debug;
+use serde_json::Value;
 use crate::routes::AppRoute::{self, Login, Home, ShowComponent};
 use crate::error::{get_error, Error};
 use crate::fragments::{
@@ -23,7 +20,8 @@ use crate::fragments::{
         ModificationsTableEdit, ComponentFilesBlock, SearchSpecsTags, AddKeywordsTags
     },
 };
-use crate::services::{PutUploadFile, UploadData, get_logged_user, get_value_field};
+use crate::services::storage_upload::{StorageUpload, storage_upload};
+use crate::services::{get_value_field, get_logged_user};
 use crate::types::{
     UUID, ComponentInfo, SlimUser, TypeAccessInfo, UploadFile, ActualStatus, ComponentUpdatePreData,
     ComponentUpdateData, ComponentType, ShowCompanyShort, ComponentModificationInfo, ShowFileInfo,
@@ -41,8 +39,6 @@ use crate::gqls::{
     },
 };
 
-type FileName = String;
-
 pub struct ComponentSettings {
     error: Option<Error>,
     current_component: Option<ComponentInfo>,
@@ -51,12 +47,12 @@ pub struct ComponentSettings {
     current_modifications: Vec<ComponentModificationInfo>,
     request_component: ComponentUpdatePreData,
     request_upload_data: Vec<UploadFile>,
-    request_upload_file: Callback<Result<Option<String>, Error>>,
+    // request_upload_file: Callback<Result<Option<String>, Error>>,
     request_upload_confirm: Vec<UUID>,
     request_access: i64,
-    router_agent: Box<dyn Bridge<StoreWrapper<AppRoute>>>,
-    task_read: Vec<(FileName, ReaderTask)>,
-    task: Vec<FetchTask>,
+    router_agent: Box<dyn Bridge<AppRoute>>,
+    // task_read: Vec<(FileName, ReaderTask)>,
+    // task: Vec<FetchTask>,
     supplier_list: Vec<ShowCompanyShort>,
     component_types: Vec<ComponentType>,
     actual_statuses: Vec<ActualStatus>,
@@ -65,7 +61,7 @@ pub struct ComponentSettings {
     update_component_access: bool,
     update_component_supplier: bool,
     upload_component_files: bool,
-    put_upload_file: PutUploadFile,
+    // put_upload_file: PutUploadFile,
     files: Vec<File>,
     files_index: u32,
     files_list: Vec<ShowFileInfo>,
@@ -81,7 +77,7 @@ pub struct ComponentSettings {
     active_loading_files_btn: bool,
 }
 
-#[derive(Properties, Clone)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub current_user: Option<SlimUser>,
     pub component_uuid: UUID,
@@ -96,17 +92,17 @@ pub enum Msg {
     RequestChangeAccess,
     RequestDeleteComponent,
     RequestUploadComponentFiles,
-    RequestUploadFile(Vec<u8>),
-    ResponseUploadFile(Result<Option<String>, Error>),
-    RequestUploadCompleted,
+    // RequestUploadFile(Vec<u8>),
+    // ResponseUploadFile(Result<Option<String>, Error>),
+    // RequestUploadCompleted,
     GetComponentData(String),
     GetListOpt(String),
     GetUpdateComponentResult(String),
     GetUpdateAccessResult(String),
     GetComponentFilesListResult(String),
     GetUploadData(String),
-    GetUploadFile,
-    GetUploadCompleted(String),
+    // GetUploadFile,
+    GetUploadCompleted(Result<usize, Error>),
     FinishUploadFiles,
     GetDeleteComponentResult(String),
     EditFiles,
@@ -139,12 +135,12 @@ impl Component for ComponentSettings {
             current_modifications: Vec::new(),
             request_component: ComponentUpdatePreData::default(),
             request_upload_data: Vec::new(),
-            request_upload_file: ctx.link().callback(Msg::ResponseUploadFile),
+            // request_upload_file: ctx.link().callback(Msg::ResponseUploadFile),
             request_upload_confirm: Vec::new(),
             request_access: 0,
             router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
-            task_read: Vec::new(),
-            task: Vec::new(),
+            // task_read: Vec::new(),
+            // task: Vec::new(),
             supplier_list: Vec::new(),
             component_types: Vec::new(),
             actual_statuses: Vec::new(),
@@ -153,7 +149,7 @@ impl Component for ComponentSettings {
             update_component_access: false,
             update_component_supplier: false,
             upload_component_files: false,
-            put_upload_file: PutUploadFile::new(),
+            // put_upload_file: PutUploadFile::new(),
             files: Vec::new(),
             files_index: 0,
             files_list: Vec::new(),
@@ -179,9 +175,9 @@ impl Component for ComponentSettings {
                 String::new()
             },
         };
-        // get target user from route
+
         let target_component_uuid =
-            use_route().unwrap_or_default().trim_start_matches("#/component/settings/").to_string();
+            use_route().unwrap_or_default().trim_start_matches("/component/settings/").to_string();
         // get flag changing current component in route
         let not_matches_component_uuid = target_component_uuid != self.current_component_uuid;
         // debug!("self.current_component_uuid {:#?}", self.current_component_uuid);
@@ -330,28 +326,28 @@ impl Component for ComponentSettings {
                     })
                 }
             },
-            Msg::RequestUploadFile(data) => {
-                if let Some(upload_data) = self.request_upload_data.pop() {
-                    let request = UploadData {
-                        upload_url: upload_data.upload_url.to_string(),
-                        file_data: data,
-                    };
-                    debug!("request: {:?}", request);
-
-                    self.task.push(self.put_upload_file.put_file(request, self.request_upload_file.clone()));
-                    self.request_upload_confirm.push(upload_data.file_uuid.clone());
-                };
-            },
-            Msg::RequestUploadCompleted => {
-                let file_uuids = self.request_upload_confirm.clone();
-                spawn_local(async move {
-                    let res = make_query(ConfirmUploadCompleted::build_query(
-                        confirm_upload_completed::Variables { file_uuids }
-                    )).await.unwrap();
-                    // debug!("ConfirmUploadCompleted: {:?}", res);
-                    link.send_message(Msg::GetUploadCompleted(res));
-                });
-            },
+            // Msg::RequestUploadFile(data) => {
+            //     if let Some(upload_data) = self.request_upload_data.pop() {
+            //         let request = UploadData {
+            //             upload_url: upload_data.upload_url.to_string(),
+            //             file_data: data,
+            //         };
+            //         debug!("request: {:?}", request);
+            //
+            //         self.task.push(self.put_upload_file.put_file(request, self.request_upload_file.clone()));
+            //         self.request_upload_confirm.push(upload_data.file_uuid.clone());
+            //     };
+            // },
+            // Msg::RequestUploadCompleted => {
+            //     let file_uuids = self.request_upload_confirm.clone();
+            //     spawn_local(async move {
+            //         let res = make_query(ConfirmUploadCompleted::build_query(
+            //             confirm_upload_completed::Variables { file_uuids }
+            //         )).await.unwrap();
+            //         // debug!("ConfirmUploadCompleted: {:?}", res);
+            //         link.send_message(Msg::GetUploadCompleted(res));
+            //     });
+            // },
             Msg::GetComponentFilesListResult(res) => {
                 let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
@@ -372,22 +368,25 @@ impl Component for ComponentSettings {
 
                 match res_value.is_null() {
                     false => {
-                        self.request_upload_data = serde_json::from_value(
+                        let result = serde_json::from_value(
                             res_value.get("uploadComponentFiles").unwrap().clone()
                         ).unwrap();
                         debug!("uploadComponentFiles {:?}", self.request_upload_data);
 
                         if !self.files.is_empty() {
-                            for file in self.files.iter().rev() {
-                                let file_name = file.name().clone();
-                                debug!("file name: {:?}", file_name);
-                                let task = {
-                                    let callback = ctx.link()
-                                        .callback(move |data: FileData| Msg::RequestUploadFile(data.content));
-                                    ReaderService::read_file(file.clone(), callback).unwrap()
-                                };
-                                self.task_read.push((file_name, task));
-                            }
+                            let callback_confirm =
+                                link.callback(|res: Result<usize, Error>| Msg::GetUploadCompleted(res));
+                            storage_upload(&result, &self.files, callback_confirm);
+                            // for file in self.files.iter().rev() {
+                            //     let file_name = file.name().clone();
+                            //     debug!("file name: {:?}", file_name);
+                            //     let task = {
+                            //         let callback = ctx.link()
+                            //             .callback(move |data: FileData| Msg::RequestUploadFile(data.content));
+                            //         ReaderService::read_file(file.clone(), callback).unwrap()
+                            //     };
+                            //     self.task_read.push((file_name, task));
+                            // }
                         }
                         debug!("file: {:#?}", self.files);
                     },
@@ -487,20 +486,11 @@ impl Component for ComponentSettings {
                 }
             },
             Msg::GetUploadCompleted(res) => {
-                let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        self.get_result_up_completed = serde_json::from_value(
-                            res_value.get("uploadCompleted").unwrap().clone()
-                        ).unwrap();
-                        debug!("uploadCompleted: {:?}", self.get_result_up_completed);
-
-                        link.send_message(Msg::FinishUploadFiles);
-                    },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                match res {
+                    Ok(value) => self.get_result_up_completed = value,
+                    Err(err) => self.error = Some(err),
                 }
+                self.active_loading_files_btn = false;
             },
             Msg::FinishUploadFiles => {
                 self.files_list.clear();
@@ -588,7 +578,7 @@ impl Component for ComponentSettings {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         if self.current_component_uuid == ctx.props().component_uuid {
             false
         } else {

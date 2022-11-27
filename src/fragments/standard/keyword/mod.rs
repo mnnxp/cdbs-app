@@ -9,7 +9,7 @@ use yew::{Component, Context, html, Html, Properties, Callback};
 // use crate::error::{get_error, Error};
 use crate::types::{UUID, Keyword};
 
-#[derive(Clone, Debug, Properties)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub show_delete_btn: bool,
     pub standard_uuid: UUID,
@@ -37,7 +37,7 @@ impl Component for KeywordsTags {
         false
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         if self.standard_uuid == ctx.props().standard_uuid &&
                 self.keywords.len() == ctx.props().keywords.len() {
             false

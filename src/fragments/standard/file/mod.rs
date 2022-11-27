@@ -9,7 +9,7 @@ use yew::{Component, Context, html, html::Scope, Html, Properties};
 use crate::types::{UUID, ShowFileInfo};
 use crate::services::get_value_field;
 
-#[derive(Clone, Debug, Properties)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub show_download_btn: bool,
     pub show_delete_btn: bool,
@@ -60,7 +60,7 @@ impl Component for StandardFilesCard {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         if self.standard_uuid == ctx.props().standard_uuid &&
             self.show_download_btn == ctx.props().show_download_btn &&
                 self.show_delete_btn == ctx.props().show_delete_btn &&
@@ -68,10 +68,10 @@ impl Component for StandardFilesCard {
             false
         } else {
             self.files_deleted_list.clear();
-            self.standard_uuid == ctx.props().standard_uuid;
-            self.show_download_btn == ctx.props().show_download_btn;
-            self.show_delete_btn == ctx.props().show_delete_btn;
-            self.files_len == ctx.props().files.len();
+            self.standard_uuid = ctx.props().standard_uuid;
+            self.show_download_btn = ctx.props().show_download_btn;
+            self.show_delete_btn = ctx.props().show_delete_btn;
+            self.files_len = ctx.props().files.len();
             true
         }
     }
@@ -102,7 +102,7 @@ impl StandardFilesCard {
     fn show_file_info(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
         file: &ShowFileInfo
     ) -> Html {
         let callback_delete_file = link.callback(|value: UUID| Msg::RemoveFile(value));

@@ -1,5 +1,6 @@
 use yew::{Component, Context, html, html::Scope, Html, Properties, Event, classes, NodeRef};
-use yew::services::timeout::{TimeoutService, TimeoutTask};
+// use yew::services::timeout::{TimeoutService, TimeoutTask};
+use gloo_timers::callback::Timeout;
 use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
@@ -12,7 +13,7 @@ use crate::services::get_value_field;
 use crate::gqls::make_query;
 use crate::gqls::relate::{SearchSpecs, search_specs};
 
-#[derive(Clone, Debug, Properties)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub component_specs: Vec<Spec>,
     pub component_uuid: UUID,
@@ -20,7 +21,7 @@ pub struct Props {
 
 pub struct SearchSpecsTags {
     component_uuid: UUID,
-    ipt_timer: Option<TimeoutTask>,
+    ipt_timer: Option<Timeout>,
     ipt_ref: NodeRef,
     specs_search_loading: bool,
     search_specs: Vec<SpecPathInfo>,
@@ -119,8 +120,9 @@ impl Component for SearchSpecsTags {
                 }
                 self.specs_search_loading = true;
                 let cb_link = link.clone();
-                self.ipt_timer = Some(TimeoutService::spawn(
-                    Duration::from_millis(800),
+                // self.ipt_timer = Some(TimeoutService::spawn(
+                //     Duration::from_millis(800),
+                self.ipt_timer = Some(Timeout::new(800,
                     cb_link.callback(move |_| {
                         let ipt_val = val.clone();
                         let res_link = link.clone();
@@ -194,7 +196,7 @@ impl Component for SearchSpecsTags {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         if self.component_uuid == ctx.props().component_uuid {
             false
         } else {
@@ -212,7 +214,7 @@ impl SearchSpecsTags {
     fn fieldset_manage_specs(
         &self,
         link: &Scope<Self>,
-        props: &Properties,
+        props: &Props,
     ) -> Html {
         let ipt_ref = self.ipt_ref.clone();
         let onclick_added_spec = link.callback(|value: usize| Msg::AddedSpec(value));

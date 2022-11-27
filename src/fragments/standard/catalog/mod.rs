@@ -3,7 +3,7 @@ mod list_item;
 pub use list_item::ListItemStandard;
 
 use yew::{Component, Context, html, Html, Properties};
-use yew_router::prelude::RouterAnchor;
+use yew_router::prelude::Link;
 
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
@@ -31,7 +31,7 @@ pub struct CatalogStandards {
     list: Vec<ShowStandardShort>
 }
 
-#[derive(Properties, Clone)]
+#[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub show_create_btn: bool,
     pub arguments: Option<StandardsQueryArg>,
@@ -100,7 +100,7 @@ impl Component for CatalogStandards {
         true
     }
 
-    fn changed(&mut self, _ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, _ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         // Should only return "true" if new properties are different to
         // previously received properties.
         // This standard has no properties so we will always return "false".
@@ -125,9 +125,9 @@ impl Component for CatalogStandards {
                     <div class="buttons">
                         {match &ctx.props().show_create_btn {
                             true => html!{
-                                <RouterAnchor<AppRoute> route={CreateStandard} classes="button is-info">
+                                <Link<AppRoute> route={CreateStandard} classes="button is-info">
                                     { get_value_field(&45) } // Create
-                                </RouterAnchor<AppRoute>>
+                                </Link<AppRoute>>
                             },
                             false => html!{},
                         }}

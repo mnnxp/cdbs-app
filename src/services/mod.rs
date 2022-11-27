@@ -7,6 +7,8 @@ mod requests;
 mod tags;
 mod util;
 pub mod storage_upload;
+// pub mod storage_upload::StorageUpload;
+// pub mod storage_upload::storage_upload;
 
 pub use auth::{Auth, get_current_user, logout};
 pub use localisation::get_value_field;

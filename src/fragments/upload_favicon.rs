@@ -1,14 +1,11 @@
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
 use graphql_client::GraphQLQuery;
-// use gloo::file::callbacks::FileReader;
-use gloo::file::File;
-// use web_sys::{DragEvent, Event, FileList, HtmlInputElement};
-use web_sys::{DragEvent, Event};
+use web_sys::{DragEvent, Event, File};
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
 use crate::fragments::list_errors::ListErrors;
 use crate::error::{Error, get_error};
-use crate::services::storage_upload::StorageUpload;
+use crate::services::storage_upload::{StorageUpload, storage_upload};
 use crate::services::get_value_field;
 use crate::types::UploadFile;
 use crate::gqls::{
@@ -159,12 +156,15 @@ impl Component for UpdateFaviconBlock {
 
                 match res_value.is_null() {
                     false => {
-                        self.request_upload_data = match &ctx.props().company_uuid {
+                        let result = match &ctx.props().company_uuid {
                             Some(_) => serde_json::from_value(res_value.get("uploadCompanyFavicon").unwrap().clone()).unwrap(),
                             None => serde_json::from_value(res_value.get("uploadFavicon").unwrap().clone()).unwrap(),
                         };
 
                         if let Some(file) = self.file.clone() {
+                            let callback_confirm =
+                                link.callback(|res: Result<usize, Error>| Msg::GetUploadCompleted(res));
+                            storage_upload(&result, &vec![file], callback_confirm);
                             // let file_name = file.name().clone();
                             // let task = {
                             //     let callback = self
@@ -173,9 +173,6 @@ impl Component for UpdateFaviconBlock {
                             //     ReaderService::read_file(file, callback).unwrap()
                             // };
                             // self.task_read = Some((file_name, task));
-                            let callback_confirm =
-                                link.callback(|res: Result<usize, Error>| Msg::GetUploadCompleted(res));
-                            self.storage_upload(vec![(self.request_upload_data, file)], callback_confirm)
                         }
                         debug!("file: {:?}", self.file);
                     },
@@ -189,7 +186,7 @@ impl Component for UpdateFaviconBlock {
             // },
             Msg::GetUploadCompleted(res) => {
                 match res {
-                    Ok(value) => self.get_result_up_completed = value > 0,
+                    Ok(value) => self.get_result_up_completed = value,
                     Err(err) => self.error = Some(err),
                 }
                 self.active_loading_files_btn = false;
@@ -204,7 +201,7 @@ impl Component for UpdateFaviconBlock {
         true
     }
 
-    fn changed(&mut self, _ctx: &Context<Self>) -> bool {
+    fn changed(&mut self, _ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         false
     }
 
@@ -345,19 +342,6 @@ impl UpdateFaviconBlock {
                 { get_value_field(&92) }
               </div>
             </article>
-        }
-    }
-
-    fn storage_upload(
-        &self,
-        data_upload: Vec<(UploadFile, File)>,
-        callback_confirm: Callback<Result<usize, Error>>,
-    ) -> Html {
-        html!{
-            <StorageUpload
-                {data_upload}
-                {callback_confirm}
-            />
         }
     }
 }
