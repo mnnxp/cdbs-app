@@ -70,8 +70,8 @@ impl Component for ModificationFilesTableCard {
                 let modification_uuid = ctx.props().modification_uuid.clone();
                 spawn_local(async move {
                     let ipt_modification_files_arg = component_modification_files_list::IptModificationFilesArg{
-                        filesUuids: None,
-                        modificationUuid: modification_uuid,
+                        files_uuids: None,
+                        modification_uuid,
                         limit: None,
                         offset: None,
                     };

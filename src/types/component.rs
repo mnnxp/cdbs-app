@@ -58,7 +58,7 @@ impl ComponentCreateData {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct ShowComponentShort {
     pub uuid: UUID,
@@ -153,7 +153,7 @@ pub struct ComponentParam{
   pub value: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Param{
   pub param_id: usize,

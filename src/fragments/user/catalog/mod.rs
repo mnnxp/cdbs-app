@@ -78,7 +78,7 @@ impl Component for CatalogUsers {
             Msg::GetList => {
                 let ipt_users_arg = match &ctx.props().arguments {
                     Some(ref arg) => Some(get_users_short_list::IptUsersArg {
-                        usersUuids: arg.users_uuids.clone(),
+                        users_uuids: arg.users_uuids.clone(),
                         subscribers: arg.subscribers,
                         favorite: arg.favorite,
                         limit: arg.limit,

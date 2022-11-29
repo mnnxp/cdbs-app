@@ -1,6 +1,6 @@
 use yew::{Component, Context, html, html::Scope, Html};
-use yew_agent::utils::store::Bridgeable;
-use yew_agent::Bridge;
+// use yew_agent::Bridge;
+use yew_router::prelude::*;
 use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
@@ -33,7 +33,7 @@ pub enum Menu {
 pub struct Notifications {
     error: Option<Error>,
     notifications: Vec<ShowNotification>,
-    router_agent: Box<dyn Bridge<AppRoute>>,
+    // router_agent: Box<dyn Bridge<AppRoute>>,
     read_notification: Vec<i64>,
     delete_notification: Vec<i64>,
     select_menu: Menu,
@@ -62,7 +62,7 @@ impl Component for Notifications {
         Self {
             error: None,
             notifications: Vec::new(),
-            router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
+            // router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             read_notification: Vec::new(),
             delete_notification: Vec::new(),
             select_menu: Menu::GetAll,
@@ -73,7 +73,9 @@ impl Component for Notifications {
         let link = ctx.link().clone();
         if let None = get_logged_user() {
             // route to login page if not found token
-            self.router_agent.send(Login);
+            // self.router_agent.send(Login);
+            let navigator: Navigator = ctx.link().navigator().unwrap();
+            navigator.replace(&Login);
         };
         if first_render {
             spawn_local(async move {
@@ -93,7 +95,7 @@ impl Component for Notifications {
         match msg {
             Msg::SelectMenu(value) => {
                 self.select_menu = value;
-                self.rendered(false, ctx);
+                self.rendered(ctx, false);
             },
             Msg::RequestReadNotification => {
                 let read_notifications_ids = self.read_notification.clone();
@@ -147,7 +149,7 @@ impl Component for Notifications {
                         let read_notification: usize = serde_json::from_value(res_value.get("readNotifications").unwrap().clone()).unwrap();
                         debug!("Read notifications data: {:?}", read_notification);
                         if read_notification > 0 {
-                            self.rendered(true, ctx);
+                            self.rendered(ctx, true);
                         }
                     },
                     true => self.error = Some(get_error(&data)),
@@ -163,7 +165,7 @@ impl Component for Notifications {
                         debug!("Read notifications data: {:?}", delete_notification);
 
                         if delete_notification > 0 {
-                            self.rendered(true, ctx);
+                            self.rendered(ctx, true);
                         }
                     },
                     true => self.error = Some(get_error(&data)),

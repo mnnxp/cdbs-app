@@ -58,8 +58,8 @@ impl Component for ComponentLicenseTag {
                 let license_id = ctx.props().license_data.id as i64;
                 spawn_local(async move {
                     let ipt_component_license_data = delete_component_license::IptComponentLicenseData{
-                        componentUuid: component_uuid,
-                        licenseId: license_id,
+                        component_uuid,
+                        license_id,
                     };
                     let res = make_query(DeleteComponentLicense::build_query(
                         delete_component_license::Variables {

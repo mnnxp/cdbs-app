@@ -60,8 +60,8 @@ impl Component for ComponentFileItem {
                 let file_uuid = ctx.props().file.uuid.clone();
                 spawn_local(async move {
                     let ipt_component_files_arg = component_files::IptComponentFilesArg{
-                        filesUuids: Some(vec![file_uuid]),
-                        componentUuid: component_uuid,
+                        files_uuids: Some(vec![file_uuid]),
+                        component_uuid,
                         limit: None,
                         offset: None,
                     };
@@ -78,8 +78,8 @@ impl Component for ComponentFileItem {
                 let file_uuid = ctx.props().file.uuid.clone();
                 spawn_local(async move {
                     let delete_component_file_data = delete_component_file::DelComponentFileData{
-                        fileUuid: file_uuid,
-                        componentUuid: component_uuid,
+                        file_uuid,
+                        component_uuid,
                     };
                     let res = make_query(DeleteComponentFile::build_query(delete_component_file::Variables {
                         delete_component_file_data

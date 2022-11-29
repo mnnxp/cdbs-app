@@ -61,8 +61,8 @@ impl Component for FilesOfFilesetCard {
         match msg {
             Msg::RequestFilesOfFileset => {
                 let ipt_file_of_fileset_arg = com_mod_files_of_fileset::IptFileOfFilesetArg{
-                    filesetUuid: self.select_fileset_uuid.clone(),
-                    fileUuids: None,
+                    fileset_uuid: self.select_fileset_uuid.clone(),
+                    file_uuids: None,
                     limit: None,
                     offset: None,
                 };

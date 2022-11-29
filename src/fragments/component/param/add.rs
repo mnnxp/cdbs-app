@@ -55,7 +55,7 @@ impl Component for RegisterParamnameBlock {
                 self.active_loading_btn = true;
                 self.disable_btn = true;
                 let ipt_param_translate_list_data = register_param::IptParamTranslateListData{
-                    langId: 1, // todo!(fix for different lang)
+                    lang_id: 1, // todo!(fix for different lang)
                     paramname: self.request_new_paramname.clone(),
                 };
                 spawn_local(async move {

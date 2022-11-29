@@ -1,8 +1,8 @@
-use yew::{Component, Callback, Context, html, html::Scope, Html, Event, FocusEvent, classes};
-use yew_agent::utils::store::Bridgeable;
-use yew_agent::Bridge;
+use yew::{Component, Callback, Context, html, html::Scope, Html, SubmitEvent, classes};
+// use yew_agent::Bridge;
+use yew_router::prelude::*;
 use wasm_bindgen_futures::spawn_local;
-use web_sys::MouseEvent;
+use web_sys::{MouseEvent, InputEvent, Event};
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use log::debug;
@@ -14,7 +14,7 @@ use crate::fragments::{
     upload_favicon::UpdateFaviconBlock,
     user::{AddUserCertificateCard, UserCertificatesCard},
 };
-use crate::routes::AppRoute::{self, Login, Home, Profile};
+use crate::routes::AppRoute::{Login, Home, Profile};
 use crate::services::{get_current_user, set_token, set_logged_user, get_logged_user, get_value_field};
 use crate::types::{Program, Region, SelfUserInfo, TypeAccessInfo, UpdatePasswordInfo, UserUpdateInfo};
 use crate::gqls::make_query;
@@ -44,7 +44,7 @@ pub struct Settings {
     request_access: i64,
     request_password: UpdatePasswordInfo,
     request_user_password: String,
-    router_agent: Box<dyn Bridge<AppRoute>>,
+    // router_agent: Box<dyn Bridge<AppRoute>>,
     current_data: Option<SelfUserInfo>,
     current_username: String,
     programs: Vec<Program>,
@@ -103,7 +103,7 @@ impl Component for Settings {
             request_access: 0,
             request_password: UpdatePasswordInfo::default(),
             request_user_password: String::new(),
-            router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
+            // router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             current_data: None,
             current_username: String::new(),
             programs: Vec::new(),
@@ -122,7 +122,9 @@ impl Component for Settings {
             let link = ctx.link().clone();
             if let None = get_logged_user() {
                 // route to login page if not found token
-                self.router_agent.send(Login);
+                // self.router_agent.send(Login);
+                let navigator = ctx.link().navigator().unwrap();
+                navigator.replace(&Login);
             };
 
             spawn_local(async move {
@@ -137,12 +139,14 @@ impl Component for Settings {
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         let link = ctx.link().clone();
+        let navigator: Navigator = ctx.link().navigator().unwrap();
 
         match msg {
             Msg::OpenProfile => {
                 // Redirect to user page
                 if let Some(user_data) = &self.current_data {
-                    self.router_agent.send(Profile { username: user_data.username.clone() });
+                    // self.router_agent.send(Profile { username: user_data.username.clone() });
+                    navigator.clone().replace(&Profile { username: user_data.username.clone() });
                 }
             },
             Msg::RequestCurrentData => {
@@ -173,9 +177,9 @@ impl Component for Settings {
                     description: self.request_profile.description.clone(),
                     address: self.request_profile.address.clone(),
                     position: self.request_profile.position.clone(),
-                    timeZone: self.request_profile.time_zone.clone(),
-                    regionId: self.request_profile.region_id.clone(),
-                    programId: self.request_profile.program_id.clone(),
+                    time_zone: self.request_profile.time_zone.clone(),
+                    region_id: self.request_profile.region_id.clone(),
+                    program_id: self.request_profile.program_id.clone(),
                 };
                 spawn_local(async move {
                     let res = make_query(UserUpdate::build_query(
@@ -195,8 +199,8 @@ impl Component for Settings {
             },
             Msg::RequestUpdatePassword => {
                 let ipt_update_password = put_update_password::IptUpdatePassword {
-                    oldPassword: self.request_password.old_password.clone(),
-                    newPassword: self.request_password.new_password.clone(),
+                    old_password: self.request_password.old_password.clone(),
+                    new_password: self.request_password.new_password.clone(),
                 };
                 spawn_local(async move {
                     let res = make_query(PutUpdatePassword::build_query(put_update_password::Variables{
@@ -251,7 +255,7 @@ impl Component for Settings {
                         self.current_data = Some(user_data.clone());
                         self.current_username = user_data.username.clone();
                         self.request_profile = user_data.into();
-                        self.rendered(false, ctx);
+                        self.rendered(ctx, false);
                     },
                     true => self.error = Some(get_error(&data)),
                 }
@@ -306,7 +310,8 @@ impl Component for Settings {
                             // Clear global token and logged user after delete profile
                             set_token(None);
                             set_logged_user(None);
-                            self.router_agent.send(Home);
+                            // self.router_agent.send(Home);
+                            navigator.replace(&Home);
                         }
                     },
                     true => self.error = Some(get_error(&data)),
@@ -333,7 +338,7 @@ impl Component for Settings {
             Msg::UpdateUserPassword(user_password) => self.request_user_password = user_password,
             Msg::SelectMenu(value) => {
                 self.select_menu = value;
-                self.rendered(false, ctx);
+                self.rendered(ctx, false);
             },
             Msg::ClearError => self.error = None,
             Msg::Ignore => {}
@@ -347,19 +352,19 @@ impl Component for Settings {
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         let onclick_clear_error = ctx.link().callback(|_| Msg::ClearError);
-        let onsubmit_update_profile = ctx.link().callback(|ev: FocusEvent| {
+        let onsubmit_update_profile = ctx.link().callback(|ev: SubmitEvent| {
             ev.prevent_default();
             Msg::RequestUpdateProfile
         });
-        let onsubmit_update_access = ctx.link().callback(|ev: FocusEvent| {
+        let onsubmit_update_access = ctx.link().callback(|ev: SubmitEvent| {
             ev.prevent_default();
             Msg::RequestChangeAccess
         });
-        let onsubmit_update_password = ctx.link().callback(|ev: FocusEvent| {
+        let onsubmit_update_password = ctx.link().callback(|ev: SubmitEvent| {
             ev.prevent_default();
             Msg::RequestUpdatePassword
         });
-        let onsubmit_remove_profile = ctx.link().callback(|ev: FocusEvent| {
+        let onsubmit_remove_profile = ctx.link().callback(|ev: SubmitEvent| {
             ev.prevent_default();
             Msg::RequestRemoveProfile
         });
@@ -484,7 +489,7 @@ impl Settings {
         label: &str,
         // placeholder: &str,
         value: String,
-        oninput: Callback<Event>,
+        oninput: Callback<InputEvent>,
     ) -> Html {
         let placeholder = label;
         let mut class = "input";
@@ -630,7 +635,7 @@ impl Settings {
         let callback_update_favicon = link.callback(|_| Msg::RequestCurrentData);
         html! {
             <UpdateFaviconBlock
-                company_uuid = {None}
+                company_uuid={None}
                 callback={callback_update_favicon}
                 />
         }
@@ -679,10 +684,11 @@ impl Settings {
         link: &Scope<Self>,
     ) -> Html {
         let onchange_type_access_id = link.callback(|ev: Event| {
-            Msg::UpdateTypeAccessId(match ev {
-                Event::Select(el) => el.value(),
-                _ => "1".to_string(),
-            })
+            Msg::UpdateTypeAccessId(ev.current_target().map(|ev| ev.as_string().unwrap_or("1".to_string())));
+            // Msg::UpdateTypeAccessId(match ev {
+            //     Event::Select(el) => el.value(),
+            //     _ => "1".to_string(),
+            // })
         });
 
         html! {
@@ -720,8 +726,8 @@ impl Settings {
         &self,
         link: &Scope<Self>,
     ) -> Html {
-        let oninput_old_password = link.callback(|ev: Event| Msg::UpdateOldPassword(ev.value));
-        let oninput_new_password = link.callback(|ev: Event| Msg::UpdateNewPassword(ev.value));
+        let oninput_old_password = link.callback(|ev: InputEvent| Msg::UpdateOldPassword(ev.input_type()));
+        let oninput_new_password = link.callback(|ev: InputEvent| Msg::UpdateNewPassword(ev.input_type()));
 
         html! {
             <fieldset class="columns">
@@ -746,26 +752,28 @@ impl Settings {
         &self,
         link: &Scope<Self>,
     ) -> Html {
-        let oninput_firstname = link.callback(|ev: Event| Msg::UpdateFirstname(ev.value));
-        let oninput_lastname = link.callback(|ev: Event| Msg::UpdateLastname(ev.value));
-        let oninput_secondname = link.callback(|ev: Event| Msg::UpdateSecondname(ev.value));
-        let oninput_username = link.callback(|ev: Event| Msg::UpdateUsername(ev.value));
-        let oninput_email = link.callback(|ev: Event| Msg::UpdateEmail(ev.value));
-        let oninput_description = link.callback(|ev: Event| Msg::UpdateDescription(ev.value));
-        let oninput_position = link.callback(|ev: Event| Msg::UpdatePosition(ev.value));
-        let oninput_phone = link.callback(|ev: Event| Msg::UpdatePhone(ev.value));
-        let oninput_address = link.callback(|ev: Event| Msg::UpdateAddress(ev.value));
-        let oninput_program_id = link.callback(|ev: Event| {
-            Msg::UpdateProgramId(match ev {
-                Event::Select(el) => el.value(),
-                _ => "1".to_string(),
-            })
+        let oninput_firstname = link.callback(|ev: InputEvent| Msg::UpdateFirstname(ev.input_type()));
+        let oninput_lastname = link.callback(|ev: InputEvent| Msg::UpdateLastname(ev.input_type()));
+        let oninput_secondname = link.callback(|ev: InputEvent| Msg::UpdateSecondname(ev.input_type()));
+        let oninput_username = link.callback(|ev: InputEvent| Msg::UpdateUsername(ev.input_type()));
+        let oninput_email = link.callback(|ev: InputEvent| Msg::UpdateEmail(ev.input_type()));
+        let oninput_description = link.callback(|ev: InputEvent| Msg::UpdateDescription(ev.input_type()));
+        let oninput_position = link.callback(|ev: InputEvent| Msg::UpdatePosition(ev.input_type()));
+        let oninput_phone = link.callback(|ev: InputEvent| Msg::UpdatePhone(ev.input_type()));
+        let oninput_address = link.callback(|ev: InputEvent| Msg::UpdateAddress(ev.input_type()));
+        let onchange_program_id = link.callback(|ev: Event| {
+            Msg::UpdateProgramId(ev.current_target().map(|ev| ev.as_string().unwrap_or("1".to_string())).unwrap_or("1".to_string()));
+            // Msg::UpdateProgramId(match ev.current_target() {
+            //    Event::Select(el) => el.value(),
+            //     _ => "1".to_string(),
+            // })
         });
         let onchange_region_id = link.callback(|ev: Event| {
-            Msg::UpdateRegionId(match ev {
-                Event::Select(el) => el.value(),
-                _ => "1".to_string(),
-            })
+            Msg::UpdateRegionId(ev.current_target().map(|ev| ev.as_string().unwrap_or("1".to_string())).unwrap_or("1".to_string()));
+            // Msg::UpdateRegionId(match ev {
+            //     Event::Select(el) => el.value(),
+            //     _ => "1".to_string(),
+            // })
         });
 
         html! {<>
@@ -846,7 +854,7 @@ impl Settings {
                           <select
                               id="program"
                               select={self.request_profile.program_id.unwrap_or_default().to_string()}
-                              onchange={oninput_program_id}
+                              onchange={onchange_program_id}
                               >
                             { for self.programs.iter().map(|x|
                                 html!{
@@ -897,7 +905,7 @@ impl Settings {
         &self,
         link: &Scope<Self>,
     ) -> Html {
-        let oninput_user_password = link.callback(|ev: Event| Msg::UpdateUserPassword(ev.value));
+        let oninput_user_password = link.callback(|ev: InputEvent| Msg::UpdateUserPassword(ev.input_type()));
 
         self.fileset_generator(
             "password", get_value_field(&62), // "your password"

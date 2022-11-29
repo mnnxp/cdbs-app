@@ -120,7 +120,7 @@ impl Component for AddKeywordsTags {
                 let standard_uuid = ctx.props().standard_uuid.clone();
                 spawn_local(async move {
                     let ipt_standard_keywords_arg = get_standard_keywords::IptStandardKeywordsArg{
-                        standardUuid: standard_uuid,
+                        standard_uuid,
                         limit: None,
                         offset: None,
                     };
@@ -179,7 +179,7 @@ impl Component for AddKeywordsTags {
                 if keywords.len() > 0 {
                     spawn_local(async move {
                         let ipt_standard_keywords_names = add_standard_keywords_by_names::IptStandardKeywordsNames{
-                            standardUuid: standard_uuid,
+                            standard_uuid,
                             keywords,
                         };
                         let res = make_query(AddStandardKeywordsByNames::build_query(add_standard_keywords_by_names::Variables {

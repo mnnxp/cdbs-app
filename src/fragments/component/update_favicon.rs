@@ -7,7 +7,7 @@ use web_sys::FileList;
 use log::debug;
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
-use crate::services::storage_upload::{StorageUpload, storage_upload};
+use crate::services::storage_upload::storage_upload;
 use crate::services::{image_detector, get_value_field};
 use crate::types::UploadFile;
 use crate::gqls::{
@@ -85,7 +85,7 @@ impl Component for UpdateComponentFaviconCard {
 
                         // debug!("RequestUploadData: {:?}", &self.request_update);
                         let ipt_component_favicon_data = upload_component_favicon::IptComponentFaviconData {
-                            componentUuid: ctx.props().component_uuid.clone(),
+                            component_uuid: ctx.props().component_uuid.clone(),
                             filename: file.name().to_string(),
                         };
                         spawn_local(async move {
@@ -143,7 +143,7 @@ impl Component for UpdateComponentFaviconCard {
                         if let Some(file) = self.file.clone() {
                             let callback_confirm =
                                 link.callback(|res: Result<usize, Error>| Msg::GetUploadCompleted(res));
-                            storage_upload(&result, &vec![file], callback_confirm);
+                            storage_upload(result, vec![file], callback_confirm);
                             // let file_name = file.name().clone();
                             // let task = {
                             //     let callback = ctx.link().callback(move |data: FileData| {

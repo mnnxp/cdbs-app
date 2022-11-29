@@ -1,6 +1,6 @@
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
-use yew_agent::utils::store::Bridgeable;
-use yew_agent::Bridge;
+// use yew_agent::Bridge;
+use yew_router::prelude::*;
 use yew_router::hooks::use_route;
 use gloo::file::File;
 use graphql_client::GraphQLQuery;
@@ -20,7 +20,7 @@ use crate::fragments::{
         ModificationsTableEdit, ComponentFilesBlock, SearchSpecsTags, AddKeywordsTags
     },
 };
-use crate::services::storage_upload::{StorageUpload, storage_upload};
+use crate::services::storage_upload::storage_upload;
 use crate::services::{get_value_field, get_logged_user};
 use crate::types::{
     UUID, ComponentInfo, SlimUser, TypeAccessInfo, UploadFile, ActualStatus, ComponentUpdatePreData,
@@ -50,7 +50,7 @@ pub struct ComponentSettings {
     // request_upload_file: Callback<Result<Option<String>, Error>>,
     request_upload_confirm: Vec<UUID>,
     request_access: i64,
-    router_agent: Box<dyn Bridge<AppRoute>>,
+    // router_agent: Box<dyn Bridge<AppRoute>>,
     // task_read: Vec<(FileName, ReaderTask)>,
     // task: Vec<FetchTask>,
     supplier_list: Vec<ShowCompanyShort>,
@@ -138,7 +138,7 @@ impl Component for ComponentSettings {
             // request_upload_file: ctx.link().callback(Msg::ResponseUploadFile),
             request_upload_confirm: Vec::new(),
             request_access: 0,
-            router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
+            // router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             // task_read: Vec::new(),
             // task: Vec::new(),
             supplier_list: Vec::new(),
@@ -171,7 +171,9 @@ impl Component for ComponentSettings {
             Some(cu) => cu.uuid,
             None => {
                 // route to login page if not found token
-                self.router_agent.send(Login);
+                // self.router_agent.send(Login);
+                let navigator: Navigator = ctx.link().navigator().unwrap();
+                navigator.replace(&Login);
                 String::new()
             },
         };
@@ -198,8 +200,8 @@ impl Component for ComponentSettings {
 
             spawn_local(async move {
                 let ipt_companies_arg = get_update_component_data_opt::IptCompaniesArg{
-                    companiesUuids: None,
-                    userUuid: Some(logged_user_uuid),
+                    companies_uuids: None,
+                    user_uuid: Some(logged_user_uuid),
                     favorite: None,
                     supplier: Some(true),
                     limit: None,
@@ -217,13 +219,13 @@ impl Component for ComponentSettings {
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         let link = ctx.link().clone();
+        let navigator: Navigator = ctx.link().navigator().unwrap();
 
         match msg {
             Msg::OpenComponent => {
                 // Redirect to component page
-                self.router_agent.send(
-                    ShowComponent { uuid: self.current_component_uuid.clone() }
-                );
+                // self.router_agent.send(ShowComponent { uuid: self.current_component_uuid.clone() });
+                navigator.clone().replace(&ShowComponent { uuid: self.current_component_uuid.clone() });
             },
             Msg::RequestManager => {
                 if self.update_component {
@@ -244,8 +246,8 @@ impl Component for ComponentSettings {
                 let component_uuid = ctx.props().component_uuid.clone();
                 spawn_local(async move {
                     let ipt_component_files_arg = component_files_list::IptComponentFilesArg{
-                        filesUuids: None,
-                        componentUuid: component_uuid,
+                        files_uuids: None,
+                        component_uuid,
                         limit: None,
                         offset: None,
                     };
@@ -268,11 +270,11 @@ impl Component for ComponentSettings {
                         actual_status_id,
                     } = request_component;
                     let ipt_update_component_data = put_component_update::IptUpdateComponentData {
-                        parentComponentUuid: parent_component_uuid,
+                        parent_component_uuid,
                         name,
                         description,
-                        componentTypeId: component_type_id,
-                        actualStatusId: actual_status_id,
+                        component_type_id,
+                        actual_status_id,
                     };
                     let res = make_query(PutComponentUpdate::build_query(put_component_update::Variables {
                         component_uuid,
@@ -286,8 +288,8 @@ impl Component for ComponentSettings {
                 let new_type_access_id = self.request_access.clone();
                 spawn_local(async move {
                     let change_type_access_component = change_component_access::ChangeTypeAccessComponent{
-                        componentUuid: component_uuid,
-                        newTypeAccessId: new_type_access_id,
+                        component_uuid,
+                        new_type_access_id,
                     };
                     let res = make_query(ChangeComponentAccess::build_query(change_component_access::Variables {
                         change_type_access_component
@@ -317,7 +319,7 @@ impl Component for ComponentSettings {
                     spawn_local(async move {
                         let ipt_component_files_data = upload_component_files::IptComponentFilesData{
                             filenames,
-                            componentUuid: component_uuid,
+                            component_uuid,
                         };
                         let res = make_query(UploadComponentFiles::build_query(upload_component_files::Variables{
                             ipt_component_files_data
@@ -376,7 +378,7 @@ impl Component for ComponentSettings {
                         if !self.files.is_empty() {
                             let callback_confirm =
                                 link.callback(|res: Result<usize, Error>| Msg::GetUploadCompleted(res));
-                            storage_upload(&result, &self.files, callback_confirm);
+                            storage_upload(result, self.files, callback_confirm);
                             // for file in self.files.iter().rev() {
                             //     let file_name = file.name().clone();
                             //     debug!("file name: {:?}", file_name);
@@ -393,19 +395,19 @@ impl Component for ComponentSettings {
                     true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }
             },
-            Msg::ResponseUploadFile(Ok(res)) => {
-                debug!("ResponseUploadFile: {:?}", res);
-                link.send_message(Msg::GetUploadFile)
-            },
-            Msg::ResponseUploadFile(Err(err)) => {
-                self.error = Some(err);
-                self.task.clear();
-                self.task_read.clear();
-                self.files_index = 0;
-                self.request_upload_confirm.clear();
-                self.get_result_up_completed = 0;
-                self.active_loading_files_btn = false;
-            },
+            // Msg::ResponseUploadFile(Ok(res)) => {
+            //     debug!("ResponseUploadFile: {:?}", res);
+            //     // link.send_message(Msg::GetUploadFile)
+            // },
+            // Msg::ResponseUploadFile(Err(err)) => {
+            //     self.error = Some(err);
+            //     self.task.clear();
+            //     self.task_read.clear();
+            //     self.files_index = 0;
+            //     self.request_upload_confirm.clear();
+            //     self.get_result_up_completed = 0;
+            //     self.active_loading_files_btn = false;
+            // },
             Msg::GetComponentData(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
@@ -476,15 +478,15 @@ impl Component for ComponentSettings {
                     true => self.error = Some(get_error(&data)),
                 }
             },
-            Msg::GetUploadFile => {
-                debug!("next: {:?}", self.files_index);
-                self.files_index -= 1;
-                if self.files_index == 0 {
-                    self.get_result_up_file = true;
-                    debug!("finish: {:?}", self.request_upload_confirm.len());
-                    link.send_message(Msg::RequestUploadCompleted);
-                }
-            },
+            // Msg::GetUploadFile => {
+            //     debug!("next: {:?}", self.files_index);
+            //     self.files_index -= 1;
+            //     if self.files_index == 0 {
+            //         self.get_result_up_file = true;
+            //         debug!("finish: {:?}", self.request_upload_confirm.len());
+            //         link.send_message(Msg::RequestUploadCompleted);
+            //     }
+            // },
             Msg::GetUploadCompleted(res) => {
                 match res {
                     Ok(value) => self.get_result_up_completed = value,
@@ -496,8 +498,8 @@ impl Component for ComponentSettings {
                 self.files_list.clear();
                 link.send_message(Msg::RequestComponentFilesList);
                 self.active_loading_files_btn = false;
-                self.task.clear();
-                self.task_read.clear();
+                // self.task.clear();
+                // self.task_read.clear();
                 self.request_upload_confirm.clear();
                 self.files.clear();
                 self.files_index = 0;
@@ -511,7 +513,8 @@ impl Component for ComponentSettings {
                         let result: UUID = serde_json::from_value(res_value.get("deleteComponent").unwrap().clone()).unwrap();
                         debug!("deleteComponent: {:?}", result);
                         if self.current_component_uuid == result {
-                            self.router_agent.send(Home)
+                            // self.router_agent.send(Home)
+                            navigator.replace(&Home);
                         }
                     },
                     true => link.send_message(Msg::ResponseError(get_error(&data))),

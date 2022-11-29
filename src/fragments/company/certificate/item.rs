@@ -66,8 +66,8 @@ impl Component for CompanyCertificateItem {
             Msg::RequestUpdateDescription => {
                 debug!("Update company cert: {:?}", &self.request_update);
                 let ipt_update_company_certificate_data = update_company_certificate::IptUpdateCompanyCertificateData {
-                    companyUuid: ctx.props().certificate.company_uuid.clone(),
-                    fileUuid: ctx.props().certificate.file.uuid.clone(),
+                    company_uuid: ctx.props().certificate.company_uuid.clone(),
+                    file_uuid: ctx.props().certificate.file.uuid.clone(),
                     description: self.request_update.clone(),
                 };
 
@@ -80,8 +80,8 @@ impl Component for CompanyCertificateItem {
             },
             Msg::RequestDeleteCert => {
                 let del_company_certificate_data = delete_company_certificate::DelCompanyCertificateData{
-                    companyUuid: ctx.props().certificate.company_uuid.clone(),
-                    fileUuid: ctx.props().certificate.file.uuid.clone(),
+                    company_uuid: ctx.props().certificate.company_uuid.clone(),
+                    file_uuid: ctx.props().certificate.file.uuid.clone(),
                 };
                 spawn_local(async move {
                     let res = make_query(DeleteCompanyCertificate::build_query(delete_company_certificate::Variables {

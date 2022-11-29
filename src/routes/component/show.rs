@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use yew::{Component, Context, html, html::Scope, Html, Properties, classes};
-use yew_agent::utils::store::Bridgeable;
-use yew_agent::Bridge;
+// use yew_agent::Bridge;
+use yew_router::prelude::*;
 use yew_router::hooks::use_route;
 use log::debug;
 use graphql_client::GraphQLQuery;
@@ -38,7 +38,7 @@ pub struct ShowComponent {
     current_component_uuid: UUID,
     current_user_owner: bool,
     // task: Option<FetchTask>,
-    router_agent: Box<dyn Bridge<AppRoute>>,
+    // router_agent: Box<dyn Bridge<AppRoute>>,
     subscribers: usize,
     is_followed: bool,
     select_modification_uuid: UUID,
@@ -95,7 +95,7 @@ impl Component for ShowComponent {
             current_component_uuid: String::new(),
             current_user_owner: false,
             // task: None,
-            router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
+            // router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             subscribers: 0,
             is_followed: false,
             select_modification_uuid: String::new(),
@@ -116,9 +116,11 @@ impl Component for ShowComponent {
     fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
         if let None = get_logged_user() {
             // route to login page if not found token
-            self.router_agent.send(Login);
+            // self.router_agent.send(Login);
+            let navigator: Navigator = ctx.link().navigator().unwrap();
+            navigator.replace(&Login);
         };
-        
+
         let target_component_uuid =
             use_route().unwrap_or_default().trim_start_matches("/component/").to_string();
         // get flag changing current component in route
@@ -153,8 +155,8 @@ impl Component for ShowComponent {
 
             spawn_local(async move {
               let ipt_component_files_arg = component_files::IptComponentFilesArg{
-                  componentUuid: target_component_uuid.clone(),
-                  filesUuids: None,
+                  component_uuid: target_component_uuid.clone(),
+                  files_uuids: None,
                   limit: None,
                   offset: None,
               };
@@ -325,7 +327,9 @@ impl Component for ShowComponent {
             Msg::OpenComponentSetting => {
                 if let Some(component_data) = &self.component {
                     // Redirect to page for change and update component
-                    self.router_agent.send(ComponentSettings { uuid: component_data.uuid.to_string() });
+                    // self.router_agent.send(ComponentSettings { uuid: component_data.uuid.to_string() });
+                    let navigator: Navigator = ctx.link().navigator().unwrap();
+                    navigator.replace(&ComponentSettings { uuid: component_data.uuid.to_string() });
                 }
             },
             Msg::ClearError => self.error = None,

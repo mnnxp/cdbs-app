@@ -101,11 +101,11 @@ impl Component for ComponentParamsTags {
             },
             Msg::RequestAddParam(param_id, param_value) => {
                 let ipt_param_data = put_component_params::IptParamData{
-                    paramId: param_id as i64,
+                    param_id: param_id as i64,
                     value: param_value,
                 };
                 let ipt_component_params_data = put_component_params::IptComponentParamsData{
-                    componentUuid: ctx.props().component_uuid.clone(),
+                    component_uuid: ctx.props().component_uuid.clone(),
                     params: vec![ipt_param_data],
                 };
                 spawn_local(async move {

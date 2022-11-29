@@ -65,7 +65,7 @@ impl CompanyCreateInfo {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct ShowCompanyShort{
   pub uuid: UUID,
@@ -80,7 +80,7 @@ pub struct ShowCompanyShort{
   pub updated_at: NaiveDateTime,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct CompanyType{
   pub company_type_id: i64,
@@ -89,7 +89,7 @@ pub struct CompanyType{
   pub shortname: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct CompanyCertificate {
     pub company_uuid: UUID,

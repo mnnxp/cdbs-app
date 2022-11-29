@@ -71,9 +71,9 @@ impl Component for SpecTagItem {
                 let spec_id = ctx.props().spec.spec_id as i64;
                 spawn_local(async move {
                     let arguments = get_specs_paths::IptSpecPathArg{
-                        specIds: Some(vec![spec_id]),
-                        splitChar: None,
-                        depthLevel: None,
+                        spec_ids: Some(vec![spec_id]),
+                        split_char: None,
+                        depth_level: None,
                         limit: None,
                         offset: None,
                     };
@@ -88,8 +88,8 @@ impl Component for SpecTagItem {
                 let spec_id = ctx.props().spec.spec_id as i64;
                 spawn_local(async move {
                     let ipt_company_specs_data = delete_company_specs::IptCompanySpecsData{
-                        companyUuid: company_uuid,
-                        specIds: vec![spec_id],
+                        company_uuid,
+                        spec_ids: vec![spec_id],
                     };
                     let res = make_query(DeleteCompanySpecs::build_query(delete_company_specs::Variables {
                         ipt_company_specs_data
@@ -102,8 +102,8 @@ impl Component for SpecTagItem {
                 let spec_id = ctx.props().spec.spec_id as i64;
                 spawn_local(async move {
                     let ipt_company_specs_data = add_company_specs::IptCompanySpecsData {
-                        companyUuid: company_uuid,
-                        specIds: vec![spec_id],
+                        company_uuid,
+                        spec_ids: vec![spec_id],
                     };
                     let res =
                         make_query(AddCompanySpecs::build_query(add_company_specs::Variables {

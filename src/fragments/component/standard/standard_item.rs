@@ -61,8 +61,8 @@ impl Component for ComponentStandardItem {
                 let standard_uuid = ctx.props().standard_data.uuid.clone();
                 spawn_local(async move {
                     let del_standard_to_component_data = delete_standards_component::DelStandardToComponentData{
-                        componentUuid: component_uuid,
-                        standardsUuids: vec![standard_uuid],
+                        component_uuid,
+                        standards_uuids: vec![standard_uuid],
                     };
                     let res = make_query(DeleteStandardsComponent::build_query(
                         delete_standards_component::Variables {

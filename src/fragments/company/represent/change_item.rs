@@ -92,8 +92,8 @@ impl Component for ChangeItem {
                 let company_uuid = self.company_uuid.clone();
                 let company_represent_uuid = self.company_represent_uuid.clone();
                 let ipt_update_company_represent_data = update_company_represent::IptUpdateCompanyRepresentData {
-                    regionId: self.request_update.region_id.clone(),
-                    representationTypeId: self.request_update.representation_type_id.clone(),
+                    region_id: self.request_update.region_id.clone(),
+                    representation_type_id: self.request_update.representation_type_id.clone(),
                     name: self.request_update.name.clone(),
                     address: self.request_update.address.clone(),
                     phone: self.request_update.phone.clone(),

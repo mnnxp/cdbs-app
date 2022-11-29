@@ -61,8 +61,8 @@ impl Component for ModificationFileItem {
                 let file_uuid = ctx.props().file.uuid.clone();
                 spawn_local(async move {
                     let ipt_modification_files_arg = component_modification_files::IptModificationFilesArg{
-                        filesUuids: Some(vec![file_uuid]),
-                        modificationUuid: modification_uuid,
+                        files_uuids: Some(vec![file_uuid]),
+                        modification_uuid: modification_uuid,
                         limit: None,
                         offset: None,
                     };
@@ -79,8 +79,8 @@ impl Component for ModificationFileItem {
                 let file_uuid = ctx.props().file.uuid.clone();
                 spawn_local(async move {
                     let delete_modification_file_data = delete_modification_file::DelModificationFileData{
-                        fileUuid: file_uuid,
-                        modificationUuid: modification_uuid,
+                        file_uuid,
+                        modification_uuid,
                     };
                     let res = make_query(DeleteModificationFile::build_query(delete_modification_file::Variables {
                         delete_modification_file_data

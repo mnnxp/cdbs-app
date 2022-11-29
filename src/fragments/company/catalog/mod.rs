@@ -29,6 +29,7 @@ pub struct CatalogCompanies {
     show_type: ListState,
     list: Vec<ShowCompanyShort>,
     arguments: Option<CompaniesQueryArg>,
+    show_create_btn: bool,
 }
 
 #[derive(Properties, Clone, Debug, PartialEq)]
@@ -47,6 +48,7 @@ impl Component for CatalogCompanies {
             show_type: ListState::get_from_storage(),
             list: Vec::new(),
             arguments: ctx.props().arguments,
+            show_create_btn: ctx.props().show_create_btn,
         }
     }
 
@@ -69,8 +71,8 @@ impl Component for CatalogCompanies {
             Msg::GetList => {
                 let ipt_companies_arg = match &ctx.props().arguments {
                     Some(ref arg) => Some(get_companies_short_list::IptCompaniesArg {
-                        companiesUuids: arg.companies_uuids.clone(),
-                        userUuid: arg.user_uuid.to_owned(),
+                        companies_uuids: arg.companies_uuids.clone(),
+                        user_uuid: arg.user_uuid.to_owned(),
                         favorite: arg.favorite,
                         supplier: arg.supplier,
                         limit: arg.limit,
@@ -145,7 +147,7 @@ impl Component for CatalogCompanies {
                     <div class="buttons">
                         {match &ctx.props().show_create_btn {
                             true => html!{
-                                <Link<AppRoute> route={CreateCompany} classes="button is-info">
+                                <Link<AppRoute> to={CreateCompany} classes="button is-info">
                                     { get_value_field(&45) } // Create
                                 </Link<AppRoute>>
                             },

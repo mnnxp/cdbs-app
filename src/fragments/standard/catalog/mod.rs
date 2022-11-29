@@ -68,8 +68,8 @@ impl Component for CatalogStandards {
             Msg::GetList => {
                 let ipt_standards_arg = match &ctx.props().arguments {
                     Some(ref arg) => Some(get_standards_short_list::IptStandardsArg {
-                        standardsUuids: arg.standards_uuids.clone(),
-                        companyUuid: arg.company_uuid.to_owned(),
+                        standards_uuids: arg.standards_uuids.clone(),
+                        company_uuid: arg.company_uuid.to_owned(),
                         favorite: arg.favorite,
                         limit: arg.limit,
                         offset: arg.offset,
@@ -125,7 +125,7 @@ impl Component for CatalogStandards {
                     <div class="buttons">
                         {match &ctx.props().show_create_btn {
                             true => html!{
-                                <Link<AppRoute> route={CreateStandard} classes="button is-info">
+                                <Link<AppRoute> to={CreateStandard} classes="button is-info">
                                     { get_value_field(&45) } // Create
                                 </Link<AppRoute>>
                             },

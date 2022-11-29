@@ -71,8 +71,8 @@ impl Component for ComponentSupplierItem {
             },
             Msg::RequestCompanyData => {
                 let ipt_companies_arg = Some(get_companies_short_list::IptCompaniesArg {
-                    companiesUuids: Some(vec![ctx.props().supplier_data.supplier.uuid.clone()]),
-                    userUuid: None,
+                    companies_uuids: Some(vec![ctx.props().supplier_data.supplier.uuid.clone()]),
+                    user_uuid: None,
                     favorite: None,
                     supplier: None,
                     limit: Some(1),
@@ -87,8 +87,8 @@ impl Component for ComponentSupplierItem {
             },
             Msg::RequestDeleteSupplier => {
                 let del_suppliers_component_data = delete_suppliers_component::DelSuppliersComponentData{
-                    componentUuid: ctx.props().component_uuid.clone(),
-                    companiesUuids: vec![ctx.props().supplier_data.supplier.uuid.clone()],
+                    component_uuid: ctx.props().component_uuid.clone(),
+                    companies_uuids: vec![ctx.props().supplier_data.supplier.uuid.clone()],
                 };
                 spawn_local(async move {
                     let res = make_query(DeleteSuppliersComponent::build_query(

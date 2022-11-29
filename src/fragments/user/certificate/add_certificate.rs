@@ -1,19 +1,21 @@
-use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
-use graphql_client::GraphQLQuery;
+use yew::{Component, Callback, Context, html, Html, Properties};
+use yew::html::{Scope, TargetCast};
 use gloo::file::File;
-use web_sys::{DragEvent, Event};
+use web_sys::{InputEvent, DragEvent, Event, FileList, HtmlInputElement};
 use wasm_bindgen_futures::spawn_local;
-use web_sys::FileList;
+use graphql_client::GraphQLQuery;
 use log::debug;
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
-use crate::services::storage_upload::{StorageUpload, storage_upload};
+use crate::services::storage_upload::storage_upload;
 use crate::services::get_value_field;
 use crate::types::UploadFile;
 use crate::gqls::{
     make_query,
-    relate::{ConfirmUploadCompleted, confirm_upload_completed},
-    user::{UploadUserCertificate, upload_user_certificate},
+    user::{
+        UploadUserCertificate,
+        upload_user_certificate
+    },
 };
 
 #[derive(PartialEq, Clone, Debug, Properties)]
@@ -51,7 +53,7 @@ pub enum Msg {
     // RequestUploadFile(Vec<u8>),
     // ResponseUploadFile(Result<Option<String>, Error>),
     // RequestUploadCompleted,
-    UpdateFile(Option<File>),
+    UpdateFile(Option<FileList>),
     GetUploadData(String),
     // GetUploadFile(Option<String>),
     GetUploadCompleted(Result<usize, Error>),
@@ -137,12 +139,11 @@ impl Component for AddUserCertificateCard {
             //         link.send_message(Msg::GetUploadCompleted(res));
             //     });
             // },
-            Msg::UpdateFile(op_file) => {
-                if op_file.is_some() {
-                    // enable bnt if file selected
-                    self.dis_upload_btn = false;
+            Msg::UpdateFile(file_list) => {
+                if let Some(files) = file_list {
+                    self.file = files.get(0).map(|f| File::from(f));
+                    self.dis_upload_btn = self.file.is_some();
                 }
-                self.file = op_file.clone();
             },
             Msg::GetUploadData(res) => {
                 let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
@@ -157,7 +158,7 @@ impl Component for AddUserCertificateCard {
                         if let Some(file) = self.file.clone() {
                             let callback_confirm =
                                 link.callback(|res: Result<usize, Error>| Msg::GetUploadCompleted(res));
-                            storage_upload(&result, vec![&file], callback_confirm);
+                            storage_upload(result, vec![file], callback_confirm);
                             // let file_name = file.name().clone();
                             // let task = {
                             //     let callback = ctx.link().callback(move |data: FileData| {
@@ -172,14 +173,14 @@ impl Component for AddUserCertificateCard {
                     true => self.error = Some(get_error(&data)),
                 }
             },
-            Msg::GetUploadFile(res) => {
-                debug!("res: {:?}", res);
-                self.get_result_up_file = true;
-                link.send_message(Msg::RequestUploadCompleted)
-            },
+            // Msg::GetUploadFile(res) => {
+            //     debug!("res: {:?}", res);
+            //     self.get_result_up_file = true;
+            //     link.send_message(Msg::RequestUploadCompleted)
+            // },
             Msg::GetUploadCompleted(res) => {
                 match res {
-                    Ok(value) => self.get_result_up_completed = value,
+                    Ok(value) => self.get_result_up_completed = value < 0,
                     Err(err) => self.error = Some(err),
                 }
                 self.active_loading_files_btn = false;
@@ -234,25 +235,19 @@ impl AddUserCertificateCard {
         &self,
         link: &Scope<Self>,
     ) -> Html {
-        let onchange_cert_file = link.callback(move |value| {
-            if let Event::Files(files) = value {
-                Msg::UpdateFile(files.get(0))
-            } else {
-                Msg::Ignore
-            }
+        let onchange_cert_file = link.callback(move |ev: Event| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateFile(input.files())
         });
-        let ondrop_cert_file = link.callback(move |value: DragEvent| {
-            value.prevent_default();
-            if let Some(files) = value.data_transfer().unwrap().files() {
-                Msg::UpdateFile(files.get(0))
-            } else {
-                Msg::Ignore
-            }
+        let ondrop_cert_file = link.callback(move |ev: DragEvent| {
+            ev.prevent_default();
+            Msg::UpdateFile(ev.data_transfer().unwrap().files())
         });
-        let ondragover_cert_file = link.callback(move |value: DragEvent| {
-            value.prevent_default();
+        let ondragover_cert_file = link.callback(move |ev: DragEvent| {
+            ev.prevent_default();
             Msg::Ignore
         });
+        let ondragenter_cert_file = ondragover_cert_file.clone();
 
         html!{<div class="block">
             <div class="columns">
@@ -269,7 +264,11 @@ impl AddUserCertificateCard {
                             type="file"
                             accept="image/*,.pdf"
                             onchange={onchange_cert_file} />
-                        <span class="file-cta" ondrop={ondrop_cert_file} ondragover={ondragover_cert_file} >
+                        <span class="file-cta"
+                            ondrop={ondrop_cert_file}
+                            ondragover={ondragover_cert_file}
+                            ondragenter={ondragenter_cert_file}
+                            >
                           <span class="file-icon">
                             <i class="fas fa-upload"></i>
                           </span>
@@ -301,7 +300,7 @@ impl AddUserCertificateCard {
         link: &Scope<Self>,
     ) -> Html {
         let oninput_cert_description =
-            link.callback(|ev: Event| Msg::UpdateDescription(ev.value));
+            link.callback(|ev: InputEvent| Msg::UpdateDescription(ev.input_type()));
 
         html!{<div class="block">
             <label class="label">{ get_value_field(&61) }</label> // "Description"

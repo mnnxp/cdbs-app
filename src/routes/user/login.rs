@@ -1,7 +1,7 @@
 use std::sync::{Arc,Mutex};
 use yew::{Component, Callback, Context, html, Html, Properties, Event, classes};
-// use yew_agent::utils::store::Bridgeable;
-use yew_agent::Bridge;
+// use yew_agent::Bridge;
+use yew_router::prelude::*;
 use yew_router::prelude::Link;
 use graphql_client::GraphQLQuery;
 use log::debug;
@@ -29,7 +29,7 @@ pub struct Login {
     request: LoginInfo,
     response: Callback<Result<UserToken, Error>>,
     task: Option<()>,
-    router_agent: Arc<Mutex<Box<dyn Bridge<AppRoute>>>>,
+    // router_agent: Arc<Mutex<Box<dyn Bridge<AppRoute>>>>,
 }
 
 pub enum Msg {
@@ -45,29 +45,33 @@ impl Component for Login {
     type Properties = Props;
 
     fn create(ctx: &Context<Self>) -> Self {
-        let router_agent = Arc::new(Mutex::new(AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore))));
+        // let router_agent = Arc::new(Mutex::new(AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore))));
         Login {
             auth: Auth::new(),
             error: None,
             request: LoginInfo::default(),
             response: ctx.link().callback(Msg::Response),
-            router_agent,
+            // router_agent,
             task: None,
         }
     }
 
-    fn rendered(&mut self, _ctx: &Context<Self>, first_render: bool) {
+    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
         if first_render {
             if let Some(user) = get_logged_user() {
                 // route to profile page if user already logged
-                self.router_agent.lock().unwrap().send(Profile { username: user.username });
+                // self.router_agent.lock().unwrap().send(Profile { username: user.username });
+                let navigator: Navigator = ctx.link().navigator().unwrap();
+                navigator.replace(&Profile { username: user.username });
             };
         }
     }
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         let props = ctx.props().clone();
-        let router_agent = self.router_agent.clone();
+        // let router_agent = self.router_agent.clone();
+        let navigator: Navigator = ctx.link().navigator().unwrap();
+
         match msg {
             Msg::Request => {
                 let request = LoginInfoWrapper { user: self.request.clone() };
@@ -86,7 +90,8 @@ impl Component for Login {
                     debug!("user.username: {}", user.username);
                     let username = user.username.clone();
                     props.callback.emit(user);
-                    router_agent.lock().unwrap().send(Profile { username });
+                    // router_agent.lock().unwrap().send(Profile { username });
+                    navigator.replace(&Profile { username });
                 });
                 // debug!("get_token().unwrap(): {:?}", get_token().unwrap());
             },
@@ -117,7 +122,7 @@ impl Component for Login {
             <div class="auth-page">
                 <h1 class="title">{ get_value_field(&13) }</h1>
                 <h2 class="subtitle">
-                    <Link<AppRoute> route={Register}>
+                    <Link<AppRoute> to={Register}>
                         { get_value_field(&18) }
                     </Link<AppRoute>>
                 </h2>

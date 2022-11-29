@@ -1,6 +1,6 @@
 use yew::{Component, Callback, Context, html, html::Scope, Html, Event, classes};
-use yew_agent::utils::store::Bridgeable;
-use yew_agent::Bridge;
+// use yew_agent::Bridge;
+use yew_router::prelude::*;
 use yew_router::prelude::Link;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
@@ -23,7 +23,7 @@ use crate::gqls::user::{
 pub struct Register {
     error: Option<Error>,
     request: RegisterInfo,
-    router_agent: Box<dyn Bridge<AppRoute>>,
+    // router_agent: Box<dyn Bridge<AppRoute>>,
     regions: Vec<Region>,
     programs: Vec<Program>,
     types_access: Vec<TypeAccessInfo>,
@@ -55,7 +55,7 @@ impl Component for Register {
         Self {
             error: None,
             request: RegisterInfo::default(),
-            router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
+            // router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             programs: Vec::new(),
             regions: Vec::new(),
             types_access: Vec::new(),
@@ -68,7 +68,9 @@ impl Component for Register {
             let link = ctx.link().clone();
             if let Some(user) = get_logged_user() {
                 // route to profile page if user already logged
-                self.router_agent.send(Profile { username: user.username });
+                // self.router_agent.send(Profile { username: user.username });
+                let navigator: Navigator = ctx.link().navigator().unwrap();
+                navigator.replace(&Profile { username: user.username });
             };
             spawn_local(async move {
                 let res = make_query(RegisterOpt::build_query(
@@ -93,11 +95,11 @@ impl Component for Register {
                     phone: Some(self.request.phone.clone()),
                     description: Some(self.request.description.clone()),
                     address: Some(self.request.address.clone()),
-                    timeZone: Some(self.request.time_zone.clone()),
+                    time_zone: Some(self.request.time_zone.clone()),
                     position: Some(self.request.position.clone()),
-                    regionId: Some(self.request.region_id as i64),
-                    programId: Some(self.request.program_id as i64),
-                    typeAccessId: Some(self.request.type_access_id as i64),
+                    region_id: Some(self.request.region_id as i64),
+                    program_id: Some(self.request.program_id as i64),
+                    type_access_id: Some(self.request.type_access_id as i64),
                 };
                 spawn_local(async move {
                     let res = make_query(RegUser::build_query(reg_user::Variables {
@@ -121,7 +123,11 @@ impl Component for Register {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res = data.as_object().unwrap().get("data").unwrap();
                 match res.is_null() {
-                    false => self.router_agent.send(Login),
+                    false => {
+                        let navigator: Navigator = ctx.link().navigator().unwrap();
+                        navigator.replace(&Login);
+                    },
+                    // false => self.router_agent.send(Login),
                     true => self.error = Some(get_error(&data)),
                 }
             },
@@ -155,7 +161,7 @@ impl Component for Register {
             <div class="auth-page">
                 <h1 class="title">{ get_value_field(&14) }</h1>
                 <h2 class="subtitle">
-                    <Link<AppRoute> route={Login}>
+                    <Link<AppRoute> to={Login}>
                         { get_value_field(&21) }
                     </Link<AppRoute>>
                 </h2>

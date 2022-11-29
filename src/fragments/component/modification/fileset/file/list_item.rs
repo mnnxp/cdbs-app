@@ -61,8 +61,8 @@ impl Component for FilesetFileItem {
                 let file_uuid = ctx.props().file.uuid.clone();
                 spawn_local(async move {
                     let ipt_file_of_fileset_arg = com_mod_fileset_files::IptFileOfFilesetArg{
-                        filesetUuid: select_fileset_uuid,
-                        fileUuids: Some(vec![file_uuid]),
+                        fileset_uuid: select_fileset_uuid,
+                        file_uuids: Some(vec![file_uuid]),
                         limit: None,
                         offset: None,
                     };
@@ -77,8 +77,8 @@ impl Component for FilesetFileItem {
                 let file_uuid = ctx.props().file.uuid.clone();
                 spawn_local(async move {
                     let del_modification_file_from_fileset_data = delete_files_from_fileset::DelModificationFileFromFilesetData{
-                        filesetUuid: select_fileset_uuid,
-                        fileUuids: vec![file_uuid],
+                        fileset_uuid: select_fileset_uuid,
+                        file_uuids: vec![file_uuid],
                     };
                     let res = make_query(DeleteFilesFromFileset::build_query(
                         delete_files_from_fileset::Variables { del_modification_file_from_fileset_data }

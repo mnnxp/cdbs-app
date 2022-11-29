@@ -12,13 +12,16 @@ version = "0.1.0"
 # crate-type = ["rlib", "cdylib"]
 
 [dependencies]
-# yew = { git = "https://github.com/yewstack/yew/", features = ["csr"] }
-yew = { version = "0.20.0", features = ["csr"] }
-yew-router = "0.17.0"
-yew-agent = "0.1.0"
+yew = {git = "https://github.com/yewstack/yew", branch = "master", features = ["csr"]}
+yew-router = { git = "https://github.com/yewstack/yew", branch="master" }
+yew-agent = { git = "https://github.com/yewstack/yew", branch="master" }
+# yew = { version = "0.20.0", features = ["csr"] }
+# yew-router = "0.17.0"
+# yew-agent = "0.1.0"
 # yewtil = "0.4.0"
 gloo = "0.8.0"
 gloo-timers = "0.2.4"
+gloo-file = "0.2.3"
 # gloo-storage = "0.2.2"
 
 console_error_panic_hook = "0.1.7"

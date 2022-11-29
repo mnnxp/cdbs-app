@@ -1,7 +1,7 @@
 // use yew::{agent::Bridged, Bridge};
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, Event};
-use yew_agent::utils::store::Bridgeable;
-use yew_agent::Bridge;
+// use yew_agent::Bridge;
+use yew_router::prelude::*;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
@@ -23,7 +23,7 @@ pub struct CreateCompany {
     error: Option<Error>,
     current_user_uuid: UUID,
     request_company: CompanyCreateInfo,
-    router_agent: Box<dyn Bridge<AppRoute>>,
+    // router_agent: Box<dyn Bridge<AppRoute>>,
     regions: Vec<Region>,
     company_types: Vec<CompanyType>,
     types_access: Vec<TypeAccessInfo>,
@@ -61,9 +61,9 @@ impl Component for CreateCompany {
     fn create(ctx: &Context<Self>) -> Self {
         CreateCompany {
             error: None,
-            current_user_uuid: ctx.props().current_user.as_ref().map(|x| &x.uuid),
+            current_user_uuid: ctx.props().current_user.as_ref().map(|x| x.uuid.clone()).unwrap_or_default(),
             request_company: CompanyCreateInfo::new(),
-            router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
+            // router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             regions: Vec::new(),
             company_types: Vec::new(),
             types_access: Vec::new(),
@@ -73,7 +73,9 @@ impl Component for CreateCompany {
     fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
         if let None = get_logged_user() {
             // route to login page if not found token
-            self.router_agent.send(Login);
+            // self.router_agent.send(Login);
+            let navigator: Navigator = ctx.link().navigator().unwrap();
+            navigator.replace(&Login);
         };
 
         if first_render {
@@ -115,11 +117,11 @@ impl Component for CreateCompany {
                         email,
                         description,
                         address,
-                        siteUrl: site_url,
-                        timeZone: time_zone,
-                        regionId: region_id,
-                        companyTypeId: company_type_id,
-                        typeAccessId: type_access_id,
+                        site_url,
+                        time_zone,
+                        region_id,
+                        company_type_id,
+                        type_access_id,
                     };
                     let res = make_query(RegisterCompany::build_query(register_company::Variables {
                         ipt_company_data
@@ -137,7 +139,9 @@ impl Component for CreateCompany {
                         let company_uuid: UUID = serde_json::from_value(res.get("registerCompany").unwrap().clone()).unwrap();
                         debug!("Company uuid: {:?}", company_uuid);
                         // Redirect to company page
-                        self.router_agent.send(ShowCompany { uuid: company_uuid.clone() });
+                        // self.router_agent.send(ShowCompany { uuid: company_uuid.clone() });
+                        let navigator: Navigator = ctx.link().navigator().unwrap();
+                        navigator.replace(&ShowCompany { uuid: company_uuid.clone() });
                     },
                     true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }

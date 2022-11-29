@@ -117,11 +117,11 @@ impl Component for ModificationTableItem {
             Msg::RequestAddParamData => {
                 debug!("RequestAddParamData: {:?}", self.request_add_param);
                 let ipt_param_data = put_modification_params::IptParamData{
-                    paramId: self.request_add_param.param_id as i64,
+                    param_id: self.request_add_param.param_id as i64,
                     value: self.request_add_param.value.clone(),
                 };
                 let ipt_modification_param_data = put_modification_params::IptModificationParamData{
-                    modificationUuid: ctx.props().modification_uuid.clone(),
+                    modification_uuid: ctx.props().modification_uuid.clone(),
                     params: vec![ipt_param_data],
                 };
                 spawn_local(async move {
@@ -134,11 +134,11 @@ impl Component for ModificationTableItem {
             Msg::RequestUpdateParamData => {
                 debug!("RequestUpdateParamData: {:?}", self.request_add_param);
                 let ipt_param_data = put_modification_params::IptParamData{
-                    paramId: self.request_edit_param.param_id as i64,
+                    param_id: self.request_edit_param.param_id as i64,
                     value: self.request_edit_param.value.clone(),
                 };
                 let ipt_modification_param_data = put_modification_params::IptModificationParamData{
-                    modificationUuid: ctx.props().modification_uuid.clone(),
+                    modification_uuid: ctx.props().modification_uuid.clone(),
                     params: vec![ipt_param_data],
                 };
                 spawn_local(async move {
@@ -151,8 +151,8 @@ impl Component for ModificationTableItem {
             Msg::RequestDeleteParamData => {
                 debug!("RequestDeleteParamData");
                 let del_modification_param_data = delete_modification_params::DelModificationParamData{
-                    modificationUuid: ctx.props().modification_uuid.clone(),
-                    paramIds: vec![self.request_edit_param.param_id as i64],
+                    modification_uuid: ctx.props().modification_uuid.clone(),
+                    param_ids: vec![self.request_edit_param.param_id as i64],
                 };
                 spawn_local(async move {
                     let res = make_query(DeleteModificationParams::build_query(

@@ -56,7 +56,7 @@ pub struct UserInfo {
     pub is_followed: bool,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+#[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct ShowUserShort {
     pub uuid: UUID,
@@ -66,7 +66,7 @@ pub struct ShowUserShort {
     pub image_file: DownloadFile,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct SlimUser {
     pub uuid: String,

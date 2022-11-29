@@ -129,8 +129,8 @@ impl Component for SearchSpecsTags {
                         spawn_local(async move {
                             let ipt_search_spec_arg = search_specs::IptSearchSpecArg {
                                 text: ipt_val.clone(),
-                                splitChar: None,
-                                depthLevel: None,
+                                split_char: None,
+                                depth_level: None,
                                 limit: None,
                                 offset: None,
                             };

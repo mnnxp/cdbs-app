@@ -74,9 +74,9 @@ impl Component for AddCompanyRepresentCard {
             Msg::RequestRegisterRepresent => {
                 debug!("Register company represent: {:?}", &self.request_register);
                 let ipt_company_represent_data = register_company_represent::IptCompanyRepresentData {
-                    companyUuid: ctx.props().company_uuid.clone(),
-                    regionId: self.request_register.region_id as i64,
-                    representationTypeId: self.request_register.representation_type_id as i64,
+                    company_uuid: ctx.props().company_uuid.clone(),
+                    region_id: self.request_register.region_id as i64,
+                    representation_type_id: self.request_register.representation_type_id as i64,
                     name: self.request_register.name.clone(),
                     address: self.request_register.address.clone(),
                     phone: self.request_register.phone.clone(),

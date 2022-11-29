@@ -1,6 +1,6 @@
 use yew::{Component, Context, html, html::Scope, Html, Event};
-use yew_agent::utils::store::Bridgeable;
-use yew_agent::Bridge;
+// use yew_agent::Bridge;
+use yew_router::prelude::*;
 use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
@@ -21,7 +21,7 @@ use crate::gqls::component::{
 pub struct CreateComponent {
     error: Option<Error>,
     request_component: ComponentCreateData,
-    router_agent: Box<dyn Bridge<AppRoute>>,
+    // router_agent: Box<dyn Bridge<AppRoute>>,
     component_types: Vec<ComponentType>,
     actual_statuses: Vec<ActualStatus>,
     types_access: Vec<TypeAccessInfo>,
@@ -51,7 +51,7 @@ impl Component for CreateComponent {
         CreateComponent {
             error: None,
             request_component: ComponentCreateData::new(),
-            router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
+            // router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             component_types: Vec::new(),
             actual_statuses: Vec::new(),
             types_access: Vec::new(),
@@ -62,7 +62,9 @@ impl Component for CreateComponent {
     fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
         if let None = get_logged_user() {
             // route to login page if not found token
-            self.router_agent.send(Login);
+            // self.router_agent.send(Login);
+            let navigator: Navigator = ctx.link().navigator().unwrap();
+            navigator.replace(&Login);
         };
         if first_render {
             let link = ctx.link().clone();
@@ -109,13 +111,13 @@ impl Component for CreateComponent {
                         is_base,
                     } = request_component;
                     let ipt_component_data = register_component::IptComponentData {
-                        parentComponentUuid: parent_component_uuid,
+                        parent_component_uuid,
                         name,
                         description,
-                        typeAccessId: type_access_id as i64,
-                        componentTypeId: component_type_id as i64,
-                        actualStatusId: actual_status_id as i64,
-                        isBase: is_base,
+                        type_access_id: type_access_id as i64,
+                        component_type_id: component_type_id as i64,
+                        actual_status_id: actual_status_id as i64,
+                        is_base,
                     };
                     let res = make_query(RegisterComponent::build_query(register_component::Variables {
                         ipt_component_data
@@ -151,7 +153,9 @@ impl Component for CreateComponent {
                         debug!("registerComponent: {:?}", result);
                         // Redirect to setting component page
                         if !result.is_empty() {
-                            self.router_agent.send(ComponentSettings { uuid: result });
+                            // self.router_agent.send(ComponentSettings { uuid: result });
+                            let navigator: Navigator = ctx.link().navigator().unwrap();
+                            navigator.replace(&ComponentSettings { uuid: result });
                         }
 
                     },

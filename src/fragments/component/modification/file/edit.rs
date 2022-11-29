@@ -7,7 +7,7 @@ use wasm_bindgen_futures::spawn_local;
 use web_sys::{File, FileList};
 use log::debug;
 use super::ModificationFileItem;
-use crate::services::storage_upload::{StorageUpload, storage_upload};
+use crate::services::storage_upload::storage_upload;
 use crate::services::get_value_field;
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
@@ -108,8 +108,8 @@ impl Component for ManageModificationFilesCard {
                 let modification_uuid = ctx.props().modification_uuid.clone();
                 spawn_local(async move {
                     let ipt_modification_files_arg = component_modification_files_list::IptModificationFilesArg{
-                        filesUuids: None,
-                        modificationUuid: modification_uuid,
+                        files_uuids: None,
+                        modification_uuid: modification_uuid,
                         limit: None,
                         offset: None,
                     };
@@ -133,7 +133,7 @@ impl Component for ManageModificationFilesCard {
 
                     spawn_local(async move {
                         let ipt_modification_files_data = upload_modification_files::IptModificationFilesData{
-                            modificationUuid: modification_uuid,
+                            modification_uuid,
                             filenames,
                         };
                         let res = make_query(UploadModificationFiles::build_query(
@@ -212,7 +212,7 @@ impl Component for ManageModificationFilesCard {
                         if !self.files.is_empty() {
                             let callback_confirm =
                                 link.callback(|res: Result<usize, Error>| Msg::GetUploadCompleted(res));
-                            storage_upload(&result, &vec![file], callback_confirm);
+                            storage_upload(result, self.files, callback_confirm);
                             // for file in self.files.iter().rev() {
                             //     let file_name = file.name().clone();
                             //     debug!("file name: {:?}", file_name);

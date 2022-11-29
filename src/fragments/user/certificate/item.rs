@@ -51,6 +51,7 @@ impl Component for UserCertificateItem {
     fn create(ctx: &Context<Self>) -> Self {
         Self {
             error: None,
+            file_uuid: String::new(),
             request_update: ctx.props().certificate.description.to_string(),
             // request_delete: DeleteUserCertData::default(),
             get_result_update: false,
@@ -66,7 +67,7 @@ impl Component for UserCertificateItem {
             Msg::RequestUpdateDescription => {
                 debug!("Update user cert: {:?}", &self.request_update);
                 let ipt_update_user_certificate_data = update_user_certificate::IptUpdateUserCertificateData {
-                    fileUuid: ctx.props().certificate.file.uuid.clone(),
+                    file_uuid: ctx.props().certificate.file.uuid.clone(),
                     description: self.request_update.clone(),
                 };
 
@@ -81,7 +82,7 @@ impl Component for UserCertificateItem {
                 let file_uuid = ctx.props().certificate.file.uuid.clone();
                 spawn_local(async move {
                     let del_user_certificate_data = delete_user_certificate::DelUserCertificateData{
-                        fileUuid: file_uuid,
+                        file_uuid,
                     };
                     let res = make_query(DeleteUserCertificate::build_query(delete_user_certificate::Variables {
                         del_user_certificate_data

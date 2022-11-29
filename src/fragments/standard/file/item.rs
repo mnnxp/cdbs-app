@@ -60,8 +60,8 @@ impl Component for FileItem {
                 let file_uuid = ctx.props().file.uuid.clone();
                 spawn_local(async move {
                     let ipt_standard_files_arg = standard_files::IptStandardFilesArg{
-                        filesUuids: Some(vec![file_uuid]),
-                        standardUuid: standard_uuid,
+                        files_uuids: Some(vec![file_uuid]),
+                        standard_uuid,
                     };
                     let res = make_query(StandardFiles::build_query(standard_files::Variables {
                         ipt_standard_files_arg
@@ -74,8 +74,8 @@ impl Component for FileItem {
                 let file_uuid = ctx.props().file.uuid.clone();
                 spawn_local(async move {
                     let delete_standard_file_data = delete_standard_file::DeleteStandardFileData{
-                        fileUuid: file_uuid,
-                        standardUuid: standard_uuid,
+                        file_uuid,
+                        standard_uuid,
                     };
                     let res = make_query(DeleteStandardFile::build_query(delete_standard_file::Variables {
                         delete_standard_file_data

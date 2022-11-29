@@ -1,6 +1,6 @@
 use yew::{Component, Context, html, html::Scope, Html, Properties, classes};
-use yew_agent::utils::store::Bridgeable;
-use yew_agent::Bridge;
+// use yew_agent::Bridge;
+use yew_router::prelude::*;
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
@@ -38,7 +38,7 @@ pub struct ListItemStandard {
     error: Option<Error>,
     standard_uuid: UUID,
     show_list: bool,
-    router_agent: Box<dyn Bridge<AppRoute>>,
+    // router_agent: Box<dyn Bridge<AppRoute>>,
     is_followed: bool,
 }
 
@@ -51,7 +51,7 @@ impl Component for ListItemStandard {
             error: None,
             show_list: ctx.props().show_list,
             standard_uuid: ctx.props().data.uuid,
-            router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
+            // router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             is_followed: ctx.props().data.is_followed,
         }
     }
@@ -62,7 +62,9 @@ impl Component for ListItemStandard {
         match msg {
             Msg::OpenStandard => {
                 // Redirect to standard page
-                self.router_agent.send(ShowStandard { uuid: ctx.props().data.uuid.to_string() });
+                // self.router_agent.send(ShowStandard { uuid: ctx.props().data.uuid.to_string() });
+                let navigator: Navigator = ctx.link().navigator().unwrap();
+                navigator.replace(&ShowStandard { uuid: ctx.props().data.uuid.to_string() });
             },
             Msg::TriggerFav => {
                 match &self.is_followed {

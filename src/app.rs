@@ -11,7 +11,7 @@ use crate::fragments::{
     header::Header,
 };
 use crate::routes::{
-    fix_fragment_routes,
+    // fix_fragment_routes,
     home::Home,
     login::Login,
     notification::Notifications,
@@ -45,11 +45,11 @@ impl Component for App {
     type Properties = ();
 
     fn create(ctx: &Context<Self>) -> Self {
-        let mut route = ctx.link().location().unwrap().route();
-        fix_fragment_routes(&mut route);
+        let mut path = ctx.link().location().unwrap().path();
+        // fix_fragment_routes(&mut route);
         App {
             // auth: Auth::new(),
-            current_route: AppRoute::switch(route),
+            current_route: AppRoute::switch(path),
             current_user: None,
         }
     }
@@ -76,7 +76,7 @@ impl Component for App {
                 )
             },
             Msg::Route(mut route) => {
-                fix_fragment_routes(&mut route);
+                // fix_fragment_routes(&mut route);
                 self.current_route = AppRoute::switch(route)
             },
             Msg::Authenticated(slim_user) => self.current_user = Some(slim_user),

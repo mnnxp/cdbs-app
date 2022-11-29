@@ -1,6 +1,6 @@
 use yew::{Component, Context, html, html::Scope, Html, Properties, Event};
-use yew_agent::utils::store::Bridgeable;
-use yew_agent::Bridge;
+// use yew_agent::Bridge;
+use yew_router::prelude::*;
 use chrono::NaiveDateTime;
 use log::debug;
 use graphql_client::GraphQLQuery;
@@ -26,7 +26,7 @@ pub struct CreateStandard {
     error: Option<Error>,
     current_user_uuid: UUID,
     request_standard: StandardCreateData,
-    router_agent: Box<dyn Bridge<AppRoute>>,
+    // router_agent: Box<dyn Bridge<AppRoute>>,
     supplier_list: Vec<ShowCompanyShort>,
     standard_statuses: Vec<StandardStatus>,
     regions: Vec<Region>,
@@ -70,7 +70,7 @@ impl Component for CreateStandard {
             error: None,
             current_user_uuid: ctx.props().current_user.as_ref().map(|x| &x.uuid),
             request_standard: StandardCreateData::new(),
-            router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
+            // router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             supplier_list: Vec::new(),
             standard_statuses: Vec::new(),
             regions: Vec::new(),
@@ -85,7 +85,9 @@ impl Component for CreateStandard {
             Some(cu) => cu.uuid,
             None => {
                 // route to login page if not found token
-                self.router_agent.send(Login);
+                // self.router_agent.send(Login);
+                let navigator: Navigator = ctx.link().navigator().unwrap();
+                navigator.replace(&Login);
                 String::new()
             },
         };
@@ -95,8 +97,8 @@ impl Component for CreateStandard {
 
             spawn_local(async move {
                 let ipt_companies_arg = get_standard_data_opt::IptCompaniesArg{
-                    companiesUuids: None,
-                    userUuid: Some(logged_user_uuid),
+                    companies_uuids: None,
+                    user_uuid: Some(logged_user_uuid),
                     favorite: None,
                     supplier: Some(true),
                     limit: None,
@@ -171,17 +173,17 @@ impl Component for CreateStandard {
                         region_id,
                     } = request_standard;
                     let ipt_standard_data = register_standard::IptStandardData {
-                        parentStandardUuid: parent_standard_uuid,
+                        parent_standard_uuid,
                         classifier,
                         name,
                         description,
-                        specifiedTolerance: specified_tolerance,
-                        technicalCommittee: technical_committee,
-                        publicationAt: publication_at,
-                        companyUuid: company_uuid,
-                        typeAccessId: type_access_id as i64,
-                        standardStatusId: standard_status_id as i64,
-                        regionId: region_id as i64,
+                        specified_tolerance,
+                        technical_committee,
+                        publication_at,
+                        company_uuid,
+                        type_access_id: type_access_id as i64,
+                        standard_status_id: standard_status_id as i64,
+                        region_id: region_id as i64,
                     };
                     let res = make_query(RegisterStandard::build_query(register_standard::Variables {
                         ipt_standard_data
@@ -224,7 +226,9 @@ impl Component for CreateStandard {
                         // Redirect to setting standard page
                         if !result.is_empty() {
                             // self.get_result_created_standard = result;
-                            self.router_agent.send(StandardSettings { uuid: result });
+                            // self.router_agent.send(StandardSettings { uuid: result });
+                            let navigator: Navigator = ctx.link().navigator().unwrap();
+                            navigator.replace(&StandardSettings { uuid: result });
                         }
 
                     },

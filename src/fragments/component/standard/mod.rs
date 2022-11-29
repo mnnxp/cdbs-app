@@ -97,8 +97,8 @@ impl Component for ComponentStandardsCard {
             },
             Msg::RequestAddStandard => {
                 let ipt_standard_to_component_data = add_standard_to_component::IptStandardToComponentData{
-                    componentUuid: ctx.props().component_uuid.clone(),
-                    standardUuid: self.request_add_standard_uuid.clone(),
+                    component_uuid: ctx.props().component_uuid.clone(),
+                    standard_uuid: self.request_add_standard_uuid.clone(),
                 };
                 spawn_local(async move {
                     let res = make_query(AddStandardToComponent::build_query(

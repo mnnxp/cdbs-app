@@ -1,6 +1,6 @@
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, classes};
-use yew_agent::utils::store::Bridgeable;
-use yew_agent::Bridge;
+// use yew_agent::Bridge;
+use yew_router::prelude::*;
 use yew_router::hooks::use_route;
 use web_sys::MouseEvent;
 use log::debug;
@@ -33,7 +33,7 @@ pub struct ShowCompany {
     company: Option<CompanyInfo>,
     current_company_uuid: UUID,
     current_user_owner: bool,
-    router_agent: Box<dyn Bridge<AppRoute>>,
+    // router_agent: Box<dyn Bridge<AppRoute>>,
     subscribers: usize,
     is_followed: bool,
     company_tab: CompanyTab,
@@ -81,7 +81,7 @@ impl Component for ShowCompany {
             company: None,
             current_company_uuid: ctx.props().company_uuid,
             current_user_owner: false,
-            router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
+            // router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             subscribers: 0,
             is_followed: false,
             company_tab: CompanyTab::Certificates,
@@ -93,9 +93,11 @@ impl Component for ShowCompany {
     fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
         if let None = get_logged_user() {
             // route to login page if not found token
-            self.router_agent.send(Login);
+            // self.router_agent.send(Login);
+            let navigator: Navigator = ctx.link().navigator().unwrap();
+            navigator.replace(&Login);
         };
-        
+
         let target_company_uuid =
             use_route().unwrap_or_default().trim_start_matches("/company/").to_string();
         // get flag changing current company in route
@@ -119,6 +121,8 @@ impl Component for ShowCompany {
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         // let link = ctx.link().clone();
+        let navigator: Navigator = ctx.link().navigator().unwrap();
+
         match msg {
             Msg::Follow => {
                 let link = ctx.link().clone();
@@ -200,13 +204,15 @@ impl Component for ShowCompany {
             Msg::OpenOwnerCompany => {
                 if let Some(company_data) = &self.company {
                     // Redirect to owneruser company page
-                    self.router_agent.send(Profile { username: company_data.owner_user.username.to_string() });
+                    // self.router_agent.send(Profile { username: company_data.owner_user.username.to_string() });
+                    navigator.clone().replace(&Profile { username: company_data.owner_user.username.to_string() });
                 }
             },
             Msg::OpenSettingCompany => {
                 if let Some(company_data) = &self.company {
                     // Redirect to company settings page
-                    self.router_agent.send(CompanySettings { uuid: company_data.uuid.to_string() });
+                    // self.router_agent.send(CompanySettings { uuid: company_data.uuid.to_string() });
+                    navigator.replace(&CompanySettings { uuid: company_data.uuid.to_string() });
                 }
             },
             Msg::ShowFullCompanyInfo => self.show_full_company_info = !self.show_full_company_info,

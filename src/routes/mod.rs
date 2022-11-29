@@ -23,7 +23,7 @@ pub use crate::fragments::{
 use yew_router::prelude::*;
 
 /// App routes
-#[derive(Debug, Clone, PartialEq, Routable)]
+#[derive(Debug, Clone, Routable, PartialEq)]
 pub enum AppRoute {
     #[at("/login")]
     Login,
@@ -64,12 +64,12 @@ pub enum AppRoute {
     NotFound,
 }
 
-/// Fix fragment handling problem for yew_router
-pub fn fix_fragment_routes(route: &mut Router) {
-    let r = route.route.as_str();
-    if let Some(index) = r.find('#') {
-        route.route = r[index..].to_string();
-    } else {
-        route.route = "/".to_string();
-    }
-}
+// Fix fragment handling problem for yew_router
+// pub fn fix_fragment_routes(route: &mut Router) {
+//     let r = route.route.as_str();
+//     if let Some(index) = r.find('#') {
+//         route.route = r[index..].to_string();
+//     } else {
+//         route.route = "/".to_string();
+//     }
+// }

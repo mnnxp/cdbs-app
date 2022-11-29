@@ -7,7 +7,7 @@ use web_sys::FileList;
 use log::debug;
 use serde_json::Value;
 use super::FilesetFilesBlock;
-use crate::services::storage_upload::{StorageUpload, storage_upload};
+use crate::services::storage_upload::storage_upload;
 use crate::services::get_value_field;
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
@@ -137,8 +137,8 @@ impl Component for ManageModificationFilesets {
             },
             Msg::RequestNewFileset => {
                 let ipt_fileset_program_data = register_modification_fileset::IptFilesetProgramData{
-                    modificationUuid: ctx.props().select_modification_uuid.clone(),
-                    programId: self.request_fileset_program_id as i64,
+                    modification_uuid: ctx.props().select_modification_uuid.clone(),
+                    program_id: self.request_fileset_program_id as i64,
                 };
                 spawn_local(async move {
                     let res = make_query(RegisterModificationFileset::build_query(
@@ -150,8 +150,8 @@ impl Component for ManageModificationFilesets {
             },
             Msg::RequestDeleteFileset => {
                 let del_fileset_program_data = delete_modification_fileset::DelFilesetProgramData{
-                    modificationUuid: ctx.props().select_modification_uuid.clone(),
-                    filesetUuid: self.select_fileset_uuid.clone(),
+                    modification_uuid: ctx.props().select_modification_uuid.clone(),
+                    fileset_uuid: self.select_fileset_uuid.clone(),
                 };
                 spawn_local(async move {
                     let res = make_query(DeleteModificationFileset::build_query(
@@ -164,8 +164,8 @@ impl Component for ManageModificationFilesets {
             Msg::RequestFilesOfFileset => {
                 if self.select_fileset_uuid.len() == 36 {
                     let ipt_file_of_fileset_arg = com_mod_files_of_fileset::IptFileOfFilesetArg{
-                        filesetUuid: self.select_fileset_uuid.clone(),
-                        fileUuids: None,
+                        fileset_uuid: self.select_fileset_uuid.clone(),
+                        file_uuids: None,
                         limit: None,
                         offset: None,
                     };
@@ -368,7 +368,7 @@ impl Component for ManageModificationFilesets {
                         if !self.files.is_empty() {
                             let callback_confirm =
                                 link.callback(|res: Result<usize, Error>| Msg::GetUploadCompleted(res));
-                            storage_upload(&result, &vec![file], callback_confirm);
+                            storage_upload(result, self.files, callback_confirm);
                             // for file in self.files.iter().rev() {
                             //     let file_name = file.name().clone();
                             //     debug!("file name: {:?}", file_name);

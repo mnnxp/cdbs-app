@@ -54,8 +54,8 @@ impl Component for ModificationFileListItem {
                 let file_uuid = ctx.props().file.uuid.clone();
                 spawn_local(async move {
                     let ipt_modification_files_arg = component_modification_files::IptModificationFilesArg{
-                        filesUuids: Some(vec![file_uuid]),
-                        modificationUuid: modification_uuid,
+                        files_uuids: Some(vec![file_uuid]),
+                        modification_uuid,
                         limit: None,
                         offset: None,
                     };

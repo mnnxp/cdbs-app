@@ -77,10 +77,10 @@ impl Component for CatalogComponents {
             Msg::GetList => {
                 let ipt_components_arg = match &ctx.props().arguments {
                     Some(ref arg) => Some(get_components_short_list::IptComponentsArg {
-                        componentsUuids: arg.components_uuids.clone(),
-                        companyUuid: arg.company_uuid.to_owned(),
-                        standardUuid: arg.standard_uuid.to_owned(),
-                        userUuid: arg.user_uuid.to_owned(),
+                        components_uuids: arg.components_uuids.clone(),
+                        company_uuid: arg.company_uuid.to_owned(),
+                        standard_uuid: arg.standard_uuid.to_owned(),
+                        user_uuid: arg.user_uuid.to_owned(),
                         favorite: arg.favorite,
                         limit: arg.limit,
                         offset: arg.offset,
@@ -175,7 +175,7 @@ impl Component for CatalogComponents {
                     <div class="buttons">
                         {match &ctx.props().show_create_btn {
                           true => html!{
-                              <Link<AppRoute> route={CreateComponent} classes="button is-info">
+                              <Link<AppRoute> to={CreateComponent} classes="button is-info">
                                   { get_value_field(&45) } // Create
                               </Link<AppRoute>>
                           },

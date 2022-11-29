@@ -205,11 +205,11 @@ impl Component for ModificationsTableEdit {
             },
             Msg::RequestAddModificationData => {
                 let ipt_component_modification_data = register_component_modification::IptComponentModificationData{
-                    componentUuid: ctx.props().current_component_uuid.clone(),
-                    parentModificationUuid: None,
-                    modificationName: self.request_add_modification.modification_name.clone(),
+                    component_uuid: ctx.props().current_component_uuid.clone(),
+                    parent_modification_uuid: None,
+                    modification_name: self.request_add_modification.modification_name.clone(),
                     description: self.request_add_modification.description.clone(),
-                    actualStatusId: self.request_add_modification.actual_status_id as i64,
+                    actual_status_id: self.request_add_modification.actual_status_id as i64,
                 };
                 spawn_local(async move {
                     let res = make_query(RegisterComponentModification::build_query(
@@ -222,7 +222,7 @@ impl Component for ModificationsTableEdit {
                 self.update_edit_modification = false;
                 let modification_uuid = self.select_modification_uuid.clone();
                 let ipt_update_component_modification_data = put_component_modification_update::IptUpdateComponentModificationData{
-                    modificationName: match self.request_edit_modification.modification_name.is_empty() {
+                    modification_name: match self.request_edit_modification.modification_name.is_empty() {
                         true => None,
                         false => Some(self.request_edit_modification.modification_name.clone())
                     },
@@ -230,7 +230,7 @@ impl Component for ModificationsTableEdit {
                         true => None,
                         false => Some(self.request_edit_modification.description.clone())
                     },
-                    actualStatusId: match self.request_edit_modification.actual_status_id == 0 {
+                    actual_status_id: match self.request_edit_modification.actual_status_id == 0 {
                         true => None,
                         false => Some(self.request_edit_modification.actual_status_id as i64)
                     },
@@ -247,8 +247,8 @@ impl Component for ModificationsTableEdit {
             },
             Msg::RequestDeleteModificationData => {
                 let del_component_modification_data = delete_component_modification::DelComponentModificationData{
-                    componentUuid: ctx.props().current_component_uuid.clone(),
-                    modificationUuid: self.select_modification_uuid.clone(),
+                    component_uuid: ctx.props().current_component_uuid.clone(),
+                    modification_uuid: self.select_modification_uuid.clone(),
                 };
                 spawn_local(async move {
                     let res = make_query(DeleteComponentModification::build_query(
@@ -261,7 +261,7 @@ impl Component for ModificationsTableEdit {
             },
             Msg::RequestComponentModificationsData => {
                 let ipt_component_modification_arg = get_component_modifications::IptComponentModificationArg{
-                    componentUuid: ctx.props().current_component_uuid.clone(),
+                    component_uuid: ctx.props().current_component_uuid.clone(),
                     limit: None,
                     offset: None,
                 };
@@ -276,8 +276,8 @@ impl Component for ModificationsTableEdit {
             },
             Msg::RequestComponentModificationFilesetsData => {
                 let ipt_fileset_program_arg = component_modification_filesets::IptFilesetProgramArg{
-                    modificationUuid: self.select_modification_uuid.clone(),
-                    programIds: None,
+                    modification_uuid: self.select_modification_uuid.clone(),
+                    program_ids: None,
                     limit: None,
                     offset: None,
                 };

@@ -1,12 +1,11 @@
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
 use graphql_client::GraphQLQuery;
-use gloo::file::File;
-use web_sys::{DragEvent, Event};
+use web_sys::{DragEvent, Event, File};
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
-use crate::services::storage_upload::{StorageUpload, storage_upload};
+use crate::services::storage_upload::storage_upload;
 use crate::services::get_value_field;
 use crate::types::UploadFile;
 use crate::gqls::{
@@ -86,7 +85,7 @@ impl Component for AddCompanyCertificateCard {
                 if let Some(file) = &self.file {
                     // debug!("RequestUploadData: {:?}", &self.request_update);
                     let cert_data = upload_company_certificate::IptCompanyCertificateData {
-                        companyUuid: ctx.props().company_uuid.clone(),
+                        company_uuid: ctx.props().company_uuid.clone(),
                         filename: file.name().to_string(),
                         description: self.description.clone(),
                     };
@@ -112,8 +111,8 @@ impl Component for AddCompanyCertificateCard {
             },
             Msg::ResponseUploadFile(Err(err)) => {
                 self.error = Some(err);
-                self.task = None;
-                self.task_read = None;
+                // self.task = None;
+                // self.task_read = None;
             },
             // Msg::RequestUploadCompleted => {
             //     let file_uuids = vec![self.request_upload_data.file_uuid.clone()];
@@ -145,7 +144,7 @@ impl Component for AddCompanyCertificateCard {
                         if let Some(file) = self.file.clone() {
                             let callback_confirm =
                                 link.callback(|res: Result<usize, Error>| Msg::GetUploadCompleted(res));
-                            storage_upload(&result, &vec![file], callback_confirm);
+                            storage_upload(result, vec![file], callback_confirm);
                             // let file_name = file.name().clone();
                             // let task = {
                             //     let callback = ctx.link().callback(move |data: FileData| {

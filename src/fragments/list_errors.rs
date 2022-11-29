@@ -1,11 +1,11 @@
 use yew::{Component, Callback, Context, html, Html, Properties};
-use yew_agent::utils::store::Bridgeable;
-use yew_agent::Bridge;
+// use yew_agent::Bridge;
+use yew_router::prelude::*;
 use crate::routes::AppRoute::{self, Login};
 use crate::error::Error;
 
 pub struct ListErrors {
-    router_agent: Box<dyn Bridge<AppRoute>>,
+    // router_agent: Box<dyn Bridge<AppRoute>>,
 }
 
 #[derive(Properties, Clone, Debug, PartialEq)]
@@ -26,7 +26,7 @@ impl Component for ListErrors {
 
     fn create(ctx: &Context<Self>) -> Self {
         ListErrors {
-            router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
+            // router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
         }
     }
 
@@ -38,7 +38,11 @@ impl Component for ListErrors {
                     clear.emit(());
                 };
             },
-            Msg::RedirectToLogin => self.router_agent.send(Login), // Redirect to login page
+            Msg::RedirectToLogin => {
+                // self.router_agent.send(Login), // Redirect to login page
+                let navigator: Navigator = ctx.link().navigator().unwrap();
+                navigator.replace(&Login);
+            },
             Msg::Ignore => {},
         }
         true

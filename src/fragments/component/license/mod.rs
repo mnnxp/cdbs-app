@@ -97,8 +97,8 @@ impl Component for ComponentLicensesTags {
             },
             Msg::RequestAddLicense => {
                 let ipt_component_license_data = add_component_license::IptComponentLicenseData{
-                    componentUuid: ctx.props().component_uuid.clone(),
-                    licenseId: self.request_add_license_id as i64,
+                    component_uuid: ctx.props().component_uuid.clone(),
+                    license_id: self.request_add_license_id as i64,
                 };
                 spawn_local(async move {
                     let res = make_query(AddComponentLicense::build_query(

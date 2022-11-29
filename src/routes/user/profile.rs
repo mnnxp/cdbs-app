@@ -1,6 +1,6 @@
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, classes};
-use yew_agent::utils::store::Bridgeable;
-use yew_agent::Bridge;
+// use yew_agent::Bridge;
+use yew_router::prelude::*;
 use yew_router::hooks::use_route;
 use web_sys::MouseEvent;
 use graphql_client::GraphQLQuery;
@@ -39,7 +39,7 @@ pub struct Profile {
     profile: Option<UserInfo>,
     current_user_uuid: UUID,
     current_username: String,
-    router_agent: Box<dyn Bridge<AppRoute>>,
+    // router_agent: Box<dyn Bridge<AppRoute>>,
     subscribers: usize,
     is_followed: bool,
     profile_tab: ProfileTab,
@@ -89,7 +89,7 @@ impl Component for Profile {
             profile: None,
             current_user_uuid: String::new(),
             current_username: String::new(),
-            router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
+            // router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             subscribers: 0,
             is_followed: false,
             profile_tab: ProfileTab::Certificates,
@@ -103,7 +103,9 @@ impl Component for Profile {
             Some(cu) => cu.username,
             None => {
                 // route to login page if not found token
-                self.router_agent.send(Login);
+                // self.router_agent.send(Login);
+                let navigator: Navigator = ctx.link().navigator().unwrap();
+                navigator.replace(&Login);
                 String::new()
             },
         };
@@ -142,7 +144,7 @@ impl Component for Profile {
                         }
                         false => {
                             let ipt_get_user_arg = get_user_data::IptGetUserArg {
-                                userUuid: None,
+                                user_uuid: None,
                                 username: Some(target_username),
                             };
                             let res = make_query(GetUserData::build_query(

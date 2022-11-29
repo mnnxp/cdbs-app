@@ -78,8 +78,8 @@ impl Component for ManageFilesOfFilesetBlock {
                     // set active loading button
                     self.active_loading_files_btn = true;
                     let ipt_file_of_fileset_arg = com_mod_fileset_files::IptFileOfFilesetArg{
-                        filesetUuid: self.select_fileset_uuid.clone(),
-                        fileUuids: None,
+                        fileset_uuid: self.select_fileset_uuid.clone(),
+                        file_uuids: None,
                         limit: None,
                         offset: None,
                     };

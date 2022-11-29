@@ -92,8 +92,8 @@ impl Component for ComponentSuppliersCard {
             },
             Msg::RequestChangeOwnerSupplier => {
                 let ipt_supplier_component_data = set_company_owner_supplier::IptSupplierComponentData{
-                    componentUuid: ctx.props().component_uuid.clone(),
-                    companyUuid: self.request_set_supplier_uuid.clone(),
+                    component_uuid: ctx.props().component_uuid.clone(),
+                    company_uuid: self.request_set_supplier_uuid.clone(),
                     description: self.request_set_supplier_description.clone(),
                 };
                 spawn_local(async move {
@@ -105,8 +105,8 @@ impl Component for ComponentSuppliersCard {
             },
             Msg::RequestAddSupplier => {
                 let ipt_supplier_component_data = add_component_supplier::IptSupplierComponentData{
-                    componentUuid: ctx.props().component_uuid.clone(),
-                    companyUuid: self.request_set_supplier_uuid.clone(),
+                    component_uuid: ctx.props().component_uuid.clone(),
+                    company_uuid: self.request_set_supplier_uuid.clone(),
                     description: self.request_set_supplier_description.clone(),
                 };
                 spawn_local(async move {

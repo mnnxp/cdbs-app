@@ -1,7 +1,7 @@
 use yew::{Component, Context, html, html::Scope, Html, Properties, classes};
 use yew_router::hooks::use_route;
-use yew_agent::utils::store::Bridgeable;
-use yew_agent::Bridge;
+// use yew_agent::Bridge;
+use yew_router::prelude::*;
 use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
@@ -33,7 +33,7 @@ pub struct ShowStandard {
     current_standard_uuid: UUID,
     current_user_owner: bool,
     // task: Option<FetchTask>,
-    router_agent: Box<dyn Bridge<AppRoute>>,
+    // router_agent: Box<dyn Bridge<AppRoute>>,
     subscribers: usize,
     is_followed: bool,
     show_full_description: bool,
@@ -74,7 +74,7 @@ impl Component for ShowStandard {
             current_standard_uuid: String::new(),
             current_user_owner: false,
             // task: None,
-            router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
+            // router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             subscribers: 0,
             is_followed: false,
             show_full_description: false,
@@ -86,7 +86,9 @@ impl Component for ShowStandard {
     fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
         if let None = get_logged_user() {
             // route to login page if not found token
-            self.router_agent.send(Login);
+            // self.router_agent.send(Login);
+            let navigator: Navigator = ctx.link().navigator().unwrap();
+            navigator.replace(&Login);
         };
 
         // get standard uuid for request standard data
@@ -115,14 +117,15 @@ impl Component for ShowStandard {
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         let link = ctx.link().clone();
+        let navigator: Navigator = ctx.link().navigator().unwrap();
 
         match msg {
             Msg::RequestDownloadFiles => {
                 let standard_uuid = ctx.props().standard_uuid.clone();
                 spawn_local(async move {
                     let ipt_standard_files_arg = standard_files::IptStandardFilesArg{
-                        filesUuids: None,
-                        standardUuid: standard_uuid,
+                        files_uuids: None,
+                        standard_uuid,
                     };
                     let res = make_query(StandardFiles::build_query(standard_files::Variables{
                         ipt_standard_files_arg
@@ -240,13 +243,15 @@ impl Component for ShowStandard {
             Msg::OpenStandardOwner => {
                 if let Some(standard_data) = &self.standard {
                     // Redirect to ownercompany standard page
-                    self.router_agent.send(ShowCompany { uuid: standard_data.owner_company.uuid.to_string() });
+                    // self.router_agent.send(ShowCompany { uuid: standard_data.owner_company.uuid.to_string() });
+                    navigator.clone().replace(&ShowCompany { uuid: standard_data.owner_company.uuid.to_string() });
                 }
             },
             Msg::OpenStandardSetting => {
                 if let Some(standard_data) = &self.standard {
                     // Redirect to page for change and update standard
-                    self.router_agent.send(StandardSettings { uuid: standard_data.uuid.to_string() });
+                    // self.router_agent.send(StandardSettings { uuid: standard_data.uuid.to_string() });
+                    navigator.replace(&StandardSettings { uuid: standard_data.uuid.to_string() });
                 }
             },
             Msg::Ignore => {}

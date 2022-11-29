@@ -66,11 +66,11 @@ impl Component for ComponentParamTag {
             Msg::ChangeParamValue => self.hide_edit_param_value = !self.hide_edit_param_value,
             Msg::RequestChangeValue => {
                 let ipt_param_data = put_component_params::IptParamData{
-                    paramId: ctx.props().param_data.param.param_id as i64,
+                    param_id: ctx.props().param_data.param.param_id as i64,
                     value: self.request_set_param_value.clone(),
                 };
                 let ipt_component_params_data = put_component_params::IptComponentParamsData{
-                    componentUuid: ctx.props().component_uuid.clone(),
+                    component_uuid: ctx.props().component_uuid.clone(),
                     params: vec![ipt_param_data],
                 };
                 spawn_local(async move {
@@ -85,8 +85,8 @@ impl Component for ComponentParamTag {
                 let param_id = ctx.props().param_data.param.param_id as i64;
                 spawn_local(async move {
                     let del_component_param_data = delete_component_params::DelComponentParamData{
-                        componentUuid: component_uuid,
-                        paramIds: vec![param_id],
+                        component_uuid,
+                        param_ids: vec![param_id],
                     };
                     let res = make_query(DeleteComponentParams::build_query(
                         delete_component_params::Variables { del_component_param_data }

@@ -50,8 +50,8 @@ impl Component for KeywordTagItem {
                 let keyword_id = ctx.props().keyword.id as i64;
                 spawn_local(async move {
                     let ipt_component_keywords_data = delete_component_keywords::IptComponentKeywordsData{
-                        componentUuid: component_uuid,
-                        keywordIds: vec![keyword_id],
+                        component_uuid,
+                        keyword_ids: vec![keyword_id],
                     };
                     let res = make_query(DeleteComponentKeywords::build_query(
                         delete_component_keywords::Variables {

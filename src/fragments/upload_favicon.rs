@@ -5,7 +5,7 @@ use wasm_bindgen_futures::spawn_local;
 use log::debug;
 use crate::fragments::list_errors::ListErrors;
 use crate::error::{Error, get_error};
-use crate::services::storage_upload::{StorageUpload, storage_upload};
+use crate::services::storage_upload::storage_upload;
 use crate::services::get_value_field;
 use crate::types::UploadFile;
 use crate::gqls::{
@@ -164,7 +164,7 @@ impl Component for UpdateFaviconBlock {
                         if let Some(file) = self.file.clone() {
                             let callback_confirm =
                                 link.callback(|res: Result<usize, Error>| Msg::GetUploadCompleted(res));
-                            storage_upload(&result, &vec![file], callback_confirm);
+                            storage_upload(result, vec![file], callback_confirm);
                             // let file_name = file.name().clone();
                             // let task = {
                             //     let callback = self
@@ -186,7 +186,7 @@ impl Component for UpdateFaviconBlock {
             // },
             Msg::GetUploadCompleted(res) => {
                 match res {
-                    Ok(value) => self.get_result_up_completed = value,
+                    Ok(value) => self.get_result_up_completed = value > 0,
                     Err(err) => self.error = Some(err),
                 }
                 self.active_loading_files_btn = false;

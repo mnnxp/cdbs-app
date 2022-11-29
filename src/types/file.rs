@@ -17,7 +17,7 @@ pub struct ShowFileInfo {
     pub updated_at: NaiveDateTime,
 }
 
-#[derive(Serialize, Deserialize, Clone, Default, Debug)]
+#[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct DownloadFile {
     pub uuid: String,
@@ -26,7 +26,7 @@ pub struct DownloadFile {
     pub download_url: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Default, Debug)]
+#[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct UploadFile {
     pub file_uuid: String,

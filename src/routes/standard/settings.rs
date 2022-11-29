@@ -1,6 +1,6 @@
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
-use yew_agent::utils::store::Bridgeable;
-use yew_agent::Bridge;
+// use yew_agent::Bridge;
+use yew_router::prelude::*;
 use yew_router::hooks::use_route;
 use gloo::file::callbacks::FileReader;
 // use gloo::file::File;
@@ -22,7 +22,7 @@ use crate::fragments::{
         AddKeywordsTags, UpdateStandardFaviconCard
     },
 };
-use crate::services::storage_upload::{StorageUpload, storage_upload};
+use crate::services::storage_upload::storage_upload;
 use crate::services::{get_logged_user, get_value_field};
 use crate::types::{
     UUID, StandardInfo, SlimUser, Region, TypeAccessInfo, UploadFile, ShowFileInfo,
@@ -53,7 +53,7 @@ pub struct StandardSettings {
     // request_upload_file: Callback<Result<Option<String>, Error>>,
     // request_upload_confirm: Vec<UUID>,
     request_access: i64,
-    router_agent: Box<dyn Bridge<AppRoute>>,
+    // router_agent: Box<dyn Bridge<AppRoute>>,
     // task_read: Vec<(FileName, ReaderTask)>,
     // task: Vec<FetchTask>,
     supplier_list: Vec<ShowCompanyShort>,
@@ -140,7 +140,7 @@ impl Component for StandardSettings {
             // request_upload_file: ctx.link().callback(Msg::ResponseUploadFile),
             // request_upload_confirm: Vec::new(),
             request_access: 0,
-            router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
+            // router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             // task_read: Vec::new(),
             // task: Vec::new(),
             supplier_list: Vec::new(),
@@ -171,7 +171,9 @@ impl Component for StandardSettings {
             Some(cu) => cu.uuid,
             None => {
                 // route to login page if not found token
-                self.router_agent.send(Login);
+                // self.router_agent.send(Login);
+                let navigator: Navigator = ctx.link().navigator().unwrap();
+                navigator.replace(&Login);
                 String::new()
             },
         };
@@ -193,8 +195,8 @@ impl Component for StandardSettings {
             self.current_standard_uuid = target_standard_uuid.clone();
             spawn_local(async move {
                 let ipt_companies_arg = get_update_standard_data_opt::IptCompaniesArg{
-                    companiesUuids: None,
-                    userUuid: Some(logged_user_uuid),
+                    companies_uuids: None,
+                    user_uuid: Some(logged_user_uuid),
                     favorite: None,
                     supplier: Some(true),
                     limit: None,
@@ -212,11 +214,13 @@ impl Component for StandardSettings {
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         let link = ctx.link().clone();
+        let navigator: Navigator = ctx.link().navigator().unwrap();
 
         match msg {
             Msg::OpenStandard => {
                 // Redirect to standard page
-                self.router_agent.send(ShowStandard { uuid: self.current_standard_uuid.clone() });
+                // self.router_agent.send(ShowStandard { uuid: self.current_standard_uuid.clone() });
+                navigator.clone().replace(&ShowStandard { uuid: self.current_standard_uuid.clone() });
             },
             Msg::RequestManager => {
                 if self.update_standard {
@@ -264,12 +268,12 @@ impl Component for StandardSettings {
                         classifier,
                         name,
                         description,
-                        specifiedTolerance: specified_tolerance,
-                        technicalCommittee: technical_committee,
-                        publicationAt: publication_at,
-                        companyUuid: company_uuid,
-                        standardStatusId: standard_status_id,
-                        regionId: region_id,
+                        specified_tolerance,
+                        technical_committee,
+                        publication_at,
+                        company_uuid,
+                        standard_status_id,
+                        region_id,
                     };
                     let res = make_query(PutStandardUpdate::build_query(put_standard_update::Variables {
                         standard_uuid,
@@ -283,8 +287,8 @@ impl Component for StandardSettings {
                 let new_type_access_id = self.request_access.clone();
                 spawn_local(async move {
                     let change_type_access_standard = change_standard_access::ChangeTypeAccessStandard{
-                        standardUuid: standard_uuid,
-                        newTypeAccessId: new_type_access_id,
+                        standard_uuid,
+                        new_type_access_id,
                     };
                     let res = make_query(ChangeStandardAccess::build_query(change_standard_access::Variables {
                         change_type_access_standard
@@ -316,7 +320,7 @@ impl Component for StandardSettings {
                     spawn_local(async move {
                         let ipt_standard_files_data = upload_standard_files::IptStandardFilesData{
                             filenames,
-                            standardUuid: standard_uuid,
+                            standard_uuid,
                         };
                         let res = make_query(UploadStandardFiles::build_query(upload_standard_files::Variables{
                             ipt_standard_files_data
@@ -374,7 +378,7 @@ impl Component for StandardSettings {
                         if !self.files.is_empty() {
                             let callback_confirm =
                                 link.callback(|res: Result<usize, Error>| Msg::GetUploadCompleted(res));
-                            storage_upload(&result, &self.files, callback_confirm);
+                            storage_upload(result, self.files, callback_confirm);
                             // for file in self.files.iter().rev() {
                             //     let file_name = file.name().clone();
                             //     debug!("file name: {:?}", file_name);
@@ -510,8 +514,10 @@ impl Component for StandardSettings {
                         if self.current_standard_uuid == result {
                             match &self.current_standard {
                                 Some(company) =>
-                                    self.router_agent.send(ShowCompany { uuid: company.owner_company.uuid.clone() }),
-                                None => self.router_agent.send(Home),
+                                    navigator.clone().replace(&ShowCompany { uuid: company.owner_company.uuid.clone() }),
+                                    // self.router_agent.send(ShowCompany { uuid: company.owner_company.uuid.clone() }),
+                                None => navigator.clone().replace(&Home),
+                                // None => self.router_agent.send(Home),
                             }
                         }
                     },

@@ -1,6 +1,6 @@
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, classes, MouseEvent};
-use yew_agent::utils::store::Bridgeable;
-use yew_agent::Bridge;
+// use yew_agent::Bridge;
+use yew_router::prelude::*;
 use yew_router::prelude::Link;
 use yew_router::hooks::use_route;
 use wasm_bindgen_futures::spawn_local;
@@ -11,7 +11,7 @@ use crate::routes::AppRoute::{self, Login, Home, Register, Notifications, Profil
 use crate::types::SlimUser;
 
 pub struct Header {
-    router_agent: Box<dyn Bridge<AppRoute>>,
+    // router_agent: Box<dyn Bridge<AppRoute>>,
     current_path: String,
     current_user: Option<SlimUser>,
     open_notifications_page: bool,
@@ -40,7 +40,7 @@ impl Component for Header {
 
     fn create(ctx: &Context<Self>) -> Self {
         Header {
-            router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
+            // router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             current_path: String::new(),
             current_user: None,
             open_notifications_page: false,
@@ -76,7 +76,9 @@ impl Component for Header {
               // Notify app to clear current user info
               ctx.props().callback.emit(());
               // Redirect to home page
-              self.router_agent.send(Home);
+              // self.router_agent.send(Home);
+              let navigator: Navigator = ctx.link().navigator().unwrap();
+              navigator.replace(&Home);
           },
           Msg::TriggerMenu => self.is_active = !self.is_active,
           Msg::SetActive(active) => self.is_active = active,
@@ -125,7 +127,7 @@ impl Component for Header {
             <nav class="navbar" role="navigation" aria-label="main navigation">
                 <div class="navbar-brand">
                     <h1 class={logo_classes}>
-                        <Link<AppRoute> route={Home}>
+                        <Link<AppRoute> to={Home}>
                             {self.show_logo()}
                         </Link<AppRoute>>
                     </h1>
@@ -190,10 +192,10 @@ impl Header {
     fn logged_out_view(&self) -> Html {
         html!{
           <div class="navbar-item">
-            <Link<AppRoute> route={Login} classes="button">
+            <Link<AppRoute> to={Login} classes="button">
               { get_value_field(&13) }
             </Link<AppRoute>>
-            <Link<AppRoute> route={Register} classes="button">
+            <Link<AppRoute> to={Register} classes="button">
               { get_value_field(&14) }
             </Link<AppRoute>>
           </div>
@@ -223,7 +225,7 @@ impl Header {
                          </button>
                      },
                      false => html!{
-                         <Link<AppRoute> route={Notifications} classes="button navbar-item" >
+                         <Link<AppRoute> to={Notifications} classes="button navbar-item" >
                              <span class="icon is-small" >
                                <i class="far fa-bell"></i>
                              </span>

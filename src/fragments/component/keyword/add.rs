@@ -120,7 +120,7 @@ impl Component for AddKeywordsTags {
                 let component_uuid = ctx.props().component_uuid.clone();
                 spawn_local(async move {
                     let ipt_component_keywords_arg = get_component_keywords::IptComponentKeywordsArg{
-                        componentUuid: component_uuid,
+                        component_uuid,
                         limit: None,
                         offset: None,
                     };
@@ -179,7 +179,7 @@ impl Component for AddKeywordsTags {
                 if keywords.len() > 0 {
                     spawn_local(async move {
                         let ipt_component_keywords_names = add_component_keywords_by_names::IptComponentKeywordsNames{
-                            componentUuid: component_uuid,
+                            component_uuid,
                             keywords,
                         };
                         let res = make_query(AddComponentKeywordsByNames::build_query(add_component_keywords_by_names::Variables {

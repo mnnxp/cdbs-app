@@ -1,6 +1,6 @@
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, Event, classes, FocusEvent, MouseEvent};
-use yew_agent::utils::store::Bridgeable;
-use yew_agent::Bridge;
+// use yew_agent::Bridge;
+use yew_router::prelude::*;
 use yew_router::hooks::use_route;
 use graphql_client::GraphQLQuery;
 use log::debug;
@@ -68,7 +68,7 @@ pub struct CompanySettings {
     company_uuid: UUID,
     request_company: CompanyUpdateInfo,
     request_access: i64,
-    router_agent: Box<dyn Bridge<AppRoute>>,
+    // router_agent: Box<dyn Bridge<AppRoute>>,
     current_data: Option<CompanyInfo>,
     regions: Vec<Region>,
     types_access: Vec<TypeAccessInfo>,
@@ -123,7 +123,7 @@ impl Component for CompanySettings {
             company_uuid: ctx.props().company_uuid,
             request_company: CompanyUpdateInfo::default(),
             request_access: 0,
-            router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
+            // router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             current_data: None,
             regions: Vec::new(),
             types_access: Vec::new(),
@@ -138,7 +138,9 @@ impl Component for CompanySettings {
     fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
         if let None = get_logged_user() {
             // route to login page if not found token
-            self.router_agent.send(Login);
+            // self.router_agent.send(Login);
+            let navigator: Navigator = ctx.link().navigator().unwrap();
+            navigator.replace(&Login);
         };
         // get target company from route
         let target_company_uuid =
@@ -165,7 +167,9 @@ impl Component for CompanySettings {
             Msg::OpenCompany => {
                 // Redirect to user page
                 if let Some(company_data) = &self.current_data {
-                    self.router_agent.send(ShowCompany { uuid: company_data.uuid.clone() });
+                    // self.router_agent.send(ShowCompany { uuid: company_data.uuid.clone() });
+                    let navigator: Navigator = ctx.link().navigator().unwrap();
+                    navigator.replace(&ShowCompany { uuid: company_data.uuid.clone() });
                 }
             },
             Msg::RequestUpdateCompany => {
@@ -178,10 +182,10 @@ impl Component for CompanySettings {
                     email: self.request_company.email.clone(),
                     description: self.request_company.description.clone(),
                     address: self.request_company.address.clone(),
-                    siteUrl: self.request_company.site_url.clone(),
-                    timeZone: self.request_company.time_zone.clone(),
-                    regionId: self.request_company.region_id.clone(),
-                    companyTypeId: self.request_company.company_type_id.clone(),
+                    site_url: self.request_company.site_url.clone(),
+                    time_zone: self.request_company.time_zone.clone(),
+                    region_id: self.request_company.region_id.clone(),
+                    company_type_id: self.request_company.company_type_id.clone(),
                 };
                 spawn_local(async move {
                     let res = make_query(CompanyUpdate::build_query(company_update::Variables {
@@ -193,11 +197,11 @@ impl Component for CompanySettings {
             },
             Msg::RequestChangeAccess => {
                 let company_uuid = self.company_uuid.clone();
-                let new_type_access = self.request_access.clone();
+                let new_type_access_id = self.request_access.clone();
                 spawn_local(async move {
                     let change_type_access_company = change_company_access::ChangeTypeAccessCompany {
-                        companyUuid: company_uuid,
-                        newTypeAccessId: new_type_access,
+                        company_uuid,
+                        new_type_access_id,
                     };
 
                     let res = make_query(ChangeCompanyAccess::build_query(
@@ -250,7 +254,7 @@ impl Component for CompanySettings {
                         debug!("Company data: {:?}", company_data);
                         self.current_data = Some(company_data.clone());
                         self.request_company = company_data.into();
-                        self.rendered(false, ctx);
+                        self.rendered(ctx, false);
                     },
                     true => self.error = Some(get_error(&data)),
                 }
@@ -285,10 +289,13 @@ impl Component for CompanySettings {
                         ).unwrap();
                         debug!("Delete company: {:?}", delete_company_uuid);
                         self.get_result_remove_company = !delete_company_uuid.is_empty();
+                        let navigator: Navigator = ctx.link().navigator().unwrap();
                         match &ctx.props().current_user {
+                            // Some(user) => self.router_agent.send(Profile { username: user.username.clone() }),
                             Some(user) =>
-                                self.router_agent.send(Profile { username: user.username.clone() }),
-                            None => self.router_agent.send(Home),
+                                navigator.clone().replace(&Profile { username: user.username.clone() }),
+                            // None => self.router_agent.send(Home),
+                            None => navigator.replace(&Home),
                         }
                     },
                     true => self.error = Some(get_error(&data)),
@@ -326,7 +333,7 @@ impl Component for CompanySettings {
                 self.request_company.company_type_id = Some(type_id.parse::<i64>().unwrap_or_default()),
             Msg::SelectMenu(value) => {
                 self.select_menu = value;
-                self.rendered(false, ctx);
+                self.rendered(ctx, false);
             },
             Msg::ClearError => self.error = None,
             Msg::Ignore => {},

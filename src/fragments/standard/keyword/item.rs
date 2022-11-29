@@ -49,8 +49,8 @@ impl Component for KeywordTagItem {
                 let keyword_id = ctx.props().keyword.id as i64;
                 spawn_local(async move {
                     let ipt_standard_keywords_data = delete_standard_keywords::IptStandardKeywordsData{
-                        standardUuid: standard_uuid,
-                        keywordIds: vec![keyword_id],
+                        standard_uuid,
+                        keyword_ids: vec![keyword_id],
                     };
                     let res = make_query(DeleteStandardKeywords::build_query(delete_standard_keywords::Variables {
                         ipt_standard_keywords_data,

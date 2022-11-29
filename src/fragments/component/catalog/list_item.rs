@@ -1,7 +1,7 @@
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, classes};
-use yew_agent::utils::store::Bridgeable;
-use yew_agent::Bridge;
+// use yew_agent::Bridge;
 // use log::debug;
+use yew_router::prelude::*;
 use crate::services::get_value_field;
 use crate::routes::AppRoute::{self, ShowComponent};
 use crate::fragments::switch_icon::res_btn;
@@ -22,9 +22,10 @@ pub struct Props {
 }
 
 pub struct ListItem {
-    router_agent: Box<dyn Bridge<AppRoute>>,
+    // router_agent: Box<dyn Bridge<AppRoute>>,
     component_uuid: UUID,
     is_followed: bool,
+    show_list: bool,
 }
 
 impl Component for ListItem {
@@ -33,9 +34,10 @@ impl Component for ListItem {
 
     fn create(ctx: &Context<Self>) -> Self {
         Self {
-            router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
+            // router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             component_uuid: ctx.props().data.uuid,
             is_followed: ctx.props().is_followed,
+            show_list: ctx.props().show_list,
         }
     }
 
@@ -43,8 +45,10 @@ impl Component for ListItem {
         match msg {
             Msg::OpenComponent => {
                 // Redirect to component page
-                self.router_agent.send(ShowComponent { uuid: ctx.props().data.uuid.to_string() });
+                // self.router_agent.send(ShowComponent { uuid: ctx.props().data.uuid.to_string() });
                 // debug!("OpenComponent");
+                let navigator: Navigator = ctx.link().navigator().unwrap();
+                navigator.replace(&ShowComponent { uuid: ctx.props().data.uuid.to_string() });
             },
             Msg::TriggerFav => {
                 if ctx.props().data.is_followed {
