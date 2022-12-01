@@ -58,10 +58,10 @@ impl Component for SpecsTags {
                 {for ctx.props().specs.iter().map(|spec| {
                     html!{<SpecTagItem
                         show_manage_btn = {ctx.props().show_manage_btn}
-                        active_info_btn = true
+                        active_info_btn = {true}
                         component_uuid = {ctx.props().component_uuid.clone()}
                         spec = {spec.clone()}
-                        is_added = true
+                        is_added = {true}
                         delete_spec = {ctx.props().delete_spec.clone()}
                         />}
                 })}

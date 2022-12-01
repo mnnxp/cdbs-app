@@ -39,7 +39,7 @@ impl Component for KeywordsTags {
 
     fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         if self.standard_uuid == ctx.props().standard_uuid &&
-                self.keywords.len() == ctx.props().keywords.len() {
+                self.keywords_len == ctx.props().keywords.len() {
             false
         } else {
             self.standard_uuid = ctx.props().standard_uuid;

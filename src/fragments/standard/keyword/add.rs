@@ -1,8 +1,8 @@
-use yew::{Component, Context, html, html::Scope, Html, Properties, Event, KeyboardEvent};
-use log::debug;
-use graphql_client::GraphQLQuery;
+use yew::{Component, Context, html, html::Scope, Html, Properties};
+use web_sys::{InputEvent, KeyboardEvent};
 use wasm_bindgen_futures::spawn_local;
-
+use graphql_client::GraphQLQuery;
+use log::debug;
 use crate::error::{get_error, Error};
 use crate::fragments::{
     list_errors::ListErrors,
@@ -267,7 +267,7 @@ impl AddKeywordsTags {
         link: &Scope<Self>,
         props: &Props,
     ) -> Html {
-        let oninput_parse_keyword = link.callback(|ev: Event| Msg::GetString(ev.value));
+        let oninput_parse_keyword = link.callback(|ev: InputEvent| Msg::GetString(ev.input_type()));
         let onkeypress_parse_keyword =
             link.callback(|ev: KeyboardEvent| {
                 debug!("ev.key(): {:?}, ev.key(): {:?}", ev.key_code(), ev.key());

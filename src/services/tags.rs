@@ -17,7 +17,7 @@ impl Tags {
     }
 
     /// Get all tags
-    pub fn get_all(&mut self, callback: Callback<Result<TagListInfo, Error>>) -> () {
+    pub fn get_all(&mut self, callback: Callback<Result<Option<TagListInfo>, Error>>) -> () {
         self.requests.get::<TagListInfo>("/tags", callback)
     }
 }

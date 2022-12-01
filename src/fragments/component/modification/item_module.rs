@@ -4,7 +4,9 @@ use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
 #[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub param_id: usize,
+    #[prop_or_default]
     pub value: Option<String>,
+    #[prop_or_default]
     pub callback_change_param: Option<Callback<usize>>,
 }
 

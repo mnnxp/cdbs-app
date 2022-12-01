@@ -1,26 +1,24 @@
-use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
-// use yew_agent::Bridge;
+use yew::{Component, Context, html, Html, Properties};
+use yew::html::{Scope, TargetCast};
 use yew_router::prelude::*;
-use yew_router::hooks::use_route;
+use web_sys::{InputEvent, DragEvent, Event, FileList, HtmlInputElement};
+use wasm_bindgen_futures::spawn_local;
 use gloo::file::File;
 use graphql_client::GraphQLQuery;
-use web_sys::{DragEvent, Event, FileList};
-use wasm_bindgen_futures::spawn_local;
-use log::debug;
 use serde_json::Value;
-use crate::routes::AppRoute::{self, Login, Home, ShowComponent};
+use log::debug;
+use crate::routes::AppRoute::{Login, Home, ShowComponent};
 use crate::error::{get_error, Error};
-use crate::fragments::{
-    // switch_icon::res_btn,
-    list_errors::ListErrors,
-    // catalog_component::CatalogComponents,
-    component::{
-        ComponentStandardsCard, ComponentSuppliersCard,
-        ComponentLicensesTags, ComponentParamsTags, UpdateComponentFaviconCard,
-        ModificationsTableEdit, ComponentFilesBlock, SearchSpecsTags, AddKeywordsTags
-    },
+use crate::fragments::files_frame::FilesFrame;
+use crate::fragments::list_errors::ListErrors;
+use crate::fragments::component::{
+    ComponentStandardsCard, ComponentSuppliersCard,
+    ComponentLicensesTags, ComponentParamsTags, UpdateComponentFaviconCard,
+    ModificationsTableEdit, ComponentFilesBlock, SearchSpecsTags, AddKeywordsTags
 };
-use crate::services::storage_upload::storage_upload;
+// switch_icon::res_btn,
+// catalog_component::CatalogComponents,
+use crate::services::storage_upload::{storage_upload, prepare_files};
 use crate::services::{get_value_field, get_logged_user};
 use crate::types::{
     UUID, ComponentInfo, SlimUser, TypeAccessInfo, UploadFile, ActualStatus, ComponentUpdatePreData,
@@ -28,7 +26,7 @@ use crate::types::{
 };
 use crate::gqls::{
     make_query,
-    relate::{ConfirmUploadCompleted, confirm_upload_completed},
+    // relate::{ConfirmUploadCompleted, confirm_upload_completed},
     component::{
         GetUpdateComponentDataOpt, get_update_component_data_opt,
         PutComponentUpdate, put_component_update,
@@ -111,7 +109,7 @@ pub enum Msg {
     UpdateComponentTypeId(String),
     UpdateName(String),
     UpdateDescription(String),
-    UpdateFiles(FileList),
+    UpdateFiles(Option<FileList>),
     UpdateConfirmDelete(String),
     ResponseError(Error),
     RegisterNewModification(UUID),
@@ -179,7 +177,7 @@ impl Component for ComponentSettings {
         };
 
         let target_component_uuid =
-            use_route().unwrap_or_default().trim_start_matches("/component/settings/").to_string();
+            ctx.link().location().unwrap().path().trim_start_matches("/component/settings/").to_string();
         // get flag changing current component in route
         let not_matches_component_uuid = target_component_uuid != self.current_component_uuid;
         // debug!("self.current_component_uuid {:#?}", self.current_component_uuid);
@@ -522,17 +520,17 @@ impl Component for ComponentSettings {
             },
             Msg::EditFiles => self.upload_component_files = !self.upload_component_files,
             Msg::UpdateTypeAccessId(data) => {
-                self.request_access = data.parse::<i64>().unwrap_or_default();
+                self.request_access = data.parse::<i64>().unwrap_or(1);
                 self.update_component_access = true;
                 self.disable_save_changes_btn = false;
             },
             Msg::UpdateActualStatusId(data) => {
-                self.request_component.actual_status_id = data.parse::<usize>().unwrap_or_default();
+                self.request_component.actual_status_id = data.parse::<usize>().unwrap_or(1);
                 self.update_component = true;
                 self.disable_save_changes_btn = false;
             },
             Msg::UpdateComponentTypeId(data) => {
-                self.request_component.component_type_id = data.parse::<usize>().unwrap_or_default();
+                self.request_component.component_type_id = data.parse::<usize>().unwrap_or(1);
                 self.update_component = true;
                 self.disable_save_changes_btn = false;
             },
@@ -546,14 +544,15 @@ impl Component for ComponentSettings {
                 self.update_component = true;
                 self.disable_save_changes_btn = false;
             },
-            Msg::UpdateFiles(files) => {
-                while let Some(file) = files.get(self.files_index) {
-                    debug!("self.files_index: {:?}", self.files_index);
-                    self.files_index += 1;
-                    self.upload_component_files = true;
-                    // self.disable_save_changes_btn = false;
-                    self.files.push(file.clone());
-                }
+            Msg::UpdateFiles(file_list) => {
+                prepare_files(&file_list, &mut self.files);
+                // while let Some(file) = files.get(self.files_index) {
+                //     debug!("self.files_index: {:?}", self.files_index);
+                //     self.files_index += 1;
+                //     self.upload_component_files = true;
+                //     // self.disable_save_changes_btn = false;
+                //     self.files.push(file.clone());
+                // }
                 // self.files_index = 0;
             },
             Msg::UpdateConfirmDelete(data) => {
@@ -638,8 +637,8 @@ impl ComponentSettings {
         &self,
         link: &Scope<Self>,
     ) -> Html {
-        let oninput_name = link.callback(|ev: Event| Msg::UpdateName(ev.value));
-        let oninput_description = link.callback(|ev: Event| Msg::UpdateDescription(ev.value));
+        let oninput_name = link.callback(|ev: InputEvent| Msg::UpdateName(ev.input_type()));
+        let oninput_description = link.callback(|ev: InputEvent| Msg::UpdateDescription(ev.input_type()));
 
         html!{<div class="card">
             <div class="column">
@@ -693,23 +692,15 @@ impl ComponentSettings {
         &self,
         link: &Scope<Self>,
     ) -> Html {
-        let onchange_actual_status_id =
-            link.callback(|ev: Event| Msg::UpdateActualStatusId(match ev {
-              Event::Select(el) => el.value(),
-              _ => "1".to_string(),
-          }));
-
-        let onchange_change_component_type =
-            link.callback(|ev: Event| Msg::UpdateComponentTypeId(match ev {
-              Event::Select(el) => el.value(),
-              _ => "1".to_string(),
-          }));
-
-        let onchange_change_type_access =
-            link.callback(|ev: Event| Msg::UpdateTypeAccessId(match ev {
-              Event::Select(el) => el.value(),
-              _ => "1".to_string(),
-          }));
+        let onchange_actual_status_id = link.callback(|ev: Event| {
+            Msg::UpdateActualStatusId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+          });
+        let onchange_change_component_type = link.callback(|ev: Event| {
+            Msg::UpdateComponentTypeId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+          });
+        let onchange_change_type_access = link.callback(|ev: Event| {
+            Msg::UpdateTypeAccessId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+          });
 
         html!{
             <div class="columns">
@@ -955,7 +946,7 @@ impl ComponentSettings {
         link: &Scope<Self>,
     ) -> Html {
         let onclick_hide_modal = link.callback(|_| Msg::ChangeHideDeleteComponent);
-        let oninput_delete_component = link.callback(|ev: Event| Msg::UpdateConfirmDelete(ev.value));
+        let oninput_delete_component = link.callback(|ev: InputEvent| Msg::UpdateConfirmDelete(ev.input_type()));
         let onclick_delete_component = link.callback(|_| Msg::RequestDeleteComponent);
 
         let class_modal = match &self.hide_delete_modal {
@@ -1007,38 +998,53 @@ impl ComponentSettings {
         &self,
         link: &Scope<Self>,
     ) -> Html {
-        let onchange_upload_files = link.callback(move |value| {
-            if let Event::Files(files) = value {
-                Msg::UpdateFiles(files)
-            } else {
-                Msg::Ignore
-            }
+        let onchange = link.callback(move |ev: Event| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateFiles(input.files())
         });
+        let ondrop = link.callback(move |ev: DragEvent| {
+            ev.prevent_default();
+            Msg::UpdateFiles(ev.data_transfer().unwrap().files())
+        });
+        let ondragover = link.callback(move |ev: DragEvent| {
+            ev.prevent_default();
+            Msg::Ignore
+        });
+        let ondragenter = ondragover.clone();
 
         html!{<>
             <div class="file has-name is-boxed is-centered">
-                <label class="file-label" style="width: 100%">
-                  <input id="component-file-input"
-                  class="file-input"
-                  type="file"
-                  // accept="image/*,application/vnd*,application/rtf,text/*,.pdf"
-                  onchange={onchange_upload_files}
-                  multiple=true />
-                <span class="file-cta">
-                  <span class="file-icon">
-                    <i class="fas fa-upload"></i>
-                  </span>
-                  <span class="file-label">
-                    { get_value_field(&200) } // Choose component files…
-                  </span>
-                </span>
+                <FilesFrame
+                    {onchange}
+                    {ondrop}
+                    {ondragover}
+                    {ondragenter}
+                    input_id={"component-file-input".to_string()}
+                    multiple={true}
+                    file_label={200}
+                />
+                // <label class="file-label" style="width: 100%">
+                //   <input id="component-file-input"
+                //   class="file-input"
+                //   type="file"
+                //   // accept="image/*,application/vnd*,application/rtf,text/*,.pdf"
+                //   onchange={onchange_upload_files}
+                //   multiple=true />
+                // <span class="file-cta">
+                //   <span class="file-icon">
+                //     <i class="fas fa-upload"></i>
+                //   </span>
+                //   <span class="file-label">
+                //     { get_value_field(&200) } // Choose component files…
+                //   </span>
+                // </span>
                 {match self.files.is_empty() {
                     true => html!{<span class="file-name">{ get_value_field(&194) }</span>}, // No file uploaded
                     false => html!{for self.files.iter().map(|f| html!{
                         <span class="file-name">{f.name().clone()}</span>
                     })}
                 }}
-              </label>
+              // </label>
             </div>
             <div class="buttons">
                 {self.show_clear_btn(link)}

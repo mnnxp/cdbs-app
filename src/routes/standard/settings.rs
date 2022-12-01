@@ -1,28 +1,23 @@
-use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
-// use yew_agent::Bridge;
+// use yew_router::hooks::use_route;
+use yew::{Component, Context, html, Html, Properties};
+use yew::html::{Scope, TargetCast};
 use yew_router::prelude::*;
-use yew_router::hooks::use_route;
-use gloo::file::callbacks::FileReader;
-// use gloo::file::File;
-use web_sys::{DragEvent, Event, File, FileList, HtmlInputElement};
-// use yew::services::fetch::FetchTask;
-// use yew::services::reader::{File, FileData, ReaderService, ReaderTask};
+use gloo::file::File;
+use web_sys::{InputEvent, DragEvent, Event, FileList, HtmlInputElement};
 use wasm_bindgen_futures::spawn_local;
-use serde_json::Value;
 use graphql_client::GraphQLQuery;
-use chrono::NaiveDateTime;
 use log::debug;
-
-use crate::routes::AppRoute::{self, Login, Home, ShowCompany, ShowStandard};
+use serde_json::Value;
+use chrono::NaiveDateTime;
+use crate::routes::AppRoute::{Login, Home, ShowCompany, ShowStandard};
 use crate::error::{get_error, Error};
-use crate::fragments::{
-    list_errors::ListErrors,
-    standard::{
-        StandardFilesCard, SearchSpecsTags,
-        AddKeywordsTags, UpdateStandardFaviconCard
-    },
+use crate::fragments::files_frame::FilesFrame;
+use crate::fragments::list_errors::ListErrors;
+use crate::fragments::standard::{
+    StandardFilesCard, SearchSpecsTags,
+    AddKeywordsTags, UpdateStandardFaviconCard,
 };
-use crate::services::storage_upload::storage_upload;
+use crate::services::storage_upload::{storage_upload, prepare_files};
 use crate::services::{get_logged_user, get_value_field};
 use crate::types::{
     UUID, StandardInfo, SlimUser, Region, TypeAccessInfo, UploadFile, ShowFileInfo,
@@ -30,7 +25,7 @@ use crate::types::{
 };
 use crate::gqls::{
     make_query,
-    relate::{ConfirmUploadCompleted, confirm_upload_completed},
+    // relate::{ConfirmUploadCompleted, confirm_upload_completed},
     standard::{
         GetUpdateStandardDataOpt, get_update_standard_data_opt,
         PutStandardUpdate, put_standard_update,
@@ -65,7 +60,7 @@ pub struct StandardSettings {
     upload_standard_files: bool,
     // put_upload_file: PutUploadFile,
     files: Vec<File>,
-    files_index: u32,
+    // files_index: u32,
     files_list: Vec<ShowFileInfo>,
     disable_delete_standard_btn: bool,
     confirm_delete_standard: String,
@@ -104,7 +99,7 @@ pub enum Msg {
     GetUploadData(String),
     // GetUploadFile,
     GetUploadCompleted(Result<usize, Error>),
-    FinishUploadFiles,
+    // FinishUploadFiles,
     GetDeleteStandard(String),
     EditFiles,
     UpdateTypeAccessId(String),
@@ -117,7 +112,7 @@ pub enum Msg {
     UpdateCompanyUuid(String),
     UpdateStandardStatusId(String),
     UpdateRegionId(String),
-    UpdateFiles(FileList),
+    UpdateFiles(Option<FileList>),
     UpdateConfirmDelete(String),
     ResponseError(Error),
     ChangeHideDeleteStandard,
@@ -152,7 +147,7 @@ impl Component for StandardSettings {
             upload_standard_files: false,
             // put_upload_file: PutUploadFile::new(),
             files: Vec::new(),
-            files_index: 0,
+            // files_index: 0,
             files_list: Vec::new(),
             disable_delete_standard_btn: true,
             confirm_delete_standard: String::new(),
@@ -179,7 +174,8 @@ impl Component for StandardSettings {
         };
 
         let target_standard_uuid =
-            use_route().unwrap_or_default().trim_start_matches("/standard/settings/").to_string();
+            ctx.link().location().unwrap().path().trim_start_matches("/standard/settings/").to_string();
+            // ctx.link().location().unwrap().path().trim_start_matches("/standard/settings/").to_string();
         // get flag changing current standard in route
         let not_matches_standard_uuid = target_standard_uuid != self.current_standard_uuid;
         // debug!("self.current_standard_uuid {:#?}", self.current_standard_uuid);
@@ -329,18 +325,18 @@ impl Component for StandardSettings {
                     })
                 }
             },
-            Msg::RequestUploadFile(data) => {
-                if let Some(upload_data) = self.request_upload_data.pop() {
-                    // let request = UploadData {
-                    //     upload_url: upload_data.upload_url.to_string(),
-                    //     file_data: data,
-                    // };
-                    // debug!("request: {:?}", request);
-                    //
-                    // self.task.push(self.put_upload_file.put_file(request, self.request_upload_file.clone()));
-                    // self.request_upload_confirm.push(upload_data.file_uuid.clone());
-                };
-            },
+            // Msg::RequestUploadFile(data) => {
+            //     if let Some(upload_data) = self.request_upload_data.pop() {
+            //         let request = UploadData {
+            //             upload_url: upload_data.upload_url.to_string(),
+            //             file_data: data,
+            //         };
+            //         debug!("request: {:?}", request);
+            //
+            //         self.task.push(self.put_upload_file.put_file(request, self.request_upload_file.clone()));
+            //         self.request_upload_confirm.push(upload_data.file_uuid.clone());
+            //     };
+            // },
             // Msg::RequestUploadCompleted => {
             //     let file_uuids = self.request_upload_confirm.clone();
             //     spawn_local(async move {
@@ -395,19 +391,19 @@ impl Component for StandardSettings {
                     true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }
             },
-            Msg::ResponseUploadFile(Ok(res)) => {
-                debug!("ResponseUploadFile: {:?}", res);
-                link.send_message(Msg::GetUploadFile)
-            },
-            Msg::ResponseUploadFile(Err(err)) => {
-                self.error = Some(err);
-                self.task.clear();
-                self.task_read.clear();
-                self.files_index = 0;
-                self.request_upload_confirm.clear();
-                self.get_result_up_completed = 0;
-                self.active_loading_files_btn = false;
-            },
+            // Msg::ResponseUploadFile(Ok(res)) => {
+            //     debug!("ResponseUploadFile: {:?}", res);
+            //     link.send_message(Msg::GetUploadFile)
+            // },
+            // Msg::ResponseUploadFile(Err(err)) => {
+            //     self.error = Some(err);
+            //     self.task.clear();
+            //     self.task_read.clear();
+            //     self.files_index = 0;
+            //     self.request_upload_confirm.clear();
+            //     self.get_result_up_completed = 0;
+            //     self.active_loading_files_btn = false;
+            // },
             Msg::GetStandardData(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
@@ -432,18 +428,14 @@ impl Component for StandardSettings {
 
                 match res_value.is_null() {
                     false => {
-                        self.supplier_list = serde_json::from_value(
-                            res_value.get("companies").unwrap().clone()
-                        ).unwrap();
-                        self.standard_statuses = serde_json::from_value(
-                            res_value.get("standardStatuses").unwrap().clone()
-                        ).unwrap();
-                        self.regions = serde_json::from_value(
-                            res_value.get("regions").unwrap().clone()
-                        ).unwrap();
-                        self.types_access = serde_json::from_value(
-                            res_value.get("typesAccess").unwrap().clone()
-                        ).unwrap();
+                        self.supplier_list =
+                            serde_json::from_value(res_value.get("companies").unwrap().clone()).unwrap();
+                        self.standard_statuses =
+                            serde_json::from_value(res_value.get("standardStatuses").unwrap().clone()).unwrap();
+                        self.regions =
+                            serde_json::from_value(res_value.get("regions").unwrap().clone()).unwrap();
+                        self.types_access =
+                            serde_json::from_value(res_value.get("typesAccess").unwrap().clone()).unwrap();
                     },
                     true => self.error = Some(get_error(&data)),
                 }
@@ -477,15 +469,15 @@ impl Component for StandardSettings {
                     true => self.error = Some(get_error(&data)),
                 }
             },
-            Msg::GetUploadFile => {
-                debug!("next: {:?}", self.files_index);
-                self.files_index -= 1;
-                if self.files_index == 0 {
-                    self.get_result_up_file = true;
-                    debug!("finish: {:?}", self.request_upload_confirm.len());
-                    // link.send_message(Msg::RequestUploadCompleted);
-                }
-            },
+            // Msg::GetUploadFile => {
+            //     debug!("next: {:?}", self.files_index);
+            //     self.files_index -= 1;
+            //     if self.files_index == 0 {
+            //         self.get_result_up_file = true;
+            //         debug!("finish: {:?}", self.request_upload_confirm.len());
+            //         // link.send_message(Msg::RequestUploadCompleted);
+            //     }
+            // },
             Msg::GetUploadCompleted(res) => {
                 match res {
                     Ok(value) => self.get_result_up_completed = value,
@@ -493,16 +485,16 @@ impl Component for StandardSettings {
                 }
                 self.active_loading_files_btn = false;
             },
-            Msg::FinishUploadFiles => {
-                self.files_list.clear();
-                link.send_message(Msg::RequestStandardFilesList);
-                self.active_loading_files_btn = false;
-                self.task.clear();
-                self.task_read.clear();
-                self.request_upload_confirm.clear();
-                self.files.clear();
-                self.files_index = 0;
-            },
+            // Msg::FinishUploadFiles => {
+            //     self.files_list.clear();
+            //     link.send_message(Msg::RequestStandardFilesList);
+            //     self.active_loading_files_btn = false;
+            //     self.task.clear();
+            //     self.task_read.clear();
+            //     self.request_upload_confirm.clear();
+            //     self.files.clear();
+            //     self.files_index = 0;
+            // },
             Msg::GetDeleteStandard(res) => {
                 let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
@@ -526,7 +518,7 @@ impl Component for StandardSettings {
             },
             Msg::EditFiles => self.upload_standard_files = !self.upload_standard_files,
             Msg::UpdateTypeAccessId(data) => {
-                self.request_access = data.parse::<i64>().unwrap_or_default();
+                self.request_access = data.parse::<i64>().unwrap_or(1);
                 self.update_standard_access = true;
                 self.disable_save_changes_btn = false;
             },
@@ -575,20 +567,21 @@ impl Component for StandardSettings {
                 self.disable_save_changes_btn = false;
             },
             Msg::UpdateStandardStatusId(data) => {
-                self.request_standard.standard_status_id = data.parse::<usize>().unwrap_or_default();
+                self.request_standard.standard_status_id = data.parse::<usize>().unwrap_or(1);
                 self.update_standard = true;
                 self.disable_save_changes_btn = false;
             },
             Msg::UpdateRegionId(data) => {
-                self.request_standard.region_id = data.parse::<usize>().unwrap_or_default();
+                self.request_standard.region_id = data.parse::<usize>().unwrap_or(1);
             },
-            Msg::UpdateFiles(files) => {
-                while let Some(file) = files.get(self.files_index) {
-                    debug!("self.files_index: {:?}", self.files_index);
-                    self.files_index += 1;
-                    self.upload_standard_files = true;
-                    self.files.push(file.clone());
-                }
+            Msg::UpdateFiles(file_list) => {
+                prepare_files(&file_list, &mut self.files);
+                // while let Some(file) = files.get(self.files_index) {
+                //     debug!("self.files_index: {:?}", self.files_index);
+                //     self.files_index += 1;
+                //     self.upload_standard_files = true;
+                //     self.files.push(file.clone());
+                // }
                 // self.files_index = 0;
             },
             Msg::UpdateConfirmDelete(data) => {
@@ -599,7 +592,7 @@ impl Component for StandardSettings {
             Msg::ChangeHideDeleteStandard => self.hide_delete_modal = !self.hide_delete_modal,
             Msg::ClearFilesBoxed => {
                 self.files = Vec::new();
-                self.files_index = 0;
+                // self.files_index = 0;
                 self.upload_standard_files = false;
             },
             Msg::ClearError => self.error = None,
@@ -660,18 +653,14 @@ impl StandardSettings {
         link: &Scope<Self>,
     ) -> Html {
         // let default_company_uuid = self.current_standard.as_ref().map(|x| x.owner_company.uuid.clone()).unwrap_or_default();
-        let onchange_change_owner_company =
-            link.callback(|ev: Event| Msg::UpdateCompanyUuid(match ev {
-              Event::Select(el) => el.value(),
-              _ => String::new(),
-          }));
-        let onchange_change_type_access =
-            link.callback(|ev: Event| Msg::UpdateTypeAccessId(match ev {
-              Event::Select(el) => el.value(),
-              _ => "1".to_string(),
-          }));
-        let oninput_name = link.callback(|ev: Event| Msg::UpdateName(ev.value));
-        let oninput_description = link.callback(|ev: Event| Msg::UpdateDescription(ev.value));
+        let onchange_change_owner_company = link.callback(|ev: Event| {
+            Msg::UpdateCompanyUuid(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+          });
+        let onchange_change_type_access = link.callback(|ev: Event| {
+            Msg::UpdateTypeAccessId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+          });
+        let oninput_name = link.callback(|ev: InputEvent| Msg::UpdateName(ev.input_type()));
+        let oninput_description = link.callback(|ev: InputEvent| Msg::UpdateDescription(ev.input_type()));
 
         html!{<div class="card">
             <div class="column">
@@ -759,28 +748,19 @@ impl StandardSettings {
         &self,
         link: &Scope<Self>,
     ) -> Html {
-        let oninput_classifier = link.callback(|ev: Event| Msg::UpdateClassifier(ev.value));
-
+        let oninput_classifier = link.callback(|ev: InputEvent| Msg::UpdateClassifier(ev.input_type()));
         let oninput_specified_tolerance =
-            link.callback(|ev: Event| Msg::UpdateSpecifiedTolerance(ev.value));
-
+            link.callback(|ev: InputEvent| Msg::UpdateSpecifiedTolerance(ev.input_type()));
         let oninput_technical_committee =
-            link.callback(|ev: Event| Msg::UpdateTechnicalCommittee(ev.value));
-
+            link.callback(|ev: InputEvent| Msg::UpdateTechnicalCommittee(ev.input_type()));
         let oninput_publication_at =
-            link.callback(|ev: Event| Msg::UpdatePublicationAt(ev.value));
-
-        let onchange_standard_status_id =
-            link.callback(|ev: Event| Msg::UpdateStandardStatusId(match ev {
-              Event::Select(el) => el.value(),
-              _ => "1".to_string(),
-          }));
-
-        let onchange_region_id =
-            link.callback(|ev: Event| Msg::UpdateRegionId(match ev {
-              Event::Select(el) => el.value(),
-              _ => "1".to_string(),
-          }));
+            link.callback(|ev: InputEvent| Msg::UpdatePublicationAt(ev.input_type()));
+        let onchange_standard_status_id = link.callback(|ev: Event| {
+            Msg::UpdateStandardStatusId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+          });
+        let onchange_region_id = link.callback(|ev: Event| {
+            Msg::UpdateRegionId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+          });
 
         html!{
             <>
@@ -986,7 +966,7 @@ impl StandardSettings {
     ) -> Html {
         let onclick_hide_modal = link.callback(|_| Msg::ChangeHideDeleteStandard);
         let oninput_delete_standard =
-            link.callback(|ev: Event| Msg::UpdateConfirmDelete(ev.value));
+            link.callback(|ev: InputEvent| Msg::UpdateConfirmDelete(ev.input_type()));
         let onclick_delete_standard = link.callback(|_| Msg::RequestDeleteStandard);
 
         let class_modal = match &self.hide_delete_modal {
@@ -1038,38 +1018,53 @@ impl StandardSettings {
         &self,
         link: &Scope<Self>,
     ) -> Html {
-        let onchange_upload_files = link.callback(move |value| {
-            if let Event::Files(files) = value {
-                Msg::UpdateFiles(files)
-            } else {
-                Msg::Ignore
-            }
+        let onchange = link.callback(move |ev: Event| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateFiles(input.files())
         });
+        let ondrop = link.callback(move |ev: DragEvent| {
+            ev.prevent_default();
+            Msg::UpdateFiles(ev.data_transfer().unwrap().files())
+        });
+        let ondragover = link.callback(move |ev: DragEvent| {
+            ev.prevent_default();
+            Msg::Ignore
+        });
+        let ondragenter = ondragover.clone();
 
         html!{<>
             <div class="file has-name is-boxed is-centered">
-                <label class="file-label" style="width: 100%">
-                  <input id="standard-file-input"
-                  class="file-input"
-                  type="file"
-                  // accept="image/*,application/vnd*,application/rtf,text/*,.pdf"
-                  onchange={onchange_upload_files}
-                  multiple=true />
-                <span class="file-cta">
-                  <span class="file-icon">
-                    <i class="fas fa-upload"></i>
-                  </span>
-                  <span class="file-label">
-                    { get_value_field(&222) } // Choose standard files…
-                  </span>
-                </span>
+                <FilesFrame
+                    {onchange}
+                    {ondrop}
+                    {ondragover}
+                    {ondragenter}
+                    input_id={"standard-file-input".to_string()}
+                    multiple={true}
+                    file_label={222}
+                />
+                // <label class="file-label" style="width: 100%">
+                //   <input id="standard-file-input"
+                //   class="file-input"
+                //   type="file"
+                //   // accept="image/*,application/vnd*,application/rtf,text/*,.pdf"
+                //   onchange={onchange_upload_files}
+                //   multiple=true />
+                // <span class="file-cta">
+                //   <span class="file-icon">
+                //     <i class="fas fa-upload"></i>
+                //   </span>
+                //   <span class="file-label">
+                //     { get_value_field(&222) } // Choose standard files…
+                //   </span>
+                // </span>
                 {match self.files.is_empty() {
                     true => html!{<span class="file-name">{ get_value_field(&194) }</span>}, // No file uploaded
                     false => html!{for self.files.iter().map(|f| html!{
                         <span class="file-name">{f.name().clone()}</span>
                     })}
                 }}
-              </label>
+              // </label>
             </div>
             <div class="buttons">
                 {self.show_clear_btn(link)}

@@ -2,6 +2,7 @@
 use yew::{Component, Context, html, html::Scope, Html};
 // use yew_router::history::Location;
 // use yew::prelude::*;
+// use yew_router::prelude::Switch;
 use yew_router::prelude::*;
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
@@ -35,7 +36,7 @@ pub struct App {
 
 pub enum Msg {
     CurrentUserResponse(Result<SlimUser, Error>),
-    Route(Router),
+    // Route(Router),
     Authenticated(SlimUser),
     Logout,
 }
@@ -49,7 +50,7 @@ impl Component for App {
         // fix_fragment_routes(&mut route);
         App {
             // auth: Auth::new(),
-            current_route: AppRoute::switch(path),
+            current_route: AppRoute::recognize(path),
             current_user: None,
         }
     }
@@ -75,10 +76,10 @@ impl Component for App {
                     |slim_user| self.current_user = Some(slim_user)
                 )
             },
-            Msg::Route(mut route) => {
-                // fix_fragment_routes(&mut route);
-                self.current_route = AppRoute::switch(route)
-            },
+            // Msg::Route(mut route) => {
+            //     // fix_fragment_routes(&mut route);
+            //     self.current_route = AppRoute::(route);
+            // },
             Msg::Authenticated(slim_user) => self.current_user = Some(slim_user),
             Msg::Logout => self.current_user = None,
         }
@@ -117,7 +118,7 @@ impl App {
     ) -> Html {
         let callback_login = link.callback(Msg::Authenticated);
         // let callback_register = link.callback(Msg::Authenticated);
-        let callback_logout = link.callback(|_| Msg::Logout);
+        // let callback_logout = link.callback(Msg::Logout);
 
         match route {
             AppRoute::Login => html!{

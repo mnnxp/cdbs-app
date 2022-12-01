@@ -25,18 +25,19 @@ impl Requests {
     }
 
     /// build all kinds of http request: post/get/delete etc.
-    pub fn builder<B, T>(
+    pub fn builder<B, J, T>(
         &mut self,
         method: &str,
         path: &str,
         body_data: Option<B>,
-        body_json: bool,
+        body_json: Option<J>,
         get_body: bool,
         callback: Callback<Result<Option<T>, Error>>,
     ) // -> Result<Response, reqwest::Error>
     where
         for<'de> T: Deserialize<'de> + 'static + std::fmt::Debug,
-        B: Serialize + Into<Body> + std::fmt::Debug,
+        J: Serialize + std::fmt::Debug,
+        B: Into<Body> + std::fmt::Debug,
     {
         let url = match path.get(0..4) {
             Some("http") => path,
@@ -56,33 +57,21 @@ impl Requests {
             req.bearer_auth(token);
         }
         if let Some(body) = body_data {
-            if body_json {
-                req.json(&body);
-            } else {
-                req.body(body);
-            }
+            req.body(body);
+        }
+        if let Some(json) = body_json {
+            req.json(&json);
         }
         debug!("Request: {:?}", req);
         self.handler(req, get_body, callback);
-
-        // spawn_local(async move {
-        //     let resp = req.send().await;
-        //         .expect("failed to get response")
-        //         .text()
-        //         .await
-        //         .expect("failed to get payload");
-        //     self.handler(req, get_body, callback);
-        // });
     }
 
     /// Delete request
-    pub fn delete<T>(&mut self, path: String, callback: Callback<Result<Option<T>, Error>>)
+    pub fn delete<T>(&mut self, path: &str, callback: Callback<Result<Option<T>, Error>>)
     where
         for<'de> T: Deserialize<'de> + 'static + std::fmt::Debug,
     {
-        let no_body: Option<String> = None;
-        self.builder("DELETE", path.as_str(), no_body, false, true, callback);
-        // self.handler(resp, true, callback);
+        self.builder("DELETE", path, no_body(), no_body(), true, callback);
     }
 
     /// Get request
@@ -90,39 +79,35 @@ impl Requests {
     where
         for<'de> T: Deserialize<'de> + 'static + std::fmt::Debug,
     {
-        let no_body: Option<String> = None;
-        self.builder("GET", path, no_body, false, true, callback);
-        // self.handler(resp, true, callback);
+        self.builder("GET", path, no_body(), no_body(), true, callback);
     }
 
     /// Post request with a body
-    pub fn post<B, T>(
+    pub fn post<J, T>(
         &mut self,
         path: &str,
-        body: B,
+        body: J,
         callback: Callback<Result<Option<T>, Error>>,
     )
     where
         for<'de> T: Deserialize<'de> + 'static + std::fmt::Debug,
-        B: Serialize + Into<Body> + std::fmt::Debug,
+        J: Serialize + std::fmt::Debug,
     {
-        self.builder("POST", path, Some(body), true, true, callback);
-        // self.handler(resp, true, callback);
+        self.builder("POST", path, no_body(), Some(body), true, callback);
     }
 
     /// Put request with a body
-    pub fn put<B, T>(
+    pub fn put<J, T>(
         &mut self,
-        path: String,
-        body: B,
+        path: &str,
+        body: J,
         callback: Callback<Result<Option<T>, Error>>,
     )
     where
         for<'de> T: Deserialize<'de> + 'static + std::fmt::Debug,
-        B: Serialize + Into<Body> + std::fmt::Debug,
+        J: Serialize + std::fmt::Debug,
     {
-        self.builder("PUT", path.as_str(), Some(body), true, true, callback);
-        // self.handler(resp, true, callback);
+        self.builder("PUT", path, no_body(), Some(body), true, callback);
     }
 
     /// Put request for send file to storage
@@ -134,10 +119,9 @@ impl Requests {
     )
     where
         for<'de> T: Deserialize<'de> + 'static + std::fmt::Debug,
-        B: Serialize + Into<Body> + std::fmt::Debug,
+        B: Into<Body> + std::fmt::Debug,
     {
-        self.builder("PUT", url, Some(*body), false, false, callback);
-        // self.handler(resp, false, callback)
+        self.builder("PUT", url, Some(*body), no_body(), false, callback);
     }
 
     fn handler<T>(
@@ -201,3 +185,7 @@ impl Requests {
         });
     }
 }
+
+/// Заглушка для запроса.
+/// Возвращает None соответствующий Option<Serialize + Into<Body> + std::fmt::Debug>.
+fn no_body() -> Option<String> { None }

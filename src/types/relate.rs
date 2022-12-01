@@ -17,7 +17,7 @@ pub struct Program {
     pub name: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Default, Debug)]
+#[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Spec {
     pub spec_id: usize,
@@ -49,7 +49,7 @@ impl From<&SpecPathInfo> for Spec {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Default, Debug)]
+#[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq)]
 pub struct Keyword {
     pub id: usize,
     pub keyword: String,
@@ -79,7 +79,7 @@ impl From<&super::CompanyCertificate> for Certificate {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Default, Debug)]
+#[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct TypeAccessInfo {
     pub lang_id: usize,

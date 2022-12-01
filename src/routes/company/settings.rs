@@ -1,14 +1,13 @@
-use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, Event, classes, FocusEvent, MouseEvent};
 // use yew_agent::Bridge;
+use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, classes};
 use yew_router::prelude::*;
-use yew_router::hooks::use_route;
-use graphql_client::GraphQLQuery;
-use log::debug;
-use serde_json::Value;
+use web_sys::{InputEvent, Event, MouseEvent, SubmitEvent};
 use wasm_bindgen_futures::spawn_local;
-
+use graphql_client::GraphQLQuery;
+use serde_json::Value;
+use log::debug;
 use crate::gqls::make_query;
-use crate::routes::AppRoute::{self, Login, Home, Profile, ShowCompany};
+use crate::routes::AppRoute::{Login, Home, Profile, ShowCompany};
 use crate::error::{get_error, Error};
 use crate::fragments::{
     company::{
@@ -144,7 +143,7 @@ impl Component for CompanySettings {
         };
         // get target company from route
         let target_company_uuid =
-            use_route().unwrap_or_default().trim_start_matches("/company/settings/").to_string();
+            ctx.link().location().unwrap().path().trim_start_matches("/company/settings/").to_string();
         // get flag changing current company in route
         let not_matches_company_uuid = target_company_uuid != self.company_uuid;
         if first_render || not_matches_company_uuid {
@@ -317,7 +316,7 @@ impl Component for CompanySettings {
                 }
             },
             Msg::UpdateTypeAccessId(type_access_id) =>
-                self.request_access = type_access_id.parse::<i64>().unwrap_or_default(),
+                self.request_access = type_access_id.parse::<i64>().unwrap_or(1),
             Msg::UpdateOrgname(orgname) => self.request_company.orgname = Some(orgname),
             Msg::UpdateShortname(shortname) => self.request_company.shortname = Some(shortname),
             Msg::UpdateInn(inn) => self.request_company.inn = Some(inn),
@@ -328,9 +327,9 @@ impl Component for CompanySettings {
             Msg::UpdateSiteUrl(site_url) => self.request_company.site_url = Some(site_url),
             Msg::UpdateTimeZone(time_zone) => self.request_company.time_zone = Some(time_zone),
             Msg::UpdateRegionId(region_id) =>
-                self.request_company.region_id = Some(region_id.parse::<i64>().unwrap_or_default()),
+                self.request_company.region_id = Some(region_id.parse::<i64>().unwrap_or(1)),
             Msg::UpdateCompanyTypeId(type_id) =>
-                self.request_company.company_type_id = Some(type_id.parse::<i64>().unwrap_or_default()),
+                self.request_company.company_type_id = Some(type_id.parse::<i64>().unwrap_or(1)),
             Msg::SelectMenu(value) => {
                 self.select_menu = value;
                 self.rendered(ctx, false);
@@ -382,7 +381,7 @@ impl CompanySettings {
         label: &str,
         // placeholder: &str,
         value: String,
-        oninput: Callback<Event>,
+        oninput: Callback<InputEvent>,
     ) -> Html {
         let placeholder = label;
         let mut class = "input";
@@ -508,7 +507,7 @@ impl CompanySettings {
         &self,
         link: &Scope<Self>,
     ) -> Html {
-        let onsubmit_update_company = link.callback(|ev: FocusEvent| {
+        let onsubmit_update_company = link.callback(|ev: SubmitEvent| {
             ev.prevent_default();
             Msg::RequestUpdateCompany
         });
@@ -586,29 +585,21 @@ impl CompanySettings {
         &self,
         link: &Scope<Self>,
     ) -> Html {
-        let oninput_orgname = link.callback(|ev: Event| Msg::UpdateOrgname(ev.value));
-        let oninput_shortname = link.callback(|ev: Event| Msg::UpdateShortname(ev.value));
-        let oninput_inn = link.callback(|ev: Event| Msg::UpdateInn(ev.value));
-        let oninput_email = link.callback(|ev: Event| Msg::UpdateEmail(ev.value));
-        let oninput_description = link.callback(|ev: Event| Msg::UpdateDescription(ev.value));
-        let oninput_phone = link.callback(|ev: Event| Msg::UpdatePhone(ev.value));
-        let oninput_address = link.callback(|ev: Event| Msg::UpdateAddress(ev.value));
-        let oninput_site_url = link.callback(|ev: Event| Msg::UpdateSiteUrl(ev.value));
-        // let oninput_time_zone = link.callback(|ev: Event| Msg::UpdateTimeZone(ev.value));
-        let onchange_region_id =
-            link.callback(|ev: Event| {
-                Msg::UpdateRegionId(match ev {
-                    Event::Select(el) => el.value(),
-                    _ => "1".to_string(),
-                })
-            });
-        let onchange_company_type_id =
-            link.callback(|ev: Event| {
-                Msg::UpdateCompanyTypeId(match ev {
-                    Event::Select(el) => el.value(),
-                    _ => "1".to_string(),
-                })
-            });
+        let oninput_orgname = link.callback(|ev: InputEvent| Msg::UpdateOrgname(ev.input_type()));
+        let oninput_shortname = link.callback(|ev: InputEvent| Msg::UpdateShortname(ev.input_type()));
+        let oninput_inn = link.callback(|ev: InputEvent| Msg::UpdateInn(ev.input_type()));
+        let oninput_email = link.callback(|ev: InputEvent| Msg::UpdateEmail(ev.input_type()));
+        let oninput_description = link.callback(|ev: InputEvent| Msg::UpdateDescription(ev.input_type()));
+        let oninput_phone = link.callback(|ev: InputEvent| Msg::UpdatePhone(ev.input_type()));
+        let oninput_address = link.callback(|ev: InputEvent| Msg::UpdateAddress(ev.input_type()));
+        let oninput_site_url = link.callback(|ev: InputEvent| Msg::UpdateSiteUrl(ev.input_type()));
+        // let oninput_time_zone = link.callback(|ev: InputEvent| Msg::UpdateTimeZone(ev.input_type()));
+        let onchange_region_id = link.callback(|ev: Event| {
+            Msg::UpdateRegionId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+        });
+        let onchange_company_type_id = link.callback(|ev: Event| {
+            Msg::UpdateCompanyTypeId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+        });
 
         html!{<>
             // first column
@@ -822,7 +813,7 @@ impl CompanySettings {
         &self,
         link: &Scope<Self>,
     ) -> Html {
-        let onsubmit_update_access = link.callback(|ev: FocusEvent| {
+        let onsubmit_update_access = link.callback(|ev: SubmitEvent| {
             ev.prevent_default();
             Msg::RequestChangeAccess
         });
@@ -845,13 +836,9 @@ impl CompanySettings {
         &self,
         link: &Scope<Self>,
     ) -> Html {
-        let onchange_type_access_id =
-            link.callback(|ev: Event| {
-                Msg::UpdateTypeAccessId(match ev {
-                    Event::Select(el) => el.value(),
-                    _ => "1".to_string(),
-                })
-            });
+        let onchange_type_access_id = link.callback(|ev: Event| {
+            Msg::UpdateTypeAccessId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+        });
 
         html!{
             <fieldset class="columns">

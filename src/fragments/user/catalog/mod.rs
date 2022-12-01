@@ -10,25 +10,11 @@ use log::debug;
 use crate::error::{Error, get_error};
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, ShowUserShort, UsersQueryArg};
-use crate::gqls::make_query;
-use crate::gqls::user::{GetUsersShortList, get_users_short_list};
 use crate::fragments::ListState;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/user.graphql",
-    response_derives = "Debug"
-)]
-struct AddUserFav;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/user.graphql",
-    response_derives = "Debug"
-)]
-struct DeleteUserFav;
+use crate::gqls::make_query;
+use crate::gqls::user::{
+    GetUsersShortList, get_users_short_list
+};
 
 pub enum Msg {
     SwitchShowType,
@@ -160,7 +146,10 @@ impl CatalogUsers {
         show_comp: &ShowUserShort,
     ) -> Html {
         html!{
-            <ListItemUser data={show_comp.clone()} show_list={self.show_type == ListState::List} />
+            <ListItemUser
+                data={show_comp.clone()}
+                show_list={self.show_type == ListState::List}
+                />
         }
     }
 }

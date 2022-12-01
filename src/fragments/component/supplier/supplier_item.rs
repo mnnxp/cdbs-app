@@ -30,6 +30,7 @@ pub struct Props {
     pub show_delete_btn: bool,
     pub component_uuid: UUID,
     pub supplier_data: Supplier,
+    #[prop_or_default]
     pub delete_supplier: Option<Callback<UUID>>,
 }
 
@@ -155,7 +156,6 @@ impl Component for ComponentSupplierItem {
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         let onclick_supplier_data_info = ctx.link().callback(|_| Msg::ShowCompanyCard);
-
         let onclick_delete_supplier = ctx.link().callback(|_| Msg::RequestDeleteSupplier);
 
         html!{<>
@@ -187,7 +187,7 @@ impl ComponentSupplierItem {
         &self,
         link: &Scope<Self>,
     ) -> Html {
-        let onclick_company_data_info = link().callback(|_| Msg::ShowCompanyCard);
+        let onclick_company_data_info = link.callback(|_| Msg::ShowCompanyCard);
 
         let class_modal = match &self.open_company_info {
             true => "modal is-active",

@@ -45,7 +45,9 @@ impl Component for UserCertificatesCard {
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
-            Msg::RemoveCertificate(cart_uuid) => self.deleted_cert_list.insert(cart_uuid),
+            Msg::RemoveCertificate(cart_uuid) => {
+                self.deleted_cert_list.insert(cart_uuid);
+            },
             Msg::Ignore => {},
         }
         true
@@ -53,7 +55,7 @@ impl Component for UserCertificatesCard {
 
     fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         if self.user_uuid == ctx.props().user_uuid &&
-              self.certificates.len() == ctx.props().certificates.len() {
+              self.certificates_len == ctx.props().certificates.len() {
             false
         } else {
             self.user_uuid = ctx.props().user_uuid;

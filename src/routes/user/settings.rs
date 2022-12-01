@@ -332,9 +332,9 @@ impl Component for Settings {
             Msg::UpdatePosition(position) => self.request_profile.position = Some(position),
             Msg::UpdateTimeZone(time_zone) => self.request_profile.time_zone = Some(time_zone),
             Msg::UpdateProgramId(program_id) =>
-                self.request_profile.program_id = Some(program_id.parse::<i64>().unwrap_or_default()),
+                self.request_profile.program_id = Some(program_id.parse::<i64>().unwrap_or(1)),
             Msg::UpdateRegionId(region_id) =>
-                self.request_profile.region_id = Some(region_id.parse::<i64>().unwrap_or_default()),
+                self.request_profile.region_id = Some(region_id.parse::<i64>().unwrap_or(1)),
             Msg::UpdateUserPassword(user_password) => self.request_user_password = user_password,
             Msg::SelectMenu(value) => {
                 self.select_menu = value;
@@ -635,8 +635,8 @@ impl Settings {
         let callback_update_favicon = link.callback(|_| Msg::RequestCurrentData);
         html! {
             <UpdateFaviconBlock
-                company_uuid={None}
                 callback={callback_update_favicon}
+                // company_uuid={None}
                 />
         }
     }
@@ -684,12 +684,15 @@ impl Settings {
         link: &Scope<Self>,
     ) -> Html {
         let onchange_type_access_id = link.callback(|ev: Event| {
-            Msg::UpdateTypeAccessId(ev.current_target().map(|ev| ev.as_string().unwrap_or("1".to_string())));
+            Msg::UpdateTypeAccessId(ev.current_target()
+                .map(|ev| ev.as_string().unwrap_or("1".to_string()))
+                .unwrap_or("1".to_string())
+            )
+        });
             // Msg::UpdateTypeAccessId(match ev {
             //     Event::Select(el) => el.value(),
             //     _ => "1".to_string(),
             // })
-        });
 
         html! {
             <div class="columns">
@@ -762,14 +765,14 @@ impl Settings {
         let oninput_phone = link.callback(|ev: InputEvent| Msg::UpdatePhone(ev.input_type()));
         let oninput_address = link.callback(|ev: InputEvent| Msg::UpdateAddress(ev.input_type()));
         let onchange_program_id = link.callback(|ev: Event| {
-            Msg::UpdateProgramId(ev.current_target().map(|ev| ev.as_string().unwrap_or("1".to_string())).unwrap_or("1".to_string()));
+            Msg::UpdateProgramId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
             // Msg::UpdateProgramId(match ev.current_target() {
             //    Event::Select(el) => el.value(),
             //     _ => "1".to_string(),
             // })
         });
         let onchange_region_id = link.callback(|ev: Event| {
-            Msg::UpdateRegionId(ev.current_target().map(|ev| ev.as_string().unwrap_or("1".to_string())).unwrap_or("1".to_string()));
+            Msg::UpdateRegionId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
             // Msg::UpdateRegionId(match ev {
             //     Event::Select(el) => el.value(),
             //     _ => "1".to_string(),

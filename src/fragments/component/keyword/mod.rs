@@ -29,7 +29,7 @@ impl Component for KeywordsTags {
     fn create(ctx: &Context<Self>) -> Self {
         Self {
             component_uuid: ctx.props().component_uuid,
-            keywords_len: ctx.props().keywords_len,
+            keywords_len: ctx.props().keywords.len(),
         }
     }
 
@@ -38,7 +38,7 @@ impl Component for KeywordsTags {
     }
 
     fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
-        if self.component_uuid == ctx.props().component_uuid &&
+        if self.component_uuid == ctx.props().component_uuid ||
                 self.keywords_len == ctx.props().keywords.len() {
             false
         } else {

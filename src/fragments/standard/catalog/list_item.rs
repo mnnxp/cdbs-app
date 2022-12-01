@@ -1,12 +1,12 @@
-use yew::{Component, Context, html, html::Scope, Html, Properties, classes};
 // use yew_agent::Bridge;
+use yew::{Component, Context, html, html::Scope, Html, Properties, classes};
 use yew_router::prelude::*;
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use log::debug;
 use crate::error::{Error, get_error};
-use crate::routes::AppRoute::{self, ShowStandard};
+use crate::routes::AppRoute::ShowStandard;
 use crate::fragments::{
     list_errors::ListErrors,
     switch_icon::res_btn,

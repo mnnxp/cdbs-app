@@ -1,7 +1,7 @@
-use yew::{Component, Context, html, html::Scope, Html, Properties, classes};
 // use yew_agent::Bridge;
+use yew::{Component, Context, html, html::Scope, Html, Properties, classes};
 use yew_router::prelude::*;
-use crate::routes::AppRoute::{self, Profile};
+use crate::routes::AppRoute::Profile;
 use crate::fragments::switch_icon::res_btn;
 use crate::services::get_value_field;
 use super::{UUID, ShowUserShort};
@@ -21,6 +21,7 @@ pub struct ListItemUser {
     // router_agent: Box<dyn Bridge<AppRoute>>,
     user_uuid: UUID,
     username: String,
+    show_list: bool,
 }
 
 impl Component for ListItemUser {
@@ -32,6 +33,7 @@ impl Component for ListItemUser {
             // router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             user_uuid: ctx.props().data.uuid.clone(),
             username: ctx.props().data.username.clone(),
+            show_list: ctx.props().show_list,
         }
     }
 
@@ -62,8 +64,8 @@ impl Component for ListItemUser {
 
     fn view(&self, ctx: &Context<Self>) -> Html {
       match ctx.props().show_list {
-        true => { self.showing_in_list(ctx.props(), ctx.link()) },
-        false => { self.showing_in_box(ctx.props(), ctx.link()) },
+        true => { self.showing_in_list(ctx.link(), ctx.props()) },
+        false => { self.showing_in_box(ctx.link(), ctx.props()) },
       }
     }
 }

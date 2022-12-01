@@ -1,16 +1,19 @@
-use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
-use graphql_client::GraphQLQuery;
-use web_sys::{DragEvent, Event, File};
+use yew::{Component, Callback, Context, html, Html, Properties};
+use yew::html::{Scope, TargetCast};
+use gloo::file::File;
+use web_sys::{InputEvent, DragEvent, Event, FileList, HtmlInputElement};
 use wasm_bindgen_futures::spawn_local;
+use graphql_client::GraphQLQuery;
 use log::debug;
 use crate::error::{get_error, Error};
+use crate::fragments::files_frame::FilesFrame;
 use crate::fragments::list_errors::ListErrors;
 use crate::services::storage_upload::storage_upload;
 use crate::services::get_value_field;
-use crate::types::UploadFile;
+// use crate::types::UploadFile;
 use crate::gqls::{
     make_query,
-    relate::{ConfirmUploadCompleted, confirm_upload_completed},
+    // relate::{ConfirmUploadCompleted, confirm_upload_completed},
     company::{UploadCompanyCertificate, upload_company_certificate},
 };
 
@@ -24,11 +27,11 @@ pub struct Props {
 #[derive(Debug)]
 pub struct AddCompanyCertificateCard {
     error: Option<Error>,
-    request_upload_data: UploadFile,
+    // request_upload_data: UploadFile,
     // request_upload_file: Callback<Result<Option<String>, Error>>,
     // task_read: Option<(FileName, ReaderTask)>,
     // task: Option<FetchTask>,
-    get_result_up_file: bool,
+    // get_result_up_file: bool,
     get_result_up_completed: bool,
     // put_upload_file: PutUploadFile,
     file: Option<File>,
@@ -40,9 +43,9 @@ pub struct AddCompanyCertificateCard {
 pub enum Msg {
     RequestUploadData,
     // RequestUploadFile(Vec<u8>),
-    ResponseUploadFile(Result<(), Error>),
+    // ResponseUploadFile(Result<(), Error>),
     // RequestUploadCompleted,
-    UpdateFile(Option<File>),
+    UpdateFiles(Option<FileList>),
     GetUploadData(String),
     // GetUploadFile(Option<String>),
     GetUploadCompleted(Result<usize, Error>),
@@ -60,11 +63,11 @@ impl Component for AddCompanyCertificateCard {
     fn create(ctx: &Context<Self>) -> Self {
         Self {
             error: None,
-            request_upload_data: UploadFile::default(),
+            // request_upload_data: UploadFile::default(),
             // request_upload_file: ctx.link().callback(Msg::ResponseUploadFile),
             // task_read: None,
             // task: None,
-            get_result_up_file: false,
+            // get_result_up_file: false,
             get_result_up_completed: false,
             // put_upload_file: PutUploadFile::new(),
             file: None,
@@ -104,16 +107,16 @@ impl Component for AddCompanyCertificateCard {
             //     };
             //     self.task = Some(self.put_upload_file.put_file(request, self.request_upload_file.clone()));
             // },
-            Msg::ResponseUploadFile(Ok(res)) => {
-                debug!("res: {:?}", res);
-                self.get_result_up_file = true;
-                // link.send_message(Msg::RequestUploadCompleted)
-            },
-            Msg::ResponseUploadFile(Err(err)) => {
-                self.error = Some(err);
-                // self.task = None;
-                // self.task_read = None;
-            },
+            // Msg::ResponseUploadFile(Ok(res)) => {
+            //     debug!("res: {:?}", res);
+            //     self.get_result_up_file = true;
+            //     link.send_message(Msg::RequestUploadCompleted)
+            // },
+            // Msg::ResponseUploadFile(Err(err)) => {
+            //     self.error = Some(err);
+            //     self.task = None;
+            //     self.task_read = None;
+            // },
             // Msg::RequestUploadCompleted => {
             //     let file_uuids = vec![self.request_upload_data.file_uuid.clone()];
             //     spawn_local(async move {
@@ -124,12 +127,11 @@ impl Component for AddCompanyCertificateCard {
             //         link.send_message(Msg::GetUploadCompleted(res));
             //     });
             // },
-            Msg::UpdateFile(op_file) => {
-                if op_file.is_some() {
-                    // enable bnt if file selected
-                    self.dis_upload_btn = false;
+            Msg::UpdateFiles(file_list) => {
+                if let Some(files) = file_list {
+                    self.file = files.get(0).map(|f| File::from(f));
+                    self.dis_upload_btn = self.file.is_none();
                 }
-                self.file = op_file.clone();
             },
             Msg::GetUploadData(res) => {
                 let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
@@ -221,50 +223,55 @@ impl AddCompanyCertificateCard {
         &self,
         link: &Scope<Self>,
     ) -> Html {
-        let onchange_cert_file = link.callback(move |value| {
-            if let Event::Files(files) = value {
-                Msg::UpdateFile(files.get(0))
-            } else {
-                Msg::Ignore
-            }
+        let onchange = link.callback(move |ev: Event| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateFiles(input.files())
         });
-
-        let ondrop_cert_file = link.callback(move |value: DragEvent| {
-            value.prevent_default();
-            if let Some(files) = value.data_transfer().unwrap().files() {
-                Msg::UpdateFile(files.get(0))
-            } else {
-                Msg::Ignore
-            }
+        let ondrop = link.callback(move |ev: DragEvent| {
+            ev.prevent_default();
+            Msg::UpdateFiles(ev.data_transfer().unwrap().files())
         });
-
-        let ondragover_cert_file = link.callback(move |value: DragEvent| {
-            value.prevent_default();
+        let ondragover = link.callback(move |ev: DragEvent| {
+            ev.prevent_default();
             Msg::Ignore
         });
+        let ondragenter = ondragover.clone();
 
         html!{<div class="block">
             <div class="columns">
                 <div class="column">
                     <div class="file is-large is-boxed has-name">
-                      <label
-                        for="cert-file-input"
-                        class="file-label"
-                        style="width: 100%; text-align: center"
-                      >
-                        <input
-                            id="cert-file-input"
-                            class="file-input"
-                            type="file"
-                            accept="image/*,.pdf"
-                            onchange={onchange_cert_file} />
-                        <span class="file-cta" ondrop={ondrop_cert_file} ondragover={ondragover_cert_file} >
-                          <span class="file-icon">
-                            <i class="fas fa-upload"></i>
-                          </span>
-                          <span class="file-label">{ get_value_field(&86) }</span> // Drop certificate file here
-                        </span>
-                      </label>
+                        <FilesFrame
+                            {onchange}
+                            {ondrop}
+                            {ondragover}
+                            {ondragenter}
+                            input_id={"cert-file-input".to_string()}
+                            accept={"image/*,.pdf".to_string()}
+                            file_label={86}
+                        />
+                      // <label
+                      //   for="cert-file-input"
+                      //   class="file-label"
+                      //   style="width: 100%; text-align: center"
+                      // >
+                      //   <input
+                      //       id="cert-file-input"
+                      //       class="file-input"
+                      //       type="file"
+                      //       accept="image/*,.pdf"
+                      //       onchange={onchange_cert_file} />
+                      //   <span class="file-cta"
+                      //       ondrop={ondrop_cert_file}
+                      //       ondragover={ondragover_cert_file}
+                      //       ondragenter={ondragenter_cert_file}
+                      //       >
+                      //     <span class="file-icon">
+                      //       <i class="fas fa-upload"></i>
+                      //     </span>
+                      //     <span class="file-label">{ get_value_field(&86) }</span> // Drop certificate file here
+                      //   </span>
+                      // </label>
                     </div>
                 </div>
                 <div class="column">
@@ -290,7 +297,7 @@ impl AddCompanyCertificateCard {
         link: &Scope<Self>,
     ) -> Html {
         let oninput_cert_description =
-            link.callback(|ev: Event| Msg::UpdateDescription(ev.value));
+            link.callback(|ev: InputEvent| Msg::UpdateDescription(ev.input_type()));
 
         html!{<div class="block">
             <label class="label">{ get_value_field(&61) }</label>

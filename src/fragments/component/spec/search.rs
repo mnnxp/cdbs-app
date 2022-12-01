@@ -1,11 +1,12 @@
-use yew::{Component, Context, html, html::Scope, Html, Properties, Event, classes, NodeRef};
+// use std::time::Duration;
 // use yew::services::timeout::{TimeoutService, TimeoutTask};
+use yew::{Component, Context, html, html::Scope, Html, Properties, classes, NodeRef};
 use gloo_timers::callback::Timeout;
-use log::debug;
-use graphql_client::GraphQLQuery;
-use serde_json::Value;
-use std::time::Duration;
+use web_sys::InputEvent;
 use wasm_bindgen_futures::spawn_local;
+use serde_json::Value;
+use graphql_client::GraphQLQuery;
+use log::debug;
 // use crate::error::{get_error, Error};
 use crate::fragments::component::{SpecsTags, SpecTagItem};
 use crate::types::{Spec, SpecPathInfo, UUID};
@@ -122,8 +123,7 @@ impl Component for SearchSpecsTags {
                 let cb_link = link.clone();
                 // self.ipt_timer = Some(TimeoutService::spawn(
                 //     Duration::from_millis(800),
-                self.ipt_timer = Some(Timeout::new(800,
-                    cb_link.callback(move |_| {
+                self.ipt_timer = Some(Timeout::new(800, move || {
                         let ipt_val = val.clone();
                         let res_link = link.clone();
                         spawn_local(async move {
@@ -140,9 +140,8 @@ impl Component for SearchSpecsTags {
                             res_link.send_message(Msg::GetSearchRes(res));
                         });
                         debug!("time up: {:?}", val.clone());
-                        Msg::Ignore
-                    }),
-                ));
+                    })
+                );
             },
             Msg::GetSearchRes(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
@@ -220,7 +219,7 @@ impl SearchSpecsTags {
         let onclick_added_spec = link.callback(|value: usize| Msg::AddedSpec(value));
         let onclick_del_new_spec = link.callback(|value: usize| Msg::DeleteNewSpec(value));
         let onclick_del_old_spec = link.callback(|value: usize| Msg::DeleteCurrentSpec(value));
-        let oninput_search = link.callback(|ev: Event| Msg::SetIptTimer(ev.value));
+        let oninput_search = link.callback(|ev: InputEvent| Msg::SetIptTimer(ev.input_type()));
 
         let mut class_p = classes!("control", "has-icons-left");
         if self.specs_search_loading {
@@ -248,11 +247,11 @@ impl SearchSpecsTags {
                             html!{}
                         } else {
                             html!{<SpecTagItem
-                                show_manage_btn = true
-                                active_info_btn = false
+                                show_manage_btn = {true}
+                                active_info_btn = {false}
                                 component_uuid = {props.component_uuid.clone()}
                                 spec = {spec.clone()}
-                                is_added = false
+                                is_added = {false}
                                 style_tag = {"is-success".to_string()}
                                 added_spec = {Some(onclick_added_spec.clone())}
                                 // delete_spec = None
@@ -264,11 +263,11 @@ impl SearchSpecsTags {
                 <div id="add-specs" class="field is-grouped is-grouped-multiline">
                     {for self.added_specs.iter().map(|st_spec| {
                         html!{<SpecTagItem
-                            show_manage_btn = true
-                            active_info_btn = false
+                            show_manage_btn = {true}
+                            active_info_btn = {false}
                             component_uuid = {props.component_uuid.clone()}
                             spec = {st_spec.clone()}
-                            is_added = true
+                            is_added = {true}
                             style_tag = {"is-info".to_string()}
                             // added_spec = None
                             delete_spec = {Some(onclick_del_new_spec.clone())}
@@ -278,7 +277,7 @@ impl SearchSpecsTags {
             </div>
             <div class="panel-block">
                 <SpecsTags
-                    show_manage_btn = true
+                    show_manage_btn = {true}
                     component_uuid = {props.component_uuid.clone()}
                     specs = {props.component_specs.clone()}
                     delete_spec = {Some(onclick_del_old_spec.clone())}

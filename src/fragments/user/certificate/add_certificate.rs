@@ -6,10 +6,11 @@ use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use log::debug;
 use crate::error::{get_error, Error};
+use crate::fragments::files_frame::FilesFrame;
 use crate::fragments::list_errors::ListErrors;
 use crate::services::storage_upload::storage_upload;
 use crate::services::get_value_field;
-use crate::types::UploadFile;
+// use crate::types::UploadFile;
 use crate::gqls::{
     make_query,
     user::{
@@ -35,11 +36,11 @@ pub struct NewUserCertData {
 #[derive(Debug)]
 pub struct AddUserCertificateCard {
     error: Option<Error>,
-    request_upload_data: UploadFile,
+    // request_upload_data: UploadFile,
     // request_upload_file: Callback<Result<Option<String>, Error>>,
     // task_read: Option<(FileName, ReaderTask)>,
     // task: Option<FetchTask>,
-    get_result_up_file: bool,
+    // get_result_up_file: bool,
     get_result_up_completed: bool,
     // put_upload_file: PutUploadFile,
     file: Option<File>,
@@ -53,7 +54,7 @@ pub enum Msg {
     // RequestUploadFile(Vec<u8>),
     // ResponseUploadFile(Result<Option<String>, Error>),
     // RequestUploadCompleted,
-    UpdateFile(Option<FileList>),
+    UpdateFiles(Option<FileList>),
     GetUploadData(String),
     // GetUploadFile(Option<String>),
     GetUploadCompleted(Result<usize, Error>),
@@ -71,11 +72,11 @@ impl Component for AddUserCertificateCard {
     fn create(ctx: &Context<Self>) -> Self {
         Self {
             error: None,
-            request_upload_data: UploadFile::default(),
+            // request_upload_data: UploadFile::default(),
             // request_upload_file: ctx.link().callback(Msg::ResponseUploadFile),
             // task_read: None,
             // task: None,
-            get_result_up_file: false,
+            // get_result_up_file: false,
             get_result_up_completed: false,
             // put_upload_file: PutUploadFile::new(),
             file: None,
@@ -139,10 +140,10 @@ impl Component for AddUserCertificateCard {
             //         link.send_message(Msg::GetUploadCompleted(res));
             //     });
             // },
-            Msg::UpdateFile(file_list) => {
+            Msg::UpdateFiles(file_list) => {
                 if let Some(files) = file_list {
                     self.file = files.get(0).map(|f| File::from(f));
-                    self.dis_upload_btn = self.file.is_some();
+                    self.dis_upload_btn = self.file.is_none();
                 }
             },
             Msg::GetUploadData(res) => {
@@ -235,46 +236,55 @@ impl AddUserCertificateCard {
         &self,
         link: &Scope<Self>,
     ) -> Html {
-        let onchange_cert_file = link.callback(move |ev: Event| {
+        let onchange = link.callback(move |ev: Event| {
             let input: HtmlInputElement = ev.target_unchecked_into();
-            Msg::UpdateFile(input.files())
+            Msg::UpdateFiles(input.files())
         });
-        let ondrop_cert_file = link.callback(move |ev: DragEvent| {
+        let ondrop = link.callback(move |ev: DragEvent| {
             ev.prevent_default();
-            Msg::UpdateFile(ev.data_transfer().unwrap().files())
+            Msg::UpdateFiles(ev.data_transfer().unwrap().files())
         });
-        let ondragover_cert_file = link.callback(move |ev: DragEvent| {
+        let ondragover = link.callback(move |ev: DragEvent| {
             ev.prevent_default();
             Msg::Ignore
         });
-        let ondragenter_cert_file = ondragover_cert_file.clone();
+        let ondragenter = ondragover.clone();
 
         html!{<div class="block">
             <div class="columns">
                 <div class="column">
                     <div class="file is-large is-boxed has-name">
-                      <label
-                        for="cert-file-input"
-                        class="file-label"
-                        style="width: 100%; text-align: center"
-                      >
-                        <input
-                            id="cert-file-input"
-                            class="file-input"
-                            type="file"
-                            accept="image/*,.pdf"
-                            onchange={onchange_cert_file} />
-                        <span class="file-cta"
-                            ondrop={ondrop_cert_file}
-                            ondragover={ondragover_cert_file}
-                            ondragenter={ondragenter_cert_file}
-                            >
-                          <span class="file-icon">
-                            <i class="fas fa-upload"></i>
-                          </span>
-                          <span class="file-label">{ get_value_field(&86) }</span>
-                        </span>
-                      </label>
+                    <FilesFrame
+                        {onchange}
+                        {ondrop}
+                        {ondragover}
+                        {ondragenter}
+                        input_id={"cert-file-input".to_string()}
+                        accept={"image/*,.pdf".to_string()}
+                        file_label={86}
+                    />
+                      // <label
+                      //   for="cert-file-input"
+                      //   class="file-label"
+                      //   style="width: 100%; text-align: center"
+                      // >
+                      //   <input
+                      //       id="cert-file-input"
+                      //       class="file-input"
+                      //       type="file"
+                      //       accept="image/*,.pdf"
+                      //       onchange={onchange_cert_file} />
+                      //   <span class="file-cta"
+                      //       ondrop={ondrop_cert_file}
+                      //       ondragover={ondragover_cert_file}
+                      //       ondragenter={ondragenter_cert_file}
+                      //       >
+                      //     <span class="file-icon">
+                      //       <i class="fas fa-upload"></i>
+                      //     </span>
+                      //     <span class="file-label">{ get_value_field(&86) }</span>
+                      //   </span>
+                      // </label>
                     </div>
                 </div>
                 <div class="column">

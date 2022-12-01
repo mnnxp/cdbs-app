@@ -1,13 +1,13 @@
-use yew::{Component, Context, html, html::Scope, Html, Properties, classes};
-use yew_router::hooks::use_route;
+// use yew_router::hooks::use_route;
 // use yew_agent::Bridge;
+use yew::{Component, Context, html, html::Scope, Html, Properties, classes};
 use yew_router::prelude::*;
 use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
-use crate::routes::AppRoute::{self, Login, ShowCompany, StandardSettings};
+use crate::routes::AppRoute::{Login, ShowCompany, StandardSettings};
 use crate::error::{get_error, Error};
 use crate::fragments::{
     switch_icon::res_btn,
@@ -93,7 +93,8 @@ impl Component for ShowStandard {
 
         // get standard uuid for request standard data
         let target_standard_uuid =
-            use_route().unwrap_or_default().trim_start_matches("/standard/").to_string();
+            ctx.link().location().unwrap().path().trim_start_matches("/standard/").to_string();
+            // ctx.link().location().unwrap().path().trim_start_matches("/standard/").to_string();
         // get flag changing current standard in route
         // get flag changing current standard in route
         let not_matches_standard_uuid = target_standard_uuid != self.current_standard_uuid;

@@ -97,7 +97,7 @@ pub struct CompanyCertificate {
     pub description: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Default, Debug)]
+#[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct SlimCompany{
   pub uuid: UUID,
@@ -133,7 +133,7 @@ impl CompaniesQueryArg {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct CompanyRepresentInfo {
     pub uuid: UUID,
@@ -179,7 +179,7 @@ pub struct CompanyRepresentUpdateInfo {
     pub phone: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct RepresentationType {
     pub representation_type_id: usize,

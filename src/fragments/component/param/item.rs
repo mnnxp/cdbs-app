@@ -1,9 +1,9 @@
-use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, Event};
-use log::debug;
+use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
+use web_sys::InputEvent;
+use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
-use wasm_bindgen_futures::spawn_local;
-
+use log::debug;
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, ComponentParam};
@@ -29,6 +29,7 @@ pub struct Props {
     pub show_manage_btn: bool,
     pub component_uuid: UUID,
     pub param_data: ComponentParam,
+    #[prop_or_default]
     pub delete_param: Option<Callback<usize>>,
 }
 
@@ -201,11 +202,9 @@ impl ComponentParamTag {
         link: &Scope<Self>,
     ) -> Html {
         let onclick_change_param_value = link.callback(|_| Msg::RequestChangeValue);
-
         let onclick_hide_modal = link.callback(|_| Msg::ChangeParamValue);
-
         let oninput_set_param_value =
-            link.callback(|ev: Event| Msg::UpdateParamValue(ev.value));
+            link.callback(|ev: InputEvent| Msg::UpdateParamValue(ev.input_type()));
 
         let class_modal = match &self.hide_edit_param_value {
             true => "modal",

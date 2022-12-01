@@ -1,10 +1,11 @@
 use std::collections::HashMap;
-use base64::encode;
+// use base64::encode;
 use gloo_file::{callbacks::FileReader, File};
-use web_sys::{DragEvent, Event, FileList, HtmlInputElement};
+use web_sys::FileList;
 use wasm_bindgen_futures::spawn_local;
 use yew::{Component, Callback, Context, html, Html, Properties};
-use yew::html::TargetCast;
+// use yew::html::TargetCast;
+use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use log::debug;
 use crate::error::{get_error, Error};
@@ -172,5 +173,21 @@ pub fn storage_upload(
             {data_upload}
             {callback_confirm}
         />
+    }
+}
+
+/// Собирает данные о файлах из input в вектор
+pub fn prepare_files(
+    file_list: &Option<FileList>,
+    files: &mut Vec<File>,
+) {
+    while let Some(fl) = file_list {
+        for i in 0..1000 { // не загружаем больше 1000 файлов, это нормально?
+            if let Some(file) = fl.get(i).map(|f| File::from(f)) {
+                files.push(file);
+            } else {
+                break;
+            }
+        }
     }
 }

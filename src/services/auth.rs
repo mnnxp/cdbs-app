@@ -42,7 +42,7 @@ impl Auth {
     pub fn login(
         &mut self,
         login_info: LoginInfoWrapper,
-        callback: Callback<Result<UserToken, Error>>,
+        callback: Callback<Result<Option<UserToken>, Error>>,
     ) {
         self.requests.post::<LoginInfoWrapper, UserToken>(
             "/login",

@@ -3,12 +3,12 @@ mod supplier_item;
 pub use supplier_item::ComponentSupplierItem;
 
 use std::collections::BTreeSet;
-use yew::{Component, Context, html, html::Scope, Html, Properties, Event};
-use log::debug;
+use yew::{Component, Context, html, html::Scope, Html, Properties};
+use web_sys::{InputEvent, Event};
+use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
-use wasm_bindgen_futures::spawn_local;
-
+use log::debug;
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, Supplier, ShowCompanyShort};
@@ -271,13 +271,11 @@ impl ComponentSuppliersCard {
     ) -> Html {
         let onclick_set_owner_supplier = link.callback(|_| Msg::RequestChangeOwnerSupplier);
         let onclick_hide_modal = link.callback(|_| Msg::ChangeHideSetSupplier);
-        let onchange_select_set_supplier =
-            link.callback(|ev: Event| Msg::UpdateSetSupplier(match ev {
-              Event::Select(el) => el.value(),
-              _ => String::new(),
-          }));
+        let onchange_select_set_supplier = link.callback(|ev: Event| {
+            Msg::UpdateSetSupplier(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+          });
         let oninput_supplier_description =
-            link.callback(|ev: Event| Msg::UpdateSupplierDescription(ev.value));
+            link.callback(|ev: InputEvent| Msg::UpdateSupplierDescription(ev.input_type()));
         let class_modal = match &self.hide_set_supplier_modal {
             true => "modal",
             false => "modal is-active",
@@ -342,13 +340,11 @@ impl ComponentSuppliersCard {
     ) -> Html {
         let onclick_add_supplier = link.callback(|_| Msg::RequestAddSupplier);
         let onclick_hide_modal = link.callback(|_| Msg::ChangeHideSetSupplier);
-        let onchange_select_add_supplier =
-            link.callback(|ev: Event| Msg::UpdateSetSupplier(match ev {
-              Event::Select(el) => el.value(),
-              _ => String::new(),
-          }));
+        let onchange_select_add_supplier = link.callback(|ev: Event| {
+            Msg::UpdateSetSupplier(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+        });
         let oninput_supplier_description =
-            link.callback(|ev: Event| Msg::UpdateSupplierDescription(ev.value));
+            link.callback(|ev: InputEvent| Msg::UpdateSupplierDescription(ev.input_type()));
         let class_modal = match &self.hide_set_supplier_modal {
             true => "modal",
             false => "modal is-active",

@@ -158,7 +158,7 @@ impl From<SelfUserInfo> for UserUpdateInfo {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct UserCertificate {
     pub user_uuid: UUID,
@@ -185,7 +185,7 @@ pub struct DegreeImportanceTranslateList {
 }
 
 // for arguments users query
-#[derive(Serialize, Deserialize, Clone, Default, Debug)]
+#[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct UsersQueryArg {
     pub users_uuids:  Option<Vec<UUID>>,

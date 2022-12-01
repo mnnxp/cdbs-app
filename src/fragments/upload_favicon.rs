@@ -1,8 +1,11 @@
-use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
-use graphql_client::GraphQLQuery;
-use web_sys::{DragEvent, Event, File};
+use yew::{Component, Callback, Context, html, Html, Properties};
+use yew::html::{Scope, TargetCast};
+use gloo::file::File;
+use web_sys::{DragEvent, Event, FileList, HtmlInputElement};
 use wasm_bindgen_futures::spawn_local;
+use graphql_client::GraphQLQuery;
 use log::debug;
+use crate::fragments::files_frame::FilesFrame;
 use crate::fragments::list_errors::ListErrors;
 use crate::error::{Error, get_error};
 use crate::services::storage_upload::storage_upload;
@@ -18,6 +21,7 @@ use crate::gqls::{
 #[derive(PartialEq, Clone, Debug, Properties)]
 pub struct Props {
     pub callback: Callback<String>,
+    #[prop_or_default]
     pub company_uuid: Option<String>,
 }
 
@@ -42,10 +46,10 @@ pub enum Msg {
     RequestUploadUserData,
     RequestUploadCompanyData,
     // RequestUploadFile(Vec<u8>),
-    ResponseUploadFile(Result<(), Error>),
+    // ResponseUploadFile(Result<(), Error>),
     // RequestUploadCompleted,
     ResponseError(Error),
-    UpdateFile(Option<File>),
+    UpdateFiles(Option<FileList>),
     GetUploadData(String),
     // GetUploadFile(Option<String>),
     GetUploadCompleted(Result<usize, Error>),
@@ -116,21 +120,21 @@ impl Component for UpdateFaviconBlock {
                     })
                 }
             },
-            Msg::RequestUploadFile(data) => {
-                // let request = UploadData {
-                //     upload_url: self.request_upload_data.upload_url.to_string(),
-                //     file_data: data,
-                // };
-                // self.task = Some(self.put_upload_file.put_file(request, self.request_upload_file.clone()));
-            },
-            Msg::ResponseUploadFile(Ok(())) => {
-                // link.send_message(Msg::GetUploadFile(()))
-            },
-            Msg::ResponseUploadFile(Err(err)) => {
-                self.error = Some(err);
-                // self.task = None;
-                // self.task_read = None;
-            },
+            // Msg::RequestUploadFile(data) => {
+            //     let request = UploadData {
+            //         upload_url: self.request_upload_data.upload_url.to_string(),
+            //         file_data: data,
+            //     };
+            //     self.task = Some(self.put_upload_file.put_file(request, self.request_upload_file.clone()));
+            // },
+            // Msg::ResponseUploadFile(Ok(())) => {
+            //     link.send_message(Msg::GetUploadFile(()))
+            // },
+            // Msg::ResponseUploadFile(Err(err)) => {
+            //     self.error = Some(err);
+            //     self.task = None;
+            //     self.task_read = None;
+            // },
             // Msg::RequestUploadCompleted => {
             //     let file_uuids = vec![self.request_upload_data.file_uuid.clone()];
             //     spawn_local(async move {
@@ -143,12 +147,11 @@ impl Component for UpdateFaviconBlock {
             Msg::ResponseError(err) => {
                 self.error = Some(err);
             },
-            Msg::UpdateFile(op_file) => {
-                if op_file.is_some() {
-                    // enable bnt if file selected
-                    self.dis_upload_btn = false;
+            Msg::UpdateFiles(file_list) => {
+                if let Some(files) = file_list {
+                    self.file = files.get(0).map(|f| File::from(f));
+                    self.dis_upload_btn = self.file.is_none();
                 }
-                self.file = op_file.clone();
             },
             Msg::GetUploadData(res) => {
                 let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
@@ -232,48 +235,51 @@ impl UpdateFaviconBlock {
         &self,
         link: &Scope<Self>,
     )  -> Html {
-        let onchange_favicon_file = link.callback(move |event| {
-            if let Event::Files(file) = event {
-                Msg::UpdateFile(file)
-            } else {
-                Msg::Ignore
-            }
+        let onchange = link.callback(move |ev: Event| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateFiles(input.files())
         });
-        let ondrop_favicon_file = link.callback(move |event: DragEvent| {
-            event.prevent_default();
-            if let Some(files) = event.data_transfer().unwrap().files() {
-                Msg::UpdateFile(files.get(0))
-            } else {
-                Msg::Ignore
-            }
+        let ondrop = link.callback(move |ev: DragEvent| {
+            ev.prevent_default();
+            Msg::UpdateFiles(ev.data_transfer().unwrap().files())
         });
-        let ondragover_favicon_file = link.callback(move |event: DragEvent| {
-            event.prevent_default();
+        let ondragover = link.callback(move |ev: DragEvent| {
+            ev.prevent_default();
             Msg::Ignore
         });
+        let ondragenter = ondragover.clone();
 
         html!{<div class="block">
             <div class="columns">
                 <div class="column">
                     <div class="file is-large is-boxed has-name">
-                      <label
-                        for="favicon-file-input"
-                        class="file-label"
-                        style="width: 100%; text-align: center"
-                      >
-                        <input
-                            id="favicon-file-input"
-                            class="file-input"
-                            type="file"
-                            accept="image/*"
-                            onchange={onchange_favicon_file} />
-                        <span class="file-cta" ondrop={ondrop_favicon_file} ondragover={ondragover_favicon_file} >
-                          <span class="file-icon">
-                            <i class="fas fa-upload"></i>
-                          </span>
-                          <span class="file-label">{ get_value_field(&93) }</span>
-                        </span>
-                      </label>
+                        <FilesFrame
+                            {onchange}
+                            {ondrop}
+                            {ondragover}
+                            {ondragenter}
+                            input_id={"favicon-file-input".to_string()}
+                            accept={"image/*".to_string()}
+                            file_label={86}
+                        />
+                      // <label
+                      //   for="favicon-file-input"
+                      //   class="file-label"
+                      //   style="width: 100%; text-align: center"
+                      // >
+                      //   <input
+                      //       id="favicon-file-input"
+                      //       class="file-input"
+                      //       type="file"
+                      //       accept="image/*"
+                      //       onchange={onchange} />
+                      //   <span class="file-cta" ondrop={ondrop} ondragover={ondragover} >
+                      //     <span class="file-icon">
+                      //       <i class="fas fa-upload"></i>
+                      //     </span>
+                      //     <span class="file-label">{ get_value_field(&93) }</span>
+                      //   </span>
+                      // </label>
                     </div>
                 </div>
                 <div class="column">
@@ -299,7 +305,6 @@ impl UpdateFaviconBlock {
         link: &Scope<Self>,
     )  -> Html {
         let onclick_upload_favicon = link.callback(|_| Msg::RequestUploadData);
-
         let class_upload_btn = match self.active_loading_files_btn {
             true => "button is-loading",
             false => "button",

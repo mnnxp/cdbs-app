@@ -1,14 +1,14 @@
+// use yew_agent::Bridge;
+// use yew_router::hooks::use_route;
 use std::collections::HashMap;
 use yew::{Component, Context, html, html::Scope, Html, Properties, classes};
-// use yew_agent::Bridge;
 use yew_router::prelude::*;
-use yew_router::hooks::use_route;
 use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
-use crate::routes::AppRoute::{self, Login, ComponentSettings};
+use crate::routes::AppRoute::{Login, ComponentSettings};
 use crate::error::{get_error, Error};
 use crate::fragments::{
     switch_icon::res_btn,
@@ -122,7 +122,7 @@ impl Component for ShowComponent {
         };
 
         let target_component_uuid =
-            use_route().unwrap_or_default().trim_start_matches("/component/").to_string();
+            ctx.link().location().unwrap().path().trim_start_matches("/component/").to_string();
         // get flag changing current component in route
         let not_matches_component_uuid = target_component_uuid != self.current_component_uuid;
         debug!("self.current_component_uuid {:#?}", self.current_component_uuid);
@@ -483,7 +483,7 @@ impl ShowComponent {
                             show_delete_btn = {false}
                             component_uuid = {self.current_component_uuid.clone()}
                             license_data = {data.clone()}
-                            delete_license = {None}
+                            // delete_license = {None}
                           />
                     })}
                 </div>
@@ -588,7 +588,7 @@ impl ShowComponent {
             show_manage_btn = {false}
             component_uuid = {props.component_uuid.clone()}
             param_data = {data.clone()}
-            delete_param = {None}
+            // delete_param = {None}
           />}
     }
 
@@ -712,7 +712,7 @@ impl ShowComponent {
                                     show_delete_btn = {false}
                                     component_uuid = {component_data.uuid.clone()}
                                     supplier_data = {data.clone()}
-                                    delete_supplier = {None}
+                                    // delete_supplier = {None}
                                 />},
                                 false => html!{},
                             }})}
@@ -722,7 +722,7 @@ impl ShowComponent {
                                show_delete_btn = {false}
                                component_uuid = {component_data.uuid.clone()}
                                supplier_data = {data.clone()}
-                               delete_supplier = {None}
+                               // delete_supplier = {None}
                            />},
                            None => html!{},
                        },
@@ -749,7 +749,7 @@ impl ShowComponent {
                        show_delete_btn = {false}
                        component_uuid = {self.current_component_uuid.clone()}
                        standard_data = {data.clone()}
-                       delete_standard = {None}
+                       // delete_standard = {None}
                      />}
                })}
             </tbody>

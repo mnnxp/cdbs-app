@@ -1,14 +1,14 @@
-use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, classes};
 // use yew_agent::Bridge;
+// use yew_router::hooks::use_route;
+use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, classes};
 use yew_router::prelude::*;
-use yew_router::hooks::use_route;
 use web_sys::MouseEvent;
 use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
-use crate::routes::AppRoute::{self, Login, Profile, CompanySettings};
+use crate::routes::AppRoute::{Login, Profile, CompanySettings};
 use crate::error::{get_error, Error};
 use crate::fragments::{
     switch_icon::res_btn,
@@ -99,7 +99,7 @@ impl Component for ShowCompany {
         };
 
         let target_company_uuid =
-            use_route().unwrap_or_default().trim_start_matches("/company/").to_string();
+            ctx.link().location().unwrap().path().trim_start_matches("/company/").to_string();
         // get flag changing current company in route
         let not_matches_company_uuid = target_company_uuid != self.current_company_uuid;
         // debug!("self.current_company_uuid {:#?}", self.current_company_uuid);

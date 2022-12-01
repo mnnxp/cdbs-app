@@ -1,14 +1,14 @@
-use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, classes};
 // use yew_agent::Bridge;
+// use yew_router::hooks::use_route;
+use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, classes};
 use yew_router::prelude::*;
-use yew_router::hooks::use_route;
 use web_sys::MouseEvent;
 use graphql_client::GraphQLQuery;
 use log::debug;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
-use crate::routes::AppRoute::{self, Login};
+use crate::routes::AppRoute::Login;
 use crate::error::{get_error, Error};
 use crate::fragments::{
     company::CatalogCompanies,
@@ -110,7 +110,10 @@ impl Component for Profile {
             },
         };
         // get and decode target user from route
-        let target_username = url_decode(use_route().unwrap_or_default().trim_start_matches("/@"));
+        let target_username = url_decode(
+            ctx.link().location().unwrap().path().trim_start_matches("/@")
+            // ctx.link().location().unwrap().path().trim_start_matches("/@")
+        );
         // get flag changing current profile in route
         let not_matches_username = target_username != self.current_username;
         // debug!("self.current_username {:?}", self.current_username);

@@ -50,7 +50,7 @@ where
         request.headers().set("Accept-Language", lang.as_str()).unwrap();
     }
 
-    let window = window();
+    let window = window().unwrap();
     let resp_value = JsFuture::from(window.fetch_with_request(&request)).await?;
     let resp: Response = resp_value.dyn_into().unwrap();
 

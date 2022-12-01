@@ -15,7 +15,7 @@ lazy_static! {
     pub static ref TOKEN: RwLock<Option<String>> = {
         let storage = storage_service();
         if let Ok(token) = storage.get(TOKEN_KEY) {
-            RwLock::new(Some(token))
+            RwLock::new(token)
         } else {
             RwLock::new(None)
         }
@@ -25,7 +25,7 @@ lazy_static! {
     pub static ref LOGGED_USER: RwLock<Option<String>> = {
         let storage = storage_service();
         if let Ok(logged_user) = storage.get(LOGGED_USER_KEY) {
-            RwLock::new(Some(logged_user))
+            RwLock::new(logged_user)
         } else {
             RwLock::new(None)
         }
@@ -35,7 +35,7 @@ lazy_static! {
     pub static ref LANGUAGE: RwLock<Option<String>> = {
         let storage = storage_service();
         if let Ok(accept_language) = storage.get(ACCEPT_LANGUAGE) {
-            RwLock::new(Some(accept_language))
+            RwLock::new(accept_language)
         } else {
             RwLock::new(None)
         }
@@ -45,7 +45,7 @@ lazy_static! {
     pub static ref LISTVIEWTYPE: RwLock<Option<String>> = {
         let storage = storage_service();
         if let Ok(list_view) = storage.get(LIST_VIEW_TYPE) {
-            RwLock::new(Some(list_view))
+            RwLock::new(list_view)
         } else {
             RwLock::new(None)
         }
@@ -56,7 +56,7 @@ lazy_static! {
 pub fn set_token(token: Option<String>) {
     let mut storage = storage_service();
     if let Some(t) = token.clone() {
-        storage.set_item(TOKEN_KEY, Ok(t));
+        storage.set_item(TOKEN_KEY, t.as_str());
     } else {
         storage.remove_item(TOKEN_KEY);
     }
@@ -79,7 +79,7 @@ pub fn is_authenticated() -> bool {
 pub fn set_logged_user(logged_user: Option<String>) {
     let mut storage = storage_service();
     if let Some(u) = logged_user.clone() {
-        storage.set_item(LOGGED_USER_KEY, Ok(u));
+        storage.set_item(LOGGED_USER_KEY, u.as_str());
     } else {
         storage.remove_item(LOGGED_USER_KEY);
     }
@@ -100,7 +100,7 @@ pub fn get_logged_user() -> Option<SlimUser> {
 pub fn set_lang(lang: Option<String>) {
     let mut storage = storage_service();
     if let Some(l) = lang.clone() {
-        storage.set_item(ACCEPT_LANGUAGE, Ok(l));
+        storage.set_item(ACCEPT_LANGUAGE, l.as_str());
     } else {
         storage.remove_item(ACCEPT_LANGUAGE);
     }
@@ -118,7 +118,7 @@ pub fn get_lang() -> Option<String> {
 pub fn set_list_view(list_view: Option<String>) {
     let mut storage = storage_service();
     if let Some(l) = list_view.clone() {
-        storage.set_item(LIST_VIEW_TYPE, Ok(l));
+        storage.set_item(LIST_VIEW_TYPE, l.as_str());
     } else {
         storage.remove_item(LIST_VIEW_TYPE);
     }

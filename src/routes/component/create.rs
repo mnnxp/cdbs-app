@@ -1,12 +1,12 @@
-use yew::{Component, Context, html, html::Scope, Html, Event};
 // use yew_agent::Bridge;
+use yew::{Component, Context, html, html::Scope, Html};
 use yew_router::prelude::*;
-use log::debug;
+use web_sys::{InputEvent, Event};
+use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
-use wasm_bindgen_futures::spawn_local;
-
-use crate::routes::AppRoute::{self, Login, ComponentSettings};
+use log::debug;
+use crate::routes::AppRoute::{Login, ComponentSettings};
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
 use crate::services::{get_logged_user, get_value_field};
@@ -168,11 +168,11 @@ impl Component for CreateComponent {
             Msg::UpdateDescription(data) =>
                 self.request_component.description = data,
             Msg::UpdateTypeAccessId(data) =>
-                self.request_component.type_access_id = data.parse::<usize>().unwrap_or_default(),
+                self.request_component.type_access_id = data.parse::<usize>().unwrap_or(1),
             Msg::UpdateComponentTypeId(data) =>
-                self.request_component.component_type_id = data.parse::<usize>().unwrap_or_default(),
+                self.request_component.component_type_id = data.parse::<usize>().unwrap_or(1),
             Msg::UpdateActualStatusId(data) =>
-                self.request_component.actual_status_id = data.parse::<usize>().unwrap_or_default(),
+                self.request_component.actual_status_id = data.parse::<usize>().unwrap_or(1),
             Msg::ClearError => self.error = None,
             Msg::Ignore => {},
         }
@@ -207,23 +207,19 @@ impl CreateComponent {
         &self,
         link: &Scope<Self>,
     ) -> Html {
-        let onchange_actual_status_id =
-            link.callback(|ev: Event| Msg::UpdateActualStatusId(match ev {
-              Event::Select(el) => el.value(),
-              _ => "1".to_string(),
-          }));
-        let onchange_change_component_type =
-            link.callback(|ev: Event| Msg::UpdateComponentTypeId(match ev {
-              Event::Select(el) => el.value(),
-              _ => "1".to_string(),
-          }));
-        let onchange_change_type_access =
-            link.callback(|ev: Event| Msg::UpdateTypeAccessId(match ev {
-              Event::Select(el) => el.value(),
-              _ => "1".to_string(),
-          }));
-        let oninput_name = link.callback(|ev: Event| Msg::UpdateName(ev.value));
-        let oninput_description = link.callback(|ev: Event| Msg::UpdateDescription(ev.value));
+        let onchange_actual_status_id = link.callback(|ev: Event| {
+            Msg::UpdateActualStatusId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+        });
+        let onchange_change_component_type = link.callback(|ev: Event| {
+            Msg::UpdateComponentTypeId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+        });
+        let onchange_change_type_access = link.callback(|ev: Event| {
+            Msg::UpdateTypeAccessId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+        });
+        let oninput_name =
+            link.callback(|ev: InputEvent| Msg::UpdateName(ev.input_type()));
+        let oninput_description =
+            link.callback(|ev: InputEvent| Msg::UpdateDescription(ev.input_type()));
 
         html!{
             <div class="card">

@@ -1,11 +1,10 @@
 use std::collections::{HashMap, BTreeSet};
-use yew::{Component, Context, html, html::Scope, Html, Properties, Event};
-
-use log::debug;
+use yew::{Component, Context, html, html::Scope, Html, Properties};
+use web_sys::{InputEvent, Event};
+use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
-use wasm_bindgen_futures::spawn_local;
-
+use log::debug;
 use super::file::ManageModificationFilesCard;
 use super::heads::ModificationTableHeads;
 use super::item::ModificationTableItem;
@@ -36,7 +35,7 @@ pub struct Props {
 pub struct ModificationsTableEdit {
     error: Option<Error>,
     component_uuid: UUID,
-    current_modifications: Vec<ComponentModificationInfo>,
+    component_modifications: Vec<ComponentModificationInfo>,
     select_modification_uuid: UUID,
     modification_filesets: HashMap<UUID, Vec<(UUID, String)>>,
     actual_statuses: Vec<ActualStatus>,
@@ -90,10 +89,6 @@ impl Component for ModificationsTableEdit {
     type Properties = Props;
 
     fn create(ctx: &Context<Self>) -> Self {
-        let component_uuid = ctx.props().current_component_uuid.clone();
-
-        let current_modifications = ctx.props().component_modifications.clone();
-
         let select_modification_uuid = ctx.props().component_modifications
             .first()
             .map(|m| m.uuid.clone())
@@ -114,8 +109,8 @@ impl Component for ModificationsTableEdit {
 
         Self {
             error: None,
-            component_uuid,
-            current_modifications,
+            component_uuid: ctx.props().current_component_uuid.clone(),
+            component_modifications: ctx.props().component_modifications.clone(),
             select_modification_uuid,
             modification_filesets,
             actual_statuses: Vec::new(),
@@ -151,7 +146,7 @@ impl Component for ModificationsTableEdit {
                 let mut set_heads: Vec<usize> = vec![0];
                 let mut collect_heads: Vec<Param> = Vec::new();
 
-                for modification in &self.current_modifications {
+                for modification in &self.component_modifications {
                     self.valid_modification_uuids.insert(modification.uuid.clone());
 
                     self.collect_columns.clear();
@@ -190,7 +185,7 @@ impl Component for ModificationsTableEdit {
             },
             Msg::ParseFilesets => {
                 let mut modification_filesets: HashMap<UUID, Vec<(UUID, String)>> = HashMap::new();
-                for component_modification in &self.current_modifications {
+                for component_modification in &self.component_modifications {
                     let mut fileset_data: Vec<(UUID, String)> = Vec::new();
                     for fileset in &component_modification.filesets_for_program {
                         fileset_data.push((fileset.uuid.clone(), fileset.program.name.clone()));
@@ -354,7 +349,7 @@ impl Component for ModificationsTableEdit {
                 match res_value.is_null() {
                     false => {
                         self.clear_current_data();
-                        self.current_modifications = serde_json::from_value(
+                        self.component_modifications = serde_json::from_value(
                             res_value.get("componentModifications").unwrap().clone()
                         ).unwrap();
                         debug!("Update modifications list");
@@ -413,7 +408,7 @@ impl Component for ModificationsTableEdit {
                 self.request_add_modification.description = data;
             },
             Msg::UpdateAddActualStatusId(data) =>
-                self.request_add_modification.actual_status_id = data.parse::<usize>().unwrap_or_default(),
+                self.request_add_modification.actual_status_id = data.parse::<usize>().unwrap_or(1),
             Msg::UpdateEditName(data) => {
                 self.request_edit_modification.modification_name = data;
                 self.update_edit_modification = true;
@@ -423,7 +418,7 @@ impl Component for ModificationsTableEdit {
                 self.update_edit_modification = true;
             },
             Msg::UpdateEditActualStatusId(data) => {
-                self.request_edit_modification.actual_status_id = data.parse::<usize>().unwrap_or_default();
+                self.request_edit_modification.actual_status_id = data.parse::<usize>().unwrap_or(1);
                 self.update_edit_modification = true;
             },
             Msg::ShowAddModificationCard => {
@@ -458,7 +453,7 @@ impl Component for ModificationsTableEdit {
                 }
             },
             Msg::UpdateSelectModification => {
-                for current_modification in self.current_modifications.iter() {
+                for current_modification in self.component_modifications.iter() {
                     if current_modification.uuid == self.select_modification_uuid {
                         self.request_edit_modification.modification_name = current_modification.modification_name.clone();
                         self.request_edit_modification.description = current_modification.description.clone();
@@ -468,7 +463,7 @@ impl Component for ModificationsTableEdit {
                 }
             },
             Msg::ChangeModificationData => {
-                for modification in self.current_modifications.iter_mut() {
+                for modification in self.component_modifications.iter_mut() {
                     if modification.uuid == self.select_modification_uuid {
                         if self.request_edit_modification.modification_name.is_empty() {
                             modification.modification_name = self.request_edit_modification.modification_name.clone();
@@ -497,12 +492,16 @@ impl Component for ModificationsTableEdit {
     }
 
     fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
-        if self.current_modifications == ctx.props().current_component_uuid {
+        if self.component_uuid == ctx.props().current_component_uuid &&
+            ctx.props().component_modifications
+                .first()
+                .map(|m| m.uuid == self.select_modification_uuid)
+                .unwrap_or_default() {
             debug!("not update modifications {:?}", self.component_modifications.len());
             false
         } else {
             debug!("update modifications {:?}", ctx.props().component_modifications.len());
-            self.current_modifications = ctx.props().component_modifications.clone();
+            self.component_modifications = ctx.props().component_modifications.clone();
             true
         }
     }
@@ -593,23 +592,14 @@ impl ModificationsTableEdit {
         &self,
         link: &Scope<Self>,
     ) -> Html {
-        let oninput_name =
-            link.callback(|ev: Event| Msg::UpdateAddName(ev.value));
-
+        let oninput_name = link.callback(|ev: InputEvent| Msg::UpdateAddName(ev.input_type()));
         let oninput_description =
-            link.callback(|ev: Event| Msg::UpdateAddDescription(ev.value));
-
-        let onchange_actual_status_id = link
-            .callback(|ev: Event| Msg::UpdateAddActualStatusId(match ev {
-              Event::Select(el) => el.value(),
-              _ => "1".to_string(),
-          }));
-
-        let onclick_add_modification_card =
-            link.callback(|_| Msg::ShowAddModificationCard);
-
-        let onclick_add_component_modification =
-            link.callback(|_| Msg::RequestAddModificationData);
+            link.callback(|ev: InputEvent| Msg::UpdateAddDescription(ev.input_type()));
+        let onchange_actual_status_id = link.callback(|ev: Event| {
+            Msg::UpdateAddActualStatusId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+        });
+        let onclick_add_modification_card = link.callback(|_| Msg::ShowAddModificationCard);
+        let onclick_add_component_modification = link.callback(|_| Msg::RequestAddModificationData);
 
         let class_modal = match &self.open_add_modification_card {
             true => "modal is-active",
@@ -689,23 +679,15 @@ impl ModificationsTableEdit {
         link: &Scope<Self>,
     ) -> Html {
         let oninput_modification_name =
-            link.callback(|ev: Event| Msg::UpdateEditName(ev.value));
-
+            link.callback(|ev: InputEvent| Msg::UpdateEditName(ev.input_type()));
         let oninput_modification_description =
-            link.callback(|ev: Event| Msg::UpdateEditDescription(ev.value));
-
-        let onchange_modification_actual_status_id = link
-            .callback(|ev: Event| Msg::UpdateEditActualStatusId(match ev {
-              Event::Select(el) => el.value(),
-              _ => "1".to_string(),
-          }));
-
-        let onclick_modification_card =
-            link.callback(|_| Msg::ShowEditModificationCard);
-
+            link.callback(|ev: InputEvent| Msg::UpdateEditDescription(ev.input_type()));
+        let onchange_modification_actual_status_id = link.callback(|ev: Event| {
+            Msg::UpdateEditActualStatusId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+        });
+        let onclick_modification_card = link.callback(|_| Msg::ShowEditModificationCard);
         let onclick_delete_component_modification =
             link.callback(|_| Msg::RequestDeleteModificationData);
-
         let onclick_component_modification_update =
             link.callback(|_| Msg::RequestUpdateModificationData);
 
@@ -713,9 +695,8 @@ impl ModificationsTableEdit {
             true => "modal is-active",
             false => "modal",
         };
-
         let modification_data: Option<&ComponentModificationInfo> =
-            self.current_modifications.iter().find(|x| x.uuid == self.select_modification_uuid);
+            self.component_modifications.iter().find(|x| x.uuid == self.select_modification_uuid);
 
         match modification_data {
             Some(modification_data) => html!{<div class={class_modal}>

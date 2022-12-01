@@ -33,8 +33,8 @@ impl Component for ListItem {
             self.data_uuid == ctx.props().data.uuid {
             false
         } else {
-            ctx.props().show_list = self.show_list;
-            ctx.props().data.uuid = self.data_uuid;
+            self.show_list = ctx.props().show_list;
+            self.data_uuid = ctx.props().data.uuid;
             true
         }
     }

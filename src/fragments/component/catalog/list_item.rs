@@ -3,7 +3,7 @@ use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, cla
 // use log::debug;
 use yew_router::prelude::*;
 use crate::services::get_value_field;
-use crate::routes::AppRoute::{self, ShowComponent};
+use crate::routes::AppRoute::ShowComponent;
 use crate::fragments::switch_icon::res_btn;
 use crate::types::{UUID, ShowComponentShort};
 
@@ -36,7 +36,7 @@ impl Component for ListItem {
         Self {
             // router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             component_uuid: ctx.props().data.uuid,
-            is_followed: ctx.props().is_followed,
+            is_followed: ctx.props().data.is_followed,
             show_list: ctx.props().show_list,
         }
     }
@@ -70,7 +70,7 @@ impl Component for ListItem {
         } else {
             self.show_list = ctx.props().show_list;
             self.component_uuid = ctx.props().data.uuid;
-            self.is_followed = ctx.props().is_followed;
+            self.is_followed = ctx.props().data.is_followed;
             true
         }
     }

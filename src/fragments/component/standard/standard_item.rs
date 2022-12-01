@@ -26,6 +26,7 @@ pub struct Props {
     pub show_delete_btn: bool,
     pub component_uuid: UUID,
     pub standard_data: ShowStandardShort,
+    #[prop_or_default]
     pub delete_standard: Option<Callback<UUID>>,
 }
 
@@ -127,7 +128,6 @@ impl ComponentStandardItem {
         props: &Props,
     ) -> Html {
         let onclick_standard_data_info = link.callback(|_| Msg::ShowStandardCard);
-
         let onclick_delete_standard = link.callback(|_| Msg::RequestDeleteStandard);
 
         html!{<>

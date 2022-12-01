@@ -38,7 +38,7 @@ impl Component for ComponentFilesBlock {
     fn create(ctx: &Context<Self>) -> Self {
         Self {
             component_uuid: ctx.props().component_uuid,
-            first_file_uuid: ctx.props().files.first().map(|x| &x.uuid),
+            first_file_uuid: ctx.props().files.first().map(|x| x.uuid.clone()).unwrap_or_default(),
             show_full_files: false,
             files_deleted_list: BTreeSet::new(),
         }
@@ -58,12 +58,12 @@ impl Component for ComponentFilesBlock {
 
     fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         if self.component_uuid == ctx.props().component_uuid &&
-             self.first_file_uuid == ctx.props().files.first().map(|x| &x.uuid) {
+             ctx.props().files.first().map(|x| x.uuid == self.first_file_uuid).unwrap_or_default() {
             false
         } else {
             self.files_deleted_list.clear();
             self.component_uuid = ctx.props().component_uuid;
-            self.first_file_uuid = ctx.props().files.first().map(|x| &x.uuid);
+            self.first_file_uuid = ctx.props().files.first().map(|x| x.uuid.clone()).unwrap_or_default();
             true
         }
     }

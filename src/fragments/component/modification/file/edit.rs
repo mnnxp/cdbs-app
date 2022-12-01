@@ -1,20 +1,21 @@
 use std::collections::BTreeSet;
-use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
-use graphql_client::GraphQLQuery;
-// use gloo::file::File;
-use web_sys::{DragEvent, Event};
+use yew::{Component, Context, html, Html, Properties};
+use yew::html::{Scope, TargetCast};
+use gloo::file::File;
+use web_sys::{DragEvent, Event, FileList, HtmlInputElement};
 use wasm_bindgen_futures::spawn_local;
-use web_sys::{File, FileList};
+use graphql_client::GraphQLQuery;
 use log::debug;
 use super::ModificationFileItem;
-use crate::services::storage_upload::storage_upload;
+use crate::services::storage_upload::{storage_upload, prepare_files};
 use crate::services::get_value_field;
 use crate::error::{get_error, Error};
+use crate::fragments::files_frame::FilesFrame;
 use crate::fragments::list_errors::ListErrors;
-use crate::types::{UUID, ShowFileInfo, UploadFile};
+use crate::types::{UUID, ShowFileInfo};
 use crate::gqls::{
     make_query,
-    relate::{ConfirmUploadCompleted, confirm_upload_completed},
+    // relate::{ConfirmUploadCompleted, confirm_upload_completed},
     component::{
         ComponentModificationFilesList, component_modification_files_list,
         UploadModificationFiles, upload_modification_files,
@@ -30,17 +31,17 @@ pub struct Props {
 pub struct ManageModificationFilesCard {
     error: Option<Error>,
     modification_uuid: UUID,
-    request_upload_data: Vec<UploadFile>,
+    // request_upload_data: Vec<UploadFile>,
     // request_upload_file: Callback<Result<Option<String>, Error>>,
-    request_upload_confirm: Vec<UUID>,
+    // request_upload_confirm: Vec<UUID>,
     // task_read: Vec<(FileName, ReaderTask)>,
     // task: Vec<FetchTask>,
     files_list: Vec<ShowFileInfo>,
     files_deleted_list: BTreeSet<UUID>,
     // put_upload_file: PutUploadFile,
     files: Vec<File>,
-    files_index: u32,
-    get_result_up_file: bool,
+    files_index: u32, // count_files?
+    // get_result_up_file: bool,
     get_result_up_completed: usize,
     active_loading_files_btn: bool,
     show_full_files: bool,
@@ -51,14 +52,14 @@ pub enum Msg {
     RequestModificationFilesList,
     RequestUploadModificationFiles,
     // RequestUploadFile(Vec<u8>),
-    ResponseUploadFile(Result<(), Error>),
+    // ResponseUploadFile(Result<(), Error>),
     // RequestUploadCompleted,
     ResponseError(Error),
     GetModificationFilesListResult(String),
     GetUploadData(String),
     // GetUploadFile,
     GetUploadCompleted(Result<usize, Error>),
-    UpdateFiles(FileList),
+    UpdateFiles(Option<FileList>),
     FinishUploadFiles,
     ShowFullList,
     RemoveFile(UUID),
@@ -75,9 +76,9 @@ impl Component for ManageModificationFilesCard {
         Self {
             error: None,
             modification_uuid: ctx.props().modification_uuid,
-            request_upload_data: Vec::new(),
+            // request_upload_data: Vec::new(),
             // request_upload_file: ctx.link().callback(Msg::ResponseUploadFile),
-            request_upload_confirm: Vec::new(),
+            // request_upload_confirm: Vec::new(),
             // task_read: Vec::new(),
             // task: Vec::new(),
             files_list: Vec::new(),
@@ -85,7 +86,7 @@ impl Component for ManageModificationFilesCard {
             // put_upload_file: PutUploadFile::new(),
             files: Vec::new(),
             files_index: 0,
-            get_result_up_file: false,
+            // get_result_up_file: false,
             get_result_up_completed: 0,
             active_loading_files_btn: false,
             show_full_files: false,
@@ -165,24 +166,24 @@ impl Component for ManageModificationFilesCard {
             //         link.send_message(Msg::GetUploadCompleted(res));
             //     });
             // },
-            Msg::ResponseUploadFile(Ok(())) => {
-                debug!("next: {:?}", self.files_index);
-                self.files_index -= 1;
-                if self.files_index == 0 {
-                    self.get_result_up_file = true;
-                    debug!("finish: {:?}", self.request_upload_confirm.len());
-                    // link.send_message(Msg::RequestUploadCompleted);
-                }
-            },
-            Msg::ResponseUploadFile(Err(err)) => {
-                self.error = Some(err);
-                // self.task.clear();
-                // self.task_read.clear();
-                self.files_index = 0;
-                self.request_upload_confirm.clear();
-                self.get_result_up_completed = 0;
-                self.active_loading_files_btn = false;
-            },
+            // Msg::ResponseUploadFile(Ok(())) => {
+            //     debug!("next: {:?}", self.files_index);
+            //     self.files_index -= 1;
+            //     if self.files_index == 0 {
+            //         self.get_result_up_file = true;
+            //         debug!("finish: {:?}", self.request_upload_confirm.len());
+            //         link.send_message(Msg::RequestUploadCompleted);
+            //     }
+            // },
+            // Msg::ResponseUploadFile(Err(err)) => {
+            //     self.error = Some(err);
+            //     self.task.clear();
+            //     self.task_read.clear();
+            //     self.files_index = 0;
+            //     self.request_upload_confirm.clear();
+            //     self.get_result_up_completed = 0;
+            //     self.active_loading_files_btn = false;
+            // },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetModificationFilesListResult(res) => {
                 let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
@@ -207,7 +208,7 @@ impl Component for ManageModificationFilesCard {
                         let result = serde_json::from_value(
                             res_value.get("uploadModificationFiles").unwrap().clone()
                         ).unwrap();
-                        debug!("uploadModificationFiles {:?}", self.request_upload_data);
+                        // debug!("uploadModificationFiles {:?}", self.request_upload_data);
 
                         if !self.files.is_empty() {
                             let callback_confirm =
@@ -245,12 +246,23 @@ impl Component for ManageModificationFilesCard {
                 }
                 self.active_loading_files_btn = false;
             },
-            Msg::UpdateFiles(files) => {
-                while let Some(file) = files.get(self.files_index) {
-                    debug!("self.files_index: {:?}", self.files_index);
-                    self.files_index += 1;
-                    self.files.push(file.clone());
-                }
+            Msg::UpdateFiles(file_list) => {
+                prepare_files(&file_list, &mut self.files);
+                // while let Some(files) = file_list {
+                //     for i in 0..1000 { // не загружаем больше 1000 файлов, это нормально?
+                //         if let Some(file) = files.get(i).map(|f| File::from(f)) {
+                //             self.files.push(file);
+                //         } else {
+                //             break;
+                //         }
+                //     }
+                //     // self.dis_upload_btn = self.file.is_none();
+                // }
+                // while let Some(file) = files.get(self.files_index) {
+                //     debug!("self.files_index: {:?}", self.files_index);
+                //     self.files_index += 1;
+                //     self.files.push(file.clone());
+                // }
                 // self.files_index = 0;
             },
             Msg::FinishUploadFiles => {
@@ -259,7 +271,7 @@ impl Component for ManageModificationFilesCard {
                 self.active_loading_files_btn = false;
                 // self.task.clear();
                 // self.task_read.clear();
-                self.request_upload_confirm.clear();
+                // self.request_upload_confirm.clear();
                 self.files.clear();
                 self.files_index = 0;
             },
@@ -384,38 +396,57 @@ impl ManageModificationFilesCard {
         link: &Scope<Self>,
         props: &Props,
     ) -> Html {
-        let onchange_upload_files = link.callback(move |value| {
-            if let Event::Files(files) = value {
-                Msg::UpdateFiles(files)
-            } else {
-                Msg::Ignore
-            }
+        let onchange = link.callback(move |ev: Event| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateFiles(input.files())
         });
+        let ondrop = link.callback(move |ev: DragEvent| {
+            ev.prevent_default();
+            Msg::UpdateFiles(ev.data_transfer().unwrap().files())
+        });
+        let ondragover = link.callback(move |ev: DragEvent| {
+            ev.prevent_default();
+            Msg::Ignore
+        });
+        let ondragenter = ondragover.clone();
+
 
         html!{<>
             <div class="file has-name is-boxed is-centered">
-                <label class="file-label" style="width: 100%">
-                  <input id="component-file-input"
-                  class="file-input"
-                  type="file"
-                  // accept="image/*,application/vnd*,application/rtf,text/*,.pdf"
-                  onchange={onchange_upload_files}
-                  multiple={true} />
-                <span class="file-cta">
-                  <span class="file-icon">
-                    <i class="fas fa-upload"></i>
-                  </span>
-                  <span class="file-label">
-                    { get_value_field(&201) } // Choose modification files…
-                  </span>
-                </span>
+                <FilesFrame
+                    {onchange}
+                    {ondrop}
+                    {ondragover}
+                    {ondragenter}
+                    input_id={"component-file-input".to_string()}
+                    multiple={true}
+                    file_label={201} // Choose fileset files…
+                />
+                // <label class="file-label" style="width: 100%">
+                //   <input id="component-file-input"
+                //   class="file-input"
+                //   type="file"
+                //   // accept="image/*,application/vnd*,application/rtf,text/*,.pdf"
+                //   onchange={onchange_upload_files}
+                //   ondrop={ondrop_upload_files}
+                //   ondragover={ondragover_upload_files}
+                //   ondragenter={ondragenter_upload_files}
+                //   multiple={true} />
+                // <span class="file-cta">
+                //   <span class="file-icon">
+                //     <i class="fas fa-upload"></i>
+                //   </span>
+                //   <span class="file-label">
+                //     { get_value_field(&201) } // Choose modification files…
+                //   </span>
+                // </span>
                 {match self.files.is_empty() {
                     true => html!{<span class="file-name">{ get_value_field(&194) }</span>}, // No file uploaded
                     false => html!{for self.files.iter().map(|f| html!{
                         <span class="file-name">{f.name().clone()}</span>
                     })}
                 }}
-              </label>
+              // </label>
             </div>
             <div class="buttons">
                 {self.show_clear_btn(link, props)}

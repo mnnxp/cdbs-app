@@ -4,7 +4,7 @@ mod main_view;
 use yew::{Component, Context, html, Html, classes};
 // use yew_agent::Bridge;
 use yew_router::prelude::*;
-use crate::routes::AppRoute::{self, Profile};
+use crate::routes::AppRoute::Profile;
 use crate::services::{get_logged_user, get_value_field};
 
 use banner::Banner;

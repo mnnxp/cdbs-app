@@ -59,7 +59,7 @@ impl StandardCreateData {
             description: String::default(),
             specified_tolerance: String::default(),
             technical_committee: String::default(),
-            publication_at: NaiveDateTime::from_timestamp(1_000_000_000, 0),
+            publication_at: NaiveDateTime::from_timestamp_opt(1_000_000_000, 0).unwrap(),
             company_uuid: String::default(),
             type_access_id: 1,
             standard_status_id: 1,
@@ -68,7 +68,7 @@ impl StandardCreateData {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct ShowStandardShort {
     pub uuid: UUID,
@@ -85,7 +85,7 @@ pub struct ShowStandardShort {
     pub is_followed: bool,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct StandardStatus{
   pub standard_status_id: usize,
@@ -154,7 +154,7 @@ impl From<&StandardUpdatePreData> for StandardUpdateData {
 }
 
 // for arguments users query
-#[derive(Serialize, Deserialize, Clone, Default, Debug)]
+#[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct StandardsQueryArg {
     pub standards_uuids:  Option<Vec<UUID>>,

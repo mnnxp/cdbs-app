@@ -1,13 +1,13 @@
-use yew::{Component, Context, html, html::Scope, Html, Properties, Event};
 // use yew_agent::Bridge;
+use yew::{Component, Context, html, html::Scope, Html, Properties};
 use yew_router::prelude::*;
-use chrono::NaiveDateTime;
-use log::debug;
+use web_sys::{InputEvent, Event};
+use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
-use wasm_bindgen_futures::spawn_local;
-
-use crate::routes::AppRoute::{self, Login, StandardSettings};
+use chrono::NaiveDateTime;
+use log::debug;
+use crate::routes::AppRoute::{Login, StandardSettings};
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
 use crate::services::{get_logged_user, get_value_field};
@@ -68,7 +68,7 @@ impl Component for CreateStandard {
     fn create(ctx: &Context<Self>) -> Self {
         CreateStandard {
             error: None,
-            current_user_uuid: ctx.props().current_user.as_ref().map(|x| &x.uuid),
+            current_user_uuid: ctx.props().current_user.as_ref().map(|x| x.uuid.clone()).unwrap_or_default(),
             request_standard: StandardCreateData::new(),
             // router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             supplier_list: Vec::new(),
@@ -249,12 +249,12 @@ impl Component for CreateStandard {
                 }
             },
             Msg::UpdateTypeAccessId(data) =>
-                self.request_standard.type_access_id = data.parse::<usize>().unwrap_or_default(),
+                self.request_standard.type_access_id = data.parse::<usize>().unwrap_or(1),
             Msg::UpdateCompanyUuid(data) => self.request_standard.company_uuid = data,
             Msg::UpdateStandardStatusId(data) =>
-                self.request_standard.standard_status_id = data.parse::<usize>().unwrap_or_default(),
+                self.request_standard.standard_status_id = data.parse::<usize>().unwrap_or(1),
             Msg::UpdateRegionId(data) =>
-                self.request_standard.region_id = data.parse::<usize>().unwrap_or_default(),
+                self.request_standard.region_id = data.parse::<usize>().unwrap_or(1),
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::ClearError => self.error = None,
             Msg::Ignore => {},
@@ -263,10 +263,10 @@ impl Component for CreateStandard {
     }
 
     fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
-        if self.current_user_uuid == ctx.props().current_user.as_ref().map(|x| &x.uuid) {
+        if ctx.props().current_user.as_ref().map(|x| x.uuid == self.current_user_uuid).unwrap_or_default() {
             false
         } else {
-            self.current_user_uuid = ctx.props().current_user.as_ref().map(|x| &x.uuid);
+            self.current_user_uuid = ctx.props().current_user.as_ref().map(|x| x.uuid.clone()).unwrap_or_default();
             true
         }
     }
@@ -298,18 +298,14 @@ impl CreateStandard {
         link: &Scope<Self>,
     ) -> Html {
         // let default_company_uuid = self.current_standard.as_ref().map(|x| x.owner_company.uuid.clone()).unwrap_or_default();
-        let onchange_change_owner_company =
-            link.callback(|ev: Event| Msg::UpdateCompanyUuid(match ev {
-              Event::Select(el) => el.value(),
-              _ => String::new(),
-          }));
-        let onchange_change_type_access =
-            link.callback(|ev: Event| Msg::UpdateTypeAccessId(match ev {
-              Event::Select(el) => el.value(),
-              _ => "1".to_string(),
-          }));
-        let oninput_name = link.callback(|ev: Event| Msg::UpdateName(ev.value));
-        let oninput_description = link.callback(|ev: Event| Msg::UpdateDescription(ev.value));
+        let onchange_change_owner_company = link.callback(|ev: Event| {
+            Msg::UpdateCompanyUuid(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+        });
+        let onchange_change_type_access = link.callback(|ev: Event| {
+            Msg::UpdateTypeAccessId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+        });
+        let oninput_name = link.callback(|ev: InputEvent| Msg::UpdateName(ev.input_type()));
+        let oninput_description = link.callback(|ev: InputEvent| Msg::UpdateDescription(ev.input_type()));
 
         html!{
             <div class="card">
@@ -382,21 +378,16 @@ impl CreateStandard {
         &self,
         link: &Scope<Self>,
     ) -> Html {
-        let oninput_classifier = link.callback(|ev: Event| Msg::UpdateClassifier(ev.value));
-        let oninput_specified_tolerance = link.callback(|ev: Event| Msg::UpdateSpecifiedTolerance(ev.value));
-        let oninput_technical_committee = link.callback(|ev: Event| Msg::UpdateTechnicalCommittee(ev.value));
-        let oninput_publication_at = link.callback(|ev: Event| Msg::UpdatePublicationAt(ev.value));
-        let onchange_standard_status_id =
-            link.callback(|ev: Event| Msg::UpdateStandardStatusId(match ev {
-              Event::Select(el) => el.value(),
-              _ => "1".to_string(),
-          }));
-
-        let onchange_region_id =
-            link.callback(|ev: Event| Msg::UpdateRegionId(match ev {
-              Event::Select(el) => el.value(),
-              _ => "1".to_string(),
-          }));
+        let oninput_classifier = link.callback(|ev: InputEvent| Msg::UpdateClassifier(ev.input_type()));
+        let oninput_specified_tolerance = link.callback(|ev: InputEvent| Msg::UpdateSpecifiedTolerance(ev.input_type()));
+        let oninput_technical_committee = link.callback(|ev: InputEvent| Msg::UpdateTechnicalCommittee(ev.input_type()));
+        let oninput_publication_at = link.callback(|ev: InputEvent| Msg::UpdatePublicationAt(ev.input_type()));
+        let onchange_standard_status_id = link.callback(|ev: Event| {
+            Msg::UpdateStandardStatusId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+        });
+        let onchange_region_id = link.callback(|ev: Event| {
+            Msg::UpdateRegionId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+        });
 
         html!{
             <>

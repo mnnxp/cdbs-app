@@ -1,7 +1,7 @@
 use yew::{Component, Callback, Context, html, Html, Properties};
 // use yew_agent::Bridge;
 use yew_router::prelude::*;
-use crate::routes::AppRoute::{self, Login};
+use crate::routes::AppRoute::Login;
 use crate::error::Error;
 
 pub struct ListErrors {

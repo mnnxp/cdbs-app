@@ -28,9 +28,11 @@ pub struct Props {
 
 pub struct ModificationsTable {
     component_uuid: UUID,
+    select_modification: UUID,
     collect_heads: Vec<Param>,
     collect_items: Vec<(UUID, HashMap<usize, String>)>,
     collect_columns: HashMap<usize, String>,
+    open_modification_files: bool,
 }
 
 pub enum Msg {
@@ -44,9 +46,11 @@ impl Component for ModificationsTable {
     fn create(ctx: &Context<Self>) -> Self {
         Self {
             component_uuid: String::new(),
+            select_modification: ctx.props().select_modification,
             collect_heads: Vec::new(),
             collect_items: Vec::new(),
             collect_columns: HashMap::new(),
+            open_modification_files: ctx.props().open_modification_files,
         }
     }
 
@@ -116,11 +120,13 @@ impl Component for ModificationsTable {
     }
 
     fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
-        if self.select_modification == ctx.props().select_modification {
-            self.open_modification_files = !ctx.props().open_modification_files;
+        if self.select_modification == ctx.props().select_modification ||
+            self.open_modification_files == ctx.props().open_modification_files {
+            false
         } else {
             self.select_modification = ctx.props().select_modification;
-            self.component_uuid = match self.modifications.first().map(|x| x.component_uuid.clone()) {
+            self.open_modification_files = ctx.props().open_modification_files;
+            self.component_uuid = match ctx.props().modifications.first().map(|x| x.component_uuid.clone()) {
                 Some(component_uuid) => component_uuid,
                 None => String::new(),
             };
@@ -146,7 +152,7 @@ impl Component for ModificationsTable {
                       collect_item = {item.clone()}
                       select_item = {&ctx.props().select_modification == modification_uuid}
                       open_modification_files = {ctx.props().open_modification_files}
-                      callback_new_modification_param = {None}
+                      // callback_new_modification_param = {None}
                       callback_select_modification = {ctx.props().callback_select_modification.clone()}
                       callback_open_modification_files = {ctx.props().callback_open_modification_files.clone()}
                       />}

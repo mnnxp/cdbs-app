@@ -1,9 +1,9 @@
-use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, Event};
+use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
+use web_sys::{InputEvent, Event};
+use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
-use wasm_bindgen_futures::spawn_local;
 use log::debug;
-
 use crate::services::{is_authenticated, get_value_field};
 use crate::fragments::list_errors::ListErrors;
 use crate::error::{Error, get_error};
@@ -102,9 +102,9 @@ impl Component for AddCompanyRepresentCard {
                 }
             },
             Msg::UpdateRegionId(region_id) =>
-                self.request_register.region_id = region_id.parse::<usize>().unwrap_or_default(),
+                self.request_register.region_id = region_id.parse::<usize>().unwrap_or(1),
             Msg::UpdateRepresentationTypeId(representation_type_id) =>
-                self.request_register.representation_type_id = representation_type_id.parse::<usize>().unwrap_or_default(),
+                self.request_register.representation_type_id = representation_type_id.parse::<usize>().unwrap_or(1),
             Msg::UpdateName(name) => self.request_register.name = name,
             Msg::UpdateAddress(address) => self.request_register.address = address,
             Msg::UpdatePhone(phone) => self.request_register.phone = phone,
@@ -171,7 +171,7 @@ impl AddCompanyRepresentCard {
         label: &str,
         // placeholder: &str,
         value: String,
-        oninput: Callback<Event>,
+        oninput: Callback<InputEvent>,
     ) -> Html {
         let placeholder = label;
         let mut class = "input";
@@ -203,19 +203,15 @@ impl AddCompanyRepresentCard {
         &self,
         link: &Scope<Self>,
     ) -> Html {
-        let oninput_region_id =
-            link.callback(|ev: Event| Msg::UpdateRegionId(match ev {
-              Event::Select(el) => el.value(),
-              _ => "1".to_string(),
-          }));
-        let oninput_representation_type_id =
-            link.callback(|ev: Event| Msg::UpdateRepresentationTypeId(match ev {
-              Event::Select(el) => el.value(),
-              _ => "1".to_string(),
-          }));
-        let oninput_name = link.callback(|ev: Event| Msg::UpdateName(ev.value));
-        let oninput_address = link.callback(|ev: Event| Msg::UpdateAddress(ev.value));
-        let oninput_phone = link.callback(|ev: Event| Msg::UpdatePhone(ev.value));
+        let oninput_region_id = link.callback(|ev: Event| {
+            Msg::UpdateRegionId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+        });
+        let oninput_representation_type_id = link.callback(|ev: Event| {
+            Msg::UpdateRepresentationTypeId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+        });
+        let oninput_name = link.callback(|ev: InputEvent| Msg::UpdateName(ev.input_type()));
+        let oninput_address = link.callback(|ev: InputEvent| Msg::UpdateAddress(ev.input_type()));
+        let oninput_phone = link.callback(|ev: InputEvent| Msg::UpdatePhone(ev.input_type()));
 
         html!{<>
             {self.fileset_generator(

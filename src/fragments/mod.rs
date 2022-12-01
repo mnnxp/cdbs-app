@@ -6,6 +6,7 @@ pub mod component;
 pub mod standard;
 pub mod user;
 
+pub mod files_frame;
 pub mod footer;
 pub mod header;
 pub mod list_errors;

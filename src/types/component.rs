@@ -121,7 +121,7 @@ impl From<&ComponentUpdatePreData> for ComponentUpdateData {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Supplier{
   pub supplier:SlimCompany,
@@ -129,7 +129,7 @@ pub struct Supplier{
   pub description: String
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct ComponentType{
   pub component_type_id: usize,
@@ -137,7 +137,7 @@ pub struct ComponentType{
   pub component_type: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct ActualStatus{
   pub actual_status_id: usize,
@@ -145,7 +145,7 @@ pub struct ActualStatus{
   pub name: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct ComponentParam{
   pub component_uuid: UUID,
@@ -168,7 +168,7 @@ pub struct ParamValue{
   pub value: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct ComponentModificationInfo{
   pub uuid: UUID,
@@ -200,7 +200,7 @@ impl ModificationUpdatePreData {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct ModificationParam{
   pub modification_uuid: UUID,
@@ -208,7 +208,7 @@ pub struct ModificationParam{
   pub value: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct FilesetProgramInfo{
   pub uuid: UUID,

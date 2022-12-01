@@ -190,7 +190,7 @@ impl Component for ComponentStandardsCard {
 
     fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         if self.component_uuid == ctx.props().component_uuid &&
-             self.component_standards.len() == ctx.props().component_standards.len() {
+             self.component_standards_len == ctx.props().component_standards.len() {
             false
         } else {
             self.standard_uuids = BTreeSet::new();
@@ -266,11 +266,9 @@ impl ComponentStandardsCard {
     ) -> Html {
         let onclick_add_standard = link.callback(|_| Msg::RequestAddStandard);
         let onclick_hide_modal = link.callback(|_| Msg::ChangeHideAddStandard);
-        let onchange_select_add_standard =
-            link.callback(|ev: Event| Msg::UpdateSelectStandard(match ev {
-              Event::Select(el) => el.value(),
-              _ => String::new(),
-          }));
+        let onchange_select_add_standard = link.callback(|ev: Event| {
+            Msg::UpdateSelectStandard(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+        });
         let class_modal = match &self.hide_add_standard_modal {
             true => "modal",
             false => "modal is-active",

@@ -1,9 +1,9 @@
-use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, Event};
+use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
+use web_sys::InputEvent;
+use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
-use wasm_bindgen_futures::spawn_local;
 use log::debug;
-
 use crate::fragments::list_errors::ListErrors;
 use crate::error::{Error, get_error};
 use crate::services::{image_detector, get_value_field};
@@ -296,8 +296,7 @@ impl CompanyCertificateItem {
         props: &Props,
     ) -> Html {
         let oninput_cert_description =
-            link.callback(|ev: Event| Msg::UpdateDescription(ev.value));
-
+            link.callback(|ev: InputEvent| Msg::UpdateDescription(ev.input_type()));
         let onclick_change_cert = link.callback(|_| Msg::RequestUpdateDescription);
 
         html!{<div class="block">

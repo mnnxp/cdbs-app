@@ -1,14 +1,14 @@
 // use yew::{agent::Bridged, Bridge};
-use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, Event};
 // use yew_agent::Bridge;
+use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
 use yew_router::prelude::*;
+use web_sys::{InputEvent, Event};
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
-
 use crate::gqls::make_query;
-use crate::routes::AppRoute::{self, Login, ShowCompany};
+use crate::routes::AppRoute::{Login, ShowCompany};
 use crate::error::{Error, get_error};
 use crate::fragments::list_errors::ListErrors;
 use crate::services::{get_logged_user, get_value_field};
@@ -147,7 +147,7 @@ impl Component for CreateCompany {
                 }
             },
             Msg::UpdateTypeAccessId(type_access_id) => {
-                self.request_company.type_access_id = type_access_id.parse::<i64>().unwrap_or_default();
+                self.request_company.type_access_id = type_access_id.parse::<i64>().unwrap_or(1);
                 debug!("Update: {:?}", type_access_id);
             },
             Msg::UpdateOrgname(orgname) => self.request_company.orgname = orgname,
@@ -160,11 +160,11 @@ impl Component for CreateCompany {
             Msg::UpdateSiteUrl(site_url) => self.request_company.site_url = site_url,
             Msg::UpdateTimeZone(time_zone) => self.request_company.time_zone = time_zone,
             Msg::UpdateRegionId(region_id) => {
-                self.request_company.region_id = region_id.parse::<i64>().unwrap_or_default();
+                self.request_company.region_id = region_id.parse::<i64>().unwrap_or(1);
                 debug!("Update: {:?}", region_id);
             },
             Msg::UpdateCompanyTypeId(type_id) => {
-                self.request_company.company_type_id = type_id.parse::<i64>().unwrap_or_default();
+                self.request_company.company_type_id = type_id.parse::<i64>().unwrap_or(1);
                 debug!("Update: {:?}", type_id);
             },
             Msg::UpdateList(res) => {
@@ -189,11 +189,10 @@ impl Component for CreateCompany {
     }
 
     fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
-        let current_user_uuid = ctx.props().current_user.as_ref().map(|x| &x.uuid);
-        if self.current_user_uuid == current_user_uuid {
+        if ctx.props().current_user.as_ref().map(|x| x.uuid == self.current_user_uuid).unwrap_or_default() {
             false
         } else {
-            self.current_user_uuid = current_user_uuid;
+            self.current_user_uuid = ctx.props().current_user.as_ref().map(|x| x.uuid.clone()).unwrap_or_default();
             true
         }
     }
@@ -235,7 +234,7 @@ impl CreateCompany {
         // placeholder: &str,
         icon_left: &str,
         value: String,
-        oninput: Callback<Event>,
+        oninput: Callback<InputEvent>,
     ) -> Html {
         let placeholder = label;
         let input_type = match id {
@@ -250,22 +249,22 @@ impl CreateCompany {
                 {match icon_left.is_empty() {
                     true => html!{
                         <input
-                            id={id.to_string()}
+                            {id}
                             class={"input"}
                             type={input_type}
-                            placeholder={placeholder.to_string()}
-                            value={value}
-                            oninput={oninput} />
+                            {placeholder}
+                            {value}
+                            {oninput} />
                     },
                     false => html!{
                         <div class="control has-icons-left">
                             <input
-                                id={id.to_string()}
+                                {id}
                                 class={"input"}
                                 type={input_type}
-                                placeholder={placeholder.to_string()}
-                                value={value}
-                                oninput={oninput} />
+                                {placeholder}
+                                {value}
+                                {oninput} />
                             <span class="icon is-small is-left">
                               <i class={icon_left.to_string()}></i>
                             </span>
@@ -280,30 +279,24 @@ impl CreateCompany {
         &self,
         link: &Scope<Self>,
     ) -> Html {
-        let oninput_orgname = link.callback(|ev: Event| Msg::UpdateOrgname(ev.value));
-        let oninput_shortname = link.callback(|ev: Event| Msg::UpdateShortname(ev.value));
-        let oninput_inn = link.callback(|ev: Event| Msg::UpdateInn(ev.value));
-        let oninput_email = link.callback(|ev: Event| Msg::UpdateEmail(ev.value));
-        let oninput_description = link.callback(|ev: Event| Msg::UpdateDescription(ev.value));
-        let oninput_phone = link.callback(|ev: Event| Msg::UpdatePhone(ev.value));
-        let oninput_address = link.callback(|ev: Event| Msg::UpdateAddress(ev.value));
-        let oninput_site_url = link.callback(|ev: Event| Msg::UpdateSiteUrl(ev.value));
-        // let oninput_time_zone = link.callback(|ev: Event| Msg::UpdateTimeZone(ev.value));
-        let onchange_region_id =
-            link.callback(|ev: Event| Msg::UpdateRegionId(match ev {
-              Event::Select(el) => el.value(),
-              _ => "1".to_string(),
-            }));
-        let onchange_company_type_id =
-            link.callback(|ev: Event| Msg::UpdateCompanyTypeId(match ev {
-              Event::Select(el) => el.value(),
-              _ => "1".to_string(),
-            }));
-        let onchange_type_access_id =
-            link.callback(|ev: Event| Msg::UpdateTypeAccessId(match ev {
-              Event::Select(el) => el.value(),
-              _ => "1".to_string(),
-            }));
+        let oninput_orgname = link.callback(|ev: InputEvent| Msg::UpdateOrgname(ev.input_type()));
+        let oninput_shortname = link.callback(|ev: InputEvent| Msg::UpdateShortname(ev.input_type()));
+        let oninput_inn = link.callback(|ev: InputEvent| Msg::UpdateInn(ev.input_type()));
+        let oninput_email = link.callback(|ev: InputEvent| Msg::UpdateEmail(ev.input_type()));
+        let oninput_description = link.callback(|ev: InputEvent| Msg::UpdateDescription(ev.input_type()));
+        let oninput_phone = link.callback(|ev: InputEvent| Msg::UpdatePhone(ev.input_type()));
+        let oninput_address = link.callback(|ev: InputEvent| Msg::UpdateAddress(ev.input_type()));
+        let oninput_site_url = link.callback(|ev: InputEvent| Msg::UpdateSiteUrl(ev.input_type()));
+        // let oninput_time_zone = link.callback(|ev: InputEvent| Msg::UpdateTimeZone(ev.input_type()));
+        let onchange_region_id = link.callback(|ev: Event| {
+            Msg::UpdateRegionId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+        });
+        let onchange_company_type_id = link.callback(|ev: Event| {
+            Msg::UpdateCompanyTypeId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+        });
+        let onchange_type_access_id = link.callback(|ev: Event| {
+            Msg::UpdateTypeAccessId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+        });
 
         html!{<>
             <div class="columns">

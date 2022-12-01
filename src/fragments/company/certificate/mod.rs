@@ -24,7 +24,7 @@ pub struct Props {
 pub struct CompanyCertificatesCard {
     deleted_cert_list: BTreeSet<UUID>,
     certificates_first_uuid: UUID,
-    certificates_len: UUID,
+    certificates_len: usize,
 }
 
 pub enum Msg {
@@ -39,7 +39,7 @@ impl Component for CompanyCertificatesCard {
     fn create(ctx: &Context<Self>) -> Self {
         Self {
             deleted_cert_list: BTreeSet::new(),
-            certificates_first_uuid: ctx.props().certificates.first().map(|x| &x.company_uuid),
+            certificates_first_uuid: ctx.props().certificates.first().map(|x| x.company_uuid.clone()).unwrap_or_default(),
             certificates_len: ctx.props().certificates.len(),
         }
     }
@@ -47,18 +47,20 @@ impl Component for CompanyCertificatesCard {
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         // let link = ctx.link().clone();
         match msg {
-            Msg::RemoveCertificate(cart_uuid) => self.deleted_cert_list.insert(cart_uuid),
+            Msg::RemoveCertificate(cart_uuid) => {
+                self.deleted_cert_list.insert(cart_uuid);
+            },
             Msg::Ignore => {},
         }
         true
     }
 
     fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
-        if self.certificates_first_uuid == ctx.props().certificates.first().map(|x| &x.company_uuid) &&
+        if ctx.props().certificates.first().map(|x| x.company_uuid == self.certificates_first_uuid).unwrap_or_default() ||
               self.certificates_len == ctx.props().certificates.len() {
             false
         } else {
-            self.certificates_first_uuid = ctx.props().certificates.first().map(|x| &x.company_uuid);
+            self.certificates_first_uuid = ctx.props().certificates.first().map(|x| x.company_uuid.clone()).unwrap_or_default();
             self.certificates_len = ctx.props().certificates.len();
             false
         }

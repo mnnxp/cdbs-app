@@ -23,6 +23,7 @@ pub struct Props {
     pub show_delete_btn: bool,
     pub component_uuid: UUID,
     pub license_data: LicenseInfo,
+    #[prop_or_default]
     pub delete_license: Option<Callback<usize>>,
 }
 

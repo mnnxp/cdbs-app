@@ -1,9 +1,9 @@
-use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, Event};
-use log::debug;
+use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
+use web_sys::InputEvent;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
-
+use serde_json::Value;
+use log::debug;
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
 use crate::services::get_value_field;
@@ -116,8 +116,11 @@ impl RegisterParamnameBlock {
         props: &Props,
     ) -> Html {
         let onclick_register_paramname = link.callback(|_| Msg::RequestRegisterParamname);
-        let oninput_set_paramname = link.callback(|ev: Event| Msg::UpdateParamname(ev.value));
-        let oninput_set_param_value = link.callback(|ev: Event| Msg::UpdateParamValue(ev.value));
+        let oninput_set_paramname =
+            link.callback(|ev: InputEvent| Msg::UpdateParamname(ev.input_type()));
+        let oninput_set_param_value =
+            link.callback(|ev: InputEvent| Msg::UpdateParamValue(ev.input_type()));
+
         let class_btn = match self.active_loading_btn {
             true => "button is-loading is-fullwidth",
             false => "button is-fullwidth",

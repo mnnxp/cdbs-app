@@ -1,13 +1,12 @@
-use std::sync::{Arc,Mutex};
-use yew::{Component, Callback, Context, html, Html, Properties, Event, classes};
 // use yew_agent::Bridge;
+// use std::sync::{Arc,Mutex};
+use yew::{Component, Callback, Context, html, Html, Properties, classes};
 use yew_router::prelude::*;
 use yew_router::prelude::Link;
+use web_sys::{InputEvent, SubmitEvent};
 use graphql_client::GraphQLQuery;
-use log::debug;
 use wasm_bindgen_futures::spawn_local;
-use web_sys::FocusEvent;
-
+use log::debug;
 use crate::fragments::list_errors::ListErrors;
 use crate::error::Error;
 use crate::routes::AppRoute::{self, Register, Profile};
@@ -27,14 +26,14 @@ pub struct Login {
     auth: Auth,
     error: Option<Error>,
     request: LoginInfo,
-    response: Callback<Result<UserToken, Error>>,
+    response: Callback<Result<Option<UserToken>, Error>>,
     task: Option<()>,
     // router_agent: Arc<Mutex<Box<dyn Bridge<AppRoute>>>>,
 }
 
 pub enum Msg {
     Request,
-    Response(Result<UserToken, Error>),
+    Response(Result<Option<UserToken>, Error>),
     Ignore,
     UpdateUsername(String),
     UpdatePassword(String),
@@ -78,21 +77,23 @@ impl Component for Login {
                 self.task = Some(self.auth.login(request, self.response.clone()));
             },
             Msg::Response(Ok(user_info)) => {
-                set_token(Some(user_info.to_string()));
-                spawn_local(async move {
-                    let res = make_query(GetMySelf::build_query(get_my_self::Variables)).await.unwrap();
-                    debug!("res: {}", res);
-                    let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
-                    let res = data.as_object().unwrap().get("data").unwrap();
-                    let user_json = res.get("myself").unwrap().clone();
-                    set_logged_user(Some(user_json.to_string()));
-                    let user : SlimUser = serde_json::from_value(user_json).unwrap();
-                    debug!("user.username: {}", user.username);
-                    let username = user.username.clone();
-                    props.callback.emit(user);
-                    // router_agent.lock().unwrap().send(Profile { username });
-                    navigator.replace(&Profile { username });
-                });
+                if let Some(user_token) = user_info {
+                    set_token(Some(user_token.to_string()));
+                    spawn_local(async move {
+                        let res = make_query(GetMySelf::build_query(get_my_self::Variables)).await.unwrap();
+                        debug!("res: {}", res);
+                        let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
+                        let res = data.as_object().unwrap().get("data").unwrap();
+                        let user_json = res.get("myself").unwrap().clone();
+                        set_logged_user(Some(user_json.to_string()));
+                        let user : SlimUser = serde_json::from_value(user_json).unwrap();
+                        debug!("user.username: {}", user.username);
+                        let username = user.username.clone();
+                        props.callback.emit(user);
+                        // router_agent.lock().unwrap().send(Profile { username });
+                        navigator.replace(&Profile { username });
+                    });
+                }
                 // debug!("get_token().unwrap(): {:?}", get_token().unwrap());
             },
             Msg::Response(Err(err)) => {
@@ -111,12 +112,12 @@ impl Component for Login {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
-        let onsubmit = ctx.link().callback(|ev: FocusEvent| {
+        let onsubmit = ctx.link().callback(|ev: SubmitEvent| {
             ev.prevent_default(); /* Prevent event propagation */
             Msg::Request
         });
-        let oninput_username = ctx.link().callback(|ev: Event| Msg::UpdateUsername(ev.value));
-        let oninput_password = ctx.link().callback(|ev: Event| Msg::UpdatePassword(ev.value));
+        let oninput_username = ctx.link().callback(|ev: InputEvent| Msg::UpdateUsername(ev.input_type()));
+        let oninput_password = ctx.link().callback(|ev: InputEvent| Msg::UpdatePassword(ev.input_type()));
 
         html!{<div class="container page">
             <div class="auth-page">

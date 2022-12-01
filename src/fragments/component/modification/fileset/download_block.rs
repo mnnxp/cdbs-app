@@ -167,15 +167,10 @@ impl ManageFilesOfFilesetBlock {
         link: &Scope<Self>,
         props: &Props,
     ) -> Html {
-        let onchange_select_fileset_btn = link
-            .callback(|ev: Event| Msg::SelectFilesetUuid(match ev {
-              Event::Select(el) => el.value(),
-              _ => String::new(),
-          }));
-
-        let onclick_open_fileset_files_list_btn = link
-            .callback(|_| Msg::OpenFilesetFilesBlock);
-
+        let onchange_select_fileset_btn = link.callback(|ev: Event| {
+            Msg::SelectFilesetUuid(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+        });
+        let onclick_open_fileset_files_list_btn = link.callback(|_| Msg::OpenFilesetFilesBlock);
         let onclick_download_fileset_btn = match self.flag_get_dowload_url {
             true => link.callback(|_| Msg::ShowModalDownloadFiles),
             false => link.callback(|_| Msg::RequestDownloadFilesetFiles),

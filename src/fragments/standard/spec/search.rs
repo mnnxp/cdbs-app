@@ -1,11 +1,11 @@
-use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, Event, classes, NodeRef};
-// use yew::services::timeout::{TimeoutService, TimeoutTask};
+// use std::time::Duration;
+use yew::{Component, Context, html, html::Scope, Html, Properties, classes, NodeRef};
+use web_sys::InputEvent;
+use wasm_bindgen_futures::spawn_local;
 use gloo_timers::callback::Timeout;
-use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
-use std::time::Duration;
-use wasm_bindgen_futures::spawn_local;
+use log::debug;
 // use crate::error::{get_error, Error};
 use crate::fragments::standard::{SpecsTags, SpecTagItem};
 use crate::types::{Spec, SpecPathInfo, UUID};
@@ -122,8 +122,7 @@ impl Component for SearchSpecsTags {
                 let cb_link = link.clone();
                 // self.ipt_timer = Some(TimeoutService::spawn(
                 //     Duration::from_millis(800),
-                self.ipt_timer = Some(Timeout::new(800,
-                    cb_link.callback(move |_| {
+                self.ipt_timer = Some(Timeout::new(800, move || {
                         let ipt_val = val.clone();
                         let res_link = link.clone();
                         spawn_local(async move {
@@ -140,9 +139,8 @@ impl Component for SearchSpecsTags {
                             res_link.send_message(Msg::GetSearchRes(res));
                         });
                         debug!("time up: {:?}", val.clone());
-                        Msg::Ignore
-                    }),
-                ));
+                    })
+                );
             },
             Msg::GetSearchRes(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
@@ -217,6 +215,7 @@ impl SearchSpecsTags {
         props: &Props,
     ) -> Html {
         let ipt_ref = self.ipt_ref.clone();
+        let oninput_spec = link.callback(|ev: InputEvent| Msg::SetIptTimer(ev.input_type()));
         let onclick_added_spec = link.callback(|value: usize| Msg::AddedSpec(value));
         let onclick_del_new_spec = link.callback(|value: usize| Msg::DeleteNewSpec(value));
         let onclick_del_old_spec = link.callback(|value: usize| Msg::DeleteCurrentSpec(value));
@@ -230,7 +229,7 @@ impl SearchSpecsTags {
             <div class="panel-block">
               <p class={class_p} >
                 <input ref={ipt_ref}
-                    oninput={link.callback(|ev: Event| Msg::SetIptTimer(ev.value))}
+                    oninput={oninput_spec}
                     class="input"
                     type="text"
                     placeholder={get_value_field(&192)} // Enter data for specifications search
@@ -263,11 +262,11 @@ impl SearchSpecsTags {
                 <div id="add-specs" class="field is-grouped is-grouped-multiline">
                     {for self.added_specs.iter().map(|st_spec| {
                         html!{<SpecTagItem
-                            show_manage_btn = true
-                            active_info_btn = false
+                            show_manage_btn = {true}
+                            active_info_btn = {false}
                             standard_uuid = {props.standard_uuid.clone()}
                             spec = {st_spec.clone()}
-                            is_added = true
+                            is_added = {true}
                             style_tag = {"is-info".to_string()}
                             // added_spec = {None}
                             delete_spec = {Some(onclick_del_new_spec.clone())}
@@ -277,7 +276,7 @@ impl SearchSpecsTags {
             </div>
             <div class="panel-block">
                 <SpecsTags
-                    show_manage_btn = true
+                    show_manage_btn = {true}
                     standard_uuid = {props.standard_uuid.clone()}
                     specs = {props.standard_specs.clone()}
                     delete_spec = {Some(onclick_del_old_spec.clone())}

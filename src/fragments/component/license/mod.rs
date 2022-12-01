@@ -269,11 +269,9 @@ impl ComponentLicensesTags {
     ) -> Html {
         let onclick_add_license = link.callback(|_| Msg::RequestAddLicense);
         let onclick_hide_modal = link.callback(|_| Msg::ChangeHideAddLicense);
-        let onchange_select_add_license =
-            link.callback(|ev: Event| Msg::UpdateSelectLicense(match ev {
-              Event::Select(el) => el.value(),
-              _ => String::new(),
-          }));
+        let onchange_select_add_license = link.callback(|ev: Event| {
+                Msg::UpdateSelectLicense(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+          });
 
         let class_modal = match &self.hide_add_license_modal {
             true => "modal",

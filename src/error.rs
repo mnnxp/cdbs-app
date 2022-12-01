@@ -7,7 +7,7 @@ use serde_json::Value;
 use log::debug;
 
 /// Define all possible errors
-#[derive(ThisError, Clone, Debug)]
+#[derive(ThisError, Clone, Debug, PartialEq)]
 pub enum Error {
     /// 400
     #[error("{0}")]

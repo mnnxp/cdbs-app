@@ -1,8 +1,7 @@
-use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, classes, MouseEvent};
 // use yew_agent::Bridge;
+use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, classes, MouseEvent};
 use yew_router::prelude::*;
 use yew_router::prelude::Link;
-use yew_router::hooks::use_route;
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
 
@@ -41,7 +40,7 @@ impl Component for Header {
     fn create(ctx: &Context<Self>) -> Self {
         Header {
             // router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
-            current_path: String::new(),
+            current_path: ctx.link().location().unwrap().path().to_string(),
             current_user: None,
             open_notifications_page: false,
             open_home_page: false,
@@ -83,12 +82,12 @@ impl Component for Header {
           Msg::TriggerMenu => self.is_active = !self.is_active,
           Msg::SetActive(active) => self.is_active = active,
           Msg::CheckPath => {
-              let current_path = use_route().unwrap_or_default();
+              let current_path = ctx.link().location().unwrap().path();
               // debug!("route_service: {:?}", route_service.get_fragment().as_str());
               // check open home page
-              self.open_home_page = current_path < 3;
+              self.open_home_page = current_path.len() < 3;
               // check open notifications page
-              self.open_notifications_page = "/notifications" == current_path.as_str();
+              self.open_notifications_page = "/notifications" == current_path;
           },
           Msg::Ignore => {},
         }
@@ -96,15 +95,15 @@ impl Component for Header {
     }
 
     fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
-        let current_path = use_route().unwrap_or_default();
-        if self.current_path == current_path {
+        let current_path = ctx.link().location().unwrap().path();
+        if self.current_path.as_str() == current_path {
             false
         } else {
             if self.is_active {
               ctx.link().send_message(Msg::TriggerMenu)
             }
             // update current path
-            self.current_path = current_path;
+            self.current_path = current_path.to_string();
             // get current user data from storage
             self.current_user = get_logged_user();
             // get current path and setting navbar
@@ -240,10 +239,10 @@ impl Header {
                       <span>{ &user_info.username }</span>
                   </a>
                   <div class="navbar-dropdown is-boxed is-right" id="dropdown-menu" role="menu">
-                    <Link<AppRoute> classes="navbar-item" route={Profile { username: user_info.username.clone() } } >
+                    <Link<AppRoute> classes="navbar-item" to={Profile { username: user_info.username.clone() } } >
                         { get_value_field(&15) }
                     </Link<AppRoute>>
-                    <Link<AppRoute> classes="navbar-item" route={Settings}>
+                    <Link<AppRoute> classes="navbar-item" to={Settings}>
                         { get_value_field(&16) }
                     </Link<AppRoute>>
                     <hr class="navbar-divider" />

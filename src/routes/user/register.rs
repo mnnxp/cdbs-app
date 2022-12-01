@@ -1,11 +1,12 @@
-use yew::{Component, Callback, Context, html, html::Scope, Html, Event, classes};
 // use yew_agent::Bridge;
+// use yew::services::fetch::FetchTask;
+use yew::{Component, Callback, Context, html, html::Scope, Html, classes};
 use yew_router::prelude::*;
 use yew_router::prelude::Link;
+use web_sys::{InputEvent, Event};
+use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
-use wasm_bindgen_futures::spawn_local;
-// use yew::services::fetch::FetchTask;
 use log::debug;
 
 use crate::routes::AppRoute::{self, Login, Profile};
@@ -202,27 +203,21 @@ impl Register {
         &self,
         link: &Scope<Self>,
     ) -> Html {
-        // let oninput_firstname = link.callback(|ev: Event| Msg::UpdateFirstname(ev.value));
-        // let oninput_lastname = link.callback(|ev: Event| Msg::UpdateLastname(ev.value));
-        // let oninput_secondname = link.callback(|ev: Event| Msg::UpdateSecondname(ev.value));
-        let oninput_username = link.callback(|ev: Event| Msg::UpdateUsername(ev.value));
-        let oninput_email = link.callback(|ev: Event| Msg::UpdateEmail(ev.value));
-        let oninput_password = link.callback(|ev: Event| Msg::UpdatePassword(ev.value));
-        let oninput_program_id =
-            link.callback(|ev: Event| Msg::UpdateProgramId(match ev {
-              Event::Select(el) => el.value(),
-              _ => "1".to_string(),
-          }));
-        let onchange_region_id =
-            link.callback(|ev: Event| Msg::UpdateRegionId(match ev {
-              Event::Select(el) => el.value(),
-              _ => "1".to_string(),
-          }));
-        let onchange_type_access_id =
-            link.callback(|ev: Event| Msg::UpdateTypeAccessId(match ev {
-                Event::Select(el) => el.value(),
-                _ => "1".to_string(),
-          }));
+        // let oninput_firstname = link.callback(|ev: InputEvent| Msg::UpdateFirstname(ev.input_type()));
+        // let oninput_lastname = link.callback(|ev: InputEvent| Msg::UpdateLastname(ev.input_type()));
+        // let oninput_secondname = link.callback(|ev: InputEvent| Msg::UpdateSecondname(ev.input_type()));
+        let oninput_username = link.callback(|ev: InputEvent| Msg::UpdateUsername(ev.input_type()));
+        let oninput_email = link.callback(|ev: InputEvent| Msg::UpdateEmail(ev.input_type()));
+        let oninput_password = link.callback(|ev: InputEvent| Msg::UpdatePassword(ev.input_type()));
+        let oninput_program_id = link.callback(|ev: Event| {
+            Msg::UpdateProgramId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+        });
+        let onchange_region_id = link.callback(|ev: Event| {
+            Msg::UpdateRegionId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+        });
+        let onchange_type_access_id = link.callback(|ev: Event| {
+            Msg::UpdateTypeAccessId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+        });
 
         html! {<>
             // first columns (username, email)
@@ -352,7 +347,7 @@ impl Register {
         // placeholder: &str,
         icon_left: &str,
         value: String,
-        oninput: Callback<Event>,
+        oninput: Callback<InputEvent>,
     ) -> Html {
         let placeholder = label;
         let input_type = match id {

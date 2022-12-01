@@ -1,10 +1,10 @@
 use std::collections::{HashMap, BTreeMap};
-use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, Event};
-use log::debug;
+use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
+use web_sys::InputEvent;
+use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
-use wasm_bindgen_futures::spawn_local;
-
+use log::debug;
 use super::ModificationTableItemModule;
 use crate::error::{get_error, Error};
 use crate::fragments::{
@@ -30,14 +30,16 @@ pub struct Props {
     pub collect_item: HashMap<usize, String>,
     pub select_item: bool,
     pub open_modification_files: bool,
+    #[prop_or_default]
     pub callback_new_modification_param: Option<Callback<UUID>>,
+    #[prop_or_default]
     pub callback_select_modification: Option<Callback<UUID>>,
+    #[prop_or_default]
     pub callback_open_modification_files: Option<Callback<()>>,
 }
 
 pub struct ModificationTableItem {
     error: Option<Error>,
-    open_modification_files: UUID,
     modification_uuid: UUID,
     collect_item: HashMap<usize, String>,
     select_item: bool,
@@ -49,6 +51,7 @@ pub struct ModificationTableItem {
     open_new_param_card: bool,
     open_add_param_card: bool,
     open_edit_param_card: bool,
+    open_modification_files: bool,
     get_add_param_card: usize,
     get_change_param_card: usize,
 }
@@ -79,7 +82,6 @@ impl Component for ModificationTableItem {
     fn create(ctx: &Context<Self>) -> Self {
         Self {
             error: None,
-            open_modification_files: ctx.props().open_modification_files.clone(),
             modification_uuid: ctx.props().modification_uuid.clone(),
             collect_item: ctx.props().collect_item.clone(),
             select_item: ctx.props().select_item,
@@ -91,6 +93,7 @@ impl Component for ModificationTableItem {
             open_new_param_card: false,
             open_add_param_card: false,
             open_edit_param_card: false,
+            open_modification_files: ctx.props().open_modification_files,
             get_add_param_card: 0,
             get_change_param_card: 0,
         }
@@ -445,7 +448,7 @@ impl ModificationTableItem {
                         />},
                         None => html!{<ModificationTableItemModule
                             param_id = {param.param_id}
-                            value = {None}
+                            // value = {None}
                             callback_change_param = {Some(onclick_add_param_card.clone())}
                         />},
                     }
@@ -453,7 +456,7 @@ impl ModificationTableItem {
                 // for add new param
                 <ModificationTableItemModule
                     param_id = {0}
-                    value = {None}
+                    // value = {None}
                     callback_change_param = {Some(onclick_new_param_card)}
                 />
             </>},
@@ -463,12 +466,12 @@ impl ModificationTableItem {
                         Some(value) => html!{<ModificationTableItemModule
                             param_id = {param.param_id}
                             value = {Some(value.clone())}
-                            callback_change_param = {None}
+                            // callback_change_param = {None}
                         />},
                         None => html!{<ModificationTableItemModule
                             param_id = {param.param_id}
-                            value = {None}
-                            callback_change_param = {None}
+                            // value = {None}
+                            // callback_change_param = {None}
                         />},
                     }
                 })}
@@ -482,10 +485,9 @@ impl ModificationTableItem {
         props: &Props,
     ) -> Html {
         let onclick_clear_error = link.callback(|_| Msg::ClearError);
-
-        let onclick_add_new_param =
-            link.callback(|(param_id, param_value)| Msg::RequestAddNewParam(param_id, param_value));
-
+        let onclick_add_new_param = link.callback(|(param_id, param_value)|
+            Msg::RequestAddNewParam(param_id, param_value)
+        );
         let onclick_close_param_card = link.callback(|_| Msg::ShowNewParamCard);
 
         let class_modal = match &self.open_new_param_card {
@@ -520,15 +522,9 @@ impl ModificationTableItem {
         props: &Props,
     ) -> Html {
         let onclick_clear_error = link.callback(|_| Msg::ClearError);
-
-        let oninput_param_value = link
-            .callback(|ev: Event| Msg::UpdateValue(ev.value));
-
-        let onclick_close_add_param = link
-            .callback(|_| Msg::ShowAddParamCard(0));
-
-        let onclick_param_add = link
-            .callback(|_| Msg::RequestAddParamData);
+        let oninput_param_value = link.callback(|ev: InputEvent| Msg::UpdateValue(ev.input_type()));
+        let onclick_close_add_param = link.callback(|_| Msg::ShowAddParamCard(0));
+        let onclick_param_add = link.callback(|_| Msg::RequestAddParamData);
 
         let class_modal = match &self.open_add_param_card {
             true => "modal is-active",
@@ -577,18 +573,11 @@ impl ModificationTableItem {
         props: &Props,
     ) -> Html {
         let onclick_clear_error = link.callback(|_| Msg::ClearError);
-
-        let oninput_param_value = link
-            .callback(|ev: Event| Msg::UpdateValue(ev.value));
-
-        let onclick_edit_param_card = link
-            .callback(|_| Msg::ShowEditParamCard(0));
-
-        let onclick_param_update = link
-            .callback(|_| Msg::RequestUpdateParamData);
-
-        let onclick_delete_param = link
-            .callback(|_| Msg::RequestDeleteParamData);
+        let oninput_param_value =
+            link.callback(|ev: InputEvent| Msg::UpdateValue(ev.input_type()));
+        let onclick_edit_param_card = link.callback(|_| Msg::ShowEditParamCard(0));
+        let onclick_param_update = link.callback(|_| Msg::RequestUpdateParamData);
+        let onclick_delete_param = link.callback(|_| Msg::RequestDeleteParamData);
 
         let class_modal = match &self.open_edit_param_card {
             true => "modal is-active",

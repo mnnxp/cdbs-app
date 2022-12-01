@@ -6,7 +6,7 @@ use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
-use crate::routes::AppRoute::{self, Login};
+use crate::routes::AppRoute::Login;
 use crate::error::{Error, get_error};
 use crate::fragments::list_errors::ListErrors;
 use crate::services::{get_logged_user, get_value_field};
