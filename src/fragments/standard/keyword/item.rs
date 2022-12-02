@@ -1,14 +1,15 @@
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
-use log::debug;
+use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
-use wasm_bindgen_futures::spawn_local;
-
+use log::debug;
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, Keyword};
 use crate::gqls::make_query;
-use crate::gqls::standard::{DeleteStandardKeywords, delete_standard_keywords};
+use crate::gqls::standard::{
+    DeleteStandardKeywords, delete_standard_keywords
+};
 
 #[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
@@ -33,7 +34,7 @@ pub enum Msg {
 impl Component for KeywordTagItem {
     type Message = Msg;
     type Properties = Props;
-    fn create(ctx: &Context<Self>) -> Self {
+    fn create(_ctx: &Context<Self>) -> Self {
         Self {
             error: None,
             get_result_delete: false,
@@ -58,9 +59,7 @@ impl Component for KeywordTagItem {
                     link.send_message(Msg::GetDeleteKeywordResult(res));
                 })
             },
-            Msg::ResponseError(err) => {
-                self.error = Some(err);
-            },
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetDeleteKeywordResult(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res = data.as_object().unwrap().get("data").unwrap();
@@ -79,9 +78,7 @@ impl Component for KeywordTagItem {
                             None => self.get_result_delete = result > 0,
                         }
                     },
-                    true => {
-                        link.send_message(Msg::ResponseError(get_error(&data)));
-                    }
+                    true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }
             },
         }
@@ -110,7 +107,6 @@ impl KeywordTagItem {
         props: &Props,
     ) -> Html {
         let onclick_delete_keyword = link.callback(|_| Msg::RequestDeleteKeyword);
-
         let style_tag = match &props.style_tag {
             Some(style) => format!("tag is-light {}", style),
             None => "tag is-light".to_string(),

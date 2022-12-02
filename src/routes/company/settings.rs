@@ -1,4 +1,3 @@
-// use yew_agent::Bridge;
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, classes};
 use yew_router::prelude::*;
 use web_sys::{InputEvent, Event, MouseEvent, SubmitEvent};
@@ -6,23 +5,21 @@ use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use log::debug;
-use crate::gqls::make_query;
 use crate::routes::AppRoute::{Login, Home, Profile, ShowCompany};
 use crate::error::{get_error, Error};
-use crate::fragments::{
-    company::{
-        CompanyCertificatesCard, AddCompanyCertificateCard,
-        AddCompanyRepresentCard, CompanyRepresents, SearchSpecsTags
-    },
-    list_errors::ListErrors,
-    side_menu::{MenuItem, SideMenu},
-    upload_favicon::UpdateFaviconBlock,
+use crate::fragments::list_errors::ListErrors;
+use crate::fragments::company::{
+    CompanyCertificatesCard, AddCompanyCertificateCard,
+    AddCompanyRepresentCard, CompanyRepresents, SearchSpecsTags
 };
+use crate::fragments::side_menu::{MenuItem, SideMenu};
+use crate::fragments::upload_favicon::UpdateFaviconBlock;
 use crate::services::{get_logged_user, get_value_field};
 use crate::types::{
     UUID, SlimUser, CompanyUpdateInfo, CompanyInfo, Region,
     CompanyType, TypeAccessInfo
 };
+use crate::gqls::make_query;
 use crate::gqls::company::{
     GetCompanySettingDataOpt, get_company_setting_data_opt,
     GetCompanyData, get_company_data,
@@ -67,7 +64,6 @@ pub struct CompanySettings {
     company_uuid: UUID,
     request_company: CompanyUpdateInfo,
     request_access: i64,
-    // router_agent: Box<dyn Bridge<AppRoute>>,
     current_data: Option<CompanyInfo>,
     regions: Vec<Region>,
     types_access: Vec<TypeAccessInfo>,
@@ -119,10 +115,9 @@ impl Component for CompanySettings {
     fn create(ctx: &Context<Self>) -> Self {
         Self {
             error: None,
-            company_uuid: ctx.props().company_uuid,
+            company_uuid: ctx.props().company_uuid.clone(),
             request_company: CompanyUpdateInfo::default(),
             request_access: 0,
-            // router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             current_data: None,
             regions: Vec::new(),
             types_access: Vec::new(),
@@ -137,7 +132,6 @@ impl Component for CompanySettings {
     fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
         if let None = get_logged_user() {
             // route to login page if not found token
-            // self.router_agent.send(Login);
             let navigator: Navigator = ctx.link().navigator().unwrap();
             navigator.replace(&Login);
         };
@@ -166,7 +160,6 @@ impl Component for CompanySettings {
             Msg::OpenCompany => {
                 // Redirect to user page
                 if let Some(company_data) = &self.current_data {
-                    // self.router_agent.send(ShowCompany { uuid: company_data.uuid.clone() });
                     let navigator: Navigator = ctx.link().navigator().unwrap();
                     navigator.replace(&ShowCompany { uuid: company_data.uuid.clone() });
                 }
@@ -344,7 +337,7 @@ impl Component for CompanySettings {
         if self.company_uuid == ctx.props().company_uuid {
             false
         } else {
-            self.company_uuid = ctx.props().company_uuid;
+            self.company_uuid = ctx.props().company_uuid.clone();
             true
         }
     }
@@ -554,7 +547,7 @@ impl CompanySettings {
                 <h4 id="updated-certificates" class="title is-4">{ get_value_field(&64) }</h4> // Certificates
                 { self.add_certificate_block(link) }
                 <br/>
-                { self.certificates_block(link) }
+                { self.certificates_block() }
             </>},
             // Show interface for add and update Represents
             Menu::Represent => html!{<>
@@ -595,10 +588,10 @@ impl CompanySettings {
         let oninput_site_url = link.callback(|ev: InputEvent| Msg::UpdateSiteUrl(ev.input_type()));
         // let oninput_time_zone = link.callback(|ev: InputEvent| Msg::UpdateTimeZone(ev.input_type()));
         let onchange_region_id = link.callback(|ev: Event| {
-            Msg::UpdateRegionId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+            Msg::UpdateRegionId(ev.current_target().map(|et| et.as_string().unwrap_or_default()).unwrap_or_default())
         });
         let onchange_company_type_id = link.callback(|ev: Event| {
-            Msg::UpdateCompanyTypeId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+            Msg::UpdateCompanyTypeId(ev.current_target().map(|et| et.as_string().unwrap_or_default()).unwrap_or_default())
         });
 
         html!{<>
@@ -736,10 +729,7 @@ impl CompanySettings {
         }
     }
 
-    fn certificates_block(
-        &self,
-        link: &Scope<Self>,
-    ) -> Html {
+    fn certificates_block(&self) -> Html {
         match &self.current_data {
             Some(current_data) => html!{
                 <CompanyCertificatesCard
@@ -761,8 +751,8 @@ impl CompanySettings {
         match &self.current_data {
             Some(current_data) => html!{
                 <SearchSpecsTags
-                    company_specs = {current_data.company_specs.clone()}
                     company_uuid = {current_data.uuid.clone()}
+                    company_specs = {current_data.company_specs.clone()}
                  />
             },
             None => html!{
@@ -837,7 +827,7 @@ impl CompanySettings {
         link: &Scope<Self>,
     ) -> Html {
         let onchange_type_access_id = link.callback(|ev: Event| {
-            Msg::UpdateTypeAccessId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+            Msg::UpdateTypeAccessId(ev.current_target().map(|et| et.as_string().unwrap_or_default()).unwrap_or_default())
         });
 
         html!{

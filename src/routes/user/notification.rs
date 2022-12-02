@@ -1,11 +1,9 @@
 use yew::{Component, Context, html, html::Scope, Html};
-// use yew_agent::Bridge;
 use yew_router::prelude::*;
-use log::debug;
+use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
-use wasm_bindgen_futures::spawn_local;
-
+use log::debug;
 use crate::routes::AppRoute::Login;
 use crate::error::{Error, get_error};
 use crate::fragments::list_errors::ListErrors;
@@ -33,7 +31,6 @@ pub enum Menu {
 pub struct Notifications {
     error: Option<Error>,
     notifications: Vec<ShowNotification>,
-    // router_agent: Box<dyn Bridge<AppRoute>>,
     read_notification: Vec<i64>,
     delete_notification: Vec<i64>,
     select_menu: Menu,
@@ -46,8 +43,6 @@ pub enum Msg {
     ReadOneNotificationIds(i64),
     RemoveOneNotificationIds(i64),
     GetAllNotification(String),
-    // GetNotificationByDegree(String),
-    // GetNotReadNotification(String),
     GetReadNotification(String),
     GetRemoveNotification(String),
     Ignore,
@@ -58,11 +53,10 @@ impl Component for Notifications {
     type Message = Msg;
     type Properties = ();
 
-    fn create(ctx: &Context<Self>) -> Self {
+    fn create(_ctx: &Context<Self>) -> Self {
         Self {
             error: None,
             notifications: Vec::new(),
-            // router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             read_notification: Vec::new(),
             delete_notification: Vec::new(),
             select_menu: Menu::GetAll,
@@ -73,7 +67,6 @@ impl Component for Notifications {
         let link = ctx.link().clone();
         if let None = get_logged_user() {
             // route to login page if not found token
-            // self.router_agent.send(Login);
             let navigator: Navigator = ctx.link().navigator().unwrap();
             navigator.replace(&Login);
         };
@@ -138,8 +131,6 @@ impl Component for Notifications {
                     true => self.error = Some(get_error(&data)),
                 }
             },
-            // Msg::GetNotificationByDegree(res) => {},
-            // Msg::GetNotReadNotification(res) => {},
             Msg::GetReadNotification(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();

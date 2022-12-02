@@ -9,18 +9,15 @@ use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
-
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, LicenseInfo};
 use crate::services::get_value_field;
-use crate::gqls::{
-    make_query,
-    relate::{GetLicenses, get_licenses},
-    component::{
-        AddComponentLicense, add_component_license,
-        GetComponentLicenses, get_component_licenses,
-    },
+use crate::gqls::make_query;
+use crate::gqls::relate::{GetLicenses, get_licenses};
+use crate::gqls::component::{
+    AddComponentLicense, add_component_license,
+    GetComponentLicenses, get_component_licenses,
 };
 
 #[derive(Properties, Clone, Debug, PartialEq)]
@@ -71,7 +68,7 @@ impl Component for ComponentLicensesTags {
             error: None,
             license_ids,
             component_licenses: ctx.props().component_licenses.clone(),
-            component_uuid: ctx.props().component_uuid,
+            component_uuid: ctx.props().component_uuid.clone(),
             component_licenses_len: ctx.props().component_licenses.len(),
             license_list: Vec::new(),
             request_add_license_id: 0,
@@ -194,7 +191,7 @@ impl Component for ComponentLicensesTags {
              self.component_licenses_len == ctx.props().component_licenses.len() {
             false
         } else {
-            self.component_uuid = ctx.props().component_uuid;
+            self.component_uuid = ctx.props().component_uuid.clone();
             self.component_licenses_len = ctx.props().component_licenses.len();
             self.license_ids = BTreeSet::new();
             for license in ctx.props().component_licenses.iter() {
@@ -210,7 +207,7 @@ impl Component for ComponentLicensesTags {
 
         html!{<>
             <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error.clone())}/>
-            {self.modal_add_license(ctx.link(), ctx.props())}
+            {self.modal_add_license(ctx.link())}
             {self.show_licenses(ctx.link(), ctx.props())}
         </>}
     }
@@ -222,7 +219,8 @@ impl ComponentLicensesTags {
         link: &Scope<Self>,
         props: &Props,
     ) -> Html {
-        let onclick_delete_license = link.callback(|value: usize| Msg::DeleteComponentLicense(value));
+        let onclick_delete_license =
+            link.callback(|value: usize| Msg::DeleteComponentLicense(value));
         let onclick_action_btn = link.callback(|_| Msg::ChangeHideAddLicense);
 
         html!{<div class="media" style="margin-bottom: 0rem">
@@ -265,14 +263,12 @@ impl ComponentLicensesTags {
     fn modal_add_license(
         &self,
         link: &Scope<Self>,
-        props: &Props,
     ) -> Html {
         let onclick_add_license = link.callback(|_| Msg::RequestAddLicense);
         let onclick_hide_modal = link.callback(|_| Msg::ChangeHideAddLicense);
         let onchange_select_add_license = link.callback(|ev: Event| {
-                Msg::UpdateSelectLicense(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
-          });
-
+            Msg::UpdateSelectLicense(ev.current_target().map(|et| et.as_string().unwrap_or_default()).unwrap_or_default())
+        });
         let class_modal = match &self.hide_add_license_modal {
             true => "modal",
             false => "modal is-active",

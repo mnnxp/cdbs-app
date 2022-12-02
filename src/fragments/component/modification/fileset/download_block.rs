@@ -1,16 +1,16 @@
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, Event};
-use log::debug;
+use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
-use wasm_bindgen_futures::spawn_local;
-// use chrono::NaiveDateTime;
-
+use log::debug;
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, DownloadFile};
 use crate::services::get_value_field;
 use crate::gqls::make_query;
-use crate::gqls::component::{ComModFilesetFiles, com_mod_fileset_files};
+use crate::gqls::component::{
+    ComModFilesetFiles, com_mod_fileset_files
+};
 
 #[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
@@ -58,7 +58,7 @@ impl Component for ManageFilesOfFilesetBlock {
 
         Self {
             error: None,
-            select_modification_uuid: ctx.props().select_modification_uuid,
+            select_modification_uuid: ctx.props().select_modification_uuid.clone(),
             select_fileset_uuid,
             open_fileset_files_card: false,
             open_modal_download_files: false,
@@ -144,7 +144,7 @@ impl Component for ManageFilesOfFilesetBlock {
             false
         } else {
             debug!("change download block: {:?}", ctx.props().select_modification_uuid);
-            self.select_modification_uuid = ctx.props().select_modification_uuid;
+            self.select_modification_uuid = ctx.props().select_modification_uuid.clone();
             ctx.link().send_message(Msg::ParseFirstFilesetUuid);
             true
         }
@@ -168,19 +168,17 @@ impl ManageFilesOfFilesetBlock {
         props: &Props,
     ) -> Html {
         let onchange_select_fileset_btn = link.callback(|ev: Event| {
-            Msg::SelectFilesetUuid(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+            Msg::SelectFilesetUuid(ev.current_target().map(|et| et.as_string().unwrap_or_default()).unwrap_or_default())
         });
         let onclick_open_fileset_files_list_btn = link.callback(|_| Msg::OpenFilesetFilesBlock);
         let onclick_download_fileset_btn = match self.flag_get_dowload_url {
             true => link.callback(|_| Msg::ShowModalDownloadFiles),
             false => link.callback(|_| Msg::RequestDownloadFilesetFiles),
         };
-
         let class_fileset_btn = match self.open_fileset_files_card {
             true => "button is-light is-active",
             false => "button",
         };
-
         let class_download_btn = match self.active_loading_files_btn {
             true => "button is-info is-active is-loading",
             false => "button is-info",
@@ -220,7 +218,6 @@ impl ManageFilesOfFilesetBlock {
         link: &Scope<Self>,
     ) -> Html {
         let onclick_modal_download_btn = link.callback(|_| Msg::ShowModalDownloadFiles);
-
         let class_modal = match &self.open_modal_download_files {
             true => "modal is-active",
             false => "modal",

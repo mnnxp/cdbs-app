@@ -6,7 +6,6 @@ pub use search::SearchSpecsTags;
 
 use yew::{Component, Context, html, Html, Properties, Callback};
 // use log::debug;
-// use crate::error::{get_error, Error};
 use crate::types::{UUID, Spec};
 
 #[derive(Properties, Clone, Debug, PartialEq)]
@@ -29,13 +28,13 @@ impl Component for SpecsTags {
 
     fn create(ctx: &Context<Self>) -> Self {
         Self {
-            standard_uuid: ctx.props().standard_uuid,
+            standard_uuid: ctx.props().standard_uuid.clone(),
             show_manage_btn: ctx.props().show_manage_btn,
             specs_len: ctx.props().specs.len(),
         }
     }
 
-    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, _ctx: &Context<Self>, _msg: Self::Message) -> bool {
         false
     }
 
@@ -45,7 +44,7 @@ impl Component for SpecsTags {
                 self.specs_len == ctx.props().specs.len() {
             false
         } else {
-            self.standard_uuid = ctx.props().standard_uuid;
+            self.standard_uuid = ctx.props().standard_uuid.clone();
             self.show_manage_btn = ctx.props().show_manage_btn;
             self.specs_len = ctx.props().specs.len();
             true

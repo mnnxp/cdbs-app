@@ -1,14 +1,10 @@
-// use yew_agent::Bridge;
-// use yew::services::fetch::FetchTask;
 use yew::{Component, Callback, Context, html, html::Scope, Html, classes};
 use yew_router::prelude::*;
-use yew_router::prelude::Link;
 use web_sys::{InputEvent, Event};
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use log::debug;
-
 use crate::routes::AppRoute::{self, Login, Profile};
 use crate::error::{Error, get_error};
 use crate::fragments::list_errors::ListErrors;
@@ -24,7 +20,6 @@ use crate::gqls::user::{
 pub struct Register {
     error: Option<Error>,
     request: RegisterInfo,
-    // router_agent: Box<dyn Bridge<AppRoute>>,
     regions: Vec<Region>,
     programs: Vec<Program>,
     types_access: Vec<TypeAccessInfo>,
@@ -52,11 +47,10 @@ impl Component for Register {
     type Message = Msg;
     type Properties = ();
 
-    fn create(ctx: &Context<Self>) -> Self {
+    fn create(_ctx: &Context<Self>) -> Self {
         Self {
             error: None,
             request: RegisterInfo::default(),
-            // router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             programs: Vec::new(),
             regions: Vec::new(),
             types_access: Vec::new(),
@@ -69,7 +63,6 @@ impl Component for Register {
             let link = ctx.link().clone();
             if let Some(user) = get_logged_user() {
                 // route to profile page if user already logged
-                // self.router_agent.send(Profile { username: user.username });
                 let navigator: Navigator = ctx.link().navigator().unwrap();
                 navigator.replace(&Profile { username: user.username });
             };
@@ -209,15 +202,12 @@ impl Register {
         let oninput_username = link.callback(|ev: InputEvent| Msg::UpdateUsername(ev.input_type()));
         let oninput_email = link.callback(|ev: InputEvent| Msg::UpdateEmail(ev.input_type()));
         let oninput_password = link.callback(|ev: InputEvent| Msg::UpdatePassword(ev.input_type()));
-        let oninput_program_id = link.callback(|ev: Event| {
-            Msg::UpdateProgramId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
-        });
-        let onchange_region_id = link.callback(|ev: Event| {
-            Msg::UpdateRegionId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
-        });
-        let onchange_type_access_id = link.callback(|ev: Event| {
-            Msg::UpdateTypeAccessId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
-        });
+        let oninput_program_id =
+            link.callback(|ev: Event| Msg::UpdateProgramId(ev.current_target().map(|et| et.as_string().unwrap_or_default()).unwrap_or_default()));
+        let onchange_region_id =
+            link.callback(|ev: Event| Msg::UpdateRegionId(ev.current_target().map(|et| et.as_string().unwrap_or_default()).unwrap_or_default()));
+        let onchange_type_access_id =
+            link.callback(|ev: Event| Msg::UpdateTypeAccessId(ev.current_target().map(|et| et.as_string().unwrap_or_default()).unwrap_or_default()));
 
         html! {<>
             // first columns (username, email)
@@ -393,7 +383,6 @@ impl Register {
         link: &Scope<Self>,
     ) -> Html {
         let onclick_show_conditions = link.callback(|_| Msg::ShowConditions);
-
         let class_modal = match &self.show_conditions {
             true => "modal is-active",
             false => "modal",

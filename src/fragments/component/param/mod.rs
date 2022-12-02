@@ -5,24 +5,20 @@ pub use item::ComponentParamTag;
 pub use add::RegisterParamnameBlock;
 
 use std::collections::BTreeSet;
-// use yew::prelude::*;
 use yew::{Component, Context, html, html::Scope, Html, Properties};
-use log::debug;
+use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
-use wasm_bindgen_futures::spawn_local;
-
+use log::debug;
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, ComponentParam, Param};
 use crate::services::get_value_field;
-use crate::gqls::{
-    make_query,
-    relate::{GetParams, get_params},
-    component::{
-        PutComponentParams, put_component_params,
-        GetComponentParams, get_component_params,
-    },
+use crate::gqls::make_query;
+use crate::gqls::relate::{GetParams, get_params};
+use crate::gqls::component::{
+    PutComponentParams, put_component_params,
+    GetComponentParams, get_component_params,
 };
 
 #[derive(Properties, Clone, Debug, PartialEq)]
@@ -72,7 +68,7 @@ impl Component for ComponentParamsTags {
 
         Self {
             error: None,
-            component_uuid: ctx.props().component_uuid,
+            component_uuid: ctx.props().component_uuid.clone(),
             component_params_len: ctx.props().component_params.len(),
             param_ids,
             component_params: ctx.props().component_params.clone(),
@@ -207,7 +203,7 @@ impl Component for ComponentParamsTags {
                 self.param_ids.insert(param.param.param_id);
             };
             self.hide_add_param_modal = true;
-            self.component_uuid = ctx.props().component_uuid;
+            self.component_uuid = ctx.props().component_uuid.clone();
             self.component_params_len = ctx.props().component_params.len();
             true
         }
@@ -232,7 +228,6 @@ impl ComponentParamsTags {
     ) -> Html {
         let onclick_delete_param =
             link.callback(|value: usize| Msg::DeleteComponentParam(value));
-
         let onclick_action_btn = link.callback(|_| Msg::ChangeHideAddParam);
 
         html!{<div class="card column">
@@ -278,9 +273,7 @@ impl ComponentParamsTags {
     ) -> Html {
         let onclick_add_param =
             link.callback(|(param_id, param_value)| Msg::RequestAddParam(param_id, param_value));
-
         let onclick_hide_modal = link.callback(|_| Msg::ChangeHideAddParam);
-
         let class_modal = match &self.hide_add_param_modal {
             true => "modal",
             false => "modal is-active",

@@ -7,9 +7,7 @@ pub use item::CompanyCertificateItem;
 use std::collections::BTreeSet;
 use yew::{Component, Context, html, Html, Properties};
 // use log::debug;
-
 use crate::types::{UUID, CompanyCertificate};
-
 
 #[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
@@ -44,7 +42,7 @@ impl Component for CompanyCertificatesCard {
         }
     }
 
-    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         // let link = ctx.link().clone();
         match msg {
             Msg::RemoveCertificate(cart_uuid) => {
@@ -56,7 +54,7 @@ impl Component for CompanyCertificatesCard {
     }
 
     fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
-        if ctx.props().certificates.first().map(|x| x.company_uuid == self.certificates_first_uuid).unwrap_or_default() ||
+        if ctx.props().certificates.first().map(|x| x.company_uuid == self.certificates_first_uuid).unwrap_or_default() &&
               self.certificates_len == ctx.props().certificates.len() {
             false
         } else {

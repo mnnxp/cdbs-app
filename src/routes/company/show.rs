@@ -1,5 +1,3 @@
-// use yew_agent::Bridge;
-// use yew_router::hooks::use_route;
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, classes};
 use yew_router::prelude::*;
 use web_sys::MouseEvent;
@@ -7,20 +5,21 @@ use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
-
 use crate::routes::AppRoute::{Login, Profile, CompanySettings};
 use crate::error::{get_error, Error};
-use crate::fragments::{
-    switch_icon::res_btn,
-    list_errors::ListErrors,
-    side_menu::{MenuItem, SideMenu},
-    company::{CompanyCertificatesCard, CompanyRepresents, SpecsTags},
-    component::CatalogComponents,
-    standard::CatalogStandards,
+use crate::fragments::switch_icon::res_btn;
+use crate::fragments::list_errors::ListErrors;
+use crate::fragments::side_menu::{MenuItem, SideMenu};
+use crate::fragments::company::{
+    CompanyCertificatesCard,
+    CompanyRepresents,
+    SpecsTags,
 };
-use crate::gqls::make_query;
+use crate::fragments::component::CatalogComponents;
+use crate::fragments::standard::CatalogStandards;
 use crate::services::{get_logged_user, get_value_field};
 use crate::types::{UUID, CompanyInfo, SlimUser, ComponentsQueryArg, StandardsQueryArg};
+use crate::gqls::make_query;
 use crate::gqls::company::{
     GetCompanyData, get_company_data,
     AddCompanyFav, add_company_fav,
@@ -79,9 +78,8 @@ impl Component for ShowCompany {
         ShowCompany {
             error: None,
             company: None,
-            current_company_uuid: ctx.props().company_uuid,
+            current_company_uuid: ctx.props().company_uuid.clone(),
             current_user_owner: false,
-            // router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             subscribers: 0,
             is_followed: false,
             company_tab: CompanyTab::Certificates,
@@ -93,7 +91,6 @@ impl Component for ShowCompany {
     fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
         if let None = get_logged_user() {
             // route to login page if not found token
-            // self.router_agent.send(Login);
             let navigator: Navigator = ctx.link().navigator().unwrap();
             navigator.replace(&Login);
         };
@@ -204,14 +201,12 @@ impl Component for ShowCompany {
             Msg::OpenOwnerCompany => {
                 if let Some(company_data) = &self.company {
                     // Redirect to owneruser company page
-                    // self.router_agent.send(Profile { username: company_data.owner_user.username.to_string() });
                     navigator.clone().replace(&Profile { username: company_data.owner_user.username.to_string() });
                 }
             },
             Msg::OpenSettingCompany => {
                 if let Some(company_data) = &self.company {
                     // Redirect to company settings page
-                    // self.router_agent.send(CompanySettings { uuid: company_data.uuid.to_string() });
                     navigator.replace(&CompanySettings { uuid: company_data.uuid.to_string() });
                 }
             },
@@ -226,7 +221,7 @@ impl Component for ShowCompany {
         if self.current_company_uuid == ctx.props().company_uuid {
             false
         } else {
-            self.current_company_uuid = ctx.props().company_uuid;
+            self.current_company_uuid = ctx.props().company_uuid.clone();
             true
         }
     }

@@ -4,7 +4,6 @@ use local_en::LOCAL_EN;
 use local_ru::LOCAL_RU;
 
 use log::debug;
-
 use crate::services::get_lang;
 
 /// Returns the field value for set language

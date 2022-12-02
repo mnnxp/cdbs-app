@@ -33,8 +33,7 @@ pub enum Msg {
 impl Component for KeywordTagItem {
     type Message = Msg;
     type Properties = Props;
-    fn create(ctx: &Context<Self>) -> Self {
-
+    fn create(_ctx: &Context<Self>) -> Self {
         Self {
             error: None,
             get_result_delete: false,

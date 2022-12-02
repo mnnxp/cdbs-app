@@ -1,5 +1,4 @@
 use yew::{Component, Context, html, html::Scope, Html, Properties, classes};
-// use yew_agent::Bridge;
 use yew_router::prelude::*;
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
@@ -7,10 +6,8 @@ use serde_json::Value;
 use log::debug;
 use crate::error::{Error, get_error};
 use crate::routes::AppRoute::ShowCompany;
-use crate::fragments::{
-    list_errors::ListErrors,
-    switch_icon::res_btn,
-};
+use crate::fragments::list_errors::ListErrors;
+use crate::fragments::switch_icon::res_btn;
 use crate::types::{UUID, ShowCompanyShort};
 use crate::services::get_value_field;
 use crate::gqls::make_query;
@@ -37,7 +34,6 @@ pub struct Props {
 pub struct ListItemCompany {
     error: Option<Error>,
     data_uuid: UUID,
-    // router_agent: Box<dyn Bridge<AppRoute>>,
     company_uuid: UUID,
     is_followed: bool,
     show_list: bool,
@@ -50,8 +46,7 @@ impl Component for ListItemCompany {
     fn create(ctx: &Context<Self>) -> Self {
         Self {
             error: None,
-            data_uuid: ctx.props().data.uuid,
-            // router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
+            data_uuid: ctx.props().data.uuid.clone(),
             company_uuid: String::new(),
             is_followed: ctx.props().data.is_followed,
             show_list: ctx.props().show_list,
@@ -71,13 +66,8 @@ impl Component for ListItemCompany {
         match msg {
             Msg::OpenCompany => {
                 // Redirect to company page
-                // self.router_agent.send(ShowCompany { uuid: ctx.props().data.uuid.clone() });
-                // let navigator: yew_router::prelude::Navigator = yew_router::prelude::RouterScopeExt::navigator(&ctx.link()).unwrap();
-                // navigator.replace(&AppRoute::Home);
-                // link.navigator().unwrap().replace(&AppRoute::Home);
-                let navigator: Navigator = link.navigator().unwrap();
+                let navigator: Navigator = link.navigator().expect("какая-то ерунда с этим роутом...");
                 navigator.replace(&ShowCompany { uuid: ctx.props().data.uuid.clone() });
-                    // .expect_throw("какая-то ерунда с этим роутом...");
             },
             Msg::TriggerFav => {
                 match &self.is_followed {
@@ -129,12 +119,12 @@ impl Component for ListItemCompany {
     }
 
     fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
-        if self.show_list == ctx.props().show_list ||
+        if self.show_list == ctx.props().show_list &&
             self.data_uuid == ctx.props().data.uuid {
             false
         } else {
             self.show_list = ctx.props().show_list;
-            self.data_uuid = ctx.props().data.uuid;
+            self.data_uuid = ctx.props().data.uuid.clone();
             true
         }
     }

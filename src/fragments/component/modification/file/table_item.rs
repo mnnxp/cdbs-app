@@ -1,16 +1,16 @@
 use yew::{Component, Context, html, html::Scope, Html, Properties};
-
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
-
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, ShowFileInfo, DownloadFile};
 use crate::services::get_value_field;
 use crate::gqls::make_query;
-use crate::gqls::component::{ComponentModificationFiles, component_modification_files};
+use crate::gqls::component::{
+    ComponentModificationFiles, component_modification_files
+};
 
 #[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
@@ -39,8 +39,8 @@ impl Component for ModificationFileListItem {
     fn create(ctx: &Context<Self>) -> Self {
         Self {
             error: None,
-            modification_uuid: String::new(),
-            file_uuid: String::new(),
+            modification_uuid: ctx.props().modification_uuid.clone(),
+            file_uuid: ctx.props().file.uuid.clone(),
             download_url: String::new(),
         }
     }

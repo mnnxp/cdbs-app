@@ -1,20 +1,17 @@
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
-use log::debug;
+use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
-use wasm_bindgen_futures::spawn_local;
-
+use log::debug;
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, Spec, SpecPathInfo};
 use crate::services::get_value_field;
-use crate::gqls::{
-    make_query,
-    relate::{GetSpecsPaths, get_specs_paths},
-    component::{
-        AddComponentSpecs, add_component_specs,
-        DeleteComponentSpecs, delete_component_specs,
-    },
+use crate::gqls::make_query;
+use crate::gqls::relate::{GetSpecsPaths, get_specs_paths};
+use crate::gqls::component::{
+    AddComponentSpecs, add_component_specs,
+    DeleteComponentSpecs, delete_component_specs,
 };
 
 #[derive(Properties, Clone, Debug, PartialEq)]
@@ -222,12 +219,10 @@ impl SpecTagItem {
         };
         let onclick_delete_spec = link.callback(|_| Msg::RequestDeleteSpec);
         let onclick_add_spec = link.callback(|_| Msg::RequestAddSpec);
-
         let mut style_tag = match &props.style_tag {
             Some(style) => format!("tag is-light {}", style),
             None => "tag is-light".to_string(),
         };
-
         if props.active_info_btn {
             style_tag += " button";
         }
@@ -254,7 +249,6 @@ impl SpecTagItem {
         link: &Scope<Self>,
     ) -> Html {
         let onclick_spec_info = link.callback(|_| Msg::ClickSpecInfo);
-
         let class_modal = match &self.open_spec_info {
             true => "modal is-active",
             false => "modal",

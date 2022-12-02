@@ -2,9 +2,6 @@
 #![allow(clippy::large_enum_variant)]
 #![allow(clippy::eval_order_dependence)]
 
-// #[macro_use]
-// extern crate log;
-
 pub mod app;
 pub mod error;
 pub mod fragments;
@@ -12,8 +9,6 @@ pub mod gqls;
 pub mod routes;
 pub mod services;
 pub mod types;
-// pub mod utils;
-// use wasm_bindgen::prelude::*;
 
 use app::App;
 

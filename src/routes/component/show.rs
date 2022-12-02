@@ -1,25 +1,20 @@
-// use yew_agent::Bridge;
-// use yew_router::hooks::use_route;
 use std::collections::HashMap;
 use yew::{Component, Context, html, html::Scope, Html, Properties, classes};
 use yew_router::prelude::*;
-use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
-
+use log::debug;
 use crate::routes::AppRoute::{Login, ComponentSettings};
 use crate::error::{get_error, Error};
-use crate::fragments::{
-    switch_icon::res_btn,
-    list_errors::ListErrors,
-    user::ListItemUser,
-    component::{
-        ComponentStandardItem, ComponentSupplierItem, ComponentLicenseTag, ComponentParamTag,
-        ModificationsTable, FilesOfFilesetCard, ManageFilesOfFilesetBlock,
-        ComponentFilesBlock, ModificationFilesTableCard, SpecsTags, KeywordsTags,
-    },
-    img_showcase::ImgShowcase,
+use crate::fragments::switch_icon::res_btn;
+use crate::fragments::list_errors::ListErrors;
+use crate::fragments::user::ListItemUser;
+use crate::fragments::img_showcase::ImgShowcase;
+use crate::fragments::component::{
+    ComponentStandardItem, ComponentSupplierItem, ComponentLicenseTag, ComponentParamTag,
+    ModificationsTable, FilesOfFilesetCard, ManageFilesOfFilesetBlock,
+    ComponentFilesBlock, ModificationFilesTableCard, SpecsTags, KeywordsTags,
 };
 use crate::services::{get_logged_user, get_value_field};
 use crate::types::{UUID, ComponentInfo, SlimUser, ComponentParam, ComponentModificationInfo, DownloadFile};
@@ -37,8 +32,6 @@ pub struct ShowComponent {
     component: Option<ComponentInfo>,
     current_component_uuid: UUID,
     current_user_owner: bool,
-    // task: Option<FetchTask>,
-    // router_agent: Box<dyn Bridge<AppRoute>>,
     subscribers: usize,
     is_followed: bool,
     select_modification_uuid: UUID,
@@ -92,10 +85,8 @@ impl Component for ShowComponent {
         ShowComponent {
             error: None,
             component: None,
-            current_component_uuid: String::new(),
+            current_component_uuid: ctx.props().component_uuid.clone(),
             current_user_owner: false,
-            // task: None,
-            // router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             subscribers: 0,
             is_followed: false,
             select_modification_uuid: String::new(),
@@ -327,7 +318,6 @@ impl Component for ShowComponent {
             Msg::OpenComponentSetting => {
                 if let Some(component_data) = &self.component {
                     // Redirect to page for change and update component
-                    // self.router_agent.send(ComponentSettings { uuid: component_data.uuid.to_string() });
                     let navigator: Navigator = ctx.link().navigator().unwrap();
                     navigator.replace(&ComponentSettings { uuid: component_data.uuid.to_string() });
                 }
@@ -342,7 +332,7 @@ impl Component for ShowComponent {
         if self.current_component_uuid == ctx.props().component_uuid {
             false
         } else {
-            self.current_component_uuid = ctx.props().component_uuid;
+            self.current_component_uuid = ctx.props().component_uuid.clone();
             true
         }
     }
@@ -362,7 +352,6 @@ impl Component for ShowComponent {
                                 true => self.show_modal_modification_card(ctx.link(), component_data),
                                 false => html!{},
                             }}
-
                             <div class="card column">
                               {self.show_main_card(ctx.link(), component_data)}
                             </div>
@@ -372,9 +361,9 @@ impl Component for ShowComponent {
                             {self.show_modification_files()}
                             <br/>
                             {self.show_cards(ctx.link(), ctx.props(), component_data)}
-                            {self.show_component_specs(ctx.link(), component_data)}
+                            {self.show_component_specs(component_data)}
                             <br/>
-                            {self.show_component_keywords(ctx.link(), component_data)}
+                            {self.show_component_keywords(component_data)}
                         </div>
                     </div>
                 </div>
@@ -629,10 +618,10 @@ impl ShowComponent {
             <div class="columns">
                 <div class="column">
                     <h2 class="has-text-weight-bold">{ get_value_field(&103) }</h2> // Standards
-                    {self.show_component_standards(link, component_data)}
+                    {self.show_component_standards(component_data)}
                 </div>
                 <div class="column">
-                    {self.show_component_suppliers(link, component_data)}
+                    {self.show_component_suppliers(component_data)}
                 </div>
             </div>
         </>}
@@ -654,7 +643,6 @@ impl ShowComponent {
 
     fn show_component_specs(
         &self,
-        link: &Scope<Self>,
         component_data: &ComponentInfo,
     ) -> Html {
         html!{<>
@@ -671,7 +659,6 @@ impl ShowComponent {
 
     fn show_component_keywords(
         &self,
-        link: &Scope<Self>,
         component_data: &ComponentInfo,
     ) -> Html {
         html!{<>
@@ -688,7 +675,6 @@ impl ShowComponent {
 
     fn show_component_suppliers(
         &self,
-        link: &Scope<Self>,
         component_data: &ComponentInfo,
     ) -> Html {
         let table_label = match component_data.is_base {
@@ -735,7 +721,6 @@ impl ShowComponent {
 
     fn show_component_standards(
         &self,
-        link: &Scope<Self>,
         component_data: &ComponentInfo,
     ) -> Html {
         html!{<div class="card column">
@@ -763,7 +748,6 @@ impl ShowComponent {
         component_data: &ComponentInfo,
     ) -> Html {
         let onclick_owner_user_info = link.callback(|_| Msg::ShowOwnerUserCard);
-
         let class_modal = match &self.open_owner_user_info {
             true => "modal is-active",
             false => "modal",
@@ -855,7 +839,6 @@ impl ShowComponent {
     ) -> Html {
         let callback_select_fileset_uuid =
             link.callback(|value: UUID| Msg::SelectFileset(value));
-
         let callback_open_fileset_uuid =
             link.callback(|value: bool| Msg::ShowFilesetFilesBlock(value));
 

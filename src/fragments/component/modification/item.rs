@@ -7,19 +7,15 @@ use serde_json::Value;
 use log::debug;
 use super::ModificationTableItemModule;
 use crate::error::{get_error, Error};
-use crate::fragments::{
-    list_errors::ListErrors,
-    component::param::RegisterParamnameBlock,
-};
+use crate::fragments::list_errors::ListErrors;
+use crate::fragments::component::param::RegisterParamnameBlock;
 use crate::services::get_value_field;
 use crate::types::{UUID, Param, ParamValue};
-use crate::gqls::{
-    make_query,
-    relate::{GetParams, get_params},
-    component::{
-        PutModificationParams, put_modification_params,
-        DeleteModificationParams, delete_modification_params,
-    },
+use crate::gqls::make_query;
+use crate::gqls::relate::{GetParams, get_params};
+use crate::gqls::component::{
+    PutModificationParams, put_modification_params,
+    DeleteModificationParams, delete_modification_params,
 };
 
 #[derive(Properties, Clone, Debug, PartialEq)]
@@ -350,9 +346,9 @@ impl Component for ModificationTableItem {
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         html!{<>
-            {self.modal_new_value(ctx.link(), ctx.props())}
-            {self.modal_add_value(ctx.link(), ctx.props())}
-            {self.modal_change_value(ctx.link(), ctx.props())}
+            {self.modal_new_value(ctx.link())}
+            {self.modal_add_value(ctx.link())}
+            {self.modal_change_value(ctx.link())}
             {self.show_modification_row(ctx.link(), ctx.props())}
         </>}
     }
@@ -364,22 +360,16 @@ impl ModificationTableItem {
         link: &Scope<Self>,
         props: &Props,
     ) -> Html {
-        let onclick_select_modification = link
-            .callback(|_| Msg::SelectModification);
-
-        let onclick_show_modification_files = link
-            .callback(|_| Msg::ShowModificationFilesList);
-
+        let onclick_select_modification = link.callback(|_| Msg::SelectModification);
+        let onclick_show_modification_files = link.callback(|_| Msg::ShowModificationFilesList);
         let class_style = match &props.select_item {
             true => "is-selected",
             false => "",
         };
-
         let files_click_icon = match &props.open_modification_files {
             true => "far fa-folder-open",
             false => "far fa-folder",
         };
-
         let (double_click_text, double_click_icon) = match &props.show_manage_btn {
             true => (get_value_field(&127), "fas fa-pencil-ruler"), // edit
             false => (get_value_field(&128), "fas fa-info"), // info
@@ -430,10 +420,8 @@ impl ModificationTableItem {
         props: &Props,
     ) -> Html {
         let onclick_new_param_card = link.callback(|_| Msg::ShowNewParamCard);
-
         let onclick_add_param_card =
             link.callback(|value: usize| Msg::ShowAddParamCard(value));
-
         let onclick_edit_param_card =
             link.callback(|value: usize| Msg::ShowEditParamCard(value));
 
@@ -482,14 +470,11 @@ impl ModificationTableItem {
     fn modal_new_value(
         &self,
         link: &Scope<Self>,
-        props: &Props,
     ) -> Html {
         let onclick_clear_error = link.callback(|_| Msg::ClearError);
-        let onclick_add_new_param = link.callback(|(param_id, param_value)|
-            Msg::RequestAddNewParam(param_id, param_value)
-        );
+        let onclick_add_new_param =
+            link.callback(|(param_id, param_value)| Msg::RequestAddNewParam(param_id, param_value));
         let onclick_close_param_card = link.callback(|_| Msg::ShowNewParamCard);
-
         let class_modal = match &self.open_new_param_card {
             true => "modal is-active",
             false => "modal",
@@ -519,13 +504,11 @@ impl ModificationTableItem {
     fn modal_add_value(
         &self,
         link: &Scope<Self>,
-        props: &Props,
     ) -> Html {
         let onclick_clear_error = link.callback(|_| Msg::ClearError);
         let oninput_param_value = link.callback(|ev: InputEvent| Msg::UpdateValue(ev.input_type()));
         let onclick_close_add_param = link.callback(|_| Msg::ShowAddParamCard(0));
         let onclick_param_add = link.callback(|_| Msg::RequestAddParamData);
-
         let class_modal = match &self.open_add_param_card {
             true => "modal is-active",
             false => "modal",
@@ -570,7 +553,6 @@ impl ModificationTableItem {
     fn modal_change_value(
         &self,
         link: &Scope<Self>,
-        props: &Props,
     ) -> Html {
         let onclick_clear_error = link.callback(|_| Msg::ClearError);
         let oninput_param_value =
@@ -578,7 +560,6 @@ impl ModificationTableItem {
         let onclick_edit_param_card = link.callback(|_| Msg::ShowEditParamCard(0));
         let onclick_param_update = link.callback(|_| Msg::RequestUpdateParamData);
         let onclick_delete_param = link.callback(|_| Msg::RequestDeleteParamData);
-
         let class_modal = match &self.open_edit_param_card {
             true => "modal is-active",
             false => "modal",

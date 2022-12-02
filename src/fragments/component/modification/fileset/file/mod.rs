@@ -38,14 +38,14 @@ impl Component for FilesetFilesBlock {
 
     fn create(ctx: &Context<Self>) -> Self {
         Self {
-            select_fileset_uuid: ctx.props().select_fileset_uuid,
+            select_fileset_uuid: ctx.props().select_fileset_uuid.clone(),
             first_file_uuid: ctx.props().files.first().map(|x| x.uuid.clone()).unwrap_or_default(),
             show_full_files: false,
             files_deleted_list: BTreeSet::new(),
         }
     }
 
-    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         // let link = ctx.link().clone();
         match msg {
             Msg::ShowFullList => self.show_full_files = !self.show_full_files,
@@ -63,7 +63,7 @@ impl Component for FilesetFilesBlock {
             false
         } else {
             debug!("change fileset uuid: {:?}", self.select_fileset_uuid);
-            self.select_fileset_uuid = ctx.props().select_fileset_uuid;
+            self.select_fileset_uuid = ctx.props().select_fileset_uuid.clone();
             self.first_file_uuid = ctx.props().files.first().map(|x| x.uuid.clone()).unwrap_or_default();
             self.show_full_files = false;
             self.files_deleted_list.clear();

@@ -1,9 +1,8 @@
 use yew::{Component, Context, html, html::Scope, Html, Properties, Callback};
-use log::debug;
+use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
-use wasm_bindgen_futures::spawn_local;
-
+use log::debug;
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, ShowFileInfo, DownloadFile};
@@ -42,7 +41,7 @@ pub enum Msg {
 impl Component for FileItem {
     type Message = Msg;
     type Properties = Props;
-    fn create(ctx: &Context<Self>) -> Self {
+    fn create(_ctx: &Context<Self>) -> Self {
         Self {
             error: None,
             open_full_info_file: false,
@@ -212,7 +211,6 @@ impl FileItem {
         props: &Props,
     ) -> Html {
         let onclick_file_info = link.callback(|_| Msg::ClickFileInfo);
-
         let class_modal = match &self.open_full_info_file {
             true => "modal is-active",
             false => "modal",

@@ -1,4 +1,3 @@
-// use yew_agent::Bridge;
 use yew::{Component, Context, html, html::Scope, Html, Properties, classes};
 use yew_router::prelude::*;
 use wasm_bindgen_futures::spawn_local;
@@ -7,10 +6,8 @@ use serde_json::Value;
 use log::debug;
 use crate::error::{Error, get_error};
 use crate::routes::AppRoute::ShowStandard;
-use crate::fragments::{
-    list_errors::ListErrors,
-    switch_icon::res_btn,
-};
+use crate::fragments::list_errors::ListErrors;
+use crate::fragments::switch_icon::res_btn;
 use crate::types::{UUID, ShowStandardShort};
 use crate::services::get_value_field;
 use crate::gqls::make_query;
@@ -38,7 +35,6 @@ pub struct ListItemStandard {
     error: Option<Error>,
     standard_uuid: UUID,
     show_list: bool,
-    // router_agent: Box<dyn Bridge<AppRoute>>,
     is_followed: bool,
 }
 
@@ -50,8 +46,7 @@ impl Component for ListItemStandard {
         Self {
             error: None,
             show_list: ctx.props().show_list,
-            standard_uuid: ctx.props().data.uuid,
-            // router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
+            standard_uuid: ctx.props().data.uuid.clone(),
             is_followed: ctx.props().data.is_followed,
         }
     }
@@ -62,7 +57,6 @@ impl Component for ListItemStandard {
         match msg {
             Msg::OpenStandard => {
                 // Redirect to standard page
-                // self.router_agent.send(ShowStandard { uuid: ctx.props().data.uuid.to_string() });
                 let navigator: Navigator = ctx.link().navigator().unwrap();
                 navigator.replace(&ShowStandard { uuid: ctx.props().data.uuid.to_string() });
             },
@@ -93,7 +87,6 @@ impl Component for ListItemStandard {
             Msg::GetFavResult(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
-
                 debug!("res value: {:#?}", res_value);
 
                 match res_value.is_null() {
@@ -116,13 +109,13 @@ impl Component for ListItemStandard {
     }
 
     fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
-        if self.show_list == ctx.props().show_list ||
+        if self.show_list == ctx.props().show_list &&
             self.standard_uuid == ctx.props().data.uuid {
             false
         } else {
             self.is_followed = ctx.props().data.is_followed;
             self.show_list = ctx.props().show_list;
-            self.standard_uuid = ctx.props().data.uuid;
+            self.standard_uuid = ctx.props().data.uuid.clone();
             true
         }
     }
@@ -157,10 +150,8 @@ impl ListItemStandard {
             // is_followed,
             ..
         } = &props.data;
-
         let show_standard_btn = link.callback(|_| Msg::OpenStandard);
         let trigger_fab_btn = link.callback(|_| Msg::TriggerFav);
-
         let mut class_res_btn = vec!["fa-bookmark"];
         let mut class_color_btn = "";
         match &self.is_followed {
@@ -257,10 +248,8 @@ impl ListItemStandard {
             // is_followed,
             ..
         } = props.data.clone();
-
         let show_standard_btn = link.callback(|_| Msg::OpenStandard);
         let trigger_fab_btn = link.callback(|_| Msg::TriggerFav);
-
         let mut class_res_btn = vec![];
         let mut class_color_btn = "";
         match &self.is_followed {

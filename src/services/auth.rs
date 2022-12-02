@@ -4,26 +4,13 @@ use serde_json::Value;
 use log::debug;
 use super::Requests;
 use crate::error::{Error, get_error};
-use crate::types::*;
+use crate::types::{SlimUser, LoginInfoWrapper, UserToken};
 use crate::services::{get_logged_user, set_logged_user};
 use crate::gqls::make_query;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/user.graphql",
-    response_derives = "Debug"
-)]
-struct GetMySelf;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/user.graphql",
-    response_derives = "Debug"
-)]
-struct Logout;
-
+use crate::gqls::user::{
+    GetMySelf, get_my_self,
+    Logout, logout,
+};
 
 /// Apis for authentication
 #[derive(Default, Debug)]
@@ -53,10 +40,7 @@ impl Auth {
 }
 
 /// Get slim data for current user
-pub async fn get_current_user(
-    // current_user: &mut Result<SlimUser, Error>,
-    // error: &'static mut Option<Error>,
-) -> Result<SlimUser, Error> {
+pub async fn get_current_user() -> Result<SlimUser, Error> {
     // check data in local storage
     match get_logged_user() {
         Some(x) => Ok(x),

@@ -19,11 +19,11 @@ impl Component for ModificationTableHeads {
     type Properties = Props;
     fn create(ctx: &Context<Self>) -> Self {
         Self {
-            component_uuid: ctx.props().component_uuid,
+            component_uuid: ctx.props().component_uuid.clone(),
         }
     }
 
-    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, _ctx: &Context<Self>, _msg: Self::Message) -> bool {
         false
     }
 
@@ -33,7 +33,7 @@ impl Component for ModificationTableHeads {
             false
         } else {
             debug!("change ctx.props().params: {:?}", ctx.props().params);
-            self.component_uuid = ctx.props().component_uuid;
+            self.component_uuid = ctx.props().component_uuid.clone();
             true
         }
     }

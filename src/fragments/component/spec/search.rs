@@ -1,13 +1,10 @@
-// use std::time::Duration;
-// use yew::services::timeout::{TimeoutService, TimeoutTask};
 use yew::{Component, Context, html, html::Scope, Html, Properties, classes, NodeRef};
-use gloo_timers::callback::Timeout;
 use web_sys::InputEvent;
 use wasm_bindgen_futures::spawn_local;
+use gloo_timers::callback::Timeout;
 use serde_json::Value;
 use graphql_client::GraphQLQuery;
 use log::debug;
-// use crate::error::{get_error, Error};
 use crate::fragments::component::{SpecsTags, SpecTagItem};
 use crate::types::{Spec, SpecPathInfo, UUID};
 use crate::services::get_value_field;
@@ -22,6 +19,7 @@ pub struct Props {
 
 pub struct SearchSpecsTags {
     component_uuid: UUID,
+    component_specs: Vec<Spec>,
     ipt_timer: Option<Timeout>,
     ipt_ref: NodeRef,
     specs_search_loading: bool,
@@ -46,7 +44,8 @@ impl Component for SearchSpecsTags {
 
     fn create(ctx: &Context<Self>) -> Self {
         Self {
-            component_uuid: ctx.props().component_uuid,
+            component_uuid: ctx.props().component_uuid.clone(),
+            component_specs: ctx.props().component_specs.clone(),
             ipt_timer: None,
             ipt_ref: NodeRef::default(),
             specs_search_loading: false,
@@ -65,7 +64,7 @@ impl Component for SearchSpecsTags {
                 let count_old_found = self.found_specs.len(); // calculate and used twice
                 let mut temp_found: Vec<Spec> = Vec::new(); // for save size found_specs array
                 temp_found.resize(count_old_found, Spec::default());
-                for spec in &ctx.props().component_specs {
+                for spec in &self.component_specs {
                     del_specs_ids.push(spec.spec_id);
                 }
                 // debug!("self.added_specs: {:?}", self.added_specs);
@@ -120,9 +119,6 @@ impl Component for SearchSpecsTags {
                     return true;
                 }
                 self.specs_search_loading = true;
-                let cb_link = link.clone();
-                // self.ipt_timer = Some(TimeoutService::spawn(
-                //     Duration::from_millis(800),
                 self.ipt_timer = Some(Timeout::new(800, move || {
                         let ipt_val = val.clone();
                         let res_link = link.clone();
@@ -148,11 +144,6 @@ impl Component for SearchSpecsTags {
                 let res = data.as_object().unwrap().get("data").unwrap();
                 let search_specs: Vec<SpecPathInfo> =
                     serde_json::from_value(res.get("searchSpecs").unwrap().clone()).unwrap();
-                // debug!(
-                //     "found_specs res:{:?} {:?}",
-                //     search_specs.iter().map(|x| Spec::from(x.clone())).collect::<Vec<Spec>>(),
-                //     Spec::from(search_specs[0].clone())
-                // );
                 self.specs_search_loading = false;
                 self.search_specs = search_specs;
                 link.send_message(Msg::ParseSpecs);
@@ -180,14 +171,14 @@ impl Component for SearchSpecsTags {
             },
             Msg::DeleteCurrentSpec(spec_id) => {
                 let mut props_specs: Vec<Spec> = Vec::new();
-                for spec in ctx.props().component_specs.iter() {
+                for spec in self.component_specs.iter() {
                     if spec.spec_id == spec_id {
                         props_specs.push(Spec::default());
                     } else {
                         props_specs.push(spec.clone());
                     }
                 }
-                ctx.props().component_specs = props_specs;
+                self.component_specs = props_specs;
             },
             Msg::Ignore => {},
         }
@@ -199,7 +190,8 @@ impl Component for SearchSpecsTags {
         if self.component_uuid == ctx.props().component_uuid {
             false
         } else {
-            self.component_uuid = ctx.props().component_uuid;
+            self.component_uuid = ctx.props().component_uuid.clone();
+            self.component_specs = ctx.props().component_specs.clone();
             true
         }
     }
@@ -220,7 +212,6 @@ impl SearchSpecsTags {
         let onclick_del_new_spec = link.callback(|value: usize| Msg::DeleteNewSpec(value));
         let onclick_del_old_spec = link.callback(|value: usize| Msg::DeleteCurrentSpec(value));
         let oninput_search = link.callback(|ev: InputEvent| Msg::SetIptTimer(ev.input_type()));
-
         let mut class_p = classes!("control", "has-icons-left");
         if self.specs_search_loading {
             class_p.push("is-loading");

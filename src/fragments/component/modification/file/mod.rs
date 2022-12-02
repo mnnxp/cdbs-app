@@ -7,17 +7,17 @@ pub use list_item::ModificationFileItem;
 pub use table_item::ModificationFileListItem;
 
 use yew::{Component, Context, html, Html, Properties};
-use log::debug;
-use graphql_client::GraphQLQuery;
-// use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
-
+use graphql_client::GraphQLQuery;
+use log::debug;
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, ShowFileInfo};
 use crate::services::get_value_field;
 use crate::gqls::make_query;
-use crate::gqls::component::{ComponentModificationFilesList, component_modification_files_list};
+use crate::gqls::component::{
+    ComponentModificationFilesList, component_modification_files_list
+};
 
 #[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
@@ -48,7 +48,7 @@ impl Component for ModificationFilesTableCard {
     fn create(ctx: &Context<Self>) -> Self {
         Self {
             error: None,
-            modification_uuid: ctx.props().modification_uuid,
+            modification_uuid: ctx.props().modification_uuid.clone(),
             files_list: Vec::new(),
             // show_full_files: false,
         }
@@ -112,7 +112,7 @@ impl Component for ModificationFilesTableCard {
             if ctx.props().modification_uuid.len() == 36 {
                 ctx.link().send_message(Msg::RequestModificationFilesList);
             }
-            self.modification_uuid = ctx.props().modification_uuid;
+            self.modification_uuid = ctx.props().modification_uuid.clone();
             true
         }
     }

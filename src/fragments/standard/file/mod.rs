@@ -5,7 +5,6 @@ pub use item::FileItem;
 use std::collections::BTreeSet;
 use yew::{Component, Context, html, html::Scope, Html, Properties};
 // use log::debug;
-// use crate::error::{get_error, Error};
 use crate::types::{UUID, ShowFileInfo};
 use crate::services::get_value_field;
 
@@ -39,7 +38,7 @@ impl Component for StandardFilesCard {
 
     fn create(ctx: &Context<Self>) -> Self {
         Self {
-            standard_uuid: ctx.props().standard_uuid,
+            standard_uuid: ctx.props().standard_uuid.clone(),
             show_download_btn: ctx.props().show_download_btn,
             show_delete_btn: ctx.props().show_delete_btn,
             files_len: ctx.props().files.len(),
@@ -48,8 +47,7 @@ impl Component for StandardFilesCard {
         }
     }
 
-    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
-        // let link = ctx.link().clone();
+    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::ShowFullList => self.show_full_files = !self.show_full_files,
             Msg::RemoveFile(file_uuid) => {
@@ -68,7 +66,7 @@ impl Component for StandardFilesCard {
             false
         } else {
             self.files_deleted_list.clear();
-            self.standard_uuid = ctx.props().standard_uuid;
+            self.standard_uuid = ctx.props().standard_uuid.clone();
             self.show_download_btn = ctx.props().show_download_btn;
             self.show_delete_btn = ctx.props().show_delete_btn;
             self.files_len = ctx.props().files.len();

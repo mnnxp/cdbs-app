@@ -1,7 +1,6 @@
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, classes};
-// use yew_agent::Bridge;
-// use log::debug;
 use yew_router::prelude::*;
+// use log::debug;
 use crate::services::get_value_field;
 use crate::routes::AppRoute::ShowComponent;
 use crate::fragments::switch_icon::res_btn;
@@ -22,7 +21,6 @@ pub struct Props {
 }
 
 pub struct ListItem {
-    // router_agent: Box<dyn Bridge<AppRoute>>,
     component_uuid: UUID,
     is_followed: bool,
     show_list: bool,
@@ -34,8 +32,7 @@ impl Component for ListItem {
 
     fn create(ctx: &Context<Self>) -> Self {
         Self {
-            // router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
-            component_uuid: ctx.props().data.uuid,
+            component_uuid: ctx.props().data.uuid.clone(),
             is_followed: ctx.props().data.is_followed,
             show_list: ctx.props().show_list,
         }
@@ -44,11 +41,8 @@ impl Component for ListItem {
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::OpenComponent => {
-                // Redirect to component page
-                // self.router_agent.send(ShowComponent { uuid: ctx.props().data.uuid.to_string() });
-                // debug!("OpenComponent");
                 let navigator: Navigator = ctx.link().navigator().unwrap();
-                navigator.replace(&ShowComponent { uuid: ctx.props().data.uuid.to_string() });
+                navigator.replace(&ShowComponent { uuid: ctx.props().data.uuid.clone() });
             },
             Msg::TriggerFav => {
                 if ctx.props().data.is_followed {
@@ -63,13 +57,13 @@ impl Component for ListItem {
     }
 
     fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
-        if self.show_list == ctx.props().show_list ||
-            self.component_uuid == ctx.props().data.uuid ||
+        if self.show_list == ctx.props().show_list &&
+            self.component_uuid == ctx.props().data.uuid &&
             self.is_followed == ctx.props().data.is_followed {
             false
         } else {
             self.show_list = ctx.props().show_list;
-            self.component_uuid = ctx.props().data.uuid;
+            self.component_uuid = ctx.props().data.uuid.clone();
             self.is_followed = ctx.props().data.is_followed;
             true
         }
@@ -106,14 +100,10 @@ impl ListItem {
             component_suppliers,
             ..
         } = &props.data;
-
         let onclick_open_component = link.callback(|_| Msg::OpenComponent);
-
         let trigger_fab_btn = link.callback(|_| Msg::TriggerFav);
-
         let mut class_res_btn = vec!["fa-bookmark"];
         let mut class_color_btn = "";
-
         match is_followed {
             true => {
                 class_res_btn.push("fas");
@@ -212,16 +202,12 @@ impl ListItem {
             name,
             ..
         } = props.data.clone();
-
         let component_supplier = props.data.component_suppliers
             .first()
             .map(|s| s.supplier.shortname.clone())
             .unwrap_or_default();
-
         let onclick_open_component = link.callback(|_| Msg::OpenComponent);
-
         let trigger_fab_btn = link.callback(|_| Msg::TriggerFav);
-
         let mut class_res_btn = vec![];
         let mut class_color_btn = "";
         match is_followed {

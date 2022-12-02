@@ -5,7 +5,6 @@ pub use item::ComponentFileItem;
 use std::collections::BTreeSet;
 use yew::{Component, Context, html, html::Scope, Html, Properties};
 // use log::debug;
-// use crate::error::{get_error, Error};
 use crate::types::{UUID, ShowFileInfo};
 use crate::services::get_value_field;
 
@@ -37,14 +36,14 @@ impl Component for ComponentFilesBlock {
 
     fn create(ctx: &Context<Self>) -> Self {
         Self {
-            component_uuid: ctx.props().component_uuid,
+            component_uuid: ctx.props().component_uuid.clone(),
             first_file_uuid: ctx.props().files.first().map(|x| x.uuid.clone()).unwrap_or_default(),
             show_full_files: false,
             files_deleted_list: BTreeSet::new(),
         }
     }
 
-    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         // let link = ctx.link().clone();
         match msg {
             Msg::ShowFullList => self.show_full_files = !self.show_full_files,
@@ -57,12 +56,12 @@ impl Component for ComponentFilesBlock {
     }
 
     fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
-        if self.component_uuid == ctx.props().component_uuid &&
-             ctx.props().files.first().map(|x| x.uuid == self.first_file_uuid).unwrap_or_default() {
+        if ctx.props().files.first().map(|x| x.uuid == self.first_file_uuid).unwrap_or_default() &&
+              self.component_uuid == ctx.props().component_uuid {
             false
         } else {
             self.files_deleted_list.clear();
-            self.component_uuid = ctx.props().component_uuid;
+            self.component_uuid = ctx.props().component_uuid.clone();
             self.first_file_uuid = ctx.props().files.first().map(|x| x.uuid.clone()).unwrap_or_default();
             true
         }
@@ -82,7 +81,7 @@ impl Component for ComponentFilesBlock {
             {match ctx.props().files.len() {
                 0 => html!{<span>{ get_value_field(&204) }</span>},
                 0..=3 => html!{},
-                _ => self.show_see_btn(ctx.link(), ctx.props()),
+                _ => self.show_see_btn(ctx.link()),
             }}
         </>}
     }
@@ -95,8 +94,7 @@ impl ComponentFilesBlock {
         props: &Props,
         file_info: &ShowFileInfo,
     ) -> Html {
-        let callback_delete_file = link
-            .callback(|value: UUID| Msg::RemoveFile(value));
+        let callback_delete_file = link.callback(|value: UUID| Msg::RemoveFile(value));
 
         match self.files_deleted_list.get(&file_info.uuid) {
             Some(_) => html!{}, // removed file
@@ -115,7 +113,6 @@ impl ComponentFilesBlock {
     fn show_see_btn(
         &self,
         link: &Scope<Self>,
-        props: &Props,
     ) -> Html {
         let show_full_files_btn = link.callback(|_| Msg::ShowFullList);
 

@@ -1,20 +1,17 @@
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
-use log::debug;
+use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
-use wasm_bindgen_futures::spawn_local;
-
+use log::debug;
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, Spec, SpecPathInfo};
 use crate::services::get_value_field;
-use crate::gqls::{
-    make_query,
-    relate::{GetSpecsPaths, get_specs_paths},
-    company::{
-        AddCompanySpecs, add_company_specs,
-        DeleteCompanySpecs, delete_company_specs,
-    },
+use crate::gqls::make_query;
+use crate::gqls::relate::{GetSpecsPaths, get_specs_paths};
+use crate::gqls::company::{
+    AddCompanySpecs, add_company_specs,
+    DeleteCompanySpecs, delete_company_specs,
 };
 
 #[derive(Properties, Clone, Debug, PartialEq)]

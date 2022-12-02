@@ -1,19 +1,15 @@
 use yew::{Component, Callback, Context, html, html::Scope, Html, SubmitEvent, classes};
-// use yew_agent::Bridge;
 use yew_router::prelude::*;
-use wasm_bindgen_futures::spawn_local;
 use web_sys::{MouseEvent, InputEvent, Event};
+use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use log::debug;
-
 use crate::error::{get_error, Error};
-use crate::fragments::{
-    list_errors::ListErrors,
-    side_menu::{MenuItem, SideMenu},
-    upload_favicon::UpdateFaviconBlock,
-    user::{AddUserCertificateCard, UserCertificatesCard},
-};
+use crate::fragments::list_errors::ListErrors;
+use crate::fragments::side_menu::{MenuItem, SideMenu};
+use crate::fragments::upload_favicon::UpdateFaviconBlock;
+use crate::fragments::user::{AddUserCertificateCard, UserCertificatesCard};
 use crate::routes::AppRoute::{Login, Home, Profile};
 use crate::services::{get_current_user, set_token, set_logged_user, get_logged_user, get_value_field};
 use crate::types::{Program, Region, SelfUserInfo, TypeAccessInfo, UpdatePasswordInfo, UserUpdateInfo};
@@ -44,7 +40,6 @@ pub struct Settings {
     request_access: i64,
     request_password: UpdatePasswordInfo,
     request_user_password: String,
-    // router_agent: Box<dyn Bridge<AppRoute>>,
     current_data: Option<SelfUserInfo>,
     current_username: String,
     programs: Vec<Program>,
@@ -96,7 +91,7 @@ impl Component for Settings {
     type Message = Msg;
     type Properties = ();
 
-    fn create(ctx: &Context<Self>) -> Self {
+    fn create(_ctx: &Context<Self>) -> Self {
         Settings {
             error: None,
             request_profile: UserUpdateInfo::default(),
@@ -122,7 +117,6 @@ impl Component for Settings {
             let link = ctx.link().clone();
             if let None = get_logged_user() {
                 // route to login page if not found token
-                // self.router_agent.send(Login);
                 let navigator = ctx.link().navigator().unwrap();
                 navigator.replace(&Login);
             };
@@ -145,7 +139,6 @@ impl Component for Settings {
             Msg::OpenProfile => {
                 // Redirect to user page
                 if let Some(user_data) = &self.current_data {
-                    // self.router_agent.send(Profile { username: user_data.username.clone() });
                     navigator.clone().replace(&Profile { username: user_data.username.clone() });
                 }
             },
@@ -318,7 +311,7 @@ impl Component for Settings {
                 }
             },
             Msg::UpdateTypeAccessId(type_access_id) =>
-                self.request_access = type_access_id.parse::<i64>().unwrap_or_default(),
+                self.request_access = type_access_id.parse::<i64>().unwrap_or(1),
             Msg::UpdateOldPassword(old_password) => self.request_password.old_password = old_password,
             Msg::UpdateNewPassword(new_password) => self.request_password.new_password = new_password,
             Msg::UpdateEmail(email) => self.request_profile.email = Some(email),
@@ -683,16 +676,8 @@ impl Settings {
         &self,
         link: &Scope<Self>,
     ) -> Html {
-        let onchange_type_access_id = link.callback(|ev: Event| {
-            Msg::UpdateTypeAccessId(ev.current_target()
-                .map(|ev| ev.as_string().unwrap_or("1".to_string()))
-                .unwrap_or("1".to_string())
-            )
-        });
-            // Msg::UpdateTypeAccessId(match ev {
-            //     Event::Select(el) => el.value(),
-            //     _ => "1".to_string(),
-            // })
+        let onchange_type_access_id =
+            link.callback(|ev: Event| Msg::UpdateTypeAccessId(ev.current_target().map(|et| et.as_string().unwrap_or_default()).unwrap_or_default()));
 
         html! {
             <div class="columns">
@@ -764,20 +749,10 @@ impl Settings {
         let oninput_position = link.callback(|ev: InputEvent| Msg::UpdatePosition(ev.input_type()));
         let oninput_phone = link.callback(|ev: InputEvent| Msg::UpdatePhone(ev.input_type()));
         let oninput_address = link.callback(|ev: InputEvent| Msg::UpdateAddress(ev.input_type()));
-        let onchange_program_id = link.callback(|ev: Event| {
-            Msg::UpdateProgramId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
-            // Msg::UpdateProgramId(match ev.current_target() {
-            //    Event::Select(el) => el.value(),
-            //     _ => "1".to_string(),
-            // })
-        });
-        let onchange_region_id = link.callback(|ev: Event| {
-            Msg::UpdateRegionId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
-            // Msg::UpdateRegionId(match ev {
-            //     Event::Select(el) => el.value(),
-            //     _ => "1".to_string(),
-            // })
-        });
+        let onchange_program_id =
+            link.callback(|ev: Event| Msg::UpdateProgramId(ev.current_target().map(|et| et.as_string().unwrap_or_default()).unwrap_or_default()));
+        let onchange_region_id =
+            link.callback(|ev: Event| Msg::UpdateRegionId(ev.current_target().map(|et| et.as_string().unwrap_or_default()).unwrap_or_default()));
 
         html! {<>
             // first columns (username, email)

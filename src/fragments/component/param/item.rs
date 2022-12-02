@@ -173,7 +173,6 @@ impl ComponentParamTag {
         props: &Props,
     ) -> Html {
         let onclick_change_param = link.callback(|_| Msg::ChangeParamValue);
-
         let onclick_delete_param = link.callback(|_| Msg::RequestDeleteParam);
 
         html!{<tr>
@@ -205,7 +204,6 @@ impl ComponentParamTag {
         let onclick_hide_modal = link.callback(|_| Msg::ChangeParamValue);
         let oninput_set_param_value =
             link.callback(|ev: InputEvent| Msg::UpdateParamValue(ev.input_type()));
-
         let class_modal = match &self.hide_edit_param_value {
             true => "modal",
             false => "modal is-active",

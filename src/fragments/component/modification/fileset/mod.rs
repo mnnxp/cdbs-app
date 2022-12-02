@@ -7,16 +7,18 @@ pub use edit::ManageModificationFilesets;
 pub use download_block::ManageFilesOfFilesetBlock;
 
 use yew::{Component, Context, html, Html, Properties};
-// use log::debug;
+use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
-use wasm_bindgen_futures::spawn_local;
+// use log::debug;
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, ShowFileInfo};
 use crate::services::get_value_field;
 use crate::gqls::make_query;
-use crate::gqls::component::{ComModFilesOfFileset, com_mod_files_of_fileset};
+use crate::gqls::component::{
+    ComModFilesOfFileset, com_mod_files_of_fileset
+};
 
 #[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {

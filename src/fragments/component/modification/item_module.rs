@@ -25,7 +25,7 @@ impl Component for ModificationTableItemModule {
     fn create(ctx: &Context<Self>) -> Self {
         Self {
             param_id: ctx.props().param_id,
-            value: ctx.props().value,
+            value: ctx.props().value.clone(),
         }
     }
 
@@ -46,7 +46,7 @@ impl Component for ModificationTableItemModule {
             false
         } else {
             self.param_id = ctx.props().param_id;
-            self.value = ctx.props().value;
+            self.value = ctx.props().value.clone();
             true
         }
     }

@@ -4,28 +4,23 @@ use gloo::file::File;
 use web_sys::{DragEvent, Event, FileList, HtmlInputElement};
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
-use log::debug;
 use serde_json::Value;
-use super::FilesetFilesBlock;
+use log::debug;
 use crate::services::storage_upload::{storage_upload, prepare_files};
 use crate::services::get_value_field;
 use crate::error::{get_error, Error};
 use crate::fragments::files_frame::FilesFrame;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, ShowFileInfo, Program};
-use crate::gqls::{
-    make_query,
-    relate::{
-        GetPrograms, get_programs,
-        // ConfirmUploadCompleted, confirm_upload_completed,
-    },
-    component::{
-        ComModFilesOfFileset, com_mod_files_of_fileset,
-        RegisterModificationFileset, register_modification_fileset,
-        DeleteModificationFileset, delete_modification_fileset,
-        UploadFilesToFileset, upload_files_to_fileset,
-    },
+use crate::gqls::make_query;
+use crate::gqls::relate::{GetPrograms, get_programs};
+use crate::gqls::component::{
+    ComModFilesOfFileset, com_mod_files_of_fileset,
+    RegisterModificationFileset, register_modification_fileset,
+    DeleteModificationFileset, delete_modification_fileset,
+    UploadFilesToFileset, upload_files_to_fileset,
 };
+use super::FilesetFilesBlock;
 
 #[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
@@ -35,22 +30,15 @@ pub struct Props {
 
 pub struct ManageModificationFilesets {
     error: Option<Error>,
-    // request_upload_data: Vec<UploadFile>,
-    // request_upload_file: Callback<Result<Option<String>, Error>>,
-    // request_upload_confirm: Vec<UUID>,
     request_fileset_program_id: usize,
-    // task_read: Vec<(FileName, ReaderTask)>,
-    // task: Vec<FetchTask>,
     filesets_program: Vec<(UUID, String)>,
     select_modification_uuid: UUID,
     select_fileset_uuid: UUID,
     files_list: Vec<ShowFileInfo>,
     programs: Vec<Program>,
-    // put_upload_file: PutUploadFile,
     files: Vec<File>,
     files_index: u32,
     open_add_fileset_card: bool,
-    get_result_up_file: bool,
     get_result_up_completed: usize,
     active_loading_files_btn: bool,
 }
@@ -61,16 +49,12 @@ pub enum Msg {
     RequestDeleteFileset,
     RequestFilesOfFileset,
     RequestUploadFilesOfFileset,
-    // RequestUploadFile(Vec<u8>),
-    // ResponseUploadFile(Result<Option<String>, Error>),
-    // RequestUploadCompleted,
     ResponseError(Error),
     GetProgramsListResult(String),
     GetNewFilesetResult(String),
     GetDeleteFilesetResult(String),
     GetFilesOfFilesetResult(String),
     GetUploadData(String),
-    // GetUploadFile,
     GetUploadCompleted(Result<usize, Error>),
     UpdateFiles(Option<FileList>),
     FinishUploadFiles,
@@ -98,22 +82,15 @@ impl Component for ManageModificationFilesets {
 
         Self {
             error: None,
-            // request_upload_data: Vec::new(),
-            // request_upload_file: ctx.link().callback(Msg::ResponseUploadFile),
-            // request_upload_confirm: Vec::new(),
             request_fileset_program_id: 1,
-            // task_read: Vec::new(),
-            // task: Vec::new(),
             filesets_program: ctx.props().filesets_program.clone(),
             select_modification_uuid: ctx.props().select_modification_uuid.clone(),
             select_fileset_uuid,
             files_list: Vec::new(),
             programs: Vec::new(),
-            // put_upload_file: PutUploadFile::new(),
             files: Vec::new(),
             files_index: 0,
             open_add_fileset_card: false,
-            get_result_up_file: false,
             get_result_up_completed: 0,
             active_loading_files_btn: false,
         }
@@ -203,47 +180,6 @@ impl Component for ManageModificationFilesets {
                     })
                 }
             },
-            // Msg::RequestUploadFile(data) => {
-            //     if let Some(upload_data) = self.request_upload_data.pop() {
-            //         let request = UploadData {
-            //             upload_url: upload_data.upload_url.to_string(),
-            //             file_data: data,
-            //         };
-            //         debug!("request: {:?}", request);
-            //
-            //         self.task.push(self.put_upload_file.put_file(request, self.request_upload_file.clone()));
-            //         self.request_upload_confirm.push(upload_data.file_uuid.clone());
-            //     };
-            // },
-            // Msg::RequestUploadCompleted => {
-            //     let file_uuids = self.request_upload_confirm.clone();
-            //     spawn_local(async move {
-            //         let res = make_query(ConfirmUploadCompleted::build_query(
-            //             confirm_upload_completed::Variables { file_uuids }
-            //         )).await.unwrap();
-            //         // debug!("ConfirmUploadCompleted: {:?}", res);
-            //         link.send_message(Msg::GetUploadCompleted(res));
-            //     });
-            // },
-            // Msg::ResponseUploadFile(Ok(res)) => {
-            //     debug!("ResponseUploadFile: {:?}", res);
-            //     self.files_index -= 1;
-            //     debug!("next: {:?}", self.files_index);
-            //     if self.files_index == 0 {
-            //         self.get_result_up_file = true;
-            //         debug!("finish: {:?}", self.request_upload_confirm.len());
-            //         // link.send_message(Msg::RequestUploadCompleted);
-            //     }
-            // },
-            // Msg::ResponseUploadFile(Err(err)) => {
-            //     self.error = Some(err);
-            //     self.task.clear();
-            //     self.task_read.clear();
-            //     self.files_index = 0;
-            //     self.request_upload_confirm.clear();
-            //     self.get_result_up_completed = 0;
-            //     self.active_loading_files_btn = false;
-            // },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetProgramsListResult(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
@@ -371,56 +307,26 @@ impl Component for ManageModificationFilesets {
                         if !self.files.is_empty() {
                             let callback_confirm =
                                 link.callback(|res: Result<usize, Error>| Msg::GetUploadCompleted(res));
-                            storage_upload(result, self.files, callback_confirm);
-                            // for file in self.files.iter().rev() {
-                            //     let file_name = file.name().clone();
-                            //     debug!("file name: {:?}", file_name);
-                            //     let task = {
-                            //         let callback = ctx.link()
-                            //             .callback(move |data: FileData| Msg::RequestUploadFile(data.content));
-                            //         ReaderService::read_file(file.clone(), callback).unwrap()
-                            //     };
-                            //     self.task_read.push((file_name, task));
-                            // }
+                            storage_upload(result, self.files.clone(), callback_confirm);
                         }
                         debug!("file: {:#?}", self.files);
                     },
                     true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }
             },
-            // Msg::GetUploadFile => {
-            //     debug!("next: {:?}", self.files_index);
-            //     self.files_index -= 1;
-            //     if self.files_index == 0 {
-            //         self.get_result_up_file = true;
-            //         debug!("finish: {:?}", self.request_upload_confirm.len());
-            //         link.send_message(Msg::RequestUploadCompleted);
-            //     }
-            // },
             Msg::GetUploadCompleted(res) => {
                 match res {
                     Ok(value) => self.get_result_up_completed = value,
                     Err(err) => self.error = Some(err),
                 }
                 self.active_loading_files_btn = false;
+                link.send_message(Msg::FinishUploadFiles);
             },
-            Msg::UpdateFiles(file_list) => {
-                prepare_files(&file_list, &mut self.files);
-                // while let Some(file) = files.get(self.files_index) {
-                //     debug!("self.files_index: {:?}", self.files_index);
-                //     self.files_index += 1;
-                //     self.active_loading_files_btn = false;
-                //     self.files.push(file.clone());
-                // }
-                // self.files_index = 0;
-            },
+            Msg::UpdateFiles(file_list) => prepare_files(&file_list, &mut self.files),
             Msg::FinishUploadFiles => {
                 self.files_list.clear();
                 link.send_message(Msg::RequestFilesOfFileset);
                 self.active_loading_files_btn = false;
-                // self.task.clear();
-                // self.task_read.clear();
-                // self.request_upload_confirm.clear();
                 self.files.clear();
                 self.files_index = 0;
             },
@@ -434,7 +340,6 @@ impl Component for ManageModificationFilesets {
                 self.request_fileset_program_id = data.parse::<usize>().unwrap_or(1),
             Msg::ShowAddFilesetCard => {
                 self.open_add_fileset_card = !self.open_add_fileset_card;
-
                 if self.programs.is_empty() {
                     link.send_message(Msg::RequestProgramsList);
                 }
@@ -501,7 +406,7 @@ impl ManageModificationFilesets {
         props: &Props,
     ) -> Html {
         let onchange_select_fileset_btn = link.callback(|ev: Event| {
-              Msg::SelectFileset(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+              Msg::SelectFileset(ev.current_target().map(|et| et.as_string().unwrap_or_default()).unwrap_or_default())
           });
         let onclick_new_fileset_card = link.callback(|_| Msg::ShowAddFilesetCard);
         let onclick_delete_fileset_btn = link.callback(|_| Msg::RequestDeleteFileset);
@@ -559,9 +464,8 @@ impl ManageModificationFilesets {
         let onclick_new_fileset_card = link.callback(|_| Msg::ShowAddFilesetCard);
         let onclick_add_fileset_btn = link.callback(|_| Msg::RequestNewFileset);
         let onchange_select_program_id = link.callback(|ev: Event| {
-              Msg::UpdateSelectProgramId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
-          });
-
+            Msg::UpdateSelectProgramId(ev.current_target().map(|et| et.as_string().unwrap_or_default()).unwrap_or_default())
+        });
         let class_modal = match &self.open_add_fileset_card {
             true => "modal is-active",
             false => "modal",
@@ -651,28 +555,13 @@ impl ManageModificationFilesets {
                     multiple={true}
                     file_label={195} // Choose fileset files…
                 />
-                // <label class="file-label" style="width: 100%">
-                //   <input id="component-file-input"
-                //   class="file-input"
-                //   type="file"
-                //   // accept="image/*,application/vnd*,application/rtf,text/*,.pdf"
-                //   onchange={onchange_upload_files}
-                //   multiple=true />
-                // <span class="file-cta">
-                //   <span class="file-icon">
-                //     <i class="fas fa-upload"></i>
-                //   </span>
-                //   <span class="file-label">
-                //     { get_value_field(&195) }
-                //   </span>
-                // </span>
-                    {match self.files.is_empty() {
-                        true => html!{<span class="file-name">{ get_value_field(&194) }</span>}, // No file uploaded
-                        false => html!{for self.files.iter().map(|f| html!{
-                            <span class="file-name">{f.name().clone()}</span>
-                        })}
-                    }}
-                // </label>
+                // </label> todo!(Исправить стиль: сделать обёртку для рамки и выбранных файлов)
+                {match self.files.is_empty() {
+                    true => html!{<span class="file-name">{ get_value_field(&194) }</span>}, // No file uploaded
+                    false => html!{for self.files.iter().map(|f| html!{
+                        <span class="file-name">{f.name().clone()}</span>
+                    })}
+                }}
             </div>
             <div class="buttons">
                 {self.show_clear_btn(link)}
@@ -705,7 +594,6 @@ impl ManageModificationFilesets {
         link: &Scope<Self>,
     ) -> Html {
         let onclick_upload_files = link.callback(|_| Msg::RequestUploadFilesOfFileset);
-
         let class_upload_btn = match self.active_loading_files_btn {
             true => "button is-loading",
             false => "button",

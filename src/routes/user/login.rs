@@ -1,8 +1,5 @@
-// use yew_agent::Bridge;
-// use std::sync::{Arc,Mutex};
 use yew::{Component, Callback, Context, html, Html, Properties, classes};
 use yew_router::prelude::*;
-use yew_router::prelude::Link;
 use web_sys::{InputEvent, SubmitEvent};
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
@@ -28,7 +25,6 @@ pub struct Login {
     request: LoginInfo,
     response: Callback<Result<Option<UserToken>, Error>>,
     task: Option<()>,
-    // router_agent: Arc<Mutex<Box<dyn Bridge<AppRoute>>>>,
 }
 
 pub enum Msg {
@@ -44,13 +40,11 @@ impl Component for Login {
     type Properties = Props;
 
     fn create(ctx: &Context<Self>) -> Self {
-        // let router_agent = Arc::new(Mutex::new(AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore))));
         Login {
             auth: Auth::new(),
             error: None,
             request: LoginInfo::default(),
             response: ctx.link().callback(Msg::Response),
-            // router_agent,
             task: None,
         }
     }
@@ -59,7 +53,6 @@ impl Component for Login {
         if first_render {
             if let Some(user) = get_logged_user() {
                 // route to profile page if user already logged
-                // self.router_agent.lock().unwrap().send(Profile { username: user.username });
                 let navigator: Navigator = ctx.link().navigator().unwrap();
                 navigator.replace(&Profile { username: user.username });
             };
@@ -68,7 +61,6 @@ impl Component for Login {
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         let props = ctx.props().clone();
-        // let router_agent = self.router_agent.clone();
         let navigator: Navigator = ctx.link().navigator().unwrap();
 
         match msg {
@@ -90,7 +82,6 @@ impl Component for Login {
                         debug!("user.username: {}", user.username);
                         let username = user.username.clone();
                         props.callback.emit(user);
-                        // router_agent.lock().unwrap().send(Profile { username });
                         navigator.replace(&Profile { username });
                     });
                 }

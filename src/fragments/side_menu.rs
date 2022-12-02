@@ -3,12 +3,6 @@ use yew::{Component, Callback, Context, html, Html, Properties, classes, Classes
 
 pub struct SideMenu {}
 
-// #[derive(Properties, Clone, Debug, PartialEq)]
-// pub struct MenuBox {
-//     pub title: String,
-//     pub children: Vec<MenuItem>,
-// }
-
 #[derive(Properties, Clone, Debug, PartialEq)]
 pub struct MenuItem {
     pub title: String,
@@ -57,15 +51,15 @@ impl Component for SideMenu {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(ctx: &Context<Self>) -> Self {
+    fn create(_ctx: &Context<Self>) -> Self {
         SideMenu {}
     }
 
-    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
+    fn changed(&mut self, _ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         true
     }
 
-    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, _ctx: &Context<Self>, _msg: Self::Message) -> bool {
         false
     }
 
@@ -96,11 +90,9 @@ impl SideMenu {
         let hide_tag = count == 0;
 
         let mut item_class = item_class;
-
         if is_active {
             item_class.push("active");
         }
-
         if is_extend {
             item_class.push("extend");
         }

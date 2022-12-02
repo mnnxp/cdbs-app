@@ -1,10 +1,8 @@
 use std::collections::HashMap;
-// use base64::encode;
-use gloo_file::{callbacks::FileReader, File};
+use yew::{Component, Callback, Context, html, Html, Properties};
 use web_sys::FileList;
 use wasm_bindgen_futures::spawn_local;
-use yew::{Component, Callback, Context, html, Html, Properties};
-// use yew::html::TargetCast;
+use gloo_file::{callbacks::FileReader, File};
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use log::debug;
@@ -12,20 +10,15 @@ use crate::error::{get_error, Error};
 use crate::services::Requests;
 use crate::types::{UUID, UploadFile};
 use crate::gqls::make_query;
-use crate::gqls::relate::{ConfirmUploadCompleted, confirm_upload_completed};
-
+use crate::gqls::relate::{
+    ConfirmUploadCompleted, confirm_upload_completed
+};
 
 #[derive(Default, Debug)]
 pub struct UploadData {
     pub upload_url: String,
     pub file_data: Vec<u8>,
 }
-
-// struct FileDetails {
-//     name: String,
-//     file_type: String,
-//     data: Vec<u8>,
-// }
 
 pub enum Msg {
     Loaded(UploadFile, Vec<u8>),
@@ -37,7 +30,6 @@ pub enum Msg {
 
 pub struct StorageUpload {
     readers: HashMap<String, FileReader>,
-    // files: Vec<FileDetails>,
     confirm_upload: Vec<UUID>,
     upload_file: Requests,
     upload_result: Callback<Result<Option<String>, Error>>,
@@ -57,7 +49,6 @@ impl Component for StorageUpload {
     fn create(ctx: &Context<Self>) -> Self {
         Self {
             readers: HashMap::default(),
-            // files: Vec::default(),
             confirm_upload: Vec::default(),
             upload_file: Requests::new(),
             upload_result: ctx.link().callback(Msg::ResultUpload),
@@ -73,6 +64,7 @@ impl Component for StorageUpload {
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         let link = ctx.link().clone();
+        let props = ctx.props().clone();
 
         match msg {
             Msg::Loaded(file_info, data) => {
@@ -80,28 +72,27 @@ impl Component for StorageUpload {
                 // self.files.push();
                 self.upload_file.put_file(
                     file_info.upload_url.as_str(),
-                    &data,
+                    data.clone(),
                     self.upload_result.clone()
                 );
                 self.readers.remove(&file_info.filename);
                 self.confirm_upload.push(file_info.file_uuid.clone());
             },
             Msg::ParseFiles => {
-                for (file_info, file) in ctx.props().data_upload.iter() {
-                    // spawn_local(async move {
-                    //
-                    // });
+                for (file_info, file) in props.data_upload.into_iter() {
+                    let l_link = ctx.link().clone();
+                    let filename = file_info.filename.clone();
                     let task = {
                         gloo::file::callbacks::read_as_bytes(&file, move |res| {
-                            link.send_message(Msg::Loaded(
-                                *file_info,
+                            l_link.send_message(Msg::Loaded(
+                                file_info.clone(),
                                 // file_type,
                                 res.expect("failed to read file"),
                             ))
                         })
                     };
                     self.noconfirm_files += 1;
-                    self.readers.insert(file_info.filename, task);
+                    self.readers.insert(filename, task);
                 }
                 debug!("Кол-во файлов для загрузки: {:?}", self.noconfirm_files);
             },
@@ -150,11 +141,11 @@ impl Component for StorageUpload {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
+    fn changed(&mut self, _ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         false
     }
 
-    fn view(&self, ctx: &Context<Self>) -> Html {
+    fn view(&self, _ctx: &Context<Self>) -> Html {
         html! {}
     }
 }
@@ -166,7 +157,7 @@ pub fn storage_upload(
     callback_confirm: Callback<Result<usize, Error>>,
 ) -> Html {
     let mut data_upload: Vec<(UploadFile, File)> = Vec::new();
-    info_data.into_iter().rev().zip(files).map(|value| data_upload.push(value));
+    for _x in info_data.into_iter().rev().zip(files).map(|value| data_upload.push(value)).into_iter() {};
 
     html!{
         <StorageUpload

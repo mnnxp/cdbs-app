@@ -72,7 +72,7 @@ impl Component for ComponentSuppliersCard {
         Self {
             error: None,
             company_uuids,
-            component_uuid: ctx.props().component_uuid,
+            component_uuid: ctx.props().component_uuid.clone(),
             component_suppliers_len: ctx.props().component_suppliers.len(),
             supplier_list_len: ctx.props().supplier_list.len(),
             component_suppliers: ctx.props().component_suppliers.clone(),
@@ -198,7 +198,7 @@ impl Component for ComponentSuppliersCard {
                 ctx.props().supplier_list.first().map(|s| s.uuid.clone()).unwrap_or_default();
             self.request_set_supplier_description = String::new();
             self.hide_set_supplier_modal = true;
-            self.component_uuid = ctx.props().component_uuid;
+            self.component_uuid = ctx.props().component_uuid.clone();
             self.component_suppliers_len = ctx.props().component_suppliers.len();
             self.supplier_list_len = ctx.props().supplier_list.len();
             true
@@ -271,9 +271,8 @@ impl ComponentSuppliersCard {
     ) -> Html {
         let onclick_set_owner_supplier = link.callback(|_| Msg::RequestChangeOwnerSupplier);
         let onclick_hide_modal = link.callback(|_| Msg::ChangeHideSetSupplier);
-        let onchange_select_set_supplier = link.callback(|ev: Event| {
-            Msg::UpdateSetSupplier(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
-          });
+        let onchange_select_set_supplier =
+            link.callback(|ev: Event| Msg::UpdateSetSupplier(ev.current_target().map(|et| et.as_string().unwrap_or_default()).unwrap_or_default()));
         let oninput_supplier_description =
             link.callback(|ev: InputEvent| Msg::UpdateSupplierDescription(ev.input_type()));
         let class_modal = match &self.hide_set_supplier_modal {
@@ -340,9 +339,8 @@ impl ComponentSuppliersCard {
     ) -> Html {
         let onclick_add_supplier = link.callback(|_| Msg::RequestAddSupplier);
         let onclick_hide_modal = link.callback(|_| Msg::ChangeHideSetSupplier);
-        let onchange_select_add_supplier = link.callback(|ev: Event| {
-            Msg::UpdateSetSupplier(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
-        });
+        let onchange_select_add_supplier =
+            link.callback(|ev: Event| Msg::UpdateSetSupplier(ev.current_target().map(|et| et.as_string().unwrap_or_default()).unwrap_or_default()));
         let oninput_supplier_description =
             link.callback(|ev: InputEvent| Msg::UpdateSupplierDescription(ev.input_type()));
         let class_modal = match &self.hide_set_supplier_modal {

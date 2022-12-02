@@ -46,7 +46,7 @@ impl Component for ModificationsTable {
     fn create(ctx: &Context<Self>) -> Self {
         Self {
             component_uuid: String::new(),
-            select_modification: ctx.props().select_modification,
+            select_modification: ctx.props().select_modification.clone(),
             collect_heads: Vec::new(),
             collect_items: Vec::new(),
             collect_columns: HashMap::new(),
@@ -68,14 +68,11 @@ impl Component for ModificationsTable {
             self.collect_heads.clear();
             self.collect_items.clear();
             self.collect_columns.clear();
-
             ctx.link().send_message(Msg::ParseParams);
         }
     }
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
-        // let link = ctx.link().clone();
-
         match msg {
             Msg::ParseParams => {
                 let mut set_heads: Vec<usize> = vec![0];
@@ -124,7 +121,7 @@ impl Component for ModificationsTable {
             self.open_modification_files == ctx.props().open_modification_files {
             false
         } else {
-            self.select_modification = ctx.props().select_modification;
+            self.select_modification = ctx.props().select_modification.clone();
             self.open_modification_files = ctx.props().open_modification_files;
             self.component_uuid = match ctx.props().modifications.first().map(|x| x.component_uuid.clone()) {
                 Some(component_uuid) => component_uuid,
@@ -143,7 +140,6 @@ impl Component for ModificationsTable {
                   component_uuid = {self.component_uuid.clone()}
                   params = {self.collect_heads.clone()}
                 />
-
                 {for self.collect_items.iter().map(|(modification_uuid, item)| {
                   html!{<ModificationTableItem
                       show_manage_btn = {false}

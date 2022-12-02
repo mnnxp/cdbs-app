@@ -1,9 +1,8 @@
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
-use log::debug;
+use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
-use wasm_bindgen_futures::spawn_local;
-
+use log::debug;
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, LicenseInfo};
@@ -124,7 +123,6 @@ impl ComponentLicenseTag {
         props: &Props,
     ) -> Html {
         let onclick_license_data_info = link.callback(|_| Msg::ShowLicenseCard);
-
         let onclick_delete_license = link.callback(|_| Msg::RequestDeleteLicense);
 
         html!{<>

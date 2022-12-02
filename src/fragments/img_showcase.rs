@@ -34,7 +34,7 @@ impl Component for ImgShowcase {
 
     fn create(ctx: &Context<Self>) -> Self {
         ImgShowcase {
-            object_uuid: ctx.props().object_uuid,
+            object_uuid: ctx.props().object_uuid.clone(),
             file_arr_len: ctx.props().file_arr.len(),
             selected_img: 0,
             show_image: false,
@@ -82,7 +82,7 @@ impl Component for ImgShowcase {
             debug!("no change: {:?}", ctx.props().file_arr.len());
             false
         } else {
-            self.object_uuid = ctx.props().object_uuid;
+            self.object_uuid = ctx.props().object_uuid.clone();
             self.file_arr_len = ctx.props().file_arr.len();
             ctx.link().send_message(Msg::ParsingFiles);
             debug!("change: {:?}", ctx.props().file_arr.len());

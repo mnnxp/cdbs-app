@@ -4,13 +4,11 @@ use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use log::debug;
 use crate::error::{Error, get_error};
-use crate::fragments::{
-    list_errors::ListErrors,
-    company::ListItemCompany,
-};
+use crate::fragments::list_errors::ListErrors;
+use crate::fragments::company::ListItemCompany;
 use crate::types::{UUID, Supplier, ShowCompanyShort};
+use crate::gqls::make_query;
 use crate::gqls::{
-    make_query,
     company::{GetCompaniesShortList, get_companies_short_list},
     component::{DeleteSuppliersComponent, delete_suppliers_component},
 };
@@ -52,8 +50,8 @@ impl Component for ComponentSupplierItem {
     fn create(ctx: &Context<Self>) -> Self {
         Self {
             error: None,
-            supplier_uuid: ctx.props().supplier_data.supplier.uuid,
-            supplier_description: ctx.props().supplier_data.description,
+            supplier_uuid: ctx.props().supplier_data.supplier.uuid.clone(),
+            supplier_description: ctx.props().supplier_data.description.clone(),
             company_data: None,
             open_company_info: false,
             get_result_delete: false,
@@ -104,7 +102,6 @@ impl Component for ComponentSupplierItem {
             Msg::GetCompanyDataResult(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
-
                 // debug!("res value: {:#?}", res_value);
 
                 match res_value.is_null() {
@@ -148,8 +145,8 @@ impl Component for ComponentSupplierItem {
             false
         } else {
             self.get_result_delete = false;
-            self.supplier_uuid = ctx.props().supplier_data.supplier.uuid;
-            self.supplier_description = ctx.props().supplier_data.description;
+            self.supplier_uuid = ctx.props().supplier_data.supplier.uuid.clone();
+            self.supplier_description = ctx.props().supplier_data.description.clone();
             true
         }
     }
@@ -188,7 +185,6 @@ impl ComponentSupplierItem {
         link: &Scope<Self>,
     ) -> Html {
         let onclick_company_data_info = link.callback(|_| Msg::ShowCompanyCard);
-
         let class_modal = match &self.open_company_info {
             true => "modal is-active",
             false => "modal",

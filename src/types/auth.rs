@@ -1,16 +1,13 @@
 use serde::{Deserialize, Serialize};
 use std::fmt;
-// use chrono::NaiveDateTime;
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
-// #[serde(rename_all = "camelCase")]
 pub struct LoginInfo {
     pub username: String,
     pub password: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-// #[serde(rename_all = "camelCase")]
 pub struct LoginInfoWrapper {
     pub user: LoginInfo,
 }
@@ -63,7 +60,6 @@ impl Default for RegisterInfo {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-// #[serde(rename_all = "camelCase")]
 pub struct UserToken {
     pub bearer: String,
 }

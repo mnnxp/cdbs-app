@@ -19,22 +19,22 @@ impl Component for ListItem {
 
     fn create(ctx: &Context<Self>) -> Self {
         Self {
-            data_uuid: ctx.props().data.uuid,
+            data_uuid: ctx.props().data.uuid.clone(),
             show_list: ctx.props().show_list,
         }
     }
 
-    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, _ctx: &Context<Self>, _msg: Self::Message) -> bool {
         false
     }
 
     fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
-        if self.show_list == ctx.props().show_list ||
+        if self.show_list == ctx.props().show_list &&
             self.data_uuid == ctx.props().data.uuid {
             false
         } else {
             self.show_list = ctx.props().show_list;
-            self.data_uuid = ctx.props().data.uuid;
+            self.data_uuid = ctx.props().data.uuid.clone();
             true
         }
     }

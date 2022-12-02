@@ -8,15 +8,14 @@ use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use log::debug;
-
 use crate::routes::AppRoute::{self, CreateCompany};
 use crate::error::{Error, get_error};
+use crate::fragments::ListState;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{ShowCompanyShort, CompaniesQueryArg};
 use crate::services::get_value_field;
 use crate::gqls::make_query;
 use crate::gqls::company::{GetCompaniesShortList, get_companies_short_list};
-use crate::fragments::ListState;
 
 pub enum Msg {
     SwitchShowType,
@@ -47,7 +46,7 @@ impl Component for CatalogCompanies {
             error: None,
             show_type: ListState::get_from_storage(),
             list: Vec::new(),
-            arguments: ctx.props().arguments,
+            arguments: ctx.props().arguments.clone(),
             show_create_btn: ctx.props().show_create_btn,
         }
     }
@@ -92,7 +91,6 @@ impl Component for CatalogCompanies {
             Msg::UpdateList(res) => {
               let data: Value = serde_json::from_str(res.as_str()).unwrap();
               let res_value = data.as_object().unwrap().get("data").unwrap();
-
               // debug!("res value: {:#?}", res_value);
 
               match res_value.is_null() {
@@ -114,7 +112,6 @@ impl Component for CatalogCompanies {
             (None, None) => true,
             _ => false,
         };
-
         // debug!("self_arg == arg: {}", flag_change);
 
         if self.show_create_btn == ctx.props().show_create_btn && flag_change{
@@ -122,7 +119,7 @@ impl Component for CatalogCompanies {
             false
         } else {
             self.show_create_btn = ctx.props().show_create_btn;
-            self.arguments = ctx.props().arguments;
+            self.arguments = ctx.props().arguments.clone();
             ctx.link().send_message(Msg::GetList);
             // debug!("else change");
             true
@@ -131,7 +128,6 @@ impl Component for CatalogCompanies {
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         let onclick_change_view = ctx.link().callback(|_|Msg::SwitchShowType);
-
         let (class_for_icon, class_for_list) = match self.show_type {
             ListState::Box => ("fas fa-bars", "flex-box"),
             ListState::List => ("fas fa-th-large", ""),

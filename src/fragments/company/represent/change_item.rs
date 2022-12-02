@@ -267,10 +267,10 @@ impl ChangeItem {
         props: &Props,
     ) -> Html {
         let oninput_region_id = link.callback(|ev: Event| {
-            Msg::UpdateRegionId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+            Msg::UpdateRegionId(ev.current_target().map(|et| et.as_string().unwrap_or_default()).unwrap_or_default())
         });
         let oninput_representation_type_id = link.callback(|ev: Event| {
-            Msg::UpdateRepresentationTypeId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+            Msg::UpdateRepresentationTypeId(ev.current_target().map(|et| et.as_string().unwrap_or_default()).unwrap_or_default())
         });
         let oninput_name = link.callback(|ev: InputEvent| Msg::UpdateName(ev.input_type()));
         let oninput_address = link.callback(|ev: InputEvent| Msg::UpdateAddress(ev.input_type()));

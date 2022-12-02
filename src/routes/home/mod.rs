@@ -2,7 +2,6 @@ mod banner;
 mod main_view;
 
 use yew::{Component, Context, html, Html, classes};
-// use yew_agent::Bridge;
 use yew_router::prelude::*;
 use crate::routes::AppRoute::Profile;
 use crate::services::{get_logged_user, get_value_field};
@@ -11,9 +10,7 @@ use banner::Banner;
 // use main_view::MainView;
 
 /// Home page with an article list and a tag list.
-pub struct Home {
-    // router_agent: Box<dyn Bridge<AppRoute>>,
-}
+pub struct Home {}
 
 pub enum Msg {
     Ignore,
@@ -23,24 +20,21 @@ impl Component for Home {
     type Message = Msg;
     type Properties = ();
 
-    fn create(ctx: &Context<Self>) -> Self {
-        Home {
-            // router_agent: AppRoute::bridge(ctx.link().callback(Msg::Ignore))
-        }
+    fn create(_ctx: &Context<Self>) -> Self {
+        Home {}
     }
 
     fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
         if first_render {
             if let Some(user) = get_logged_user() {
                 // route to profile page if user already logged
-                // self.router_agent.send(Profile { username: user.username });
                 let navigator: Navigator = ctx.link().navigator().unwrap();
                 navigator.replace(&Profile { username: user.username });
             };
         }
     }
 
-    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, _ctx: &Context<Self>, _msg: Self::Message) -> bool {
         false
     }
 
@@ -48,7 +42,7 @@ impl Component for Home {
         false
     }
 
-    fn view(&self, ctx: &Context<Self>) -> Html {
+    fn view(&self, _ctx: &Context<Self>) -> Html {
         html!{
             <div class={classes!("tile", "is-ancestor", "is-vertical")}>
                 <div class="tile is-child hero">

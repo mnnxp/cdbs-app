@@ -52,8 +52,7 @@ impl Component for UserCertificateItem {
         Self {
             error: None,
             file_uuid: String::new(),
-            request_update: ctx.props().certificate.description.to_string(),
-            // request_delete: DeleteUserCertData::default(),
+            request_update: ctx.props().certificate.description.clone(),
             get_result_update: false,
             get_result_delete: false,
             show_cert: false,
@@ -132,7 +131,7 @@ impl Component for UserCertificateItem {
         if self.file_uuid == ctx.props().certificate.file.uuid {
             false
         } else {
-            self.file_uuid = ctx.props().certificate.file.uuid;
+            self.file_uuid = ctx.props().certificate.file.uuid.clone();
             true
         }
     }
@@ -188,7 +187,7 @@ impl UserCertificateItem {
                         <span class="overflow-title has-text-weight-bold">{ get_value_field(&262) }</span>
                         <span class="overflow-title">{props.certificate.file.filename.clone()}</span>
                     </div>
-                    {self.show_update_block(link, props)}
+                    {self.show_update_block(link)}
                     <div class="buttons">
                       {self.show_certificate_btn(link, props)}
                       <button id={"delete-cert"}
@@ -212,8 +211,6 @@ impl UserCertificateItem {
     ) -> Html {
         let onclick_clear_error = link.callback(|_| Msg::ClearError);
         let onclick_show_cert = link.callback(|_| Msg::ShowCert);
-
-
         let cert_url = match image_detector(&props.certificate.file.filename) {
             true => props.certificate.file.download_url.clone(),
             false => String::from("https://bulma.io/images/placeholders/128x128.png"),
@@ -265,7 +262,6 @@ impl UserCertificateItem {
         props: &Props,
     ) -> Html {
         let onclick_show_cert = link.callback(|_| Msg::ShowCert);
-
         let text_btn = match self.show_cert {
             true => "Hide",
             false => "Show",
@@ -286,7 +282,6 @@ impl UserCertificateItem {
     fn show_update_block(
         &self,
         link: &Scope<Self>,
-        props: &Props,
     ) -> Html {
         let oninput_cert_description =
             link.callback(|ev: InputEvent| Msg::UpdateDescription(ev.input_type()));
@@ -306,7 +301,7 @@ impl UserCertificateItem {
                         class="input"
                         type="text"
                         placeholder={get_value_field(&61)}
-                        value={self.request_update.to_string()}
+                        value={self.request_update.clone()}
                         oninput={oninput_cert_description} />
                 </div>
                 <div class="column">
@@ -341,12 +336,10 @@ impl UserCertificateItem {
         props: &Props,
     ) -> Html {
         let onclick_show_cert = link.callback(|_| Msg::ShowCert);
-
         let class_modal = match &self.show_cert {
             true => "modal is-active",
             false => "modal",
         };
-
         let cert_url = match image_detector(&props.certificate.file.filename) {
             true => props.certificate.file.download_url.clone(),
             false => String::from("https://bulma.io/images/placeholders/128x128.png"),

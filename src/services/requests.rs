@@ -1,14 +1,10 @@
-use reqwest::{Client, Response, Body, RequestBuilder};
-// use reqwest::header::{AUTHORIZATION, CONTENT_TYPE};
-use reqwest::header::CONTENT_TYPE;
 use dotenv_codegen::dotenv;
-use log::debug;
-use serde::{Deserialize, Serialize};
+use reqwest::{Client, Response, Body, RequestBuilder};
+use reqwest::header::CONTENT_TYPE;
 use yew::callback::Callback;
 use wasm_bindgen_futures::spawn_local;
-// use yew::format::{Json, Nothing, Text, Binary};
-// use yew::services::fetch::{FetchService, FetchTask, Request, Response};
-
+use serde::{Deserialize, Serialize};
+use log::debug;
 use crate::error::Error;
 use crate::services::get_token;
 use crate::types::ErrorInfo;
@@ -30,18 +26,18 @@ impl Requests {
         method: &str,
         path: &str,
         body_data: Option<B>,
-        body_json: Option<J>,
+        body_json: Option<&J>,
         get_body: bool,
         callback: Callback<Result<Option<T>, Error>>,
-    ) // -> Result<Response, reqwest::Error>
+    )
     where
         for<'de> T: Deserialize<'de> + 'static + std::fmt::Debug,
         J: Serialize + std::fmt::Debug,
         B: Into<Body> + std::fmt::Debug,
     {
         let url = match path.get(0..4) {
-            Some("http") => path,
-            _ => format!("{}{}", API_BACKEND, path).as_str(),
+            Some("http") => path.to_string(),
+            _ => format!("{}{}", API_BACKEND, path),
         };
         debug!("complect url: {}", url);
         let client = Client::new();
@@ -51,16 +47,16 @@ impl Requests {
             "DELETE" => client.delete(url),
             _ => client.get(url),
         };
-        req.header(CONTENT_TYPE, "application/json");
+        req = req.header(CONTENT_TYPE, "application/json");
         if let Some(token) = get_token() {
             // req.header(AUTHORIZATION, format!("Token {}", token));
-            req.bearer_auth(token);
+            req = req.bearer_auth(token);
         }
         if let Some(body) = body_data {
-            req.body(body);
+            req = req.body(body);
         }
         if let Some(json) = body_json {
-            req.json(&json);
+            req = req.json(json);
         }
         debug!("Request: {:?}", req);
         self.handler(req, get_body, callback);
@@ -71,7 +67,7 @@ impl Requests {
     where
         for<'de> T: Deserialize<'de> + 'static + std::fmt::Debug,
     {
-        self.builder("DELETE", path, no_body(), no_body(), true, callback);
+        self.builder("DELETE", path, no_body(), no_json(), true, callback);
     }
 
     /// Get request
@@ -79,7 +75,7 @@ impl Requests {
     where
         for<'de> T: Deserialize<'de> + 'static + std::fmt::Debug,
     {
-        self.builder("GET", path, no_body(), no_body(), true, callback);
+        self.builder("GET", path, no_body(), no_json(), true, callback);
     }
 
     /// Post request with a body
@@ -93,7 +89,7 @@ impl Requests {
         for<'de> T: Deserialize<'de> + 'static + std::fmt::Debug,
         J: Serialize + std::fmt::Debug,
     {
-        self.builder("POST", path, no_body(), Some(body), true, callback);
+        self.builder("POST", path, no_body(), Some(&body), true, callback);
     }
 
     /// Put request with a body
@@ -107,21 +103,21 @@ impl Requests {
         for<'de> T: Deserialize<'de> + 'static + std::fmt::Debug,
         J: Serialize + std::fmt::Debug,
     {
-        self.builder("PUT", path, no_body(), Some(body), true, callback);
+        self.builder("PUT", path, no_body(), Some(&body), true, callback);
     }
 
     /// Put request for send file to storage
     pub fn put_file<B, T>(
         &mut self,
         url: &str,
-        body: &B,
+        body: B,
         callback: Callback<Result<Option<T>, Error>>,
     )
     where
         for<'de> T: Deserialize<'de> + 'static + std::fmt::Debug,
         B: Into<Body> + std::fmt::Debug,
     {
-        self.builder("PUT", url, Some(*body), no_body(), false, callback);
+        self.builder("PUT", url, Some(body), no_json(), false, callback);
     }
 
     fn handler<T>(
@@ -187,5 +183,8 @@ impl Requests {
 }
 
 /// Заглушка для запроса.
-/// Возвращает None соответствующий Option<Serialize + Into<Body> + std::fmt::Debug>.
-fn no_body() -> Option<String> { None }
+/// Возвращает None соответствующий Option<Serialize + std::fmt::Debug>.
+fn no_json() -> Option<&'static String> { None }
+
+/// Возвращает None соответствующий Option<Into<Body> + std::fmt::Debug>.
+fn no_body() -> Option<Vec<u8>> { None }

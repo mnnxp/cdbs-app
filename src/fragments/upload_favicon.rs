@@ -10,12 +10,12 @@ use crate::fragments::list_errors::ListErrors;
 use crate::error::{Error, get_error};
 use crate::services::storage_upload::storage_upload;
 use crate::services::get_value_field;
-use crate::types::UploadFile;
-use crate::gqls::{
-    make_query,
-    user::{UploadUserFavicon, upload_user_favicon},
-    company::{UploadCompanyFavicon, upload_company_favicon},
-    // relate::{ConfirmUploadCompleted, confirm_upload_completed},
+use crate::gqls::make_query;
+use crate::gqls::user::{
+    UploadUserFavicon, upload_user_favicon
+};
+use crate::gqls::company::{
+    UploadCompanyFavicon, upload_company_favicon
 };
 
 #[derive(PartialEq, Clone, Debug, Properties)]
@@ -29,13 +29,7 @@ pub struct Props {
 #[derive(Debug)]
 pub struct UpdateFaviconBlock {
     error: Option<Error>,
-    request_upload_data: UploadFile,
-    // request_upload_file: Callback<Result<(), Error>>,
-    // task_read: Option<(FileName, ReaderTask)>,
-    // task: Option<FetchTask>,
-    get_result_up_file: bool,
     get_result_up_completed: bool,
-    // put_upload_file: PutUploadFile,
     file: Option<File>,
     dis_upload_btn: bool,
     active_loading_files_btn: bool,
@@ -45,13 +39,9 @@ pub enum Msg {
     RequestUploadData,
     RequestUploadUserData,
     RequestUploadCompanyData,
-    // RequestUploadFile(Vec<u8>),
-    // ResponseUploadFile(Result<(), Error>),
-    // RequestUploadCompleted,
     ResponseError(Error),
     UpdateFiles(Option<FileList>),
     GetUploadData(String),
-    // GetUploadFile(Option<String>),
     GetUploadCompleted(Result<usize, Error>),
     ClearFileBoxed,
     ClearError,
@@ -62,16 +52,10 @@ impl Component for UpdateFaviconBlock {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(ctx: &Context<Self>) -> Self {
+    fn create(_ctx: &Context<Self>) -> Self {
         Self {
             error: None,
-            request_upload_data: UploadFile::default(),
-            // request_upload_file: ctx.link().callback(Msg::ResponseUploadFile),
-            // task_read: None,
-            // task: None,
-            get_result_up_file: false,
             get_result_up_completed: false,
-            // put_upload_file: PutUploadFile::new(),
             file: None,
             dis_upload_btn: true,
             active_loading_files_btn: false,
@@ -85,7 +69,6 @@ impl Component for UpdateFaviconBlock {
             Msg::RequestUploadData => {
                 // see loading button
                 self.active_loading_files_btn = true;
-
                 match &ctx.props().company_uuid {
                     Some(_) => ctx.link().send_message(Msg::RequestUploadCompanyData),
                     None => ctx.link().send_message(Msg::RequestUploadUserData),
@@ -120,33 +103,7 @@ impl Component for UpdateFaviconBlock {
                     })
                 }
             },
-            // Msg::RequestUploadFile(data) => {
-            //     let request = UploadData {
-            //         upload_url: self.request_upload_data.upload_url.to_string(),
-            //         file_data: data,
-            //     };
-            //     self.task = Some(self.put_upload_file.put_file(request, self.request_upload_file.clone()));
-            // },
-            // Msg::ResponseUploadFile(Ok(())) => {
-            //     link.send_message(Msg::GetUploadFile(()))
-            // },
-            // Msg::ResponseUploadFile(Err(err)) => {
-            //     self.error = Some(err);
-            //     self.task = None;
-            //     self.task_read = None;
-            // },
-            // Msg::RequestUploadCompleted => {
-            //     let file_uuids = vec![self.request_upload_data.file_uuid.clone()];
-            //     spawn_local(async move {
-            //         let res = make_query(ConfirmUploadCompleted::build_query(confirm_upload_completed::Variables {
-            //             file_uuids,
-            //         })).await.unwrap();
-            //         link.send_message(Msg::GetUploadCompleted(res));
-            //     });
-            // },
-            Msg::ResponseError(err) => {
-                self.error = Some(err);
-            },
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::UpdateFiles(file_list) => {
                 if let Some(files) = file_list {
                     self.file = files.get(0).map(|f| File::from(f));
@@ -168,28 +125,15 @@ impl Component for UpdateFaviconBlock {
                             let callback_confirm =
                                 link.callback(|res: Result<usize, Error>| Msg::GetUploadCompleted(res));
                             storage_upload(result, vec![file], callback_confirm);
-                            // let file_name = file.name().clone();
-                            // let task = {
-                            //     let callback = self
-                            //         .link
-                            //         .callback(move |data: FileData| Msg::RequestUploadFile(data.content));
-                            //     ReaderService::read_file(file, callback).unwrap()
-                            // };
-                            // self.task_read = Some((file_name, task));
                         }
                         debug!("file: {:?}", self.file);
                     },
                     true => self.error = Some(get_error(&data)),
                 }
             },
-            // Msg::GetUploadFile(res) => {
-            //     debug!("res: {:?}", res);
-            //     self.get_result_up_file = true;
-            //     link.send_message(Msg::RequestUploadCompleted)
-            // },
             Msg::GetUploadCompleted(res) => {
                 match res {
-                    Ok(value) => self.get_result_up_completed = value > 0,
+                    Ok(value) => self.get_result_up_completed = value == 1_usize,
                     Err(err) => self.error = Some(err),
                 }
                 self.active_loading_files_btn = false;
@@ -262,24 +206,6 @@ impl UpdateFaviconBlock {
                             accept={"image/*".to_string()}
                             file_label={86}
                         />
-                      // <label
-                      //   for="favicon-file-input"
-                      //   class="file-label"
-                      //   style="width: 100%; text-align: center"
-                      // >
-                      //   <input
-                      //       id="favicon-file-input"
-                      //       class="file-input"
-                      //       type="file"
-                      //       accept="image/*"
-                      //       onchange={onchange} />
-                      //   <span class="file-cta" ondrop={ondrop} ondragover={ondragover} >
-                      //     <span class="file-icon">
-                      //       <i class="fas fa-upload"></i>
-                      //     </span>
-                      //     <span class="file-label">{ get_value_field(&93) }</span>
-                      //   </span>
-                      // </label>
                     </div>
                 </div>
                 <div class="column">

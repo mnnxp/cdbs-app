@@ -10,13 +10,9 @@ use crate::fragments::files_frame::FilesFrame;
 use crate::fragments::list_errors::ListErrors;
 use crate::services::storage_upload::storage_upload;
 use crate::services::get_value_field;
-// use crate::types::UploadFile;
-use crate::gqls::{
-    make_query,
-    user::{
-        UploadUserCertificate,
-        upload_user_certificate
-    },
+use crate::gqls::make_query;
+use crate::gqls::user::{
+    UploadUserCertificate, upload_user_certificate,
 };
 
 #[derive(PartialEq, Clone, Debug, Properties)]
@@ -36,13 +32,7 @@ pub struct NewUserCertData {
 #[derive(Debug)]
 pub struct AddUserCertificateCard {
     error: Option<Error>,
-    // request_upload_data: UploadFile,
-    // request_upload_file: Callback<Result<Option<String>, Error>>,
-    // task_read: Option<(FileName, ReaderTask)>,
-    // task: Option<FetchTask>,
-    // get_result_up_file: bool,
     get_result_up_completed: bool,
-    // put_upload_file: PutUploadFile,
     file: Option<File>,
     description: String,
     active_loading_files_btn: bool,
@@ -51,12 +41,8 @@ pub struct AddUserCertificateCard {
 
 pub enum Msg {
     RequestUploadData,
-    // RequestUploadFile(Vec<u8>),
-    // ResponseUploadFile(Result<Option<String>, Error>),
-    // RequestUploadCompleted,
     UpdateFiles(Option<FileList>),
     GetUploadData(String),
-    // GetUploadFile(Option<String>),
     GetUploadCompleted(Result<usize, Error>),
     UpdateDescription(String),
     HideNotification,
@@ -69,16 +55,10 @@ impl Component for AddUserCertificateCard {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(ctx: &Context<Self>) -> Self {
+    fn create(_ctx: &Context<Self>) -> Self {
         Self {
             error: None,
-            // request_upload_data: UploadFile::default(),
-            // request_upload_file: ctx.link().callback(Msg::ResponseUploadFile),
-            // task_read: None,
-            // task: None,
-            // get_result_up_file: false,
             get_result_up_completed: false,
-            // put_upload_file: PutUploadFile::new(),
             file: None,
             description: String::new(),
             active_loading_files_btn: false,
@@ -117,29 +97,6 @@ impl Component for AddUserCertificateCard {
                     })
                 }
             },
-            // Msg::RequestUploadFile(data) => {
-            //     let request = UploadData {
-            //         upload_url: self.request_upload_data.upload_url.to_string(),
-            //         file_data: data,
-            //     };
-            //     self.task = Some(self.put_upload_file.put_file(request, self.request_upload_file.clone()));
-            // },
-            // Msg::ResponseUploadFile(Ok(res)) => link.send_message(Msg::GetUploadFile(res)),
-            // Msg::ResponseUploadFile(Err(err)) => {
-            //     self.error = Some(err);
-            //     self.task = None;
-            //     self.task_read = None;
-            // },
-            // Msg::RequestUploadCompleted => {
-            //     let file_uuids = vec![self.request_upload_data.file_uuid.clone()];
-            //     spawn_local(async move {
-            //         let res = make_query(ConfirmUploadCompleted::build_query(
-            //             confirm_upload_completed::Variables { file_uuids })
-            //         ).await.unwrap();
-            //         debug!("ConfirmUploadCompleted: {:?}", res);
-            //         link.send_message(Msg::GetUploadCompleted(res));
-            //     });
-            // },
             Msg::UpdateFiles(file_list) => {
                 if let Some(files) = file_list {
                     self.file = files.get(0).map(|f| File::from(f));
@@ -160,28 +117,15 @@ impl Component for AddUserCertificateCard {
                             let callback_confirm =
                                 link.callback(|res: Result<usize, Error>| Msg::GetUploadCompleted(res));
                             storage_upload(result, vec![file], callback_confirm);
-                            // let file_name = file.name().clone();
-                            // let task = {
-                            //     let callback = ctx.link().callback(move |data: FileData| {
-                            //         Msg::RequestUploadFile(data.content)
-                            //     });
-                            //     ReaderService::read_file(file, callback).unwrap()
-                            // };
-                            // self.task_read = Some((file_name, task));
                         }
                         debug!("file: {:?}", self.file);
                     }
                     true => self.error = Some(get_error(&data)),
                 }
             },
-            // Msg::GetUploadFile(res) => {
-            //     debug!("res: {:?}", res);
-            //     self.get_result_up_file = true;
-            //     link.send_message(Msg::RequestUploadCompleted)
-            // },
             Msg::GetUploadCompleted(res) => {
                 match res {
-                    Ok(value) => self.get_result_up_completed = value < 0,
+                    Ok(value) => self.get_result_up_completed = value == 1_usize,
                     Err(err) => self.error = Some(err),
                 }
                 self.active_loading_files_btn = false;
@@ -254,37 +198,15 @@ impl AddUserCertificateCard {
             <div class="columns">
                 <div class="column">
                     <div class="file is-large is-boxed has-name">
-                    <FilesFrame
-                        {onchange}
-                        {ondrop}
-                        {ondragover}
-                        {ondragenter}
-                        input_id={"cert-file-input".to_string()}
-                        accept={"image/*,.pdf".to_string()}
-                        file_label={86}
-                    />
-                      // <label
-                      //   for="cert-file-input"
-                      //   class="file-label"
-                      //   style="width: 100%; text-align: center"
-                      // >
-                      //   <input
-                      //       id="cert-file-input"
-                      //       class="file-input"
-                      //       type="file"
-                      //       accept="image/*,.pdf"
-                      //       onchange={onchange_cert_file} />
-                      //   <span class="file-cta"
-                      //       ondrop={ondrop_cert_file}
-                      //       ondragover={ondragover_cert_file}
-                      //       ondragenter={ondragenter_cert_file}
-                      //       >
-                      //     <span class="file-icon">
-                      //       <i class="fas fa-upload"></i>
-                      //     </span>
-                      //     <span class="file-label">{ get_value_field(&86) }</span>
-                      //   </span>
-                      // </label>
+                        <FilesFrame
+                            {onchange}
+                            {ondrop}
+                            {ondragover}
+                            {ondragenter}
+                            input_id={"cert-file-input".to_string()}
+                            accept={"image/*,.pdf".to_string()}
+                            file_label={86}
+                        />
                     </div>
                 </div>
                 <div class="column">
@@ -329,7 +251,6 @@ impl AddUserCertificateCard {
         link: &Scope<Self>,
     ) -> Html {
         let onclick_upload_cert = link.callback(|_| Msg::RequestUploadData);
-
         let class_upload_btn = match self.active_loading_files_btn {
             true => "button is-loading",
             false => "button",

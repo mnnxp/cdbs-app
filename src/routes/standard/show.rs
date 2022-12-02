@@ -1,21 +1,16 @@
-// use yew_router::hooks::use_route;
-// use yew_agent::Bridge;
 use yew::{Component, Context, html, html::Scope, Html, Properties, classes};
 use yew_router::prelude::*;
-use log::debug;
+use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
-use wasm_bindgen_futures::spawn_local;
-
+use log::debug;
 use crate::routes::AppRoute::{Login, ShowCompany, StandardSettings};
 use crate::error::{get_error, Error};
-use crate::fragments::{
-    switch_icon::res_btn,
-    list_errors::ListErrors,
-    component::CatalogComponents,
-    standard::{StandardFilesCard, SpecsTags, KeywordsTags},
-    img_showcase::ImgShowcase,
-};
+use crate::fragments::switch_icon::res_btn;
+use crate::fragments::list_errors::ListErrors;
+use crate::fragments::component::CatalogComponents;
+use crate::fragments::standard::{StandardFilesCard, SpecsTags, KeywordsTags};
+use crate::fragments::img_showcase::ImgShowcase;
 use crate::services::{get_logged_user, get_value_field};
 use crate::types::{UUID, StandardInfo, SlimUser, DownloadFile, ComponentsQueryArg};
 use crate::gqls::make_query;
@@ -32,8 +27,6 @@ pub struct ShowStandard {
     standard: Option<StandardInfo>,
     current_standard_uuid: UUID,
     current_user_owner: bool,
-    // task: Option<FetchTask>,
-    // router_agent: Box<dyn Bridge<AppRoute>>,
     subscribers: usize,
     is_followed: bool,
     show_full_description: bool,
@@ -67,14 +60,12 @@ impl Component for ShowStandard {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(ctx: &Context<Self>) -> Self {
+    fn create(_ctx: &Context<Self>) -> Self {
         ShowStandard {
             error: None,
             standard: None,
             current_standard_uuid: String::new(),
             current_user_owner: false,
-            // task: None,
-            // router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             subscribers: 0,
             is_followed: false,
             show_full_description: false,
@@ -86,20 +77,15 @@ impl Component for ShowStandard {
     fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
         if let None = get_logged_user() {
             // route to login page if not found token
-            // self.router_agent.send(Login);
             let navigator: Navigator = ctx.link().navigator().unwrap();
             navigator.replace(&Login);
         };
-
         // get standard uuid for request standard data
         let target_standard_uuid =
             ctx.link().location().unwrap().path().trim_start_matches("/standard/").to_string();
-            // ctx.link().location().unwrap().path().trim_start_matches("/standard/").to_string();
-        // get flag changing current standard in route
         // get flag changing current standard in route
         let not_matches_standard_uuid = target_standard_uuid != self.current_standard_uuid;
         // debug!("self.current_standard_uuid {:#?}", self.current_standard_uuid);
-
         if first_render || not_matches_standard_uuid {
             let link = ctx.link().clone();
 
@@ -244,14 +230,12 @@ impl Component for ShowStandard {
             Msg::OpenStandardOwner => {
                 if let Some(standard_data) = &self.standard {
                     // Redirect to ownercompany standard page
-                    // self.router_agent.send(ShowCompany { uuid: standard_data.owner_company.uuid.to_string() });
                     navigator.clone().replace(&ShowCompany { uuid: standard_data.owner_company.uuid.to_string() });
                 }
             },
             Msg::OpenStandardSetting => {
                 if let Some(standard_data) = &self.standard {
                     // Redirect to page for change and update standard
-                    // self.router_agent.send(StandardSettings { uuid: standard_data.uuid.to_string() });
                     navigator.replace(&StandardSettings { uuid: standard_data.uuid.to_string() });
                 }
             },
@@ -264,7 +248,7 @@ impl Component for ShowStandard {
         if self.current_standard_uuid == ctx.props().standard_uuid {
             false
         } else {
-            self.current_standard_uuid = ctx.props().standard_uuid;
+            self.current_standard_uuid = ctx.props().standard_uuid.clone();
             true
         }
     }

@@ -3,15 +3,14 @@ use log::debug;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
-
 use crate::error::{get_error, Error};
-use crate::fragments::{
-    list_errors::ListErrors,
-    standard::ListItemStandard,
-};
+use crate::fragments::list_errors::ListErrors;
+use crate::fragments::standard::ListItemStandard;
 use crate::types::{UUID, ShowStandardShort};
 use crate::gqls::make_query;
-use crate::gqls::component::{DeleteStandardsComponent, delete_standards_component};
+use crate::gqls::component::{
+    DeleteStandardsComponent, delete_standards_component
+};
 
 /// Standard card for show data on component page
 pub struct ComponentStandardItem {
@@ -46,7 +45,7 @@ impl Component for ComponentStandardItem {
     fn create(ctx: &Context<Self>) -> Self {
         Self {
             error: None,
-            standard_uuid: ctx.props().standard_data.uuid,
+            standard_uuid: ctx.props().standard_data.uuid.clone(),
             open_standard_info: false,
             get_result_delete: false,
         }
@@ -104,7 +103,7 @@ impl Component for ComponentStandardItem {
         match self.standard_uuid == ctx.props().standard_data.uuid {
             true => false,
             false => {
-                self.standard_uuid = ctx.props().standard_data.uuid;
+                self.standard_uuid = ctx.props().standard_data.uuid.clone();
                 true
             },
         }
@@ -157,7 +156,6 @@ impl ComponentStandardItem {
         props: &Props,
     ) -> Html {
         let onclick_standard_data_info = link.callback(|_| Msg::ShowStandardCard);
-
         let class_modal = match &self.open_standard_info {
             true => "modal is-active",
             false => "modal",

@@ -37,7 +37,7 @@ impl Component for RegisterParamnameBlock {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(ctx: &Context<Self>) -> Self {
+    fn create(_ctx: &Context<Self>) -> Self {
         Self {
             error: None,
             request_new_paramname: String::new(),
@@ -95,7 +95,7 @@ impl Component for RegisterParamnameBlock {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
+    fn changed(&mut self, _ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         false
     }
 
@@ -104,7 +104,7 @@ impl Component for RegisterParamnameBlock {
 
         html!{<>
             <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error.clone())}/>
-            {self.add_paramname(ctx.link(), ctx.props())}
+            {self.add_paramname(ctx.link())}
         </>}
     }
 }
@@ -113,14 +113,12 @@ impl RegisterParamnameBlock {
     fn add_paramname(
         &self,
         link: &Scope<Self>,
-        props: &Props,
     ) -> Html {
         let onclick_register_paramname = link.callback(|_| Msg::RequestRegisterParamname);
         let oninput_set_paramname =
             link.callback(|ev: InputEvent| Msg::UpdateParamname(ev.input_type()));
         let oninput_set_param_value =
             link.callback(|ev: InputEvent| Msg::UpdateParamValue(ev.input_type()));
-
         let class_btn = match self.active_loading_btn {
             true => "button is-loading is-fullwidth",
             false => "button is-fullwidth",

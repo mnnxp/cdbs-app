@@ -1,6 +1,3 @@
-// use yew::services::timeout::{TimeoutService, TimeoutTask};
-// use std::time::Duration;
-// use crate::error::{get_error, Error};
 use yew::{Component, Context, html, html::Scope, Html, Properties, classes, NodeRef};
 use web_sys::InputEvent;
 use wasm_bindgen_futures::spawn_local;
@@ -22,6 +19,7 @@ pub struct Props {
 
 pub struct SearchSpecsTags {
     company_uuid: UUID,
+    company_specs: Vec<Spec>,
     ipt_timer: Option<Timeout>,
     ipt_ref: NodeRef,
     specs_search_loading: bool,
@@ -47,6 +45,7 @@ impl Component for SearchSpecsTags {
     fn create(ctx: &Context<Self>) -> Self {
         Self {
             company_uuid: ctx.props().company_uuid.clone(),
+            company_specs: ctx.props().company_specs.clone(),
             ipt_timer: None,
             ipt_ref: NodeRef::default(),
             specs_search_loading: false,
@@ -65,7 +64,7 @@ impl Component for SearchSpecsTags {
                 let count_old_found = self.found_specs.len(); // calculate and used twice
                 let mut temp_found: Vec<Spec> = Vec::new(); // for save size found_specs array
                 temp_found.resize(count_old_found, Spec::default());
-                for spec in &ctx.props().company_specs {
+                for spec in &self.company_specs {
                     del_specs_ids.push(spec.spec_id);
                 }
                 // debug!("self.added_specs: {:?}", self.added_specs);
@@ -120,9 +119,6 @@ impl Component for SearchSpecsTags {
                     return true;
                 }
                 self.specs_search_loading = true;
-                let cb_link = link.clone();
-                // self.ipt_timer = Some(TimeoutService::spawn(
-                //     Duration::from_millis(800),
                 self.ipt_timer = Some(Timeout::new(800, move || {
                         let ipt_val = val.clone();
                         let res_link = link.clone();
@@ -180,14 +176,14 @@ impl Component for SearchSpecsTags {
             },
             Msg::DeleteCurrentSpec(spec_id) => {
                 let mut props_specs: Vec<Spec> = Vec::new();
-                for spec in ctx.props().company_specs.iter() {
+                for spec in self.company_specs.iter() {
                     if spec.spec_id == spec_id {
                         props_specs.push(Spec::default());
                     } else {
                         props_specs.push(spec.clone());
                     }
                 }
-                ctx.props().company_specs = props_specs;
+                self.company_specs = props_specs;
             },
             Msg::Ignore => {},
         }
@@ -199,7 +195,8 @@ impl Component for SearchSpecsTags {
         if self.company_uuid == ctx.props().company_uuid {
             false
         } else {
-            self.company_uuid = ctx.props().company_uuid;
+            self.company_uuid = ctx.props().company_uuid.clone();
+            self.company_specs = ctx.props().company_specs.clone();
             true
         }
     }

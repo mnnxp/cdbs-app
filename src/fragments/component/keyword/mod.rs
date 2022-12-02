@@ -28,21 +28,21 @@ impl Component for KeywordsTags {
 
     fn create(ctx: &Context<Self>) -> Self {
         Self {
-            component_uuid: ctx.props().component_uuid,
+            component_uuid: ctx.props().component_uuid.clone(),
             keywords_len: ctx.props().keywords.len(),
         }
     }
 
-    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, _ctx: &Context<Self>, _msg: Self::Message) -> bool {
         false
     }
 
     fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
-        if self.component_uuid == ctx.props().component_uuid ||
+        if self.component_uuid == ctx.props().component_uuid &&
                 self.keywords_len == ctx.props().keywords.len() {
             false
         } else {
-            self.component_uuid = ctx.props().component_uuid;
+            self.component_uuid = ctx.props().component_uuid.clone();
             self.keywords_len = ctx.props().keywords.len();
             true
         }

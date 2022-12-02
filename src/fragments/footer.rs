@@ -1,6 +1,5 @@
 use yew::{Component, Context, html, html::Scope, Html, classes};
-use crate::services::{set_lang, get_lang};
-use crate::services::get_value_field;
+use crate::services::{get_value_field, set_lang, get_lang};
 
 pub struct Footer {
     show_terms: bool,
@@ -18,7 +17,7 @@ impl Component for Footer {
     type Message = Msg;
     type Properties = ();
 
-    fn create(ctx: &Context<Self>) -> Self {
+    fn create(_ctx: &Context<Self>) -> Self {
         let current_lang = get_lang().map(|lang|
             match lang.as_str() {
                 "ru" => 2,
@@ -33,7 +32,7 @@ impl Component for Footer {
         }
     }
 
-    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::ShowTerms => self.show_terms = !self.show_terms,
             Msg::ShowAbout => self.show_about = !self.show_about,
@@ -58,7 +57,6 @@ impl Component for Footer {
         let onclick_lang_ru = ctx.link().callback(|_| Msg::ChangeLanguage(2));
         let onclick_show_terms = ctx.link().callback(|_| Msg::ShowTerms);
         let onclick_show_about = ctx.link().callback(|_| Msg::ShowAbout);
-
         let (button_en, button_ru) = match self.current_lang {
             2 => (classes!("button"), classes!("button", "is-info")),
             _ => (classes!("button", "is-info"), classes!("button")),
@@ -121,7 +119,6 @@ impl Footer {
         link: &Scope<Self>,
     ) -> Html {
         let onclick_show_terms = link.callback(|_| Msg::ShowTerms);
-
         let class_modal = match &self.show_terms {
             true => "modal is-active",
             false => "modal",

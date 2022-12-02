@@ -1,5 +1,3 @@
-// use yew::{agent::Bridged, Bridge};
-// use yew_agent::Bridge;
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
 use yew_router::prelude::*;
 use web_sys::{InputEvent, Event};
@@ -7,12 +5,12 @@ use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
-use crate::gqls::make_query;
 use crate::routes::AppRoute::{Login, ShowCompany};
 use crate::error::{Error, get_error};
 use crate::fragments::list_errors::ListErrors;
 use crate::services::{get_logged_user, get_value_field};
 use crate::types::{UUID, SlimUser, CompanyCreateInfo, Region, CompanyType, TypeAccessInfo};
+use crate::gqls::make_query;
 use crate::gqls::company::{
     GetCreateCompanyDataOpt, get_create_company_data_opt,
     RegisterCompany, register_company
@@ -23,7 +21,6 @@ pub struct CreateCompany {
     error: Option<Error>,
     current_user_uuid: UUID,
     request_company: CompanyCreateInfo,
-    // router_agent: Box<dyn Bridge<AppRoute>>,
     regions: Vec<Region>,
     company_types: Vec<CompanyType>,
     types_access: Vec<TypeAccessInfo>,
@@ -63,7 +60,6 @@ impl Component for CreateCompany {
             error: None,
             current_user_uuid: ctx.props().current_user.as_ref().map(|x| x.uuid.clone()).unwrap_or_default(),
             request_company: CompanyCreateInfo::new(),
-            // router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             regions: Vec::new(),
             company_types: Vec::new(),
             types_access: Vec::new(),
@@ -73,7 +69,6 @@ impl Component for CreateCompany {
     fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
         if let None = get_logged_user() {
             // route to login page if not found token
-            // self.router_agent.send(Login);
             let navigator: Navigator = ctx.link().navigator().unwrap();
             navigator.replace(&Login);
         };
@@ -139,7 +134,6 @@ impl Component for CreateCompany {
                         let company_uuid: UUID = serde_json::from_value(res.get("registerCompany").unwrap().clone()).unwrap();
                         debug!("Company uuid: {:?}", company_uuid);
                         // Redirect to company page
-                        // self.router_agent.send(ShowCompany { uuid: company_uuid.clone() });
                         let navigator: Navigator = ctx.link().navigator().unwrap();
                         navigator.replace(&ShowCompany { uuid: company_uuid.clone() });
                     },
@@ -249,20 +243,20 @@ impl CreateCompany {
                 {match icon_left.is_empty() {
                     true => html!{
                         <input
-                            {id}
+                            id={id.to_string()}
                             class={"input"}
                             type={input_type}
-                            {placeholder}
+                            placeholder={placeholder.to_string()}
                             {value}
                             {oninput} />
                     },
                     false => html!{
                         <div class="control has-icons-left">
                             <input
-                                {id}
+                                id={id.to_string()}
                                 class={"input"}
                                 type={input_type}
-                                {placeholder}
+                                placeholder={placeholder.to_string()}
                                 {value}
                                 {oninput} />
                             <span class="icon is-small is-left">
@@ -289,13 +283,13 @@ impl CreateCompany {
         let oninput_site_url = link.callback(|ev: InputEvent| Msg::UpdateSiteUrl(ev.input_type()));
         // let oninput_time_zone = link.callback(|ev: InputEvent| Msg::UpdateTimeZone(ev.input_type()));
         let onchange_region_id = link.callback(|ev: Event| {
-            Msg::UpdateRegionId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+            Msg::UpdateRegionId(ev.current_target().map(|et| et.as_string().unwrap_or_default()).unwrap_or_default())
         });
         let onchange_company_type_id = link.callback(|ev: Event| {
-            Msg::UpdateCompanyTypeId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+            Msg::UpdateCompanyTypeId(ev.current_target().map(|et| et.as_string().unwrap_or_default()).unwrap_or_default())
         });
         let onchange_type_access_id = link.callback(|ev: Event| {
-            Msg::UpdateTypeAccessId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+            Msg::UpdateTypeAccessId(ev.current_target().map(|et| et.as_string().unwrap_or_default()).unwrap_or_default())
         });
 
         html!{<>

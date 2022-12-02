@@ -1,10 +1,10 @@
 //! Error type for error handling
 
-use crate::types::ErrorInfo;
-use crate::services::{set_token, set_logged_user};
 use thiserror::Error as ThisError;
 use serde_json::Value;
 use log::debug;
+use crate::types::ErrorInfo;
+use crate::services::{set_token, set_logged_user};
 
 /// Define all possible errors
 #[derive(ThisError, Clone, Debug, PartialEq)]

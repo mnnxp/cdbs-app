@@ -1,4 +1,3 @@
-// use yew_agent::Bridge;
 use yew::{Component, Context, html, html::Scope, Html};
 use yew_router::prelude::*;
 use web_sys::{InputEvent, Event};
@@ -21,7 +20,6 @@ use crate::gqls::component::{
 pub struct CreateComponent {
     error: Option<Error>,
     request_component: ComponentCreateData,
-    // router_agent: Box<dyn Bridge<AppRoute>>,
     component_types: Vec<ComponentType>,
     actual_statuses: Vec<ActualStatus>,
     types_access: Vec<TypeAccessInfo>,
@@ -47,11 +45,10 @@ impl Component for CreateComponent {
     type Message = Msg;
     type Properties = ();
 
-    fn create(ctx: &Context<Self>) -> Self {
+    fn create(_ctx: &Context<Self>) -> Self {
         CreateComponent {
             error: None,
             request_component: ComponentCreateData::new(),
-            // router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             component_types: Vec::new(),
             actual_statuses: Vec::new(),
             types_access: Vec::new(),
@@ -62,7 +59,6 @@ impl Component for CreateComponent {
     fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
         if let None = get_logged_user() {
             // route to login page if not found token
-            // self.router_agent.send(Login);
             let navigator: Navigator = ctx.link().navigator().unwrap();
             navigator.replace(&Login);
         };
@@ -92,7 +88,6 @@ impl Component for CreateComponent {
                     debug!("description is empty: {:?}", self.request_component.description);
                     flag = false;
                 }
-
                 if flag {
                     link.send_message(Msg::RequestCreateComponentData);
                 }
@@ -207,15 +202,12 @@ impl CreateComponent {
         &self,
         link: &Scope<Self>,
     ) -> Html {
-        let onchange_actual_status_id = link.callback(|ev: Event| {
-            Msg::UpdateActualStatusId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
-        });
-        let onchange_change_component_type = link.callback(|ev: Event| {
-            Msg::UpdateComponentTypeId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
-        });
-        let onchange_change_type_access = link.callback(|ev: Event| {
-            Msg::UpdateTypeAccessId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
-        });
+        let onchange_actual_status_id =
+            link.callback(|ev: Event| Msg::UpdateActualStatusId(ev.current_target().map(|et| et.as_string().unwrap_or_default()).unwrap_or_default()));
+        let onchange_change_component_type =
+            link.callback(|ev: Event| Msg::UpdateComponentTypeId(ev.current_target().map(|et| et.as_string().unwrap_or_default()).unwrap_or_default()));
+        let onchange_change_type_access =
+            link.callback(|ev: Event| Msg::UpdateTypeAccessId(ev.current_target().map(|et| et.as_string().unwrap_or_default()).unwrap_or_default()));
         let oninput_name =
             link.callback(|ev: InputEvent| Msg::UpdateName(ev.input_type()));
         let oninput_description =

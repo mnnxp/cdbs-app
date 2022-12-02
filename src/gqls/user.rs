@@ -29,6 +29,15 @@ pub(crate) struct RegUser;
 )]
 pub(crate) struct GetMySelf;
 
+/// Деактивация активного токена пользователя
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/user.graphql",
+    response_derives = "Debug"
+)]
+pub(crate) struct Logout;
+
 /// Получение уведомлений авторизированного пользователя
 #[derive(GraphQLQuery)]
 #[graphql(

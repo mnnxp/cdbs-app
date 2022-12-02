@@ -132,14 +132,14 @@ impl Component for CompanyCertificateItem {
         if self.current_file_uuid == ctx.props().certificate.file.uuid {
             false
         } else {
-            self.current_file_uuid = ctx.props().certificate.file.uuid;
+            self.current_file_uuid = ctx.props().certificate.file.uuid.clone();
             true
         }
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         match self.get_result_delete {
-            true => self.show_delete_certificate(ctx.link(), ctx.props()),
+            true => self.show_delete_certificate(),
             false => {
                 match ctx.props().manage_btn {
                     true => self.show_certificate_update(ctx.link(), ctx.props()),
@@ -160,9 +160,7 @@ impl CompanyCertificateItem {
         props: &Props,
     ) -> Html {
         let onclick_clear_error = link.callback(|_| Msg::ClearError);
-
         let onclick_delete_cert = link.callback(|_| Msg::RequestDeleteCert);
-
         let cert_url = match image_detector(&props.certificate.file.filename) {
             true => props.certificate.file.download_url.clone(),
             false => String::from("https://bulma.io/images/placeholders/128x128.png"),
@@ -190,7 +188,7 @@ impl CompanyCertificateItem {
                         <span class="overflow-title has-text-weight-bold">{ get_value_field(&120) }</span> // Filename
                         <span class="overflow-title">{props.certificate.file.filename.clone()}</span>
                     </div>
-                    {self.show_update_block(link, props)}
+                    {self.show_update_block(link)}
                     <div class="buttons">
                       {self.show_certificate_btn(link, props)}
                       <button id={"delete-cert"}
@@ -198,7 +196,7 @@ impl CompanyCertificateItem {
                           onclick={onclick_delete_cert}>
                           { get_value_field(&135) } // Delete
                       </button>
-                      {self.show_download_btn(link, props)}
+                      {self.show_download_btn(props)}
                     </div>
                   </div>
                 </div>
@@ -238,11 +236,7 @@ impl CompanyCertificateItem {
         </div>}
     }
 
-    fn show_delete_certificate(
-        &self,
-        link: &Scope<Self>,
-        props: &Props,
-    ) -> Html {
+    fn show_delete_certificate(&self) -> Html {
         html!{<div class="card">
             <div class="message is-success">
               <div class="message-header">{ get_value_field(&89) }</div> // Success
@@ -251,11 +245,7 @@ impl CompanyCertificateItem {
         </div>}
     }
 
-    fn show_update_description(
-        &self,
-        link: &Scope<Self>,
-        props: &Props,
-    ) -> Html {
+    fn show_update_description(&self) -> Html {
         match self.get_result_update {
             true => html!{<div class="column">
                 <span id="remove-profile" class="tag is-info is-light">
@@ -293,7 +283,6 @@ impl CompanyCertificateItem {
     fn show_update_block(
         &self,
         link: &Scope<Self>,
-        props: &Props,
     ) -> Html {
         let oninput_cert_description =
             link.callback(|ev: InputEvent| Msg::UpdateDescription(ev.input_type()));
@@ -304,7 +293,7 @@ impl CompanyCertificateItem {
                 <div class="column">
                     <label class="label">{ get_value_field(&61) }</label> // Description
                 </div>
-                {self.show_update_description(link, props)}
+                {self.show_update_description()}
             </div>
             <div class="columns">
                 <div class="column">
@@ -329,7 +318,6 @@ impl CompanyCertificateItem {
 
     fn show_download_btn(
         &self,
-        link: &Scope<Self>,
         props: &Props,
     ) -> Html {
         match props.download_btn {

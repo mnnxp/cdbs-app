@@ -54,11 +54,13 @@ lazy_static! {
 
 /// Set jwt token to local storage.
 pub fn set_token(token: Option<String>) {
-    let mut storage = storage_service();
+    let storage = storage_service();
     if let Some(t) = token.clone() {
-        storage.set_item(TOKEN_KEY, t.as_str());
+        storage.set_item(TOKEN_KEY, t.as_str())
+            .expect("no access storage");
     } else {
-        storage.remove_item(TOKEN_KEY);
+        storage.remove_item(TOKEN_KEY)
+            .expect("no access storage");
     }
     let mut token_lock = TOKEN.write();
     *token_lock = token;
@@ -77,11 +79,13 @@ pub fn is_authenticated() -> bool {
 
 /// Set current user to local storage.
 pub fn set_logged_user(logged_user: Option<String>) {
-    let mut storage = storage_service();
+    let storage = storage_service();
     if let Some(u) = logged_user.clone() {
-        storage.set_item(LOGGED_USER_KEY, u.as_str());
+        storage.set_item(LOGGED_USER_KEY, u.as_str())
+            .expect("no access storage");
     } else {
-        storage.remove_item(LOGGED_USER_KEY);
+        storage.remove_item(LOGGED_USER_KEY)
+            .expect("no access storage");
     }
     let mut logged_user_lock = LOGGED_USER.write();
     *logged_user_lock = logged_user;
@@ -98,11 +102,13 @@ pub fn get_logged_user() -> Option<SlimUser> {
 
 /// Set language to local storage.
 pub fn set_lang(lang: Option<String>) {
-    let mut storage = storage_service();
+    let storage = storage_service();
     if let Some(l) = lang.clone() {
-        storage.set_item(ACCEPT_LANGUAGE, l.as_str());
+        storage.set_item(ACCEPT_LANGUAGE, l.as_str())
+            .expect("no access storage");
     } else {
-        storage.remove_item(ACCEPT_LANGUAGE);
+        storage.remove_item(ACCEPT_LANGUAGE)
+            .expect("no access storage");
     }
     let mut lang_lock = LANGUAGE.write();
     *lang_lock = lang;
@@ -116,11 +122,13 @@ pub fn get_lang() -> Option<String> {
 
 /// Set list view type to local storage.
 pub fn set_list_view(list_view: Option<String>) {
-    let mut storage = storage_service();
+    let storage = storage_service();
     if let Some(l) = list_view.clone() {
-        storage.set_item(LIST_VIEW_TYPE, l.as_str());
+        storage.set_item(LIST_VIEW_TYPE, l.as_str())
+            .expect("no access storage");
     } else {
-        storage.remove_item(LIST_VIEW_TYPE);
+        storage.remove_item(LIST_VIEW_TYPE)
+            .expect("no access storage");
     }
     let mut list_view_lock = LISTVIEWTYPE.write();
     *list_view_lock = list_view;

@@ -1,16 +1,13 @@
-// use yew_agent::Bridge;
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, classes, MouseEvent};
 use yew_router::prelude::*;
 use yew_router::prelude::Link;
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
-
 use crate::services::{set_token, get_logged_user, set_logged_user, logout, get_value_field};
 use crate::routes::AppRoute::{self, Login, Home, Register, Notifications, Profile, Settings};
 use crate::types::SlimUser;
 
 pub struct Header {
-    // router_agent: Box<dyn Bridge<AppRoute>>,
     current_path: String,
     current_user: Option<SlimUser>,
     open_notifications_page: bool,
@@ -39,7 +36,6 @@ impl Component for Header {
 
     fn create(ctx: &Context<Self>) -> Self {
         Header {
-            // router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             current_path: ctx.link().location().unwrap().path().to_string(),
             current_user: None,
             open_notifications_page: false,
@@ -75,19 +71,20 @@ impl Component for Header {
               // Notify app to clear current user info
               ctx.props().callback.emit(());
               // Redirect to home page
-              // self.router_agent.send(Home);
               let navigator: Navigator = ctx.link().navigator().unwrap();
               navigator.replace(&Home);
           },
           Msg::TriggerMenu => self.is_active = !self.is_active,
           Msg::SetActive(active) => self.is_active = active,
           Msg::CheckPath => {
-              let current_path = ctx.link().location().unwrap().path();
-              // debug!("route_service: {:?}", route_service.get_fragment().as_str());
-              // check open home page
-              self.open_home_page = current_path.len() < 3;
-              // check open notifications page
-              self.open_notifications_page = "/notifications" == current_path;
+              ctx.link().location().map(|l| {
+                  let current_path = l.path();
+                  // debug!("route_service: {:?}", route_service.get_fragment().as_str());
+                  // check open home page
+                  self.open_home_page = current_path.len() < 3;
+                  // check open notifications page
+                  self.open_notifications_page = "/notifications" == current_path;
+              });
           },
           Msg::Ignore => {},
         }
@@ -95,15 +92,15 @@ impl Component for Header {
     }
 
     fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
-        let current_path = ctx.link().location().unwrap().path();
-        if self.current_path.as_str() == current_path {
+        let current_path = ctx.link().location().unwrap().path().to_string();
+        if self.current_path == current_path {
             false
         } else {
             if self.is_active {
               ctx.link().send_message(Msg::TriggerMenu)
             }
             // update current path
-            self.current_path = current_path.to_string();
+            self.current_path = current_path;
             // get current user data from storage
             self.current_user = get_logged_user();
             // get current path and setting navbar

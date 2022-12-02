@@ -8,8 +8,8 @@ use graphql_client::GraphQLQuery;
 use log::debug;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
-
 use crate::error::{get_error, Error};
+use crate::fragments::ListState;
 use crate::fragments::list_errors::ListErrors;
 use crate::routes::AppRoute::{self, CreateComponent};
 use crate::types::{ComponentsQueryArg, ShowComponentShort, UUID};
@@ -20,7 +20,6 @@ use crate::gqls::component::{
     AddComponentFav, add_component_fav,
     DeleteComponentFav, delete_component_fav,
 };
-use crate::fragments::ListState;
 
 pub enum Msg {
     SwitchShowType,
@@ -54,7 +53,7 @@ impl Component for CatalogComponents {
             show_type: ListState::get_from_storage(),
             list: Vec::new(),
             show_create_btn: ctx.props().show_create_btn,
-            arguments: ctx.props().arguments,
+            arguments: ctx.props().arguments.clone(),
         }
     }
 

@@ -1,24 +1,18 @@
-// use yew_agent::Bridge;
-// use yew_router::hooks::use_route;
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, classes};
 use yew_router::prelude::*;
 use web_sys::MouseEvent;
+use wasm_bindgen_futures::spawn_local;
+use serde_json::Value;
 use graphql_client::GraphQLQuery;
 use log::debug;
-use serde_json::Value;
-use wasm_bindgen_futures::spawn_local;
-
 use crate::routes::AppRoute::Login;
 use crate::error::{get_error, Error};
-use crate::fragments::{
-    company::CatalogCompanies,
-    component::CatalogComponents,
-    list_errors::ListErrors,
-    side_menu::{MenuItem, SideMenu},
-    standard::CatalogStandards,
-    user::CatalogUsers,
-    user::UserCertificatesCard,
-};
+use crate::fragments::list_errors::ListErrors;
+use crate::fragments::company::CatalogCompanies;
+use crate::fragments::component::CatalogComponents;
+use crate::fragments::side_menu::{MenuItem, SideMenu};
+use crate::fragments::standard::CatalogStandards;
+use crate::fragments::user::{CatalogUsers, UserCertificatesCard};
 use crate::services::{url_decode, get_logged_user, get_value_field};
 use crate::types::{
     UserDataCard, CompaniesQueryArg, ComponentsQueryArg, SelfUserInfo, SlimUser,
@@ -39,7 +33,6 @@ pub struct Profile {
     profile: Option<UserInfo>,
     current_user_uuid: UUID,
     current_username: String,
-    // router_agent: Box<dyn Bridge<AppRoute>>,
     subscribers: usize,
     is_followed: bool,
     profile_tab: ProfileTab,
@@ -82,14 +75,13 @@ impl Component for Profile {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(ctx: &Context<Self>) -> Self {
+    fn create(_ctx: &Context<Self>) -> Self {
         Profile {
             error: None,
             self_profile: None,
             profile: None,
             current_user_uuid: String::new(),
             current_username: String::new(),
-            // router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             subscribers: 0,
             is_followed: false,
             profile_tab: ProfileTab::Certificates,
@@ -103,7 +95,6 @@ impl Component for Profile {
             Some(cu) => cu.username,
             None => {
                 // route to login page if not found token
-                // self.router_agent.send(Login);
                 let navigator: Navigator = ctx.link().navigator().unwrap();
                 navigator.replace(&Login);
                 String::new()
@@ -112,7 +103,6 @@ impl Component for Profile {
         // get and decode target user from route
         let target_username = url_decode(
             ctx.link().location().unwrap().path().trim_start_matches("/@")
-            // ctx.link().location().unwrap().path().trim_start_matches("/@")
         );
         // get flag changing current profile in route
         let not_matches_username = target_username != self.current_username;
@@ -222,12 +212,9 @@ impl Component for Profile {
             Msg::GetSelfProfileResult(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
-
                 // clean profile data if get self user data
                 self.profile = None;
-
                 // debug!("res_value: {:?}", res_value);
-
                 match res_value.is_null() {
                     false => {
                         let self_data: SelfUserInfo =
@@ -245,10 +232,8 @@ impl Component for Profile {
             Msg::GetUserProfileResult(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res_value = data.as_object().unwrap().get("data").unwrap();
-
                 // clean sef data if get data other user
                 self.self_profile = None;
-
                 match res_value.is_null() {
                     false => {
                         let user_data: UserInfo =
@@ -282,7 +267,7 @@ impl Component for Profile {
         true
     }
 
-    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
+    fn changed(&mut self, _ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
         false
     }
 

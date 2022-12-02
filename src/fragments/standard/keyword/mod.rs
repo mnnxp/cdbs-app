@@ -6,7 +6,6 @@ pub use add::AddKeywordsTags;
 
 use yew::{Component, Context, html, Html, Properties, Callback};
 // use log::debug;
-// use crate::error::{get_error, Error};
 use crate::types::{UUID, Keyword};
 
 #[derive(Properties, Clone, Debug, PartialEq)]
@@ -28,12 +27,12 @@ impl Component for KeywordsTags {
 
     fn create(ctx: &Context<Self>) -> Self {
         Self {
-            standard_uuid: ctx.props().standard_uuid,
+            standard_uuid: ctx.props().standard_uuid.clone(),
             keywords_len: ctx.props().keywords.len(),
         }
     }
 
-    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, _ctx: &Context<Self>, _msg: Self::Message) -> bool {
         false
     }
 
@@ -42,7 +41,7 @@ impl Component for KeywordsTags {
                 self.keywords_len == ctx.props().keywords.len() {
             false
         } else {
-            self.standard_uuid = ctx.props().standard_uuid;
+            self.standard_uuid = ctx.props().standard_uuid.clone();
             self.keywords_len = ctx.props().keywords.len();
             true
         }

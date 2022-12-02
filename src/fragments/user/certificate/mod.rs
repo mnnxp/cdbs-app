@@ -7,7 +7,6 @@ pub use item::UserCertificateItem;
 use std::collections::BTreeSet;
 use yew::{Component, Context, html, Html, Properties};
 // use log::debug;
-
 use crate::types::{UUID, UserCertificate};
 
 #[derive(Properties, Clone, Debug, PartialEq)]
@@ -37,13 +36,13 @@ impl Component for UserCertificatesCard {
 
     fn create(ctx: &Context<Self>) -> Self {
         Self {
-            user_uuid: ctx.props().user_uuid,
+            user_uuid: ctx.props().user_uuid.clone(),
             certificates_len: ctx.props().certificates.len(),
             deleted_cert_list: BTreeSet::new(),
         }
     }
 
-    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::RemoveCertificate(cart_uuid) => {
                 self.deleted_cert_list.insert(cart_uuid);
@@ -58,7 +57,7 @@ impl Component for UserCertificatesCard {
               self.certificates_len == ctx.props().certificates.len() {
             false
         } else {
-            self.user_uuid = ctx.props().user_uuid;
+            self.user_uuid = ctx.props().user_uuid.clone();
             self.certificates_len = ctx.props().certificates.len();
             true
         }

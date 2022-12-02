@@ -3,8 +3,6 @@ mod change_item;
 mod list_item;
 
 pub use add_represent::AddCompanyRepresentCard;
-use list_item::ListItem;
-use change_item::ChangeItem;
 
 use yew::{Component, Context, html, html::Scope, Html, Properties};
 // use log::debug;
@@ -12,6 +10,8 @@ use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::CompanyRepresentInfo;
 use crate::fragments::ListState;
+use list_item::ListItem;
+use change_item::ChangeItem;
 
 pub enum Msg {
     SwitchShowType,
@@ -41,7 +41,7 @@ impl Component for CompanyRepresents {
         }
     }
 
-    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         // let link = ctx.link().clone();
         match msg {
             Msg::SwitchShowType => {
@@ -93,7 +93,6 @@ impl CompanyRepresents {
         props: &Props,
     ) -> Html {
         let onclick_change_view = link.callback(|_|Msg::SwitchShowType);
-
         let (class_for_icon, class_for_list) = match self.show_type {
             ListState::Box => ("fas fa-bars", "flex-box"),
             ListState::List => ("fas fa-th-large", ""),

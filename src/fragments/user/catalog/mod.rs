@@ -2,7 +2,7 @@ mod list_item;
 
 pub use list_item::ListItemUser;
 
-use yew::prelude::*;
+use yew::{Component, Context, html, Html, Properties};
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
@@ -37,7 +37,7 @@ impl Component for CatalogUsers {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(ctx: &Context<Self>) -> Self {
+    fn create(_ctx: &Context<Self>) -> Self {
         Self {
             error: None,
             show_type: ListState::get_from_storage(),

@@ -4,12 +4,10 @@ pub use list_item::ListItemStandard;
 
 use yew::{Component, Context, html, Html, Properties};
 use yew_router::prelude::Link;
-
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use log::debug;
-
 use crate::routes::AppRoute::{self, CreateStandard};
 use crate::error::{Error, get_error};
 use crate::fragments::list_errors::ListErrors;
@@ -41,7 +39,7 @@ impl Component for CatalogStandards {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(ctx: &Context<Self>) -> Self {
+    fn create(_ctx: &Context<Self>) -> Self {
         Self {
             error: None,
             show_type: ListState::get_from_storage(),
@@ -109,7 +107,6 @@ impl Component for CatalogStandards {
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         let onclick_change_view = ctx.link().callback(|_|Msg::SwitchShowType);
-
         let (class_for_icon, class_for_list) = match self.show_type {
             ListState::Box => ("fas fa-bars", "flex-box"),
             ListState::List => ("fas fa-th-large", ""),

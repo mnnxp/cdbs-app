@@ -1,5 +1,3 @@
-//! Components used by route pages
-
 pub mod company;
 pub mod component;
 // pub mod spec;

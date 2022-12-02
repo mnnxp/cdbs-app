@@ -1,4 +1,3 @@
-// use yew_agent::Bridge;
 use yew::{Component, Context, html, html::Scope, Html, Properties};
 use yew_router::prelude::*;
 use web_sys::{InputEvent, Event};
@@ -70,13 +69,11 @@ impl Component for CreateStandard {
             error: None,
             current_user_uuid: ctx.props().current_user.as_ref().map(|x| x.uuid.clone()).unwrap_or_default(),
             request_standard: StandardCreateData::new(),
-            // router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             supplier_list: Vec::new(),
             standard_statuses: Vec::new(),
             regions: Vec::new(),
             types_access: Vec::new(),
             disable_create_btn: false,
-            // get_result_created_standard: String::new(),
         }
     }
 
@@ -84,8 +81,6 @@ impl Component for CreateStandard {
         let logged_user_uuid = match get_logged_user() {
             Some(cu) => cu.uuid,
             None => {
-                // route to login page if not found token
-                // self.router_agent.send(Login);
                 let navigator: Navigator = ctx.link().navigator().unwrap();
                 navigator.replace(&Login);
                 String::new()
@@ -150,7 +145,6 @@ impl Component for CreateStandard {
                     debug!("technical_committee {:?}", self.request_standard.technical_committee);
                     flag = false;
                 }
-
                 if flag {
                     link.send_message(Msg::RequestCreateStandardData);
                 }
@@ -197,18 +191,14 @@ impl Component for CreateStandard {
 
                 match res_value.is_null() {
                     false => {
-                        self.supplier_list = serde_json::from_value(
-                            res_value.get("companies").unwrap().clone()
-                        ).unwrap();
-                        self.standard_statuses = serde_json::from_value(
-                            res_value.get("standardStatuses").unwrap().clone()
-                        ).unwrap();
-                        self.regions = serde_json::from_value(
-                            res_value.get("regions").unwrap().clone()
-                        ).unwrap();
-                        self.types_access = serde_json::from_value(
-                            res_value.get("typesAccess").unwrap().clone()
-                        ).unwrap();
+                        self.supplier_list =
+                            serde_json::from_value(res_value.get("companies").unwrap().clone()).unwrap();
+                        self.standard_statuses =
+                            serde_json::from_value(res_value.get("standardStatuses").unwrap().clone()).unwrap();
+                        self.regions =
+                            serde_json::from_value(res_value.get("regions").unwrap().clone()).unwrap();
+                        self.types_access =
+                            serde_json::from_value(res_value.get("typesAccess").unwrap().clone()).unwrap();
                     },
                     true => self.error = Some(get_error(&data)),
                 }
@@ -219,18 +209,14 @@ impl Component for CreateStandard {
 
                 match res_value.is_null() {
                     false => {
-                        let result: UUID = serde_json::from_value(
-                            res_value.get("registerStandard").unwrap().clone()
-                        ).unwrap();
+                        let result: UUID =
+                            serde_json::from_value(res_value.get("registerStandard").unwrap().clone()).unwrap();
                         debug!("registerStandard: {:?}", result);
                         // Redirect to setting standard page
                         if !result.is_empty() {
-                            // self.get_result_created_standard = result;
-                            // self.router_agent.send(StandardSettings { uuid: result });
                             let navigator: Navigator = ctx.link().navigator().unwrap();
                             navigator.replace(&StandardSettings { uuid: result });
                         }
-
                     },
                     true => self.error = Some(get_error(&data)),
                 }
@@ -298,12 +284,10 @@ impl CreateStandard {
         link: &Scope<Self>,
     ) -> Html {
         // let default_company_uuid = self.current_standard.as_ref().map(|x| x.owner_company.uuid.clone()).unwrap_or_default();
-        let onchange_change_owner_company = link.callback(|ev: Event| {
-            Msg::UpdateCompanyUuid(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
-        });
-        let onchange_change_type_access = link.callback(|ev: Event| {
-            Msg::UpdateTypeAccessId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
-        });
+        let onchange_change_owner_company =
+            link.callback(|ev: Event| Msg::UpdateCompanyUuid(ev.current_target().map(|et| et.as_string().unwrap_or_default()).unwrap_or_default()));
+        let onchange_change_type_access =
+            link.callback(|ev: Event| Msg::UpdateTypeAccessId(ev.current_target().map(|et| et.as_string().unwrap_or_default()).unwrap_or_default()));
         let oninput_name = link.callback(|ev: InputEvent| Msg::UpdateName(ev.input_type()));
         let oninput_description = link.callback(|ev: InputEvent| Msg::UpdateDescription(ev.input_type()));
 
@@ -382,12 +366,10 @@ impl CreateStandard {
         let oninput_specified_tolerance = link.callback(|ev: InputEvent| Msg::UpdateSpecifiedTolerance(ev.input_type()));
         let oninput_technical_committee = link.callback(|ev: InputEvent| Msg::UpdateTechnicalCommittee(ev.input_type()));
         let oninput_publication_at = link.callback(|ev: InputEvent| Msg::UpdatePublicationAt(ev.input_type()));
-        let onchange_standard_status_id = link.callback(|ev: Event| {
-            Msg::UpdateStandardStatusId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
-        });
-        let onchange_region_id = link.callback(|ev: Event| {
-            Msg::UpdateRegionId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
-        });
+        let onchange_standard_status_id =
+            link.callback(|ev: Event| Msg::UpdateStandardStatusId(ev.current_target().map(|et| et.as_string().unwrap_or_default()).unwrap_or_default()));
+        let onchange_region_id =
+            link.callback(|ev: Event| Msg::UpdateRegionId(ev.current_target().map(|et| et.as_string().unwrap_or_default()).unwrap_or_default()));
 
         html!{
             <>

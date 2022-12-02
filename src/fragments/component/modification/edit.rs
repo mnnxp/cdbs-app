@@ -5,10 +5,6 @@ use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use log::debug;
-use super::file::ManageModificationFilesCard;
-use super::heads::ModificationTableHeads;
-use super::item::ModificationTableItem;
-use super::fileset::ManageModificationFilesets;
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
 use crate::services::get_value_field;
@@ -25,6 +21,10 @@ use crate::gqls::component::{
     ComponentModificationFilesets, component_modification_filesets,
     ComponentActualStatuses, component_actual_statuses,
 };
+use super::file::ManageModificationFilesCard;
+use super::heads::ModificationTableHeads;
+use super::item::ModificationTableItem;
+use super::fileset::ManageModificationFilesets;
 
 #[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
@@ -596,7 +596,7 @@ impl ModificationsTableEdit {
         let oninput_description =
             link.callback(|ev: InputEvent| Msg::UpdateAddDescription(ev.input_type()));
         let onchange_actual_status_id = link.callback(|ev: Event| {
-            Msg::UpdateAddActualStatusId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+            Msg::UpdateAddActualStatusId(ev.current_target().map(|et| et.as_string().unwrap_or_default()).unwrap_or_default())
         });
         let onclick_add_modification_card = link.callback(|_| Msg::ShowAddModificationCard);
         let onclick_add_component_modification = link.callback(|_| Msg::RequestAddModificationData);
@@ -683,7 +683,7 @@ impl ModificationsTableEdit {
         let oninput_modification_description =
             link.callback(|ev: InputEvent| Msg::UpdateEditDescription(ev.input_type()));
         let onchange_modification_actual_status_id = link.callback(|ev: Event| {
-            Msg::UpdateEditActualStatusId(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+            Msg::UpdateEditActualStatusId(ev.current_target().map(|et| et.as_string().unwrap_or_default()).unwrap_or_default())
         });
         let onclick_modification_card = link.callback(|_| Msg::ShowEditModificationCard);
         let onclick_delete_component_modification =

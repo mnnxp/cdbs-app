@@ -1,4 +1,3 @@
-// use yew_agent::Bridge;
 use yew::{Component, Context, html, html::Scope, Html, Properties, classes};
 use yew_router::prelude::*;
 use crate::routes::AppRoute::Profile;
@@ -18,7 +17,6 @@ pub struct Props {
 }
 
 pub struct ListItemUser {
-    // router_agent: Box<dyn Bridge<AppRoute>>,
     user_uuid: UUID,
     username: String,
     show_list: bool,
@@ -30,7 +28,6 @@ impl Component for ListItemUser {
 
     fn create(ctx: &Context<Self>) -> Self {
         Self {
-            // router_agent: AppRoute::bridge(ctx.link().callback(|_| Msg::Ignore)),
             user_uuid: ctx.props().data.uuid.clone(),
             username: ctx.props().data.username.clone(),
             show_list: ctx.props().show_list,
@@ -41,7 +38,6 @@ impl Component for ListItemUser {
         match msg {
             Msg::ShowProfile => {
                 // Redirect to profile page
-                // self.router_agent.send(Profile { username: self.username.to_string() });
                 let navigator: Navigator = ctx.link().navigator().unwrap();
                 navigator.replace(&Profile { username: self.username.to_string() });
             },
@@ -107,7 +103,7 @@ impl ListItemUser {
             username,
             image_file,
             ..
-        } = props.data;
+        } = props.data.clone();
 
         html!{
           <div class="box itemBox">

@@ -3,23 +3,23 @@ mod standard_item;
 pub use standard_item::ComponentStandardItem;
 
 use std::collections::BTreeSet;
-use yew::{Component, Context, html, html::Scope, Html, Properties, Event};
-use log::debug;
+use yew::{Component, Context, html, html::Scope, Html, Properties};
+use web_sys::Event;
+use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
-use wasm_bindgen_futures::spawn_local;
-
+use log::debug;
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, ShowStandardShort};
 use crate::services::get_value_field;
-use crate::gqls::{
-    make_query,
-    component::{
-        AddStandardToComponent, add_standard_to_component,
-        GetComponentStandards, get_component_standards,
-    },
-    standard::{GetStandardsShortList, get_standards_short_list},
+use crate::gqls::make_query;
+use crate::gqls::component::{
+    AddStandardToComponent, add_standard_to_component,
+    GetComponentStandards, get_component_standards,
+};
+use crate::gqls::standard::{
+    GetStandardsShortList, get_standards_short_list,
 };
 
 #[derive(Properties, Clone, Debug, PartialEq)]
@@ -27,7 +27,6 @@ pub struct Props {
     pub show_delete_btn: bool,
     pub component_uuid: UUID,
     pub component_standards: Vec<ShowStandardShort>,
-    // pub delete_standard: Option<Callback<UUID>>,
 }
 
 pub struct ComponentStandardsCard {
@@ -69,7 +68,7 @@ impl Component for ComponentStandardsCard {
 
         Self {
             error: None,
-            component_uuid: ctx.props().component_uuid,
+            component_uuid: ctx.props().component_uuid.clone(),
             component_standards_len: ctx.props().component_standards.len(),
             standard_uuids,
             component_standards: ctx.props().component_standards.clone(),
@@ -198,7 +197,7 @@ impl Component for ComponentStandardsCard {
                 self.standard_uuids.insert(standards.uuid.clone());
             };
             self.hide_add_standard_modal = true;
-            self.component_uuid = ctx.props().component_uuid;
+            self.component_uuid = ctx.props().component_uuid.clone();
             self.component_standards_len = ctx.props().component_standards.len();
             true
         }
@@ -267,7 +266,7 @@ impl ComponentStandardsCard {
         let onclick_add_standard = link.callback(|_| Msg::RequestAddStandard);
         let onclick_hide_modal = link.callback(|_| Msg::ChangeHideAddStandard);
         let onchange_select_add_standard = link.callback(|ev: Event| {
-            Msg::UpdateSelectStandard(ev.current_target().map(|ev| ev.as_string().unwrap_or_default()).unwrap_or_default())
+            Msg::UpdateSelectStandard(ev.current_target().map(|et| et.as_string().unwrap_or_default()).unwrap_or_default())
         });
         let class_modal = match &self.hide_add_standard_modal {
             true => "modal",

@@ -20,21 +20,21 @@ pub struct Props {
 pub fn files_frame(props: &Props) -> Html {
     html!{
         <label
-          for={props.input_id}
+          for={props.input_id.clone()}
           class="file-label"
           style="width: 100%; text-align: center"
         >
           <input
-              id={props.input_id}
+              id={props.input_id.clone()}
               class="file-input"
               type="file"
-              accept={props.accept}
+              accept={props.accept.clone()}
               multiple={props.multiple}
-              onchange={props.onchange} />
+              onchange={props.onchange.clone()} />
           <span class="file-cta"
-              ondrop={props.ondrop}
-              ondragover={props.ondragover}
-              ondragenter={props.ondragenter}
+              ondrop={props.ondrop.clone()}
+              ondragover={props.ondragover.clone()}
+              ondragenter={props.ondragenter.clone()}
               >
             <span class="file-icon">
               <i class="fas fa-upload"></i>

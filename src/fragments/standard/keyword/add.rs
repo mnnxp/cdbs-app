@@ -4,10 +4,8 @@ use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use log::debug;
 use crate::error::{get_error, Error};
-use crate::fragments::{
-    list_errors::ListErrors,
-    standard::{KeywordsTags, KeywordTagItem},
-};
+use crate::fragments::list_errors::ListErrors;
+use crate::fragments::standard::{KeywordsTags, KeywordTagItem};
 use crate::types::{UUID, Keyword};
 use crate::services::get_value_field;
 use crate::gqls::make_query;
@@ -18,13 +16,14 @@ use crate::gqls::standard::{
 
 #[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
-    pub standard_keywords: Vec<Keyword>,
     pub standard_uuid: UUID,
+    pub standard_keywords: Vec<Keyword>,
 }
 
 pub struct AddKeywordsTags {
     error: Option<Error>,
-    // current_keywords: Vec<Keyword>,
+    standard_uuid: UUID,
+    standard_keywords: Vec<Keyword>,
     ipt_index: usize,
     ipt_keyword: String,
     add_keywords: Vec<Keyword>,
@@ -56,7 +55,8 @@ impl Component for AddKeywordsTags {
     fn create(ctx: &Context<Self>) -> Self {
         Self {
             error: None,
-            // current_keywords: ctx.props().standard_keywords.clone(),
+            standard_uuid: ctx.props().standard_uuid.clone(),
+            standard_keywords: ctx.props().standard_keywords.clone(),
             ipt_index: 0,
             ipt_keyword: String::new(),
             add_keywords: Vec::new(),
@@ -140,7 +140,7 @@ impl Component for AddKeywordsTags {
                             res_value.get("standardKeywords").unwrap().clone()
                         ).unwrap();
                         debug!("GetStandardKeywords before: {:?}", result);
-                        if ctx.props().standard_keywords.is_empty() {
+                        if self.standard_keywords.is_empty() {
                             for k_res in &result {
                                 match self.new_keywords.iter().find(|k| k.keyword == k_res.keyword) {
                                     Some(dup) => debug!("dup {:?}", dup),
@@ -149,7 +149,7 @@ impl Component for AddKeywordsTags {
                             }
                         } else {
                             for k_res in &result {
-                                match ctx.props().standard_keywords.iter().find(|k| k.keyword == k_res.keyword) {
+                                match self.standard_keywords.iter().find(|k| k.keyword == k_res.keyword) {
                                     Some(k) => debug!("k_res.keyword {:?} != k_props.keyword {:?}", k_res.keyword, k),
                                     None => {
                                         match self.new_keywords.iter().find(|k| k.keyword == k_res.keyword) {
@@ -210,14 +210,14 @@ impl Component for AddKeywordsTags {
             Msg::HideNotification => self.bad_keyword = false,
             Msg::DeleteCurrentKeyword(keyword_id) => {
                 let mut props_keywords: Vec<Keyword> = Vec::new();
-                for k in ctx.props().standard_keywords.iter() {
+                for k in self.standard_keywords.iter() {
                     if k.id == keyword_id {
                         props_keywords.push(Keyword::default());
                     } else {
                         props_keywords.push(k.clone());
                     }
                 }
-                ctx.props().standard_keywords = props_keywords;
+                self.standard_keywords = props_keywords;
             },
             Msg::DeleteNewKeyword(keyword) => {
                 // debug!("self.new_keywords before delete: {:?}", self.new_keywords);
@@ -246,8 +246,14 @@ impl Component for AddKeywordsTags {
         true
     }
 
-    fn changed(&mut self, _ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
-        false
+    fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
+        if self.standard_uuid == ctx.props().standard_uuid {
+            false
+        } else {
+            self.standard_uuid = ctx.props().standard_uuid.clone();
+            self.standard_keywords = ctx.props().standard_keywords.clone();
+            true
+        }
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
@@ -256,7 +262,7 @@ impl Component for AddKeywordsTags {
         html!{<>
             <ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error.clone())}/>
             <br/>
-            {self.add_standard_keyword(ctx.link(), ctx.props())}
+            {self.add_standard_keyword(ctx.link())}
         </>}
     }
 }
@@ -265,7 +271,6 @@ impl AddKeywordsTags {
     fn add_standard_keyword(
         &self,
         link: &Scope<Self>,
-        props: &Props,
     ) -> Html {
         let oninput_parse_keyword = link.callback(|ev: InputEvent| Msg::GetString(ev.input_type()));
         let onkeypress_parse_keyword =
@@ -308,7 +313,7 @@ impl AddKeywordsTags {
                    } else {
                       html!{<KeywordTagItem
                          show_delete_btn = {true}
-                         standard_uuid = {props.standard_uuid.clone()}
+                         standard_uuid = {self.standard_uuid.clone()}
                          keyword = {keyword.clone()}
                          style_tag = {Some("is-success".to_string())}
                          delete_keyword = {Some(onclick_del_new_keyword.clone())}
@@ -320,8 +325,8 @@ impl AddKeywordsTags {
            <div class="panel-block">
                <KeywordsTags
                   show_delete_btn = {true}
-                  standard_uuid = {props.standard_uuid.clone()}
-                  keywords = {props.standard_keywords.clone()}
+                  standard_uuid = {self.standard_uuid.clone()}
+                  keywords = {self.standard_keywords.clone()}
                   delete_keyword = {Some(onclick_del_old_keyword.clone())}
                  />
            </div>

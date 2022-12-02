@@ -1,6 +1,5 @@
 use yew::{Component, Context, html, Html, Properties};
 // use log::debug;
-
 use crate::types::{UUID, ShowFileInfo};
 
 #[derive(Properties, Clone, Debug, PartialEq)]
@@ -17,13 +16,13 @@ impl Component for FileOfFilesetItem {
     type Message = ();
     type Properties = Props;
 
-    fn create(ctx: &Context<Self>) -> Self {
+    fn create(_ctx: &Context<Self>) -> Self {
         Self {
             file_uuid: String::new(),
         }
     }
 
-    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, _ctx: &Context<Self>, _msg: Self::Message) -> bool {
         false
     }
 
