@@ -1,5 +1,6 @@
-use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
-use web_sys::InputEvent;
+use yew::{Component, Callback, Context, html, Html, Properties};
+use yew::html::{Scope, TargetCast};
+use web_sys::{InputEvent, HtmlInputElement};
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
@@ -202,8 +203,10 @@ impl ComponentParamTag {
     ) -> Html {
         let onclick_change_param_value = link.callback(|_| Msg::RequestChangeValue);
         let onclick_hide_modal = link.callback(|_| Msg::ChangeParamValue);
-        let oninput_set_param_value =
-            link.callback(|ev: InputEvent| Msg::UpdateParamValue(ev.input_type()));
+        let oninput_set_param_value = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateParamValue(input.value())
+        });
         let class_modal = match &self.hide_edit_param_value {
             true => "modal",
             false => "modal is-active",

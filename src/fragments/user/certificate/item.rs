@@ -1,5 +1,6 @@
-use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
-use web_sys::InputEvent;
+use yew::{Component, Callback, Context, html, Html, Properties};
+use yew::html::{Scope, TargetCast};
+use web_sys::{InputEvent, HtmlInputElement};
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
@@ -283,8 +284,10 @@ impl UserCertificateItem {
         &self,
         link: &Scope<Self>,
     ) -> Html {
-        let oninput_cert_description =
-            link.callback(|ev: InputEvent| Msg::UpdateDescription(ev.input_type()));
+        let oninput_cert_description = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateDescription(input.value())
+        });
         let onclick_change_cert = link.callback(|_| Msg::RequestUpdateDescription);
 
         html!{<div class="block">

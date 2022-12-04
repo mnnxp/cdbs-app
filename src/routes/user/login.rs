@@ -1,6 +1,7 @@
 use yew::{Component, Callback, Context, html, Html, Properties, classes};
+use yew::html::TargetCast;
 use yew_router::prelude::*;
-use web_sys::{InputEvent, SubmitEvent};
+use web_sys::{InputEvent, SubmitEvent, HtmlInputElement};
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
@@ -14,8 +15,8 @@ use crate::gqls::user::{GetMySelf, get_my_self};
 
 #[derive(PartialEq, Properties, Clone)]
 pub struct Props {
-    /// Callback when user is logged in successfully
-    pub callback: Callback<SlimUser>,
+    // Callback when user is logged in successfully
+    // pub callback: Callback<SlimUser>,
 }
 
 /// Login page
@@ -60,7 +61,7 @@ impl Component for Login {
     }
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
-        let props = ctx.props().clone();
+        // let props = ctx.props().clone();
         let navigator: Navigator = ctx.link().navigator().unwrap();
 
         match msg {
@@ -81,7 +82,7 @@ impl Component for Login {
                         let user : SlimUser = serde_json::from_value(user_json).unwrap();
                         debug!("user.username: {}", user.username);
                         let username = user.username.clone();
-                        props.callback.emit(user);
+                        // props.callback.emit(user);
                         navigator.replace(&Profile { username });
                     });
                 }
@@ -107,8 +108,14 @@ impl Component for Login {
             ev.prevent_default(); /* Prevent event propagation */
             Msg::Request
         });
-        let oninput_username = ctx.link().callback(|ev: InputEvent| Msg::UpdateUsername(ev.input_type()));
-        let oninput_password = ctx.link().callback(|ev: InputEvent| Msg::UpdatePassword(ev.input_type()));
+        let oninput_username = ctx.link().callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateUsername(input.value())
+        });
+        let oninput_password = ctx.link().callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdatePassword(input.value())
+        });
 
         html!{<div class="container page">
             <div class="auth-page">

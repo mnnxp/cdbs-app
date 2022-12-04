@@ -1,5 +1,6 @@
-use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
-use web_sys::{InputEvent, Event};
+use yew::{Component, Callback, Context, html, Html, Properties};
+use yew::html::{Scope, TargetCast};
+use web_sys::{InputEvent, Event, HtmlInputElement};
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
@@ -209,9 +210,18 @@ impl AddCompanyRepresentCard {
         let oninput_representation_type_id = link.callback(|ev: Event| {
             Msg::UpdateRepresentationTypeId(ev.current_target().map(|et| et.as_string().unwrap_or_default()).unwrap_or_default())
         });
-        let oninput_name = link.callback(|ev: InputEvent| Msg::UpdateName(ev.input_type()));
-        let oninput_address = link.callback(|ev: InputEvent| Msg::UpdateAddress(ev.input_type()));
-        let oninput_phone = link.callback(|ev: InputEvent| Msg::UpdatePhone(ev.input_type()));
+        let oninput_name = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateName(input.value())
+        });
+        let oninput_address = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateAddress(input.value())
+        });
+        let oninput_phone = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdatePhone(input.value())
+        });
 
         html!{<>
             {self.fileset_generator(

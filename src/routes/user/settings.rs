@@ -1,6 +1,7 @@
-use yew::{Component, Callback, Context, html, html::Scope, Html, SubmitEvent, classes};
+use yew::{Component, Callback, Context, html, Html, SubmitEvent, classes};
+use yew::html::{Scope, TargetCast};
 use yew_router::prelude::*;
-use web_sys::{MouseEvent, InputEvent, Event};
+use web_sys::{MouseEvent, InputEvent, Event, HtmlInputElement};
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
@@ -714,8 +715,14 @@ impl Settings {
         &self,
         link: &Scope<Self>,
     ) -> Html {
-        let oninput_old_password = link.callback(|ev: InputEvent| Msg::UpdateOldPassword(ev.input_type()));
-        let oninput_new_password = link.callback(|ev: InputEvent| Msg::UpdateNewPassword(ev.input_type()));
+        let oninput_old_password = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateOldPassword(input.value())
+        });
+        let oninput_new_password = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateNewPassword(input.value())
+        });
 
         html! {
             <fieldset class="columns">
@@ -740,15 +747,42 @@ impl Settings {
         &self,
         link: &Scope<Self>,
     ) -> Html {
-        let oninput_firstname = link.callback(|ev: InputEvent| Msg::UpdateFirstname(ev.input_type()));
-        let oninput_lastname = link.callback(|ev: InputEvent| Msg::UpdateLastname(ev.input_type()));
-        let oninput_secondname = link.callback(|ev: InputEvent| Msg::UpdateSecondname(ev.input_type()));
-        let oninput_username = link.callback(|ev: InputEvent| Msg::UpdateUsername(ev.input_type()));
-        let oninput_email = link.callback(|ev: InputEvent| Msg::UpdateEmail(ev.input_type()));
-        let oninput_description = link.callback(|ev: InputEvent| Msg::UpdateDescription(ev.input_type()));
-        let oninput_position = link.callback(|ev: InputEvent| Msg::UpdatePosition(ev.input_type()));
-        let oninput_phone = link.callback(|ev: InputEvent| Msg::UpdatePhone(ev.input_type()));
-        let oninput_address = link.callback(|ev: InputEvent| Msg::UpdateAddress(ev.input_type()));
+        let oninput_firstname = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateFirstname(input.value())
+        });
+        let oninput_lastname = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateLastname(input.value())
+        });
+        let oninput_secondname = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateSecondname(input.value())
+        });
+        let oninput_username = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateUsername(input.value())
+        });
+        let oninput_email = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateEmail(input.value())
+        });
+        let oninput_description = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateDescription(input.value())
+        });
+        let oninput_position = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdatePosition(input.value())
+        });
+        let oninput_phone = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdatePhone(input.value())
+        });
+        let oninput_address = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateAddress(input.value())
+        });
         let onchange_program_id =
             link.callback(|ev: Event| Msg::UpdateProgramId(ev.current_target().map(|et| et.as_string().unwrap_or_default()).unwrap_or_default()));
         let onchange_region_id =
@@ -883,7 +917,10 @@ impl Settings {
         &self,
         link: &Scope<Self>,
     ) -> Html {
-        let oninput_user_password = link.callback(|ev: InputEvent| Msg::UpdateUserPassword(ev.input_type()));
+        let oninput_user_password = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateUserPassword(input.value())
+        });
 
         self.fileset_generator(
             "password", get_value_field(&62), // "your password"

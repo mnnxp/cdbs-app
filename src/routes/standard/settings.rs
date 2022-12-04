@@ -552,9 +552,14 @@ impl StandardSettings {
             link.callback(|ev: Event| Msg::UpdateCompanyUuid(ev.current_target().map(|et| et.as_string().unwrap_or_default()).unwrap_or_default()));
         let onchange_change_type_access =
             link.callback(|ev: Event| Msg::UpdateTypeAccessId(ev.current_target().map(|et| et.as_string().unwrap_or_default()).unwrap_or_default()));
-        let oninput_name = link.callback(|ev: InputEvent| Msg::UpdateName(ev.input_type()));
-        let oninput_description =
-            link.callback(|ev: InputEvent| Msg::UpdateDescription(ev.input_type()));
+        let oninput_name =  link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateName(input.value())
+        });
+        let oninput_description = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateDescription(input.value())
+        });
 
         html!{<div class="card">
             <div class="column">
@@ -642,14 +647,22 @@ impl StandardSettings {
         &self,
         link: &Scope<Self>,
     ) -> Html {
-        let oninput_classifier =
-            link.callback(|ev: InputEvent| Msg::UpdateClassifier(ev.input_type()));
-        let oninput_specified_tolerance =
-            link.callback(|ev: InputEvent| Msg::UpdateSpecifiedTolerance(ev.input_type()));
-        let oninput_technical_committee =
-            link.callback(|ev: InputEvent| Msg::UpdateTechnicalCommittee(ev.input_type()));
-        let oninput_publication_at =
-            link.callback(|ev: InputEvent| Msg::UpdatePublicationAt(ev.input_type()));
+        let oninput_classifier = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateClassifier(input.value())
+        });
+        let oninput_specified_tolerance = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateSpecifiedTolerance(input.value())
+        });
+        let oninput_technical_committee = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateTechnicalCommittee(input.value())
+        });
+        let oninput_publication_at = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdatePublicationAt(input.value())
+        });
         let onchange_standard_status_id =
             link.callback(|ev: Event| Msg::UpdateStandardStatusId(ev.current_target().map(|et| et.as_string().unwrap_or_default()).unwrap_or_default()));
         let onchange_region_id =
@@ -858,8 +871,10 @@ impl StandardSettings {
         link: &Scope<Self>,
     ) -> Html {
         let onclick_hide_modal = link.callback(|_| Msg::ChangeHideDeleteStandard);
-        let oninput_delete_standard =
-            link.callback(|ev: InputEvent| Msg::UpdateConfirmDelete(ev.input_type()));
+        let oninput_delete_standard = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateConfirmDelete(input.value())
+        });
         let onclick_delete_standard = link.callback(|_| Msg::RequestDeleteStandard);
         let class_modal = match &self.hide_delete_modal {
             true => "modal",

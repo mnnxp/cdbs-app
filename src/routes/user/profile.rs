@@ -102,14 +102,15 @@ impl Component for Profile {
         };
         // get and decode target user from route
         let target_username = url_decode(
-            ctx.link().location().unwrap().path().trim_start_matches("/@")
+            ctx.link().location().unwrap().path().trim_start_matches("/profile/")
         );
+        debug!("target_username {:?}", target_username);
         // get flag changing current profile in route
         let not_matches_username = target_username != self.current_username;
-        // debug!("self.current_username {:?}", self.current_username);
+        debug!("self.current_username {:?}", self.current_username);
         // check get self data
         let get_self = logged_username == target_username;
-        // debug!("get_self {:?}", get_self);
+        debug!("get_self {:?}", get_self);
         if first_render || not_matches_username {
             // clear old data
             self.error = None;

@@ -27,7 +27,7 @@ const goodRegion = "Altai Republic";
 
 const registerButton = Selector('a').withAttribute('href', '/register');
 const settingButton = Selector('a').withAttribute('href', '/settings');
-const profileButton = Selector('a').withAttribute('href', `/@${goodUsername}`);
+const profileButton = Selector('a').withAttribute('href', `/profile/${goodUsername}`);
 
 fixture `Check update user data`// declare the fixture
     .page `${url}`;  // specify the start page

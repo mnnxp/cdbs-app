@@ -55,7 +55,7 @@ pub enum AppRoute {
     ShowStandard { uuid: String },
     // #[at("/users")]
     // CatalogUsers,
-    #[at("/@:username")]
+    #[at("/profile/:username")]
     Profile { username: String },
     #[at("/")]
     Home,

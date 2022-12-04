@@ -215,8 +215,10 @@ impl AddCompanyCertificateCard {
         &self,
         link: &Scope<Self>,
     ) -> Html {
-        let oninput_cert_description =
-            link.callback(|ev: InputEvent| Msg::UpdateDescription(ev.input_type()));
+        let oninput_cert_description = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateDescription(input.value())
+        });
 
         html!{
             <div class="block">

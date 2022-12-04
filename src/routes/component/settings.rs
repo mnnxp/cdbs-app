@@ -552,8 +552,14 @@ impl ComponentSettings {
         &self,
         link: &Scope<Self>,
     ) -> Html {
-        let oninput_name = link.callback(|ev: InputEvent| Msg::UpdateName(ev.input_type()));
-        let oninput_description = link.callback(|ev: InputEvent| Msg::UpdateDescription(ev.input_type()));
+        let oninput_name = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateName(input.value())
+        });
+        let oninput_description = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateDescription(input.value())
+        });
 
         html!{<div class="card">
             <div class="column">
@@ -858,7 +864,10 @@ impl ComponentSettings {
         link: &Scope<Self>,
     ) -> Html {
         let onclick_hide_modal = link.callback(|_| Msg::ChangeHideDeleteComponent);
-        let oninput_delete_component = link.callback(|ev: InputEvent| Msg::UpdateConfirmDelete(ev.input_type()));
+        let oninput_delete_component = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateConfirmDelete(input.value())
+        });
         let onclick_delete_component = link.callback(|_| Msg::RequestDeleteComponent);
 
         let class_modal = match &self.hide_delete_modal {

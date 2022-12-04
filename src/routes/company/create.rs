@@ -1,6 +1,7 @@
-use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
+use yew::{Component, Callback, Context, html, Html, Properties};
+use yew::html::{Scope, TargetCast};
 use yew_router::prelude::*;
-use web_sys::{InputEvent, Event};
+use web_sys::{InputEvent, Event, HtmlInputElement};
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
@@ -273,15 +274,39 @@ impl CreateCompany {
         &self,
         link: &Scope<Self>,
     ) -> Html {
-        let oninput_orgname = link.callback(|ev: InputEvent| Msg::UpdateOrgname(ev.input_type()));
-        let oninput_shortname = link.callback(|ev: InputEvent| Msg::UpdateShortname(ev.input_type()));
-        let oninput_inn = link.callback(|ev: InputEvent| Msg::UpdateInn(ev.input_type()));
-        let oninput_email = link.callback(|ev: InputEvent| Msg::UpdateEmail(ev.input_type()));
-        let oninput_description = link.callback(|ev: InputEvent| Msg::UpdateDescription(ev.input_type()));
-        let oninput_phone = link.callback(|ev: InputEvent| Msg::UpdatePhone(ev.input_type()));
-        let oninput_address = link.callback(|ev: InputEvent| Msg::UpdateAddress(ev.input_type()));
-        let oninput_site_url = link.callback(|ev: InputEvent| Msg::UpdateSiteUrl(ev.input_type()));
-        // let oninput_time_zone = link.callback(|ev: InputEvent| Msg::UpdateTimeZone(ev.input_type()));
+        let oninput_orgname = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateOrgname(input.value())
+        });
+        let oninput_shortname = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateShortname(input.value())
+        });
+        let oninput_inn = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateInn(input.value())
+        });
+        let oninput_email = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateEmail(input.value())
+        });
+        let oninput_description = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateDescription(input.value())
+        });
+        let oninput_phone = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdatePhone(input.value())
+        });
+        let oninput_address = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateAddress(input.value())
+        });
+        let oninput_site_url = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateSiteUrl(input.value())
+        });
+        // let oninput_time_zone = link.callback(|ev: InputEvent| Msg::UpdateTimeZone(input.value()));
         let onchange_region_id = link.callback(|ev: Event| {
             Msg::UpdateRegionId(ev.current_target().map(|et| et.as_string().unwrap_or_default()).unwrap_or_default())
         });

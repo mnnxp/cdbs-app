@@ -1,6 +1,7 @@
 use std::collections::{HashMap, BTreeMap};
-use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
-use web_sys::InputEvent;
+use yew::{Component, Callback, Context, html, Html, Properties};
+use yew::html::{Scope, TargetCast};
+use web_sys::{InputEvent, HtmlInputElement};
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
@@ -506,7 +507,10 @@ impl ModificationTableItem {
         link: &Scope<Self>,
     ) -> Html {
         let onclick_clear_error = link.callback(|_| Msg::ClearError);
-        let oninput_param_value = link.callback(|ev: InputEvent| Msg::UpdateValue(ev.input_type()));
+        let oninput_param_value = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateValue(input.value())
+        });
         let onclick_close_add_param = link.callback(|_| Msg::ShowAddParamCard(0));
         let onclick_param_add = link.callback(|_| Msg::RequestAddParamData);
         let class_modal = match &self.open_add_param_card {
@@ -555,8 +559,10 @@ impl ModificationTableItem {
         link: &Scope<Self>,
     ) -> Html {
         let onclick_clear_error = link.callback(|_| Msg::ClearError);
-        let oninput_param_value =
-            link.callback(|ev: InputEvent| Msg::UpdateValue(ev.input_type()));
+        let oninput_param_value = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateValue(input.value())
+        });
         let onclick_edit_param_card = link.callback(|_| Msg::ShowEditParamCard(0));
         let onclick_param_update = link.callback(|_| Msg::RequestUpdateParamData);
         let onclick_delete_param = link.callback(|_| Msg::RequestDeleteParamData);

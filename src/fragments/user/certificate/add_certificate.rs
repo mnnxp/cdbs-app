@@ -1,8 +1,8 @@
 use yew::{Component, Callback, Context, html, Html, Properties};
 use yew::html::{Scope, TargetCast};
-use gloo::file::File;
 use web_sys::{InputEvent, DragEvent, Event, FileList, HtmlInputElement};
 use wasm_bindgen_futures::spawn_local;
+use gloo::file::File;
 use graphql_client::GraphQLQuery;
 use log::debug;
 use crate::error::{get_error, Error};
@@ -231,8 +231,10 @@ impl AddUserCertificateCard {
         &self,
         link: &Scope<Self>,
     ) -> Html {
-        let oninput_cert_description =
-            link.callback(|ev: InputEvent| Msg::UpdateDescription(ev.input_type()));
+        let oninput_cert_description = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateDescription(input.value())
+        });
 
         html!{<div class="block">
             <label class="label">{ get_value_field(&61) }</label> // "Description"

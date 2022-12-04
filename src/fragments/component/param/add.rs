@@ -1,5 +1,6 @@
-use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
-use web_sys::InputEvent;
+use yew::{Component, Callback, Context, html, Html, Properties};
+use yew::html::{Scope, TargetCast};
+use web_sys::{InputEvent, HtmlInputElement};
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 use serde_json::Value;
@@ -115,10 +116,14 @@ impl RegisterParamnameBlock {
         link: &Scope<Self>,
     ) -> Html {
         let onclick_register_paramname = link.callback(|_| Msg::RequestRegisterParamname);
-        let oninput_set_paramname =
-            link.callback(|ev: InputEvent| Msg::UpdateParamname(ev.input_type()));
-        let oninput_set_param_value =
-            link.callback(|ev: InputEvent| Msg::UpdateParamValue(ev.input_type()));
+        let oninput_set_paramname = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateParamname(input.value())
+        });
+        let oninput_set_param_value = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateParamValue(input.value())
+        });
         let class_btn = match self.active_loading_btn {
             true => "button is-loading is-fullwidth",
             false => "button is-fullwidth",

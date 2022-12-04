@@ -1,6 +1,7 @@
-use yew::{Component, Context, html, html::Scope, Html};
+use yew::{Component, Context, html, Html};
+use yew::html::{Scope, TargetCast};
 use yew_router::prelude::*;
-use web_sys::{InputEvent, Event};
+use web_sys::{InputEvent, Event, HtmlInputElement};
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
@@ -208,10 +209,14 @@ impl CreateComponent {
             link.callback(|ev: Event| Msg::UpdateComponentTypeId(ev.current_target().map(|et| et.as_string().unwrap_or_default()).unwrap_or_default()));
         let onchange_change_type_access =
             link.callback(|ev: Event| Msg::UpdateTypeAccessId(ev.current_target().map(|et| et.as_string().unwrap_or_default()).unwrap_or_default()));
-        let oninput_name =
-            link.callback(|ev: InputEvent| Msg::UpdateName(ev.input_type()));
-        let oninput_description =
-            link.callback(|ev: InputEvent| Msg::UpdateDescription(ev.input_type()));
+        let oninput_name = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateName(input.value())
+        });
+        let oninput_description = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateDescription(input.value())
+        });
 
         html!{
             <div class="card">

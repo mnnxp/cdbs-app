@@ -1,6 +1,7 @@
-use yew::{Component, Context, html, html::Scope, Html, Properties};
+use yew::{Component, Context, html, Html, Properties};
+use yew::html::{Scope, TargetCast};
 use yew_router::prelude::*;
-use web_sys::{InputEvent, Event};
+use web_sys::{InputEvent, Event, HtmlInputElement};
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
@@ -288,8 +289,14 @@ impl CreateStandard {
             link.callback(|ev: Event| Msg::UpdateCompanyUuid(ev.current_target().map(|et| et.as_string().unwrap_or_default()).unwrap_or_default()));
         let onchange_change_type_access =
             link.callback(|ev: Event| Msg::UpdateTypeAccessId(ev.current_target().map(|et| et.as_string().unwrap_or_default()).unwrap_or_default()));
-        let oninput_name = link.callback(|ev: InputEvent| Msg::UpdateName(ev.input_type()));
-        let oninput_description = link.callback(|ev: InputEvent| Msg::UpdateDescription(ev.input_type()));
+        let oninput_name = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateName(input.value())
+        });
+        let oninput_description = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateDescription(input.value())
+        });
 
         html!{
             <div class="card">
@@ -362,10 +369,22 @@ impl CreateStandard {
         &self,
         link: &Scope<Self>,
     ) -> Html {
-        let oninput_classifier = link.callback(|ev: InputEvent| Msg::UpdateClassifier(ev.input_type()));
-        let oninput_specified_tolerance = link.callback(|ev: InputEvent| Msg::UpdateSpecifiedTolerance(ev.input_type()));
-        let oninput_technical_committee = link.callback(|ev: InputEvent| Msg::UpdateTechnicalCommittee(ev.input_type()));
-        let oninput_publication_at = link.callback(|ev: InputEvent| Msg::UpdatePublicationAt(ev.input_type()));
+        let oninput_classifier = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateClassifier(input.value())
+        });
+        let oninput_specified_tolerance = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateSpecifiedTolerance(input.value())
+        });
+        let oninput_technical_committee = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdateTechnicalCommittee(input.value())
+        });
+        let oninput_publication_at = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::UpdatePublicationAt(input.value())
+        });
         let onchange_standard_status_id =
             link.callback(|ev: Event| Msg::UpdateStandardStatusId(ev.current_target().map(|et| et.as_string().unwrap_or_default()).unwrap_or_default()));
         let onchange_region_id =

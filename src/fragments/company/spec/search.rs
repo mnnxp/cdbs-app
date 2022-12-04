@@ -1,5 +1,6 @@
-use yew::{Component, Context, html, html::Scope, Html, Properties, classes, NodeRef};
-use web_sys::InputEvent;
+use yew::{Component, Context, html, Html, Properties, classes, NodeRef};
+use yew::html::{Scope, TargetCast};
+use web_sys::{InputEvent, HtmlInputElement};
 use wasm_bindgen_futures::spawn_local;
 use gloo_timers::callback::Timeout;
 use graphql_client::GraphQLQuery;
@@ -213,7 +214,10 @@ impl SearchSpecsTags {
         props: &Props,
     ) -> Html {
         let ipt_ref = self.ipt_ref.clone();
-        let oninput_spec = link.callback(|ev: InputEvent| Msg::SetIptTimer(ev.input_type()));
+        let oninput_spec = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::SetIptTimer(input.value())
+        });
         let onclick_added_spec = link.callback(|value: usize| Msg::AddedSpec(value));
         let onclick_del_new_spec = link.callback(|value: usize| Msg::DeleteNewSpec(value));
         let onclick_del_old_spec = link.callback(|value: usize| Msg::DeleteCurrentSpec(value));

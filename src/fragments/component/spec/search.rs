@@ -1,5 +1,6 @@
-use yew::{Component, Context, html, html::Scope, Html, Properties, classes, NodeRef};
-use web_sys::InputEvent;
+use yew::{Component, Context, html, Html, Properties, classes, NodeRef};
+use yew::html::{Scope, TargetCast};
+use web_sys::{InputEvent, HtmlInputElement};
 use wasm_bindgen_futures::spawn_local;
 use gloo_timers::callback::Timeout;
 use serde_json::Value;
@@ -211,7 +212,10 @@ impl SearchSpecsTags {
         let onclick_added_spec = link.callback(|value: usize| Msg::AddedSpec(value));
         let onclick_del_new_spec = link.callback(|value: usize| Msg::DeleteNewSpec(value));
         let onclick_del_old_spec = link.callback(|value: usize| Msg::DeleteCurrentSpec(value));
-        let oninput_search = link.callback(|ev: InputEvent| Msg::SetIptTimer(ev.input_type()));
+        let oninput_search = link.callback(|ev: InputEvent| {
+            let input: HtmlInputElement = ev.target_unchecked_into();
+            Msg::SetIptTimer(input.value())
+        });
         let mut class_p = classes!("control", "has-icons-left");
         if self.specs_search_loading {
             class_p.push("is-loading");
