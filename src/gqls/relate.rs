@@ -1,6 +1,6 @@
 use graphql_client::GraphQLQuery;
 use chrono::NaiveDateTime;
-// use crate::types::UUID;
+use crate::types::UUID;
 
 /// Отправка подтверждения о загрузке файлов в хранилище
 #[derive(GraphQLQuery)]

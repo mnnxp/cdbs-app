@@ -325,9 +325,8 @@ impl Component for ComponentSettings {
 
                 match res_value.is_null() {
                     false => {
-                        let result = serde_json::from_value(
-                            res_value.get("uploadComponentFiles").unwrap().clone()
-                        ).unwrap();
+                        let result: Vec<UploadFile> =
+                            serde_json::from_value(res_value.get("uploadComponentFiles").unwrap().clone()).unwrap();
                         debug!("uploadComponentFiles {:?}", self.request_upload_data);
 
                         if !self.files.is_empty() {

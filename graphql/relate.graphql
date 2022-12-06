@@ -42,7 +42,7 @@ fragment typesAccessTransListFields on TypeAccessTranslateList {
   name
 }
 
-mutation ConfirmUploadCompleted($fileUuids: [String!]!) {
+mutation ConfirmUploadCompleted($fileUuids: [UUID!]!) {
   uploadCompleted(fileUuids: $fileUuids)
 }
 

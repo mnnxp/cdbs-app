@@ -11,7 +11,7 @@ use crate::services::get_value_field;
 use crate::error::{get_error, Error};
 use crate::fragments::files_frame::FilesFrame;
 use crate::fragments::list_errors::ListErrors;
-use crate::types::{UUID, ShowFileInfo, Program};
+use crate::types::{UUID, ShowFileInfo, Program, UploadFile};
 use crate::gqls::make_query;
 use crate::gqls::relate::{GetPrograms, get_programs};
 use crate::gqls::component::{
@@ -301,7 +301,8 @@ impl Component for ManageModificationFilesets {
 
                 match res_value.is_null() {
                     false => {
-                        let result = serde_json::from_value(res_value.get("uploadFilesToFileset").unwrap().clone()).unwrap();
+                        let result: Vec<UploadFile> =
+                            serde_json::from_value(res_value.get("uploadFilesToFileset").unwrap().clone()).unwrap();
                         // debug!("uploadFilesToFileset {:?}", self.request_upload_data);
 
                         if !self.files.is_empty() {

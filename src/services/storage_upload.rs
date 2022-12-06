@@ -141,8 +141,15 @@ impl Component for StorageUpload {
         true
     }
 
-    fn changed(&mut self, _ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
-        false
+    fn changed(&mut self, ctx: &Context<Self>, old_props: &Self::Properties) -> bool {
+        if old_props.data_upload.first().map(|d| &d.0.file_uuid) ==
+              ctx.props().data_upload.first().map(|d| &d.0.file_uuid) {
+            false
+        } else {
+            debug!("Получение новых данных для загрузки...");
+            ctx.link().send_message(Msg::ParseFiles);
+            true
+        }
     }
 
     fn view(&self, _ctx: &Context<Self>) -> Html {
@@ -156,14 +163,22 @@ pub fn storage_upload(
     files: Vec<File>,
     callback_confirm: Callback<Result<usize, Error>>,
 ) -> Html {
+    let mut current_proc = String::new();
     let mut data_upload: Vec<(UploadFile, File)> = Vec::new();
-    for _x in info_data.into_iter().rev().zip(files).map(|value| data_upload.push(value)).into_iter() {};
+    for value in info_data.into_iter().rev().zip(files).map(|value| value).into_iter() {
+        current_proc = value.0.filename.clone();
+        debug!("parse data for upload...{:?}", value.0.filename);
+        data_upload.push(value);
+    };
 
     html!{
-        <StorageUpload
-            {data_upload}
-            {callback_confirm}
-        />
+        <>
+            <h6>{current_proc}</h6>
+            <StorageUpload
+                {data_upload}
+                {callback_confirm}
+            />
+        </>
     }
 }
 

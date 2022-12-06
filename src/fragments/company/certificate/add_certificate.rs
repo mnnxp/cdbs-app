@@ -10,6 +10,7 @@ use crate::fragments::files_frame::FilesFrame;
 use crate::fragments::list_errors::ListErrors;
 use crate::services::storage_upload::storage_upload;
 use crate::services::get_value_field;
+use crate::types::UploadFile;
 use crate::gqls::make_query;
 use crate::gqls::company::{
     UploadCompanyCertificate, upload_company_certificate
@@ -93,14 +94,13 @@ impl Component for AddCompanyCertificateCard {
 
                 match res_value.is_null() {
                     false => {
-                        let result = serde_json::from_value(
-                            res_value.get("uploadCompanyCertificate").unwrap().clone(),
-                        ).unwrap();
+                        let result: UploadFile =
+                            serde_json::from_value(res_value.get("uploadCompanyCertificate").unwrap().clone()).unwrap();
 
                         if let Some(file) = self.file.clone() {
                             let callback_confirm =
                                 link.callback(|res: Result<usize, Error>| Msg::GetUploadCompleted(res));
-                            storage_upload(result, vec![file], callback_confirm);
+                            storage_upload(vec![result], vec![file], callback_confirm);
                         }
                         debug!("file: {:?}", self.file);
                     }

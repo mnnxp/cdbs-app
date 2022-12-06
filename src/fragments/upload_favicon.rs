@@ -1,4 +1,5 @@
 use yew::{Component, Callback, Context, html, Html, Properties};
+use yew::virtual_dom::VNode;
 use yew::html::{Scope, TargetCast};
 use gloo::file::File;
 use web_sys::{DragEvent, Event, FileList, HtmlInputElement};
@@ -10,6 +11,7 @@ use crate::fragments::list_errors::ListErrors;
 use crate::error::{Error, get_error};
 use crate::services::storage_upload::storage_upload;
 use crate::services::get_value_field;
+use crate::types::UploadFile;
 use crate::gqls::make_query;
 use crate::gqls::user::{
     UploadUserFavicon, upload_user_favicon
@@ -33,6 +35,7 @@ pub struct UpdateFaviconBlock {
     file: Option<File>,
     dis_upload_btn: bool,
     active_loading_files_btn: bool,
+    v_node: Option<VNode>,
 }
 
 pub enum Msg {
@@ -59,6 +62,7 @@ impl Component for UpdateFaviconBlock {
             file: None,
             dis_upload_btn: true,
             active_loading_files_btn: false,
+            v_node: None,
         }
     }
 
@@ -116,15 +120,18 @@ impl Component for UpdateFaviconBlock {
 
                 match res_value.is_null() {
                     false => {
-                        let result = match &ctx.props().company_uuid {
+                        // debug!("ctx.props().company_uuid: {:?}", ctx.props().company_uuid);
+                        let result: UploadFile = match &ctx.props().company_uuid {
                             Some(_) => serde_json::from_value(res_value.get("uploadCompanyFavicon").unwrap().clone()).unwrap(),
                             None => serde_json::from_value(res_value.get("uploadFavicon").unwrap().clone()).unwrap(),
                         };
+                        // debug!("serde: {:?}", result);
 
                         if let Some(file) = self.file.clone() {
                             let callback_confirm =
                                 link.callback(|res: Result<usize, Error>| Msg::GetUploadCompleted(res));
-                            storage_upload(result, vec![file], callback_confirm);
+                            self.v_node = Some(storage_upload(vec![result], vec![file], callback_confirm));
+                            debug!("res_stor: {:?}", self.v_node);
                         }
                         debug!("file: {:?}", self.file);
                     },
@@ -189,7 +196,7 @@ impl UpdateFaviconBlock {
         });
         let ondragover = link.callback(move |ev: DragEvent| {
             ev.prevent_default();
-            Msg::Ignore
+            Msg::UpdateFiles(ev.data_transfer().unwrap().files())
         });
         let ondragenter = ondragover.clone();
 
@@ -207,6 +214,10 @@ impl UpdateFaviconBlock {
                             file_label={86}
                         />
                     </div>
+                    {match &self.v_node {
+                        Some(v) => v.clone(),
+                        None => html!{},
+                    }}
                 </div>
                 <div class="column">
                     <div class="has-text-grey-light" style="overflow-wrap: anywhere">

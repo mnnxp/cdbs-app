@@ -12,7 +12,7 @@ use crate::services::get_value_field;
 use crate::error::{get_error, Error};
 use crate::fragments::files_frame::FilesFrame;
 use crate::fragments::list_errors::ListErrors;
-use crate::types::{UUID, ShowFileInfo};
+use crate::types::{UUID, ShowFileInfo, UploadFile};
 use crate::gqls::make_query;
 use crate::gqls::component::{
     ComponentModificationFilesList, component_modification_files_list,
@@ -142,9 +142,8 @@ impl Component for ManageModificationFilesCard {
 
                 match res_value.is_null() {
                     false => {
-                        let result = serde_json::from_value(
-                            res_value.get("uploadModificationFiles").unwrap().clone()
-                        ).unwrap();
+                        let result: Vec<UploadFile> =
+                            serde_json::from_value(res_value.get("uploadModificationFiles").unwrap().clone()).unwrap();
                         // debug!("uploadModificationFiles {:?}", self.request_upload_data);
 
                         if !self.files.is_empty() {
