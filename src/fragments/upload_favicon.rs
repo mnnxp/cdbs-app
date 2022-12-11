@@ -45,7 +45,7 @@ pub enum Msg {
     ResponseError(Error),
     UpdateFiles(Option<FileList>),
     GetUploadData(String),
-    GetUploadCompleted(Result<usize, Error>),
+    FinishUploadFiles(Result<usize, Error>),
     ClearFileBoxed,
     ClearError,
     Ignore,
@@ -129,7 +129,7 @@ impl Component for UpdateFaviconBlock {
 
                         if let Some(file) = self.file.clone() {
                             let callback_confirm =
-                                link.callback(|res: Result<usize, Error>| Msg::GetUploadCompleted(res));
+                                link.callback(|res: Result<usize, Error>| Msg::FinishUploadFiles(res));
                             self.v_node = Some(storage_upload(vec![result], vec![file], callback_confirm));
                             debug!("res_stor: {:?}", self.v_node);
                         }
@@ -138,7 +138,7 @@ impl Component for UpdateFaviconBlock {
                     true => self.error = Some(get_error(&data)),
                 }
             },
-            Msg::GetUploadCompleted(res) => {
+            Msg::FinishUploadFiles(res) => {
                 match res {
                     Ok(value) => self.get_result_up_completed = value == 1_usize,
                     Err(err) => self.error = Some(err),

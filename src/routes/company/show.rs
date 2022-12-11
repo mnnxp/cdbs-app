@@ -189,9 +189,14 @@ impl Component for ShowCompany {
                         self.subscribers = company_data.subscribers.to_owned();
                         self.is_followed = company_data.is_followed.to_owned();
                         self.current_company_uuid = company_data.uuid.to_owned();
-                        if let Some(user) = &ctx.props().current_user {
-                            self.current_user_owner = company_data.owner_user.uuid == user.uuid;
-                        }
+                        self.current_user_owner = match &ctx.props().current_user {
+                            Some(user) => company_data.owner_user.uuid == user.uuid,
+                            None => {
+                                get_logged_user()
+                                    .map(|u| company_data.owner_user.uuid == u.uuid)
+                                    .unwrap_or_default()
+                            },
+                        };
                         self.company = Some(company_data);
                     },
                     true => self.error = Some(get_error(&data)),

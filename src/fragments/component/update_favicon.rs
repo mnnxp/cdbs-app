@@ -1,4 +1,5 @@
 use yew::{Component, Callback, Context, html, Html, Properties};
+use yew::virtual_dom::VNode;
 use yew::html::{Scope, TargetCast};
 use web_sys::{DragEvent, Event, FileList, HtmlInputElement};
 use wasm_bindgen_futures::spawn_local;
@@ -30,13 +31,14 @@ pub struct UpdateComponentFaviconCard {
     file: Option<File>,
     active_loading_files_btn: bool,
     dis_upload_btn: bool,
+    v_node: Option<VNode>,
 }
 
 pub enum Msg {
     RequestUploadData,
     UpdateFiles(Option<FileList>),
     GetUploadData(String),
-    GetUploadCompleted(Result<usize, Error>),
+    FinishUploadFiles(Result<usize, Error>),
     HideNotificationSuccess,
     ClearFileBoxed,
     ClearError,
@@ -54,6 +56,7 @@ impl Component for UpdateComponentFaviconCard {
             file: None,
             active_loading_files_btn: false,
             dis_upload_btn: true,
+            v_node: None,
         }
     }
 
@@ -101,15 +104,15 @@ impl Component for UpdateComponentFaviconCard {
 
                         if let Some(file) = self.file.clone() {
                             let callback_confirm =
-                                link.callback(|res: Result<usize, Error>| Msg::GetUploadCompleted(res));
-                            storage_upload(vec![result], vec![file], callback_confirm);
+                                link.callback(|res: Result<usize, Error>| Msg::FinishUploadFiles(res));
+                            self.v_node = Some(storage_upload(vec![result], vec![file], callback_confirm));
                         }
                         debug!("file: {:?}", self.file);
                     }
                     true => self.error = Some(get_error(&data)),
                 }
             },
-            Msg::GetUploadCompleted(res) => {
+            Msg::FinishUploadFiles(res) => {
                 match res {
                     Ok(value) => self.get_result_up_completed = value > 0,
                     Err(err) => self.error = Some(err),
@@ -179,6 +182,10 @@ impl UpdateComponentFaviconCard {
                         file_label={182} // Drop preview image here
                     />
                     // </label> todo!(Исправить стиль: сделать обёртку для рамки и выбранных файлов)
+                    {match &self.v_node {
+                        Some(v) => v.clone(),
+                        None => html!{},
+                    }}
                     <div class="columns">
                         <div class="column">
                             <span class="file-name" style="overflow-wrap: anywhere">

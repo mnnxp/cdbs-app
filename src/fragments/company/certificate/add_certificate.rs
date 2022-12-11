@@ -1,4 +1,5 @@
 use yew::{Component, Callback, Context, html, Html, Properties};
+use yew::virtual_dom::VNode;
 use yew::html::{Scope, TargetCast};
 use gloo::file::File;
 use web_sys::{InputEvent, DragEvent, Event, FileList, HtmlInputElement};
@@ -31,13 +32,14 @@ pub struct AddCompanyCertificateCard {
     description: String,
     active_loading_files_btn: bool,
     dis_upload_btn: bool,
+    v_node: Option<VNode>,
 }
 
 pub enum Msg {
     RequestUploadData,
     UpdateFiles(Option<FileList>),
     GetUploadData(String),
-    GetUploadCompleted(Result<usize, Error>),
+    FinishUploadFiles(Result<usize, Error>),
     UpdateDescription(String),
     HideNotification,
     ClearFileBoxed,
@@ -57,6 +59,7 @@ impl Component for AddCompanyCertificateCard {
             description: String::new(),
             active_loading_files_btn: false,
             dis_upload_btn: true,
+            v_node: None,
         }
     }
 
@@ -99,15 +102,15 @@ impl Component for AddCompanyCertificateCard {
 
                         if let Some(file) = self.file.clone() {
                             let callback_confirm =
-                                link.callback(|res: Result<usize, Error>| Msg::GetUploadCompleted(res));
-                            storage_upload(vec![result], vec![file], callback_confirm);
+                                link.callback(|res: Result<usize, Error>| Msg::FinishUploadFiles(res));
+                            self.v_node = Some(storage_upload(vec![result], vec![file], callback_confirm));
                         }
                         debug!("file: {:?}", self.file);
                     }
                     true => self.error = Some(get_error(&data)),
                 }
             },
-            Msg::GetUploadCompleted(res) => {
+            Msg::FinishUploadFiles(res) => {
                 match res {
                     Ok(value) => self.get_result_up_completed = value > 0,
                     Err(err) => self.error = Some(err),
@@ -192,6 +195,10 @@ impl AddCompanyCertificateCard {
                             file_label={86}
                         />
                     </div>
+                    {match &self.v_node {
+                        Some(v) => v.clone(),
+                        None => html!{},
+                    }}
                 </div>
                 <div class="column">
                     <div class="has-text-grey-light" style="overflow-wrap: anywhere">

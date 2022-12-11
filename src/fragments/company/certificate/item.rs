@@ -186,7 +186,7 @@ impl CompanyCertificateItem {
                   </div>
                   <div class="media-content" style="margin-right: 1rem;">
                     <div class="block" style="overflow-wrap: anywhere">
-                        <span class="overflow-title has-text-weight-bold">{ get_value_field(&120) }</span> // Filename
+                        <span class="overflow-title has-text-weight-bold">{ get_value_field(&262) }</span> // Filename:
                         <span class="overflow-title">{props.certificate.file.filename.clone()}</span>
                     </div>
                     {self.show_update_block(link)}

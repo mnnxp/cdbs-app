@@ -26,6 +26,7 @@ pub enum Msg {
     ResultUpload(Result<Option<String>, Error>),
     ReqUploadCompleted,
     GetUploadConfirm(String),
+    Clear,
 }
 
 pub struct StorageUpload {
@@ -131,11 +132,18 @@ impl Component for StorageUpload {
                         let result: usize =
                             serde_json::from_value(res_value.get("uploadCompleted").unwrap().clone()).unwrap();
                         debug!("uploadCompleted: {:?}", result);
-
                         ctx.props().callback_confirm.emit(Ok(result));
+                        ctx.link().send_message(Msg::Clear);
                     },
                     true => ctx.props().callback_confirm.emit(Err(get_error(&data))),
                 }
+            },
+            Msg::Clear => {
+                self.readers = HashMap::default();
+                self.confirm_upload = Vec::default();
+                self.upload_file = Requests::new();
+                self.upload_result = ctx.link().callback(Msg::ResultUpload);
+                self.noconfirm_files = 0;
             },
         }
         true
@@ -163,22 +171,17 @@ pub fn storage_upload(
     files: Vec<File>,
     callback_confirm: Callback<Result<usize, Error>>,
 ) -> Html {
-    let mut current_proc = String::new();
     let mut data_upload: Vec<(UploadFile, File)> = Vec::new();
     for value in info_data.into_iter().rev().zip(files).map(|value| value).into_iter() {
-        current_proc = value.0.filename.clone();
         debug!("parse data for upload...{:?}", value.0.filename);
         data_upload.push(value);
     };
 
     html!{
-        <>
-            <h6>{current_proc}</h6>
-            <StorageUpload
-                {data_upload}
-                {callback_confirm}
-            />
-        </>
+        <StorageUpload
+            {data_upload}
+            {callback_confirm}
+        />
     }
 }
 
@@ -187,13 +190,11 @@ pub fn prepare_files(
     file_list: &Option<FileList>,
     files: &mut Vec<File>,
 ) {
-    while let Some(fl) = file_list {
-        for i in 0..1000 { // не загружаем больше 1000 файлов, это нормально?
-            if let Some(file) = fl.get(i).map(|f| File::from(f)) {
-                files.push(file);
-            } else {
-                break;
-            }
+    if let Some(fl) = file_list {
+        let mut get_i: u32 = 0;
+        while let Some(file) = fl.get(get_i).map(|f| File::from(f)) {
+            files.push(file);
+            get_i +=1;
         }
     }
 }

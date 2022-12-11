@@ -1,4 +1,5 @@
 use yew::{Component, Context, html, Html, Properties};
+use yew::virtual_dom::VNode;
 use yew::html::{Scope, TargetCast};
 use yew_router::prelude::*;
 use web_sys::{InputEvent, DragEvent, Event, FileList, HtmlInputElement};
@@ -16,8 +17,6 @@ use crate::fragments::component::{
     ComponentLicensesTags, ComponentParamsTags, UpdateComponentFaviconCard,
     ModificationsTableEdit, ComponentFilesBlock, SearchSpecsTags, AddKeywordsTags
 };
-// switch_icon::res_btn,
-// catalog_component::CatalogComponents,
 use crate::services::storage_upload::{storage_upload, prepare_files};
 use crate::services::{get_value_field, get_logged_user};
 use crate::types::{
@@ -42,7 +41,6 @@ pub struct ComponentSettings {
     current_modifications: Vec<ComponentModificationInfo>,
     request_component: ComponentUpdatePreData,
     request_upload_data: Vec<UploadFile>,
-    request_upload_confirm: Vec<UUID>,
     request_access: i64,
     supplier_list: Vec<ShowCompanyShort>,
     component_types: Vec<ComponentType>,
@@ -64,6 +62,7 @@ pub struct ComponentSettings {
     get_result_access: bool,
     get_result_up_completed: usize,
     active_loading_files_btn: bool,
+    v_node: Option<VNode>,
 }
 
 #[derive(Properties, Clone, Debug, PartialEq)]
@@ -87,8 +86,7 @@ pub enum Msg {
     GetUpdateAccessResult(String),
     GetComponentFilesListResult(String),
     GetUploadData(String),
-    GetUploadCompleted(Result<usize, Error>),
-    FinishUploadFiles,
+    FinishUploadFiles(Result<usize, Error>),
     GetDeleteComponentResult(String),
     EditFiles,
     UpdateTypeAccessId(String),
@@ -120,7 +118,6 @@ impl Component for ComponentSettings {
             current_modifications: Vec::new(),
             request_component: ComponentUpdatePreData::default(),
             request_upload_data: Vec::new(),
-            request_upload_confirm: Vec::new(),
             request_access: 0,
             supplier_list: Vec::new(),
             component_types: Vec::new(),
@@ -142,6 +139,7 @@ impl Component for ComponentSettings {
             get_result_access: false,
             get_result_up_completed: 0,
             active_loading_files_btn: false,
+            v_node: None,
         }
     }
 
@@ -331,8 +329,8 @@ impl Component for ComponentSettings {
 
                         if !self.files.is_empty() {
                             let callback_confirm =
-                                link.callback(|res: Result<usize, Error>| Msg::GetUploadCompleted(res));
-                            storage_upload(result, self.files.clone(), callback_confirm);
+                                link.callback(|res: Result<usize, Error>| Msg::FinishUploadFiles(res));
+                            self.v_node = Some(storage_upload(result, self.files.clone(), callback_confirm));
                         }
                         debug!("file: {:#?}", self.files);
                     },
@@ -409,22 +407,17 @@ impl Component for ComponentSettings {
                     true => self.error = Some(get_error(&data)),
                 }
             },
-            Msg::GetUploadCompleted(res) => {
+            Msg::FinishUploadFiles(res) => {
                 match res {
-                    Ok(value) => self.get_result_up_completed = value,
+                    Ok(value) => {
+                        self.get_result_up_completed = value;
+                        self.files_list.clear();
+                        link.send_message(Msg::RequestComponentFilesList);
+                        self.files.clear();
+                    },
                     Err(err) => self.error = Some(err),
                 }
                 self.active_loading_files_btn = false;
-            },
-            Msg::FinishUploadFiles => {
-                self.files_list.clear();
-                link.send_message(Msg::RequestComponentFilesList);
-                self.active_loading_files_btn = false;
-                // self.task.clear();
-                // self.task_read.clear();
-                self.request_upload_confirm.clear();
-                self.files.clear();
-                self.files_index = 0;
             },
             Msg::GetDeleteComponentResult(res) => {
                 let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
@@ -943,14 +936,18 @@ impl ComponentSettings {
                     multiple={true}
                     file_label={200}
                 />
-                // </label> todo!(Исправить стиль: сделать обёртку для рамки и выбранных файлов)
-                {match self.files.is_empty() {
-                    true => html!{<span class="file-name">{ get_value_field(&194) }</span>}, // No file uploaded
-                    false => html!{for self.files.iter().map(|f| html!{
-                        <span class="file-name">{f.name().clone()}</span>
-                    })}
-                }}
             </div>
+            // </label> todo!(Исправить стиль: сделать обёртку для рамки и выбранных файлов)
+            {match &self.v_node {
+                Some(v) => v.clone(),
+                None => html!{},
+            }}
+            {match self.files.is_empty() {
+                true => html!{<span class="file-name">{ get_value_field(&194) }</span>}, // No file uploaded
+                false => html!{for self.files.iter().map(|f| html!{
+                    <span class="file-name">{f.name().clone()}</span>
+                })}
+            }}
             <div class="buttons">
                 {self.show_clear_btn(link)}
                 {self.show_upload_files_btn(link)}

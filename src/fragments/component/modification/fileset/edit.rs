@@ -1,4 +1,5 @@
 use yew::{Component, Context, html, Html, Properties};
+use yew::virtual_dom::VNode;
 use yew::html::{Scope, TargetCast};
 use gloo::file::File;
 use web_sys::{DragEvent, Event, FileList, HtmlInputElement};
@@ -41,6 +42,7 @@ pub struct ManageModificationFilesets {
     open_add_fileset_card: bool,
     get_result_up_completed: usize,
     active_loading_files_btn: bool,
+    v_node: Option<VNode>,
 }
 
 pub enum Msg {
@@ -55,9 +57,8 @@ pub enum Msg {
     GetDeleteFilesetResult(String),
     GetFilesOfFilesetResult(String),
     GetUploadData(String),
-    GetUploadCompleted(Result<usize, Error>),
+    FinishUploadFiles(Result<usize, Error>),
     UpdateFiles(Option<FileList>),
-    FinishUploadFiles,
     SelectFileset(UUID),
     UpdateSelectProgramId(String),
     ShowAddFilesetCard,
@@ -93,6 +94,7 @@ impl Component for ManageModificationFilesets {
             open_add_fileset_card: false,
             get_result_up_completed: 0,
             active_loading_files_btn: false,
+            v_node: None,
         }
     }
 
@@ -307,30 +309,27 @@ impl Component for ManageModificationFilesets {
 
                         if !self.files.is_empty() {
                             let callback_confirm =
-                                link.callback(|res: Result<usize, Error>| Msg::GetUploadCompleted(res));
-                            storage_upload(result, self.files.clone(), callback_confirm);
+                                link.callback(|res: Result<usize, Error>| Msg::FinishUploadFiles(res));
+                            self.v_node = Some(storage_upload(result, self.files.clone(), callback_confirm));
                         }
                         debug!("file: {:#?}", self.files);
                     },
                     true => link.send_message(Msg::ResponseError(get_error(&data))),
                 }
             },
-            Msg::GetUploadCompleted(res) => {
+            Msg::FinishUploadFiles(res) => {
                 match res {
-                    Ok(value) => self.get_result_up_completed = value,
+                    Ok(value) => {
+                        self.get_result_up_completed = value;
+                        self.files_list.clear();
+                        link.send_message(Msg::RequestFilesOfFileset);
+                        self.files.clear();
+                    },
                     Err(err) => self.error = Some(err),
                 }
                 self.active_loading_files_btn = false;
-                link.send_message(Msg::FinishUploadFiles);
             },
             Msg::UpdateFiles(file_list) => prepare_files(&file_list, &mut self.files),
-            Msg::FinishUploadFiles => {
-                self.files_list.clear();
-                link.send_message(Msg::RequestFilesOfFileset);
-                self.active_loading_files_btn = false;
-                self.files.clear();
-                self.files_index = 0;
-            },
             Msg::SelectFileset(fileset_uuid) => {
                 debug!("SelectFileset: {:?}", fileset_uuid);
                 self.select_fileset_uuid = fileset_uuid;
@@ -556,14 +555,18 @@ impl ManageModificationFilesets {
                     multiple={true}
                     file_label={195} // Choose fileset files…
                 />
-                // </label> todo!(Исправить стиль: сделать обёртку для рамки и выбранных файлов)
-                {match self.files.is_empty() {
-                    true => html!{<span class="file-name">{ get_value_field(&194) }</span>}, // No file uploaded
-                    false => html!{for self.files.iter().map(|f| html!{
-                        <span class="file-name">{f.name().clone()}</span>
-                    })}
-                }}
             </div>
+            // </label> todo!(Исправить стиль: сделать обёртку для рамки и выбранных файлов)
+            {match &self.v_node {
+                Some(v) => v.clone(),
+                None => html!{},
+            }}
+            {match self.files.is_empty() {
+                true => html!{<span class="file-name">{ get_value_field(&194) }</span>}, // No file uploaded
+                false => html!{for self.files.iter().map(|f| html!{
+                    <span class="file-name">{f.name().clone()}</span>
+                })}
+            }}
             <div class="buttons">
                 {self.show_clear_btn(link)}
                 {self.show_upload_files_btn(link)}
