@@ -2,7 +2,7 @@ mod list_item;
 
 pub use list_item::ListItemUser;
 
-use yew::{Component, Context, html, Html, Properties};
+use yew::{Component, Callback, Context, html, Html, Properties};
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
@@ -25,6 +25,7 @@ pub enum Msg {
 #[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
     pub arguments: Option<UsersQueryArg>,
+    pub callback_change: Option<Callback<bool>>,
 }
 
 pub struct CatalogUsers {
@@ -133,7 +134,7 @@ impl Component for CatalogUsers {
                 </div>
               </div>
               <div class={class_for_list}>
-                {for self.list.iter().map(|x| self.show_card(&x))}
+                {for self.list.iter().map(|x| self.show_card(&x, ctx.props().callback_change.clone()))}
               </div>
             </div>
         }
@@ -144,12 +145,14 @@ impl CatalogUsers {
     fn show_card(
         &self,
         show_comp: &ShowUserShort,
+        callback_change: Option<Callback<bool>>,
     ) -> Html {
         html!{
             <ListItemUser
                 data={show_comp.clone()}
                 show_list={self.show_type == ListState::List}
-                />
+                {callback_change}
+            />
         }
     }
 }

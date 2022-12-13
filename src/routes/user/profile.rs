@@ -56,6 +56,7 @@ pub enum Msg {
     GetUserProfileResult(String),
     ChangeTab(ProfileTab),
     ShowFullUserInfo,
+    ChangeRoute,
     ClearError,
     Ignore,
 }
@@ -262,21 +263,33 @@ impl Component for Profile {
                 }
             },
             Msg::ShowFullUserInfo => self.show_full_user_info = !self.show_full_user_info,
+            Msg::ChangeRoute => self.rendered(ctx, false),
             Msg::ClearError => self.error = None,
             Msg::Ignore => {},
         }
         true
     }
 
-    fn changed(&mut self, _ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
-        false
+    fn changed(&mut self, ctx: &Context<Self>, old_props: &Self::Properties) -> bool {
+        let same_props = match (&old_props.current_user, &ctx.props().current_user) {
+            (Some(old), Some(cur)) => old.uuid == cur.uuid,
+            (None, None) => true,
+            _ => false,
+        };
+        if  same_props && self.current_username ==
+              url_decode(ctx.link().location().unwrap().path().trim_start_matches("/profile/")) {
+            false
+        } else {
+            true
+        }
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         let onclick_clear_error = ctx.link().callback(|_| Msg::ClearError);
+        let callback_change = ctx.link().callback(|_| Msg::ChangeRoute);
 
         match (&self.self_profile, &self.profile) {
-            (Some(self_data), _) => self.self_user_card(ctx.link(), self_data),
+            (Some(self_data), _) => self.self_user_card(ctx.link(), self_data, callback_change),
             (_, Some(user_data)) => self.other_user_card(ctx.link(), user_data),
             _ => html!{<ListErrors error={self.error.clone()} clear_error={Some(onclick_clear_error)} />},
         }
@@ -288,6 +301,7 @@ impl Profile {
         &self,
         link: &Scope<Self>,
         self_data: &SelfUserInfo,
+        callback_change: Callback<bool>,
     ) -> Html {
         html! {
             <div class="profile-page">
@@ -307,7 +321,7 @@ impl Profile {
                                     ) }
                                 </div>
                             </div>
-                            {self.self_user_relate_object(link, self_data)}
+                            {self.self_user_relate_object(link, self_data, callback_change)}
                         </div>
                     </div>
                 </div>
@@ -319,6 +333,7 @@ impl Profile {
         &self,
         link: &Scope<Self>,
         self_data: &SelfUserInfo,
+        callback_change: Callback<bool>,
     ) -> Html {
         html!{<div class="card">
             <div class="columns is-mobile">
@@ -332,7 +347,7 @@ impl Profile {
                             ProfileTab::FavoriteComponents => self.view_favorite_components(None),
                             ProfileTab::FavoriteCompanies => self.view_favorite_companies(None),
                             ProfileTab::FavoriteStandards => self.view_favorite_standards(),
-                            ProfileTab::FavoriteUsers => html!{<CatalogUsers arguments = {UsersQueryArg::set_favorite()} />},
+                            ProfileTab::FavoriteUsers => self.view_favorite_users(callback_change),
                         }}
                     </div>
                 </div>
@@ -697,9 +712,21 @@ impl Profile {
         }
     }
 
+    fn view_favorite_users(
+        &self,
+        callback_change: Callback<bool>,
+    ) -> Html {
+        html!{
+            <CatalogUsers
+                arguments = {UsersQueryArg::set_favorite()}
+                {callback_change}
+            />
+        }
+    }
+
     fn get_number_of_items(&self, tab: &ProfileTab ) -> usize {
         match &self.self_profile {
-            Some( ref res) =>  match tab {
+            Some(ref res) =>  match tab {
               ProfileTab::Certificates => res.certificates.len(),
               ProfileTab::Components => res.components_count,
               ProfileTab::FavoriteComponents => res.fav_components_count,

@@ -1,4 +1,4 @@
-use yew::{Component, Context, html, html::Scope, Html, Properties, classes};
+use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, classes};
 use yew_router::prelude::*;
 use crate::routes::AppRoute::Profile;
 use crate::fragments::switch_icon::res_btn;
@@ -14,6 +14,7 @@ pub enum Msg {
 pub struct Props {
     pub data: ShowUserShort,
     pub show_list: bool,
+    pub callback_change: Option<Callback<bool>>,
 }
 
 pub struct ListItemUser {
@@ -40,6 +41,10 @@ impl Component for ListItemUser {
                 // Redirect to profile page
                 let navigator: Navigator = ctx.link().navigator().unwrap();
                 navigator.replace(&Profile { username: self.username.to_string() });
+                if let Some(change) = &ctx.props().callback_change {
+                    // принудительно перезагружаем страницу профиля (похоже на баг yew)
+                    change.emit(true);
+                }
             },
             Msg::Ignore => {},
         }
@@ -47,7 +52,7 @@ impl Component for ListItemUser {
     }
 
     fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
-        if self.show_list == ctx.props().show_list ||
+        if self.show_list == ctx.props().show_list &&
             self.user_uuid == ctx.props().data.uuid {
             false
         } else {
