@@ -33,7 +33,6 @@ pub struct Props {
 
 pub struct ListItemCompany {
     error: Option<Error>,
-    data_uuid: UUID,
     company_uuid: UUID,
     is_followed: bool,
     show_list: bool,
@@ -46,8 +45,7 @@ impl Component for ListItemCompany {
     fn create(ctx: &Context<Self>) -> Self {
         Self {
             error: None,
-            data_uuid: ctx.props().data.uuid.clone(),
-            company_uuid: String::new(),
+            company_uuid: ctx.props().data.uuid.clone(),
             is_followed: ctx.props().data.is_followed,
             show_list: ctx.props().show_list,
         }
@@ -119,12 +117,14 @@ impl Component for ListItemCompany {
     }
 
     fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
-        if self.show_list == ctx.props().show_list &&
-            self.data_uuid == ctx.props().data.uuid {
+        if self.company_uuid == ctx.props().data.uuid &&
+            self.is_followed == ctx.props().data.is_followed &&
+              self.show_list == ctx.props().show_list {
             false
         } else {
+            self.company_uuid = ctx.props().data.uuid.clone();
+            self.is_followed = ctx.props().data.is_followed;
             self.show_list = ctx.props().show_list;
-            self.data_uuid = ctx.props().data.uuid.clone();
             true
         }
     }
