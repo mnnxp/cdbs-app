@@ -57,14 +57,14 @@ impl Component for ListItem {
     }
 
     fn changed(&mut self, ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
-        if self.show_list == ctx.props().show_list &&
-            self.component_uuid == ctx.props().data.uuid &&
-            self.is_followed == ctx.props().data.is_followed {
+        if self.component_uuid == ctx.props().data.uuid &&
+            self.is_followed == ctx.props().data.is_followed &&
+              self.show_list == ctx.props().show_list {
             false
         } else {
-            self.show_list = ctx.props().show_list;
             self.component_uuid = ctx.props().data.uuid.clone();
             self.is_followed = ctx.props().data.is_followed;
+            self.show_list = ctx.props().show_list;
             true
         }
     }

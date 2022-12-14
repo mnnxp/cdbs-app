@@ -150,6 +150,7 @@ impl Component for CatalogComponents {
             false
         } else {
             self.show_create_btn = ctx.props().show_create_btn;
+            self.arguments = ctx.props().arguments.clone();
             ctx.link().send_message(Msg::GetList);
             // debug!("else change");
             true
