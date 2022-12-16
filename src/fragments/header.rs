@@ -3,7 +3,7 @@ use yew_router::prelude::*;
 use yew_router::prelude::Link;
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
-use crate::services::{set_token, get_logged_user, set_logged_user, logout, get_value_field};
+use crate::services::{set_token, is_authenticated, get_logged_user, set_logged_user, logout, get_value_field};
 use crate::routes::AppRoute::{self, Login, Home, Register, Notifications, Profile, Settings};
 use crate::types::SlimUser;
 
@@ -45,8 +45,9 @@ impl Component for Header {
     }
 
     fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
-        if first_render {
-            // get current user data from storage
+        // костыль для обновления шапки после авторизации пользователя
+        if first_render || (is_authenticated() && self.current_user.is_none()) {
+            debug!("location current_user");
             self.current_user = get_logged_user();
             // get current path and setting navbar
             ctx.link().send_message(Msg::CheckPath);
@@ -79,7 +80,8 @@ impl Component for Header {
           Msg::CheckPath => {
               ctx.link().location().map(|l| {
                   let current_path = l.path();
-                  // debug!("route_service: {:?}", route_service.get_fragment().as_str());
+                  // update current path
+                  self.current_path = current_path.to_string();
                   // check open home page
                   self.open_home_page = current_path.len() < 3;
                   // check open notifications page
@@ -99,8 +101,6 @@ impl Component for Header {
             if self.is_active {
               ctx.link().send_message(Msg::TriggerMenu)
             }
-            // update current path
-            self.current_path = current_path;
             // get current user data from storage
             self.current_user = get_logged_user();
             // get current path and setting navbar
