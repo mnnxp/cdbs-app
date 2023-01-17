@@ -96,10 +96,6 @@ impl Component for CreateComponent {
                     debug!("name is empty: {:?}", self.request_component.name);
                     flag = false;
                 }
-                if self.request_component.description.is_empty() {
-                    debug!("description is empty: {:?}", self.request_component.description);
-                    flag = false;
-                }
 
                 if flag {
                     link.send_message(Msg::RequestCreateComponentData);
