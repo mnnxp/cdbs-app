@@ -9,7 +9,7 @@ use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use log::debug;
 use crate::routes::AppRoute::{Login, Home, ShowComponent};
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::files_frame::FilesFrame;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::component::{
@@ -18,7 +18,7 @@ use crate::fragments::component::{
     ModificationsTableEdit, ComponentFilesBlock, SearchSpecsTags, AddKeywordsTags
 };
 use crate::services::storage_upload::{storage_upload, prepare_files};
-use crate::services::{get_value_field, get_logged_user};
+use crate::services::{get_value_field, get_logged_user, resp_parsing, resp_parsing_item, get_value_response, get_from_value};
 use crate::types::{
     UUID, ComponentInfo, SlimUser, TypeAccessInfo, UploadFile, ActualStatus, ComponentUpdatePreData,
     ComponentUpdateData, ComponentType, ShowCompanyShort, ComponentModificationInfo, ShowFileInfo,
@@ -40,7 +40,7 @@ pub struct ComponentSettings {
     current_component_is_base: bool,
     current_modifications: Vec<ComponentModificationInfo>,
     request_component: ComponentUpdatePreData,
-    request_upload_data: Vec<UploadFile>,
+    // request_upload_data: Vec<UploadFile>,
     request_access: i64,
     supplier_list: Vec<ShowCompanyShort>,
     component_types: Vec<ComponentType>,
@@ -96,12 +96,12 @@ pub enum Msg {
     UpdateDescription(String),
     UpdateFiles(Option<FileList>),
     UpdateConfirmDelete(String),
-    ResponseError(Error),
     RegisterNewModification(UUID),
     DeleteModification(UUID),
     ChangeHideDeleteComponent,
     ClearFilesBoxed,
     ClearError,
+    ResponseError(Error),
     Ignore,
 }
 
@@ -117,7 +117,7 @@ impl Component for ComponentSettings {
             current_component_is_base: false,
             current_modifications: Vec::new(),
             request_component: ComponentUpdatePreData::default(),
-            request_upload_data: Vec::new(),
+            // request_upload_data: Vec::new(),
             request_access: 0,
             supplier_list: Vec::new(),
             component_types: Vec::new(),
@@ -304,108 +304,54 @@ impl Component for ComponentSettings {
                 }
             },
             Msg::GetComponentFilesListResult(res) => {
-                let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        self.files_list = serde_json::from_value(
-                            res_value.get("componentFilesList").unwrap().clone()
-                        ).unwrap();
-                        debug!("componentFilesList {:?}", self.files_list.len());
-                    },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
-                }
+                self.files_list = resp_parsing(res, "componentFilesList")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
             },
             Msg::GetUploadData(res) => {
-                let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: Vec<UploadFile> =
-                            serde_json::from_value(res_value.get("uploadComponentFiles").unwrap().clone()).unwrap();
-                        debug!("uploadComponentFiles {:?}", self.request_upload_data);
-
-                        if !self.files.is_empty() {
-                            let callback_confirm =
-                                link.callback(|res: Result<usize, Error>| Msg::FinishUploadFiles(res));
-                            self.v_node = Some(storage_upload(result, self.files.clone(), callback_confirm));
-                        }
-                        debug!("file: {:#?}", self.files);
-                    },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                let result: Vec<UploadFile> = resp_parsing(res, "uploadComponentFiles")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                if !self.files.is_empty() {
+                    let callback_confirm =
+                        link.callback(|res: Result<usize, Error>| Msg::FinishUploadFiles(res));
+                    self.v_node = Some(storage_upload(result, self.files.clone(), callback_confirm));
                 }
+                debug!("file: {:#?}", self.files);
             },
             Msg::GetComponentData(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let component_data: ComponentInfo =
-                            serde_json::from_value(res_value.get("component").unwrap().clone()).unwrap();
-                        // debug!("Component data: {:?}", component_data);
-
-                        self.current_component_uuid = component_data.uuid.clone();
-                        self.current_component_is_base = component_data.is_base;
-                        self.current_component = Some(component_data.clone());
-                        // if let Some(user) = &ctx.props().current_user {
-                        //     self.current_user_owner = component_data.owner_user.uuid == user.uuid;
-                        // }
-                        self.current_modifications = component_data.component_modifications.clone();
-                        self.files_list = component_data.files.clone();
-                        self.request_component = component_data.into();
-                    },
-                    true => self.error = Some(get_error(&data)),
-                }
+                let component_data: ComponentInfo = resp_parsing_item(res, "component")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                self.current_component_uuid = component_data.uuid.clone();
+                self.current_component_is_base = component_data.is_base;
+                self.current_component = Some(component_data.clone());
+                // if let Some(user) = &ctx.props().current_user {
+                //     self.current_user_owner = component_data.owner_user.uuid == user.uuid;
+                // }
+                self.current_modifications = component_data.component_modifications.clone();
+                self.files_list = component_data.files.clone();
+                self.request_component = component_data.into();
             },
             Msg::GetListOpt(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        self.supplier_list =
-                            serde_json::from_value(res_value.get("companies").unwrap().clone()).unwrap();
-                        self.component_types =
-                            serde_json::from_value(res_value.get("componentTypes").unwrap().clone()).unwrap();
-                        self.actual_statuses =
-                            serde_json::from_value(res_value.get("componentActualStatuses").unwrap().clone()).unwrap();
-                        self.types_access =
-                            serde_json::from_value(res_value.get("typesAccess").unwrap().clone()).unwrap();
-                    },
-                    true => self.error = Some(get_error(&data)),
-                }
+                let value: Value = get_value_response(res)
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                self.supplier_list = get_from_value(&value, "companies").unwrap();
+                self.component_types = get_from_value(&value, "componentTypes").unwrap();
+                self.actual_statuses = get_from_value(&value, "componentActualStatuses").unwrap();
+                self.types_access = get_from_value(&value, "typesAccess").unwrap();
             },
             Msg::GetUpdateComponentResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: usize =
-                            serde_json::from_value(res_value.get("putComponentUpdate").unwrap().clone()).unwrap();
-                        // debug!("Component data: {:?}", result);
-                        self.get_result_component_data = result;
-                    },
-                    true => self.error = Some(get_error(&data)),
-                }
+                self.get_result_component_data = resp_parsing_item(res, "putComponentUpdate")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
             },
             Msg::GetUpdateAccessResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: bool =
-                            serde_json::from_value(res_value.get("changeComponentAccess").unwrap().clone()).unwrap();
-                        debug!("Component change access: {:?}", result);
-                        self.update_component_access = false;
-                        self.get_result_access = result;
-                    },
-                    true => self.error = Some(get_error(&data)),
-                }
+                self.update_component_access = false;
+                self.get_result_access = resp_parsing_item(res, "putComponentUpdate")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
             },
             Msg::FinishUploadFiles(res) => {
                 match res {
@@ -420,19 +366,11 @@ impl Component for ComponentSettings {
                 self.active_loading_files_btn = false;
             },
             Msg::GetDeleteComponentResult(res) => {
-                let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: UUID = serde_json::from_value(res_value.get("deleteComponent").unwrap().clone()).unwrap();
-                        debug!("deleteComponent: {:?}", result);
-                        if self.current_component_uuid == result {
-                            // self.router_agent.send(Home)
-                            navigator.replace(&Home);
-                        }
-                    },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                let result: UUID = resp_parsing_item(res, "deleteComponent")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                if self.current_component_uuid == result {
+                    navigator.replace(&Home);
                 }
             },
             Msg::EditFiles => self.upload_component_files = !self.upload_component_files,
@@ -466,7 +404,6 @@ impl Component for ComponentSettings {
                 self.disable_delete_component_btn = self.current_component_uuid != data;
                 self.confirm_delete_component = data;
             },
-            Msg::ResponseError(err) => self.error = Some(err),
             Msg::RegisterNewModification(modification_uuid) => {
                 // link.send_message(Msg::RequestComponentModificationsData);
                 self.select_component_modification = modification_uuid.clone();
@@ -482,6 +419,7 @@ impl Component for ComponentSettings {
                 self.upload_component_files = false;
             },
             Msg::ClearError => self.error = None,
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::Ignore => {},
         }
         true

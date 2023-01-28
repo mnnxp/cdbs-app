@@ -1,12 +1,10 @@
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
-use log::debug;
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, Spec, SpecPathInfo};
-use crate::services::get_value_field;
+use crate::services::{get_value_field, resp_parsing, resp_parsing_item};
 use crate::gqls::make_query;
 use crate::gqls::relate::{GetSpecsPaths, get_specs_paths};
 use crate::gqls::company::{
@@ -38,12 +36,12 @@ pub enum Msg {
     RequestSpecInfo,
     RequestDeleteSpec,
     RequestAddSpec,
-    ResponseError(Error),
     GetSpecInfoResult(String),
     GetAddedSpecResult(String),
     GetDeleteSpecResult(String),
     ClickSpecInfo,
     ClearError,
+    ResponseError(Error),
     Ignore,
 }
 
@@ -110,67 +108,43 @@ impl Component for SpecTagItem {
                     link.send_message(Msg::GetAddedSpecResult(res.unwrap()));
                 })
             },
-            Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetSpecInfoResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        let result: Vec<SpecPathInfo> = serde_json::from_value(res.get("specsPaths").unwrap().clone()).unwrap();
-                        debug!("specsPaths: {:?}", result);
-                        if let Some(data) = result.first() {
-                            self.spec_data = Some(data.clone());
-                            self.open_spec_info = true;
-                        }
-                    },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                let result: Vec<SpecPathInfo> = resp_parsing(res, "specsPaths")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                if let Some(data) = result.first() {
+                    self.spec_data = Some(data.clone());
+                    self.open_spec_info = true;
                 }
             },
             Msg::GetAddedSpecResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        let result: usize = serde_json::from_value(res.get("addCompanySpecs").unwrap().clone()).unwrap();
-                        debug!("addCompanySpecs: {:?}", result);
-                        // self.get_result_delete = result > 0;
-                        match &ctx.props().added_spec {
-                            Some(added_spec) => {
-                                if result > 0 {
-                                    self.is_added = true;
-                                    self.get_result_delete = false;
-                                    added_spec.emit(ctx.props().spec.spec_id);
-                                };
-                            },
-                            None => self.is_added = result > 0,
-                        }
+                let result: usize = resp_parsing_item(res, "specsPaths")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                match &ctx.props().added_spec {
+                    Some(added_spec) => {
+                        if result > 0 {
+                            self.is_added = true;
+                            self.get_result_delete = false;
+                            added_spec.emit(ctx.props().spec.spec_id);
+                        };
                     },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                    None => self.is_added = result > 0,
                 }
             },
             Msg::GetDeleteSpecResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        let result: usize = serde_json::from_value(res.get("deleteCompanySpecs").unwrap().clone()).unwrap();
-                        debug!("deleteCompanySpecs: {:?}", result);
-                        // self.get_result_delete = result > 0;
-                        match &ctx.props().delete_spec {
-                            Some(delete_spec) => {
-                                if result > 0 {
-                                    self.is_added = false;
-                                    self.get_result_delete = true;
-                                    delete_spec.emit(ctx.props().spec.spec_id);
-                                };
-                            },
-                            None => self.get_result_delete = result > 0,
-                        }
+                let result: usize = resp_parsing_item(res, "deleteCompanySpecs")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                match &ctx.props().delete_spec {
+                    Some(delete_spec) => {
+                        if result > 0 {
+                            self.is_added = false;
+                            self.get_result_delete = true;
+                            delete_spec.emit(ctx.props().spec.spec_id);
+                        };
                     },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                    None => self.get_result_delete = result > 0,
                 }
             },
             Msg::ClickSpecInfo => {
@@ -180,6 +154,7 @@ impl Component for SpecTagItem {
                 }
             },
             Msg::ClearError => self.error = None,
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::Ignore => (),
         }
         true

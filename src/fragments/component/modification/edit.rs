@@ -4,11 +4,10 @@ use yew::html::{Scope, TargetCast};
 use web_sys::{InputEvent, Event, HtmlInputElement};
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use log::debug;
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
-use crate::services::get_value_field;
+use crate::services::{get_value_field, resp_parsing, resp_parsing_item};
 use crate::types::{
     UUID, ComponentModificationInfo, Param, ActualStatus,
     ModificationUpdatePreData, FilesetProgramInfo,
@@ -296,108 +295,53 @@ impl Component for ModificationsTableEdit {
                 });
             },
             Msg::GetAddModificationResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        self.select_modification_uuid = serde_json::from_value(
-                            res_value.get("registerComponentModification").unwrap().clone()
-                        ).unwrap();
-
-                        self.open_add_modification_card = false;
-
-                        link.send_message(Msg::RequestComponentModificationsData);
-                    },
-                    true => self.error = Some(get_error(&data)),
-                }
+                self.select_modification_uuid = resp_parsing_item(res, "registerComponentModification")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                self.open_add_modification_card = false;
+                link.send_message(Msg::RequestComponentModificationsData);
             },
             Msg::GetUpdateModificationResult(res) => {
-                let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: usize = serde_json::from_value(res_value.get("putComponentModificationUpdate").unwrap().clone()).unwrap();
-                        debug!("putComponentModificationUpdate: {:?}", result);
-                        if result > 0 {
-                            link.send_message(Msg::RequestComponentModificationsData);
-                        }
-                    },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
-                }
                 self.open_edit_modification_card = false;
+                let result: usize = resp_parsing_item(res, "putComponentModificationUpdate")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                if result > 0 {
+                    link.send_message(Msg::RequestComponentModificationsData);
+                }
             },
             Msg::GetDeleteModificationResult(res) => {
-                let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: UUID = serde_json::from_value(res_value.get("deleteComponentModification").unwrap().clone()).unwrap();
-                        debug!("deleteComponentModification: {:?}", result);
-                        self.valid_modification_uuids.remove(&result);
-                        self.select_modification_uuid = String::new();
-                    },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
-                }
                 self.open_edit_modification_card = false;
+                let result: UUID = resp_parsing_item(res, "deleteComponentModification")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                self.valid_modification_uuids.remove(&result);
+                self.select_modification_uuid = String::new();
             },
             Msg::GetComponentModificationsResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        self.clear_current_data();
-                        self.component_modifications = serde_json::from_value(
-                            res_value.get("componentModifications").unwrap().clone()
-                        ).unwrap();
-                        debug!("Update modifications list");
-                        link.send_message(Msg::ParseParams);
-                        link.send_message(Msg::ParseFilesets);
-                    },
-                    true => self.error = Some(get_error(&data)),
-                }
+                self.clear_current_data();
+                self.component_modifications = resp_parsing(res, "componentModifications")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                link.send_message(Msg::ParseParams);
+                link.send_message(Msg::ParseFilesets);
             },
             Msg::GetComponentModificationFilesetResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let filesets: Vec<FilesetProgramInfo> = serde_json::from_value(
-                            res_value.get("componentModificationFilesets").unwrap().clone()
-                        ).unwrap();
-                        debug!("Update modification filesets list");
-
-                        let component_modification_uuid = filesets.first().map(|x| x.modification_uuid.clone()).unwrap_or_default();
-                        let mut fileset_data: Vec<(UUID, String)> = Vec::new();
-                        for fileset in &filesets {
-                            fileset_data.push((fileset.uuid.clone(), fileset.program.name.clone()));
-                        }
-
-                        self.modification_filesets.remove(&component_modification_uuid);
-                        self.modification_filesets.insert(
-                            component_modification_uuid,
-                            fileset_data.clone()
-                        );
-                    },
-                    true => self.error = Some(get_error(&data)),
+                let filesets: Vec<FilesetProgramInfo> = resp_parsing(res, "componentModificationFilesets")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                let component_modification_uuid = filesets.first().map(|x| x.modification_uuid.clone()).unwrap_or_default();
+                let mut fileset_data: Vec<(UUID, String)> = Vec::new();
+                for fileset in &filesets {
+                    fileset_data.push((fileset.uuid.clone(), fileset.program.name.clone()));
                 }
+                self.modification_filesets.remove(&component_modification_uuid);
+                self.modification_filesets.insert(component_modification_uuid, fileset_data.clone());
             },
             Msg::GetListOptResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        self.actual_statuses = serde_json::from_value(
-                            res_value.get("componentActualStatuses").unwrap().clone()
-                        ).unwrap();
-                    },
-                    true => self.error = Some(get_error(&data)),
-                }
+                self.actual_statuses = resp_parsing_item(res, "componentActualStatuses")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
             },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::UpdateAddName(data) => {

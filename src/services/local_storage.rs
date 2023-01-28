@@ -94,9 +94,8 @@ pub fn set_logged_user(logged_user: Option<String>) {
 /// Get authenticated user from browser storage
 pub fn get_logged_user() -> Option<SlimUser> {
     let logged_user_lock = LOGGED_USER.read();
-    let logged_user_lock: Option<SlimUser> = serde_json::from_str(
-        &logged_user_lock.clone().unwrap_or_default()
-      ).unwrap_or_default();
+    let logged_user_lock: Option<SlimUser> =
+        serde_json::from_str(&logged_user_lock.clone().unwrap_or_default()).unwrap_or_default();
     logged_user_lock.clone()
 }
 
@@ -104,11 +103,9 @@ pub fn get_logged_user() -> Option<SlimUser> {
 pub fn set_lang(lang: Option<String>) {
     let storage = storage_service();
     if let Some(l) = lang.clone() {
-        storage.set_item(ACCEPT_LANGUAGE, l.as_str())
-            .expect("no access storage");
+        storage.set_item(ACCEPT_LANGUAGE, l.as_str()).expect("no access storage");
     } else {
-        storage.remove_item(ACCEPT_LANGUAGE)
-            .expect("no access storage");
+        storage.remove_item(ACCEPT_LANGUAGE).expect("no access storage");
     }
     let mut lang_lock = LANGUAGE.write();
     *lang_lock = lang;
@@ -124,11 +121,9 @@ pub fn get_lang() -> Option<String> {
 pub fn set_list_view(list_view: Option<String>) {
     let storage = storage_service();
     if let Some(l) = list_view.clone() {
-        storage.set_item(LIST_VIEW_TYPE, l.as_str())
-            .expect("no access storage");
+        storage.set_item(LIST_VIEW_TYPE, l.as_str()).expect("no access storage");
     } else {
-        storage.remove_item(LIST_VIEW_TYPE)
-            .expect("no access storage");
+        storage.remove_item(LIST_VIEW_TYPE).expect("no access storage");
     }
     let mut list_view_lock = LISTVIEWTYPE.write();
     *list_view_lock = list_view;

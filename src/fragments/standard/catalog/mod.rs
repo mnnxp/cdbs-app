@@ -6,13 +6,11 @@ use yew::{Component, Context, html, Html, Properties};
 use yew_router::prelude::Link;
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
-use log::debug;
 use crate::routes::AppRoute::{self, CreateStandard};
-use crate::error::{Error, get_error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{ShowStandardShort, StandardsQueryArg};
-use crate::services::get_value_field;
+use crate::services::{get_value_field, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::standard::{GetStandardsShortList, get_standards_short_list};
 use crate::fragments::ListState;
@@ -21,6 +19,7 @@ pub enum Msg {
     SwitchShowType,
     UpdateList(String),
     GetList,
+    ResponseError(Error),
 }
 
 pub struct CatalogStandards {
@@ -82,18 +81,11 @@ impl Component for CatalogStandards {
                 });
             },
             Msg::UpdateList(res) => {
-              let data: Value = serde_json::from_str(res.as_str()).unwrap();
-              let res_value = data.as_object().unwrap().get("data").unwrap();
-              debug!("res value: {:#?}", res_value);
-              match res_value.is_null() {
-                  false => {
-                      let result: Vec<ShowStandardShort> = serde_json::from_value(res_value.get("standards").unwrap().clone()).unwrap();
-                      debug!("UpdateList result: {:?}", result);
-                      self.list = result;
-                  },
-                  true => self.error = Some(get_error(&data)),
-              }
-          },
+                self.list = resp_parsing(res, "standards")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+            },
+            Msg::ResponseError(err) => self.error = Some(err),
         }
         true
     }

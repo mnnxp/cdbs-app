@@ -3,11 +3,9 @@ use yew::html::{Scope, TargetCast};
 use web_sys::{InputEvent, HtmlInputElement};
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
-use serde_json::Value;
-use log::debug;
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
-use crate::services::get_value_field;
+use crate::services::{get_value_field, resp_parsing_item};
 use crate::gqls::make_query;
 use crate::gqls::relate::{RegisterParam, register_param};
 
@@ -31,6 +29,7 @@ pub enum Msg {
     UpdateParamname(String),
     UpdateParamValue(String),
     ClearError,
+    ResponseError(Error),
     Ignore,
 }
 
@@ -67,23 +66,14 @@ impl Component for RegisterParamnameBlock {
                 })
             },
             Msg::GetRegisterParamnameResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let value: usize =
-                            serde_json::from_value(res_value.get("registerParam").unwrap().clone()).unwrap();
-                        debug!("registerParam: {:?}", value);
-                        ctx.props().callback_add_param.emit((value, self.set_param_value.clone()));
-                        self.active_loading_btn = false;
-
-                        // clear old data
-                        self.request_new_paramname.clear();
-                        self.set_param_value.clear();
-                    },
-                    true => self.error = Some(get_error(&data)),
-                }
+                let value: usize = resp_parsing_item(res, "registerParam")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                ctx.props().callback_add_param.emit((value, self.set_param_value.clone()));
+                self.active_loading_btn = false;
+                // clear old data
+                self.request_new_paramname.clear();
+                self.set_param_value.clear();
             },
             Msg::UpdateParamname(data) => {
                 self.disable_btn = false;
@@ -91,6 +81,7 @@ impl Component for RegisterParamnameBlock {
             },
             Msg::UpdateParamValue(data) => self.set_param_value = data,
             Msg::ClearError => self.error = None,
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::Ignore => {},
         }
         true

@@ -8,9 +8,9 @@ use serde_json::Value;
 use chrono::NaiveDateTime;
 use log::debug;
 use crate::routes::AppRoute::{Login, StandardSettings};
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
-use crate::services::{get_logged_user, get_value_field};
+use crate::services::{get_from_value, get_logged_user, get_value_field, get_value_response, resp_parsing_item};
 use crate::types::{
     UUID, StandardCreateData, SlimUser, Region, TypeAccessInfo,
     ShowCompanyShort, StandardStatus,
@@ -187,39 +187,21 @@ impl Component for CreateStandard {
                 })
             },
             Msg::GetListOpt(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        self.supplier_list =
-                            serde_json::from_value(res_value.get("companies").unwrap().clone()).unwrap();
-                        self.standard_statuses =
-                            serde_json::from_value(res_value.get("standardStatuses").unwrap().clone()).unwrap();
-                        self.regions =
-                            serde_json::from_value(res_value.get("regions").unwrap().clone()).unwrap();
-                        self.types_access =
-                            serde_json::from_value(res_value.get("typesAccess").unwrap().clone()).unwrap();
-                    },
-                    true => self.error = Some(get_error(&data)),
-                }
+                let value: Value = get_value_response(res)
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                self.supplier_list = get_from_value(&value, "companies").unwrap();
+                self.standard_statuses = get_from_value(&value, "standardStatuses").unwrap();
+                self.regions = get_from_value(&value, "regions").unwrap();
+                self.types_access = get_from_value(&value, "typesAccess").unwrap();
             },
             Msg::GetCreateStandardResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: UUID =
-                            serde_json::from_value(res_value.get("registerStandard").unwrap().clone()).unwrap();
-                        debug!("registerStandard: {:?}", result);
-                        // Redirect to setting standard page
-                        if !result.is_empty() {
-                            let navigator: Navigator = ctx.link().navigator().unwrap();
-                            navigator.replace(&StandardSettings { uuid: result });
-                        }
-                    },
-                    true => self.error = Some(get_error(&data)),
+                let result: UUID = resp_parsing_item(res, "registerStandard")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                if !result.is_empty() {
+                    let navigator: Navigator = ctx.link().navigator().unwrap();
+                    navigator.replace(&StandardSettings { uuid: result });
                 }
             },
             // items request create main standard data

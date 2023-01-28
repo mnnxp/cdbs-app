@@ -7,9 +7,9 @@ use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
 use crate::routes::AppRoute::{Login, ShowCompany};
-use crate::error::{Error, get_error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
-use crate::services::{get_logged_user, get_value_field};
+use crate::services::{get_from_value, get_logged_user, get_value_field, get_value_response, resp_parsing_item};
 use crate::types::{UUID, SlimUser, CompanyCreateInfo, Region, CompanyType, TypeAccessInfo};
 use crate::gqls::make_query;
 use crate::gqls::company::{
@@ -34,7 +34,6 @@ pub struct Props {
 
 pub enum Msg {
     RequestCreateCompany,
-    ResponseError(Error),
     GetCreateCompanyResult(String),
     UpdateTypeAccessId(String),
     UpdateOrgname(String),
@@ -49,6 +48,7 @@ pub enum Msg {
     UpdateCompanyTypeId(String),
     UpdateRegionId(String),
     UpdateList(String),
+    ResponseError(Error),
     Ignore,
 }
 
@@ -125,21 +125,13 @@ impl Component for CreateCompany {
                     link.send_message(Msg::GetCreateCompanyResult(res.unwrap()));
                 })
             },
-            Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetCreateCompanyResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        let company_uuid: UUID = serde_json::from_value(res.get("registerCompany").unwrap().clone()).unwrap();
-                        debug!("Company uuid: {:?}", company_uuid);
-                        // Redirect to company page
-                        let navigator: Navigator = ctx.link().navigator().unwrap();
-                        navigator.replace(&ShowCompany { uuid: company_uuid.clone() });
-                    },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
-                }
+                let company_uuid: UUID = resp_parsing_item(res, "registerCompany")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                // Redirect to company page
+                let navigator: Navigator = ctx.link().navigator().unwrap();
+                navigator.replace(&ShowCompany { uuid: company_uuid.clone() });
             },
             Msg::UpdateTypeAccessId(type_access_id) => {
                 self.request_company.type_access_id = type_access_id.parse::<i64>().unwrap_or(1);
@@ -163,21 +155,14 @@ impl Component for CreateCompany {
                 debug!("Update: {:?}", type_id);
             },
             Msg::UpdateList(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-                match res_value.is_null() {
-                    false => {
-                        // debug!("Result: {:#?}", res_value.clone);
-                        self.regions =
-                            serde_json::from_value(res_value.get("regions").unwrap().clone()).unwrap();
-                        self.company_types =
-                            serde_json::from_value(res_value.get("companyTypes").unwrap().clone()).unwrap();
-                        self.types_access =
-                            serde_json::from_value(res_value.get("typesAccess").unwrap().clone()).unwrap();
-                    },
-                    true => self.error = Some(get_error(&data)),
-                }
+                let value: Value = get_value_response(res)
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                self.regions = get_from_value(&value, "regions").unwrap();
+                self.company_types = get_from_value(&value, "companyTypes").unwrap();
+                self.types_access = get_from_value(&value, "typesAccess").unwrap();
             },
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::Ignore => {},
         }
         true

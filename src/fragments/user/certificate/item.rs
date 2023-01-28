@@ -3,11 +3,10 @@ use yew::html::{Scope, TargetCast};
 use web_sys::{InputEvent, HtmlInputElement};
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use log::debug;
 use crate::fragments::list_errors::ListErrors;
-use crate::error::{Error, get_error};
-use crate::services::{image_detector, get_value_field};
+use crate::error::Error;
+use crate::services::{image_detector, get_value_field, resp_parsing_item};
 use crate::types::{UUID, UserCertificate};
 use crate::gqls::make_query;
 use crate::gqls::user::{
@@ -32,6 +31,7 @@ pub enum Msg {
     UpdateDescription(String),
     ShowCert,
     ClearError,
+    ResponseError(Error),
     Ignore,
 }
 
@@ -91,37 +91,22 @@ impl Component for UserCertificateItem {
                 })
             },
             Msg::GetUpdateResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: bool = serde_json::from_value(res_value.get("updateUserCertificate").unwrap().clone()).unwrap();
-                        debug!("Update user cert: {:?}", result);
-                        self.get_result_update = result;
-                    },
-                    true => self.error = Some(get_error(&data)),
-                }
+                self.get_result_update  = resp_parsing_item(res, "updateUserCertificate")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
             },
             Msg::GetDeleteCertResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        self.get_result_delete = serde_json::from_value(res_value.get("deleteUserCertificate").unwrap().clone()).unwrap();
-                        debug!("Update user cert: {:?}", self.get_result_delete);
-
-                        if self.get_result_delete {
-                            ctx.props().callback_delete_cert.emit(ctx.props().certificate.file.uuid.clone());
-                        }
-                    },
-                    true => self.error = Some(get_error(&data)),
+                self.get_result_delete = resp_parsing_item(res, "deleteUserCertificate")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                if self.get_result_delete {
+                    ctx.props().callback_delete_cert.emit(ctx.props().certificate.file.uuid.clone());
                 }
             },
             Msg::UpdateDescription(description) => self.request_update = description,
             Msg::ShowCert => self.show_cert = !self.show_cert,
             Msg::ClearError => self.error = None,
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::Ignore => {},
         }
 

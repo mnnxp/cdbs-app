@@ -2,11 +2,10 @@ use std::collections::HashMap;
 use yew::{Component, Context, html, html::Scope, Html, Properties, classes};
 use yew_router::prelude::*;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
 use crate::routes::AppRoute::{Login, ComponentSettings};
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::switch_icon::res_btn;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::user::ListItemUser;
@@ -16,7 +15,7 @@ use crate::fragments::component::{
     ModificationsTable, FilesOfFilesetCard, ManageFilesOfFilesetBlock,
     ComponentFilesBlock, ModificationFilesTableCard, SpecsTags, KeywordsTags,
 };
-use crate::services::{get_logged_user, get_value_field};
+use crate::services::{get_logged_user, get_value_field, resp_parsing, resp_parsing_item};
 use crate::types::{UUID, ComponentInfo, SlimUser, ComponentParam, ComponentModificationInfo, DownloadFile};
 use crate::gqls::make_query;
 use crate::gqls::component::{
@@ -62,7 +61,6 @@ pub enum Msg {
     AddFollow(String),
     UnFollow,
     DelFollow(String),
-    ResponseError(Error),
     GetComponentData(String),
     ShowDescription,
     ShowFullCharacteristics,
@@ -74,6 +72,7 @@ pub enum Msg {
     OpenComponentSetting,
     GetDownloadFileResult(String),
     ClearError,
+    ResponseError(Error),
     Ignore,
 }
 
@@ -110,7 +109,7 @@ impl Component for ShowComponent {
             // self.router_agent.send(Login);
             let navigator: Navigator = ctx.link().navigator().unwrap();
             navigator.replace(&Login);
-        };
+        }
 
         let target_component_uuid =
             ctx.link().location().unwrap().path().trim_start_matches("/component/").to_string();
@@ -142,7 +141,7 @@ impl Component for ShowComponent {
 
                 link.send_message(Msg::GetComponentData(res));
               })
-            };
+            }
 
             spawn_local(async move {
               let ipt_component_files_arg = component_files::IptComponentFilesArg{
@@ -191,19 +190,12 @@ impl Component for ShowComponent {
                 })
             },
             Msg::AddFollow(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: bool =
-                            serde_json::from_value(res_value.get("addComponentFav").unwrap().clone()).unwrap();
-                        if result {
-                            self.subscribers += 1;
-                            self.is_followed = true;
-                        }
-                    }
-                    true => self.error = Some(get_error(&data)),
+                let result: bool = resp_parsing_item(res, "addComponentFav")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                if result {
+                    self.subscribers += 1;
+                    self.is_followed = true;
                 }
             },
             Msg::UnFollow => {
@@ -217,95 +209,65 @@ impl Component for ShowComponent {
                 })
             },
             Msg::DelFollow(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: bool =
-                            serde_json::from_value(res_value.get("deleteComponentFav").unwrap().clone()).unwrap();
-
-                        if result {
-                            self.subscribers -= 1;
-                            self.is_followed = false;
-                        }
-                    }
-                    true => self.error = Some(get_error(&data)),
+                let result: bool = resp_parsing_item(res, "deleteComponentFav")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                if result {
+                    self.subscribers -= 1;
+                    self.is_followed = false;
                 }
             },
-            Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetComponentData(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let component_data: ComponentInfo =
-                            serde_json::from_value(res_value.get("component").unwrap().clone()).unwrap();
-                        debug!("Component data: {:?}", component_data);
-
-                        self.subscribers = component_data.subscribers;
-                        self.is_followed = component_data.is_followed;
-                        self.current_component_uuid = component_data.uuid.clone();
-                        if let Some(user) = get_logged_user() {
-                            self.current_user_owner = component_data.owner_user.uuid == user.uuid;
-                            debug!("Component data: {:?}", component_data);
-                        }
-                        // length check for show btn more/less
-                        self.show_full_description = component_data.description.len() < 250;
-                        // add main image
-                        self.file_arr.push(component_data.image_file.clone());
-                        self.show_full_characteristics = component_data.component_params.len() < 4;
-                        self.select_modification_uuid = component_data.component_modifications
-                            .first()
-                            .map(|m| m.uuid.clone())
-                            .unwrap_or_default();
-                        self.select_fileset_uuid = component_data.component_modifications
-                                .first()
-                                .map(|m| m.filesets_for_program.first().map(|f| f.uuid.clone())
-                                .unwrap_or_default()
-                            ).unwrap_or_default();
-                        for component_modification in &component_data.component_modifications {
-                            let mut fileset_data: Vec<(UUID, String)> = Vec::new();
-                            for fileset in &component_modification.filesets_for_program {
-                                fileset_data.push((fileset.uuid.clone(), fileset.program.name.clone()));
-                            }
-                            self.modification_filesets.insert(
-                                component_modification.uuid.clone(),
-                                fileset_data.clone()
-                            );
-                        }
-                        self.current_filesets_program = self.modification_filesets
-                            .get(&self.select_modification_uuid)
-                            .map(|f| f.clone())
-                            .unwrap_or_default();
-
-                        self.component = Some(component_data);
-                    }
-                    true => self.error = Some(get_error(&data)),
+                let component_data: ComponentInfo = resp_parsing_item(res, "component")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                self.subscribers = component_data.subscribers;
+                self.is_followed = component_data.is_followed;
+                self.current_component_uuid = component_data.uuid.clone();
+                if let Some(user) = get_logged_user() {
+                    self.current_user_owner = component_data.owner_user.uuid == user.uuid;
+                    debug!("Component data: {:?}", component_data);
                 }
+                // length check for show btn more/less
+                self.show_full_description = component_data.description.len() < 250;
+                // add main image
+                self.file_arr.push(component_data.image_file.clone());
+                self.show_full_characteristics = component_data.component_params.len() < 4;
+                self.select_modification_uuid = component_data.component_modifications
+                    .first()
+                    .map(|m| m.uuid.clone())
+                    .unwrap_or_default();
+                self.select_fileset_uuid = component_data.component_modifications
+                    .first()
+                    .map(|m| m.filesets_for_program.first().map(|f| f.uuid.clone())
+                        .unwrap_or_default()
+                    ).unwrap_or_default();
+                for component_modification in &component_data.component_modifications {
+                    let mut fileset_data: Vec<(UUID, String)> = Vec::new();
+                    for fileset in &component_modification.filesets_for_program {
+                        fileset_data.push((fileset.uuid.clone(), fileset.program.name.clone()));
+                    }
+                    self.modification_filesets.insert(
+                        component_modification.uuid.clone(),
+                        fileset_data.clone()
+                    );
+                }
+                self.current_filesets_program = self.modification_filesets
+                    .get(&self.select_modification_uuid)
+                    .map(|f| f.clone())
+                    .unwrap_or_default();
+                self.component = Some(component_data);
             },
             Msg::GetDownloadFileResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let mut result: Vec<DownloadFile> = serde_json::from_value(res_value.get("componentFiles").unwrap().clone()).unwrap();
-                        debug!("Download file: {:?}", result);
-
-                        if !result.is_empty() {
-                            // checkign have main image
-                            match self.file_arr.first() {
-                                Some(main_img) => {
-                                    result.push(main_img.clone());
-                                    self.file_arr = result;
-                                },
-                                None => self.file_arr = result,
-                            }
-                        }
+                let mut result: Vec<DownloadFile> = resp_parsing(res, "componentFiles")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                if !result.is_empty() {
+                    // checkign have main image
+                    if let Some(main_img) = self.file_arr.first() {
+                        result.push(main_img.clone());
                     }
-                    true => self.error = Some(get_error(&data)),
+                    self.file_arr = result;
                 }
             },
             Msg::ShowDescription => self.show_full_description = !self.show_full_description,
@@ -323,6 +285,7 @@ impl Component for ShowComponent {
                 }
             },
             Msg::ClearError => self.error = None,
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::Ignore => {},
         }
         true

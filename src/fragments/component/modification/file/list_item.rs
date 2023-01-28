@@ -1,12 +1,10 @@
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
-use log::debug;
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, ShowFileInfo, DownloadFile};
-use crate::services::get_value_field;
+use crate::services::{get_value_field, resp_parsing, resp_parsing_item};
 use crate::gqls::make_query;
 use crate::gqls::component::{
     ComponentModificationFiles, component_modification_files,
@@ -89,33 +87,19 @@ impl Component for ModificationFileItem {
             },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetDownloadFileResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        let result: Vec<DownloadFile> = serde_json::from_value(res.get("componentModificationFiles").unwrap().clone()).unwrap();
-                        debug!("componentModificationFiles: {:?}", result);
-                        self.download_url = result.first().map(|f| f.download_url.clone()).unwrap_or_default();
-                    },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
-                }
+                let result_parsing: Vec::<DownloadFile> = resp_parsing(res, "componentModificationFiles")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                self.download_url = result_parsing.first().map(|f| f.download_url.clone()).unwrap_or_default();
             },
             Msg::GetDeleteFileResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        self.get_result_delete = serde_json::from_value(res.get("deleteModificationFile").unwrap().clone()).unwrap();
-                        debug!("deleteModificationFile: {:?}", self.get_result_delete);
-                        if self.get_result_delete {
-                            if let Some(rollback) = &ctx.props().callback_delete_file {
-                                rollback.emit(ctx.props().file.uuid.clone());
-                            }
-                        }
-                    },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                self.get_result_delete = resp_parsing_item(res, "componentModificationFiles")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                if self.get_result_delete {
+                    if let Some(rollback) = &ctx.props().callback_delete_file {
+                        rollback.emit(ctx.props().file.uuid.clone());
+                    }
                 }
             },
             Msg::ClickFileInfo => self.open_full_info_file = !self.open_full_info_file,

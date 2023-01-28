@@ -10,7 +10,7 @@ use serde_json::Value;
 use chrono::NaiveDateTime;
 use log::debug;
 use crate::routes::AppRoute::{Login, Home, ShowCompany, ShowStandard};
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::files_frame::FilesFrame;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::standard::{
@@ -18,7 +18,7 @@ use crate::fragments::standard::{
     AddKeywordsTags, UpdateStandardFaviconCard,
 };
 use crate::services::storage_upload::{storage_upload, prepare_files};
-use crate::services::{get_logged_user, get_value_field};
+use crate::services::{get_from_value, get_logged_user, get_value_field, get_value_response, resp_parsing, resp_parsing_item, resp_parsing_two_level};
 use crate::types::{
     UUID, StandardInfo, SlimUser, Region, TypeAccessInfo, UploadFile, ShowFileInfo,
     ShowCompanyShort, StandardUpdatePreData, StandardUpdateData, StandardStatus,
@@ -96,10 +96,10 @@ pub enum Msg {
     UpdateRegionId(String),
     UpdateFiles(Option<FileList>),
     UpdateConfirmDelete(String),
-    ResponseError(Error),
     ChangeHideDeleteStandard,
     ClearFilesBoxed,
     ClearError,
+    ResponseError(Error),
     Ignore,
 }
 
@@ -297,103 +297,49 @@ impl Component for StandardSettings {
                 }
             },
             Msg::GetStandardFilesList(res) => {
-                let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        self.files_list = serde_json::from_value(
-                            res_value.get("standard").unwrap()
-                                .get("standardFiles").unwrap().clone()
-                        ).unwrap();
-                        debug!("standardFilesList {:?}", self.files_list.len());
-                    },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
-                }
+                self.files_list = resp_parsing_two_level(res, "standard", "standardFiles")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
             },
             Msg::GetUploadData(res) => {
-                let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: Vec<UploadFile> = serde_json::from_value(res_value.get("uploadStandardFiles").unwrap().clone()).unwrap();
-                        debug!("uploadStandardFiles {:?}", result);
-                        // self.request_upload_data = result;
-                        if !self.files.is_empty() {
-                            let callback_confirm =
-                                link.callback(|res: Result<usize, Error>| Msg::FinishUploadFiles(res));
-                            self.v_node = Some(storage_upload(result, self.files.clone(), callback_confirm));
-                        }
-                        debug!("file: {:#?}", self.files);
-                    },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                let result: Vec<UploadFile> = resp_parsing(res, "uploadStandardFiles")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                if !self.files.is_empty() {
+                    let callback_confirm =
+                        link.callback(|res: Result<usize, Error>| Msg::FinishUploadFiles(res));
+                    self.v_node = Some(storage_upload(result, self.files.clone(), callback_confirm));
                 }
+                debug!("file: {:#?}", self.files);
             },
             Msg::GetStandardData(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let standard_data: StandardInfo =
-                            serde_json::from_value(res_value.get("standard").unwrap().clone()).unwrap();
-                        debug!("Standard data: {:?}", standard_data);
-
-                        self.current_standard_uuid = standard_data.uuid.clone();
-                        self.files_list = standard_data.standard_files.clone();
-                        self.current_standard = Some(standard_data.clone());
-                        self.request_standard = standard_data.into();
-                    },
-                    true => self.error = Some(get_error(&data)),
-                }
+                let standard_data: StandardInfo = resp_parsing_item(res, "standard")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                self.current_standard_uuid = standard_data.uuid.clone();
+                self.files_list = standard_data.standard_files.clone();
+                self.current_standard = Some(standard_data.clone());
+                self.request_standard = standard_data.into();
             },
             Msg::GetListOpt(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        self.supplier_list =
-                            serde_json::from_value(res_value.get("companies").unwrap().clone()).unwrap();
-                        self.standard_statuses =
-                            serde_json::from_value(res_value.get("standardStatuses").unwrap().clone()).unwrap();
-                        self.regions =
-                            serde_json::from_value(res_value.get("regions").unwrap().clone()).unwrap();
-                        self.types_access =
-                            serde_json::from_value(res_value.get("typesAccess").unwrap().clone()).unwrap();
-                    },
-                    true => self.error = Some(get_error(&data)),
-                }
+                let value: Value = get_value_response(res)
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                self.supplier_list = get_from_value(&value, "companies").unwrap();
+                self.standard_statuses = get_from_value(&value, "standardStatuses").unwrap();
+                self.regions = get_from_value(&value, "regions").unwrap();
+                self.types_access = get_from_value(&value, "typesAccess").unwrap();
             },
             Msg::GetUpdateStandardResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: usize =
-                            serde_json::from_value(res_value.get("putStandardUpdate").unwrap().clone()).unwrap();
-                        debug!("Standard data: {:?}", result);
-                        self.get_result_standard_data = result;
-                    },
-                    true => self.error = Some(get_error(&data)),
-                }
+                self.get_result_standard_data = resp_parsing_item(res, "putStandardUpdate")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
             },
             Msg::GetUpdateAccessResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: bool =
-                            serde_json::from_value(res_value.get("changeStandardAccess").unwrap().clone()).unwrap();
-                        debug!("Standard change access: {:?}", result);
-                        self.update_standard_access = false;
-                        self.get_result_access = result;
-                    },
-                    true => self.error = Some(get_error(&data)),
-                }
+                self.update_standard_access = false;
+                self.get_result_access = resp_parsing_item(res, "changeStandardAccess")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
             },
             Msg::FinishUploadFiles(res) => {
                 match res {
@@ -408,24 +354,17 @@ impl Component for StandardSettings {
                 self.active_loading_files_btn = false;
             },
             Msg::GetDeleteStandard(res) => {
-                let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: UUID = serde_json::from_value(res_value.get("deleteStandard").unwrap().clone()).unwrap();
-                        debug!("deleteStandard: {:?}", result);
-                        if self.current_standard_uuid == result {
-                            match &self.current_standard {
-                                Some(company) =>
-                                    navigator.clone().replace(&ShowCompany { uuid: company.owner_company.uuid.clone() }),
-                                    // self.router_agent.send(ShowCompany { uuid: company.owner_company.uuid.clone() }),
-                                None => navigator.clone().replace(&Home),
-                                // None => self.router_agent.send(Home),
-                            }
-                        }
-                    },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                let result: UUID = resp_parsing_item(res, "deleteStandard")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                if self.current_standard_uuid == result {
+                    match &self.current_standard {
+                        Some(company) =>
+                            navigator.clone().replace(&ShowCompany { uuid: company.owner_company.uuid.clone() }),
+                        // self.router_agent.send(ShowCompany { uuid: company.owner_company.uuid.clone() }),
+                        None => navigator.clone().replace(&Home),
+                        // None => self.router_agent.send(Home),
+                    }
                 }
             },
             Msg::EditFiles => self.upload_standard_files = !self.upload_standard_files,
@@ -491,13 +430,13 @@ impl Component for StandardSettings {
                 self.disable_delete_standard_btn = self.current_standard_uuid != data;
                 self.confirm_delete_standard = data;
             },
-            Msg::ResponseError(err) => self.error = Some(err),
             Msg::ChangeHideDeleteStandard => self.hide_delete_modal = !self.hide_delete_modal,
             Msg::ClearFilesBoxed => {
                 self.files = Vec::new();
                 self.upload_standard_files = false;
             },
             Msg::ClearError => self.error = None,
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::Ignore => {},
         }
         true

@@ -9,8 +9,8 @@ use graphql_client::GraphQLQuery;
 use log::debug;
 use super::ModificationFileItem;
 use crate::services::storage_upload::{storage_upload, prepare_files};
-use crate::services::get_value_field;
-use crate::error::{get_error, Error};
+use crate::services::{get_value_field, resp_parsing};
+use crate::error::Error;
 use crate::fragments::files_frame::FilesFrame;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, ShowFileInfo, UploadFile};
@@ -125,38 +125,20 @@ impl Component for ManageModificationFilesCard {
             },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetModificationFilesListResult(res) => {
-                let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        self.files_list = serde_json::from_value(
-                            res_value.get("componentModificationFilesList").unwrap().clone()
-                        ).unwrap();
-                        debug!("componentModificationFilesList {:?}", self.files_list.len());
-                    },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
-                }
+                self.files_list = resp_parsing(res, "componentModificationFilesList")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
             },
             Msg::GetUploadData(res) => {
-                let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: Vec<UploadFile> =
-                            serde_json::from_value(res_value.get("uploadModificationFiles").unwrap().clone()).unwrap();
-                        // debug!("uploadModificationFiles {:?}", self.request_upload_data);
-
-                        if !self.files.is_empty() {
-                            let callback_confirm =
-                                link.callback(|res: Result<usize, Error>| Msg::FinishUploadFiles(res));
-                            self.v_node = Some(storage_upload(result, self.files.clone(), callback_confirm));
-                        }
-                        debug!("file: {:#?}", self.files);
-                    },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                let result: Vec<UploadFile> = resp_parsing(res, "uploadModificationFiles")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                if !self.files.is_empty() {
+                    let callback_confirm =
+                        link.callback(|res: Result<usize, Error>| Msg::FinishUploadFiles(res));
+                    self.v_node = Some(storage_upload(result, self.files.clone(), callback_confirm));
                 }
+                debug!("file: {:#?}", self.files);
             },
             Msg::FinishUploadFiles(res) => {
                 match res {

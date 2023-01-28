@@ -3,12 +3,11 @@ use yew::html::{Scope, TargetCast};
 use web_sys::{InputEvent, HtmlInputElement};
 use wasm_bindgen_futures::spawn_local;
 use gloo_timers::callback::Timeout;
-use serde_json::Value;
 use graphql_client::GraphQLQuery;
 use log::debug;
 use crate::fragments::component::{SpecsTags, SpecTagItem};
 use crate::types::{Spec, SpecPathInfo, UUID};
-use crate::services::get_value_field;
+use crate::services::{get_value_field, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::relate::{SearchSpecs, search_specs};
 
@@ -141,12 +140,10 @@ impl Component for SearchSpecsTags {
                 );
             },
             Msg::GetSearchRes(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-                let search_specs: Vec<SpecPathInfo> =
-                    serde_json::from_value(res.get("searchSpecs").unwrap().clone()).unwrap();
                 self.specs_search_loading = false;
-                self.search_specs = search_specs;
+                self.search_specs = resp_parsing(res, "searchSpecs")
+                    .map_err(|err| debug!("Error: {:?}", err))
+                    .unwrap();
                 link.send_message(Msg::ParseSpecs);
             },
             Msg::DeleteNewSpec(spec_id) => {

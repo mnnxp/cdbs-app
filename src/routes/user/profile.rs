@@ -2,18 +2,17 @@ use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, cla
 use yew_router::prelude::*;
 use web_sys::MouseEvent;
 use wasm_bindgen_futures::spawn_local;
-use serde_json::Value;
 use graphql_client::GraphQLQuery;
 use log::debug;
 use crate::routes::AppRoute::Login;
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::company::CatalogCompanies;
 use crate::fragments::component::CatalogComponents;
 use crate::fragments::side_menu::{MenuItem, SideMenu};
 use crate::fragments::standard::CatalogStandards;
 use crate::fragments::user::{CatalogUsers, UserCertificatesCard};
-use crate::services::{url_decode, get_logged_user, get_value_field};
+use crate::services::{url_decode, get_logged_user, get_value_field, resp_parsing_item};
 use crate::types::{
     UserDataCard, CompaniesQueryArg, ComponentsQueryArg, SelfUserInfo, SlimUser,
     StandardsQueryArg, UserCertificate, UserInfo, UsersQueryArg, UUID,
@@ -58,6 +57,7 @@ pub enum Msg {
     ShowFullUserInfo,
     ChangeRoute,
     ClearError,
+    ResponseError(Error),
     Ignore,
 }
 
@@ -164,21 +164,12 @@ impl Component for Profile {
                 })
             },
             Msg::AddFollow(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: bool = serde_json::from_value(
-                            res_value.get("addUserFav").unwrap().clone()
-                        ).unwrap();
-
-                        if result {
-                            self.subscribers += 1;
-                            self.is_followed = true;
-                        }
-                    },
-                    true => self.error = Some(get_error(&data)),
+                let result: bool = resp_parsing_item(res, "addUserFav")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                if result {
+                    self.subscribers += 1;
+                    self.is_followed = true;
                 }
             },
             Msg::UnFollow => {
@@ -194,61 +185,32 @@ impl Component for Profile {
                 })
             },
             Msg::DelFollow(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: bool = serde_json::from_value(
-                            res_value.get("deleteUserFav").unwrap().clone()
-                        ).unwrap();
-
-                        if result {
-                            self.subscribers -= 1;
-                            self.is_followed = false;
-                        }
-                    },
-                    true => self.error = Some(get_error(&data)),
+                let result: bool = resp_parsing_item(res, "deleteUserFav")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                if result {
+                    self.subscribers -= 1;
+                    self.is_followed = false;
                 }
             },
             Msg::GetSelfProfileResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-                // clean profile data if get self user data
-                self.profile = None;
-                // debug!("res_value: {:?}", res_value);
-                match res_value.is_null() {
-                    false => {
-                        let self_data: SelfUserInfo =
-                            serde_json::from_value(res_value.get("selfData").unwrap().clone())
-                                .unwrap();
-                        debug!("User self data: {:?}", self_data);
-
-                        self.subscribers = self_data.subscribers.to_owned();
-                        self.current_user_uuid = self_data.uuid.to_owned();
-                        self.self_profile = Some(self_data);
-                    },
-                    true => self.error = Some(get_error(&data)),
-                }
+                let self_data: SelfUserInfo = resp_parsing_item(res, "selfData")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                self.subscribers = self_data.subscribers.to_owned();
+                self.current_user_uuid = self_data.uuid.to_owned();
+                self.self_profile = Some(self_data);
             },
             Msg::GetUserProfileResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
                 // clean sef data if get data other user
                 self.self_profile = None;
-                match res_value.is_null() {
-                    false => {
-                        let user_data: UserInfo =
-                            serde_json::from_value(res_value.get("user").unwrap().clone()).unwrap();
-                        debug!("User data: {:?}", user_data);
-
-                        self.subscribers = user_data.subscribers.to_owned();
-                        self.is_followed = user_data.is_followed.to_owned();
-                        self.current_user_uuid = user_data.uuid.to_owned();
-                        self.profile = Some(user_data);
-                    },
-                    true => self.error = Some(get_error(&data)),
-                }
+                let user_data: UserInfo = resp_parsing_item(res, "user")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                self.subscribers = user_data.subscribers.to_owned();
+                self.is_followed = user_data.is_followed.to_owned();
+                self.current_user_uuid = user_data.uuid.to_owned();
+                self.profile = Some(user_data);
             },
             Msg::ChangeTab(set_tab) => {
                 self.profile_tab = set_tab.clone();
@@ -265,6 +227,7 @@ impl Component for Profile {
             Msg::ShowFullUserInfo => self.show_full_user_info = !self.show_full_user_info,
             Msg::ChangeRoute => self.rendered(ctx, false),
             Msg::ClearError => self.error = None,
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::Ignore => {},
         }
         true

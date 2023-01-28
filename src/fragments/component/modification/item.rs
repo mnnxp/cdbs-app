@@ -4,13 +4,12 @@ use yew::html::{Scope, TargetCast};
 use web_sys::{InputEvent, HtmlInputElement};
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use log::debug;
 use super::ModificationTableItemModule;
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::component::param::RegisterParamnameBlock;
-use crate::services::get_value_field;
+use crate::services::{get_value_field, resp_parsing, resp_parsing_item};
 use crate::types::{UUID, Param, ParamValue};
 use crate::gqls::make_query;
 use crate::gqls::relate::{GetParams, get_params};
@@ -70,6 +69,7 @@ pub enum Msg {
     ShowAddParamCard(usize),
     ShowEditParamCard(usize),
     ClearError,
+    ResponseError(Error),
     Ignore,
 }
 
@@ -162,105 +162,66 @@ impl Component for ModificationTableItem {
                 })
             },
             Msg::GetParamsListResult(res) => {
-                // debug!("GetParamsListResult: {:?}", res);
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: Vec<Param> = serde_json::from_value(
-                            res_value.get("params").unwrap().clone()
-                        ).unwrap();
-                        for x in result.iter() {
-                            self.params_list.insert(x.param_id, x.clone());
-                        }
-                        for y in ctx.props().collect_heads.iter() {
-                            self.params_list.remove(&y.param_id);
-                        }
-                        debug!("params: {:?}", self.params_list);
-                        if let Some((_, param)) = self.params_list.iter().next() {
-                            // debug!("get first of params_list: {:?}", param);
-                            self.request_add_param.param_id = param.param_id;
-                        };
-                    },
-                    true => self.error = Some(get_error(&data)),
+                let result: Vec<Param> = resp_parsing(res, "params")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                for x in result.iter() {
+                    self.params_list.insert(x.param_id, x.clone());
+                }
+                for y in ctx.props().collect_heads.iter() {
+                    self.params_list.remove(&y.param_id);
+                }
+                debug!("params: {:?}", self.params_list);
+                if let Some((_, param)) = self.params_list.iter().next() {
+                    // debug!("get first of params_list: {:?}", param);
+                    self.request_add_param.param_id = param.param_id;
                 }
             },
             Msg::GetAddParamResult(res) => {
-                debug!("GetAddParamResult: {:?}", res);
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
+                self.get_add_param_card = resp_parsing_item(res, "putModificationParams")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                if self.get_add_param_card > 0 {
+                    self.collect_item.insert(
+                        self.request_add_param.param_id,
+                        self.request_add_param.value.clone()
+                    );
 
-                match res_value.is_null() {
-                    false => {
-                        self.get_add_param_card = serde_json::from_value(
-                            res_value.get("putModificationParams").unwrap().clone()
-                        ).unwrap();
-                        debug!("putModificationParams: {:?}", self.get_add_param_card);
-                        if self.get_add_param_card > 0 {
-                            self.collect_item.insert(
-                                self.request_add_param.param_id,
-                                self.request_add_param.value.clone()
-                            );
-
-                            match self.open_add_param_card {
-                                true => self.open_add_param_card = false,
-                                false => {
-                                    self.params_list.remove(&self.request_add_param.param_id);
-                                    self.open_new_param_card = false;
-                                    if let Some(rollback) = &ctx.props().callback_new_modification_param {
-                                        rollback.emit(ctx.props().modification_uuid.clone());
-                                    }
-                                },
+                    match self.open_add_param_card {
+                        true => self.open_add_param_card = false,
+                        false => {
+                            self.params_list.remove(&self.request_add_param.param_id);
+                            self.open_new_param_card = false;
+                            if let Some(rollback) = &ctx.props().callback_new_modification_param {
+                                rollback.emit(ctx.props().modification_uuid.clone());
                             }
+                        },
+                    }
 
-                            self.request_add_param = ParamValue::default();
-                        }
-                    },
-                    true => self.error = Some(get_error(&data)),
+                    self.request_add_param = ParamValue::default();
                 }
             },
             Msg::GetUpdateParamResult(res) => {
-                debug!("GetUpdateParamResult: {:?}", res);
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        self.get_change_param_card = serde_json::from_value(
-                            res_value.get("putModificationParams").unwrap().clone()
-                        ).unwrap();
-                        debug!("putModificationParams: {:?}", self.get_change_param_card);
-                        if self.get_change_param_card > 0 {
-                            self.collect_item.insert(
-                                self.request_edit_param.param_id,
-                                self.request_edit_param.value.clone()
-                            );
-                            self.request_edit_param = ParamValue::default();
-                            self.open_edit_param_card = false;
-                        }
-                    },
-                    true => self.error = Some(get_error(&data)),
+                self.get_add_param_card = resp_parsing_item(res, "putModificationParams")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                if self.get_change_param_card > 0 {
+                    self.collect_item.insert(
+                        self.request_edit_param.param_id,
+                        self.request_edit_param.value.clone()
+                    );
+                    self.request_edit_param = ParamValue::default();
+                    self.open_edit_param_card = false;
                 }
             },
             Msg::GetDeleteParamResult(res) => {
-                debug!("GetDeleteParamResult: {:?}", res);
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        self.get_change_param_card = serde_json::from_value(
-                            res_value.get("deleteModificationParams").unwrap().clone()
-                        ).unwrap();
-                        debug!("deleteModificationParams: {:?}", self.get_change_param_card);
-                        if self.get_change_param_card > 0 {
-                            self.collect_item.remove(&self.request_edit_param.param_id);
-                            self.request_edit_param.param_id = 0;
-                            self.open_edit_param_card = false;
-                        }
-                    },
-                    true => self.error = Some(get_error(&data)),
+                self.get_add_param_card = resp_parsing_item(res, "deleteModificationParams")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                if self.get_change_param_card > 0 {
+                    self.collect_item.remove(&self.request_edit_param.param_id);
+                    self.request_edit_param.param_id = 0;
+                    self.open_edit_param_card = false;
                 }
             },
             Msg::SelectModification => {
@@ -324,6 +285,7 @@ impl Component for ModificationTableItem {
                 }
             },
             Msg::ClearError => self.error = None,
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::Ignore => {},
         }
         true

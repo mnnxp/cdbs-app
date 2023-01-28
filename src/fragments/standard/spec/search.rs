@@ -4,11 +4,11 @@ use web_sys::{InputEvent, HtmlInputElement};
 use wasm_bindgen_futures::spawn_local;
 use gloo_timers::callback::Timeout;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use log::debug;
+use crate::error::Error;
 use crate::fragments::standard::{SpecsTags, SpecTagItem};
 use crate::types::{Spec, SpecPathInfo, UUID};
-use crate::services::get_value_field;
+use crate::services::{get_value_field, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::relate::{SearchSpecs, search_specs};
 
@@ -36,6 +36,7 @@ pub enum Msg {
     GetSearchRes(String),
     DeleteNewSpec(usize),
     DeleteCurrentSpec(usize),
+    ResponseError(Error),
     Ignore,
 }
 
@@ -141,17 +142,14 @@ impl Component for SearchSpecsTags {
                 );
             },
             Msg::GetSearchRes(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-                let search_specs: Vec<SpecPathInfo> =
-                    serde_json::from_value(res.get("searchSpecs").unwrap().clone()).unwrap();
-                // debug!(
-                //     "found_specs res:{:?} {:?}",
+                self.specs_search_loading = false;
+                // debug!("found_specs res:{:?} {:?}",
                 //     search_specs.iter().map(|x| Spec::from(x.clone())).collect::<Vec<Spec>>(),
                 //     Spec::from(search_specs[0].clone())
                 // );
-                self.specs_search_loading = false;
-                self.search_specs = search_specs;
+                self.search_specs = resp_parsing(res, "searchSpecs")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
                 link.send_message(Msg::ParseSpecs);
             },
             Msg::DeleteNewSpec(spec_id) => {
@@ -186,6 +184,7 @@ impl Component for SearchSpecsTags {
                 }
                 self.standard_specs = props_specs;
             },
+            Msg::ResponseError(_err) => {},
             Msg::Ignore => {},
         }
 

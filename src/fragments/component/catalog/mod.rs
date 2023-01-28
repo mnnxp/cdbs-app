@@ -6,14 +6,13 @@ use yew::{Component, Context, html, html::Scope, Html, Properties};
 use yew_router::prelude::Link;
 use graphql_client::GraphQLQuery;
 use log::debug;
-use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::ListState;
 use crate::fragments::list_errors::ListErrors;
 use crate::routes::AppRoute::{self, CreateComponent};
 use crate::types::{ComponentsQueryArg, ShowComponentShort, UUID};
-use crate::services::get_value_field;
+use crate::services::{get_value_field, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::component::{
     GetComponentsShortList, get_components_short_list,
@@ -27,6 +26,7 @@ pub enum Msg {
     AddFav(UUID),
     DelFav(UUID),
     GetList,
+    ResponseError(Error),
 }
 
 pub struct CatalogComponents {
@@ -97,18 +97,9 @@ impl Component for CatalogComponents {
                 });
             },
             Msg::UpdateList(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        self.list = serde_json::from_value(
-                            res_value.get("components").unwrap().clone()
-                        ).unwrap();
-                        // debug!("UpdateList result: {:?}", self.list);
-                    },
-                    true => self.error = Some(get_error(&data)),
-                }
+                self.list = resp_parsing(res, "components")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
             },
             Msg::AddFav(component_uuid) => {
                 spawn_local(async move {
@@ -132,6 +123,7 @@ impl Component for CatalogComponents {
                     link.send_message(Msg::GetList);
                 });
             },
+            Msg::ResponseError(err) => self.error = Some(err),
         }
         true
     }

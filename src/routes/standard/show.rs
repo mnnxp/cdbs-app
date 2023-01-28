@@ -2,16 +2,14 @@ use yew::{Component, Context, html, html::Scope, Html, Properties, classes};
 use yew_router::prelude::*;
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
-use log::debug;
 use crate::routes::AppRoute::{Login, ShowCompany, StandardSettings};
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::switch_icon::res_btn;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::component::CatalogComponents;
 use crate::fragments::standard::{StandardFilesCard, SpecsTags, KeywordsTags};
 use crate::fragments::img_showcase::ImgShowcase;
-use crate::services::{get_logged_user, get_value_field};
+use crate::services::{get_logged_user, get_value_field, resp_parsing, resp_parsing_item};
 use crate::types::{UUID, StandardInfo, SlimUser, DownloadFile, ComponentsQueryArg};
 use crate::gqls::make_query;
 use crate::gqls::standard::{
@@ -53,6 +51,7 @@ pub enum Msg {
     ShowComponentsList,
     OpenStandardOwner,
     OpenStandardSetting,
+    ResponseError(Error),
     Ignore,
 }
 
@@ -132,21 +131,12 @@ impl Component for ShowStandard {
                 })
             },
             Msg::AddFollow(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: bool =
-                            serde_json::from_value(res_value.get("addStandardFav").unwrap().clone())
-                                .unwrap();
-
-                        if result {
-                            self.subscribers += 1;
-                            self.is_followed = true;
-                        }
-                    },
-                    true => self.error = Some(get_error(&data)),
+                let result: bool = resp_parsing_item(res, "addStandardFav")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                if result {
+                    self.subscribers += 1;
+                    self.is_followed = true;
                 }
             },
             Msg::UnFollow => {
@@ -161,69 +151,41 @@ impl Component for ShowStandard {
                 })
             },
             Msg::DelFollow(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: bool =
-                            serde_json::from_value(res_value.get("deleteStandardFav").unwrap().clone())
-                                .unwrap();
-
-                        if result {
-                            self.subscribers -= 1;
-                            self.is_followed = false;
-                        }
-                    },
-                    true => self.error = Some(get_error(&data)),
+                let result: bool = resp_parsing_item(res, "deleteStandardFav")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                if result {
+                    self.subscribers -= 1;
+                    self.is_followed = false;
                 }
             },
             Msg::GetDownloadFilesResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        let mut result: Vec<DownloadFile> = serde_json::from_value(res.get("standardFiles").unwrap().clone()).unwrap();
-                        debug!("standardFiles: {:?}", result);
-
-                        if !result.is_empty() {
-                            // checkign have main image
-                            match self.file_arr.first() {
-                                Some(main_img) => {
-                                    result.push(main_img.clone());
-                                    self.file_arr = result;
-                                },
-                                None => self.file_arr = result,
-                            }
-                        }
-                    },
-                    true => self.error = Some(get_error(&data)),
+                let mut result: Vec<DownloadFile> = resp_parsing(res, "standardFiles")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                if !result.is_empty() {
+                    // checkign have main image
+                    if let Some(main_img) = self.file_arr.first() {
+                        result.push(main_img.clone());
+                    }
+                    self.file_arr = result;
                 }
             },
             Msg::GetStandardData(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let standard_data: StandardInfo =
-                            serde_json::from_value(res_value.get("standard").unwrap().clone()).unwrap();
-                        debug!("Standard data: {:?}", standard_data);
-                        self.subscribers = standard_data.subscribers;
-                        self.is_followed = standard_data.is_followed;
-                        self.current_standard_uuid = standard_data.uuid.clone();
-                        if let Some(user) = get_logged_user() {
-                            self.current_user_owner = standard_data.owner_user.uuid == user.uuid;
-                        }
-                        // description length check for show
-                        self.show_full_description = standard_data.description.len() < 250;
-                        // add main image
-                        self.file_arr.push(standard_data.image_file.clone());
-                        self.standard = Some(standard_data);
-                    },
-                    true => self.error = Some(get_error(&data)),
+                let standard_data: StandardInfo = resp_parsing_item(res, "standard")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                self.subscribers = standard_data.subscribers;
+                self.is_followed = standard_data.is_followed;
+                self.current_standard_uuid = standard_data.uuid.clone();
+                if let Some(user) = get_logged_user() {
+                    self.current_user_owner = standard_data.owner_user.uuid == user.uuid;
                 }
+                // description length check for show
+                self.show_full_description = standard_data.description.len() < 250;
+                // add main image
+                self.file_arr.push(standard_data.image_file.clone());
+                self.standard = Some(standard_data);
             },
             Msg::ShowDescription => self.show_full_description = !self.show_full_description,
             Msg::ShowComponentsList => self.show_related_components = !self.show_related_components,
@@ -239,6 +201,7 @@ impl Component for ShowStandard {
                     navigator.replace(&StandardSettings { uuid: standard_data.uuid.to_string() });
                 }
             },
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::Ignore => {}
         }
         true

@@ -8,12 +8,10 @@ use std::collections::BTreeSet;
 use yew::{Component, Context, html, html::Scope, Html, Properties};
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
-use log::debug;
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, ComponentParam, Param};
-use crate::services::get_value_field;
+use crate::services::{get_value_field, resp_parsing, resp_parsing_item, resp_parsing_two_level};
 use crate::gqls::make_query;
 use crate::gqls::relate::{GetParams, get_params};
 use crate::gqls::component::{
@@ -53,6 +51,7 @@ pub enum Msg {
     ChangeHideAddParam,
     SetSelectParam,
     ClearError,
+    ResponseError(Error),
     Ignore,
 }
 
@@ -121,55 +120,28 @@ impl Component for ComponentParamsTags {
                 })
             },
             Msg::GetParamsListResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: Vec<Param> =
-                            serde_json::from_value(res_value.get("params").unwrap().clone()).unwrap();
-                        debug!("params: {:?}", result);
-                        self.param_list = result;
-                        link.send_message(Msg::SetSelectParam);
-                    },
-                    true => self.error = Some(get_error(&data)),
-                }
+                self.param_list = resp_parsing(res, "params")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                link.send_message(Msg::SetSelectParam);
             },
             Msg::GetAddParamResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: usize =
-                            serde_json::from_value(res_value.get("putComponentParams").unwrap().clone()).unwrap();
-                        debug!("putComponentParams: {:?}", result);
-                        self.hide_add_param_modal = result > 0;
-                        self.request_set_param_value = String::new();
-                        link.send_message(Msg::RequestComponentParams);
-                    },
-                    true => self.error = Some(get_error(&data)),
-                }
+                let result: usize = resp_parsing_item(res, "putComponentParams")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                self.hide_add_param_modal = result > 0;
+                self.request_set_param_value = String::new();
+                link.send_message(Msg::RequestComponentParams);
             },
             Msg::GetComponentParamsResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: Vec<ComponentParam> =
-                            serde_json::from_value(res_value.get("component").unwrap()
-                                .get("componentParams").unwrap().clone()).unwrap();
-                        debug!("componentParams: {:?}", result);
-                        self.component_params = result;
-                        self.param_ids = BTreeSet::new();
-                        for param in self.component_params.clone() {
-                            self.param_ids.insert(param.param.param_id);
-                        };
-                        link.send_message(Msg::SetSelectParam);
-                    },
-                    true => self.error = Some(get_error(&data)),
+                self.component_params = resp_parsing_two_level(res, "component", "componentParams")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                self.param_ids = BTreeSet::new();
+                for param in self.component_params.clone() {
+                    self.param_ids.insert(param.param.param_id);
                 }
+                link.send_message(Msg::SetSelectParam);
             },
             Msg::UpdateParamValue(data) => self.request_set_param_value = data,
             Msg::ChangeHideAddParam => {
@@ -188,6 +160,7 @@ impl Component for ComponentParamsTags {
                 }
             },
             Msg::ClearError => self.error = None,
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::Ignore => {},
         }
         true

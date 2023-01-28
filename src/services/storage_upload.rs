@@ -4,10 +4,9 @@ use web_sys::FileList;
 use wasm_bindgen_futures::spawn_local;
 use gloo_file::{callbacks::FileReader, File};
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use log::debug;
-use crate::error::{get_error, Error};
-use crate::services::Requests;
+use crate::error::Error;
+use crate::services::{Requests, resp_parsing_item};
 use crate::types::{UUID, UploadFile};
 use crate::gqls::make_query;
 use crate::gqls::relate::{
@@ -124,19 +123,11 @@ impl Component for StorageUpload {
                 });
             },
             Msg::GetUploadConfirm(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: usize =
-                            serde_json::from_value(res_value.get("uploadCompleted").unwrap().clone()).unwrap();
-                        debug!("uploadCompleted: {:?}", result);
-                        ctx.props().callback_confirm.emit(Ok(result));
-                        ctx.link().send_message(Msg::Clear);
-                    },
-                    true => ctx.props().callback_confirm.emit(Err(get_error(&data))),
-                }
+                let result: usize = resp_parsing_item(res, "uploadCompleted")
+                    .map_err(|err| ctx.props().callback_confirm.emit(Err(err)))
+                    .unwrap();
+                ctx.props().callback_confirm.emit(Ok(result));
+                ctx.link().send_message(Msg::Clear);
             },
             Msg::Clear => {
                 self.readers = HashMap::default();

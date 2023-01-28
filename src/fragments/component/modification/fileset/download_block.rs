@@ -1,12 +1,11 @@
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties, Event};
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use log::debug;
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, DownloadFile};
-use crate::services::get_value_field;
+use crate::services::{get_value_field, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::component::{
     ComModFilesetFiles, com_mod_fileset_files
@@ -94,22 +93,12 @@ impl Component for ManageFilesOfFilesetBlock {
             },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetDownloadFilesetFilesResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        self.file_arr = serde_json::from_value(
-                            res.get("componentModificationFilesetFiles").unwrap().clone()
-                        ).unwrap();
-                        debug!("componentModificationFilesetFiles: {:?}", self.file_arr);
-
-                        self.flag_get_dowload_url = true;
-                        self.open_modal_download_files = true;
-                        self.active_loading_files_btn = false;
-                    },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
-                }
+                self.file_arr = resp_parsing(res, "componentModificationFilesetFiles")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                self.flag_get_dowload_url = true;
+                self.open_modal_download_files = true;
+                self.active_loading_files_btn = false;
             },
             Msg::ParseFirstFilesetUuid => {
                 self.select_fileset_uuid = ctx.props().current_filesets_program

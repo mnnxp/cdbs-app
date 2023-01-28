@@ -4,6 +4,7 @@ mod local_storage;
 mod requests;
 // mod tags;
 mod util;
+mod response_parsing;
 pub mod storage_upload;
 
 pub use auth::{Auth, get_current_user, logout};
@@ -15,3 +16,6 @@ pub use local_storage::{
 pub use requests::Requests;
 // pub use tags::Tags;
 pub(crate) use util::{image_detector, url_decode};
+pub(crate) use response_parsing::{
+    resp_parsing, resp_parsing_item, resp_parsing_two_level, get_value_response, get_from_value
+};

@@ -3,11 +3,10 @@ use yew::html::{Scope, TargetCast};
 use web_sys::{InputEvent, Event, HtmlInputElement};
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use log::debug;
-use crate::services::{is_authenticated, get_value_field};
+use crate::services::{is_authenticated, get_value_field, resp_parsing_item, get_value_response, get_from_value};
 use crate::fragments::list_errors::ListErrors;
-use crate::error::{Error, get_error};
+use crate::error::Error;
 use crate::types::{UUID, Region, RepresentationType, RegisterCompanyRepresentInfo};
 use crate::gqls::make_query;
 use crate::gqls::company::{
@@ -26,6 +25,7 @@ pub enum Msg {
     UpdateList(String),
     ClearData,
     ClearError,
+    ResponseError(Error),
 }
 
 pub struct AddCompanyRepresentCard {
@@ -90,17 +90,9 @@ impl Component for AddCompanyRepresentCard {
                 })
             },
             Msg::GetRegisterResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: bool = serde_json::from_value(res_value.get("registerCompanyRepresent").unwrap().clone()).unwrap();
-                        debug!("Register company represent: {:?}", result);
-                        self.get_result_register = result;
-                    },
-                    true => self.error = Some(get_error(&data)),
-                }
+                self.get_result_register = resp_parsing_item(res, "registerCompanyRepresent")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
             },
             Msg::UpdateRegionId(region_id) =>
                 self.request_register.region_id = region_id.parse::<usize>().unwrap_or(1),
@@ -110,18 +102,11 @@ impl Component for AddCompanyRepresentCard {
             Msg::UpdateAddress(address) => self.request_register.address = address,
             Msg::UpdatePhone(phone) => self.request_register.phone = phone,
             Msg::UpdateList(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-                match res_value.is_null() {
-                    false => {
-                        // debug!("Result: {:#?}", res_value.clone);
-                        self.regions =
-                            serde_json::from_value(res_value.get("regions").unwrap().clone()).unwrap();
-                        self.represent_types =
-                            serde_json::from_value(res_value.get("companyRepresentTypes").unwrap().clone()).unwrap();
-                    },
-                    true => self.error = Some(get_error(&data)),
-                }
+                let value = get_value_response(res)
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                self.regions = get_from_value(&value, "regions").unwrap();
+                self.represent_types = get_from_value(&value, "companyRepresentTypes").unwrap();
             },
             Msg::ClearData => {
                 self.error = None;
@@ -129,6 +114,7 @@ impl Component for AddCompanyRepresentCard {
                 self.get_result_register = false;
             },
             Msg::ClearError => self.error = None,
+            Msg::ResponseError(err) => self.error = Some(err),
         }
         true
     }

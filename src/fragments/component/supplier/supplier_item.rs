@@ -1,9 +1,7 @@
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
-use log::debug;
-use crate::error::{Error, get_error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::company::ListItemCompany;
 use crate::types::{UUID, Supplier, ShowCompanyShort};
@@ -12,6 +10,7 @@ use crate::gqls::{
     company::{GetCompaniesShortList, get_companies_short_list},
     component::{DeleteSuppliersComponent, delete_suppliers_component},
 };
+use crate::services::{resp_parsing, resp_parsing_item};
 
 /// Company card for show data on component page
 pub struct ComponentSupplierItem {
@@ -100,38 +99,23 @@ impl Component for ComponentSupplierItem {
             },
             Msg::ResponseError(error) => self.error = Some(error),
             Msg::GetCompanyDataResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-                // debug!("res value: {:#?}", res_value);
-
-                match res_value.is_null() {
-                    false => {
-                        let result: Vec<ShowCompanyShort> = serde_json::from_value(res_value.get("companies").unwrap().clone()).unwrap();
-                        // debug!("GetCompanyDataResult result: {:?}", result);
-                        self.company_data = result.first().map(|x| x.clone());
-                    },
-                    true => self.error = Some(get_error(&data)),
-                }
+                let result: Vec<ShowCompanyShort> = resp_parsing(res, "companies")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                self.company_data = result.first().map(|x| x.clone());
             },
             Msg::GetDeleteSupplierResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        let result: usize = serde_json::from_value(res.get("deleteSuppliersComponent").unwrap().clone()).unwrap();
-                        debug!("deleteSuppliersComponent: {:?}", result);
-                        match &ctx.props().delete_supplier {
-                            Some(delete_supplier) => {
-                                if result > 0 {
-                                    self.get_result_delete = true;
-                                    delete_supplier.emit(ctx.props().supplier_data.supplier.uuid.clone());
-                                };
-                            },
-                            None => self.get_result_delete = result > 0,
+                let result: usize  = resp_parsing_item(res, "deleteSuppliersComponent")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                match &ctx.props().delete_supplier {
+                    Some(delete_supplier) => {
+                        if result > 0 {
+                            self.get_result_delete = true;
+                            delete_supplier.emit(ctx.props().supplier_data.supplier.uuid.clone());
                         }
                     },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                    None => self.get_result_delete = result > 0,
                 }
             },
             Msg::Ignore => {}

@@ -5,9 +5,8 @@ use web_sys::{InputEvent, Event, MouseEvent, SubmitEvent, HtmlInputElement};
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
-use log::debug;
 use crate::routes::AppRoute::{Login, Home, Profile, ShowCompany};
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::company::{
     CompanyCertificatesCard, AddCompanyCertificateCard,
@@ -15,7 +14,7 @@ use crate::fragments::company::{
 };
 use crate::fragments::side_menu::{MenuItem, SideMenu};
 use crate::fragments::upload_favicon::UpdateFaviconBlock;
-use crate::services::{get_logged_user, get_value_field};
+use crate::services::{get_from_value, get_logged_user, get_value_field, get_value_response, resp_parsing_item};
 use crate::types::{
     UUID, SlimUser, CompanyUpdateInfo, CompanyInfo, Region,
     CompanyType, TypeAccessInfo
@@ -106,6 +105,7 @@ pub enum Msg {
     UpdateCompanyTypeId(String),
     UpdateRegionId(String),
     ClearError,
+    ResponseError(Error),
     Ignore,
 }
 
@@ -222,92 +222,45 @@ impl Component for CompanySettings {
                 })
             },
             Msg::GetUpdateAccessResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        let result: bool = serde_json::from_value(
-                            res.get("changeCompanyAccess").unwrap().clone()
-                        ).unwrap();
-                        debug!("Change company access: {:?}", result);
-                        self.get_result_access = result;
-                    },
-                    true => self.error = Some(get_error(&data)),
-                }
+                self.get_result_access = resp_parsing_item(res, "changeCompanyAccess")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
             },
             Msg::GetCompanyDataResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        let company_data: CompanyInfo =
-                            serde_json::from_value(res.get("company").unwrap().clone()).unwrap();
-                        debug!("Company data: {:?}", company_data);
-                        self.current_data = Some(company_data.clone());
-                        self.request_company = company_data.into();
-                        self.rendered(ctx, false);
-                    },
-                    true => self.error = Some(get_error(&data)),
-                }
+                let company_data: CompanyInfo = resp_parsing_item(res, "company")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                self.current_data = Some(company_data.clone());
+                self.request_company = company_data.into();
+                self.rendered(ctx, false);
             },
             Msg::GetUpdateListResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-                match res_value.is_null() {
-                    false => {
-                        // debug!("Result: {:#?}", res_value.clone);
-                        self.regions = serde_json::from_value(
-                            res_value.get("regions").unwrap().clone()
-                        ).unwrap();
-                        self.company_types = serde_json::from_value(
-                            res_value.get("companyTypes").unwrap().clone()
-                        ).unwrap();
-                        self.types_access = serde_json::from_value(
-                            res_value.get("typesAccess").unwrap().clone()
-                        ).unwrap();
-                    },
-                    true => self.error = Some(get_error(&data)),
-                }
+                let value: Value = get_value_response(res)
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                self.regions = get_from_value(&value, "regions").unwrap();
+                self.company_types = get_from_value(&value, "companyTypes").unwrap();
+                self.types_access = get_from_value(&value, "typesAccess").unwrap();
             },
             Msg::GetRemoveCompanyResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        let delete_company_uuid: UUID = serde_json::from_value(
-                            res.get("deleteCompany").unwrap().clone()
-                        ).unwrap();
-                        debug!("Delete company: {:?}", delete_company_uuid);
-                        self.get_result_remove_company = !delete_company_uuid.is_empty();
-                        let navigator: Navigator = ctx.link().navigator().unwrap();
-                        match &ctx.props().current_user {
-                            // Some(user) => self.router_agent.send(Profile { username: user.username.clone() }),
-                            Some(user) =>
-                                navigator.clone().replace(&Profile { username: user.username.clone() }),
-                            // None => self.router_agent.send(Home),
-                            None => navigator.replace(&Home),
-                        }
-                    },
-                    true => self.error = Some(get_error(&data)),
+                let delete_company_uuid: UUID = resp_parsing_item(res, "deleteCompany")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                self.get_result_remove_company = !delete_company_uuid.is_empty();
+                let navigator: Navigator = ctx.link().navigator().unwrap();
+                match &ctx.props().current_user {
+                    // Some(user) => self.router_agent.send(Profile { username: user.username.clone() }),
+                    Some(user) =>
+                        navigator.clone().replace(&Profile { username: user.username.clone() }),
+                    // None => self.router_agent.send(Home),
+                    None => navigator.replace(&Home),
                 }
             },
             Msg::GetUpdateCompanyResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        self.get_result_update = serde_json::from_value(
-                            res.get("putCompanyUpdate").unwrap().clone()
-                        ).unwrap();
-                        // debug!("Updated rows: {:?}", self.get_result_update);
-                        link.send_message(Msg::ReguestCompanyData);
-                    },
-                    true => self.error = Some(get_error(&data)),
-                }
+                self.get_result_update = resp_parsing_item(res, "putCompanyUpdate")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                link.send_message(Msg::ReguestCompanyData);
             },
             Msg::UpdateTypeAccessId(type_access_id) =>
                 self.request_access = type_access_id.parse::<i64>().unwrap_or(1),
@@ -329,6 +282,7 @@ impl Component for CompanySettings {
                 self.rendered(ctx, false);
             },
             Msg::ClearError => self.error = None,
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::Ignore => {},
         }
         true

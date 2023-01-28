@@ -8,10 +8,10 @@ use graphql_client::GraphQLQuery;
 use log::debug;
 use crate::fragments::files_frame::FilesFrame;
 use crate::fragments::list_errors::ListErrors;
-use crate::error::{Error, get_error};
+use crate::error::Error;
 use crate::services::storage_upload::storage_upload;
-use crate::services::get_value_field;
-use crate::types::UploadFile;
+use crate::services::{get_value_field, resp_parsing_item};
+// use crate::types::UploadFile;
 use crate::gqls::make_query;
 use crate::gqls::user::{
     UploadUserFavicon, upload_user_favicon
@@ -42,12 +42,12 @@ pub enum Msg {
     RequestUploadData,
     RequestUploadUserData,
     RequestUploadCompanyData,
-    ResponseError(Error),
     UpdateFiles(Option<FileList>),
     GetUploadData(String),
     FinishUploadFiles(Result<usize, Error>),
     ClearFileBoxed,
     ClearError,
+    ResponseError(Error),
     Ignore,
 }
 
@@ -107,7 +107,6 @@ impl Component for UpdateFaviconBlock {
                     })
                 }
             },
-            Msg::ResponseError(err) => self.error = Some(err),
             Msg::UpdateFiles(file_list) => {
                 if let Some(files) = file_list {
                     self.file = files.get(0).map(|f| File::from(f));
@@ -115,28 +114,20 @@ impl Component for UpdateFaviconBlock {
                 }
             },
             Msg::GetUploadData(res) => {
-                let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        // debug!("ctx.props().company_uuid: {:?}", ctx.props().company_uuid);
-                        let result: UploadFile = match &ctx.props().company_uuid {
-                            Some(_) => serde_json::from_value(res_value.get("uploadCompanyFavicon").unwrap().clone()).unwrap(),
-                            None => serde_json::from_value(res_value.get("uploadFavicon").unwrap().clone()).unwrap(),
-                        };
-                        // debug!("serde: {:?}", result);
-
-                        if let Some(file) = self.file.clone() {
-                            let callback_confirm =
-                                link.callback(|res: Result<usize, Error>| Msg::FinishUploadFiles(res));
-                            self.v_node = Some(storage_upload(vec![result], vec![file], callback_confirm));
-                            debug!("res_stor: {:?}", self.v_node);
-                        }
-                        debug!("file: {:?}", self.file);
-                    },
-                    true => self.error = Some(get_error(&data)),
+                let key_word = match &ctx.props().company_uuid {
+                    Some(_) => "uploadCompanyFavicon",
+                    None => "uploadFavicon",
+                };
+                let result = resp_parsing_item(res, key_word)
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                if let Some(file) = self.file.clone() {
+                    let callback_confirm =
+                        link.callback(|res: Result<usize, Error>| Msg::FinishUploadFiles(res));
+                    self.v_node = Some(storage_upload(vec![result], vec![file], callback_confirm));
+                    debug!("res_stor: {:?}", self.v_node);
                 }
+                debug!("file: {:?}", self.file);
             },
             Msg::FinishUploadFiles(res) => {
                 match res {
@@ -150,6 +141,7 @@ impl Component for UpdateFaviconBlock {
                 self.dis_upload_btn = true;
             },
             Msg::ClearError => self.error = None,
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::Ignore => {},
         }
         true

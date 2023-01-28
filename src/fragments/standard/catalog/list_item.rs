@@ -2,14 +2,12 @@ use yew::{Component, Context, html, html::Scope, Html, Properties, classes};
 use yew_router::prelude::*;
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
-use log::debug;
-use crate::error::{Error, get_error};
+use crate::error::Error;
 use crate::routes::AppRoute::ShowStandard;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::switch_icon::res_btn;
 use crate::types::{UUID, ShowStandardShort};
-use crate::services::get_value_field;
+use crate::services::{get_value_field, resp_parsing_item};
 use crate::gqls::make_query;
 use crate::gqls::standard::{
     AddStandardFav, add_standard_fav,
@@ -22,6 +20,7 @@ pub enum Msg {
     AddFav,
     DelFav,
     GetFavResult(String),
+    ResponseError(Error),
     Ignore,
 }
 
@@ -85,24 +84,18 @@ impl Component for ListItemStandard {
                 });
             },
             Msg::GetFavResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-                debug!("res value: {:#?}", res_value);
-
-                match res_value.is_null() {
-                    false => {
-                        let result: bool = match &self.is_followed {
-                            true => serde_json::from_value(res_value.get("deleteStandardFav").unwrap().clone()).unwrap(),
-                            false => serde_json::from_value(res_value.get("addStandardFav").unwrap().clone()).unwrap(),
-                        };
-                        debug!("Fav result: {:?}", result);
-                        if result {
-                            self.is_followed = !self.is_followed;
-                        }
-                    },
-                    true => self.error = Some(get_error(&data)),
+                let key_word = match &self.is_followed {
+                    true => "deleteStandardFav",
+                    false => "addStandardFav",
+                };
+                let result: bool = resp_parsing_item(res, key_word)
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                if result {
+                    self.is_followed = !self.is_followed;
                 }
             },
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::Ignore => {},
         }
         true

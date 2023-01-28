@@ -8,12 +8,10 @@ use yew::html::{Scope, TargetCast};
 use web_sys::{InputEvent, Event, HtmlInputElement};
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
-use log::debug;
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, Supplier, ShowCompanyShort};
-use crate::services::get_value_field;
+use crate::services::{get_value_field, resp_parsing, resp_parsing_item};
 use crate::gqls::make_query;
 use crate::gqls::component::{
     SetCompanyOwnerSupplier, set_company_owner_supplier,
@@ -57,6 +55,7 @@ pub enum Msg {
     UpdateSupplierDescription(String),
     ChangeHideSetSupplier,
     ClearError,
+    ResponseError(Error),
     Ignore,
 }
 
@@ -127,59 +126,31 @@ impl Component for ComponentSuppliersCard {
                 })
             },
             Msg::GetUpdateSetSupplierResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: bool =
-                            serde_json::from_value(res_value.get("setCompanyOwnerSupplier").unwrap().clone()).unwrap();
-                        debug!("setCompanyOwnerSupplier: {:?}", result);
-                        self.hide_set_supplier_modal = result;
-                        // self.get_result_supplier = result;
-                        link.send_message(Msg::RequestComponentSuppliers);
-                    },
-                    true => self.error = Some(get_error(&data)),
-                }
+                self.hide_set_supplier_modal = resp_parsing_item(res, "setCompanyOwnerSupplier")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                link.send_message(Msg::RequestComponentSuppliers);
             },
             Msg::GetUpdateAddSupplierResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: bool =
-                            serde_json::from_value(res_value.get("addComponentSupplier").unwrap().clone()).unwrap();
-                        debug!("addComponentSupplier: {:?}", result);
-                        self.hide_set_supplier_modal = result;
-                        // self.get_result_supplier = result;
-                        link.send_message(Msg::RequestComponentSuppliers);
-                    },
-                    true => self.error = Some(get_error(&data)),
-                }
+                self.hide_set_supplier_modal = resp_parsing_item(res, "addComponentSupplier")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                link.send_message(Msg::RequestComponentSuppliers);
             },
             Msg::GetComponentSuppliersResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: Vec<Supplier> =
-                            serde_json::from_value(res_value.get("componentSuppliers").unwrap().clone()).unwrap();
-                        debug!("componentSuppliers: {:?}", result);
-                        self.component_suppliers = result;
-                        self.company_uuids = BTreeSet::new();
-                        for company in self.component_suppliers.iter() {
-                            self.company_uuids.insert(company.supplier.uuid.clone());
-                        };
-                    },
-                    true => self.error = Some(get_error(&data)),
+                self.component_suppliers = resp_parsing(res, "componentSuppliers")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                self.company_uuids = BTreeSet::new();
+                for company in self.component_suppliers.iter() {
+                    self.company_uuids.insert(company.supplier.uuid.clone());
                 }
             },
             Msg::UpdateSetSupplier(data) => self.request_set_supplier_uuid = data,
             Msg::UpdateSupplierDescription(data) => self.request_set_supplier_description = data,
             Msg::ChangeHideSetSupplier => self.hide_set_supplier_modal = !self.hide_set_supplier_modal,
             Msg::ClearError => self.error = None,
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::Ignore => {},
         }
         true

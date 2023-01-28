@@ -6,11 +6,11 @@ use wasm_bindgen_futures::spawn_local;
 use gloo::file::File;
 use graphql_client::GraphQLQuery;
 use log::debug;
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::files_frame::FilesFrame;
 use crate::fragments::list_errors::ListErrors;
 use crate::services::storage_upload::storage_upload;
-use crate::services::{image_detector, get_value_field};
+use crate::services::{image_detector, get_value_field, resp_parsing_item};
 use crate::types::UploadFile;
 use crate::gqls::make_query;
 use crate::gqls::standard::{
@@ -42,6 +42,7 @@ pub enum Msg {
     HideNotificationSuccess,
     ClearFileBoxed,
     ClearError,
+    ResponseError(Error),
     Ignore,
 }
 
@@ -94,23 +95,15 @@ impl Component for UpdateStandardFaviconCard {
                 }
             },
             Msg::GetUploadData(res) => {
-                let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: UploadFile =
-                            serde_json::from_value(res_value.get("uploadStandardFavicon").unwrap().clone()).unwrap();
-
-                        if let Some(file) = self.file.clone() {
-                            let callback_confirm =
-                                link.callback(|res: Result<usize, Error>| Msg::FinishUploadFiles(res));
-                            self.v_node = Some(storage_upload(vec![result], vec![file], callback_confirm));
-                        }
-                        debug!("file: {:?}", self.file);
-                    }
-                    true => self.error = Some(get_error(&data)),
+                let result: UploadFile = resp_parsing_item(res, "uploadStandardFavicon")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                if let Some(file) = self.file.clone() {
+                    let callback_confirm =
+                        link.callback(|res: Result<usize, Error>| Msg::FinishUploadFiles(res));
+                    self.v_node = Some(storage_upload(vec![result], vec![file], callback_confirm));
                 }
+                debug!("file: {:?}", self.file);
             },
             Msg::FinishUploadFiles(res) => {
                 match res {
@@ -128,6 +121,7 @@ impl Component for UpdateStandardFaviconCard {
                 self.dis_upload_btn = true;
             },
             Msg::ClearError => self.error = None,
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::Ignore => {},
         }
         true

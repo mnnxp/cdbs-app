@@ -6,13 +6,13 @@ use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use log::debug;
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::side_menu::{MenuItem, SideMenu};
 use crate::fragments::upload_favicon::UpdateFaviconBlock;
 use crate::fragments::user::{AddUserCertificateCard, UserCertificatesCard};
 use crate::routes::AppRoute::{Login, Home, Profile};
-use crate::services::{get_current_user, set_token, set_logged_user, get_logged_user, get_value_field};
+use crate::services::{get_current_user, set_token, set_logged_user, get_logged_user, get_value_field, resp_parsing_item, get_value_response, get_from_value};
 use crate::types::{Program, Region, SelfUserInfo, TypeAccessInfo, UpdatePasswordInfo, UserUpdateInfo};
 use crate::gqls::make_query;
 use crate::gqls::user::{
@@ -85,6 +85,7 @@ pub enum Msg {
     GetUpdateListResult(String),
     SelectMenu(Menu),
     ClearError,
+    ResponseError(Error),
     Ignore,
 }
 
@@ -213,102 +214,54 @@ impl Component for Settings {
                 })
             },
             Msg::GetUpdateAccessResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        let result: bool = serde_json::from_value(res.get("changeTypeAccessUser").unwrap().clone()).unwrap();
-                        debug!("changeTypeAccessUser: {:?}", result);
-                        self.get_result_access = result;
-                    },
-                    true => self.error = Some(get_error(&data)),
-                }
+                self.get_result_access = resp_parsing_item(res, "changeTypeAccessUser")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
             },
             Msg::GetUpdatePwdResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        let result: bool = serde_json::from_value(res.get("putUpdatePassword").unwrap().clone()).unwrap();
-                        debug!("putUpdatePassword: {:?}", result);
-                        self.get_result_pwd = result;
-                    },
-                    true => self.error = Some(get_error(&data)),
-                }
+                self.get_result_pwd = resp_parsing_item(res, "putUpdatePassword")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
             },
             Msg::GetProfileDataResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        let user_data: SelfUserInfo = serde_json::from_value(res.get("selfData").unwrap().clone()).unwrap();
-                        debug!("User data: {:?}", user_data);
-                        self.current_data = Some(user_data.clone());
-                        self.current_username = user_data.username.clone();
-                        self.request_profile = user_data.into();
-                        self.rendered(ctx, false);
-                    },
-                    true => self.error = Some(get_error(&data)),
-                }
+                let user_data: SelfUserInfo = resp_parsing_item(res, "selfData")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                self.current_data = Some(user_data.clone());
+                self.current_username = user_data.username.clone();
+                self.request_profile = user_data.into();
+                self.rendered(ctx, false);
             },
             Msg::GetUpdateListResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-                match res_value.is_null() {
-                    false => {
-                        // debug!("Result: {:#?}", res_value.clone());
-                        self.regions =
-                            serde_json::from_value(res_value.get("regions").unwrap().clone()).unwrap();
-                        self.programs =
-                            serde_json::from_value(res_value.get("programs").unwrap().clone()).unwrap();
-                        self.types_access =
-                            serde_json::from_value(res_value.get("typesAccess").unwrap().clone()).unwrap();
-                    },
-                    true => self.error = Some(get_error(&data)),
-                }
+                let value: Value = get_value_response(res)
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                self.regions = get_from_value(&value, "regions").unwrap();
+                self.programs = get_from_value(&value, "programs").unwrap();
+                self.types_access = get_from_value(&value, "typesAccess").unwrap();
             },
             Msg::GetUpdateProfileResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        let updated_rows: usize =
-                            serde_json::from_value(res.get("putUserUpdate").unwrap().clone()).unwrap();
-                        debug!("Updated rows: {:?}", updated_rows);
-                        // update local data
-                        set_logged_user(None);
-                        spawn_local(async move {
-                            let res = get_current_user().await;
-                            debug!("update locale slim user: {:?}", res);
-                        });
-                        self.get_result_profile = updated_rows;
-                        link.send_message(Msg::RequestCurrentData);
-                    },
-                    true => self.error = Some(get_error(&data)),
-                }
+                self.get_result_profile = resp_parsing_item(res, "putUserUpdate")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                // update local data
+                set_logged_user(None);
+                spawn_local(async move {
+                    let res = get_current_user().await;
+                    debug!("update locale slim user: {:?}", res);
+                });
+                link.send_message(Msg::RequestCurrentData);
             },
             Msg::GetRemoveProfileResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        self.get_result_remove_profile =
-                            serde_json::from_value(res.get("deleteUserData").unwrap().clone()).unwrap();
-                        debug!("Delete user data: {:?}", self.get_result_remove_profile);
-                        if self.get_result_remove_profile {
-                            // Clear global token and logged user after delete profile
-                            set_token(None);
-                            set_logged_user(None);
-                            // self.router_agent.send(Home);
-                            navigator.replace(&Home);
-                        }
-                    },
-                    true => self.error = Some(get_error(&data)),
+                self.get_result_profile = resp_parsing_item(res, "deleteUserData")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                if self.get_result_remove_profile {
+                    // Clear global token and logged user after delete profile
+                    set_token(None);
+                    set_logged_user(None);
+                    // self.router_agent.send(Home);
+                    navigator.replace(&Home);
                 }
             },
             Msg::UpdateTypeAccessId(type_access_id) =>
@@ -335,6 +288,7 @@ impl Component for Settings {
                 self.rendered(ctx, false);
             },
             Msg::ClearError => self.error = None,
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::Ignore => {}
         }
         true

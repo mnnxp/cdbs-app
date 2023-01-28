@@ -7,9 +7,9 @@ use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use log::debug;
 use crate::routes::AppRoute::{Login, ComponentSettings};
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
-use crate::services::{get_logged_user, get_value_field};
+use crate::services::{get_from_value, get_logged_user, get_value_field, get_value_response, resp_parsing_item};
 use crate::types::{UUID, ComponentCreateData, TypeAccessInfo, ActualStatus, ComponentType};
 use crate::gqls::make_query;
 use crate::gqls::component::{
@@ -39,6 +39,7 @@ pub enum Msg {
     UpdateComponentTypeId(String),
     UpdateActualStatusId(String),
     ClearError,
+    ResponseError(Error),
     Ignore,
 }
 
@@ -122,40 +123,22 @@ impl Component for CreateComponent {
                 })
             },
             Msg::GetListOpt(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        self.component_types =
-                            serde_json::from_value(res_value.get("componentTypes").unwrap().clone()).unwrap();
-                        self.actual_statuses =
-                            serde_json::from_value(res_value.get("componentActualStatuses").unwrap().clone()).unwrap();
-                        self.types_access =
-                            serde_json::from_value(res_value.get("typesAccess").unwrap().clone()).unwrap();
-                    },
-                    true => self.error = Some(get_error(&data)),
-                }
+                let value: Value = get_value_response(res)
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                self.component_types = get_from_value(&value, "componentTypes").unwrap();
+                self.actual_statuses = get_from_value(&value, "componentActualStatuses").unwrap();
+                self.types_access = get_from_value(&value, "typesAccess").unwrap();
             },
             Msg::GetCreateComponentResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: UUID = serde_json::from_value(
-                            res_value.get("registerComponent").unwrap().clone()
-                        ).unwrap();
-                        debug!("registerComponent: {:?}", result);
-                        // Redirect to setting component page
-                        if !result.is_empty() {
-                            // self.router_agent.send(ComponentSettings { uuid: result });
-                            let navigator: Navigator = ctx.link().navigator().unwrap();
-                            navigator.replace(&ComponentSettings { uuid: result });
-                        }
-
-                    },
-                    true => self.error = Some(get_error(&data)),
+                let result: UUID = resp_parsing_item(res, "registerComponent")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                // Redirect to setting component page
+                if !result.is_empty() {
+                    // self.router_agent.send(ComponentSettings { uuid: result });
+                    let navigator: Navigator = ctx.link().navigator().unwrap();
+                    navigator.replace(&ComponentSettings { uuid: result });
                 }
             },
             // items request create main component data
@@ -170,6 +153,7 @@ impl Component for CreateComponent {
             Msg::UpdateActualStatusId(data) =>
                 self.request_component.actual_status_id = data.parse::<usize>().unwrap_or(1),
             Msg::ClearError => self.error = None,
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::Ignore => {},
         }
         true

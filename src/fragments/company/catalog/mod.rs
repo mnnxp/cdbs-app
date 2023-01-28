@@ -6,21 +6,21 @@ use yew::{Component, Context, html, Html, Properties};
 use yew_router::prelude::Link;
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use log::debug;
 use crate::routes::AppRoute::{self, CreateCompany};
-use crate::error::{Error, get_error};
+use crate::error::Error;
 use crate::fragments::ListState;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{ShowCompanyShort, CompaniesQueryArg};
-use crate::services::get_value_field;
+use crate::services::{get_value_field, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::company::{GetCompaniesShortList, get_companies_short_list};
 
 pub enum Msg {
     SwitchShowType,
     UpdateList(String),
-    GetList
+    GetList,
+    ResponseError(Error),
 }
 
 pub struct CatalogCompanies {
@@ -89,19 +89,11 @@ impl Component for CatalogCompanies {
                 });
             },
             Msg::UpdateList(res) => {
-              let data: Value = serde_json::from_str(res.as_str()).unwrap();
-              let res_value = data.as_object().unwrap().get("data").unwrap();
-              // debug!("res value: {:#?}", res_value);
-
-              match res_value.is_null() {
-                  false => {
-                      let result: Vec<ShowCompanyShort> = serde_json::from_value(res_value.get("companies").unwrap().clone()).unwrap();
-                      // debug!("UpdateList result: {:?}", result);
-                      self.list = result;
-                  },
-                  true => self.error = Some(get_error(&data)),
-              }
-          },
+                self.list = resp_parsing(res, "companies")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+            },
+            Msg::ResponseError(err) => self.error = Some(err),
         }
         true
     }

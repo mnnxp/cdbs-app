@@ -7,12 +7,10 @@ use yew::{Component, Context, html, html::Scope, Html, Properties};
 use web_sys::Event;
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
-use log::debug;
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, ShowStandardShort};
-use crate::services::get_value_field;
+use crate::services::{get_value_field, resp_parsing, resp_parsing_item, resp_parsing_two_level};
 use crate::gqls::make_query;
 use crate::gqls::component::{
     AddStandardToComponent, add_standard_to_component,
@@ -53,6 +51,7 @@ pub enum Msg {
     ChangeHideAddStandard,
     SetSelectStandard,
     ClearError,
+    ResponseError(Error),
     Ignore,
 }
 
@@ -116,54 +115,27 @@ impl Component for ComponentStandardsCard {
                 })
             },
             Msg::GetStandardsListResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: Vec<ShowStandardShort> =
-                            serde_json::from_value(res_value.get("standards").unwrap().clone()).unwrap();
-                        debug!("standards: {:?}", result);
-                        self.standard_list = result;
-                        link.send_message(Msg::SetSelectStandard);
-                    },
-                    true => self.error = Some(get_error(&data)),
-                }
+                self.standard_list = resp_parsing(res, "standards")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                link.send_message(Msg::SetSelectStandard);
             },
             Msg::GetAddStandardResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: bool =
-                            serde_json::from_value(res_value.get("addStandardToComponent").unwrap().clone()).unwrap();
-                        debug!("addStandardToComponent: {:?}", result);
-                        self.hide_add_standard_modal = result;
-                        link.send_message(Msg::RequestComponentStandards);
-                    },
-                    true => self.error = Some(get_error(&data)),
-                }
+                self.hide_add_standard_modal = resp_parsing_item(res, "addStandardToComponent")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                link.send_message(Msg::RequestComponentStandards);
             },
             Msg::GetComponentStandardsResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: Vec<ShowStandardShort> =
-                            serde_json::from_value(res_value.get("component").unwrap()
-                                .get("componentStandards").unwrap().clone()).unwrap();
-                        debug!("componentStandards: {:?}", result);
-                        self.component_standards = result;
-                        self.standard_uuids = BTreeSet::new();
-                        for standard in self.component_standards.clone() {
-                            self.standard_uuids.insert(standard.uuid.clone());
-                        };
-                        link.send_message(Msg::SetSelectStandard);
-                    },
-                    true => self.error = Some(get_error(&data)),
+                self.component_standards =
+                    resp_parsing_two_level(res, "component", "componentStandards")
+                        .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                        .unwrap();
+                self.standard_uuids = BTreeSet::new();
+                for standard in self.component_standards.clone() {
+                    self.standard_uuids.insert(standard.uuid.clone());
                 }
+                link.send_message(Msg::SetSelectStandard);
             },
             Msg::UpdateSelectStandard(data) => self.request_add_standard_uuid = data,
             Msg::ChangeHideAddStandard => {
@@ -182,6 +154,7 @@ impl Component for ComponentStandardsCard {
                 }
             },
             Msg::ClearError => self.error = None,
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::Ignore => {},
         }
         true

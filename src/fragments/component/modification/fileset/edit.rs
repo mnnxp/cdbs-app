@@ -5,11 +5,10 @@ use gloo::file::File;
 use web_sys::{DragEvent, Event, FileList, HtmlInputElement};
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use log::debug;
 use crate::services::storage_upload::{storage_upload, prepare_files};
-use crate::services::get_value_field;
-use crate::error::{get_error, Error};
+use crate::services::{get_value_field, resp_parsing, resp_parsing_item};
+use crate::error::Error;
 use crate::fragments::files_frame::FilesFrame;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, ShowFileInfo, Program, UploadFile};
@@ -184,138 +183,92 @@ impl Component for ManageModificationFilesets {
             },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetProgramsListResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
+                let result: Vec<Program> = resp_parsing(res, "programs")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
 
-                match res.is_null() {
-                    false => {
-                        let result: Vec<Program> = serde_json::from_value(
-                            res.get("programs").unwrap().clone()
-                        ).unwrap();
-                        // debug!("programs: {:?}", result);
-                        self.programs.clear();
-                        for x in result.iter() {
-                            if let None = self.filesets_program.iter().find(|(_, program_name)| program_name == &x.name) {
-                                self.programs.push(x.clone());
-                                continue;
-                            }
-                        }
+                self.programs.clear();
+                for x in result.iter() {
+                    if let None = self.filesets_program.iter().find(|(_, program_name)| program_name == &x.name) {
+                        self.programs.push(x.clone());
+                        continue;
+                    }
+                }
 
-                        if let Some(program) = self.programs.first() {
-                            self.request_fileset_program_id = program.id;
-                        }
-                    },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                if let Some(program) = self.programs.first() {
+                    self.request_fileset_program_id = program.id;
                 }
             },
             Msg::GetNewFilesetResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
+                self.select_fileset_uuid = resp_parsing_item(res, "registerModificationFileset")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
 
-                match res.is_null() {
-                    false => {
-                        self.select_fileset_uuid = serde_json::from_value(
-                            res.get("registerModificationFileset").unwrap().clone()
-                        ).unwrap();
-                        // debug!("registerModificationFileset: {:?}", self.select_fileset_uuid);
+                self.files_list.clear(); // clear shown files (new fileset always empty)
 
-                        // clear shown files (new fileset always empty)
-                        self.files_list.clear();
-
-                        if let Some(program) = self.programs.iter().find(|x| x.id == self.request_fileset_program_id) {
-                            if let None = self.filesets_program.iter().find(|(_, p_name)| p_name == &program.name) {
-                                self.filesets_program.push((
-                                    self.select_fileset_uuid.clone(),
-                                    program.name.clone(),
-                                ));
-                            }
-                        }
-
-                        self.open_add_fileset_card = false;
-                    },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                if let Some(program) = self.programs.iter().find(|x| x.id == self.request_fileset_program_id) {
+                    if let None = self.filesets_program.iter().find(|(_, p_name)| p_name == &program.name) {
+                        self.filesets_program.push((
+                            self.select_fileset_uuid.clone(),
+                            program.name.clone(),
+                        ));
+                    }
                 }
+                self.open_add_fileset_card = false;
             },
             Msg::GetDeleteFilesetResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
+                let result: bool = resp_parsing_item(res, "deleteModificationFileset")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                if result {
+                    let mut update_filesets: Vec<(UUID, String)> = Vec::new();
 
-                match res.is_null() {
-                    false => {
-                        let result: bool = serde_json::from_value(
-                            res.get("deleteModificationFileset").unwrap().clone()
-                        ).unwrap();
-                        // debug!("deleteModificationFileset: {:?}", self.select_fileset_uuid);
-                        if result {
-                            let mut update_filesets: Vec<(UUID, String)> = Vec::new();
+                    // for set next item after delete
+                    let delete_fileset_uuid = self.select_fileset_uuid.clone();
+                    self.select_fileset_uuid = String::new();
+                    let mut flag_delete = false;
 
-                            // for set next item after delete
-                            let delete_fileset_uuid = self.select_fileset_uuid.clone();
-                            self.select_fileset_uuid = String::new();
-                            let mut flag_delete = false;
-
-                            for x in self.filesets_program.iter() {
-                                if flag_delete {
-                                    self.select_fileset_uuid = x.0.clone();
-                                    flag_delete = false;
-                                    // debug!("self.select_fileset_uuid: {:?}", self.select_fileset_uuid);
-                                }
-
-                                if x.0 != delete_fileset_uuid {
-                                    update_filesets.push(x.clone());
-                                } else {
-                                    flag_delete = true;
-                                }
-                            }
-
-                            if self.select_fileset_uuid.is_empty() {
-                                self.select_fileset_uuid = update_filesets
-                                    .first()
-                                    .map(|(fileset_uuid, _)| fileset_uuid.clone())
-                                    .unwrap_or_default();
-                            }
-
-                            self.filesets_program = update_filesets;
-
-                            ctx.link().send_message(Msg::RequestFilesOfFileset);
+                    for x in self.filesets_program.iter() {
+                        if flag_delete {
+                            self.select_fileset_uuid = x.0.clone();
+                            flag_delete = false;
+                            // debug!("self.select_fileset_uuid: {:?}", self.select_fileset_uuid);
                         }
-                    },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+
+                        if x.0 != delete_fileset_uuid {
+                            update_filesets.push(x.clone());
+                        } else {
+                            flag_delete = true;
+                        }
+                    }
+
+                    if self.select_fileset_uuid.is_empty() {
+                        self.select_fileset_uuid = update_filesets
+                            .first()
+                            .map(|(fileset_uuid, _)| fileset_uuid.clone())
+                            .unwrap_or_default();
+                    }
+
+                    self.filesets_program = update_filesets;
+
+                    ctx.link().send_message(Msg::RequestFilesOfFileset);
                 }
             },
             Msg::GetFilesOfFilesetResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        self.files_list = serde_json::from_value(
-                            res.get("componentModificationFilesOfFileset").unwrap().clone()
-                        ).unwrap();
-                        debug!("componentModificationFilesOfFileset: {:?}", self.files_list.len());
-                    },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
-                }
+                self.files_list = resp_parsing(res, "componentModificationFilesOfFileset")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
             },
             Msg::GetUploadData(res) => {
-                let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: Vec<UploadFile> =
-                            serde_json::from_value(res_value.get("uploadFilesToFileset").unwrap().clone()).unwrap();
-                        // debug!("uploadFilesToFileset {:?}", self.request_upload_data);
-
-                        if !self.files.is_empty() {
-                            let callback_confirm =
-                                link.callback(|res: Result<usize, Error>| Msg::FinishUploadFiles(res));
-                            self.v_node = Some(storage_upload(result, self.files.clone(), callback_confirm));
-                        }
-                        debug!("file: {:#?}", self.files);
-                    },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                let result: Vec<UploadFile> = resp_parsing(res, "uploadFilesToFileset")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                if !self.files.is_empty() {
+                    let callback_confirm =
+                        link.callback(|res: Result<usize, Error>| Msg::FinishUploadFiles(res));
+                    self.v_node = Some(storage_upload(result, self.files.clone(), callback_confirm));
                 }
+                debug!("file: {:#?}", self.files);
             },
             Msg::FinishUploadFiles(res) => {
                 match res {

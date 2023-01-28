@@ -4,11 +4,11 @@ use web_sys::{InputEvent, KeyboardEvent, HtmlInputElement};
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use log::debug;
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::standard::{KeywordsTags, KeywordTagItem};
 use crate::types::{UUID, Keyword};
-use crate::services::get_value_field;
+use crate::services::{get_value_field, resp_parsing, resp_parsing_item};
 use crate::gqls::make_query;
 use crate::gqls::standard::{
     GetStandardKeywords, get_standard_keywords,
@@ -132,40 +132,30 @@ impl Component for AddKeywordsTags {
                 })
             },
             Msg::GetStandardKeywordsResult(res) => {
-                let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: Vec<Keyword> = serde_json::from_value(
-                            res_value.get("standardKeywords").unwrap().clone()
-                        ).unwrap();
-                        debug!("GetStandardKeywords before: {:?}", result);
-                        if self.standard_keywords.is_empty() {
-                            for k_res in &result {
-                                match self.new_keywords.iter().find(|k| k.keyword == k_res.keyword) {
-                                    Some(dup) => debug!("dup {:?}", dup),
-                                    None => self.new_keywords.push(k_res.clone()),
-                                }
-                            }
-                        } else {
-                            for k_res in &result {
-                                match self.standard_keywords.iter().find(|k| k.keyword == k_res.keyword) {
-                                    Some(k) => debug!("k_res.keyword {:?} != k_props.keyword {:?}", k_res.keyword, k),
-                                    None => {
-                                        match self.new_keywords.iter().find(|k| k.keyword == k_res.keyword) {
-                                            Some(dup) => debug!("dup {:?}", dup),
-                                            None => self.new_keywords.push(k_res.clone()),
-                                        }
-                                    },
-                                }
-                            }
+                let result: Vec<Keyword> = resp_parsing(res, "standardKeywords")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                if self.standard_keywords.is_empty() {
+                    for k_res in &result {
+                        match self.new_keywords.iter().find(|k| k.keyword == k_res.keyword) {
+                            Some(dup) => debug!("dup {:?}", dup),
+                            None => self.new_keywords.push(k_res.clone()),
                         }
-                        debug!("GetStandardKeywords after: {:?}", self.new_keywords);
-                        // self.rendered(false);
-                    },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                    }
+                    return true
                 }
+                for k_res in &result {
+                    match self.standard_keywords.iter().find(|k| k.keyword == k_res.keyword) {
+                        Some(k) => debug!("k_res.keyword {:?} != k_props.keyword {:?}", k_res.keyword, k),
+                        None => {
+                            match self.new_keywords.iter().find(|k| k.keyword == k_res.keyword) {
+                                Some(dup) => debug!("dup {:?}", dup),
+                                None => self.new_keywords.push(k_res.clone()),
+                            }
+                        },
+                    }
+                }
+                // self.rendered(false);
             },
             Msg::RequestAddKeywords => {
                 let standard_uuid = ctx.props().standard_uuid.clone();
@@ -191,21 +181,11 @@ impl Component for AddKeywordsTags {
                 }
             },
             Msg::GetAddKeywordsResult(res) => {
-                let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: usize = serde_json::from_value(
-                            res_value.get("addStandardKeywordsByNames").unwrap().clone()
-                        ).unwrap();
-                        debug!("request_add_keyword: {:?}", result);
-                        self.request_add_keyword = result;
-                        if result > 0 {
-                            link.send_message(Msg::RequestGetStandardKeywords);
-                        }
-                    },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                self.request_add_keyword = resp_parsing_item(res, "addStandardKeywordsByNames")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                if self.request_add_keyword > 0 {
+                    link.send_message(Msg::RequestGetStandardKeywords);
                 }
             },
             Msg::HideNotification => self.bad_keyword = false,

@@ -1,15 +1,14 @@
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
-use log::debug;
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, Keyword};
 use crate::gqls::make_query;
 use crate::gqls::standard::{
     DeleteStandardKeywords, delete_standard_keywords
 };
+use crate::services::resp_parsing_item;
 
 #[derive(Properties, Clone, Debug, PartialEq)]
 pub struct Props {
@@ -61,24 +60,17 @@ impl Component for KeywordTagItem {
             },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetDeleteKeywordResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        let result: usize = serde_json::from_value(res.get("deleteStandardKeywords").unwrap().clone()).unwrap();
-                        debug!("deleteStandardKeywords: {:?}", result);
-                        match &ctx.props().delete_keyword {
-                            Some(delete_keyword) => {
-                                if result > 0 {
-                                    self.get_result_delete = true;
-                                    delete_keyword.emit(ctx.props().keyword.clone());
-                                };
-                            },
-                            None => self.get_result_delete = result > 0,
-                        }
+                let result: usize = resp_parsing_item(res, "deleteStandardKeywords")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                match &ctx.props().delete_keyword {
+                    Some(delete_keyword) => {
+                        if result > 0 {
+                            self.get_result_delete = true;
+                            delete_keyword.emit(ctx.props().keyword.clone());
+                        };
                     },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                    None => self.get_result_delete = result > 0,
                 }
             },
         }

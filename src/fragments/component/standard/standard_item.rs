@@ -1,9 +1,7 @@
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
-use log::debug;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::standard::ListItemStandard;
 use crate::types::{UUID, ShowStandardShort};
@@ -11,6 +9,7 @@ use crate::gqls::make_query;
 use crate::gqls::component::{
     DeleteStandardsComponent, delete_standards_component
 };
+use crate::services::resp_parsing_item;
 
 /// Standard card for show data on component page
 pub struct ComponentStandardItem {
@@ -74,24 +73,17 @@ impl Component for ComponentStandardItem {
             },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetDeleteStandardResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        let result: usize = serde_json::from_value(res.get("deleteStandardsComponent").unwrap().clone()).unwrap();
-                        debug!("deleteStandardsComponent: {:?}", result);
-                        match &ctx.props().delete_standard {
-                            Some(delete_standard) => {
-                                if result > 0 {
-                                    self.get_result_delete = true;
-                                    delete_standard.emit(ctx.props().standard_data.uuid.clone());
-                                };
-                            },
-                            None => self.get_result_delete = result > 0,
+                let result: usize  = resp_parsing_item(res, "deleteStandardsComponent")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                match &ctx.props().delete_standard {
+                    Some(delete_standard) => {
+                        if result > 0 {
+                            self.get_result_delete = true;
+                            delete_standard.emit(ctx.props().standard_data.uuid.clone());
                         }
                     },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                    None => self.get_result_delete = result > 0,
                 }
             },
             Msg::Ignore => {}

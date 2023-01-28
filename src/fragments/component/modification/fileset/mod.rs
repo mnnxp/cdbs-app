@@ -9,12 +9,10 @@ pub use download_block::ManageFilesOfFilesetBlock;
 use yew::{Component, Context, html, Html, Properties};
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
-// use log::debug;
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, ShowFileInfo};
-use crate::services::get_value_field;
+use crate::services::{get_value_field, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::component::{
     ComModFilesOfFileset, com_mod_files_of_fileset
@@ -78,18 +76,9 @@ impl Component for FilesOfFilesetCard {
             },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetFilesOfFilesetResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        self.files_list = serde_json::from_value(
-                            res.get("componentModificationFilesOfFileset").unwrap().clone()
-                        ).unwrap();
-                        // debug!("componentModificationFilesOfFileset: {:?}", result);
-                    },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
-                }
+                self.files_list = resp_parsing(res, "componentModificationFilesOfFileset")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
             },
             Msg::ClearError => self.error = None,
         }

@@ -5,9 +5,8 @@ pub use list_item::ListItemUser;
 use yew::{Component, Callback, Context, html, Html, Properties};
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use log::debug;
-use crate::error::{Error, get_error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, ShowUserShort, UsersQueryArg};
 use crate::fragments::ListState;
@@ -15,11 +14,13 @@ use crate::gqls::make_query;
 use crate::gqls::user::{
     GetUsersShortList, get_users_short_list
 };
+use crate::services::resp_parsing;
 
 pub enum Msg {
     SwitchShowType,
     UpdateList(String),
-    GetList
+    GetList,
+    ResponseError(Error),
 }
 
 #[derive(Properties, Clone, Debug, PartialEq)]
@@ -82,14 +83,11 @@ impl Component for CatalogUsers {
                 });
             },
             Msg::UpdateList(res) => {
-              let data: Value = serde_json::from_str(res.as_str()).unwrap();
-              let res_value = data.as_object().unwrap().get("data").unwrap();
-              match res_value.is_null() {
-                  false => self.list = serde_json::from_value(res_value.get("users").unwrap().clone()).unwrap(),
-                  true => self.error = Some(get_error(&data)),
-              }
-              debug!("users list: {:?}", self.list);
-          }
+                self.list = resp_parsing(res, "users")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+            },
+            Msg::ResponseError(err) => self.error = Some(err),
         }
         true
     }

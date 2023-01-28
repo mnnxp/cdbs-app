@@ -3,12 +3,10 @@ use yew::html::{Scope, TargetCast};
 use web_sys::{InputEvent, HtmlInputElement};
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
-use log::debug;
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, ComponentParam};
-use crate::services::get_value_field;
+use crate::services::{get_value_field, resp_parsing_item};
 use crate::gqls::make_query;
 use crate::gqls::component::{
     PutComponentParams, put_component_params,
@@ -98,44 +96,29 @@ impl Component for ComponentParamTag {
             },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetDeleteParamResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        let result: usize = serde_json::from_value(res.get("deleteComponentParams").unwrap().clone()).unwrap();
-                        debug!("deleteComponentParams: {:?}", result);
-                        match &ctx.props().delete_param {
-                            Some(delete_param) => {
-                                if result > 0 {
-                                    self.get_result_delete = true;
-                                    self.hide_edit_param_value = true;
-                                    delete_param.emit(ctx.props().param_data.param.param_id);
-                                };
-                            },
-                            None => self.get_result_delete = result > 0,
-                        }
+                let result: usize = resp_parsing_item(res, "deleteComponentParams")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                match &ctx.props().delete_param {
+                    Some(delete_param) => {
+                        if result > 0 {
+                            self.get_result_delete = true;
+                            self.hide_edit_param_value = true;
+                            delete_param.emit(ctx.props().param_data.param.param_id);
+                        };
                     },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                    None => self.get_result_delete = result > 0,
                 }
             },
             Msg::GetChangeValueResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: usize =
-                            serde_json::from_value(res_value.get("putComponentParams").unwrap().clone()).unwrap();
-                        debug!("putComponentParams: {:?}", result);
-                        if result > 0 {
-                            self.hide_edit_param_value = true;
-                            self.current_param_value = self.request_set_param_value.clone();
-                        }
-                        // self.request_set_param_value = String::new();
-                    },
-                    true => self.error = Some(get_error(&data)),
+                let result: usize = resp_parsing_item(res, "putComponentParams")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                if result > 0 {
+                    self.hide_edit_param_value = true;
+                    self.current_param_value = self.request_set_param_value.clone();
                 }
+                // self.request_set_param_value = String::new();
             },
             Msg::UpdateParamValue(data) => self.request_set_param_value = data,
             Msg::Ignore => {}

@@ -1,13 +1,12 @@
 use yew::{Component, Callback, Context, html, html::Scope, Html, Properties};
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
-use log::debug;
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, LicenseInfo};
 use crate::gqls::make_query;
 use crate::gqls::component::{DeleteComponentLicense, delete_component_license};
+use crate::services::resp_parsing_item;
 
 /// License card for show data on component page
 pub struct ComponentLicenseTag {
@@ -71,24 +70,17 @@ impl Component for ComponentLicenseTag {
             },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetDeleteLicenseResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        let result: usize = serde_json::from_value(res.get("deleteComponentLicense").unwrap().clone()).unwrap();
-                        debug!("deleteComponentLicense: {:?}", result);
-                        match &ctx.props().delete_license {
-                            Some(delete_license) => {
-                                if result > 0 {
-                                    self.get_result_delete = true;
-                                    delete_license.emit(ctx.props().license_data.id);
-                                };
-                            },
-                            None => self.get_result_delete = result > 0,
+                let result: usize = resp_parsing_item(res, "deleteComponentLicense")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                match &ctx.props().delete_license {
+                    Some(delete_license) => {
+                        if result > 0 {
+                            self.get_result_delete = true;
+                            delete_license.emit(ctx.props().license_data.id);
                         }
                     },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                    None => self.get_result_delete = result > 0,
                 }
             },
             Msg::Ignore => {}

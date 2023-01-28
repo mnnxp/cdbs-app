@@ -3,11 +3,10 @@ use yew::html::{Scope, TargetCast};
 use web_sys::{InputEvent, Event, HtmlInputElement};
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use log::debug;
-use crate::services::{is_authenticated, get_value_field};
+use crate::services::{is_authenticated, get_value_field, resp_parsing_item, get_value_response, get_from_value};
 use crate::fragments::list_errors::ListErrors;
-use crate::error::{Error, get_error};
+use crate::error::Error;
 use crate::types::{UUID, Region, RepresentationType, CompanyRepresentInfo, CompanyRepresentUpdateInfo};
 use crate::gqls::make_query;
 use crate::gqls::company::{
@@ -28,6 +27,7 @@ pub enum Msg {
     UpdatePhone(String),
     UpdateList(String),
     ClearError,
+    ResponseError(Error),
 }
 
 #[derive(Properties, Clone, Debug, PartialEq)]
@@ -125,32 +125,14 @@ impl Component for ChangeItem {
                 })
             },
             Msg::GetUpdateResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        self.get_result_update = serde_json::from_value(
-                            res_value.get("updateCompanyRepresent").unwrap().clone()
-                        ).unwrap();
-                        debug!("Update company represent: {:?}", self.get_result_update);
-                    },
-                    true => self.error = Some(get_error(&data)),
-                }
+                self.get_result_update = resp_parsing_item(res, "updateCompanyRepresent")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
             },
             Msg::GetDeleteRepresentResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        self.get_result_delete = serde_json::from_value(
-                            res_value.get("deleteCompanyRepresent").unwrap().clone()
-                        ).unwrap();
-                        debug!("Delete company represent: {:?}", self.get_result_delete);
-                    },
-                    true => self.error = Some(get_error(&data)),
-                }
+                self.get_result_delete = resp_parsing_item(res, "deleteCompanyRepresent")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
             },
             Msg::UpdateRegionId(region_id) => {
                 self.request_update.region_id = Some(region_id.parse::<i64>().unwrap_or_default());
@@ -158,30 +140,21 @@ impl Component for ChangeItem {
             Msg::UpdateRepresentationTypeId(representation_type_id) => {
                 self.request_update.representation_type_id = Some(representation_type_id.parse::<i64>().unwrap_or_default());
             },
-            Msg::UpdateName(name) => {
-                self.request_update.name = Some(name);
-            },
-            Msg::UpdateAddress(address) => {
-                self.request_update.address = Some(address);
-            },
-            Msg::UpdatePhone(phone) => {
-                self.request_update.phone = Some(phone);
-            },
+            Msg::UpdateName(name) => self.request_update.name = Some(name),
+            Msg::UpdateAddress(address) => self.request_update.address = Some(address),
+            Msg::UpdatePhone(phone) => self.request_update.phone = Some(phone),
             Msg::UpdateList(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-                match res_value.is_null() {
-                    false => {
-                        // debug!("Result: {:#?}", res_value.clone);
-                        self.regions =
-                            serde_json::from_value(res_value.get("regions").unwrap().clone()).unwrap();
-                        self.represent_types =
-                            serde_json::from_value(res_value.get("companyRepresentTypes").unwrap().clone()).unwrap();
+                let value = get_value_response(res);
+                match value {
+                    Ok(root_value) => {
+                        self.regions = get_from_value(&root_value, "regions").unwrap();
+                        self.represent_types = get_from_value(&root_value, "companyRepresentTypes").unwrap();
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => self.error = Some(err),
                 }
             },
             Msg::ClearError => self.error = None,
+            Msg::ResponseError(err) => self.error = Some(err),
         }
         true
     }

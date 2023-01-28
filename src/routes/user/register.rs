@@ -7,9 +7,9 @@ use graphql_client::GraphQLQuery;
 use serde_json::Value;
 use log::debug;
 use crate::routes::AppRoute::{self, Login, Profile};
-use crate::error::{Error, get_error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
-use crate::services::{get_logged_user, get_value_field};
+use crate::services::{get_from_value, get_logged_user, get_value_field, get_value_response};
 use crate::types::{RegisterInfo, Region, Program, TypeAccessInfo};
 use crate::gqls::make_query;
 use crate::gqls::user::{
@@ -41,6 +41,7 @@ pub enum Msg {
     UpdateList(String),
     GetRegister(String),
     ShowConditions,
+    ResponseError(Error),
     Ignore,
 }
 
@@ -104,27 +105,20 @@ impl Component for Register {
                 })
             },
             Msg::UpdateList(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-                self.regions =
-                    serde_json::from_value(res.get("regions").unwrap().clone()).unwrap();
-                self.programs =
-                    serde_json::from_value(res.get("programs").unwrap().clone()).unwrap();
-                self.types_access =
-                    serde_json::from_value(res.get("typesAccess").unwrap().clone()).unwrap();
+                let value: Value = get_value_response(res)
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                self.regions = get_from_value(&value, "regions").unwrap();
+                self.programs = get_from_value(&value, "programs").unwrap();
+                self.types_access = get_from_value(&value, "typesAccess").unwrap();
                 debug!("Update: {:?}", self.programs);
             },
             Msg::GetRegister(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-                match res.is_null() {
-                    false => {
-                        let navigator: Navigator = ctx.link().navigator().unwrap();
-                        navigator.replace(&Login);
-                    },
-                    // false => self.router_agent.send(Login),
-                    true => self.error = Some(get_error(&data)),
-                }
+                let _value: Value = get_value_response(res)
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                let navigator: Navigator = ctx.link().navigator().unwrap();
+                navigator.replace(&Login);
             },
             // Msg::UpdateFirstname(firstname) => self.request.firstname = firstname,
             // Msg::UpdateLastname(lastname) => self.request.lastname = lastname,
@@ -139,6 +133,7 @@ impl Component for Register {
             Msg::UpdateTypeAccessId(type_access_id) =>
                 self.request.type_access_id = type_access_id.parse::<usize>().unwrap_or(1),
             Msg::ShowConditions => self.show_conditions = !self.show_conditions,
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::Ignore => {}
         }
         true

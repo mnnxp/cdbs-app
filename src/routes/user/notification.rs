@@ -2,12 +2,11 @@ use yew::{Component, Context, html, html::Scope, Html};
 use yew_router::prelude::*;
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use log::debug;
 use crate::routes::AppRoute::Login;
-use crate::error::{Error, get_error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
-use crate::services::{get_logged_user, get_value_field};
+use crate::services::{get_logged_user, get_value_field, resp_parsing, resp_parsing_item};
 use crate::types::{ShowNotification, DegreeImportanceTranslateList};
 use crate::gqls::make_query;
 use crate::gqls::user::{
@@ -47,6 +46,7 @@ pub enum Msg {
     GetRemoveNotification(String),
     Ignore,
     GetCurrentData,
+    ResponseError(Error),
 }
 
 impl Component for Notifications {
@@ -119,51 +119,29 @@ impl Component for Notifications {
                 link.send_message(Msg::RequestRemoveNotification);
             },
             Msg::GetAllNotification(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let notifications_data: Vec<ShowNotification> = serde_json::from_value(res_value.get("notifications").unwrap().clone()).unwrap();
-                        debug!("User notifications data: {:?}", notifications_data);
-                        self.notifications = notifications_data;
-                    },
-                    true => self.error = Some(get_error(&data)),
-                }
+                self.notifications = resp_parsing(res, "notifications")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
             },
             Msg::GetReadNotification(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let read_notification: usize = serde_json::from_value(res_value.get("readNotifications").unwrap().clone()).unwrap();
-                        debug!("Read notifications data: {:?}", read_notification);
-                        if read_notification > 0 {
-                            self.rendered(ctx, true);
-                        }
-                    },
-                    true => self.error = Some(get_error(&data)),
+                let read_notification: usize = resp_parsing_item(res, "readNotifications")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                if read_notification > 0 {
+                    self.rendered(ctx, true);
                 }
             },
             Msg::GetRemoveNotification(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let delete_notification: usize = serde_json::from_value(res_value.get("deleteNotifications").unwrap().clone()).unwrap();
-                        debug!("Read notifications data: {:?}", delete_notification);
-
-                        if delete_notification > 0 {
-                            self.rendered(ctx, true);
-                        }
-                    },
-                    true => self.error = Some(get_error(&data)),
+                let delete_notification: usize = resp_parsing_item(res, "deleteNotifications")
+                    .map_err(|err| link.send_message(Msg::ResponseError(err)))
+                    .unwrap();
+                if delete_notification > 0 {
+                    self.rendered(ctx, true);
                 }
             },
             Msg::Ignore => {},
             Msg::GetCurrentData => {},
+            Msg::ResponseError(err) => self.error = Some(err),
         }
         true
     }
