@@ -349,7 +349,7 @@ impl Component for ComponentSettings {
             },
             Msg::GetUpdateAccessResult(res) => {
                 self.update_component_access = false;
-                self.get_result_access = resp_parsing_item(res, "putComponentUpdate")
+                self.get_result_access = resp_parsing_item(res, "changeComponentAccess")
                     .map_err(|err| link.send_message(Msg::ResponseError(err)))
                     .unwrap();
             },

@@ -118,7 +118,7 @@ impl Component for SpecTagItem {
                 }
             },
             Msg::GetAddedSpecResult(res) => {
-                let result: usize = resp_parsing_item(res, "specsPaths")
+                let result: usize = resp_parsing_item(res, "addCompanySpecs")
                     .map_err(|err| link.send_message(Msg::ResponseError(err)))
                     .unwrap();
                 match &ctx.props().added_spec {

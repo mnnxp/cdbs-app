@@ -3,7 +3,7 @@ use serde::Deserialize;
 use serde_json::{Value, from_str, from_value};
 use crate::error::{Error, get_error};
 
-/// Возвращает извлечённые по ключу объекты
+/// Get objects from response data by key
 pub(crate) fn resp_parsing<T>(
     response: String,
     key_word: &str,
@@ -18,7 +18,7 @@ where
     })
 }
 
-/// Возвращает извлечённый по ключу объект
+/// Get object from response data by key
 pub(crate) fn resp_parsing_item<T>(
     response: String,
     key_word: &str,
@@ -33,8 +33,8 @@ where
     })
 }
 
-/// Верхний объект извлекается по первому ключу,
-/// далее из него извлекаются объекты по второму ключу.
+/// The top object is extracted by the first key,
+/// then next objects are extracted from it by the second key.
 pub(crate) fn resp_parsing_two_level<T>(
     response: String,
     first_key: &str,
@@ -53,7 +53,7 @@ where
     })
 }
 
-/// Получает объект из JSON value
+/// Get object from JSON value by key
 pub(crate) fn get_from_value<T>(
     value: &Value,
     key_word: &str,
@@ -66,7 +66,7 @@ where
     Ok(res.unwrap())
 }
 
-/// Извлекает данные ответа из `data` и возвращает JSON value
+/// Retrieves an object with the key "data" from the response data and returns a JSON value.
 pub(crate) fn get_value_response(response: String) -> Result<Value, Error> {
     let data: Value = from_str(response.as_str()).unwrap();
     let res = data.as_object().unwrap().get("data").unwrap().clone();

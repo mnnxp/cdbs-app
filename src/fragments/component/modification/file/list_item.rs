@@ -93,7 +93,7 @@ impl Component for ModificationFileItem {
                 self.download_url = result_parsing.first().map(|f| f.download_url.clone()).unwrap_or_default();
             },
             Msg::GetDeleteFileResult(res) => {
-                self.get_result_delete = resp_parsing_item(res, "componentModificationFiles")
+                self.get_result_delete = resp_parsing_item(res, "deleteModificationFile")
                     .map_err(|err| link.send_message(Msg::ResponseError(err)))
                     .unwrap();
                 if self.get_result_delete {

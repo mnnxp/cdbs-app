@@ -11,7 +11,7 @@ use crate::fragments::list_errors::ListErrors;
 use crate::error::Error;
 use crate::services::storage_upload::storage_upload;
 use crate::services::{get_value_field, resp_parsing_item};
-// use crate::types::UploadFile;
+use crate::types::UploadFile;
 use crate::gqls::make_query;
 use crate::gqls::user::{
     UploadUserFavicon, upload_user_favicon
@@ -118,7 +118,7 @@ impl Component for UpdateFaviconBlock {
                     Some(_) => "uploadCompanyFavicon",
                     None => "uploadFavicon",
                 };
-                let result = resp_parsing_item(res, key_word)
+                let result: UploadFile = resp_parsing_item(res, key_word)
                     .map_err(|err| link.send_message(Msg::ResponseError(err)))
                     .unwrap();
                 if let Some(file) = self.file.clone() {
