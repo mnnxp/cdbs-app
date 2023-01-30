@@ -1,7 +1,7 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://gitlab.com/mnnxp/cdbs-app">
+  <a href="https://gitlab.com/mnnxp/cdbs-app" id="#readme-top">
     <img src="data/logo_min.svg" alt="Logo" width="80">
   </a>
 
