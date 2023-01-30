@@ -221,7 +221,7 @@ Don't forget to give the project a star! Thanks again!
 <!-- LICENSE -->
 ## License
 
-Distributed under the MIT License. See `LICENSE.txt` for more information.
+Distributed under the MIT License. See [LICENSE](/LICENSE) for more information.
 
 <div align="right">(<a href="#about-the-project">back to top</a>)</div>
 
