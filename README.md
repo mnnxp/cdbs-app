@@ -1,20 +1,20 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://gitlab.com/mnnxp/cdbs-app" id="#readme-top">
+  <a href="https://gitlab.com/cadbase/cdbs-app">
     <img src="data/logo_min.svg" alt="Logo" width="80">
   </a>
 
-  <h3 align="center">Frontend for CADBase Platform</h3>
+  <h3>Frontend for CADBase Platform</h3>
 
-  <p align="center">
+  <p>
     CADBase is a digital platform for sharing 3D models and drawings!
     <br />
-    <a href="https://gitlab.com/mnnxp/cdbs-app">View site</a>
+    <a href="https://gitlab.com/cadbase/cdbs-app">View site</a>
     ·
-    <a href="https://gitlab.com/mnnxp/cdbs-app/issues">Report Bug</a>
+    <a href="https://gitlab.com/cadbase/cdbs-app/issues">Report Bug</a>
     ·
-    <a href="https://gitlab.com/mnnxp/cdbs-app/issues">Request Feature</a>
+    <a href="https://gitlab.com/cadbase/cdbs-app/issues">Request Feature</a>
   </p>
 </div>
 
@@ -75,7 +75,7 @@ We also have a YouTube channel <a href="https://www.youtube.com/channel/UC-dHiTH
 
 If you do not see interest in this site and its functionality, you can try to benefit from the code base of this site. In any case, have peace and goodness ;)
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+<div align="right">(<a href="#about-the-project">back to top</a>)</div>
 
 
 
@@ -91,7 +91,7 @@ To create this part of the project, were used
 
 Thank you to all contributors who have contributed to the above and to <a href="#acknowledgments">Acknowledgments</a> projects! Your input has allowed us to make CADBase better and faster.
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+<div align="right">(<a href="#about-the-project">back to top</a>)</div>
 
 
 
@@ -129,14 +129,14 @@ Note: Before performing step 2, check the correct settings of the environment in
 
 1. Clone the repo
    ```sh
-   git clone https://gitlab.com/mnnxp/cdbs-app.git
+   git clone https://gitlab.com/cadbase/cdbs-app.git
    ```
 2. Build, watch & serve the Rust WASM app and all of its assets
    ```sh
    trunk serve
    ```
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+<div align="right">(<a href="#about-the-project">back to top</a>)</div>
 
 
 
@@ -146,13 +146,13 @@ Note: Before performing step 2, check the correct settings of the environment in
 We haven't yet opened the backend to a high-profile audience. But since the primary server API is available to all users, you can use these settings:
 
 ```
-  API_BACKEND=https://api.cadbase.rs:3000
-  API_GPL=https://api.cadbase.rs:3000/graphql
+  API_BACKEND=https://api.cadbase.rs
+  API_GPL=https://api.cadbase.rs/graphql
 ```
 
-_Also please refer to the [API Reference](https://doc.cadbase.rs) if you want make more about API CADBase_
+_Also please refer to the [API Reference](https://docs.cadbase.rs) if you want make more about API CADBase_
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+<div align="right">(<a href="#about-the-project">back to top</a>)</div>
 
 
 <!-- RUN TESTS -->
@@ -194,9 +194,9 @@ This example will run a login test that will be performed using the Firefox brow
     - [ ] Chinese
     - [ ] Spanish
 
-See the [open issues](https://gitlab.com/mnnxp/cdbs-app/issues) for a full list of proposed features (and known issues).
+See the [open issues](https://gitlab.com/cadbase/cdbs-app/issues) for a full list of proposed features (and known issues).
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+<p align="right" style="text-align: right;">(<a href="#readme-top">back to top</a>)</p>
 
 
 
@@ -214,7 +214,7 @@ Don't forget to give the project a star! Thanks again!
 4. Push to the Branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+<div align="right">(<a href="#about-the-project">back to top</a>)</div>
 
 
 
@@ -223,7 +223,7 @@ Don't forget to give the project a star! Thanks again!
 
 Distributed under the MIT License. See `LICENSE.txt` for more information.
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+<div align="right">(<a href="#about-the-project">back to top</a>)</div>
 
 
 
@@ -234,7 +234,7 @@ Ivan Nosovsky - in@cadbase.rs or `mnnxp#1839` (Discord)
 
 Xia TianHao - xth@cadbase.rs or [Sansx](https://github.com/sansx) (GitHub)
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+<div align="right">(<a href="#about-the-project">back to top</a>)</div>
 
 
 
@@ -253,7 +253,7 @@ Use this space to list resources you find helpful and would like to give credit 
 * [Choose an Open Source License](https://choosealicense.com)
 * [Img Shields](https://shields.io)
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+<div align="right">(<a href="#about-the-project">back to top</a>)</div>
 
 
 
