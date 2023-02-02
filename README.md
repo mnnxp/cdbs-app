@@ -10,7 +10,7 @@
   <p>
     CADBase is a digital platform for sharing 3D models and drawings!
     <br />
-    <a href="https://gitlab.com/cadbase/cdbs-app">View site</a>
+    <a href="https://cadbase.rs">View site</a>
     ·
     <a href="https://gitlab.com/cadbase/cdbs-app/issues">Report Bug</a>
     ·
@@ -60,20 +60,20 @@
 
 [![Product Name Screen Shot][product-screenshot]](https://cadbase.rs)
 
-Here contains the code for site the CADBase. This digital platform for sharing 3D models, drawings, standards, supplier information, and other engineering data.
+This is a digital platform for sharing 3D models, drawings and other engineering data.
 
-At first glance, it may seem that all the tasks of exchanging 3D models, drawings and other engineering data, taking into account their versioning and availability, have already been solved by existing solutions.
+At first glance, it may seem that all the challenges of exchanging 3D models, drawings and other engineering data with regard to their versioning and availability have already been solved by existing solutions.
 
-However, I hope that the CADBase project will find its niche for the following reasons: 
-* Specific dependency between data to simplify the work when using different CAD systems
-* API functionality is available to all users of the platform 
-* Ability to integrate the platform with various design systems and other solutions
+However, I hope that the CADBase project will be able to find its niche for the following reasons:
+* Made it easier to work with different CAD systems by using specific data dependencies
+* All platform users have access to API functionality
+* Possibility to integrate the platform with various CAD systems and other solutions
 
-We have a rather ambitious goal: to create a solution for the exchange of design data suitable for most of engineers.
+We have an ambitious goal: to create a design data exchange solution that is suitable for most engineers.
 
-We also have a YouTube channel <a href="https://www.youtube.com/channel/UC-dHiTHBGV88ScxFKSC3srw">CADBase Platform</a> if you're interested.
+If you're interested, we're also on YouTube <a href="https://www.youtube.com/channel/UC-dHiTHBGV88ScxFKSC3srw">CADBase Platform</a>.
 
-If you do not see interest in this site and its functionality, you can try to benefit from the code base of this site. In any case, have peace and goodness ;)
+And if you're not interested in this site and its functionality, you can try to profit from the code base of this site. In any case, have peace and goodwill ;)
 
 <div align="right">(<a href="#about-the-project">back to top</a>)</div>
 
@@ -81,7 +81,7 @@ If you do not see interest in this site and its functionality, you can try to be
 
 ### Built With
 
-To create this part of the project, were used
+For the creation of this part of the project, the following solutions have been used
 <a href="https://yew.rs"><img src="https://yew.rs/img/logo.svg" width="50"/></a>  <a href="https://bulma.io"><img src="https://bulma.io/images/bulma-logo.png" width="125"/></a>
 
 | Libraries used |
@@ -89,7 +89,7 @@ To create this part of the project, were used
 | [![router][router]][router-url] [![yewtil][yewtil]][yewtil-url] [![bindgen][bindgen]][bindgen-url] [![logger][logger]][logger-url] [![instant][instant]][instant-url] [![lipsum][lipsum]][lipsum-url] [![log][log]][log-url] [![getrandom][getrandom]][getrandom-url] [![rand][rand]][rand-url] [![chrono][chrono]][chrono-url] [![dotenv_codegen][dotenv_codegen]][dotenv_codegen-url] [![lazy_static][lazy_static]][lazy_static-url] [![parking_lot][parking_lot]][parking_lot-url] [![cmark][cmark]][cmark-url] [![serde][serde]][serde-url] [![regex][regex]][regex-url] [![serde_json][serde_json]][serde_json-url] [![thiserror][thiserror]][thiserror-url] [![graphql_client][graphql_client]][graphql_client-url] [![wee_alloc][wee_alloc]][wee_alloc-url] [![web-sys][web-sys]][web-sys-url] [![wasm-bindgen-test][wasm-bindgen-test]][wasm-bindgen-test-url] [![toml][toml]][toml-url] [![js-sys][js-sys]][js-sys-url] [![console_error_panic_hook][console_error_panic_hook]][console_error_panic_hook-url] [![anyhow][anyhow]][anyhow-url] |
 
 
-Thank you to all contributors who have contributed to the above and to <a href="#acknowledgments">Acknowledgments</a> projects! Your input has allowed us to make CADBase better and faster.
+Many thanks to all of you who have contributed to the projects listed above and to the projects listed in the <a href="#acknowledgments">Acknowledgments</a> section! Your input has allowed us to make CADBase better and faster.
 
 <div align="right">(<a href="#about-the-project">back to top</a>)</div>
 
@@ -180,6 +180,7 @@ This example will run a login test that will be performed using the Firefox brow
   yarn testcafe firefox tests/login_test.js
 ```
 
+<div align="right">(<a href="#about-the-project">back to top</a>)</div>
 
 <!-- ROADMAP -->
 ## Roadmap
@@ -196,7 +197,7 @@ This example will run a login test that will be performed using the Firefox brow
 
 See the [open issues](https://gitlab.com/cadbase/cdbs-app/issues) for a full list of proposed features (and known issues).
 
-<p align="right" style="text-align: right;">(<a href="#readme-top">back to top</a>)</p>
+<div align="right">(<a href="#about-the-project">back to top</a>)</div>
 
 
 
@@ -241,9 +242,6 @@ Xia TianHao - xth@cadbase.rs or [Sansx](https://github.com/sansx) (GitHub)
 <!-- ACKNOWLEDGMENTS -->
 ## Acknowledgments
 
-I find helpful this resources and 
-Use this space to list resources you find helpful and would like to give credit to. I've included a few of my favorites to kick things off!
-
 * [Yew-graphql-demo](https://github.com/sansx/yew-graphql-demo)
 * [Webapp.rs](https://github.com/saschagrunert/webapp.rs)
 * [Canduma](https://github.com/clifinger/canduma)
@@ -251,6 +249,7 @@ Use this space to list resources you find helpful and would like to give credit 
 * [TestCafe](https://testcafe.io)
 * [Best-README-Template](https://github.com/othneildrew/Best-README-Template)
 * [Choose an Open Source License](https://choosealicense.com)
+* [Container Registry](https://container-registry.com)
 * [Img Shields](https://shields.io)
 
 <div align="right">(<a href="#about-the-project">back to top</a>)</div>
