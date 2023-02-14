@@ -13,7 +13,7 @@ use crate::routes::AppRoute;
 use crate::error::{Error, get_error};
 use crate::fragments::list_errors::ListErrors;
 use crate::services::{get_logged_user, get_value_field};
-use crate::types::{RegisterInfo, Region, Program, TypeAccessInfo};
+use crate::types::{RegisterInfo, Program, TypeAccessInfo};
 use crate::gqls::make_query;
 use crate::gqls::user::{
     RegisterOpt, register_opt,
@@ -26,7 +26,6 @@ pub struct Register {
     // props: Props,
     request: RegisterInfo,
     router_agent: Box<dyn Bridge<RouteAgent>>,
-    regions: Vec<Region>,
     programs: Vec<Program>,
     types_access: Vec<TypeAccessInfo>,
     link: ComponentLink<Self>,
@@ -42,7 +41,6 @@ pub enum Msg {
     UpdateEmail(String),
     UpdatePassword(String),
     UpdateProgramId(String),
-    UpdateRegionId(String),
     UpdateTypeAccessId(String),
     UpdateList(String),
     GetRegister(String),
@@ -62,7 +60,6 @@ impl Component for Register {
             router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             link,
             programs: Vec::new(),
-            regions: Vec::new(),
             types_access: Vec::new(),
             show_conditions: false,
         }
@@ -102,7 +99,7 @@ impl Component for Register {
                     address: Some(self.request.address.clone()),
                     timeZone: Some(self.request.time_zone.clone()),
                     position: Some(self.request.position.clone()),
-                    regionId: Some(self.request.region_id as i64),
+                    regionId: Some(8_i64), // set region "Other"
                     programId: Some(self.request.program_id as i64),
                     typeAccessId: Some(self.request.type_access_id as i64),
                 };
@@ -116,8 +113,6 @@ impl Component for Register {
             Msg::UpdateList(res) => {
                 let data: Value = serde_json::from_str(res.as_str()).unwrap();
                 let res = data.as_object().unwrap().get("data").unwrap();
-                self.regions =
-                    serde_json::from_value(res.get("regions").unwrap().clone()).unwrap();
                 self.programs =
                     serde_json::from_value(res.get("programs").unwrap().clone()).unwrap();
                 self.types_access =
@@ -141,8 +136,6 @@ impl Component for Register {
             Msg::UpdateUsername(username) => self.request.username = username,
             Msg::UpdateProgramId(program_id) =>
                 self.request.program_id = program_id.parse::<usize>().unwrap_or(1),
-            Msg::UpdateRegionId(region_id) =>
-                self.request.region_id = region_id.parse::<usize>().unwrap_or(1),
             Msg::UpdateTypeAccessId(type_access_id) =>
                 self.request.type_access_id = type_access_id.parse::<usize>().unwrap_or(1),
             Msg::ShowConditions => self.show_conditions = !self.show_conditions,
@@ -214,12 +207,6 @@ impl Register {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
-        let onchange_region_id = self
-            .link
-            .callback(|ev: ChangeData| Msg::UpdateRegionId(match ev {
-              ChangeData::Select(el) => el.value(),
-              _ => "1".to_string(),
-          }));
         let onchange_type_access_id = self
             .link
             .callback(|ev: ChangeData| Msg::UpdateTypeAccessId(match ev {
@@ -284,7 +271,7 @@ impl Register {
                 oninput_password
             )}
 
-            // fourth columns (program, region, access)
+            // fourth columns (program, access)
             <div class="columns">
                 <div class="column">
                     <label class="label">{ get_value_field(&26) }</label>
@@ -298,27 +285,6 @@ impl Register {
                             { for self.programs.iter().map(|x| html!{
                               <option value={x.id.to_string()} >{&x.name}</option>
                             }) }
-                          </select>
-                        </div>
-                    </div>
-                </div>
-                <div class="column">
-                    <label class="label">{ get_value_field(&27) }</label>
-                    <div class="control">
-                        <div class="select">
-                          <select
-                              id="region"
-                              select=self.request.region_id.to_string()
-                              onchange=onchange_region_id
-                              >
-                              { for self.regions.iter().map(|x|
-                                  html!{
-                                      <option value={x.region_id.to_string()}
-                                            selected={x.region_id == self.request.region_id} >
-                                          {&x.region}
-                                      </option>
-                                  }
-                              )}
                           </select>
                         </div>
                     </div>

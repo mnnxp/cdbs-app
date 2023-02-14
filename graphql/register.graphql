@@ -4,12 +4,6 @@ query RegisterOpt {
     name
   }
 
-  regions {
-    regionId
-    langId
-    region
-  }
-
   typesAccess {
     typeAccessId
     langId
