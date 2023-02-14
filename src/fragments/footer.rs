@@ -55,7 +55,7 @@ impl Component for Footer {
     }
 
     fn view(&self) -> Html {
-        let current_info = "© CADBase 2022";
+        let current_info = "© CADBase";
         let onclick_lang_en = self.link.callback(|_| Msg::ChangeLanguage(1));
         let onclick_lang_ru = self.link.callback(|_| Msg::ChangeLanguage(2));
         let onclick_show_terms = self.link.callback(|_| Msg::ShowTerms);
