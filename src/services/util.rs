@@ -2,14 +2,34 @@ use regex::Regex;
 
 /// Checkign files for get images when can display in browser
 pub(crate) fn image_detector(filename: &str) -> bool {
-    let ext_str = Regex::new(r"\w*$").unwrap().find(filename).unwrap().as_str();
+    let ext_str =
+        Regex::new(r"\.\w+$")
+            .unwrap()
+            .find(filename)
+            .map(|m| m.as_str().to_ascii_lowercase())
+            .unwrap_or_default();
 
     matches!(
-        ext_str,
-        "apng" | "avif" | "gif" |
-        "jpg" | "jpeg" | "jpe" |
-        "jif" | "jfif" | "png" |
-        "svg" | "webp"
+        ext_str.as_str(),
+        ".apng" | ".avif" | ".gif" |
+        ".jpg" | ".jpeg" | ".jpe" |
+        ".jif" | ".jfif" | ".png" |
+        ".svg" | ".webp"
+    )
+}
+
+/// Search for a file to display a 3D object
+pub(crate) fn three_detector(filename: &str) -> bool {
+    let ext_str =
+        Regex::new(r"\.\w+$")
+            .unwrap()
+            .find(filename)
+            .map(|m| m.as_str().to_ascii_lowercase())
+            .unwrap_or_default();
+
+    matches!(
+        ext_str.as_str(),
+        ".stl"
     )
 }
 

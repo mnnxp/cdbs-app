@@ -300,5 +300,10 @@ lazy_static! {
             (294, "No child component available"),
             (295, "Hide components"),
             (296, "See components"),
+            (297, "No file to display"),
+            (298, "Expand"),
+            (299, "Collapse"),
+            (300, "View"),
+            (301, "Close"),
         ]);
 }
