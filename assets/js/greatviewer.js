@@ -72,7 +72,7 @@ AAAAAElFTkSuQmCC`;
         const scene = new THREE.Scene();
 
         var showAxesHelper = false;
-        var axesHelper = new THREE.AxesHelper(5);
+        var axesHelper = new THREE.AxesHelper(30);
         function axesHelperOnScene(value) {
             if (value) {
                 scene.add(axesHelper);
