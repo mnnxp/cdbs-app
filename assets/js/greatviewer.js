@@ -150,6 +150,9 @@ AAAAAElFTkSuQmCC`;
             clearcoatRoughness: 0.25,
         });
 
+        var infoMessage = document.createElement('div');
+        infoMessage.classList.add('text-center')
+        container.appendChild(infoMessage);
         const loader = new STLLoader()
         loader.load(
             this.modelPath,
@@ -160,10 +163,15 @@ AAAAAElFTkSuQmCC`;
                 geometry.center();
             },
             (xhr) => {
-                console.log((xhr.loaded / xhr.total) * 100 + '% loaded');
+                var loadedProgress = (xhr.loaded / xhr.total) * 100 + '%';
+                console.log(loadedProgress + ' loaded');
+                infoMessage.innerHTML = loadedProgress;
+                // remove the div with the information message after successful loading
+                if (loadedProgress == '100%') { container.removeChild(infoMessage); }
             },
             (error) => {
                 console.warn(error);
+                infoMessage.innerHTML = error;
             }
         )
 

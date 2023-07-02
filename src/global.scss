@@ -278,3 +278,15 @@ body {
   // padding: 1rem 1.5rem 1rem;
   margin-top: 1.5rem;
 }
+
+scene-hull {
+  position: relative;
+}
+
+.text-center {
+  text-align: center;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}

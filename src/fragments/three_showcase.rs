@@ -185,7 +185,11 @@ impl Component for ThreeShowcase {
             <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
             <scene-hull class={scene_hull_class}>
                 {match self.selected_file.is_none() {
-                    true => html!{<span>{get_value_field(&297)}</span>},
+                    true => html!{
+                        <div class="text-center">
+                            <span>{get_value_field(&297)}</span>
+                        </div>
+                    },
                     false => html!{
                         <button
                             id="three-size-button"
