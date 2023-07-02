@@ -70,7 +70,17 @@ AAAAAElFTkSuQmCC`;
 
         // create a Scene
         const scene = new THREE.Scene();
-        scene.add(new THREE.AxesHelper(5));
+
+        var showAxesHelper = false;
+        var axesHelper = new THREE.AxesHelper(5);
+        function axesHelperOnScene(value) {
+            if (value) {
+                scene.add(axesHelper);
+            } else {
+                scene.remove(axesHelper);
+            }
+            showAxesHelper = value;
+        }
 
         const light = new THREE.SpotLight();
         light.position.set(50, 50, 50);
@@ -78,6 +88,10 @@ AAAAAElFTkSuQmCC`;
 
         // Set the background color
         scene.background = new THREE.Color(backgroundColor);
+
+        // set scaling 1/2 by default
+        var customScale = 0.5;
+        scene.scale.set(customScale, customScale, customScale);
 
         // Create a camera
         const fov = 45; // AKA Field of View
@@ -142,6 +156,8 @@ AAAAAElFTkSuQmCC`;
             function (geometry) {
                 const mesh = new THREE.Mesh(geometry, material);
                 scene.add(mesh);
+                // set object by center scene
+                geometry.center();
             },
             (xhr) => {
                 console.log((xhr.loaded / xhr.total) * 100 + '% loaded');
@@ -154,15 +170,21 @@ AAAAAElFTkSuQmCC`;
         function setControlsGui() {
             const gui = new GUI({ autoPlace: false, title: '', container: container });
                 gui.domElement.id = 'three-gui'
+                const sceneParams = {
+                    backgroundColor: scene.background.getHex(),
+                    customScale,
+                    showAxesHelper,
+                };
+                gui.add(sceneParams, 'showAxesHelper')
+                    .name('Оси координат')
+                    .onChange((value) => {
+                        axesHelperOnScene(value);
+                    });
                 gui.add(material, 'wireframe').name('Каркас');
                 const materialParams = { materialMeshColor: material.color.getHex() };
                 gui.addColor(materialParams, 'materialMeshColor')
                     .name('Цвет модели')
                     .onChange((value) => material.color.set(value));
-                const sceneParams = {
-                    backgroundColor: scene.background.getHex(),
-                    customScale: 1,
-                };
                 gui.addColor(sceneParams, 'backgroundColor')
                     .name('Цвет фона')
                     .onChange((value) => scene.background.set(value));
@@ -197,7 +219,7 @@ AAAAAElFTkSuQmCC`;
                 clientWidth = container.clientWidth;
                 clientHeight = container.clientHeight;
                 renderer.setSize(clientWidth, clientHeight);
-                setSceneSize()
+                setSceneSize();
             }
 
             // if (rotation) {
