@@ -82,6 +82,11 @@ AAAAAElFTkSuQmCC`;
             showAxesHelper = value;
         }
 
+        var sceneRotation = false;
+        function runSceneRotation(value) {
+            sceneRotation = value;
+        }
+
         const light = new THREE.SpotLight();
         light.position.set(50, 50, 50);
         scene.add(light);
@@ -179,14 +184,20 @@ AAAAAElFTkSuQmCC`;
             const gui = new GUI({ autoPlace: false, title: '', container: container });
                 gui.domElement.id = 'three-gui'
                 const sceneParams = {
+                    showAxesHelper,
+                    sceneRotation,
                     backgroundColor: scene.background.getHex(),
                     customScale,
-                    showAxesHelper,
                 };
                 gui.add(sceneParams, 'showAxesHelper')
                     .name('Оси координат')
                     .onChange((value) => {
                         axesHelperOnScene(value);
+                    });
+                gui.add(sceneParams, 'sceneRotation')
+                    .name('Вращение')
+                    .onChange((value) => {
+                        runSceneRotation(value);
                     });
                 gui.add(material, 'wireframe').name('Каркас');
                 const materialParams = { materialMeshColor: material.color.getHex() };
@@ -230,10 +241,10 @@ AAAAAElFTkSuQmCC`;
                 setSceneSize();
             }
 
-            // if (rotation) {
-            //     torus.rotation.x += 0.005
-            //     torus.rotation.y += 0.01
-            // }
+            if (sceneRotation) {
+                scene.rotation.x += 0.005
+                scene.rotation.y += 0.01
+            }
 
             renderer.render(scene, camera);
             stats.update();
