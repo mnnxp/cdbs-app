@@ -156,7 +156,7 @@ AAAAAElFTkSuQmCC`;
         });
 
         var infoMessage = document.createElement('div');
-        infoMessage.classList.add('text-center')
+        infoMessage.classList.add('text-center');
         container.appendChild(infoMessage);
         const loader = new STLLoader()
         loader.load(
@@ -172,7 +172,7 @@ AAAAAElFTkSuQmCC`;
                 console.log(loadedProgress + ' loaded');
                 infoMessage.innerHTML = loadedProgress;
                 // remove the div with the information message after successful loading
-                if (loadedProgress == '100%') { container.removeChild(infoMessage); }
+                if (loadedProgress == '100%') { infoMessage.innerHTML = ''; }
             },
             (error) => {
                 console.warn(error);
