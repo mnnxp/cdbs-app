@@ -305,5 +305,11 @@ lazy_static! {
             (299, "Collapse"),
             (300, "View"),
             (301, "Close"),
+            (302, "Coordinate axes"),
+            (303, "Rotation"),
+            (304, "Frame"),
+            (305, "Model color"),
+            (306, "Background color"),
+            (307, "Model Scale"),
         ]);
 }
