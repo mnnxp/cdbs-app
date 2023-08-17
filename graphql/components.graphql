@@ -410,6 +410,7 @@ fragment showFileRelatedDataFields on ShowFileRelatedData {
   uuid
   filename
   parentFileUuid
+  revision
   ownerUser {
     ...showUserShortFields
   }
