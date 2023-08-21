@@ -53,3 +53,60 @@ mutation DeleteFile($fileUuid: UUID!) {
 mutation RegisterParam($iptParamTranslateListData: IptParamTranslateListData!) {
   registerParam(args: $iptParamTranslateListData)
 }
+
+query ShowFileRevisions(
+  $fileUuid: UUID!,
+  $limit: Int,
+  $offset: Int
+){
+  showFileRevisions(
+    fileUuid: $fileUuid,
+    limit: $limit,
+    offset: $offset
+  ){
+    ...showFileRelatedDataFields
+  }
+}
+
+mutation ChangeActiveFileRevision($fileUuid: UUID!){
+  changeActiveFileRevision(fileUuid: $fileUuid)
+}
+
+fragment showFileRelatedDataFields on ShowFileRelatedData {
+  uuid
+  filename
+  parentFileUuid
+  revision
+  ownerUser {
+    ...showUserShortFields
+  }
+  contentType
+  filesize
+  program {
+    ...programFields
+  }
+  createdAt
+  updatedAt
+}
+
+fragment showUserShortFields on ShowUserShort {
+  uuid
+  firstname
+  lastname
+  username
+  imageFile {
+    ...downloadFileFields
+  }
+}
+
+fragment downloadFileFields on DownloadFile {
+  uuid
+  filename
+  filesize
+  downloadUrl
+}
+
+fragment programFields on Program {
+  id
+  name
+}

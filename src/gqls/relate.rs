@@ -1,6 +1,6 @@
 use graphql_client::GraphQLQuery;
 use chrono::NaiveDateTime;
-// use crate::types::UUID;
+use crate::types::UUID;
 
 /// Отправка подтверждения о загрузке файлов в хранилище
 #[derive(GraphQLQuery)]
@@ -64,3 +64,21 @@ pub(crate) struct GetParams;
     response_derives = "Debug"
 )]
 pub(crate) struct RegisterParam;
+
+/// Получение списка ревизий для активного файла
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/relate.graphql",
+    response_derives = "Debug"
+)]
+pub(crate) struct ShowFileRevisions;
+
+/// Изменение (установка) активной ревизии файла
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/relate.graphql",
+    response_derives = "Debug"
+)]
+pub(crate) struct ChangeActiveFileRevision;
