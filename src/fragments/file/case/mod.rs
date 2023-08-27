@@ -1,14 +1,13 @@
 use std::collections::BTreeSet;
-use yew::{classes, html, Component, ComponentLink, Html, Properties, ShouldRender, Callback};
+use yew::{html, Component, ComponentLink, Html, Properties, ShouldRender, Callback};
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
 
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
-use crate::types::{ShowFileInfo, DownloadFile, UUID};
-use crate::services::{get_value_field, resp_parsing, resp_parsing_item};
+use crate::types::{ShowFileInfo, UUID};
+use crate::services::{get_value_field, resp_parsing_item};
 use crate::gqls::make_query;
 use crate::gqls::relate::{
   ShowFileRevisions, show_file_revisions,
@@ -183,7 +182,7 @@ impl Component for FileShowcase {
             // <div class="card column">
               {match self.props.show_revisions {
                 true => self.show_revisions(),
-                false => self.show_full_info_file(),
+                false => self.show_info_card(self.props.file_info.uuid.clone()),
               }}
             // </div>
           </div>
@@ -200,9 +199,6 @@ impl FileShowcase {
       <h1 class="title">
         <p>{self.props.file_info.filename.clone()}</p>
       </h1>
-      // <p>{get_value_field(&236)}{" "}{self.props.file_info.filename.clone()}</p>
-      // <p>{get_value_field(&237)}{" "}{self.props.file_info.content_type.clone()}</p>
-      // <p>{get_value_field(&239)}{" "}{self.props.file_info.program.name.clone()}</p>
       <table class="table is-striped is-narrow is-hoverable is-fullwidth">
         <thead>{self.set_title()}</thead>
         // <tfoot>{self.set_title()}</tfoot>
@@ -229,7 +225,7 @@ impl FileShowcase {
         // <th>{get_value_field(&239)}</th> // Program
         <th><abbr title={get_value_field(&240)}>{get_value_field(&311)}</abbr></th> // Upload by
         <th><abbr title={get_value_field(&242)}>{get_value_field(&312)}</abbr></th> // Created at
-        <th><abbr title={get_value_field(&241)}>{get_value_field(&313)}</abbr></th> // Upload at
+        // <th><abbr title={get_value_field(&241)}>{get_value_field(&313)}</abbr></th> // Upload at
         <th>{get_value_field(&111)}</th>
       </tr>
     }
@@ -259,7 +255,7 @@ impl FileShowcase {
           file_info.owner_user.username.clone(),
         )}</td>
         <td>{format!("{:.*}", 19, file_info.created_at.to_string())}</td>
-        <td>{format!("{:.*}", 19, file_info.updated_at.to_string())}</td>
+        // <td>{format!("{:.*}", 19, file_info.updated_at.to_string())}</td>
         <td>{match select_str.is_empty() {
           true => html!{
             <div class="buttons">
@@ -279,6 +275,28 @@ impl FileShowcase {
     }
   }
 
+  fn show_info_card(&self, file_uuid: UUID) -> Html {
+    let onclick_delete_btn =
+      self.link.callback(move |_| Msg::ClickDeleteFile(file_uuid.clone()));
+    html!{<>
+      {self.show_full_info_file()}
+      {match &self.props.file_delete_callback.is_some() {
+        true => html!{
+          <div class="buttons">
+            {self.show_download_full_btn()}
+            <button class="button is-white is-danger is-fullwidth" onclick=onclick_delete_btn >
+              <span class="icon" >
+                <i class="fa fa-trash" aria-hidden="true"></i>
+              </span>
+              <span>{get_value_field(&135)}</span>
+            </button>
+          </div>
+        },
+        false => {self.show_download_full_btn()},
+      }}
+    </>}
+  }
+
   /// Show modal with info about a file
   fn show_full_info_file(&self) -> Html {
     html!{
@@ -290,17 +308,21 @@ impl FileShowcase {
               <td>{self.props.file_info.filename.clone()}</td>
             </tr>
             <tr>
-              <td>{get_value_field(&237)}</td> // Content type
-              <td>{self.props.file_info.content_type.clone()}</td>
+              <td>{get_value_field(&308)}</td> // Revision
+              <td>{self.props.file_info.revision}</td>
             </tr>
+            // <tr>
+            //   <td>{get_value_field(&237)}</td> // Content type
+            //   <td>{self.props.file_info.content_type.clone()}</td>
+            // </tr>
             <tr>
               <td>{get_value_field(&238)}</td> // Filesize
               <td>{self.props.file_info.filesize.clone()}</td>
             </tr>
-            <tr>
-              <td>{get_value_field(&239)}</td> // Program
-              <td>{self.props.file_info.program.name.clone()}</td>
-            </tr>
+            // <tr>
+            //   <td>{get_value_field(&239)}</td> // Program
+            //   <td>{self.props.file_info.program.name.clone()}</td>
+            // </tr>
             <tr>
               <td>{get_value_field(&240)}</td> // Upload by
               <td>{format!("{} {} (@{})",
@@ -309,14 +331,14 @@ impl FileShowcase {
                 self.props.file_info.owner_user.username.clone(),
               )}</td>
             </tr>
-            // <tr>
-            //   <td>{get_value_field(&242)}</td> // Created at
-            //   <td>{format!("{:.*}", 19, self.props.file_info.created_at.to_string())}</td>
-            // </tr>
             <tr>
-              <td>{get_value_field(&241)}</td> // Upload at
-              <td>{format!("{:.*}", 19, self.props.file_info.updated_at.to_string())}</td>
+              <td>{get_value_field(&242)}</td> // Created at
+              <td>{format!("{:.*}", 19, self.props.file_info.created_at.to_string())}</td>
             </tr>
+            // <tr>
+            //   <td>{get_value_field(&241)}</td> // Upload at
+            //   <td>{format!("{:.*}", 19, self.props.file_info.updated_at.to_string())}</td>
+            // </tr>
           </tbody>
         </table>
       </div>
@@ -333,6 +355,21 @@ impl FileShowcase {
         <span class="icon" >
           <i class="fas fa-file-download" style="color: #1872f0;" aria-hidden="true"></i>
         </span>
+      </a>
+    }
+  }
+
+  fn show_download_full_btn(&self) -> Html {
+    html!{
+      <a class="button is-info is-fullwidth"
+          href={self.download_url.clone()}
+          disabled={self.download_url.is_empty()}
+          target="_blank"
+          >
+        <span class="icon" >
+          <i class="fas fa-file-download" aria-hidden="true"></i>
+        </span>
+        <span>{get_value_field(&126)}</span>
       </a>
     }
   }

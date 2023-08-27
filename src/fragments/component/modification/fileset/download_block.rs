@@ -7,6 +7,7 @@ use wasm_bindgen_futures::spawn_local;
 
 use crate::error::{get_error, Error};
 use crate::fragments::list_errors::ListErrors;
+use crate::fragments::file::{FileHeadersShow, FileDownItemShow};
 use crate::types::{UUID, DownloadFile};
 use crate::services::get_value_field;
 use crate::gqls::make_query;
@@ -238,30 +239,14 @@ impl ManageFilesOfFilesetBlock {
                 <div class="box itemBox">
                   <article class="media center-media">
                       <div class="media-content">
-                          <table class="table is-fullwidth">
-                              <thead>
-                                <tr>
-                                  <th>{ get_value_field(&120) }</th>
-                                  <th>{ get_value_field(&122) }</th>
-                                  <th>{ get_value_field(&126) }</th>
-                                </tr>
-                              </thead>
-                            <tbody>
-                              {for self.file_arr.iter().map(|file| html!{
-                                  <tr>
-                                    <td>{file.filename.clone()}</td>
-                                    <td>{file.filesize.clone()}</td>
-                                    <td>
-                                        <a class="button is-ghost" href={file.download_url.clone()}  target="_blank">
-                                          <span class="icon" >
-                                            <i class="fas fa-file-download" aria-hidden="true"></i>
-                                          </span>
-                                        </a>
-                                    </td>
-                                  </tr>
-                              })}
-                            </tbody>
-                          </table>
+                        <table class="table is-fullwidth">
+                          <FileHeadersShow show_long={false} />
+                          <tbody>
+                            {for self.file_arr.iter().map(|file| html!{
+                              <FileDownItemShow file_down={file.clone()} />
+                            })}
+                          </tbody>
+                        </table>
                       </div>
                   </article>
                 </div>

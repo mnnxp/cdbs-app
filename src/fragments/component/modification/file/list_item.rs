@@ -1,14 +1,13 @@
 use yew::{Component, Callback, ComponentLink, Html, Properties, ShouldRender, html};
 use log::debug;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
-use crate::error::{get_error, Error};
+use crate::error::Error;
+use crate::fragments::file::FileShowcase;
 use crate::fragments::list_errors::ListErrors;
-use crate::fragments::file_showcase::FileShowcase;
 use crate::types::{UUID, ShowFileInfo, DownloadFile};
-use crate::services::{get_value_field, resp_parsing, resp_parsing_item};
+use crate::services::{resp_parsing, resp_parsing_item};
 use crate::gqls::make_query;
 use crate::gqls::component::{
     ComponentModificationFiles, component_modification_files,
@@ -141,15 +140,14 @@ impl Component for ModificationFileItem {
                 true => html!{},
                 false => html!{<>
                     <FileShowcase
-                        file_info=self.props.file.clone()
-                        file_info_callback=onclick_file_info
-                        file_download_callback=Some(onclick_download_btn)
-                        file_delete_callback=Some(onclick_delete_btn)
-                        open_modal_frame=self.open_full_info_file
-                        show_revisions=true
-                        download_url=self.download_url.clone()
+                        file_info={self.props.file.clone()}
+                        file_info_callback={onclick_file_info}
+                        file_download_callback={Some(onclick_download_btn)}
+                        file_delete_callback={Some(onclick_delete_btn)}
+                        open_modal_frame={self.open_full_info_file}
+                        show_revisions={self.props.show_delete_btn}
+                        download_url={self.download_url.clone()}
                         />
-                    // {self.show_full_info_file()}
                     {self.show_file()}
                 </>},
             }}
@@ -169,110 +167,6 @@ impl ModificationFileItem {
                     </span>
                     <span>{self.props.file.filename.clone()}</span>
                 </div>
-                {self.show_download_btn()}
-                {self.show_delete_btn()}
-            </div>
-        }
-    }
-
-    fn show_download_btn(&self) -> Html {
-        let file_uuid = self.props.file.uuid.clone();
-        let onclick_download_btn =
-          self.link.callback(move |_| Msg::RequestDownloadFile(file_uuid.clone()));
-
-        match &self.props.show_download_btn {
-            true => match self.download_url.is_empty() {
-                true => html!{
-                    <button class="button is-ghost" onclick=onclick_download_btn>
-                      <span>{ get_value_field(&137) }</span>
-                    </button>
-                },
-                false => html!{
-                    <a class="button is-ghost" href={self.download_url.clone()}  target="_blank">
-                      <span class="icon" >
-                        <i class="fas fa-file-download" aria-hidden="true"></i>
-                      </span>
-                    </a>
-                },
-            },
-            false => html!{},
-        }
-    }
-
-    fn show_delete_btn(&self) -> Html {
-        let file_uuid = self.props.file.uuid.clone();
-        let onclick_delete_btn =
-            self.link.callback(move |_| Msg::RequestDeleteFile(file_uuid.clone()));
-
-        match &self.props.show_delete_btn {
-            true => html!{
-                <button class="button is-white" onclick=onclick_delete_btn >
-                  <span class="icon" >
-                    <i class="fa fa-trash" aria-hidden="true"></i>
-                  </span>
-                </button>
-            },
-            false => html!{},
-        }
-    }
-
-    fn show_full_info_file(&self) -> Html {
-        let onclick_file_info = self.link
-            .callback(|_| Msg::ClickFileInfo);
-
-        let class_modal = match &self.open_full_info_file {
-            true => "modal is-active",
-            false => "modal",
-        };
-
-        html!{
-            <div class=class_modal>
-              <div class="modal-background" onclick=onclick_file_info.clone() />
-              <div class="modal-content">
-                  <div class="card column">
-                    <table class="table is-fullwidth">
-                      <tbody>
-                        <tr>
-                          <td>{ get_value_field(&236) }</td> // Filename
-                          <td>{self.props.file.filename.clone()}</td>
-                        </tr>
-                        <tr>
-                          <td>{ get_value_field(&237) }</td> // Content type
-                          <td>{self.props.file.content_type.clone()}</td>
-                        </tr>
-                        <tr>
-                          <td>{ get_value_field(&238) }</td> // Filesize
-                          <td>{self.props.file.filesize.clone()}</td>
-                        </tr>
-                        <tr>
-                          <td>{ get_value_field(&239) }</td> // Program
-                          <td>{self.props.file.program.name.clone()}</td>
-                        </tr>
-                        // <tr>
-                        //   <td>{"parent_file_uuid"}</td>
-                        //   <td>{self.props.file.parent_file_uuid.clone()}</td>
-                        // </tr>
-                        <tr>
-                          <td>{ get_value_field(&240) }</td> // Upload by
-                          <td>{format!("{} {} (@{})",
-                            self.props.file.owner_user.firstname.clone(),
-                            self.props.file.owner_user.lastname.clone(),
-                            self.props.file.owner_user.username.clone(),
-                          )}</td>
-                        </tr>
-                        // <tr>
-                        //   <td>{ get_value_field(&242) }</td> // Created at
-                        //   <td>{format!("{:.*}", 19, self.props.file.created_at.to_string())}</td>
-                        // </tr>
-                        <tr>
-                          <td>{ get_value_field(&241) }</td> // Upload at
-                          <td>{format!("{:.*}", 19, self.props.file.updated_at.to_string())}</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-              </div>
-              <button class="modal-close is-large" aria-label="close" onclick=onclick_file_info />
             </div>
         }
     }

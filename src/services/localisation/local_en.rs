@@ -266,7 +266,7 @@ lazy_static! {
             (260, "Thank you for using CADBase!"),
             (261, "Show profile"),
             (262, "Filename: "),
-            (263, "This certificate removed!"),
+            // (263, "This certificate removed!"),
             (264, "Update Company"),
             (265, "Open company"),
             (266, "Representations"),
@@ -317,5 +317,7 @@ lazy_static! {
             (311, "Uploaded"),
             (312, "Created"),
             (313, "Loaded"),
+            (314, "Hide"),
+            (315, "Show"),
         ]);
 }

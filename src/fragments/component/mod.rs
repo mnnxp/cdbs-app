@@ -17,7 +17,6 @@ pub use modification::{
     ModificationsTable, ModificationsTableEdit, ModificationTableItemModule,
     ModificationTableItem, ModificationTableHeads, ModificationFilesTableCard,
     ManageModificationFilesCard, ManageFilesOfFilesetBlock, FilesOfFilesetCard,
-    FileOfFilesetItem 
 };
 pub use param::{ComponentParamTag, ComponentParamsTags, RegisterParamnameBlock};
 pub use spec::{SpecsTags, SpecTagItem, SearchSpecsTags};

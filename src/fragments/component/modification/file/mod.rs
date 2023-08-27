@@ -9,10 +9,10 @@ pub use table_item::ModificationFileListItem;
 use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
 use log::debug;
 use graphql_client::GraphQLQuery;
-// use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::error::{get_error, Error};
+use crate::fragments::file::FileHeadersShow;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, ShowFileInfo};
 use crate::services::get_value_field;
@@ -136,20 +136,10 @@ impl ModificationFilesTableCard {
     fn show_files_card(&self) -> Html {
         html!{<div class="card">
             <table class="table is-fullwidth is-striped">
-              <thead>
-                <tr>
-                  <th>{ get_value_field(&120) }</th> // Filename
-                  // <th>{ get_value_field(&121) }</th> // Content
-                  <th>{ get_value_field(&122) }</th> // Filesize
-                  <th>{ get_value_field(&26) }</th> // Program
-                  <th>{ get_value_field(&124) }</th> // Upload by
-                  <th>{ get_value_field(&125) }</th> // Upload at
-                  {match &self.props.show_download_btn {
-                      true => html!{<th>{ get_value_field(&126) }</th>}, // Download
-                      false => html!{},
-                  }}
-                </tr>
-              </thead>
+              <FileHeadersShow
+                show_long={true}
+                show_download_btn={self.props.show_download_btn}
+                />
               <tfoot>
                 {for self.files_list.iter().map(|file| html!{
                     <ModificationFileListItem

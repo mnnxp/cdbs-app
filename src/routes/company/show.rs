@@ -557,7 +557,7 @@ impl ShowCompany {
         html!{<div class="profileBox" >
             <CompanyCertificatesCard
                 certificates = company_data.company_certificates.clone()
-                show_cert_btn = true
+                show_cert_btn = false
                 download_btn = false
                 manage_btn = false
              />

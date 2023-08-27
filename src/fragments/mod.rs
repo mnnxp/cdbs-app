@@ -6,7 +6,7 @@ pub mod component;
 pub mod standard;
 pub mod user;
 
-pub mod file_showcase;
+pub mod file;
 pub mod footer;
 pub mod header;
 pub mod list_errors;
