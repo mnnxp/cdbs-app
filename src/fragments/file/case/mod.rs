@@ -7,7 +7,7 @@ use log::debug;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{ShowFileInfo, UUID};
-use crate::services::{get_value_field, resp_parsing_item};
+use crate::services::{get_value_field, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::relate::{
   ShowFileRevisions, show_file_revisions,
@@ -98,7 +98,7 @@ impl Component for FileShowcase {
           })
         },
         Msg::ParsingFiles(res) => {
-          match resp_parsing_item(res, "showFileRevisions") {
+          match resp_parsing(res, "showFileRevisions") {
             Ok(file_arr) => {
               // debug!("showFileRevisions: {:?}", file_arr);
               self.file_arr = file_arr;
@@ -115,8 +115,7 @@ impl Component for FileShowcase {
           })
         },
         Msg::GetActiveRevResult(res, file_uuid) => {
-          // let res: Result<bool, Error> = resp_parsing_item(res, "changeActiveFileRevision");
-          match resp_parsing_item(res, "changeActiveFileRevision") {
+          match resp_parsing(res, "changeActiveFileRevision") {
             Ok(res) => {
               debug!("changeActiveFileRevision {:?}: {:?}", file_uuid, res);
               if res {

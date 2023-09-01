@@ -4,7 +4,7 @@ use yew::{
 };
 use yew_router::{
     agent::RouteRequest::ChangeRoute,
-    prelude::*,
+    prelude::RouteAgent,
 };
 use crate::routes::AppRoute;
 use crate::fragments::switch_icon::res_btn;

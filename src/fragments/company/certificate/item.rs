@@ -6,7 +6,7 @@ use log::debug;
 use crate::fragments::file::CertificateItem;
 use crate::fragments::list_errors::ListErrors;
 use crate::error::Error;
-use crate::services::resp_parsing_item;
+use crate::services::resp_parsing;
 use crate::types::{UUID, CompanyCertificate, Certificate};
 use crate::gqls::make_query;
 use crate::gqls::company::{
@@ -94,7 +94,7 @@ impl Component for CompanyCertificateItem {
                 })
             },
             Msg::GetUpdateResult(res) => {
-                match resp_parsing_item(res, "updateCompanyCertificate") {
+                match resp_parsing(res, "updateCompanyCertificate") {
                     Ok(result) => {
                         debug!("Update company cert: {:?}", result);
                         self.get_result_update = result;
@@ -103,7 +103,7 @@ impl Component for CompanyCertificateItem {
                 }
             },
             Msg::GetDeleteCertResult(res) => {
-                match resp_parsing_item(res, "deleteCompanyCertificate") {
+                match resp_parsing(res, "deleteCompanyCertificate") {
                     Ok(result) => {
                         debug!("Update company cert: {:?}", result);
                         self.get_result_delete = result;

@@ -7,7 +7,7 @@ use crate::error::Error;
 use crate::fragments::file::FileShowcase;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, ShowFileInfo, DownloadFile};
-use crate::services::{resp_parsing, resp_parsing_item};
+use crate::services::{resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::component::{
     ComponentFiles, component_files,
@@ -94,16 +94,16 @@ impl Component for ComponentFileItem {
             },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetDownloadFileResult(res, file_uuid) => {
-                match resp_parsing(res, "componentFiles") {
+                match resp_parsing::<Vec<DownloadFile>>(res, "componentFiles") {
                     Ok(result) => {
                         debug!("componentFiles: {:?}, file_uuid: {:?}", result, file_uuid);
-                        self.download_url = result.first().map(|f: &DownloadFile| f.download_url.clone()).unwrap_or_default();
+                        self.download_url = result.first().map(|f| f.download_url.clone()).unwrap_or_default();
                     },
                     Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::GetDeleteFileResult(res, file_uuid) => {
-                match resp_parsing_item(res, "deleteComponentFile") {
+                match resp_parsing(res, "deleteComponentFile") {
                     Ok(result) => {
                         if result && &file_uuid == &self.props.file.uuid {
                             self.get_result_delete = result;

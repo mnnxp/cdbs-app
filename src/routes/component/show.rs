@@ -6,7 +6,7 @@ use yew::{
 use yew_router::{
     service::RouteService,
     agent::RouteRequest::ChangeRoute,
-    prelude::*,
+    prelude::RouteAgent,
 };
 use log::debug;
 use graphql_client::GraphQLQuery;

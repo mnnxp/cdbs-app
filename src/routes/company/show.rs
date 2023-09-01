@@ -5,7 +5,7 @@ use yew::{
 use yew_router::{
     service::RouteService,
     agent::RouteRequest::ChangeRoute,
-    prelude::*,
+    prelude::RouteAgent,
 };
 use web_sys::MouseEvent;
 use log::debug;

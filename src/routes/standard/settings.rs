@@ -1,46 +1,40 @@
 use yew::{
-    agent::Bridged, html, Bridge, Callback, Component, Properties,
+    agent::Bridged, html, Bridge, Component, Properties,
     ComponentLink, Html, ShouldRender, InputData, ChangeData
 };
-use yew::services::fetch::FetchTask;
-use yew::services::reader::{File, FileData, ReaderService, ReaderTask};
 use yew_router::{
     service::RouteService,
     agent::RouteRequest::ChangeRoute,
-    prelude::*,
+    prelude::RouteAgent,
 };
-use web_sys::FileList;
 use chrono::NaiveDateTime;
 use log::debug;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::routes::AppRoute;
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::{
+    file::UploaderFiles,
     list_errors::ListErrors,
     standard::{
         StandardFilesCard, SearchSpecsTags,
         AddKeywordsTags, UpdateStandardFaviconCard
     },
 };
-use crate::services::{PutUploadFile, UploadData, get_logged_user, get_value_field};
+use crate::services::{get_logged_user, get_value_field, resp_parsing_two_level, resp_parsing, get_value_response, get_from_value};
 use crate::types::{
     UUID, StandardInfo, SlimUser, Region, TypeAccessInfo, UploadFile, ShowFileInfo,
     ShowCompanyShort, StandardUpdatePreData, StandardUpdateData, StandardStatus,
 };
-use crate::gqls::{
-    make_query,
-    relate::{ConfirmUploadCompleted, confirm_upload_completed},
-    standard::{
-        GetUpdateStandardDataOpt, get_update_standard_data_opt,
-        PutStandardUpdate, put_standard_update,
-        DeleteStandard, delete_standard,
-        ChangeStandardAccess, change_standard_access,
-        UploadStandardFiles, upload_standard_files,
-        StandardFilesList, standard_files_list,
-    },
+use crate::gqls::make_query;
+use crate::gqls::standard::{
+    GetUpdateStandardDataOpt, get_update_standard_data_opt,
+    PutStandardUpdate, put_standard_update,
+    DeleteStandard, delete_standard,
+    ChangeStandardAccess, change_standard_access,
+    UploadStandardFiles, upload_standard_files,
+    StandardFilesList, standard_files_list,
 };
 
 type FileName = String;
@@ -52,12 +46,8 @@ pub struct StandardSettings {
     current_standard_uuid: UUID,
     request_standard: StandardUpdatePreData,
     request_upload_data: Vec<UploadFile>,
-    request_upload_file: Callback<Result<Option<String>, Error>>,
-    request_upload_confirm: Vec<UUID>,
     request_access: i64,
     router_agent: Box<dyn Bridge<RouteAgent>>,
-    task_read: Vec<(FileName, ReaderTask)>,
-    task: Vec<FetchTask>,
     props: Props,
     link: ComponentLink<Self>,
     supplier_list: Vec<ShowCompanyShort>,
@@ -66,10 +56,6 @@ pub struct StandardSettings {
     types_access: Vec<TypeAccessInfo>,
     update_standard: bool,
     update_standard_access: bool,
-    upload_standard_files: bool,
-    put_upload_file: PutUploadFile,
-    files: Vec<File>,
-    files_index: u32,
     files_list: Vec<ShowFileInfo>,
     disable_delete_standard_btn: bool,
     confirm_delete_standard: String,
@@ -77,9 +63,6 @@ pub struct StandardSettings {
     disable_save_changes_btn: bool,
     get_result_standard_data: usize,
     get_result_access: bool,
-    get_result_up_file: bool,
-    get_result_up_completed: usize,
-    active_loading_files_btn: bool,
 }
 
 #[derive(Properties, Clone)]
@@ -96,21 +79,16 @@ pub enum Msg {
     RequestUpdateStandardData,
     RequestChangeAccess,
     RequestDeleteStandard,
-    RequestUploadStandardFiles,
-    RequestUploadFile(Vec<u8>),
-    ResponseUploadFile(Result<Option<String>, Error>),
-    RequestUploadCompleted,
+    RequestUploadStandardFiles(Vec<FileName>),
     GetStandardFilesList(String),
     GetStandardData(String),
     GetListOpt(String),
     GetUpdateStandardResult(String),
     GetUpdateAccessResult(String),
     GetUploadData(String),
-    GetUploadFile,
-    GetUploadCompleted(String),
+    UploadConfirm(usize),
     FinishUploadFiles,
     GetDeleteStandard(String),
-    EditFiles,
     UpdateTypeAccessId(String),
     UpdateClassifier(String),
     UpdateName(String),
@@ -121,11 +99,9 @@ pub enum Msg {
     UpdateCompanyUuid(String),
     UpdateStandardStatusId(String),
     UpdateRegionId(String),
-    UpdateFiles(FileList),
     UpdateConfirmDelete(String),
     ResponseError(Error),
     ChangeHideDeleteStandard,
-    ClearFilesBoxed,
     ClearError,
     Ignore,
 }
@@ -141,12 +117,8 @@ impl Component for StandardSettings {
             current_standard_uuid: String::new(),
             request_standard: StandardUpdatePreData::default(),
             request_upload_data: Vec::new(),
-            request_upload_file: link.callback(Msg::ResponseUploadFile),
-            request_upload_confirm: Vec::new(),
             request_access: 0,
             router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
-            task_read: Vec::new(),
-            task: Vec::new(),
             props,
             link,
             supplier_list: Vec::new(),
@@ -155,10 +127,6 @@ impl Component for StandardSettings {
             types_access: Vec::new(),
             update_standard: false,
             update_standard_access: false,
-            upload_standard_files: false,
-            put_upload_file: PutUploadFile::new(),
-            files: Vec::new(),
-            files_index: 0,
             files_list: Vec::new(),
             disable_delete_standard_btn: true,
             confirm_delete_standard: String::new(),
@@ -166,9 +134,6 @@ impl Component for StandardSettings {
             disable_save_changes_btn: true,
             get_result_standard_data: 0,
             get_result_access: false,
-            get_result_up_file: false,
-            get_result_up_completed: 0,
-            active_loading_files_btn: false,
         }
     }
 
@@ -181,7 +146,6 @@ impl Component for StandardSettings {
                 String::new()
             },
         };
-
         // get standard uuid for request standard data
         let route_service: RouteService<()> = RouteService::new();
         // get target user from route
@@ -192,19 +156,16 @@ impl Component for StandardSettings {
         // get flag changing current standard in route
         let not_matches_standard_uuid = target_standard_uuid != self.current_standard_uuid;
         // debug!("self.current_standard_uuid {:#?}", self.current_standard_uuid);
-
         if not_matches_standard_uuid {
             // clear old data
             self.current_standard = None;
             self.current_standard_uuid = String::new();
             self.request_standard = StandardUpdatePreData::default();
         }
-
         if first_render || not_matches_standard_uuid {
             let link = self.link.clone();
             // update current_standard_uuid for checking change standard in route
             self.current_standard_uuid = target_standard_uuid.clone();
-
             spawn_local(async move {
                 let ipt_companies_arg = get_update_standard_data_opt::IptCompaniesArg{
                     companiesUuids: None,
@@ -218,7 +179,6 @@ impl Component for StandardSettings {
                     standard_uuid: target_standard_uuid,
                     ipt_companies_arg,
                 })).await.unwrap();
-
                 link.send_message(Msg::GetStandardData(res.clone()));
                 link.send_message(Msg::GetListOpt(res));
             })
@@ -242,14 +202,8 @@ impl Component for StandardSettings {
                 if self.update_standard_access {
                     self.link.send_message(Msg::RequestChangeAccess)
                 }
-
-                // if self.upload_standard_files && !self.files.is_empty() {
-                //     self.link.send_message(Msg::RequestUploadStandardFiles);
-                // }
-
                 self.update_standard = false;
                 self.update_standard_access = false;
-                // self.upload_standard_files = false;
                 self.disable_save_changes_btn = true;
                 self.get_result_standard_data = 0;
                 self.get_result_access = false;
@@ -320,214 +274,87 @@ impl Component for StandardSettings {
                     link.send_message(Msg::GetDeleteStandard(res));
                 })
             },
-            Msg::RequestUploadStandardFiles => {
-                // see loading button
-                self.active_loading_files_btn = true;
-
-                if !self.files.is_empty() {
-                    let mut filenames: Vec<String> = Vec::new();
-                    for file in &self.files {filenames.push(file.name().clone());}
-                    debug!("filenames: {:?}", filenames);
-                    let standard_uuid = self.current_standard_uuid.clone();
-
-                    spawn_local(async move {
-                        let ipt_standard_files_data = upload_standard_files::IptStandardFilesData{
-                            filenames,
-                            standardUuid: standard_uuid,
-                        };
-                        let res = make_query(UploadStandardFiles::build_query(upload_standard_files::Variables{
-                            ipt_standard_files_data
-                        })).await.unwrap();
-                        link.send_message(Msg::GetUploadData(res));
-                    })
+            Msg::RequestUploadStandardFiles(filenames) => {
+                debug!("filenames: {:?}", filenames);
+                if self.current_standard_uuid.len() != 36 || filenames.is_empty() {
+                    return false
                 }
-            },
-            Msg::RequestUploadFile(data) => {
-                if let Some(upload_data) = self.request_upload_data.pop() {
-                    let request = UploadData {
-                        upload_url: upload_data.upload_url.to_string(),
-                        file_data: data,
-                    };
-                    debug!("request: {:?}", request);
-
-                    self.task.push(self.put_upload_file.put_file(request, self.request_upload_file.clone()));
-                    self.request_upload_confirm.push(upload_data.file_uuid.clone());
-                };
-            },
-            Msg::RequestUploadCompleted => {
-                let file_uuids = self.request_upload_confirm.clone();
+                debug!("filenames: {:?}", filenames);
+                let standard_uuid = self.current_standard_uuid.clone();
                 spawn_local(async move {
-                    let res = make_query(ConfirmUploadCompleted::build_query(
-                        confirm_upload_completed::Variables { file_uuids }
-                    )).await.unwrap();
-                    // debug!("ConfirmUploadCompleted: {:?}", res);
-                    link.send_message(Msg::GetUploadCompleted(res));
-                });
+                    let ipt_standard_files_data = upload_standard_files::IptStandardFilesData{
+                        filenames,
+                        standardUuid: standard_uuid,
+                    };
+                    let res = make_query(UploadStandardFiles::build_query(upload_standard_files::Variables{
+                        ipt_standard_files_data
+                    })).await.unwrap();
+                    link.send_message(Msg::GetUploadData(res));
+                })
             },
             Msg::GetStandardFilesList(res) => {
-                let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        self.files_list = serde_json::from_value(
-                            res_value.get("standard").unwrap()
-                                .get("standardFiles").unwrap().clone()
-                        ).unwrap();
-                        debug!("standardFilesList {:?}", self.files_list.len());
-                    },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                match resp_parsing_two_level(res, "standard", "standardFiles") {
+                    Ok(result) => self.files_list = result,
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
+                debug!("standardFilesList {:?}", self.files_list.len());
             },
             Msg::GetUploadData(res) => {
-                let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: Vec<UploadFile> = serde_json::from_value(res_value.get("uploadStandardFiles").unwrap().clone()).unwrap();
-                        debug!("uploadStandardFiles {:?}", result);
-                        self.request_upload_data = result;
-
-                        if !self.files.is_empty() {
-                            for file in self.files.iter().rev() {
-                                let file_name = file.name().clone();
-                                debug!("file name: {:?}", file_name);
-                                let task = {
-                                    let callback = self.link
-                                        .callback(move |data: FileData| Msg::RequestUploadFile(data.content));
-                                    ReaderService::read_file(file.clone(), callback).unwrap()
-                                };
-                                self.task_read.push((file_name, task));
-                            }
-                        }
-                        debug!("file: {:#?}", self.files);
-                    },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                match resp_parsing(res, "uploadStandardFiles") {
+                    Ok(result) => self.request_upload_data = result,
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
-            },
-            Msg::ResponseUploadFile(Ok(res)) => {
-                debug!("ResponseUploadFile: {:?}", res);
-                link.send_message(Msg::GetUploadFile)
-            },
-            Msg::ResponseUploadFile(Err(err)) => {
-                self.error = Some(err);
-                self.task.clear();
-                self.task_read.clear();
-                self.files_index = 0;
-                self.request_upload_confirm.clear();
-                self.get_result_up_completed = 0;
-                self.active_loading_files_btn = false;
+                debug!("uploadStandardFiles {:?}", self.request_upload_data.len());
             },
             Msg::GetStandardData(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let standard_data: StandardInfo =
-                            serde_json::from_value(res_value.get("standard").unwrap().clone()).unwrap();
+                match resp_parsing::<StandardInfo>(res, "standard") {
+                    Ok(standard_data) => {
                         debug!("Standard data: {:?}", standard_data);
-
                         self.current_standard_uuid = standard_data.uuid.clone();
                         self.files_list = standard_data.standard_files.clone();
                         self.current_standard = Some(standard_data.clone());
                         self.request_standard = standard_data.into();
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::GetListOpt(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        self.supplier_list = serde_json::from_value(
-                            res_value.get("companies").unwrap().clone()
-                        ).unwrap();
-                        self.standard_statuses = serde_json::from_value(
-                            res_value.get("standardStatuses").unwrap().clone()
-                        ).unwrap();
-                        self.regions = serde_json::from_value(
-                            res_value.get("regions").unwrap().clone()
-                        ).unwrap();
-                        self.types_access = serde_json::from_value(
-                            res_value.get("typesAccess").unwrap().clone()
-                        ).unwrap();
+                match get_value_response(res) {
+                    Ok(value) => {
+                        self.supplier_list = get_from_value(&value, "companies").unwrap_or_default();
+                        self.standard_statuses = get_from_value(&value, "standardStatuses").unwrap_or_default();
+                        self.regions = get_from_value(&value, "regions").unwrap_or_default();
+                        self.types_access = get_from_value(&value, "typesAccess").unwrap_or_default();
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::GetUpdateStandardResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: usize =
-                            serde_json::from_value(res_value.get("putStandardUpdate").unwrap().clone()).unwrap();
-                        debug!("Standard data: {:?}", result);
-                        self.get_result_standard_data = result;
-                    },
-                    true => self.error = Some(get_error(&data)),
+                match resp_parsing(res, "putStandardUpdate") {
+                    Ok(result) => self.get_result_standard_data = result,
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
+                debug!("Standard data: {:?}", self.get_result_standard_data);
             },
             Msg::GetUpdateAccessResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: bool =
-                            serde_json::from_value(res_value.get("changeStandardAccess").unwrap().clone()).unwrap();
-                        debug!("Standard change access: {:?}", result);
-                        self.update_standard_access = false;
-                        self.get_result_access = result;
-                    },
-                    true => self.error = Some(get_error(&data)),
+                match resp_parsing(res, "changeStandardAccess") {
+                    Ok(result) => self.get_result_access = result,
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
+                debug!("Standard change access: {:?}", self.get_result_access);
             },
-            Msg::GetUploadFile => {
-                debug!("next: {:?}", self.files_index);
-                self.files_index -= 1;
-                if self.files_index == 0 {
-                    self.get_result_up_file = true;
-                    debug!("finish: {:?}", self.request_upload_confirm.len());
-                    link.send_message(Msg::RequestUploadCompleted);
-                }
-            },
-            Msg::GetUploadCompleted(res) => {
-                let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        self.get_result_up_completed = serde_json::from_value(res_value.get("uploadCompleted").unwrap().clone()).unwrap();
-                        debug!("uploadCompleted: {:?}", self.get_result_up_completed);
-
-                        link.send_message(Msg::FinishUploadFiles);
-                    },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
-                }
+            Msg::UploadConfirm(confirmations) => {
+                debug!("Confirmation upload of files: {:?}", confirmations);
+                link.send_message(Msg::FinishUploadFiles);
             },
             Msg::FinishUploadFiles => {
+                self.request_upload_data.clear();
                 self.files_list.clear();
                 link.send_message(Msg::RequestStandardFilesList);
-                self.active_loading_files_btn = false;
-                self.task.clear();
-                self.task_read.clear();
-                self.request_upload_confirm.clear();
-                self.files.clear();
-                self.files_index = 0;
             },
             Msg::GetDeleteStandard(res) => {
-                let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: UUID = serde_json::from_value(res_value.get("deleteStandard").unwrap().clone()).unwrap();
+                match resp_parsing::<UUID>(res, "deleteStandard") {
+                    Ok(result) => {
                         debug!("deleteStandard: {:?}", result);
                         if self.current_standard_uuid == result {
                             match &self.current_standard {
@@ -538,10 +365,9 @@ impl Component for StandardSettings {
                             }
                         }
                     },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
-            Msg::EditFiles => self.upload_standard_files = !self.upload_standard_files,
             Msg::UpdateTypeAccessId(data) => {
                 self.request_access = data.parse::<i64>().unwrap_or_default();
                 self.update_standard_access = true;
@@ -599,26 +425,12 @@ impl Component for StandardSettings {
             Msg::UpdateRegionId(data) => {
                 self.request_standard.region_id = data.parse::<usize>().unwrap_or_default();
             },
-            Msg::UpdateFiles(files) => {
-                while let Some(file) = files.get(self.files_index) {
-                    debug!("self.files_index: {:?}", self.files_index);
-                    self.files_index += 1;
-                    self.upload_standard_files = true;
-                    self.files.push(file.clone());
-                }
-                // self.files_index = 0;
-            },
             Msg::UpdateConfirmDelete(data) => {
                 self.disable_delete_standard_btn = self.current_standard_uuid != data;
                 self.confirm_delete_standard = data;
             },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::ChangeHideDeleteStandard => self.hide_delete_modal = !self.hide_delete_modal,
-            Msg::ClearFilesBoxed => {
-                self.files = Vec::new();
-                self.files_index = 0;
-                self.upload_standard_files = false;
-            },
             Msg::ClearError => self.error = None,
             Msg::Ignore => {},
         }
@@ -635,8 +447,7 @@ impl Component for StandardSettings {
     }
 
     fn view(&self) -> Html {
-        let onclick_clear_error = self.link
-            .callback(|_| Msg::ClearError);
+        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
 
         html!{
             <div class="standard-page">
@@ -675,30 +486,27 @@ impl Component for StandardSettings {
 impl StandardSettings {
     fn show_main_card(&self) -> Html {
         // let default_company_uuid = self.current_standard.as_ref().map(|x| x.owner_company.uuid.clone()).unwrap_or_default();
-        let onchange_change_owner_company = self.link
-            .callback(|ev: ChangeData| Msg::UpdateCompanyUuid(match ev {
+        let onchange_change_owner_company =
+            self.link.callback(|ev: ChangeData| Msg::UpdateCompanyUuid(match ev {
               ChangeData::Select(el) => el.value(),
               _ => String::new(),
-          }));
-
-        let onchange_change_type_access = self.link
-            .callback(|ev: ChangeData| Msg::UpdateTypeAccessId(match ev {
+            }));
+        let onchange_change_type_access =
+            self.link.callback(|ev: ChangeData| Msg::UpdateTypeAccessId(match ev {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
-          }));
-
-        let oninput_name = self.link
-            .callback(|ev: InputData| Msg::UpdateName(ev.value));
-
-        let oninput_description = self.link
-            .callback(|ev: InputData| Msg::UpdateDescription(ev.value));
+            }));
+        let oninput_name =
+            self.link.callback(|ev: InputData| Msg::UpdateName(ev.value));
+        let oninput_description =
+            self.link.callback(|ev: InputData| Msg::UpdateDescription(ev.value));
 
         html!{<div class="card">
             <div class="column">
                 <div class="control">
                     <div class="media">
                         <div class="media-content">
-                            <label class="label">{ get_value_field(&223) }</label> // Owner company
+                            <label class="label">{get_value_field(&223)}</label> // Owner company
                             <div class="select">
                               <select
                                   id="set-owner-company"
@@ -717,7 +525,7 @@ impl StandardSettings {
                             </div>
                         </div>
                         <div class="media-right" style="margin-right: 1rem">
-                            <label class="label">{ get_value_field(&114) }</label>
+                            <label class="label">{get_value_field(&114)}</label>
                             <div class="select">
                               <select
                                   id="set-type-access"
@@ -737,7 +545,7 @@ impl StandardSettings {
                         </div>
                     </div>
                 </div>
-                <label class="label">{ get_value_field(&110) }</label>
+                <label class="label">{get_value_field(&110)}</label>
                 <input
                     id="update-name"
                     class="input"
@@ -745,7 +553,7 @@ impl StandardSettings {
                     placeholder=get_value_field(&110)
                     value={self.request_standard.name.clone()}
                     oninput=oninput_name />
-                <label class="label">{ get_value_field(&61) }</label>
+                <label class="label">{get_value_field(&61)}</label>
                 <textarea
                     id="update-description"
                     class="textarea"
@@ -762,7 +570,7 @@ impl StandardSettings {
         let callback_update_favicon = self.link.callback(|_| Msg::Ignore);
 
         html!{<>
-            <h2 class="has-text-weight-bold">{ get_value_field(&184) }</h2> // Update image for preview
+            <h2 class="has-text-weight-bold">{get_value_field(&184)}</h2> // Update image for preview
             <div class="card column">
                 <UpdateStandardFaviconCard
                     standard_uuid=self.current_standard_uuid.clone()
@@ -773,38 +581,32 @@ impl StandardSettings {
     }
 
     fn show_standard_params(&self) -> Html {
-        let oninput_classifier = self.link
-            .callback(|ev: InputData| Msg::UpdateClassifier(ev.value));
-
-        let oninput_specified_tolerance = self.link
-            .callback(|ev: InputData| Msg::UpdateSpecifiedTolerance(ev.value));
-
-        let oninput_technical_committee = self.link
-            .callback(|ev: InputData| Msg::UpdateTechnicalCommittee(ev.value));
-
-        let oninput_publication_at = self.link
-            .callback(|ev: InputData| Msg::UpdatePublicationAt(ev.value));
-
-        let onchange_standard_status_id = self.link
-            .callback(|ev: ChangeData| Msg::UpdateStandardStatusId(match ev {
+        let oninput_classifier =
+            self.link.callback(|ev: InputData| Msg::UpdateClassifier(ev.value));
+        let oninput_specified_tolerance =
+            self.link.callback(|ev: InputData| Msg::UpdateSpecifiedTolerance(ev.value));
+        let oninput_technical_committee =
+            self.link.callback(|ev: InputData| Msg::UpdateTechnicalCommittee(ev.value));
+        let oninput_publication_at =
+            self.link.callback(|ev: InputData| Msg::UpdatePublicationAt(ev.value));
+        let onchange_standard_status_id =
+            self.link.callback(|ev: ChangeData| Msg::UpdateStandardStatusId(match ev {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
-          }));
-
-        let onchange_region_id = self.link
-            .callback(|ev: ChangeData| Msg::UpdateRegionId(match ev {
+            }));
+        let onchange_region_id =
+            self.link.callback(|ev: ChangeData| Msg::UpdateRegionId(match ev {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
-          }));
-
+            }));
         html!{
             <>
-              <h2 class="has-text-weight-bold">{ get_value_field(&224) }</h2> // Manage standard characteristics
+              <h2 class="has-text-weight-bold">{get_value_field(&224)}</h2> // Manage standard characteristics
               <div class="card column">
                 <table class="table is-fullwidth">
                     <tbody>
                       <tr>
-                        <td>{ get_value_field(&146) }</td> // classifier
+                        <td>{get_value_field(&146)}</td> // classifier
                         <td><input
                             id="update-classifier"
                             class="input"
@@ -814,7 +616,7 @@ impl StandardSettings {
                             oninput=oninput_classifier /></td>
                       </tr>
                       <tr>
-                        <td>{ get_value_field(&147) }</td>
+                        <td>{get_value_field(&147)}</td>
                         // <td>{self.request_standard.specified_tolerance.as_ref().map(|x| x.clone()).unwrap_or_default()}</td>
                         <td><input
                             id="update-specified-tolerance"
@@ -825,7 +627,7 @@ impl StandardSettings {
                             oninput=oninput_specified_tolerance /></td>
                       </tr>
                       <tr>
-                        <td>{ get_value_field(&148) }</td>
+                        <td>{get_value_field(&148)}</td>
                         <td><input
                             id="update-technical-committee"
                             class="input"
@@ -835,7 +637,7 @@ impl StandardSettings {
                             oninput=oninput_technical_committee /></td>
                       </tr>
                       <tr>
-                        <td>{ get_value_field(&149) }</td>
+                        <td>{get_value_field(&149)}</td>
                         <td><input
                             id="update-publication-at"
                             class="input"
@@ -849,7 +651,7 @@ impl StandardSettings {
                             /></td>
                       </tr>
                       <tr>
-                        <td>{ get_value_field(&150) }</td>
+                        <td>{get_value_field(&150)}</td>
                         <td><div class="control">
                             <div class="select">
                               <select
@@ -870,7 +672,7 @@ impl StandardSettings {
                         </div></td>
                       </tr>
                       <tr>
-                        <td>{ get_value_field(&151) }</td>
+                        <td>{get_value_field(&151)}</td>
                         <td><div class="select">
                               <select
                                   id="region"
@@ -896,32 +698,39 @@ impl StandardSettings {
         }
     }
 
-    fn show_standard_files(
-        &self,
-        standard_data: &StandardInfo,
-    ) -> Html {
+    fn show_standard_files(&self, standard_data: &StandardInfo) -> Html {
+        let callback_upload_filenames =
+            self.link.callback(move |filenames| Msg::RequestUploadStandardFiles(filenames));
+        let request_upload_files = match self.request_upload_data.is_empty() {
+            true => None,
+            false => Some(self.request_upload_data.clone()),
+        };
+        let callback_upload_confirm =
+            self.link.callback(|confirmations| Msg::UploadConfirm(confirmations));
         html!{
             <div class="column">
-              <h2 class="has-text-weight-bold">{ get_value_field(&225) }</h2> // Files stadndard
+              <h2 class="has-text-weight-bold">{get_value_field(&225)}</h2> // Files stadndard
               <div class="card column">
-                  {self.show_frame_upload_files()}
-                  <StandardFilesCard
-                      show_download_btn = false
-                      show_delete_btn = true
-                      standard_uuid = standard_data.uuid.clone()
-                      files = self.files_list.clone()
+                <UploaderFiles
+                    text_choose_files={222} // Choose standard files…
+                    callback_upload_filenames={callback_upload_filenames}
+                    request_upload_files={request_upload_files}
+                    callback_upload_confirm={callback_upload_confirm}
                     />
-                </div>
+                <StandardFilesCard
+                    show_download_btn = false
+                    show_delete_btn = true
+                    standard_uuid = standard_data.uuid.clone()
+                    files = self.files_list.clone()
+                    />
+              </div>
             </div>
         }
     }
 
-    fn show_standard_specs(
-        &self,
-        standard_data: &StandardInfo,
-    ) -> Html {
+    fn show_standard_specs(&self, standard_data: &StandardInfo) -> Html {
         html!{<>
-            <h2 class="has-text-weight-bold">{ get_value_field(&104) }</h2>
+            <h2 class="has-text-weight-bold">{get_value_field(&104)}</h2>
             <div class="card">
               <SearchSpecsTags
                   standard_specs = standard_data.standard_specs.clone()
@@ -931,13 +740,10 @@ impl StandardSettings {
         </>}
     }
 
-    fn show_standard_keywords(
-        &self,
-        standard_data: &StandardInfo,
-    ) -> Html {
+    fn show_standard_keywords(&self, standard_data: &StandardInfo) -> Html {
         // debug!("Keywords: {:?}", &standard_data.uuid);
         html!{<>
-              <h2 class="has-text-weight-bold">{ get_value_field(&105) }</h2>
+              <h2 class="has-text-weight-bold">{get_value_field(&105)}</h2>
               <div class="card">
                 <AddKeywordsTags
                     standard_keywords = standard_data.standard_keywords.clone()
@@ -948,12 +754,9 @@ impl StandardSettings {
     }
 
     fn show_manage_btn(&self) -> Html {
-        let onclick_open_standard = self.link
-            .callback(|_| Msg::OpenStandard);
-        let onclick_show_delete_modal = self.link
-            .callback(|_| Msg::ChangeHideDeleteStandard);
-        let onclick_save_changes = self.link
-            .callback(|_| Msg::RequestManager);
+        let onclick_open_standard = self.link.callback(|_| Msg::OpenStandard);
+        let onclick_show_delete_modal = self.link.callback(|_| Msg::ChangeHideDeleteStandard);
+        let onclick_save_changes = self.link.callback(|_| Msg::RequestManager);
 
         html!{
             <div class="media">
@@ -962,12 +765,12 @@ impl StandardSettings {
                         id="open-standard"
                         class="button"
                         onclick={onclick_open_standard} >
-                        { get_value_field(&226) } // Open standard
+                        {get_value_field(&226)} // Open standard
                     </button>
                 </div>
                 <div class="media-content">
                     {if self.get_result_standard_data > 0 || self.get_result_access {
-                        html!{get_value_field(&214) } // Data updated
+                        html!{get_value_field(&214)} // Data updated
                     } else {
                         html!{}
                     }}
@@ -979,14 +782,14 @@ impl StandardSettings {
                             id="delete-standard"
                             class="button is-danger"
                             onclick={onclick_show_delete_modal} >
-                            { get_value_field(&135) }
+                            {get_value_field(&135)}
                         </button>
                         <button
                             id="update-data"
                             class="button"
                             onclick={onclick_save_changes}
                             disabled={self.disable_save_changes_btn} >
-                            {  get_value_field(&46) }
+                            {get_value_field(&46)}
                         </button>
                     </div>
                 </div>
@@ -995,13 +798,12 @@ impl StandardSettings {
     }
 
     fn modal_delete_standard(&self) -> Html {
-        let onclick_hide_modal = self.link
-            .callback(|_| Msg::ChangeHideDeleteStandard);
-        let oninput_delete_standard = self.link
-            .callback(|ev: InputData| Msg::UpdateConfirmDelete(ev.value));
-        let onclick_delete_standard = self.link
-            .callback(|_| Msg::RequestDeleteStandard);
-
+        let onclick_hide_modal =
+            self.link.callback(|_| Msg::ChangeHideDeleteStandard);
+        let oninput_delete_standard =
+            self.link.callback(|ev: InputData| Msg::UpdateConfirmDelete(ev.value));
+        let onclick_delete_standard =
+            self.link.callback(|_| Msg::RequestDeleteStandard);
         let class_modal = match &self.hide_delete_modal {
             true => "modal",
             false => "modal is-active",
@@ -1013,14 +815,14 @@ impl StandardSettings {
                 <div class="modal-content">
                   <div class="card">
                     <header class="modal-card-head">
-                      <p class="modal-card-title">{ get_value_field(&227) }</p> // Delete standard
+                      <p class="modal-card-title">{get_value_field(&227)}</p> // Delete standard
                       <button class="delete" aria-label="close" onclick=onclick_hide_modal.clone() />
                     </header>
                     <section class="modal-card-body">
                         <p class="is-size-6">
-                            { get_value_field(&218) }
+                            {get_value_field(&218)}
                             <span class="has-text-danger-dark">{self.request_standard.name.clone()}</span>
-                            { get_value_field(&228) }
+                            {get_value_field(&228)}
                             <br/>
                             <span class="has-text-weight-bold is-size-6">{self.current_standard_uuid.clone()}</span>
                         </p>
@@ -1038,89 +840,12 @@ impl StandardSettings {
                             id="delete-standard"
                             class="button is-danger"
                             disabled={self.disable_delete_standard_btn}
-                            onclick={onclick_delete_standard} >{ get_value_field(&220) }</button> // Yes, delete
-                        <button class="button" onclick=onclick_hide_modal.clone()>{ get_value_field(&221) }</button> // Cancel
+                            onclick={onclick_delete_standard} >{get_value_field(&220)}</button> // Yes, delete
+                        <button class="button" onclick=onclick_hide_modal.clone()>{get_value_field(&221)}</button> // Cancel
                     </footer>
                 </div>
               </div>
             </div>
-        }
-    }
-
-    fn show_frame_upload_files(&self) -> Html {
-        let onchange_upload_files = self.link.callback(move |value| {
-            if let ChangeData::Files(files) = value {
-                Msg::UpdateFiles(files)
-            } else {
-                Msg::Ignore
-            }
-        });
-
-        html!{<>
-            <div class="file has-name is-boxed is-centered">
-                <label class="file-label" style="width: 100%">
-                  <input id="standard-file-input"
-                  class="file-input"
-                  type="file"
-                  // accept="image/*,application/vnd*,application/rtf,text/*,.pdf"
-                  onchange={onchange_upload_files}
-                  multiple=true />
-                <span class="file-cta">
-                  <span class="file-icon">
-                    <i class="fas fa-upload"></i>
-                  </span>
-                  <span class="file-label">
-                    { get_value_field(&222) } // Choose standard files…
-                  </span>
-                </span>
-                {match self.files.is_empty() {
-                    true => html!{<span class="file-name">{ get_value_field(&194) }</span>}, // No file uploaded
-                    false => html!{for self.files.iter().map(|f| html!{
-                        <span class="file-name">{f.name().clone()}</span>
-                    })}
-                }}
-              </label>
-            </div>
-            <div class="buttons">
-                {self.show_clear_btn()}
-                {self.show_upload_files_btn()}
-            </div>
-        </>}
-    }
-
-    fn show_clear_btn(&self) -> Html {
-        let onclick_clear_boxed =
-            self.link.callback(|_| Msg::ClearFilesBoxed);
-
-        html!{
-            <button id="clear-upload-standard-files"
-              class="button"
-              onclick=onclick_clear_boxed
-              disabled={self.files.is_empty()} >
-                <span>{ get_value_field(&88) }</span>
-            </button>
-        }
-    }
-
-    fn show_upload_files_btn(&self) -> Html {
-        let onclick_upload_files = self.link.callback(|_| Msg::RequestUploadStandardFiles);
-
-        let class_upload_btn = match self.active_loading_files_btn {
-            true => "button is-loading",
-            false => "button",
-        };
-
-        html!{
-            <button
-              id="upload-component-files"
-              class={class_upload_btn}
-              disabled={self.files.is_empty() || self.current_standard_uuid.len() != 36}
-              onclick={onclick_upload_files} >
-                // <span class="icon" >
-                //     <i class="fas fa-angle-double-up" aria-hidden="true"></i>
-                // </span>
-                <span>{ get_value_field(&87) }</span>
-            </button>
         }
     }
 }

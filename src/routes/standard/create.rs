@@ -4,7 +4,7 @@ use yew::{
 };
 use yew_router::{
     agent::RouteRequest::ChangeRoute,
-    prelude::*,
+    prelude::RouteAgent,
 };
 use chrono::NaiveDateTime;
 use log::debug;

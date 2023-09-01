@@ -7,21 +7,6 @@ use crate::error::{Error, get_error};
 pub(crate) fn resp_parsing<T>(
     response: String,
     key_word: &str,
-) -> Result<Vec<T>, Error>
-where
-    for<'de> T: Deserialize<'de> + 'static + std::fmt::Debug,
-{
-    debug!("Key word: {:?}", key_word);
-    get_value_response(response).and_then(|val| {
-        let res = from_value(val.get(key_word).unwrap().clone());
-        Ok(res.unwrap())
-    })
-}
-
-/// Get object from response data by key
-pub(crate) fn resp_parsing_item<T>(
-    response: String,
-    key_word: &str,
 ) -> Result<T, Error>
 where
     for<'de> T: Deserialize<'de> + 'static + std::fmt::Debug,

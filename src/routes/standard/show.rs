@@ -1,11 +1,8 @@
-use yew::{
-    agent::Bridged, classes, html, Bridge, Component,
-    ComponentLink, Html, ShouldRender, Properties
-};
+use yew::{agent::Bridged, classes, html, Bridge, Component, ComponentLink, Html, ShouldRender, Properties};
 use yew_router::{
     service::RouteService,
     agent::RouteRequest::ChangeRoute,
-    prelude::*,
+    prelude::RouteAgent,
 };
 use log::debug;
 use graphql_client::GraphQLQuery;
@@ -509,20 +506,6 @@ impl ShowStandard {
         </>}
     }
 
-    // fn show_share_btn(&self) -> Html {
-    //     html!{
-    //         <div class="media-right flexBox" >
-    //           <button
-    //               id="share-button"
-    //               class="button" >
-    //             <span class="icon is-small">
-    //               <i class="fas fa-share-alt"></i>
-    //             </span>
-    //           </button>
-    //         </div>
-    //     }
-    // }
-
     fn show_related_components_btn(&self) -> Html {
         let onclick_related_components_btn = self.link
             .callback(|_| Msg::ShowComponentsList);
@@ -555,18 +538,6 @@ impl ShowStandard {
             </div>
         </>}
     }
-
-    // fn show_download_btn(&self) -> Html {
-    //     let onclick_download_standard_btn =
-    //         self.link.callback(|_| Msg::RequestDownloadFiles);
-    //
-    //     html!{
-    //         <button class="button is-info"
-    //             onclick=onclick_download_standard_btn >
-    //           <span class="has-text-weight-bold">{ get_value_field(&126) }</span>
-    //         </button>
-    //     }
-    // }
 
     fn show_setting_btn(&self) -> Html {
         let onclick_setting_standard_btn = self.link

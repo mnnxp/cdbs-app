@@ -1,7 +1,7 @@
 use yew::prelude::*;
 use yew_router::{
     agent::RouteRequest::ChangeRoute,
-    prelude::*,
+    prelude::RouteAgent,
 };
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;

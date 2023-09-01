@@ -1,7 +1,7 @@
 use yew::prelude::*;
 use yew_router::{
     agent::RouteRequest::ChangeRoute,
-    prelude::*,
+    prelude::RouteAgent,
 };
 // use log::debug;
 use crate::services::get_value_field;

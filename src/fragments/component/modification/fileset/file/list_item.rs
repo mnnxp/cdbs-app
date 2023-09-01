@@ -7,7 +7,7 @@ use crate::error::Error;
 use crate::fragments::file::FileShowcase;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, ShowFileInfo, DownloadFile};
-use crate::services::{resp_parsing, resp_parsing_item};
+use crate::services::{resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::component::{
     ComModFilesetFiles, com_mod_fileset_files,
@@ -92,7 +92,7 @@ impl Component for FilesetFileItem {
             },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetDownloadFileResult(res, file_uuid) => {
-                match resp_parsing(res, "componentModificationFilesetFiles") {
+                match resp_parsing::<Vec<DownloadFile>>(res, "componentModificationFilesetFiles") {
                     Ok(result) => {
                         // let result: Vec<DownloadFile> = result;
                         debug!("componentModificationFilesetFiles: {:?}, file_uuid: {:?}", result, file_uuid);
@@ -102,7 +102,7 @@ impl Component for FilesetFileItem {
                 }
             },
             Msg::GetDeleteFileResult(res, file_uuid) => {
-                match resp_parsing_item(res, "deleteFilesFromFileset") {
+                match resp_parsing(res, "deleteFilesFromFileset") {
                     Ok(result) => {
                         if result && &file_uuid == &self.props.file.uuid {
                             self.get_result_delete = result;
