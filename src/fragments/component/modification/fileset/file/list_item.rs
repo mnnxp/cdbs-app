@@ -7,7 +7,7 @@ use crate::error::Error;
 use crate::fragments::file::FileShowcase;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, ShowFileInfo, DownloadFile};
-use crate::services::{resp_parsing};
+use crate::services::resp_parsing;
 use crate::gqls::make_query;
 use crate::gqls::component::{
     ComModFilesetFiles, com_mod_fileset_files,

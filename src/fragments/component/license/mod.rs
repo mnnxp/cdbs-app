@@ -1,19 +1,16 @@
 mod item;
-
 pub use item::ComponentLicenseTag;
 
 use std::collections::BTreeSet;
-use yew::prelude::*;
-use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
+use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html, ChangeData};
 use log::debug;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, LicenseInfo};
-use crate::services::get_value_field;
+use crate::services::{get_value_field, resp_parsing_two_level, resp_parsing};
 use crate::gqls::{
     make_query,
     relate::{GetLicenses, get_licenses},
@@ -53,8 +50,8 @@ pub enum Msg {
     UpdateSelectLicense(String),
     ChangeHideAddLicense,
     SetSelectLicense,
+    ResponseError(Error),
     ClearError,
-    Ignore,
 }
 
 impl Component for ComponentLicensesTags {
@@ -120,53 +117,37 @@ impl Component for ComponentLicensesTags {
                 })
             },
             Msg::GetLicensesListResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: Vec<LicenseInfo> =
-                            serde_json::from_value(res_value.get("licenses").unwrap().clone()).unwrap();
+                match resp_parsing(res, "licenses") {
+                    Ok(result) => {
                         debug!("licenses: {:?}", result);
                         self.license_list = result;
                         link.send_message(Msg::SetSelectLicense);
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::GetAddLicenseResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: bool =
-                            serde_json::from_value(res_value.get("addComponentLicense").unwrap().clone()).unwrap();
+                match resp_parsing(res, "addComponentLicense") {
+                    Ok(result) => {
                         debug!("addComponentLicense: {:?}", result);
                         self.hide_add_license_modal = result;
                         link.send_message(Msg::RequestComponentLicenses);
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::GetComponentLicensesResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: Vec<LicenseInfo> =
-                            serde_json::from_value(res_value.get("component").unwrap()
-                                .get("licenses").unwrap().clone()).unwrap();
+                match resp_parsing_two_level(res, "component", "licenses") {
+                    Ok(result) => {
                         debug!("licenses: {:?}", result);
                         self.component_licenses = result;
                         self.license_ids = BTreeSet::new();
                         for license in self.component_licenses.clone() {
                             self.license_ids.insert(license.id);
-                        };
+                        }
                         link.send_message(Msg::SetSelectLicense);
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::UpdateSelectLicense(data) =>
@@ -186,8 +167,8 @@ impl Component for ComponentLicensesTags {
                     }
                 }
             },
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::ClearError => self.error = None,
-            Msg::Ignore => {},
         }
         true
     }
@@ -233,7 +214,7 @@ impl ComponentLicensesTags {
                 </span>
             </div>
             <div class="media-content">
-                <div class="tags">
+                <div>
                     {for self.component_licenses.iter().map(|data| html!{
                         match self.license_ids.get(&data.id) {
                             Some(_) => html!{<ComponentLicenseTag

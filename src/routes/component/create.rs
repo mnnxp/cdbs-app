@@ -1,20 +1,16 @@
-use yew::{
-    agent::Bridged, html, Bridge, Component,
-    ComponentLink, Html, ShouldRender, InputData, ChangeData
-};
+use yew::{agent::Bridged, html, Bridge, Component, ComponentLink, Html, ShouldRender, InputData, ChangeData};
 use yew_router::{
     agent::RouteRequest::ChangeRoute,
     prelude::RouteAgent,
 };
 use log::debug;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::routes::AppRoute;
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
-use crate::services::{get_logged_user, get_value_field};
+use crate::services::{get_logged_user, get_value_field, get_value_response, get_from_value, resp_parsing};
 use crate::types::{UUID, ComponentCreateData, TypeAccessInfo, ActualStatus, ComponentType};
 use crate::gqls::make_query;
 use crate::gqls::component::{
@@ -38,6 +34,7 @@ pub struct CreateComponent {
 pub enum Msg {
     RequestManager,
     RequestCreateComponentData,
+    ResponseError(Error),
     GetListOpt(String),
     GetCreateComponentResult(String),
     UpdateName(String),
@@ -129,51 +126,34 @@ impl Component for CreateComponent {
                     link.send_message(Msg::GetCreateComponentResult(res));
                 })
             },
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetListOpt(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        self.component_types = serde_json::from_value(
-                            res_value.get("componentTypes").unwrap().clone()
-                        ).unwrap();
-                        self.actual_statuses = serde_json::from_value(
-                            res_value.get("componentActualStatuses").unwrap().clone()
-                        ).unwrap();
-                        self.types_access = serde_json::from_value(
-                            res_value.get("typesAccess").unwrap().clone()
-                        ).unwrap();
+                match get_value_response(res) {
+                    Ok(ref value) => {
+                        self.component_types = get_from_value(value, "componentTypes").unwrap_or_default();
+                        self.actual_statuses = get_from_value(value, "componentActualStatuses").unwrap_or_default();
+                        self.types_access = get_from_value(value, "typesAccess").unwrap_or_default();
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::GetCreateComponentResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: UUID = serde_json::from_value(
-                            res_value.get("registerComponent").unwrap().clone()
-                        ).unwrap();
+                match resp_parsing::<UUID>(res, "registerComponent") {
+                    Ok(result) => {
                         debug!("registerComponent: {:?}", result);
                         // Redirect to setting component page
                         if !result.is_empty() {
-                            self.router_agent.send(ChangeRoute(
-                                AppRoute::ComponentSettings(result).into()
-                            ));
+                            self.router_agent.send(
+                                ChangeRoute(AppRoute::ComponentSettings(result).into())
+                            );
                         }
-
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             // items request create main component data
-            Msg::UpdateName(data) =>
-                self.request_component.name = data,
-            Msg::UpdateDescription(data) =>
-                self.request_component.description = data,
+            Msg::UpdateName(data) => self.request_component.name = data,
+            Msg::UpdateDescription(data) => self.request_component.description = data,
             Msg::UpdateTypeAccessId(data) =>
                 self.request_component.type_access_id = data.parse::<usize>().unwrap_or_default(),
             Msg::UpdateComponentTypeId(data) =>

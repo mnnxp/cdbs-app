@@ -134,8 +134,7 @@ impl Component for AddUserCertificateCard {
 
 impl AddUserCertificateCard {
     fn show_input_description(&self) -> Html {
-        let oninput_cert_description =
-            self.link.callback(|ev: InputData| Msg::UpdateDescription(ev.value));
+        let oninput_cert_description = self.link.callback(|ev: InputData| Msg::UpdateDescription(ev.value));
 
         html!{<div class="block">
             <label class="label">{get_value_field(&61)}</label> // "Description"

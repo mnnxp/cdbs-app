@@ -5,7 +5,6 @@ pub use item::FileItem;
 use std::collections::BTreeSet;
 use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
 // use log::debug;
-// use crate::error::{get_error, Error};
 use crate::types::{UUID, ShowFileInfo};
 use crate::services::get_value_field;
 

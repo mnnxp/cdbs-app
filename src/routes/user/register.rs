@@ -1,18 +1,13 @@
-use graphql_client::GraphQLQuery;
-use serde_json::Value;
-use wasm_bindgen_futures::spawn_local;
-// use yew::services::fetch::FetchTask;
-use yew::{
-    agent::Bridged, classes, html, Bridge, Callback, Component, ComponentLink,
-    Html, InputData, ChangeData, ShouldRender,
-};
+use yew::{agent::Bridged, classes, html, Bridge, Callback, Component, ComponentLink, Html, InputData, ChangeData, ShouldRender};
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
+use graphql_client::GraphQLQuery;
+use wasm_bindgen_futures::spawn_local;
 use log::debug;
 
 use crate::routes::AppRoute;
-use crate::error::{Error, get_error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
-use crate::services::{get_logged_user, get_value_field};
+use crate::services::{get_logged_user, get_value_field, get_value_response, get_from_value};
 use crate::types::{RegisterInfo, Program, TypeAccessInfo};
 use crate::gqls::make_query;
 use crate::gqls::user::{
@@ -45,6 +40,7 @@ pub enum Msg {
     UpdateList(String),
     GetRegister(String),
     ShowConditions,
+    ResponseError(Error),
     Ignore,
 }
 
@@ -111,21 +107,22 @@ impl Component for Register {
                 })
             },
             Msg::UpdateList(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-                self.programs =
-                    serde_json::from_value(res.get("programs").unwrap().clone()).unwrap();
-                self.types_access =
-                    serde_json::from_value(res.get("typesAccess").unwrap().clone()).unwrap();
-                debug!("Update: {:?}", self.programs);
+                match get_value_response(res) {
+                    Ok(ref value) => {
+                        self.programs = get_from_value(value, "programs").unwrap_or_default();
+                        self.types_access = get_from_value(value, "typesAccess").unwrap_or_default();
+                        debug!("Update: {:?}", self.programs);
+                    },
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
+                }
             },
             Msg::GetRegister(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => self.router_agent.send(ChangeRoute(AppRoute::Login.into())),
-                    true => self.error = Some(get_error(&data)),
+                match get_value_response(res) {
+                    Ok(value) => {
+                        debug!("Value: {:?}", value);
+                        self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
+                    },
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             // Msg::UpdateFirstname(firstname) => self.request.firstname = firstname,
@@ -139,6 +136,7 @@ impl Component for Register {
             Msg::UpdateTypeAccessId(type_access_id) =>
                 self.request.type_access_id = type_access_id.parse::<usize>().unwrap_or(1),
             Msg::ShowConditions => self.show_conditions = !self.show_conditions,
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::Ignore => {}
         }
         true
@@ -201,18 +199,16 @@ impl Register {
         let oninput_username = self.link.callback(|ev: InputData| Msg::UpdateUsername(ev.value));
         let oninput_email = self.link.callback(|ev: InputData| Msg::UpdateEmail(ev.value));
         let oninput_password = self.link.callback(|ev: InputData| Msg::UpdatePassword(ev.value));
-        let oninput_program_id = self
-            .link
-            .callback(|ev: ChangeData| Msg::UpdateProgramId(match ev {
+        let oninput_program_id =
+            self.link.callback(|ev: ChangeData| Msg::UpdateProgramId(match ev {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
-          }));
-        let onchange_type_access_id = self
-            .link
-            .callback(|ev: ChangeData| Msg::UpdateTypeAccessId(match ev {
+            }));
+        let onchange_type_access_id =
+            self.link.callback(|ev: ChangeData| Msg::UpdateTypeAccessId(match ev {
                 ChangeData::Select(el) => el.value(),
                 _ => "1".to_string(),
-          }));
+            }));
 
         html! {<>
             // first columns (username, email)

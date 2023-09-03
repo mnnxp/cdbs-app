@@ -11,11 +11,11 @@ use log::debug;
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::file::FileHeadersShow;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, ShowFileInfo};
-use crate::services::get_value_field;
+use crate::services::{get_value_field, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::component::{ComponentModificationFilesList, component_modification_files_list};
 
@@ -38,7 +38,6 @@ pub enum Msg {
     RequestModificationFilesList,
     ResponseError(Error),
     GetModificationFilesListResult(String),
-    // ShowFullList,
     ClearError,
 }
 
@@ -85,20 +84,12 @@ impl Component for ModificationFilesTableCard {
             },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetModificationFilesListResult(res) => {
-                let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        self.files_list = serde_json::from_value(
-                            res_value.get("componentModificationFilesList").unwrap().clone()
-                        ).unwrap();
-                        debug!("componentModificationFilesList {:?}", self.files_list.len());
-                    },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                match resp_parsing(res, "componentModificationFilesList") {
+                    Ok(result) => self.files_list = result,
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
+                debug!("componentModificationFilesList {:?}", self.files_list.len());
             },
-            // Msg::ShowFullList => self.show_full_files = !self.show_full_files,
             Msg::ClearError => self.error = None,
         }
         true

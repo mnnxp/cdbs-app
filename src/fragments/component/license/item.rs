@@ -1,14 +1,11 @@
-use yew::{
-    html, Callback, Component, ComponentLink,
-    Html, Properties, ShouldRender,
-};
+use yew::{html, Callback, Component, ComponentLink, Html, Properties, ShouldRender};
 use log::debug;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
+use crate::services::resp_parsing;
 use crate::types::{UUID, LicenseInfo};
 use crate::gqls::make_query;
 use crate::gqls::component::{DeleteComponentLicense, delete_component_license};
@@ -36,7 +33,6 @@ pub enum Msg {
     RequestDeleteLicense,
     ResponseError(Error),
     GetDeleteLicenseResult(String),
-    Ignore,
 }
 
 impl Component for ComponentLicenseTag {
@@ -76,38 +72,29 @@ impl Component for ComponentLicenseTag {
             },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetDeleteLicenseResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        let result: usize = serde_json::from_value(res.get("deleteComponentLicense").unwrap().clone()).unwrap();
+                match resp_parsing::<usize>(res, "deleteComponentLicense") {
+                    Ok(result) => {
                         debug!("deleteComponentLicense: {:?}", result);
-                        match &self.props.delete_license {
-                            Some(delete_license) => {
-                                if result > 0 {
-                                    self.get_result_delete = true;
-                                    delete_license.emit(self.props.license_data.id);
-                                };
-                            },
-                            None => self.get_result_delete = result > 0,
+                        self.get_result_delete = result > 0;
+                        if self.get_result_delete {
+                            if let Some(delete_license) = &self.props.delete_license {
+                                delete_license.emit(self.props.license_data.id);
+                            }
                         }
                     },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
-            Msg::Ignore => {}
         }
         true
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        match self.props.license_data.id == props.license_data.id {
-            true => false,
-            false => {
-                self.props = props;
-                true
-            },
+        if self.props.license_data.id == props.license_data.id {
+            false
+        } else {
+            self.props = props;
+            true
         }
     }
 
@@ -124,26 +111,24 @@ impl Component for ComponentLicenseTag {
 
 impl ComponentLicenseTag {
     fn show_license(&self) -> Html {
-        let onclick_license_data_info = self.link
-            .callback(|_| Msg::ShowLicenseCard);
-
-        let onclick_delete_license = self.link
-            .callback(|_| Msg::RequestDeleteLicense);
-
+        let onclick_license_data_info = self.link.callback(|_| Msg::ShowLicenseCard);
+        let onclick_delete_license = self.link.callback(|_| Msg::RequestDeleteLicense);
         html!{<>
             // {self.show_modal_license_info()}
             {match self.props.show_delete_btn {
-                true => html!{<div class="tags has-addons" style="margin-left: 1rem" >
-                  <span class="tag is-light" onclick={onclick_license_data_info}>
+                true => html!{
+                  <div class="tags has-addons" style="margin-left: 1rem" >
+                    <span class="tag is-light" onclick={onclick_license_data_info}>
+                      {self.props.license_data.keyword.clone()}
+                    </span>
+                    <a class="tag is-delete is-small is-light" onclick={onclick_delete_license} />
+                  </div>
+                },
+                false => html!{
+                  <span class="tag is-light" style="margin-left: 1rem" onclick={onclick_license_data_info} >
                     {self.props.license_data.keyword.clone()}
                   </span>
-                  <a class="tag is-delete is-small is-light" onclick={onclick_delete_license} />
-                </div>},
-                false => html!{<span class="tag is-light"
-                    style="margin-left: 1rem"
-                    onclick={onclick_license_data_info} >
-                  {self.props.license_data.keyword.clone()}
-                </span>},
+                },
             }}
         </>}
     }

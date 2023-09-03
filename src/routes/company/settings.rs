@@ -1,16 +1,19 @@
 use yew::{
-    agent::Bridged, html, classes, Bridge, ChangeData, Component, ComponentLink, FocusEvent, Html,
-    Callback, InputData, Properties, ShouldRender, MouseEvent
+    agent::Bridged, html, classes, Bridge, ChangeData, Component, ComponentLink,
+    FocusEvent, Html, Callback, InputData, Properties, ShouldRender, MouseEvent
 };
-use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*, service::RouteService};
+use yew_router::{
+    agent::RouteRequest::ChangeRoute,
+    service::RouteService,
+    prelude::RouteAgent,
+};
 use graphql_client::GraphQLQuery;
 use log::debug;
-use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::gqls::make_query;
 use crate::routes::AppRoute;
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::{
     company::{
         CompanyCertificatesCard, AddCompanyCertificateCard,
@@ -20,7 +23,7 @@ use crate::fragments::{
     side_menu::{MenuItem, SideMenu},
     upload_favicon::UpdateFaviconBlock,
 };
-use crate::services::{get_logged_user, get_value_field};
+use crate::services::{get_logged_user, get_value_field, resp_parsing, get_value_response, get_from_value};
 use crate::types::{
     UUID, SlimUser, CompanyUpdateInfo, CompanyInfo, Region,
     CompanyType, TypeAccessInfo
@@ -95,6 +98,7 @@ pub enum Msg {
     RequestChangeAccess,
     RequestRemoveCompany,
     ReguestCompanyData,
+    ResponseError(Error),
     GetUpdateAccessResult(String),
     GetCompanyDataResult(String),
     GetUpdateCompanyResult(String),
@@ -239,67 +243,40 @@ impl Component for CompanySettings {
                     link.send_message(Msg::GetCompanyDataResult(res));
                 })
             },
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetUpdateAccessResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        let result: bool = serde_json::from_value(
-                            res.get("changeCompanyAccess").unwrap().clone()
-                        ).unwrap();
-                        debug!("Change company access: {:?}", result);
-                        self.get_result_access = result;
-                    },
-                    true => self.error = Some(get_error(&data)),
+                match resp_parsing(res, "changeCompanyAccess") {
+                    Ok(result) => self.get_result_access = result,
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
+                debug!("Change company access: {:?}", self.get_result_access);
             },
             Msg::GetCompanyDataResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        let company_data: CompanyInfo =
-                            serde_json::from_value(res.get("company").unwrap().clone()).unwrap();
+                match resp_parsing::<CompanyInfo>(res, "company") {
+                    Ok(company_data) => {
                         debug!("Company data: {:?}", company_data);
                         self.current_data = Some(company_data.clone());
                         self.request_company = company_data.into();
                         self.rendered(false);
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::GetUpdateListResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-                match res_value.is_null() {
-                    false => {
-                        // debug!("Result: {:#?}", res_value.clone);
-                        self.regions = serde_json::from_value(
-                            res_value.get("regions").unwrap().clone()
-                        ).unwrap();
-                        self.company_types = serde_json::from_value(
-                            res_value.get("companyTypes").unwrap().clone()
-                        ).unwrap();
-                        self.types_access = serde_json::from_value(
-                            res_value.get("typesAccess").unwrap().clone()
-                        ).unwrap();
+                match get_value_response(res) {
+                    Ok(ref value) => {
+                        self.regions = get_from_value(value, "regions").unwrap_or_default();
+                        self.company_types = get_from_value(value, "companyTypes").unwrap_or_default();
+                        self.types_access = get_from_value(value, "typesAccess").unwrap_or_default();
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::GetRemoveCompanyResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        let delete_company_uuid: UUID = serde_json::from_value(
-                            res.get("deleteCompany").unwrap().clone()
-                        ).unwrap();
+                match resp_parsing::<UUID>(res, "deleteCompany") {
+                    Ok(delete_company_uuid) => {
                         debug!("Delete company: {:?}", delete_company_uuid);
-                        self.get_result_remove_company = !delete_company_uuid.is_empty();
+                        self.get_result_remove_company = true;
                         match &self.props.current_user {
                             Some(user) => self
                                 .router_agent
@@ -307,22 +284,16 @@ impl Component for CompanySettings {
                             None => self.router_agent.send(ChangeRoute(AppRoute::Home.into())),
                         }
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::GetUpdateCompanyResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        self.get_result_update = serde_json::from_value(
-                            res.get("putCompanyUpdate").unwrap().clone()
-                        ).unwrap();
-                        // debug!("Updated rows: {:?}", self.get_result_update);
+                match resp_parsing(res, "putCompanyUpdate") {
+                    Ok(result) => {
+                        self.get_result_update = result;
                         link.send_message(Msg::ReguestCompanyData);
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::UpdateTypeAccessId(type_access_id) =>
@@ -582,37 +553,29 @@ impl CompanySettings {
     }
 
     fn fieldset_company(&self) -> Html {
-        let oninput_orgname =
-            self.link.callback(|ev: InputData| Msg::UpdateOrgname(ev.value));
-        let oninput_shortname =
-            self.link.callback(|ev: InputData| Msg::UpdateShortname(ev.value));
-        let oninput_inn =
-            self.link.callback(|ev: InputData| Msg::UpdateInn(ev.value));
-        let oninput_email =
-            self.link.callback(|ev: InputData| Msg::UpdateEmail(ev.value));
-        let oninput_description =
-            self.link.callback(|ev: InputData| Msg::UpdateDescription(ev.value));
-        let oninput_phone =
-            self.link.callback(|ev: InputData| Msg::UpdatePhone(ev.value));
-        let oninput_address =
-            self.link.callback(|ev: InputData| Msg::UpdateAddress(ev.value));
-        let oninput_site_url =
-            self.link.callback(|ev: InputData| Msg::UpdateSiteUrl(ev.value));
-        // let oninput_time_zone =
-        //     self.link.callback(|ev: InputData| Msg::UpdateTimeZone(ev.value));
-
-        let onchange_region_id = self.link.callback(|ev: ChangeData| {
-            Msg::UpdateRegionId(match ev {
-                ChangeData::Select(el) => el.value(),
-                _ => "1".to_string(),
-            })
-        });
-        let onchange_company_type_id = self.link.callback(|ev: ChangeData| {
-            Msg::UpdateCompanyTypeId(match ev {
-                ChangeData::Select(el) => el.value(),
-                _ => "1".to_string(),
-            })
-        });
+        let oninput_orgname = self.link.callback(|ev: InputData| Msg::UpdateOrgname(ev.value));
+        let oninput_shortname = self.link.callback(|ev: InputData| Msg::UpdateShortname(ev.value));
+        let oninput_inn = self.link.callback(|ev: InputData| Msg::UpdateInn(ev.value));
+        let oninput_email = self.link.callback(|ev: InputData| Msg::UpdateEmail(ev.value));
+        let oninput_description = self.link.callback(|ev: InputData| Msg::UpdateDescription(ev.value));
+        let oninput_phone = self.link.callback(|ev: InputData| Msg::UpdatePhone(ev.value));
+        let oninput_address = self.link.callback(|ev: InputData| Msg::UpdateAddress(ev.value));
+        let oninput_site_url = self.link.callback(|ev: InputData| Msg::UpdateSiteUrl(ev.value));
+        // let oninput_time_zone = self.link.callback(|ev: InputData| Msg::UpdateTimeZone(ev.value));
+        let onchange_region_id =
+            self.link.callback(|ev: ChangeData| {
+                Msg::UpdateRegionId(match ev {
+                    ChangeData::Select(el) => el.value(),
+                    _ => "1".to_string(),
+                })
+            });
+        let onchange_company_type_id =
+            self.link.callback(|ev: ChangeData| {
+                Msg::UpdateCompanyTypeId(match ev {
+                    ChangeData::Select(el) => el.value(),
+                    _ => "1".to_string(),
+                })
+            });
 
         html!{<>
             // first column

@@ -1,21 +1,16 @@
 use std::collections::{HashMap, BTreeSet};
-use yew::{
-    Component, ComponentLink, Html, Properties,
-    ShouldRender, html, InputData, ChangeData
-};
-
+use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html, InputData, ChangeData};
 use log::debug;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
 use super::file::ManageModificationFilesCard;
 use super::heads::ModificationTableHeads;
 use super::item::ModificationTableItem;
 use super::fileset::ManageModificationFilesets;
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
-use crate::services::get_value_field;
+use crate::services::{get_value_field, resp_parsing};
 use crate::types::{
     UUID, ComponentModificationInfo, Param, ActualStatus,
     ModificationUpdatePreData, FilesetProgramInfo,
@@ -87,7 +82,6 @@ pub enum Msg {
     UpdateSelectModification,
     ChangeModificationData,
     ClearError,
-    Ignore,
 }
 
 impl Component for ModificationsTableEdit {
@@ -96,21 +90,17 @@ impl Component for ModificationsTableEdit {
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
         let component_uuid = props.current_component_uuid.clone();
-
         let current_modifications = props.component_modifications.clone();
-
         let select_modification_uuid = props.component_modifications
             .first()
             .map(|m| m.uuid.clone())
             .unwrap_or_default();
-
         let mut modification_filesets: HashMap<UUID, Vec<(UUID, String)>> = HashMap::new();
         for component_modification in &props.component_modifications {
             let mut fileset_data: Vec<(UUID, String)> = Vec::new();
             for fileset in &component_modification.filesets_for_program {
                 fileset_data.push((fileset.uuid.clone(), fileset.program.name.clone()));
             }
-
             modification_filesets.insert(
                 component_modification.uuid.clone(),
                 fileset_data.clone()
@@ -202,7 +192,6 @@ impl Component for ModificationsTableEdit {
                     for fileset in &component_modification.filesets_for_program {
                         fileset_data.push((fileset.uuid.clone(), fileset.program.name.clone()));
                     }
-
                     modification_filesets.insert(
                         component_modification.uuid.clone(),
                         fileset_data.clone()
@@ -307,107 +296,72 @@ impl Component for ModificationsTableEdit {
                 });
             },
             Msg::GetAddModificationResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        self.select_modification_uuid = serde_json::from_value(
-                            res_value.get("registerComponentModification").unwrap().clone()
-                        ).unwrap();
-
+                match resp_parsing(res, "registerComponentModification") {
+                    Ok(result) => {
+                        self.select_modification_uuid = result;
                         self.open_add_modification_card = false;
-
                         link.send_message(Msg::RequestComponentModificationsData);
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::GetUpdateModificationResult(res) => {
-                let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: usize = serde_json::from_value(res_value.get("putComponentModificationUpdate").unwrap().clone()).unwrap();
+                match resp_parsing::<usize>(res, "putComponentModificationUpdate") {
+                    Ok(result) => {
                         debug!("putComponentModificationUpdate: {:?}", result);
                         if result > 0 {
                             link.send_message(Msg::RequestComponentModificationsData);
                         }
                     },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
                 self.open_edit_modification_card = false;
             },
             Msg::GetDeleteModificationResult(res) => {
-                let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: UUID = serde_json::from_value(res_value.get("deleteComponentModification").unwrap().clone()).unwrap();
+                match resp_parsing::<UUID>(res, "deleteComponentModification") {
+                    Ok(result) => {
                         debug!("deleteComponentModification: {:?}", result);
                         self.valid_modification_uuids.remove(&result);
                         self.select_modification_uuid = String::new();
                     },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
                 self.open_edit_modification_card = false;
             },
             Msg::GetComponentModificationsResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
+                match resp_parsing(res, "componentModifications") {
+                    Ok(result) => {
                         self.clear_current_data();
-                        self.current_modifications = serde_json::from_value(
-                            res_value.get("componentModifications").unwrap().clone()
-                        ).unwrap();
+                        self.current_modifications = result;
                         debug!("Update modifications list");
                         link.send_message(Msg::ParseParams);
                         link.send_message(Msg::ParseFilesets);
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::GetComponentModificationFilesetResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let filesets: Vec<FilesetProgramInfo> = serde_json::from_value(
-                            res_value.get("componentModificationFilesets").unwrap().clone()
-                        ).unwrap();
+                match resp_parsing::<Vec<FilesetProgramInfo>>(res, "componentModificationFilesets") {
+                    Ok(filesets) => {
                         debug!("Update modification filesets list");
-
                         let component_modification_uuid = filesets.first().map(|x| x.modification_uuid.clone()).unwrap_or_default();
                         let mut fileset_data: Vec<(UUID, String)> = Vec::new();
                         for fileset in &filesets {
                             fileset_data.push((fileset.uuid.clone(), fileset.program.name.clone()));
                         }
-
                         self.modification_filesets.remove(&component_modification_uuid);
                         self.modification_filesets.insert(
                             component_modification_uuid,
                             fileset_data.clone()
                         );
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::GetListOptResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        self.actual_statuses = serde_json::from_value(
-                            res_value.get("componentActualStatuses").unwrap().clone()
-                        ).unwrap();
-                    },
-                    true => self.error = Some(get_error(&data)),
+                match resp_parsing(res, "componentActualStatuses") {
+                    Ok(result) => self.actual_statuses = result,
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::ResponseError(err) => self.error = Some(err),
@@ -459,7 +413,6 @@ impl Component for ModificationsTableEdit {
                     true => link.send_message(Msg::ShowEditModificationCard),
                     false => {
                         self.select_modification_uuid = modification_uuid;
-
                         link.send_message(Msg::RequestComponentModificationFilesetsData);
                     },
                 }
@@ -480,11 +433,9 @@ impl Component for ModificationsTableEdit {
                         if self.request_edit_modification.modification_name.is_empty() {
                             modification.modification_name = self.request_edit_modification.modification_name.clone();
                         }
-
                         if self.request_edit_modification.description.is_empty() {
                             modification.description = self.request_edit_modification.description.clone();
                         }
-
                         if self.request_edit_modification.actual_status_id == 0 {
                             for actual_status in self.actual_statuses.iter() {
                                 if actual_status.actual_status_id == self.request_edit_modification.actual_status_id {
@@ -498,7 +449,6 @@ impl Component for ModificationsTableEdit {
                 }
             }
             Msg::ClearError => self.error = None,
-            Msg::Ignore => {},
         }
         true
     }
@@ -531,15 +481,11 @@ impl Component for ModificationsTableEdit {
 
 impl ModificationsTableEdit {
     fn show_modifications_table(&self) -> Html {
-        let onclick_new_modification_param = self.link
-            .callback(|value: UUID| Msg::ChangeNewModificationParam(value));
-
-        let onclick_select_modification = self.link
-            .callback(|value: UUID| Msg::ChangeSelectModification(value));
-
-        let onclick_add_modification_card = self.link
-            .callback(|_| Msg::ShowAddModificationCard);
-
+        let onclick_new_modification_param =
+            self.link.callback(|value: UUID| Msg::ChangeNewModificationParam(value));
+        let onclick_select_modification =
+            self.link.callback(|value: UUID| Msg::ChangeSelectModification(value));
+        let onclick_add_modification_card = self.link.callback(|_| Msg::ShowAddModificationCard);
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
 
         html!{<div class="card">
@@ -552,8 +498,7 @@ impl ModificationsTableEdit {
                   show_new_column = true
                   component_uuid = self.component_uuid.clone()
                   params = self.collect_heads.clone()
-                />
-
+                  />
                 {for self.collect_items.iter().map(|(modification_uuid, item)|
                     match self.valid_modification_uuids.get(modification_uuid) {
                         Some(_) => html!{<ModificationTableItem
@@ -596,24 +541,15 @@ impl ModificationsTableEdit {
     }
 
     fn modal_add_modification_card(&self) -> Html {
-        let oninput_name = self.link
-            .callback(|ev: InputData| Msg::UpdateAddName(ev.value));
-
-        let oninput_description = self.link
-            .callback(|ev: InputData| Msg::UpdateAddDescription(ev.value));
-
-        let onchange_actual_status_id = self.link
-            .callback(|ev: ChangeData| Msg::UpdateAddActualStatusId(match ev {
+        let oninput_name = self.link.callback(|ev: InputData| Msg::UpdateAddName(ev.value));
+        let oninput_description = self.link.callback(|ev: InputData| Msg::UpdateAddDescription(ev.value));
+        let onchange_actual_status_id =
+            self.link.callback(|ev: ChangeData| Msg::UpdateAddActualStatusId(match ev {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
-
-        let onclick_add_modification_card = self.link
-            .callback(|_| Msg::ShowAddModificationCard);
-
-        let onclick_add_component_modification = self.link
-            .callback(|_| Msg::RequestAddModificationData);
-
+        let onclick_add_modification_card = self.link.callback(|_| Msg::ShowAddModificationCard);
+        let onclick_add_component_modification = self.link.callback(|_| Msg::RequestAddModificationData);
         let class_modal = match &self.open_add_modification_card {
             true => "modal is-active",
             false => "modal",
@@ -688,34 +624,22 @@ impl ModificationsTableEdit {
     }
 
     fn modal_edit_modification_card(&self) -> Html {
-        let oninput_modification_name = self.link
-            .callback(|ev: InputData| Msg::UpdateEditName(ev.value));
-
-        let oninput_modification_description = self.link
-            .callback(|ev: InputData| Msg::UpdateEditDescription(ev.value));
-
-        let onchange_modification_actual_status_id = self.link
-            .callback(|ev: ChangeData| Msg::UpdateEditActualStatusId(match ev {
+        let oninput_modification_name = self.link.callback(|ev: InputData| Msg::UpdateEditName(ev.value));
+        let oninput_modification_description = self.link.callback(|ev: InputData| Msg::UpdateEditDescription(ev.value));
+        let onchange_modification_actual_status_id =
+            self.link.callback(|ev: ChangeData| Msg::UpdateEditActualStatusId(match ev {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
-
-        let onclick_modification_card = self.link
-            .callback(|_| Msg::ShowEditModificationCard);
-
-        let onclick_delete_component_modification = self.link
-            .callback(|_| Msg::RequestDeleteModificationData);
-
-        let onclick_component_modification_update = self.link
-            .callback(|_| Msg::RequestUpdateModificationData);
-
+        let onclick_modification_card = self.link.callback(|_| Msg::ShowEditModificationCard);
+        let onclick_delete_component_modification = self.link.callback(|_| Msg::RequestDeleteModificationData);
+        let onclick_component_modification_update = self.link.callback(|_| Msg::RequestUpdateModificationData);
         let class_modal = match &self.open_edit_modification_card {
             true => "modal is-active",
             false => "modal",
         };
-
-        let modification_data: Option<&ComponentModificationInfo> = self.current_modifications.iter()
-            .find(|x| x.uuid == self.select_modification_uuid);
+        let modification_data: Option<&ComponentModificationInfo> =
+            self.current_modifications.iter().find(|x| x.uuid == self.select_modification_uuid);
 
         match modification_data {
             Some(modification_data) => html!{<div class=class_modal>

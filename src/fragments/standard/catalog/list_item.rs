@@ -1,20 +1,19 @@
-use yew::prelude::*;
+use yew::{agent::Bridged, classes, html, Bridge, Component, ComponentLink, Html, Properties, ShouldRender};
 use yew_router::{
     agent::RouteRequest::ChangeRoute,
     prelude::RouteAgent,
 };
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use log::debug;
-use crate::error::{Error, get_error};
+use crate::error::Error;
 use crate::routes::AppRoute;
 use crate::fragments::{
     list_errors::ListErrors,
     switch_icon::res_btn,
 };
 use crate::types::ShowStandardShort;
-use crate::services::get_value_field;
+use crate::services::{get_value_field, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::standard::{
     AddStandardFav, add_standard_fav,
@@ -27,6 +26,7 @@ pub enum Msg {
     AddFav,
     DelFav,
     GetFavResult(String),
+    ResponseError(Error),
     Ignore,
 }
 
@@ -94,25 +94,21 @@ impl Component for ListItemStandard {
                 });
             },
             Msg::GetFavResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                debug!("res value: {:#?}", res_value);
-
-                match res_value.is_null() {
-                    false => {
-                        let result: bool = match &self.is_followed {
-                            true => serde_json::from_value(res_value.get("deleteStandardFav").unwrap().clone()).unwrap(),
-                            false => serde_json::from_value(res_value.get("addStandardFav").unwrap().clone()).unwrap(),
-                        };
+                let target_key = match &self.is_followed {
+                    true => "deleteStandardFav",
+                    false => "addStandardFav",
+                };
+                match resp_parsing(res, target_key) {
+                    Ok(result) => {
                         debug!("Fav result: {:?}", result);
                         if result {
                             self.is_followed = !self.is_followed;
                         }
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::Ignore => {},
         }
         true
@@ -166,9 +162,7 @@ impl ListItemStandard {
                 class_res_btn.push("fas");
                 class_color_btn = "color: #1872F0;";
             },
-            false => {
-                class_res_btn.push("far");
-            },
+            false => class_res_btn.push("far"),
         }
 
         html!{
@@ -264,9 +258,7 @@ impl ListItemStandard {
                 class_res_btn.push("fas");
                 class_color_btn = "color: #1872F0;";
             },
-            false => {
-                class_res_btn.push("far");
-            },
+            false => class_res_btn.push("far"),
         }
         class_res_btn.push("fa-bookmark");
 

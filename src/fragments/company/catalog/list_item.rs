@@ -1,20 +1,19 @@
-use yew::prelude::*;
+use yew::{agent::Bridged, classes, html, Bridge, Component, ComponentLink, Html, Properties, ShouldRender};
 use yew_router::{
     agent::RouteRequest::ChangeRoute,
     prelude::RouteAgent,
 };
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use log::debug;
-use crate::error::{Error, get_error};
+use crate::error::Error;
 use crate::routes::AppRoute;
 use crate::fragments::{
     list_errors::ListErrors,
     switch_icon::res_btn,
 };
 use crate::types::{UUID, ShowCompanyShort};
-use crate::services::get_value_field;
+use crate::services::{get_value_field, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::company::{
     AddCompanyFav, add_company_fav,
@@ -27,6 +26,7 @@ pub enum Msg {
     AddFav,
     DelFav,
     GetFavResult(String),
+    ResponseError(Error),
     Ignore,
 }
 
@@ -74,9 +74,9 @@ impl Component for ListItemCompany {
         match msg {
             Msg::OpenCompany => {
                 // Redirect to profile page
-                self.router_agent.send(ChangeRoute(AppRoute::ShowCompany(
-                    self.props.data.uuid.to_string()
-                ).into()));
+                self.router_agent.send(
+                    ChangeRoute(AppRoute::ShowCompany(self.props.data.uuid.to_string()).into())
+                );
             },
             Msg::TriggerFav => {
                 match &self.is_followed {
@@ -103,25 +103,21 @@ impl Component for ListItemCompany {
                 });
             },
             Msg::GetFavResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                debug!("res value: {:#?}", res_value);
-
-                match res_value.is_null() {
-                    false => {
-                        let result: bool = match &self.is_followed {
-                            true => serde_json::from_value(res_value.get("deleteCompanyFav").unwrap().clone()).unwrap(),
-                            false => serde_json::from_value(res_value.get("addCompanyFav").unwrap().clone()).unwrap(),
-                        };
+                let target_key = match &self.is_followed {
+                    true => "deleteCompanyFav",
+                    false => "addCompanyFav",
+                };
+                match resp_parsing(res, target_key) {
+                    Ok(result) => {
                         debug!("Fav result: {:?}", result);
                         if result {
                             self.is_followed = !self.is_followed;
                         }
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::Ignore => {},
         }
         true
@@ -141,8 +137,6 @@ impl Component for ListItemCompany {
     }
 
     fn view(&self) -> Html {
-        // debug!("&self.props.data.shortname: {}", &self.props.data.shortname);
-        // debug!("&self.props.data.is_followed: {}", &self.props.data.is_followed);
         html!{<>
           <ListErrors error=self.error.clone()/>
           {match self.props.show_list {

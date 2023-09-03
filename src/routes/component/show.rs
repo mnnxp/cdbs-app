@@ -1,8 +1,5 @@
 use std::collections::HashMap;
-use yew::{
-    agent::Bridged, classes, html, Bridge, Component, Properties,
-    ComponentLink, Html, ShouldRender
-};
+use yew::{agent::Bridged, classes, html, Bridge, Component, Properties, ComponentLink, Html, ShouldRender};
 use yew_router::{
     service::RouteService,
     agent::RouteRequest::ChangeRoute,
@@ -10,11 +7,10 @@ use yew_router::{
 };
 use log::debug;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::routes::AppRoute;
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::{
     switch_icon::res_btn,
     list_errors::ListErrors,
@@ -27,7 +23,7 @@ use crate::fragments::{
     img_showcase::ImgShowcase,
     three_showcase::ThreeShowcase,
 };
-use crate::services::{get_logged_user, get_value_field};
+use crate::services::{get_logged_user, get_value_field, resp_parsing};
 use crate::types::{UUID, ComponentInfo, SlimUser, ComponentParam, ComponentModificationInfo, DownloadFile};
 use crate::gqls::make_query;
 use crate::gqls::component::{
@@ -43,7 +39,6 @@ pub struct ShowComponent {
     component: Option<ComponentInfo>,
     current_component_uuid: UUID,
     current_user_owner: bool,
-    // task: Option<FetchTask>,
     router_agent: Box<dyn Bridge<RouteAgent>>,
     props: Props,
     link: ComponentLink<Self>,
@@ -104,7 +99,6 @@ impl Component for ShowComponent {
             component: None,
             current_component_uuid: String::new(),
             current_user_owner: false,
-            // task: None,
             router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             props,
             link,
@@ -221,21 +215,14 @@ impl Component for ShowComponent {
                 })
             },
             Msg::AddFollow(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: bool =
-                            serde_json::from_value(res_value.get("addComponentFav").unwrap().clone())
-                                .unwrap();
-
+                match resp_parsing(res, "addComponentFav") {
+                    Ok(result) => {
                         if result {
                             self.subscribers += 1;
                             self.is_followed = true;
                         }
-                    }
-                    true => self.error = Some(get_error(&data)),
+                    },
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::UnFollow => {
@@ -250,34 +237,21 @@ impl Component for ShowComponent {
                 })
             },
             Msg::DelFollow(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: bool =
-                            serde_json::from_value(res_value.get("deleteComponentFav").unwrap().clone())
-                                .unwrap();
-
+                match resp_parsing(res, "deleteComponentFav") {
+                    Ok(result) => {
                         if result {
                             self.subscribers -= 1;
                             self.is_followed = false;
                         }
-                    }
-                    true => self.error = Some(get_error(&data)),
+                    },
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetComponentData(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let component_data: ComponentInfo =
-                            serde_json::from_value(res_value.get("component").unwrap().clone()).unwrap();
+                match resp_parsing::<ComponentInfo>(res, "component") {
+                    Ok(component_data) => {
                         debug!("Component data: {:?}", component_data);
-
                         self.subscribers = component_data.subscribers;
                         self.is_followed = component_data.is_followed;
                         self.current_component_uuid = component_data.uuid.clone();
@@ -313,33 +287,28 @@ impl Component for ShowComponent {
                             .get(&self.select_modification_uuid)
                             .map(|f| f.clone())
                             .unwrap_or_default();
-
                         self.component = Some(component_data);
-                    }
-                    true => self.error = Some(get_error(&data)),
+                    },
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::GetDownloadFileResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let mut result: Vec<DownloadFile> = serde_json::from_value(res_value.get("componentFiles").unwrap().clone()).unwrap();
+                match resp_parsing::<Vec<DownloadFile>>(res, "componentFiles") {
+                    Ok(mut result) => {
                         debug!("Download file: {:?}", result);
-
-                        if !result.is_empty() {
-                            // checkign have main image
-                            match self.file_arr.first() {
-                                Some(main_img) => {
-                                    result.push(main_img.clone());
-                                    self.file_arr = result;
-                                },
-                                None => self.file_arr = result,
-                            }
+                        if result.is_empty() {
+                            return true
                         }
-                    }
-                    true => self.error = Some(get_error(&data)),
+                        // checkign have main image
+                        match self.file_arr.first() {
+                            Some(main_img) => {
+                                result.push(main_img.clone());
+                                self.file_arr = result;
+                            },
+                            None => self.file_arr = result,
+                        }
+                    },
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::ShowDescription => self.show_full_description = !self.show_full_description,
@@ -517,7 +486,7 @@ impl ShowComponent {
                 </span>
             </div>
             <div class="media-content">
-                <div class="tags">
+                <div>
                     {for component_data.licenses.iter().map(|data| html!{
                         // format!("{}; ", data.name)
                         <ComponentLicenseTag

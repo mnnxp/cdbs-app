@@ -206,8 +206,7 @@ impl CertificateItem {
     }
 
     fn show_update_block(&self) -> Html {
-        let oninput_cert_description =
-            self.link.callback(|ev: InputData| Msg::UpdateDescription(ev.value));
+        let oninput_cert_description = self.link.callback(|ev: InputData| Msg::UpdateDescription(ev.value));
         let onclick_change_cert =
             self.link.callback(|_| Msg::SetNewDescription);
 

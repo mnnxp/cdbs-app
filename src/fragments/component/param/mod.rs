@@ -5,17 +5,15 @@ pub use item::ComponentParamTag;
 pub use add::RegisterParamnameBlock;
 
 use std::collections::BTreeSet;
-// use yew::prelude::*;
 use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
 use log::debug;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, ComponentParam, Param};
-use crate::services::get_value_field;
+use crate::services::{get_value_field, resp_parsing_two_level, resp_parsing};
 use crate::gqls::{
     make_query,
     relate::{GetParams, get_params},
@@ -56,8 +54,8 @@ pub enum Msg {
     UpdateParamValue(String),
     ChangeHideAddParam,
     SetSelectParam,
+    ResponseError(Error),
     ClearError,
-    Ignore,
 }
 
 impl Component for ComponentParamsTags {
@@ -128,45 +126,29 @@ impl Component for ComponentParamsTags {
                 })
             },
             Msg::GetParamsListResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: Vec<Param> =
-                            serde_json::from_value(res_value.get("params").unwrap().clone()).unwrap();
+                match resp_parsing::<Vec<Param>>(res, "params") {
+                    Ok(result) => {
                         debug!("params: {:?}", result);
                         self.param_list = result;
                         link.send_message(Msg::SetSelectParam);
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::GetAddParamResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: usize =
-                            serde_json::from_value(res_value.get("putComponentParams").unwrap().clone()).unwrap();
+                match resp_parsing::<usize>(res, "putComponentParams") {
+                    Ok(result) => {
                         debug!("putComponentParams: {:?}", result);
                         self.hide_add_param_modal = result > 0;
                         self.request_set_param_value = String::new();
                         link.send_message(Msg::RequestComponentParams);
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::GetComponentParamsResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: Vec<ComponentParam> =
-                            serde_json::from_value(res_value.get("component").unwrap()
-                                .get("componentParams").unwrap().clone()).unwrap();
+                match resp_parsing_two_level(res, "component", "componentParams") {
+                    Ok(result) => {
                         debug!("componentParams: {:?}", result);
                         self.component_params = result;
                         self.param_ids = BTreeSet::new();
@@ -175,7 +157,7 @@ impl Component for ComponentParamsTags {
                         };
                         link.send_message(Msg::SetSelectParam);
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::UpdateParamValue(data) => self.request_set_param_value = data,
@@ -194,8 +176,8 @@ impl Component for ComponentParamsTags {
                     }
                 }
             },
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::ClearError => self.error = None,
-            Msg::Ignore => {},
         }
         true
     }
@@ -228,11 +210,9 @@ impl Component for ComponentParamsTags {
 
 impl ComponentParamsTags {
     fn show_params(&self) -> Html {
-        let onclick_delete_param = self.link
-            .callback(|value: usize| Msg::DeleteComponentParam(value));
-
-        let onclick_action_btn = self.link
-            .callback(|_| Msg::ChangeHideAddParam);
+        let onclick_delete_param =
+            self.link.callback(|value: usize| Msg::DeleteComponentParam(value));
+        let onclick_action_btn = self.link.callback(|_| Msg::ChangeHideAddParam);
 
         html!{<div class="card column">
           <table class="table is-fullwidth">
@@ -274,9 +254,7 @@ impl ComponentParamsTags {
     fn modal_add_param(&self) -> Html {
         let onclick_add_param =
             self.link.callback(|(param_id, param_value)| Msg::RequestAddParam(param_id, param_value));
-
         let onclick_hide_modal = self.link.callback(|_| Msg::ChangeHideAddParam);
-
         let class_modal = match &self.hide_add_param_modal {
             true => "modal",
             false => "modal is-active",

@@ -1,13 +1,13 @@
 use yew::{Component, Callback, ComponentLink, Html, Properties, ShouldRender, html};
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use log::debug;
-use crate::error::{Error, get_error};
+use crate::error::Error;
 use crate::fragments::{
     list_errors::ListErrors,
     company::ListItemCompany,
 };
+use crate::services::resp_parsing;
 use crate::types::{UUID, Supplier, ShowCompanyShort};
 use crate::gqls::{
     make_query,
@@ -41,7 +41,6 @@ pub enum Msg {
     ResponseError(Error),
     GetCompanyDataResult(String),
     GetDeleteSupplierResult(String),
-    Ignore,
 }
 
 impl Component for ComponentSupplierItem {
@@ -101,42 +100,25 @@ impl Component for ComponentSupplierItem {
             },
             Msg::ResponseError(error) => self.error = Some(error),
             Msg::GetCompanyDataResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                // debug!("res value: {:#?}", res_value);
-
-                match res_value.is_null() {
-                    false => {
-                        let result: Vec<ShowCompanyShort> = serde_json::from_value(res_value.get("companies").unwrap().clone()).unwrap();
-                        // debug!("GetCompanyDataResult result: {:?}", result);
-                        self.company_data = result.first().map(|x| x.clone());
-                    },
-                    true => self.error = Some(get_error(&data)),
+                match resp_parsing::<Vec<ShowCompanyShort>>(res, "companies") {
+                    Ok(result) => self.company_data = result.first().map(|x| x.clone()),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::GetDeleteSupplierResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        let result: usize = serde_json::from_value(res.get("deleteSuppliersComponent").unwrap().clone()).unwrap();
+                match resp_parsing::<usize>(res, "deleteSuppliersComponent") {
+                    Ok(result) => {
                         debug!("deleteSuppliersComponent: {:?}", result);
-                        match &self.props.delete_supplier {
-                            Some(delete_supplier) => {
-                                if result > 0 {
-                                    self.get_result_delete = true;
-                                    delete_supplier.emit(self.props.supplier_data.supplier.uuid.clone());
-                                };
-                            },
-                            None => self.get_result_delete = result > 0,
+                        self.get_result_delete = result > 0;
+                        if self.get_result_delete {
+                            if let Some(delete_supplier) = &self.props.delete_supplier {
+                                delete_supplier.emit(self.props.supplier_data.supplier.uuid.clone());
+                            }
                         }
                     },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
-            Msg::Ignore => {}
         }
         true
     }
@@ -153,11 +135,8 @@ impl Component for ComponentSupplierItem {
     }
 
     fn view(&self) -> Html {
-        let onclick_supplier_data_info = self.link
-            .callback(|_| Msg::ShowCompanyCard);
-
-        let onclick_delete_supplier = self.link
-            .callback(|_| Msg::RequestDeleteSupplier);
+        let onclick_supplier_data_info = self.link.callback(|_| Msg::ShowCompanyCard);
+        let onclick_delete_supplier = self.link.callback(|_| Msg::RequestDeleteSupplier);
 
         html!{<>
             <ListErrors error=self.error.clone()/>
@@ -185,9 +164,7 @@ impl Component for ComponentSupplierItem {
 
 impl ComponentSupplierItem {
     fn show_modal_company_info(&self) -> Html {
-        let onclick_company_data_info = self.link
-            .callback(|_| Msg::ShowCompanyCard);
-
+        let onclick_company_data_info = self.link.callback(|_| Msg::ShowCompanyCard);
         let class_modal = match &self.open_company_info {
             true => "modal is-active",
             false => "modal",

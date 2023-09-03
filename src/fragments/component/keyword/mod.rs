@@ -1,12 +1,10 @@
 mod item;
 mod add;
-
 pub use item::KeywordTagItem;
 pub use add::AddKeywordsTags;
 
 use yew::{Callback, Component, ComponentLink, Html, Properties, ShouldRender, html};
 // use log::debug;
-// use crate::error::{get_error, Error};
 use crate::types::{UUID, Keyword};
 
 #[derive(Clone, Debug, Properties)]
@@ -26,9 +24,7 @@ impl Component for KeywordsTags {
     type Properties = Props;
 
     fn create(props: Self::Properties, _link: ComponentLink<Self>) -> Self {
-        Self {
-            props,
-        }
+        Self { props }
     }
 
     fn update(&mut self, _msg: Self::Message) -> ShouldRender {

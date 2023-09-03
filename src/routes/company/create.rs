@@ -4,19 +4,18 @@ use yew::{
 };
 use yew_router::{
     agent::RouteRequest::ChangeRoute,
-    prelude::*
+    prelude::RouteAgent,
 };
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
 
-use crate::gqls::make_query;
 use crate::routes::AppRoute;
-use crate::error::{Error, get_error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
-use crate::services::{get_logged_user, get_value_field};
+use crate::services::{get_logged_user, get_value_field, resp_parsing, get_value_response, get_from_value};
 use crate::types::{UUID, SlimUser, CompanyCreateInfo, Region, CompanyType, TypeAccessInfo};
+use crate::gqls::make_query;
 use crate::gqls::company::{
     GetCreateCompanyDataOpt, get_create_company_data_opt,
     RegisterCompany, register_company
@@ -131,24 +130,20 @@ impl Component for CreateCompany {
                     };
                     let res = make_query(RegisterCompany::build_query(register_company::Variables {
                         ipt_company_data
-                    })).await;
-                    link.send_message(Msg::GetCreateCompanyResult(res.unwrap()));
+                    })).await.unwrap();
+                    link.send_message(Msg::GetCreateCompanyResult(res));
                 })
             },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetCreateCompanyResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        let company_uuid: UUID = serde_json::from_value(res.get("registerCompany").unwrap().clone()).unwrap();
+                match resp_parsing::<UUID>(res, "registerCompany") {
+                    Ok(company_uuid) => {
                         debug!("Company uuid: {:?}", company_uuid);
-                        self.router_agent.send(ChangeRoute(AppRoute::ShowCompany(
-                            company_uuid.clone()
-                        ).into()))
+                        self.router_agent.send(
+                            ChangeRoute(AppRoute::ShowCompany(company_uuid.clone()).into()
+                        ))
                     },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::UpdateTypeAccessId(type_access_id) => {
@@ -173,19 +168,13 @@ impl Component for CreateCompany {
                 debug!("Update: {:?}", type_id);
             },
             Msg::UpdateList(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-                match res_value.is_null() {
-                    false => {
-                        // debug!("Result: {:#?}", res_value.clone);
-                        self.regions =
-                            serde_json::from_value(res_value.get("regions").unwrap().clone()).unwrap();
-                        self.company_types =
-                            serde_json::from_value(res_value.get("companyTypes").unwrap().clone()).unwrap();
-                        self.types_access =
-                            serde_json::from_value(res_value.get("typesAccess").unwrap().clone()).unwrap();
+                match get_value_response(res) {
+                    Ok(ref value) => {
+                        self.regions = get_from_value(value, "regions").unwrap_or_default();
+                        self.company_types = get_from_value(value, "companyTypes").unwrap_or_default();
+                        self.types_access = get_from_value(value, "typesAccess").unwrap_or_default();
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::Ignore => {},

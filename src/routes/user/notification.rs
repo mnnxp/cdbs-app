@@ -2,13 +2,12 @@ use yew::{agent::Bridged, html, Bridge, Component, ComponentLink, Html, ShouldRe
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
 use log::debug;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::routes::AppRoute;
-use crate::error::{Error, get_error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
-use crate::services::{get_logged_user, get_value_field};
+use crate::services::{get_logged_user, get_value_field, resp_parsing};
 use crate::types::{ShowNotification, DegreeImportanceTranslateList};
 use crate::gqls::make_query;
 use crate::gqls::user::{
@@ -51,8 +50,9 @@ pub enum Msg {
     // GetNotReadNotification(String),
     GetReadNotification(String),
     GetRemoveNotification(String),
+    // GetCurrentData,
+    ResponseError(Error),
     Ignore,
-    GetCurrentData,
 }
 
 impl Component for Notifications {
@@ -121,71 +121,47 @@ impl Component for Notifications {
             Msg::ReadOneNotificationIds(id) => {
                 debug!("ReadOneNotificationIds: {}", id);
                 self.read_notification.push(id);
-
                 link.send_message(Msg::RequestReadNotification);
             },
             Msg::RemoveOneNotificationIds(id) => {
                 debug!("RemoveOneNotificationIds: {}", id);
                 self.delete_notification.push(id);
-
                 link.send_message(Msg::RequestRemoveNotification);
             },
             Msg::GetAllNotification(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let notifications_data: Vec<ShowNotification> = serde_json::from_value(res_value.get("notifications").unwrap().clone()).unwrap();
-                        debug!("User notifications data: {:?}", notifications_data);
-
-                        self.notifications = notifications_data;
-                    },
-                    true => {
-                        self.error = Some(get_error(&data));
-                    },
+                match resp_parsing::<Vec<ShowNotification>>(res, "notifications") {
+                    Ok(result) => self.notifications = result,
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
+                debug!("User notifications data: {:?}", self.notifications);
             },
             // Msg::GetNotificationByDegree(res) => {},
             // Msg::GetNotReadNotification(res) => {},
             Msg::GetReadNotification(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let read_notification: usize = serde_json::from_value(res_value.get("readNotifications").unwrap().clone()).unwrap();
-                        debug!("Read notifications data: {:?}", read_notification);
-
-                        if read_notification > 0 {
+                match resp_parsing::<usize>(res, "readNotifications") {
+                    Ok(result) => {
+                        debug!("Read notifications data: {:?}", result);
+                        if result > 0 {
                             self.rendered(true);
                         }
                     },
-                    true => {
-                        self.error = Some(get_error(&data));
-                    },
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::GetRemoveNotification(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let delete_notification: usize = serde_json::from_value(res_value.get("deleteNotifications").unwrap().clone()).unwrap();
-                        debug!("Read notifications data: {:?}", delete_notification);
-
-                        if delete_notification > 0 {
+                match resp_parsing::<usize>(res, "deleteNotifications") {
+                    Ok(result) => {
+                        debug!("Read notifications data: {:?}", result);
+                        if result > 0 {
                             self.rendered(true);
                         }
                     },
-                    true => {
-                        self.error = Some(get_error(&data));
-                    },
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
+            // Msg::GetCurrentData => {},
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::Ignore => {},
-            Msg::GetCurrentData => {},
         }
         true
     }

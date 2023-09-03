@@ -1,13 +1,13 @@
 use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
 
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
 
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::file::FileInfoItemShow;
 use crate::fragments::list_errors::ListErrors;
+use crate::services::resp_parsing;
 use crate::types::{UUID, ShowFileInfo, DownloadFile};
 use crate::gqls::make_query;
 use crate::gqls::component::{ComponentModificationFiles, component_modification_files};
@@ -77,16 +77,12 @@ impl Component for ModificationFileListItem {
             },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetDownloadFileResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        let result: Vec<DownloadFile> = serde_json::from_value(res.get("componentModificationFiles").unwrap().clone()).unwrap();
+                match resp_parsing::<Vec<DownloadFile>>(res, "componentModificationFiles") {
+                    Ok(result) => {
                         debug!("componentModificationFiles: {:?}", result);
                         self.download_url = result.first().map(|f| f.download_url.clone()).unwrap_or_default();
                     },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::ClearError => self.error = None,

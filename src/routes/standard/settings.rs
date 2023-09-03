@@ -496,10 +496,8 @@ impl StandardSettings {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
             }));
-        let oninput_name =
-            self.link.callback(|ev: InputData| Msg::UpdateName(ev.value));
-        let oninput_description =
-            self.link.callback(|ev: InputData| Msg::UpdateDescription(ev.value));
+        let oninput_name = self.link.callback(|ev: InputData| Msg::UpdateName(ev.value));
+        let oninput_description = self.link.callback(|ev: InputData| Msg::UpdateDescription(ev.value));
 
         html!{<div class="card">
             <div class="column">
@@ -581,14 +579,10 @@ impl StandardSettings {
     }
 
     fn show_standard_params(&self) -> Html {
-        let oninput_classifier =
-            self.link.callback(|ev: InputData| Msg::UpdateClassifier(ev.value));
-        let oninput_specified_tolerance =
-            self.link.callback(|ev: InputData| Msg::UpdateSpecifiedTolerance(ev.value));
-        let oninput_technical_committee =
-            self.link.callback(|ev: InputData| Msg::UpdateTechnicalCommittee(ev.value));
-        let oninput_publication_at =
-            self.link.callback(|ev: InputData| Msg::UpdatePublicationAt(ev.value));
+        let oninput_classifier = self.link.callback(|ev: InputData| Msg::UpdateClassifier(ev.value));
+        let oninput_specified_tolerance = self.link.callback(|ev: InputData| Msg::UpdateSpecifiedTolerance(ev.value));
+        let oninput_technical_committee = self.link.callback(|ev: InputData| Msg::UpdateTechnicalCommittee(ev.value));
+        let oninput_publication_at = self.link.callback(|ev: InputData| Msg::UpdatePublicationAt(ev.value));
         let onchange_standard_status_id =
             self.link.callback(|ev: ChangeData| Msg::UpdateStandardStatusId(match ev {
               ChangeData::Select(el) => el.value(),
@@ -800,8 +794,7 @@ impl StandardSettings {
     fn modal_delete_standard(&self) -> Html {
         let onclick_hide_modal =
             self.link.callback(|_| Msg::ChangeHideDeleteStandard);
-        let oninput_delete_standard =
-            self.link.callback(|ev: InputData| Msg::UpdateConfirmDelete(ev.value));
+        let oninput_delete_standard = self.link.callback(|ev: InputData| Msg::UpdateConfirmDelete(ev.value));
         let onclick_delete_standard =
             self.link.callback(|_| Msg::RequestDeleteStandard);
         let class_modal = match &self.hide_delete_modal {

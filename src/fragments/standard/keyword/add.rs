@@ -1,18 +1,15 @@
-use yew::{
-    html, Component, ComponentLink, InputData, KeyboardEvent,
-    Html, Properties, ShouldRender,
-};
+use yew::{html, Component, ComponentLink, InputData, KeyboardEvent, Html, Properties, ShouldRender};
 use log::debug;
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::{
     list_errors::ListErrors,
     standard::{KeywordsTags, KeywordTagItem},
 };
 use crate::types::{UUID, Keyword};
-use crate::services::get_value_field;
+use crate::services::{get_value_field, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::standard::{
     GetStandardKeywords, get_standard_keywords,
@@ -72,8 +69,6 @@ impl Component for AddKeywordsTags {
             request_add_keyword: 0,
         }
     }
-
-    // fn rendered(&mut self, first_render: bool) {}
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         let link = self.link.clone();
@@ -138,14 +133,8 @@ impl Component for AddKeywordsTags {
                 })
             },
             Msg::GetStandardKeywordsResult(res) => {
-                let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: Vec<Keyword> = serde_json::from_value(
-                            res_value.get("standardKeywords").unwrap().clone()
-                        ).unwrap();
+                match resp_parsing::<Vec<Keyword>>(res, "standardKeywords") {
+                    Ok(result) => {
                         debug!("GetStandardKeywords before: {:?}", result);
                         if self.props.standard_keywords.is_empty() {
                             for k_res in &result {
@@ -168,9 +157,8 @@ impl Component for AddKeywordsTags {
                             }
                         }
                         debug!("GetStandardKeywords after: {:?}", self.new_keywords);
-                        // self.rendered(false);
                     },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::RequestAddKeywords => {
@@ -197,21 +185,15 @@ impl Component for AddKeywordsTags {
                 }
             },
             Msg::GetAddKeywordsResult(res) => {
-                let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: usize = serde_json::from_value(
-                            res_value.get("addStandardKeywordsByNames").unwrap().clone()
-                        ).unwrap();
-                        debug!("request_add_keyword: {:?}", result);
+                match resp_parsing::<usize>(res, "addStandardKeywordsByNames") {
+                    Ok(result) => {
+                        debug!("addStandardKeywordsByNames: {:?}", result);
                         self.request_add_keyword = result;
                         if result > 0 {
                             link.send_message(Msg::RequestGetStandardKeywords);
                         }
                     },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::HideNotification => self.bad_keyword = false,
@@ -258,8 +240,7 @@ impl Component for AddKeywordsTags {
     }
 
     fn view(&self) -> Html {
-        let onclick_clear_error = self.link
-            .callback(|_| Msg::ClearError);
+        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
 
         html!{<>
             <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
@@ -271,22 +252,20 @@ impl Component for AddKeywordsTags {
 
 impl AddKeywordsTags {
     fn add_standard_keyword(&self) -> Html {
-        let oninput_parse_keyword = self.link
-            .callback(|ev: InputData| Msg::GetString(ev.value));
-        let onkeypress_parse_keyword = self.link
-            .callback(|ev: KeyboardEvent| {
+        let oninput_parse_keyword = self.link.callback(|ev: InputData| Msg::GetString(ev.value));
+        let onkeypress_parse_keyword =
+            self.link.callback(|ev: KeyboardEvent| {
                 debug!("ev.key(): {:?}, ev.key(): {:?}", ev.key_code(), ev.key());
                 match ev.key_code() {
                     13 => Msg::PressKeyEnter,
                     _ => Msg::Ignore,
                 }
             });
-        let onclick_hide_notification = self.link
-            .callback(|_| Msg::HideNotification);
-        let onclick_del_new_keyword = self.link
-            .callback(|value: Keyword| Msg::DeleteNewKeyword(value.keyword));
-        let onclick_del_old_keyword = self.link
-            .callback(|value: Keyword| Msg::DeleteCurrentKeyword(value.id));
+        let onclick_hide_notification = self.link.callback(|_| Msg::HideNotification);
+        let onclick_del_new_keyword =
+            self.link.callback(|value: Keyword| Msg::DeleteNewKeyword(value.keyword));
+        let onclick_del_old_keyword =
+            self.link.callback(|value: Keyword| Msg::DeleteCurrentKeyword(value.id));
 
         html!{<>
             <div class="panel-block">

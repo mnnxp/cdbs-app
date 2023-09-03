@@ -1,16 +1,13 @@
 use yew::{html, Component, ComponentLink, Html, Properties, ShouldRender, classes};
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use log::debug;
 use crate::fragments::list_errors::ListErrors;
-use crate::services::{three_detector, preview_model, get_value_field};
-use crate::error::{get_error, Error};
+use crate::services::{three_detector, preview_model, get_value_field, resp_parsing};
+use crate::error::Error;
 use crate::types::{DownloadFile, UUID};
 use crate::gqls::make_query;
-use crate::gqls::component::{
-    ComModFilesetFiles, com_mod_fileset_files,
-};
+use crate::gqls::component::{ComModFilesetFiles, com_mod_fileset_files};
 
 // 1. Получаем UUID набора файлов
 // 2. Запрашиваем файлы из набора файлов (если набор подходит)
@@ -42,7 +39,6 @@ pub enum Msg {
     ChangeTypeShow,
     ShowThree,
     ClearError,
-    Ignore,
 }
 
 impl Component for ThreeShowcase {
@@ -95,16 +91,10 @@ impl Component for ThreeShowcase {
             },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetDownloadFilesetFilesResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        self.file_arr = serde_json::from_value(
-                            res.get("componentModificationFilesetFiles").unwrap().clone()
-                        ).unwrap();
+                match resp_parsing(res, "componentModificationFilesetFiles") {
+                    Ok(result) => {
+                        self.file_arr = result;
                         debug!("componentModificationFilesetFiles: {:?}", self.file_arr);
-
                         for file in self.file_arr.iter() {
                             if three_detector(&file.filename) {
                                 self.selected_file = Some(file.clone());
@@ -112,12 +102,11 @@ impl Component for ThreeShowcase {
                                 break;
                             }
                         }
-
                         if self.selected_file.is_some() {
                             link.send_message(Msg::ShowThree)
                         }
                     },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::ChangeTypeShow => {
@@ -129,7 +118,6 @@ impl Component for ThreeShowcase {
                 preview_model(patch_to_model, self.full_screen); // Starting 3D View
             },
             Msg::ClearError => self.error = None,
-            Msg::Ignore => {}
         };
         true
     }
@@ -140,11 +128,9 @@ impl Component for ThreeShowcase {
             false
         } else {
             self.props = props;
-
             self.file_arr.clear();
             self.full_screen = false;
             self.selected_file = None;
-            
             self.link.send_message(Msg::RequestDownloadFilesetFiles);
             debug!("change: {:?}", self.props.fileset_uuid);
             true
@@ -160,11 +146,9 @@ impl Component for ThreeShowcase {
         let scene_hull_class = classes!("column", "main");
         let mut class_icon = classes!("fas");
         let mut class_modal = classes!("modal");
-        
         if self.selected_file.is_none() {
             container_style = "padding-left: 0.75rem;";
         }
-
         let text_full_screen = match self.full_screen {
             true => {
                 // scene_hull_class.push("main");

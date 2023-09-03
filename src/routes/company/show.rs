@@ -1,7 +1,4 @@
-use yew::{
-    agent::Bridged, classes, html, Bridge, Callback, Component, Properties,
-    ComponentLink, Html, ShouldRender
-};
+use yew::{agent::Bridged, classes, html, Bridge, Callback, Component, Properties, ComponentLink, Html, ShouldRender};
 use yew_router::{
     service::RouteService,
     agent::RouteRequest::ChangeRoute,
@@ -10,11 +7,10 @@ use yew_router::{
 use web_sys::MouseEvent;
 use log::debug;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::routes::AppRoute;
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::{
     switch_icon::res_btn,
     list_errors::ListErrors,
@@ -23,9 +19,9 @@ use crate::fragments::{
     component::CatalogComponents,
     standard::CatalogStandards,
 };
-use crate::gqls::make_query;
-use crate::services::{get_logged_user, get_value_field};
+use crate::services::{get_logged_user, get_value_field, resp_parsing};
 use crate::types::{UUID, CompanyInfo, SlimUser, ComponentsQueryArg, StandardsQueryArg};
+use crate::gqls::make_query;
 use crate::gqls::company::{
     GetCompanyData, get_company_data,
     AddCompanyFav, add_company_fav,
@@ -65,6 +61,7 @@ pub enum Msg {
     OpenOwnerCompany,
     OpenSettingCompany,
     ShowFullCompanyInfo,
+    ResponseError(Error),
     ClearError,
     Ignore,
 }
@@ -137,7 +134,7 @@ impl Component for ShowCompany {
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        // let link = self.link.clone();
+        let link = self.link.clone();
 
         match msg {
             Msg::Follow => {
@@ -153,21 +150,14 @@ impl Component for ShowCompany {
                 })
             },
             Msg::AddFollow(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: bool =
-                            serde_json::from_value(res_value.get("addCompanyFav").unwrap().clone())
-                                .unwrap();
-
+                match resp_parsing(res, "addCompanyFav") {
+                    Ok(result) => {
                         if result {
                             self.subscribers += 1;
                             self.is_followed = true;
                         }
-                    }
-                    true => self.error = Some(get_error(&data)),
+                    },
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::UnFollow => {
@@ -183,33 +173,20 @@ impl Component for ShowCompany {
                 })
             },
             Msg::DelFollow(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: bool = serde_json::from_value(
-                            res_value.get("deleteCompanyFav").unwrap().clone()
-                        ).unwrap();
-
+                match resp_parsing(res, "deleteCompanyFav") {
+                    Ok(result) => {
                         if result {
                             self.subscribers -= 1;
                             self.is_followed = false;
                         }
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::GetCompanyResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let company_data: CompanyInfo =
-                            serde_json::from_value(res_value.get("company").unwrap().clone()).unwrap();
+                match resp_parsing::<CompanyInfo>(res, "company") {
+                    Ok(company_data) => {
                         debug!("Company data: {:?}", company_data);
-
                         self.subscribers = company_data.subscribers.to_owned();
                         self.is_followed = company_data.is_followed.to_owned();
                         self.current_company_uuid = company_data.uuid.to_owned();
@@ -218,7 +195,7 @@ impl Component for ShowCompany {
                         }
                         self.company = Some(company_data);
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::ChangeTab(set_tab) => self.company_tab = set_tab,
@@ -239,6 +216,7 @@ impl Component for ShowCompany {
                 }
             },
             Msg::ShowFullCompanyInfo => self.show_full_company_info = !self.show_full_company_info,
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::ClearError => self.error = None,
             Msg::Ignore => {},
         }

@@ -9,13 +9,12 @@ use yew_router::{
 use chrono::NaiveDateTime;
 use log::debug;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::routes::AppRoute;
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
-use crate::services::{get_logged_user, get_value_field};
+use crate::services::{get_logged_user, get_value_field, get_value_response, get_from_value, resp_parsing};
 use crate::types::{
     UUID, StandardCreateData, SlimUser, Region, TypeAccessInfo,
     ShowCompanyShort, StandardStatus,
@@ -83,7 +82,6 @@ impl Component for CreateStandard {
             regions: Vec::new(),
             types_access: Vec::new(),
             disable_create_btn: false,
-            // get_result_created_standard: String::new(),
         }
     }
 
@@ -197,60 +195,37 @@ impl Component for CreateStandard {
                 })
             },
             Msg::GetListOpt(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        self.supplier_list = serde_json::from_value(
-                            res_value.get("companies").unwrap().clone()
-                        ).unwrap();
-                        self.standard_statuses = serde_json::from_value(
-                            res_value.get("standardStatuses").unwrap().clone()
-                        ).unwrap();
-                        self.regions = serde_json::from_value(
-                            res_value.get("regions").unwrap().clone()
-                        ).unwrap();
-                        self.types_access = serde_json::from_value(
-                            res_value.get("typesAccess").unwrap().clone()
-                        ).unwrap();
+                match get_value_response(res) {
+                    Ok(ref value) => {
+                        self.supplier_list = get_from_value(value, "companies").unwrap_or_default();
+                        self.standard_statuses = get_from_value(value, "standardStatuses").unwrap_or_default();
+                        self.regions = get_from_value(value, "regions").unwrap_or_default();
+                        self.types_access = get_from_value(value, "typesAccess").unwrap_or_default();
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::GetCreateStandardResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: UUID = serde_json::from_value(
-                            res_value.get("registerStandard").unwrap().clone()
-                        ).unwrap();
+                match resp_parsing::<UUID>(res, "registerStandard") {
+                    Ok(result) => {
                         debug!("registerStandard: {:?}", result);
                         // Redirect to setting standard page
-                        if !result.is_empty() {
-                            // self.get_result_created_standard = result;
-                            self.router_agent.send(ChangeRoute(
-                                AppRoute::StandardSettings(result).into()
-                            ));
+                        if result.is_empty() {
+                            return true;
                         }
-
+                        self.router_agent.send(
+                            ChangeRoute(AppRoute::StandardSettings(result).into())
+                        );
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             // items request create main standard data
-            Msg::UpdateClassifier(data) =>
-                self.request_standard.classifier = data,
-            Msg::UpdateName(data) =>
-                self.request_standard.name = data,
-            Msg::UpdateDescription(data) =>
-                self.request_standard.description = data,
-            Msg::UpdateSpecifiedTolerance(data) =>
-                self.request_standard.specified_tolerance = data,
-            Msg::UpdateTechnicalCommittee(data) =>
-                self.request_standard.technical_committee = data,
+            Msg::UpdateClassifier(data) => self.request_standard.classifier = data,
+            Msg::UpdateName(data) => self.request_standard.name = data,
+            Msg::UpdateDescription(data) => self.request_standard.description = data,
+            Msg::UpdateSpecifiedTolerance(data) => self.request_standard.specified_tolerance = data,
+            Msg::UpdateTechnicalCommittee(data) => self.request_standard.technical_committee = data,
             Msg::UpdatePublicationAt(data) => {
                 let date = NaiveDateTime::parse_from_str(&format!("{} 00:00:00", data), "%Y-%m-%d %H:%M:%S");
                 debug!("new date: {:?}", date);
@@ -260,8 +235,7 @@ impl Component for CreateStandard {
             },
             Msg::UpdateTypeAccessId(data) =>
                 self.request_standard.type_access_id = data.parse::<usize>().unwrap_or_default(),
-            Msg::UpdateCompanyUuid(data) =>
-                self.request_standard.company_uuid = data,
+            Msg::UpdateCompanyUuid(data) => self.request_standard.company_uuid = data,
             Msg::UpdateStandardStatusId(data) =>
                 self.request_standard.standard_status_id = data.parse::<usize>().unwrap_or_default(),
             Msg::UpdateRegionId(data) =>
