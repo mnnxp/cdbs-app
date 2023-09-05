@@ -92,7 +92,7 @@ impl Component for ShowCompany {
             is_followed: false,
             company_tab: CompanyTab::Certificates,
             extend_tab: None,
-            show_full_company_info: true,
+            show_full_company_info: false,
         }
     }
 

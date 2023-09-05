@@ -101,7 +101,7 @@ impl Component for Profile {
             is_followed: false,
             profile_tab: ProfileTab::Certificates,
             extend_tab: Some(ProfileTab::Certificates),
-            show_full_user_info: true,
+            show_full_user_info: false,
         }
     }
 
