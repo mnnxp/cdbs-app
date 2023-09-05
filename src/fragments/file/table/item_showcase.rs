@@ -1,6 +1,7 @@
 use yew::{html, Component, ComponentLink, Html, Properties, ShouldRender};
 
 use crate::types::ShowFileInfo;
+use crate::services::Size;
 
 pub struct FileInfoItemShow {
   props: Props,
@@ -50,7 +51,7 @@ impl FileInfoItemShow {
       <td>{self.props.file_info.filename.clone()}</td>
       // <td>{self.props.file_info.content_type.clone()}</td>
       <td>{self.props.file_info.revision}</td>
-      <td>{self.props.file_info.filesize.clone()}</td>
+      <td>{self.props.file_info.show_size()}</td>
       // <td>{self.props.file_info.program.name.clone()}</td>
       <td>{format!("{} {} (@{})",
         self.props.file_info.owner_user.firstname.clone(),

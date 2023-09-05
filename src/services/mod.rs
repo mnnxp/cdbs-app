@@ -2,6 +2,7 @@
 
 mod auth;
 mod localisation;
+mod filesize;
 mod local_storage;
 mod preview_model;
 mod requests;
@@ -12,6 +13,7 @@ mod response_parsing;
 
 pub use auth::{Auth, get_current_user, logout};
 pub use localisation::get_value_field;
+pub use filesize::Size;
 pub use local_storage::{
     get_logged_user, set_logged_user, get_token, is_authenticated,
     set_lang, get_lang, set_token, set_list_view, get_list_view

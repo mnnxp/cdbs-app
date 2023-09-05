@@ -7,7 +7,7 @@ use log::debug;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{ShowFileInfo, UUID};
-use crate::services::{get_value_field, resp_parsing};
+use crate::services::{Size, get_value_field, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::relate::{
   ShowFileRevisions, show_file_revisions,
@@ -245,7 +245,7 @@ impl FileShowcase {
         <td><abbr title={file_info.uuid.clone()}>{file_info.revision.clone()}</abbr></td>
         // <td>{file_info.filename.clone()}</td>
         // <td>{file_info.content_type.clone()}</td>
-        <td>{file_info.filesize.clone()}</td>
+        <td>{file_info.show_size()}</td>
         // <td>{file_info.program.name.clone()}</td>
         // <td>{file_info.parent_file_uuid.clone()}</td>
         <td>{format!("{} {} (@{})",
@@ -316,7 +316,7 @@ impl FileShowcase {
             // </tr>
             <tr>
               <td>{get_value_field(&238)}</td> // Filesize
-              <td>{self.props.file_info.filesize.clone()}</td>
+              <td>{self.props.file_info.show_size()}</td>
             </tr>
             // <tr>
             //   <td>{get_value_field(&239)}</td> // Program

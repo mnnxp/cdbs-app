@@ -1,6 +1,7 @@
 use yew::{html, Component, ComponentLink, Html, Properties, ShouldRender};
 
 use crate::types::DownloadFile;
+use crate::services::Size;
 
 pub struct FileDownItemShow {
   props: Props,
@@ -46,7 +47,7 @@ impl FileDownItemShow {
     html!{
       <tr>
         <td>{self.props.file_down.filename.clone()}</td>
-        <td>{self.props.file_down.filesize.clone()}</td>
+        <td>{self.props.file_down.show_size()}</td>
         {self.show_download_btn()}
       </tr>
     }
