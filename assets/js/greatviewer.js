@@ -1,25 +1,24 @@
 import * as THREE from 'three'
-import { STLLoader } from 'three/addons/loaders/STLLoader';
+import { STLLoader } from 'three/addons/loaders/STLLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import Stats from 'three/addons/libs/stats.module';
+import Stats from 'three/addons/libs/stats.module.js';
 import { GUI } from 'lil-gui';
 
-// TODO:
-// +Стили и gui для настройки отображения модели
-// +Загрузка текстуры
-// Загрузка разных файлов (stl/obj)
-// Отображение прогресса загрузки "loading..."
-// Манипуляции с Numpad 
-// Манипуляции со стрелок 
-// Манипуляции со w,a,s,d
-
 export class GreatViewer {
-    constructor(model_path, size_flag) {
+    constructor(model_path, size_flag, i18n_str) {
         this.modelPath = model_path;
         this.sizeFlag = size_flag;
+        this.i18nArr = i18n_str.split("#");
     }
-  
+
     starter() {
+        let i18nCoordinateAxes = this.i18nArr[0];
+        let i18nRotation = this.i18nArr[1];
+        let i18nFrame = this.i18nArr[2];
+        let i18nModelColor = this.i18nArr[3];
+        let i18nBackgroundColor = this.i18nArr[4];
+        let i18nModelScale = this.i18nArr[5];
+
         const nxImg = `data:image/gif;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAIAAABMXPacAAAAyUlEQVR42u3RMREAMAgAsVKb3DHi
 XwIyYMhL+ERXPu31LQAAQAAACAAAAQAgAAAEAIAAABAAAAIAQAAACAAAAQAgAAAEAIAAABAAAAIA
 QAAACAAAAQAgAAAEAIAAABAAAAIAQAAACAAAAQAgAAAEAIAAABAAAAAEAIAAABAAAAIAQAAACAAA
@@ -190,26 +189,26 @@ AAAAAElFTkSuQmCC`;
                     customScale,
                 };
                 gui.add(sceneParams, 'showAxesHelper')
-                    .name('Оси координат')
+                    .name(i18nCoordinateAxes)
                     .onChange((value) => {
                         axesHelperOnScene(value);
                     });
                 gui.add(sceneParams, 'sceneRotation')
-                    .name('Вращение')
+                    .name(i18nRotation)
                     .onChange((value) => {
                         runSceneRotation(value);
                     });
-                gui.add(material, 'wireframe').name('Каркас');
+                gui.add(material, 'wireframe').name(i18nFrame);
                 const materialParams = { materialMeshColor: material.color.getHex() };
                 gui.addColor(materialParams, 'materialMeshColor')
-                    .name('Цвет модели')
+                    .name(i18nModelColor)
                     .onChange((value) => material.color.set(value));
                 gui.addColor(sceneParams, 'backgroundColor')
-                    .name('Цвет фона')
+                    .name(i18nBackgroundColor)
                     .onChange((value) => scene.background.set(value));
 
                 gui.add(sceneParams, 'customScale', 0.01, 2)
-                  .name('Масштаб модели')
+                  .name(i18nModelScale)
                   .onChange((value) => {
                     scene.scale.setX(value);
                     scene.scale.setY(value);

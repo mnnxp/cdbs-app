@@ -91,7 +91,6 @@ impl Component for CompanyRepresents {
 impl CompanyRepresents {
     fn show_card(&self) -> Html {
         let onclick_change_view = self.link.callback(|_|Msg::SwitchShowType);
-
         let (class_for_icon, class_for_list) = match self.show_type {
             ListState::Box => ("fas fa-bars", "flex-box"),
             ListState::List => ("fas fa-th-large", ""),

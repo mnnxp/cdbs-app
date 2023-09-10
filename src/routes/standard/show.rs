@@ -1,19 +1,15 @@
-use yew::{
-    agent::Bridged, classes, html, Bridge, Component,
-    ComponentLink, Html, ShouldRender, Properties
-};
+use yew::{agent::Bridged, classes, html, Bridge, Component, ComponentLink, Html, ShouldRender, Properties};
 use yew_router::{
     service::RouteService,
     agent::RouteRequest::ChangeRoute,
-    prelude::*,
+    prelude::RouteAgent,
 };
 use log::debug;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::routes::AppRoute;
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::{
     switch_icon::res_btn,
     list_errors::ListErrors,
@@ -21,7 +17,7 @@ use crate::fragments::{
     standard::{StandardFilesCard, SpecsTags, KeywordsTags},
     img_showcase::ImgShowcase,
 };
-use crate::services::{get_logged_user, get_value_field};
+use crate::services::{get_logged_user, get_value_field, resp_parsing};
 use crate::types::{UUID, StandardInfo, SlimUser, DownloadFile, ComponentsQueryArg};
 use crate::gqls::make_query;
 use crate::gqls::standard::{
@@ -37,7 +33,6 @@ pub struct ShowStandard {
     standard: Option<StandardInfo>,
     current_standard_uuid: UUID,
     current_user_owner: bool,
-    // task: Option<FetchTask>,
     router_agent: Box<dyn Bridge<RouteAgent>>,
     props: Props,
     link: ComponentLink<Self>,
@@ -67,6 +62,7 @@ pub enum Msg {
     ShowComponentsList,
     OpenStandardOwner,
     OpenStandardSetting,
+    ResponseError(Error),
     Ignore,
 }
 
@@ -135,6 +131,8 @@ impl Component for ShowStandard {
                     let ipt_standard_files_arg = standard_files::IptStandardFilesArg{
                         filesUuids: None,
                         standardUuid: standard_uuid,
+                        limit: None,
+                        offset: None,
                     };
                     let res = make_query(StandardFiles::build_query(standard_files::Variables{
                         ipt_standard_files_arg
@@ -154,21 +152,14 @@ impl Component for ShowStandard {
                 })
             },
             Msg::AddFollow(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: bool =
-                            serde_json::from_value(res_value.get("addStandardFav").unwrap().clone())
-                                .unwrap();
-
+                match resp_parsing::<bool>(res, "addStandardFav") {
+                    Ok(result) => {
                         if result {
                             self.subscribers += 1;
                             self.is_followed = true;
                         }
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::UnFollow => {
@@ -183,56 +174,36 @@ impl Component for ShowStandard {
                 })
             },
             Msg::DelFollow(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: bool =
-                            serde_json::from_value(res_value.get("deleteStandardFav").unwrap().clone())
-                                .unwrap();
-
+                match resp_parsing::<bool>(res, "deleteStandardFav") {
+                    Ok(result) => {
                         if result {
                             self.subscribers -= 1;
                             self.is_followed = false;
                         }
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::GetDownloadFilesResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        let mut result: Vec<DownloadFile> = serde_json::from_value(res.get("standardFiles").unwrap().clone()).unwrap();
+                match resp_parsing::<Vec<DownloadFile>>(res, "standardFiles") {
+                    Ok(mut result) => {
                         debug!("standardFiles: {:?}", result);
-
-                        if !result.is_empty() {
-                            // checkign have main image
-                            match self.file_arr.first() {
-                                Some(main_img) => {
-                                    result.push(main_img.clone());
-                                    self.file_arr = result;
-                                },
-                                None => self.file_arr = result,
-                            }
+                        if result.is_empty() {
+                            return  true
                         }
+                        // checkign have main image
+                        if let Some(main_img) = self.file_arr.first() {
+                            result.push(main_img.clone());
+                        }
+                        self.file_arr = result;
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::GetStandardData(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let standard_data: StandardInfo =
-                            serde_json::from_value(res_value.get("standard").unwrap().clone()).unwrap();
+                match resp_parsing::<StandardInfo>(res, "standard") {
+                    Ok(standard_data) => {
                         debug!("Standard data: {:?}", standard_data);
-
                         self.subscribers = standard_data.subscribers;
                         self.is_followed = standard_data.is_followed;
                         self.current_standard_uuid = standard_data.uuid.clone();
@@ -241,21 +212,15 @@ impl Component for ShowStandard {
                         }
                         // description length check for show
                         self.show_full_description = standard_data.description.len() < 250;
-
                         // add main image
                         self.file_arr.push(standard_data.image_file.clone());
-
                         self.standard = Some(standard_data);
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
-            Msg::ShowDescription => {
-                self.show_full_description = !self.show_full_description;
-            },
-            Msg::ShowComponentsList => {
-                self.show_related_components = !self.show_related_components;
-            },
+            Msg::ShowDescription => self.show_full_description = !self.show_full_description,
+            Msg::ShowComponentsList => self.show_related_components = !self.show_related_components,
             Msg::OpenStandardOwner => {
                 if let Some(standard_data) = &self.standard {
                     // Redirect to owner standard page
@@ -272,6 +237,7 @@ impl Component for ShowStandard {
                     ).into()));
                 }
             },
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::Ignore => {}
         }
         true
@@ -326,11 +292,8 @@ impl ShowStandard {
         &self,
         standard_data: &StandardInfo,
     ) -> Html {
-        let onclick_open_owner_company = self.link
-            .callback(|_| Msg::OpenStandardOwner);
-
-        let show_description_btn = self.link
-            .callback(|_| Msg::ShowDescription);
+        let onclick_open_owner_company = self.link.callback(|_| Msg::OpenStandardOwner);
+        let show_description_btn = self.link.callback(|_| Msg::ShowDescription);
 
         html!{
             <div class="columns">
@@ -507,24 +470,8 @@ impl ShowStandard {
         </>}
     }
 
-    // fn show_share_btn(&self) -> Html {
-    //     html!{
-    //         <div class="media-right flexBox" >
-    //           <button
-    //               id="share-button"
-    //               class="button" >
-    //             <span class="icon is-small">
-    //               <i class="fas fa-share-alt"></i>
-    //             </span>
-    //           </button>
-    //         </div>
-    //     }
-    // }
-
     fn show_related_components_btn(&self) -> Html {
-        let onclick_related_components_btn = self.link
-            .callback(|_| Msg::ShowComponentsList);
-
+        let onclick_related_components_btn = self.link.callback(|_| Msg::ShowComponentsList);
         let (text_btn, classes_btn) = match &self.show_related_components {
             true => (get_value_field(&295), "button"),
             false => (get_value_field(&296), "button is-info is-light"),
@@ -554,22 +501,8 @@ impl ShowStandard {
         </>}
     }
 
-    // fn show_download_btn(&self) -> Html {
-    //     let onclick_download_standard_btn =
-    //         self.link.callback(|_| Msg::RequestDownloadFiles);
-    //
-    //     html!{
-    //         <button class="button is-info"
-    //             onclick=onclick_download_standard_btn >
-    //           <span class="has-text-weight-bold">{ get_value_field(&126) }</span>
-    //         </button>
-    //     }
-    // }
-
     fn show_setting_btn(&self) -> Html {
-        let onclick_setting_standard_btn = self.link
-            .callback(|_| Msg::OpenStandardSetting);
-
+        let onclick_setting_standard_btn = self.link.callback(|_| Msg::OpenStandardSetting);
         match &self.current_user_owner {
             true => {res_btn(
                 classes!("fa", "fa-tools"),

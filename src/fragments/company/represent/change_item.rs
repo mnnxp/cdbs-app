@@ -1,15 +1,11 @@
-use yew::{
-    html, Component, Callback, ComponentLink,
-    Html, InputData, ChangeData, Properties, ShouldRender,
-};
+use yew::{html, Component, Callback, ComponentLink, Html, InputData, ChangeData, Properties, ShouldRender};
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
 
-use crate::services::{is_authenticated, get_value_field};
+use crate::services::{is_authenticated, get_value_field, resp_parsing, get_value_response, get_from_value};
 use crate::fragments::list_errors::ListErrors;
-use crate::error::{Error, get_error};
+use crate::error::Error;
 use crate::types::{UUID, Region, RepresentationType, CompanyRepresentInfo, CompanyRepresentUpdateInfo};
 use crate::gqls::make_query;
 use crate::gqls::company::{
@@ -29,6 +25,7 @@ pub enum Msg {
     UpdateAddress(String),
     UpdatePhone(String),
     UpdateList(String),
+    ResponseError(Error),
     ClearError,
 }
 
@@ -131,62 +128,36 @@ impl Component for ChangeItem {
                 })
             },
             Msg::GetUpdateResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        self.get_result_update = serde_json::from_value(
-                            res_value.get("updateCompanyRepresent").unwrap().clone()
-                        ).unwrap();
-                        debug!("Update company represent: {:?}", self.get_result_update);
-                    },
-                    true => self.error = Some(get_error(&data)),
+                match resp_parsing(res, "updateCompanyRepresent") {
+                    Ok(result) => self.get_result_update = result,
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
+                debug!("Update company represent: {:?}", self.get_result_update);
             },
             Msg::GetDeleteRepresentResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        self.get_result_delete = serde_json::from_value(
-                            res_value.get("deleteCompanyRepresent").unwrap().clone()
-                        ).unwrap();
-                        debug!("Delete company represent: {:?}", self.get_result_delete);
-                    },
-                    true => self.error = Some(get_error(&data)),
+                match resp_parsing(res, "deleteCompanyRepresent") {
+                    Ok(result) => self.get_result_delete = result,
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
+                debug!("Delete company represent: {:?}", self.get_result_delete);
             },
-            Msg::UpdateRegionId(region_id) => {
-                self.request_update.region_id = Some(region_id.parse::<i64>().unwrap_or_default());
-            },
-            Msg::UpdateRepresentationTypeId(representation_type_id) => {
-                self.request_update.representation_type_id = Some(representation_type_id.parse::<i64>().unwrap_or_default());
-            },
-            Msg::UpdateName(name) => {
-                self.request_update.name = Some(name);
-            },
-            Msg::UpdateAddress(address) => {
-                self.request_update.address = Some(address);
-            },
-            Msg::UpdatePhone(phone) => {
-                self.request_update.phone = Some(phone);
-            },
+            Msg::UpdateRegionId(region_id) =>
+                self.request_update.region_id = Some(region_id.parse::<i64>().unwrap_or_default()),
+            Msg::UpdateRepresentationTypeId(representation_type_id) =>
+                self.request_update.representation_type_id = Some(representation_type_id.parse::<i64>().unwrap_or_default()),
+            Msg::UpdateName(name) => self.request_update.name = Some(name),
+            Msg::UpdateAddress(address) => self.request_update.address = Some(address),
+            Msg::UpdatePhone(phone) => self.request_update.phone = Some(phone),
             Msg::UpdateList(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-                match res_value.is_null() {
-                    false => {
-                        // debug!("Result: {:#?}", res_value.clone);
-                        self.regions =
-                            serde_json::from_value(res_value.get("regions").unwrap().clone()).unwrap();
-                        self.represent_types =
-                            serde_json::from_value(res_value.get("companyRepresentTypes").unwrap().clone()).unwrap();
+                match get_value_response(res) {
+                    Ok(ref value) => {
+                        self.regions = get_from_value(value, "regions").unwrap_or_default();
+                        self.represent_types = get_from_value(value, "companyRepresentTypes").unwrap_or_default();
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::ClearError => self.error = None,
         }
         true
@@ -270,24 +241,19 @@ impl ChangeItem {
     }
 
     fn change_represent_block(&self) -> Html {
-        let oninput_region_id = self
-            .link
-            .callback(|ev: ChangeData| Msg::UpdateRegionId(match ev {
+        let oninput_region_id =
+            self.link.callback(|ev: ChangeData| Msg::UpdateRegionId(match ev {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
-          }));
-        let oninput_representation_type_id = self
-            .link
-            .callback(|ev: ChangeData| Msg::UpdateRepresentationTypeId(match ev {
+            }));
+        let oninput_representation_type_id =
+            self.link.callback(|ev: ChangeData| Msg::UpdateRepresentationTypeId(match ev {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
-          }));
-        let oninput_name =
-            self.link.callback(|ev: InputData| Msg::UpdateName(ev.value));
-        let oninput_address =
-            self.link.callback(|ev: InputData| Msg::UpdateAddress(ev.value));
-        let oninput_phone =
-            self.link.callback(|ev: InputData| Msg::UpdatePhone(ev.value));
+            }));
+        let oninput_name = self.link.callback(|ev: InputData| Msg::UpdateName(ev.value));
+        let oninput_address = self.link.callback(|ev: InputData| Msg::UpdateAddress(ev.value));
+        let oninput_phone = self.link.callback(|ev: InputData| Msg::UpdatePhone(ev.value));
 
         html!{<>
             {self.fileset_generator(
@@ -366,10 +332,8 @@ impl ChangeItem {
     }
 
     fn show_manage_buttons(&self) -> Html {
-        let onclick_change_represent =
-            self.link.callback(|_| Msg::RequestUpdateRepresent);
-        let onclick_delete_represent =
-            self.link.callback(|_| Msg::RequestDeleteRepresent);
+        let onclick_change_represent = self.link.callback(|_| Msg::RequestUpdateRepresent);
+        let onclick_delete_represent = self.link.callback(|_| Msg::RequestDeleteRepresent);
 
         html!{<div class="columns">
             <div class="column">

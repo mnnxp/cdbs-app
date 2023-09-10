@@ -1,14 +1,11 @@
-use yew::{
-    html, Callback, Component, ComponentLink,
-    Html, Properties, ShouldRender,
-};
+use yew::{html, Callback, Component, ComponentLink, Html, Properties, ShouldRender};
 use log::debug;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
+use crate::services::resp_parsing;
 use crate::types::{UUID, Keyword};
 use crate::gqls::make_query;
 use crate::gqls::standard::{DeleteStandardKeywords, delete_standard_keywords};
@@ -66,30 +63,19 @@ impl Component for KeywordTagItem {
                     link.send_message(Msg::GetDeleteKeywordResult(res));
                 })
             },
-            Msg::ResponseError(err) => {
-                self.error = Some(err);
-            },
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetDeleteKeywordResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        let result: usize = serde_json::from_value(res.get("deleteStandardKeywords").unwrap().clone()).unwrap();
+                match resp_parsing::<usize>(res, "deleteStandardKeywords") {
+                    Ok(result) => {
                         debug!("deleteStandardKeywords: {:?}", result);
-                        match &self.props.delete_keyword {
-                            Some(delete_keyword) => {
-                                if result > 0 {
-                                    self.get_result_delete = true;
-                                    delete_keyword.emit(self.props.keyword.clone());
-                                };
-                            },
-                            None => self.get_result_delete = result > 0,
+                        self.get_result_delete = result > 0;
+                        if self.get_result_delete {
+                            if let Some(delete_keyword) = &self.props.delete_keyword {
+                                delete_keyword.emit(self.props.keyword.clone());
+                            }
                         }
                     },
-                    true => {
-                        link.send_message(Msg::ResponseError(get_error(&data)));
-                    }
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
         }
@@ -115,10 +101,7 @@ impl KeywordTagItem {
     fn show_keyword(
         &self,
     ) -> Html {
-        let onclick_delete_keyword = self
-            .link
-            .callback(|_| Msg::RequestDeleteKeyword);
-
+        let onclick_delete_keyword = self.link.callback(|_| Msg::RequestDeleteKeyword);
         let style_tag = match &self.props.style_tag {
             Some(style) => format!("tag is-light {}", style),
             None => "tag is-light".to_string(),

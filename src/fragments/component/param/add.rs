@@ -1,13 +1,11 @@
-use yew::prelude::*;
-use yew::{Component, Callback, ComponentLink, Html, Properties, ShouldRender, html};
+use yew::{Component, Callback, ComponentLink, Html, Properties, ShouldRender, html, InputData};
 use log::debug;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
-use crate::services::get_value_field;
+use crate::services::{get_value_field, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::relate::{RegisterParam, register_param};
 
@@ -32,6 +30,7 @@ pub enum Msg {
     GetRegisterParamnameResult(String),
     UpdateParamname(String),
     UpdateParamValue(String),
+    ResponseError(Error),
     ClearError,
     Ignore,
 }
@@ -71,22 +70,16 @@ impl Component for RegisterParamnameBlock {
                 })
             },
             Msg::GetRegisterParamnameResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let value: usize =
-                            serde_json::from_value(res_value.get("registerParam").unwrap().clone()).unwrap();
-                        debug!("registerParam: {:?}", value);
-                        self.props.callback_add_param.emit((value, self.set_param_value.clone()));
+                match resp_parsing(res, "registerParam") {
+                    Ok(result) => {
+                        debug!("registerParam: {:?}", result);
+                        self.props.callback_add_param.emit((result, self.set_param_value.clone()));
                         self.active_loading_btn = false;
-
                         // clear old data
                         self.request_new_paramname.clear();
                         self.set_param_value.clear();
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::UpdateParamname(data) => {
@@ -94,6 +87,7 @@ impl Component for RegisterParamnameBlock {
                 self.request_new_paramname = data;
             },
             Msg::UpdateParamValue(data) => self.set_param_value = data,
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::ClearError => self.error = None,
             Msg::Ignore => {},
         }
@@ -119,11 +113,9 @@ impl RegisterParamnameBlock {
     fn add_paramname(&self) -> Html {
         let onclick_register_paramname = self.link.callback(|_| Msg::RequestRegisterParamname);
 
-        let oninput_set_paramname =
-            self.link.callback(|ev: InputData| Msg::UpdateParamname(ev.value));
+        let oninput_set_paramname = self.link.callback(|ev: InputData| Msg::UpdateParamname(ev.value));
 
-        let oninput_set_param_value =
-            self.link.callback(|ev: InputData| Msg::UpdateParamValue(ev.value));
+        let oninput_set_param_value = self.link.callback(|ev: InputData| Msg::UpdateParamValue(ev.value));
 
         let class_btn = match self.active_loading_btn {
             true => "button is-loading is-fullwidth",

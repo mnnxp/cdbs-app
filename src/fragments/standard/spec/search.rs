@@ -5,13 +5,11 @@ use yew::{
 use yew::services::timeout::{TimeoutService, TimeoutTask};
 use log::debug;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use std::time::Duration;
 use wasm_bindgen_futures::spawn_local;
-// use crate::error::{get_error, Error};
 use crate::fragments::standard::{SpecsTags, SpecTagItem};
 use crate::types::{Spec, SpecPathInfo, UUID};
-use crate::services::get_value_field;
+use crate::services::{get_value_field, get_value_response, get_from_value};
 use crate::gqls::make_query;
 use crate::gqls::relate::{SearchSpecs, search_specs};
 
@@ -148,18 +146,19 @@ impl Component for SearchSpecsTags {
                 ));
             },
             Msg::GetSearchRes(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-                let search_specs: Vec<SpecPathInfo> =
-                    serde_json::from_value(res.get("searchSpecs").unwrap().clone()).unwrap();
-                // debug!(
-                //     "found_specs res:{:?} {:?}",
-                //     search_specs.iter().map(|x| Spec::from(x.clone())).collect::<Vec<Spec>>(),
-                //     Spec::from(search_specs[0].clone())
-                // );
-                self.specs_search_loading = false;
-                self.search_specs = search_specs;
-                link.send_message(Msg::ParseSpecs);
+                match get_value_response(res) {
+                    Ok(ref value) => {
+                        self.specs_search_loading = false;
+                        self.search_specs = get_from_value::<SpecPathInfo>(value, "searchSpecs").unwrap_or_default();
+                        // debug!(
+                        //     "found_specs res:{:?} {:?}",
+                        //     search_specs.iter().map(|x| Spec::from(x.clone())).collect::<Vec<Spec>>(),
+                        //     Spec::from(search_specs[0].clone())
+                        // );
+                        link.send_message(Msg::ParseSpecs);
+                    },
+                    Err(err) => debug!("Error searchSpecs: {:?}", err),
+                }
             },
             Msg::DeleteNewSpec(spec_id) => {
                 // debug!("self.found_specs before delete: {:?}", self.found_specs);
@@ -218,12 +217,12 @@ impl Component for SearchSpecsTags {
 impl SearchSpecsTags {
     fn fieldset_manage_specs(&self) -> Html {
         let ipt_ref = self.ipt_ref.clone();
-        let onclick_added_spec = self.link
-            .callback(|value: usize| Msg::AddedSpec(value));
-        let onclick_del_new_spec = self.link
-            .callback(|value: usize| Msg::DeleteNewSpec(value));
-        let onclick_del_old_spec = self.link
-            .callback(|value: usize| Msg::DeleteCurrentSpec(value));
+        let onclick_added_spec =
+            self.link.callback(|value: usize| Msg::AddedSpec(value));
+        let onclick_del_new_spec =
+            self.link.callback(|value: usize| Msg::DeleteNewSpec(value));
+        let onclick_del_old_spec =
+            self.link.callback(|value: usize| Msg::DeleteCurrentSpec(value));
 
         html!{<>
             <div class="panel-block">

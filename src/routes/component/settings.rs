@@ -1,24 +1,20 @@
 use yew::{
-    agent::Bridged, html, Bridge, Callback, Component, Properties,
+    agent::Bridged, html, Bridge, Component, Properties,
     ComponentLink, Html, ShouldRender, InputData, ChangeData
 };
-use yew::services::fetch::FetchTask;
-use yew::services::reader::{File, FileData, ReaderService, ReaderTask};
 use yew_router::{
     service::RouteService,
     agent::RouteRequest::ChangeRoute,
-    prelude::*,
+    prelude::RouteAgent,
 };
-use web_sys::FileList;
 use log::debug;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::routes::AppRoute;
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::{
-    // switch_icon::res_btn,
+    file::UploaderFiles,
     list_errors::ListErrors,
     // catalog_component::CatalogComponents,
     component::{
@@ -27,22 +23,19 @@ use crate::fragments::{
         ModificationsTableEdit, ComponentFilesBlock, SearchSpecsTags, AddKeywordsTags
     },
 };
-use crate::services::{PutUploadFile, UploadData, get_logged_user, get_value_field};
+use crate::services::{get_logged_user, get_value_field, resp_parsing, get_value_response, get_from_value};
 use crate::types::{
     UUID, ComponentInfo, SlimUser, TypeAccessInfo, UploadFile, ActualStatus, ComponentUpdatePreData,
     ComponentUpdateData, ComponentType, ShowCompanyShort, ComponentModificationInfo, ShowFileInfo,
 };
-use crate::gqls::{
-    make_query,
-    relate::{ConfirmUploadCompleted, confirm_upload_completed},
-    component::{
-        GetUpdateComponentDataOpt, get_update_component_data_opt,
-        PutComponentUpdate, put_component_update,
-        DeleteComponent, delete_component,
-        ChangeComponentAccess, change_component_access,
-        ComponentFilesList, component_files_list,
-        UploadComponentFiles, upload_component_files,
-    },
+use crate::gqls::make_query;
+use crate::gqls::component::{
+    GetUpdateComponentDataOpt, get_update_component_data_opt,
+    PutComponentUpdate, put_component_update,
+    DeleteComponent, delete_component,
+    ChangeComponentAccess, change_component_access,
+    ComponentFilesList, component_files_list,
+    UploadComponentFiles, upload_component_files,
 };
 
 type FileName = String;
@@ -55,12 +48,8 @@ pub struct ComponentSettings {
     current_modifications: Vec<ComponentModificationInfo>,
     request_component: ComponentUpdatePreData,
     request_upload_data: Vec<UploadFile>,
-    request_upload_file: Callback<Result<Option<String>, Error>>,
-    request_upload_confirm: Vec<UUID>,
     request_access: i64,
     router_agent: Box<dyn Bridge<RouteAgent>>,
-    task_read: Vec<(FileName, ReaderTask)>,
-    task: Vec<FetchTask>,
     props: Props,
     link: ComponentLink<Self>,
     supplier_list: Vec<ShowCompanyShort>,
@@ -70,10 +59,6 @@ pub struct ComponentSettings {
     update_component: bool,
     update_component_access: bool,
     update_component_supplier: bool,
-    upload_component_files: bool,
-    put_upload_file: PutUploadFile,
-    files: Vec<File>,
-    files_index: u32,
     files_list: Vec<ShowFileInfo>,
     disable_delete_component_btn: bool,
     confirm_delete_component: String,
@@ -82,9 +67,6 @@ pub struct ComponentSettings {
     select_component_modification: UUID,
     get_result_component_data: usize,
     get_result_access: bool,
-    get_result_up_file: bool,
-    get_result_up_completed: usize,
-    active_loading_files_btn: bool,
 }
 
 #[derive(Properties, Clone)]
@@ -101,33 +83,26 @@ pub enum Msg {
     RequestUpdateComponentData,
     RequestChangeAccess,
     RequestDeleteComponent,
-    RequestUploadComponentFiles,
-    RequestUploadFile(Vec<u8>),
-    ResponseUploadFile(Result<Option<String>, Error>),
-    RequestUploadCompleted,
+    RequestUploadComponentFiles(Vec<FileName>),
     GetComponentData(String),
     GetListOpt(String),
     GetUpdateComponentResult(String),
     GetUpdateAccessResult(String),
     GetComponentFilesListResult(String),
     GetUploadData(String),
-    GetUploadFile,
-    GetUploadCompleted(String),
+    UploadConfirm(usize),
     FinishUploadFiles,
     GetDeleteComponentResult(String),
-    EditFiles,
     UpdateTypeAccessId(String),
     UpdateActualStatusId(String),
     UpdateComponentTypeId(String),
     UpdateName(String),
     UpdateDescription(String),
-    UpdateFiles(FileList),
     UpdateConfirmDelete(String),
     ResponseError(Error),
     RegisterNewModification(UUID),
     DeleteModification(UUID),
     ChangeHideDeleteComponent,
-    ClearFilesBoxed,
     ClearError,
     Ignore,
 }
@@ -145,12 +120,8 @@ impl Component for ComponentSettings {
             current_modifications: Vec::new(),
             request_component: ComponentUpdatePreData::default(),
             request_upload_data: Vec::new(),
-            request_upload_file: link.callback(Msg::ResponseUploadFile),
-            request_upload_confirm: Vec::new(),
             request_access: 0,
             router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
-            task_read: Vec::new(),
-            task: Vec::new(),
             props,
             link,
             supplier_list: Vec::new(),
@@ -160,10 +131,6 @@ impl Component for ComponentSettings {
             update_component: false,
             update_component_access: false,
             update_component_supplier: false,
-            upload_component_files: false,
-            put_upload_file: PutUploadFile::new(),
-            files: Vec::new(),
-            files_index: 0,
             files_list: Vec::new(),
             disable_delete_component_btn: true,
             confirm_delete_component: String::new(),
@@ -172,9 +139,6 @@ impl Component for ComponentSettings {
             select_component_modification: String::new(),
             get_result_component_data: 0,
             get_result_access: false,
-            get_result_up_file: false,
-            get_result_up_completed: 0,
-            active_loading_files_btn: false,
         }
     }
 
@@ -249,15 +213,12 @@ impl Component for ComponentSettings {
                 if self.update_component {
                     self.link.send_message(Msg::RequestUpdateComponentData)
                 }
-
                 if self.update_component_access {
                     self.link.send_message(Msg::RequestChangeAccess)
                 }
-
                 self.update_component = false;
                 self.update_component_access = false;
                 self.update_component_supplier = false;
-                self.upload_component_files = false;
                 self.disable_save_changes_btn = true;
                 self.get_result_component_data = 0;
                 self.get_result_access = false;
@@ -326,115 +287,41 @@ impl Component for ComponentSettings {
                     link.send_message(Msg::GetDeleteComponentResult(res));
                 })
             },
-            Msg::RequestUploadComponentFiles => {
-                if !self.files.is_empty() && self.current_component_uuid.len() == 36 {
-                    // see loading button
-                    self.active_loading_files_btn = true;
-
-                    let mut filenames: Vec<String> = Vec::new();
-                    for file in &self.files {filenames.push(file.name().clone());}
-                    debug!("filenames: {:?}", filenames);
-                    let component_uuid = self.current_component_uuid.clone();
-
-                    spawn_local(async move {
-                        let ipt_component_files_data = upload_component_files::IptComponentFilesData{
-                            filenames,
-                            componentUuid: component_uuid,
-                        };
-                        let res = make_query(UploadComponentFiles::build_query(upload_component_files::Variables{
-                            ipt_component_files_data
-                        })).await.unwrap();
-                        link.send_message(Msg::GetUploadData(res));
-                    })
+            Msg::RequestUploadComponentFiles(filenames) => {
+                debug!("filenames: {:?}", filenames);
+                if self.current_component_uuid.len() != 36 || filenames.is_empty() {
+                    return false
                 }
-            },
-            Msg::RequestUploadFile(data) => {
-                if let Some(upload_data) = self.request_upload_data.pop() {
-                    let request = UploadData {
-                        upload_url: upload_data.upload_url.to_string(),
-                        file_data: data,
-                    };
-                    debug!("request: {:?}", request);
-
-                    self.task.push(self.put_upload_file.put_file(request, self.request_upload_file.clone()));
-                    self.request_upload_confirm.push(upload_data.file_uuid.clone());
-                };
-            },
-            Msg::RequestUploadCompleted => {
-                let file_uuids = self.request_upload_confirm.clone();
+                let component_uuid = self.current_component_uuid.clone();
                 spawn_local(async move {
-                    let res = make_query(ConfirmUploadCompleted::build_query(
-                        confirm_upload_completed::Variables { file_uuids }
-                    )).await.unwrap();
-                    // debug!("ConfirmUploadCompleted: {:?}", res);
-                    link.send_message(Msg::GetUploadCompleted(res));
-                });
+                    let ipt_component_files_data = upload_component_files::IptComponentFilesData{
+                        filenames,
+                        componentUuid: component_uuid,
+                    };
+                    let res = make_query(UploadComponentFiles::build_query(upload_component_files::Variables{
+                        ipt_component_files_data
+                    })).await.unwrap();
+                    link.send_message(Msg::GetUploadData(res));
+                })
             },
             Msg::GetComponentFilesListResult(res) => {
-                let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        self.files_list = serde_json::from_value(
-                            res_value.get("componentFilesList").unwrap().clone()
-                        ).unwrap();
-                        debug!("componentFilesList {:?}", self.files_list.len());
-                    },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                match resp_parsing(res, "componentFilesList") {
+                    Ok(result) => self.files_list = result,
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
+                debug!("componentFilesList {:?}", self.files_list.len());
             },
             Msg::GetUploadData(res) => {
-                let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        self.request_upload_data = serde_json::from_value(
-                            res_value.get("uploadComponentFiles").unwrap().clone()
-                        ).unwrap();
-                        debug!("uploadComponentFiles {:?}", self.request_upload_data);
-
-                        if !self.files.is_empty() {
-                            for file in self.files.iter().rev() {
-                                let file_name = file.name().clone();
-                                debug!("file name: {:?}", file_name);
-                                let task = {
-                                    let callback = self.link
-                                        .callback(move |data: FileData| Msg::RequestUploadFile(data.content));
-                                    ReaderService::read_file(file.clone(), callback).unwrap()
-                                };
-                                self.task_read.push((file_name, task));
-                            }
-                        }
-                        debug!("file: {:#?}", self.files);
-                    },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                match resp_parsing(res, "uploadComponentFiles") {
+                    Ok(result) => self.request_upload_data = result,
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
-            },
-            Msg::ResponseUploadFile(Ok(res)) => {
-                debug!("ResponseUploadFile: {:?}", res);
-                link.send_message(Msg::GetUploadFile)
-            },
-            Msg::ResponseUploadFile(Err(err)) => {
-                self.error = Some(err);
-                self.task.clear();
-                self.task_read.clear();
-                self.files_index = 0;
-                self.request_upload_confirm.clear();
-                self.get_result_up_completed = 0;
-                self.active_loading_files_btn = false;
+                debug!("uploadComponentFiles {:?}", self.request_upload_data);
             },
             Msg::GetComponentData(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let component_data: ComponentInfo =
-                            serde_json::from_value(res_value.get("component").unwrap().clone()).unwrap();
+                match resp_parsing::<ComponentInfo>(res, "component") {
+                    Ok(component_data) => {
                         // debug!("Component data: {:?}", component_data);
-
                         self.current_component_uuid = component_data.uuid.clone();
                         self.current_component_is_base = component_data.is_base;
                         self.current_component = Some(component_data.clone());
@@ -445,111 +332,53 @@ impl Component for ComponentSettings {
                         self.files_list = component_data.files.clone();
                         self.request_component = component_data.into();
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::GetListOpt(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        self.supplier_list = serde_json::from_value(
-                            res_value.get("companies").unwrap().clone()
-                        ).unwrap();
-                        self.component_types = serde_json::from_value(
-                            res_value.get("componentTypes").unwrap().clone()
-                        ).unwrap();
-                        self.actual_statuses = serde_json::from_value(
-                            res_value.get("componentActualStatuses").unwrap().clone()
-                        ).unwrap();
-                        self.types_access = serde_json::from_value(
-                            res_value.get("typesAccess").unwrap().clone()
-                        ).unwrap();
+                match get_value_response(res) {
+                    Ok(value) => {
+                        self.supplier_list = get_from_value(&value, "companies").unwrap_or_default();
+                        self.component_types = get_from_value(&value, "componentTypes").unwrap_or_default();
+                        self.actual_statuses = get_from_value(&value, "componentActualStatuses").unwrap_or_default();
+                        self.types_access = get_from_value(&value, "typesAccess").unwrap_or_default();
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::GetUpdateComponentResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: usize =
-                            serde_json::from_value(res_value.get("putComponentUpdate").unwrap().clone()).unwrap();
-                        // debug!("Component data: {:?}", result);
-                        self.get_result_component_data = result;
-                    },
-                    true => self.error = Some(get_error(&data)),
+                match resp_parsing(res, "putComponentUpdate") {
+                    Ok(result) => self.get_result_component_data = result,
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::GetUpdateAccessResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: bool =
-                            serde_json::from_value(res_value.get("changeComponentAccess").unwrap().clone()).unwrap();
-                        debug!("Component change access: {:?}", result);
-                        self.update_component_access = false;
-                        self.get_result_access = result;
-                    },
-                    true => self.error = Some(get_error(&data)),
+                self.update_component_access = false;
+                match resp_parsing(res, "changeComponentAccess") {
+                    Ok(result) => self.get_result_access = result,
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
-            Msg::GetUploadFile => {
-                debug!("next: {:?}", self.files_index);
-                self.files_index -= 1;
-                if self.files_index == 0 {
-                    self.get_result_up_file = true;
-                    debug!("finish: {:?}", self.request_upload_confirm.len());
-                    link.send_message(Msg::RequestUploadCompleted);
-                }
-            },
-            Msg::GetUploadCompleted(res) => {
-                let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        self.get_result_up_completed = serde_json::from_value(
-                            res_value.get("uploadCompleted").unwrap().clone()
-                        ).unwrap();
-                        debug!("uploadCompleted: {:?}", self.get_result_up_completed);
-
-                        link.send_message(Msg::FinishUploadFiles);
-                    },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
-                }
+            Msg::UploadConfirm(confirmations) => {
+                debug!("Confirmation upload of files: {:?}", confirmations);
+                link.send_message(Msg::FinishUploadFiles);
             },
             Msg::FinishUploadFiles => {
+                self.request_upload_data.clear();
                 self.files_list.clear();
                 link.send_message(Msg::RequestComponentFilesList);
-                self.active_loading_files_btn = false;
-                self.task.clear();
-                self.task_read.clear();
-                self.request_upload_confirm.clear();
-                self.files.clear();
-                self.files_index = 0;
             },
             Msg::GetDeleteComponentResult(res) => {
-                let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: UUID = serde_json::from_value(res_value.get("deleteComponent").unwrap().clone()).unwrap();
+                match resp_parsing::<UUID>(res, "deleteComponent") {
+                    Ok(result) => {
                         debug!("deleteComponent: {:?}", result);
                         if self.current_component_uuid == result {
                             self.router_agent.send(ChangeRoute(AppRoute::Home.into()))
                         }
                     },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
-            Msg::EditFiles => self.upload_component_files = !self.upload_component_files,
             Msg::UpdateTypeAccessId(data) => {
                 self.request_access = data.parse::<i64>().unwrap_or_default();
                 self.update_component_access = true;
@@ -575,16 +404,6 @@ impl Component for ComponentSettings {
                 self.update_component = true;
                 self.disable_save_changes_btn = false;
             },
-            Msg::UpdateFiles(files) => {
-                while let Some(file) = files.get(self.files_index) {
-                    debug!("self.files_index: {:?}", self.files_index);
-                    self.files_index += 1;
-                    self.upload_component_files = true;
-                    // self.disable_save_changes_btn = false;
-                    self.files.push(file.clone());
-                }
-                // self.files_index = 0;
-            },
             Msg::UpdateConfirmDelete(data) => {
                 self.disable_delete_component_btn = self.current_component_uuid != data;
                 self.confirm_delete_component = data;
@@ -599,11 +418,6 @@ impl Component for ComponentSettings {
                 self.select_component_modification = String::new();
             },
             Msg::ChangeHideDeleteComponent => self.hide_delete_modal = !self.hide_delete_modal,
-            Msg::ClearFilesBoxed => {
-                self.files.clear();
-                self.files_index = 0;
-                self.upload_component_files = false;
-            },
             Msg::ClearError => self.error = None,
             Msg::Ignore => {},
         }
@@ -664,11 +478,9 @@ impl Component for ComponentSettings {
 
 impl ComponentSettings {
     fn show_main_card(&self) -> Html {
-        let oninput_name = self.link
-            .callback(|ev: InputData| Msg::UpdateName(ev.value));
+        let oninput_name = self.link.callback(|ev: InputData| Msg::UpdateName(ev.value));
 
-        let oninput_description = self.link
-            .callback(|ev: InputData| Msg::UpdateDescription(ev.value));
+        let oninput_description = self.link.callback(|ev: InputData| Msg::UpdateDescription(ev.value));
 
         html!{<div class="card">
             <div class="column">
@@ -719,20 +531,17 @@ impl ComponentSettings {
     }
 
     fn show_component_params(&self) -> Html {
-        let onchange_actual_status_id = self.link
-            .callback(|ev: ChangeData| Msg::UpdateActualStatusId(match ev {
+        let onchange_actual_status_id = self.link.callback(|ev: ChangeData| Msg::UpdateActualStatusId(match ev {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
 
-        let onchange_change_component_type = self.link
-            .callback(|ev: ChangeData| Msg::UpdateComponentTypeId(match ev {
+        let onchange_change_component_type = self.link.callback(|ev: ChangeData| Msg::UpdateComponentTypeId(match ev {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
 
-        let onchange_change_type_access = self.link
-            .callback(|ev: ChangeData| Msg::UpdateTypeAccessId(match ev {
+        let onchange_change_type_access = self.link.callback(|ev: ChangeData| Msg::UpdateTypeAccessId(match ev {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
@@ -839,6 +648,14 @@ impl ComponentSettings {
     }
 
     fn show_component_files(&self) -> Html {
+        let callback_upload_filenames =
+            self.link.callback(move |filenames| Msg::RequestUploadComponentFiles(filenames));
+        let request_upload_files = match self.request_upload_data.is_empty() {
+            true => None,
+            false => Some(self.request_upload_data.clone()),
+        };
+        let callback_upload_confirm =
+            self.link.callback(|confirmations| Msg::UploadConfirm(confirmations));
         html!{<>
             <h2 class="has-text-weight-bold">{ get_value_field(&187) }</h2> // Manage component files
             <div class="card column">
@@ -854,7 +671,12 @@ impl ComponentSettings {
                     </div>
                     <div class="column">
                       <h2 class="has-text-weight-bold">{ get_value_field(&186) }</h2> // Upload component files
-                      {self.show_frame_upload_files()}
+                      <UploaderFiles
+                        text_choose_files={200} // Choose component files…
+                        callback_upload_filenames={callback_upload_filenames}
+                        request_upload_files={request_upload_files}
+                        callback_upload_confirm={callback_upload_confirm}
+                        />
                     </div>
                 </div>
             </div>
@@ -924,12 +746,9 @@ impl ComponentSettings {
     }
 
     fn show_manage_btn(&self) -> Html {
-        let onclick_open_component =
-            self.link.callback(|_| Msg::OpenComponent);
-        let onclick_show_delete_modal =
-            self.link.callback(|_| Msg::ChangeHideDeleteComponent);
-        let onclick_save_changes =
-            self.link.callback(|_| Msg::RequestManager);
+        let onclick_open_component = self.link.callback(|_| Msg::OpenComponent);
+        let onclick_show_delete_modal = self.link.callback(|_| Msg::ChangeHideDeleteComponent);
+        let onclick_save_changes = self.link.callback(|_| Msg::RequestManager);
 
         html!{
             <div class="media">
@@ -971,13 +790,9 @@ impl ComponentSettings {
     }
 
     fn modal_delete_component(&self) -> Html {
-        let onclick_hide_modal = self.link
-            .callback(|_| Msg::ChangeHideDeleteComponent);
-        let oninput_delete_component = self.link
-            .callback(|ev: InputData| Msg::UpdateConfirmDelete(ev.value));
-        let onclick_delete_component = self.link
-            .callback(|_| Msg::RequestDeleteComponent);
-
+        let onclick_hide_modal = self.link.callback(|_| Msg::ChangeHideDeleteComponent);
+        let oninput_delete_component = self.link.callback(|ev: InputData| Msg::UpdateConfirmDelete(ev.value));
+        let onclick_delete_component = self.link.callback(|_| Msg::RequestDeleteComponent);
         let class_modal = match &self.hide_delete_modal {
             true => "modal",
             false => "modal is-active",
@@ -1020,85 +835,6 @@ impl ComponentSettings {
                 </div>
               </div>
             </div>
-        }
-    }
-
-    fn show_frame_upload_files(&self) -> Html {
-        let onchange_upload_files = self.link.callback(move |value| {
-            if let ChangeData::Files(files) = value {
-                Msg::UpdateFiles(files)
-            } else {
-                Msg::Ignore
-            }
-        });
-
-        html!{<>
-            <div class="file has-name is-boxed is-centered">
-                <label class="file-label" style="width: 100%">
-                  <input id="component-file-input"
-                  class="file-input"
-                  type="file"
-                  // accept="image/*,application/vnd*,application/rtf,text/*,.pdf"
-                  onchange={onchange_upload_files}
-                  multiple=true />
-                <span class="file-cta">
-                  <span class="file-icon">
-                    <i class="fas fa-upload"></i>
-                  </span>
-                  <span class="file-label">
-                    { get_value_field(&200) } // Choose component files…
-                  </span>
-                </span>
-                {match self.files.is_empty() {
-                    true => html!{<span class="file-name">{ get_value_field(&194) }</span>}, // No file uploaded
-                    false => html!{for self.files.iter().map(|f| html!{
-                        <span class="file-name">{f.name().clone()}</span>
-                    })}
-                }}
-              </label>
-            </div>
-            <div class="buttons">
-                {self.show_clear_btn()}
-                {self.show_upload_files_btn()}
-            </div>
-        </>}
-    }
-
-    fn show_clear_btn(&self) -> Html {
-        let onclick_clear_boxed = self.link.callback(|_| Msg::ClearFilesBoxed);
-
-        html!{
-            <button id="clear-upload-component-files"
-              class="button"
-              onclick=onclick_clear_boxed
-              disabled={self.files.is_empty()} >
-                // <span class="icon" >
-                //     <i class="fas fa-boom" aria-hidden="true"></i>
-                // </span>
-                <span>{ get_value_field(&88) }</span>
-            </button>
-        }
-    }
-
-    fn show_upload_files_btn(&self) -> Html {
-        let onclick_upload_files = self.link.callback(|_| Msg::RequestUploadComponentFiles);
-
-        let class_upload_btn = match self.active_loading_files_btn {
-            true => "button is-loading",
-            false => "button",
-        };
-
-        html!{
-            <button
-              id="upload-component-files"
-              class={class_upload_btn}
-              disabled={self.files.is_empty() || self.current_component_uuid.len() != 36}
-              onclick={onclick_upload_files} >
-                // <span class="icon" >
-                //     <i class="fas fa-angle-double-up" aria-hidden="true"></i>
-                // </span>
-                <span>{ get_value_field(&87) }</span>
-            </button>
         }
     }
 }

@@ -1,16 +1,12 @@
-use yew::{
-    html, Callback, Component, ComponentLink,
-    Html, Properties, ShouldRender,
-};
+use yew::{html, Callback, Component, ComponentLink, Html, Properties, ShouldRender};
 use log::debug;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, Spec, SpecPathInfo};
-use crate::services::get_value_field;
+use crate::services::{get_value_field, resp_parsing};
 use crate::gqls::{
     make_query,
     relate::{GetSpecsPaths, get_specs_paths},
@@ -117,71 +113,53 @@ impl Component for SpecTagItem {
                         make_query(AddCompanySpecs::build_query(add_company_specs::Variables {
                             ipt_company_specs_data,
                         }))
-                        .await;
-                    link.send_message(Msg::GetAddedSpecResult(res.unwrap()));
+                        .await.unwrap();
+                    link.send_message(Msg::GetAddedSpecResult(res));
                 })
             },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetSpecInfoResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        let result: Vec<SpecPathInfo> = serde_json::from_value(res.get("specsPaths").unwrap().clone()).unwrap();
+                match resp_parsing::<Vec<SpecPathInfo>>(res, "specsPaths") {
+                    Ok(result) => {
                         debug!("specsPaths: {:?}", result);
                         if let Some(data) = result.first() {
                             self.spec_data = Some(data.clone());
                             self.open_spec_info = true;
                         }
                     },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::GetAddedSpecResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        let result: usize = serde_json::from_value(res.get("addCompanySpecs").unwrap().clone()).unwrap();
+                match resp_parsing::<usize>(res, "addCompanySpecs") {
+                    Ok(result) => {
                         debug!("addCompanySpecs: {:?}", result);
-                        // self.get_result_delete = result > 0;
                         match &self.props.added_spec {
                             Some(added_spec) => {
                                 if result > 0 {
                                     self.is_added = true;
                                     self.get_result_delete = false;
                                     added_spec.emit(self.props.spec.spec_id);
-                                };
+                                }
                             },
                             None => self.is_added = result > 0,
                         }
                     },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::GetDeleteSpecResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        let result: usize = serde_json::from_value(res.get("deleteCompanySpecs").unwrap().clone()).unwrap();
+                match resp_parsing::<usize>(res, "deleteCompanySpecs") {
+                    Ok(result) => {
                         debug!("deleteCompanySpecs: {:?}", result);
-                        // self.get_result_delete = result > 0;
-                        match &self.props.delete_spec {
-                            Some(delete_spec) => {
-                                if result > 0 {
-                                    self.is_added = false;
-                                    self.get_result_delete = true;
-                                    delete_spec.emit(self.props.spec.spec_id);
-                                };
-                            },
-                            None => self.get_result_delete = result > 0,
+                        self.get_result_delete = result > 0;
+                        if self.get_result_delete {
+                            if let Some(delete_spec) = &self.props.delete_spec {
+                                delete_spec.emit(self.props.spec.spec_id);
+                            }
                         }
                     },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::ClickSpecInfo => {
@@ -229,12 +207,10 @@ impl SpecTagItem {
         };
         let onclick_delete_spec = self.link.callback(|_| Msg::RequestDeleteSpec);
         let onclick_add_spec = self.link.callback(|_| Msg::RequestAddSpec);
-
         let mut style_tag = match &self.props.style_tag {
             Some(style) => format!("tag is-light {}", style),
             None => "tag is-light".to_string(),
         };
-
         if self.props.active_info_btn {
             style_tag += " button";
         }
@@ -257,9 +233,7 @@ impl SpecTagItem {
     }
 
     fn show_spec_info(&self) -> Html {
-        let onclick_spec_info = self.link
-            .callback(|_| Msg::ClickSpecInfo);
-
+        let onclick_spec_info = self.link.callback(|_| Msg::ClickSpecInfo);
         let class_modal = match &self.open_spec_info {
             true => "modal is-active",
             false => "modal",

@@ -1,19 +1,16 @@
 mod supplier_item;
-
 pub use supplier_item::ComponentSupplierItem;
 
 use std::collections::BTreeSet;
-use yew::prelude::*;
-use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
+use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html, ChangeData, InputData};
 use log::debug;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, Supplier, ShowCompanyShort};
-use crate::services::get_value_field;
+use crate::services::{get_value_field, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::component::{
     SetCompanyOwnerSupplier, set_company_owner_supplier,
@@ -55,8 +52,8 @@ pub enum Msg {
     UpdateSetSupplier(String),
     UpdateSupplierDescription(String),
     ChangeHideSetSupplier,
+    ResponseError(Error),
     ClearError,
-    Ignore,
 }
 
 impl Component for ComponentSuppliersCard {
@@ -65,14 +62,11 @@ impl Component for ComponentSuppliersCard {
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
         let mut company_uuids: BTreeSet<UUID> = BTreeSet::new();
-
         for company in props.component_suppliers.iter() {
             company_uuids.insert(company.supplier.uuid.clone());
         };
-
         let request_set_supplier_uuid =
             props.supplier_list.first().map(|s| s.uuid.clone()).unwrap_or_default();
-
         let component_suppliers = props.component_suppliers.clone();
 
         Self {
@@ -131,45 +125,28 @@ impl Component for ComponentSuppliersCard {
                 })
             },
             Msg::GetUpdateSetSupplierResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: bool =
-                            serde_json::from_value(res_value.get("setCompanyOwnerSupplier").unwrap().clone()).unwrap();
+                match resp_parsing::<bool>(res, "setCompanyOwnerSupplier") {
+                    Ok(result) => {
                         debug!("setCompanyOwnerSupplier: {:?}", result);
                         self.hide_set_supplier_modal = result;
-                        // self.get_result_supplier = result;
                         link.send_message(Msg::RequestComponentSuppliers);
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::GetUpdateAddSupplierResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: bool =
-                            serde_json::from_value(res_value.get("addComponentSupplier").unwrap().clone()).unwrap();
+                match resp_parsing::<bool>(res, "addComponentSupplier") {
+                    Ok(result) => {
                         debug!("addComponentSupplier: {:?}", result);
                         self.hide_set_supplier_modal = result;
-                        // self.get_result_supplier = result;
                         link.send_message(Msg::RequestComponentSuppliers);
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::GetComponentSuppliersResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: Vec<Supplier> =
-                            serde_json::from_value(res_value.get("componentSuppliers").unwrap().clone()).unwrap();
+                match resp_parsing::<Vec<Supplier>>(res, "componentSuppliers") {
+                    Ok(result) => {
                         debug!("componentSuppliers: {:?}", result);
                         self.component_suppliers = result;
                         self.company_uuids = BTreeSet::new();
@@ -177,14 +154,14 @@ impl Component for ComponentSuppliersCard {
                             self.company_uuids.insert(company.supplier.uuid.clone());
                         };
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::UpdateSetSupplier(data) => self.request_set_supplier_uuid = data,
             Msg::UpdateSupplierDescription(data) => self.request_set_supplier_description = data,
             Msg::ChangeHideSetSupplier => self.hide_set_supplier_modal = !self.hide_set_supplier_modal,
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::ClearError => self.error = None,
-            Msg::Ignore => {},
         }
         true
     }
@@ -220,11 +197,9 @@ impl Component for ComponentSuppliersCard {
 
 impl ComponentSuppliersCard {
     fn show_suppliers(&self) -> Html {
-        let onclick_delete_supplier = self.link
-            .callback(|value: UUID| Msg::DeleteComponentCompany(value));
-
-        let onclick_action_btn = self.link
-            .callback(|_| Msg::ChangeHideSetSupplier);
+        let onclick_delete_supplier =
+            self.link.callback(|value: UUID| Msg::DeleteComponentCompany(value));
+        let onclick_action_btn = self.link.callback(|_| Msg::ChangeHideSetSupplier);
 
         html!{<div class="card column">
           <table class="table is-fullwidth">
@@ -266,21 +241,14 @@ impl ComponentSuppliersCard {
     }
 
     fn modal_set_owner_supplier(&self) -> Html {
-        let onclick_set_owner_supplier = self.link
-            .callback(|_| Msg::RequestChangeOwnerSupplier);
-
-        let onclick_hide_modal = self.link
-            .callback(|_| Msg::ChangeHideSetSupplier);
-
-        let onchange_select_set_supplier = self.link
-            .callback(|ev: ChangeData| Msg::UpdateSetSupplier(match ev {
+        let onclick_set_owner_supplier = self.link.callback(|_| Msg::RequestChangeOwnerSupplier);
+        let onclick_hide_modal = self.link.callback(|_| Msg::ChangeHideSetSupplier);
+        let onchange_select_set_supplier =
+            self.link.callback(|ev: ChangeData| Msg::UpdateSetSupplier(match ev {
               ChangeData::Select(el) => el.value(),
               _ => String::new(),
           }));
-
-        let oninput_supplier_description = self.link
-            .callback(|ev: InputData| Msg::UpdateSupplierDescription(ev.value));
-
+        let oninput_supplier_description = self.link.callback(|ev: InputData| Msg::UpdateSupplierDescription(ev.value));
         let class_modal = match &self.hide_set_supplier_modal {
             true => "modal",
             false => "modal is-active",
@@ -339,21 +307,14 @@ impl ComponentSuppliersCard {
     }
 
     fn modal_add_supplier(&self) -> Html {
-        let onclick_add_supplier = self.link
-            .callback(|_| Msg::RequestAddSupplier);
-
-        let onclick_hide_modal = self.link
-            .callback(|_| Msg::ChangeHideSetSupplier);
-
-        let onchange_select_add_supplier = self.link
-            .callback(|ev: ChangeData| Msg::UpdateSetSupplier(match ev {
+        let onclick_add_supplier = self.link.callback(|_| Msg::RequestAddSupplier);
+        let onclick_hide_modal = self.link.callback(|_| Msg::ChangeHideSetSupplier);
+        let onchange_select_add_supplier =
+            self.link.callback(|ev: ChangeData| Msg::UpdateSetSupplier(match ev {
               ChangeData::Select(el) => el.value(),
               _ => String::new(),
           }));
-
-        let oninput_supplier_description = self.link
-            .callback(|ev: InputData| Msg::UpdateSupplierDescription(ev.value));
-
+        let oninput_supplier_description = self.link.callback(|ev: InputData| Msg::UpdateSupplierDescription(ev.value));
         let class_modal = match &self.hide_set_supplier_modal {
             true => "modal",
             false => "modal is-active",

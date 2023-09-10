@@ -1,15 +1,13 @@
-use yew::{
-    html, Component, Callback, ComponentLink, Html, Properties, ShouldRender, InputData,
-};
+use yew::{html, Component, Callback, ComponentLink, Html, Properties, ShouldRender};
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
 
+use crate::fragments::file::CertificateItem;
 use crate::fragments::list_errors::ListErrors;
-use crate::error::{Error, get_error};
-use crate::services::{image_detector, get_value_field};
-use crate::types::{UUID, CompanyCertificate};
+use crate::error::Error;
+use crate::services::resp_parsing;
+use crate::types::{UUID, CompanyCertificate, Certificate};
 use crate::gqls::make_query;
 use crate::gqls::company::{
     UpdateCompanyCertificate, update_company_certificate,
@@ -26,12 +24,13 @@ pub struct Props {
 }
 
 pub enum Msg {
-    RequestUpdateDescription,
-    RequestDeleteCert,
+    RequestUpdateDescription(UUID, String),
+    RequestDeleteCert(UUID),
     GetUpdateResult(String),
     GetDeleteCertResult(String),
     UpdateDescription(String),
     ShowCert,
+    ResponseError(Error),
     ClearError,
     Ignore,
 }
@@ -67,12 +66,12 @@ impl Component for CompanyCertificateItem {
         let link = self.link.clone();
 
         match msg {
-            Msg::RequestUpdateDescription => {
+            Msg::RequestUpdateDescription(file_uuid, description) => {
                 debug!("Update company cert: {:?}", &self.request_update);
                 let ipt_update_company_certificate_data = update_company_certificate::IptUpdateCompanyCertificateData {
                     companyUuid: self.props.certificate.company_uuid.clone(),
-                    fileUuid: self.props.certificate.file.uuid.clone(),
-                    description: self.request_update.clone(),
+                    fileUuid: file_uuid,
+                    description,
                 };
 
                 spawn_local(async move {
@@ -82,10 +81,10 @@ impl Component for CompanyCertificateItem {
                     link.send_message(Msg::GetUpdateResult(res));
                 })
             },
-            Msg::RequestDeleteCert => {
+            Msg::RequestDeleteCert(file_uuid) => {
                 let del_company_certificate_data = delete_company_certificate::DelCompanyCertificateData{
                     companyUuid: self.props.certificate.company_uuid.clone(),
-                    fileUuid: self.props.certificate.file.uuid.clone(),
+                    fileUuid: file_uuid,
                 };
                 spawn_local(async move {
                     let res = make_query(DeleteCompanyCertificate::build_query(delete_company_certificate::Variables {
@@ -95,36 +94,29 @@ impl Component for CompanyCertificateItem {
                 })
             },
             Msg::GetUpdateResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: bool = serde_json::from_value(res_value.get("updateCompanyCertificate").unwrap().clone()).unwrap();
+                match resp_parsing(res, "updateCompanyCertificate") {
+                    Ok(result) => {
                         debug!("Update company cert: {:?}", result);
                         self.get_result_update = result;
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::GetDeleteCertResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        self.get_result_delete = serde_json::from_value(res_value.get("deleteCompanyCertificate").unwrap().clone()).unwrap();
-                        debug!("Update company cert: {:?}", self.get_result_delete);
-
+                match resp_parsing(res, "deleteCompanyCertificate") {
+                    Ok(result) => {
+                        debug!("Update company cert: {:?}", result);
+                        self.get_result_delete = result;
                         if self.get_result_delete {
                             self.props.callback_delete_cert.emit(self.props.certificate.file.uuid.clone());
                         }
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::UpdateDescription(description) => self.request_update = description,
             Msg::ShowCert => self.show_cert = !self.show_cert,
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::ClearError => self.error = None,
             Msg::Ignore => {},
         }
@@ -142,214 +134,27 @@ impl Component for CompanyCertificateItem {
     }
 
     fn view(&self) -> Html {
-        match self.get_result_delete {
-            true => self.show_delete_certificate(),
-            false => {
-                match self.props.manage_btn {
-                    true => self.show_certificate_update(),
-                    false => html!{<>
-                        {self.modal_full_certificate()}
-                        {self.show_certificate_data()}
-                    </>},
-                }
-            },
-        }
-    }
-}
-
-impl CompanyCertificateItem {
-    fn show_certificate_update(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
-
-        let onclick_delete_cert = self.link.callback(|_| Msg::RequestDeleteCert);
-
-        let cert_url = match image_detector(&self.props.certificate.file.filename) {
-            true => self.props.certificate.file.download_url.clone(),
-            false => String::from("https://bulma.io/images/placeholders/128x128.png"),
+        let onclick_change_cert =
+            self.link.callback(|(file_uuid, description)| Msg::RequestUpdateDescription(file_uuid, description));
+        let onclick_delete_cert =
+            self.link.callback(|file_uuid| Msg::RequestDeleteCert(file_uuid));
+        let (onclick_change_cert, onclick_delete_cert) = match self.props.manage_btn {
+            true => (Some(onclick_change_cert), Some(onclick_delete_cert)),
+            false => (None, None),
         };
-
         html!{<>
-            <br/>
-            <div class="card">
-                <ListErrors error=self.error.clone() clear_error=onclick_clear_error.clone()/>
-                <br/>
-                <div class="media" >
-                  <div class="media-left">
-                    {match self.show_cert {
-                        true => html!{<figure class="image is-128x128" style="margin-left: 1rem" >
-                            <img
-                                src={cert_url}
-                                loading="lazy"
-                            />
-                        </figure>},
-                        false => html!{},
-                    }}
-                  </div>
-                  <div class="media-content" style="margin-right: 1rem;">
-                    <div class="block" style="overflow-wrap: anywhere">
-                        <span class="overflow-title has-text-weight-bold">{ get_value_field(&120) }</span> // Filename
-                        <span class="overflow-title">{self.props.certificate.file.filename.clone()}</span>
-                    </div>
-                    {self.show_update_block()}
-                    <div class="buttons">
-                      {self.show_certificate_btn()}
-                      <button id={"delete-cert"}
-                          class="button is-danger is-fullwidth has-text-weight-bold"
-                          onclick=onclick_delete_cert>
-                          { get_value_field(&135) } // Delete
-                      </button>
-                      {self.show_download_btn()}
-                    </div>
-                  </div>
-                </div>
-                <br/>
-            </div>
-        </>}
-    }
-
-    fn show_certificate_data(&self) -> Html {
-        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
-
-        let cert_url = match image_detector(&self.props.certificate.file.filename) {
-            true => self.props.certificate.file.download_url.clone(),
-            false => String::from("https://bulma.io/images/placeholders/128x128.png"),
-        };
-
-        html!{<div class="boxItem" >
-          <div class="innerBox" >
             <ListErrors error=self.error.clone() clear_error=onclick_clear_error.clone()/>
-            <div class="imgBox" >
-                <figure class="image is-256x256" >
-                    <img
-                        src={cert_url}
-                        loading="lazy"
-                    />
-                </figure>
-            </div>
-            <div class="overflow-title has-text-weight-bold">{self.props.certificate.description.clone()}</div>
-            <div class="btnBox">
-              {self.show_certificate_btn()}
-            </div>
-          </div>
-        </div>}
-    }
-
-    fn show_delete_certificate(&self) -> Html {
-        html!{<div class="card">
-            <div class="message is-success">
-              <div class="message-header">{ get_value_field(&89) }</div> // Success
-              <div class="message-body">{ get_value_field(&139) }</div> // This certificate removed!
-            </div>
-        </div>}
-    }
-
-    fn show_update_description(&self) -> Html {
-        match self.get_result_update {
-            true => html!{<div class="column">
-                <span id="remove-profile" class="tag is-info is-light">
-                    { get_value_field(&140) } // Description updated!
-                </span>
-            </div>},
-            false => html!{},
-        }
-    }
-
-    fn show_certificate_btn(&self) -> Html {
-        let onclick_show_cert = self.link.callback(|_| Msg::ShowCert);
-
-        let text_btn = match self.show_cert {
-            true => "Hide",
-            false => "Show",
-        };
-
-        match self.props.show_cert_btn {
-            true => html!{
-                <button id={"show-cert"}
-                    class="button is-light is-fullwidth has-text-weight-bold"
-                    onclick=onclick_show_cert>
-                    { text_btn }
-                </button>
-            },
-            false => html!{},
-        }
-    }
-
-    fn show_update_block(&self) -> Html {
-        let oninput_cert_description = self.link
-            .callback(|ev: InputData| Msg::UpdateDescription(ev.value));
-
-        let onclick_change_cert = self.link
-            .callback(|_| Msg::RequestUpdateDescription);
-
-        html!{<div class="block">
-            <div class="columns" style="margin-bottom: 0px">
-                <div class="column">
-                    <label class="label">{ get_value_field(&61) }</label> // Description
-                </div>
-                {self.show_update_description()}
-            </div>
-            <div class="columns">
-                <div class="column">
-                    <input
-                        id={"cert-description"}
-                        class="input"
-                        type="text"
-                        placeholder=get_value_field(&61)
-                        value={ self.request_update.to_string() }
-                        oninput=oninput_cert_description />
-                </div>
-                <div class="column">
-                    <button id={"change-cert"}
-                        class="button is-light is-fullwidth has-text-weight-bold"
-                        onclick=onclick_change_cert>
-                        { get_value_field(&46) } // Update
-                    </button>
-                </div>
-            </div>
-        </div>}
-    }
-
-    fn show_download_btn(&self) -> Html {
-        match self.props.download_btn {
-            true => html!{
-                <a id={"down-cert"}
-                    class="button is-light is-fullwidth has-text-weight-bold"
-                    href={ self.props.certificate.file.download_url.clone() }
-                    download={ self.props.certificate.file.filename.clone() }>
-                    { get_value_field(&126) }
-                </a>
-            },
-            false => html!{},
-        }
-    }
-
-    fn modal_full_certificate(&self) -> Html {
-        let onclick_show_cert = self.link.callback(|_| Msg::ShowCert);
-
-        let class_modal = match &self.show_cert {
-            true => "modal is-active",
-            false => "modal",
-        };
-
-        let cert_url = match image_detector(&self.props.certificate.file.filename) {
-            true => self.props.certificate.file.download_url.clone(),
-            false => String::from("https://bulma.io/images/placeholders/128x128.png"),
-        };
-
-        html!{
-            <div class=class_modal>
-              <div class="modal-background" onclick=onclick_show_cert.clone() />
-              <div class="modal-content">
-                <p class="image is-4by3">
-                  // <img src="https://bulma.io/images/placeholders/1280x960.png" alt="" />
-                  <img
-                    src={cert_url}
-                    loading="lazy"
-                  />
-                </p>
-              </div>
-              <button class="modal-close is-large" aria-label="close" onclick=onclick_show_cert />
-            </div>
-        }
+            <CertificateItem
+                certificate={Certificate::from(self.props.certificate.clone())}
+                show_cert_btn={self.props.show_cert_btn}
+                download_btn={self.props.download_btn}
+                manage_btn={self.props.manage_btn}
+                get_result_update={self.get_result_update}
+                get_result_delete={self.get_result_delete}
+                callback_update_descript={onclick_change_cert}
+                callback_delete_cert={onclick_delete_cert}
+                />
+        </>}
     }
 }

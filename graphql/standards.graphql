@@ -238,6 +238,7 @@ fragment typeAccessFields on TypeAccessTranslateList {
 fragment showFileRelatedDataFields on ShowFileRelatedData {
   uuid
   filename
+  revision
   parentFileUuid
   ownerUser {
     ...showUserShortFields

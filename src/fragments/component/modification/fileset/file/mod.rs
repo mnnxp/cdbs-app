@@ -1,13 +1,10 @@
 mod list_item;
-mod table_item;
 
 pub use list_item::FilesetFileItem;
-pub use table_item::FileOfFilesetItem;
 
 use std::collections::BTreeSet;
 use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
 use log::debug;
-// use crate::error::{get_error, Error};
 use crate::types::{UUID, ShowFileInfo};
 use crate::services::get_value_field;
 

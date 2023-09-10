@@ -9,7 +9,7 @@ pub use file::{ModificationFilesTableCard, ManageModificationFilesCard};
 pub use edit::ModificationsTableEdit;
 pub use heads::ModificationTableHeads;
 pub use item::ModificationTableItem;
-pub use fileset::{FilesOfFilesetCard, FileOfFilesetItem, ManageFilesOfFilesetBlock};
+pub use fileset::{FilesOfFilesetCard, ManageFilesOfFilesetBlock};
 pub use item_module::ModificationTableItemModule;
 
 use std::collections::HashMap;

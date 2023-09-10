@@ -1,21 +1,16 @@
 use std::collections::{HashMap, BTreeMap};
-use yew::{
-    html, Callback, Component, ComponentLink,
-    Html, Properties, ShouldRender, InputData,
-    // ChangeData,
-};
+use yew::{html, Callback, Component, ComponentLink, Html, Properties, ShouldRender, InputData};
 use log::debug;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
 use super::ModificationTableItemModule;
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::{
     list_errors::ListErrors,
     component::param::RegisterParamnameBlock,
 };
-use crate::services::get_value_field;
+use crate::services::{get_value_field, resp_parsing};
 use crate::types::{UUID, Param, ParamValue};
 use crate::gqls::{
     make_query,
@@ -74,6 +69,7 @@ pub enum Msg {
     ShowNewParamCard,
     ShowAddParamCard(usize),
     ShowEditParamCard(usize),
+    ResponseError(Error),
     ClearError,
     Ignore,
 }
@@ -171,15 +167,8 @@ impl Component for ModificationTableItem {
                 })
             },
             Msg::GetParamsListResult(res) => {
-                // debug!("GetParamsListResult: {:?}", res);
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: Vec<Param> = serde_json::from_value(
-                            res_value.get("params").unwrap().clone()
-                        ).unwrap();
+                match resp_parsing::<Vec<Param>>(res, "params") {
+                    Ok(result) => {
                         for x in result.iter() {
                             self.params_list.insert(x.param_id, x.clone());
                         }
@@ -192,26 +181,20 @@ impl Component for ModificationTableItem {
                             self.request_add_param.param_id = param.param_id;
                         };
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::GetAddParamResult(res) => {
                 debug!("GetAddParamResult: {:?}", res);
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        self.get_add_param_card = serde_json::from_value(
-                            res_value.get("putModificationParams").unwrap().clone()
-                        ).unwrap();
+                match resp_parsing(res, "putModificationParams") {
+                    Ok(result) => {
+                        self.get_add_param_card = result;
                         debug!("putModificationParams: {:?}", self.get_add_param_card);
                         if self.get_add_param_card > 0 {
                             self.collect_item.insert(
                                 self.request_add_param.param_id,
                                 self.request_add_param.value.clone()
                             );
-
                             match self.open_add_param_card {
                                 true => self.open_add_param_card = false,
                                 false => {
@@ -222,23 +205,17 @@ impl Component for ModificationTableItem {
                                     }
                                 },
                             }
-
                             self.request_add_param = ParamValue::default();
                         }
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::GetUpdateParamResult(res) => {
                 debug!("GetUpdateParamResult: {:?}", res);
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        self.get_change_param_card = serde_json::from_value(
-                            res_value.get("putModificationParams").unwrap().clone()
-                        ).unwrap();
+                match resp_parsing(res, "putModificationParams") {
+                    Ok(result) => {
+                        self.get_change_param_card = result;
                         debug!("putModificationParams: {:?}", self.get_change_param_card);
                         if self.get_change_param_card > 0 {
                             self.collect_item.insert(
@@ -249,19 +226,14 @@ impl Component for ModificationTableItem {
                             self.open_edit_param_card = false;
                         }
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::GetDeleteParamResult(res) => {
                 debug!("GetDeleteParamResult: {:?}", res);
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        self.get_change_param_card = serde_json::from_value(
-                            res_value.get("deleteModificationParams").unwrap().clone()
-                        ).unwrap();
+                match resp_parsing(res, "deleteModificationParams") {
+                    Ok(result) => {
+                        self.get_change_param_card = result;
                         debug!("deleteModificationParams: {:?}", self.get_change_param_card);
                         if self.get_change_param_card > 0 {
                             self.collect_item.remove(&self.request_edit_param.param_id);
@@ -269,7 +241,7 @@ impl Component for ModificationTableItem {
                             self.open_edit_param_card = false;
                         }
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::SelectModification => {
@@ -332,6 +304,7 @@ impl Component for ModificationTableItem {
                     debug!("Select modification uuid {:?}", self.modification_uuid);
                 }
             },
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::ClearError => self.error = None,
             Msg::Ignore => {},
         }
@@ -366,22 +339,16 @@ impl Component for ModificationTableItem {
 
 impl ModificationTableItem {
     fn show_modification_row(&self) -> Html {
-        let onclick_select_modification = self.link
-            .callback(|_| Msg::SelectModification);
-
-        let onclick_show_modification_files = self.link
-            .callback(|_| Msg::ShowModificationFilesList);
-
+        let onclick_select_modification = self.link.callback(|_| Msg::SelectModification);
+        let onclick_show_modification_files = self.link.callback(|_| Msg::ShowModificationFilesList);
         let class_style = match &self.props.select_item {
             true => "is-selected",
             false => "",
         };
-
         let files_click_icon = match &self.props.open_modification_files {
             true => "far fa-folder-open",
             false => "far fa-folder",
         };
-
         let (double_click_text, double_click_icon) = match &self.props.show_manage_btn {
             true => (get_value_field(&127), "fas fa-pencil-ruler"), // edit
             false => (get_value_field(&128), "fas fa-info"), // info
@@ -428,12 +395,10 @@ impl ModificationTableItem {
 
     fn show_items(&self) -> Html {
         let onclick_new_param_card = self.link.callback(|_| Msg::ShowNewParamCard);
-
-        let onclick_add_param_card = self.link
-            .callback(|value: usize| Msg::ShowAddParamCard(value));
-
-        let onclick_edit_param_card = self.link
-            .callback(|value: usize| Msg::ShowEditParamCard(value));
+        let onclick_add_param_card =
+            self.link.callback(|value: usize| Msg::ShowAddParamCard(value));
+        let onclick_edit_param_card =
+            self.link.callback(|value: usize| Msg::ShowEditParamCard(value));
 
         match self.props.show_manage_btn {
             true => html!{<>
@@ -479,12 +444,9 @@ impl ModificationTableItem {
 
     fn modal_new_value(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
-
         let onclick_add_new_param =
             self.link.callback(|(param_id, param_value)| Msg::RequestAddNewParam(param_id, param_value));
-
         let onclick_close_param_card = self.link.callback(|_| Msg::ShowNewParamCard);
-
         let class_modal = match &self.open_new_param_card {
             true => "modal is-active",
             false => "modal",
@@ -513,16 +475,9 @@ impl ModificationTableItem {
 
     fn modal_add_value(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
-
-        let oninput_param_value = self.link
-            .callback(|ev: InputData| Msg::UpdateValue(ev.value));
-
-        let onclick_close_add_param = self.link
-            .callback(|_| Msg::ShowAddParamCard(0));
-
-        let onclick_param_add = self.link
-            .callback(|_| Msg::RequestAddParamData);
-
+        let oninput_param_value = self.link.callback(|ev: InputData| Msg::UpdateValue(ev.value));
+        let onclick_close_add_param = self.link.callback(|_| Msg::ShowAddParamCard(0));
+        let onclick_param_add = self.link.callback(|_| Msg::RequestAddParamData);
         let class_modal = match &self.open_add_param_card {
             true => "modal is-active",
             false => "modal",
@@ -566,19 +521,10 @@ impl ModificationTableItem {
 
     fn modal_change_value(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
-
-        let oninput_param_value = self.link
-            .callback(|ev: InputData| Msg::UpdateValue(ev.value));
-
-        let onclick_edit_param_card = self.link
-            .callback(|_| Msg::ShowEditParamCard(0));
-
-        let onclick_param_update = self.link
-            .callback(|_| Msg::RequestUpdateParamData);
-
-        let onclick_delete_param = self.link
-            .callback(|_| Msg::RequestDeleteParamData);
-
+        let oninput_param_value = self.link.callback(|ev: InputData| Msg::UpdateValue(ev.value));
+        let onclick_edit_param_card = self.link.callback(|_| Msg::ShowEditParamCard(0));
+        let onclick_param_update = self.link.callback(|_| Msg::RequestUpdateParamData);
+        let onclick_delete_param = self.link.callback(|_| Msg::RequestDeleteParamData);
         let class_modal = match &self.open_edit_param_card {
             true => "modal is-active",
             false => "modal",

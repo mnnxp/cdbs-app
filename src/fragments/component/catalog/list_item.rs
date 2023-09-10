@@ -1,7 +1,7 @@
-use yew::prelude::*;
+use yew::{agent::Bridged, Callback, classes, html, Bridge, Component, ComponentLink, Html, Properties, ShouldRender};
 use yew_router::{
     agent::RouteRequest::ChangeRoute,
-    prelude::*,
+    prelude::RouteAgent,
 };
 // use log::debug;
 use crate::services::get_value_field;
@@ -178,7 +178,7 @@ impl ListItem {
                             Some(l) => html!{format!("{}: {}", get_value_field(&162), &l.name)}, // License
                             None => html!{},
                         }}
-                        // <div class="tags">
+                        // <div>
                         //   {for licenses.iter().map(|x| html!{
                         //       <span class="tag is-info is-light">{x.name.clone()}</span>
                         //   })}

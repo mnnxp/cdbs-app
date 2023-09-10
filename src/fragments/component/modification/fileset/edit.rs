@@ -1,29 +1,21 @@
-use yew::services::fetch::FetchTask;
-use yew::services::reader::{File, FileData, ReaderService, ReaderTask};
-use yew::{Component, Callback, ComponentLink, Html, Properties, ShouldRender, html, ChangeData};
+use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html, ChangeData};
 use log::debug;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
-use web_sys::FileList;
 
 use super::FilesetFilesBlock;
-use crate::services::{PutUploadFile, UploadData, get_value_field};
-use crate::error::{get_error, Error};
+use crate::services::{get_value_field, resp_parsing};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
+use crate::fragments::file::UploaderFiles;
 use crate::types::{UUID, ShowFileInfo, Program, UploadFile};
-use crate::gqls::{
-    make_query,
-    relate::{
-        GetPrograms, get_programs,
-        ConfirmUploadCompleted, confirm_upload_completed,
-    },
-    component::{
-        ComModFilesOfFileset, com_mod_files_of_fileset,
-        RegisterModificationFileset, register_modification_fileset,
-        DeleteModificationFileset, delete_modification_fileset,
-        UploadFilesToFileset, upload_files_to_fileset,
-    },
+use crate::gqls::make_query;
+use crate::gqls::relate::{GetPrograms, get_programs};
+use crate::gqls::component::{
+    ComModFilesOfFileset, com_mod_files_of_fileset,
+    RegisterModificationFileset, register_modification_fileset,
+    DeleteModificationFileset, delete_modification_fileset,
+    UploadFilesToFileset, upload_files_to_fileset,
 };
 
 type FileName = String;
@@ -37,24 +29,14 @@ pub struct Props {
 pub struct ManageModificationFilesets {
     error: Option<Error>,
     request_upload_data: Vec<UploadFile>,
-    request_upload_file: Callback<Result<Option<String>, Error>>,
-    request_upload_confirm: Vec<UUID>,
     request_fileset_program_id: usize,
-    task_read: Vec<(FileName, ReaderTask)>,
-    task: Vec<FetchTask>,
     props: Props,
     link: ComponentLink<Self>,
     filesets_program: Vec<(UUID, String)>,
     select_fileset_uuid: UUID,
     files_list: Vec<ShowFileInfo>,
     programs: Vec<Program>,
-    put_upload_file: PutUploadFile,
-    files: Vec<File>,
-    files_index: u32,
     open_add_fileset_card: bool,
-    get_result_up_file: bool,
-    get_result_up_completed: usize,
-    active_loading_files_btn: bool,
 }
 
 pub enum Msg {
@@ -62,26 +44,19 @@ pub enum Msg {
     RequestNewFileset,
     RequestDeleteFileset,
     RequestFilesOfFileset,
-    RequestUploadFilesOfFileset,
-    RequestUploadFile(Vec<u8>),
-    ResponseUploadFile(Result<Option<String>, Error>),
-    RequestUploadCompleted,
+    RequestUploadFilesOfFileset(Vec<FileName>),
     ResponseError(Error),
     GetProgramsListResult(String),
     GetNewFilesetResult(String),
     GetDeleteFilesetResult(String),
     GetFilesOfFilesetResult(String),
     GetUploadData(String),
-    GetUploadFile,
-    GetUploadCompleted(String),
-    UpdateFiles(FileList),
+    UploadConfirm(usize),
     FinishUploadFiles,
     SelectFileset(UUID),
     UpdateSelectProgramId(String),
     ShowAddFilesetCard,
-    ClearFilesBoxed,
     ClearError,
-    Ignore,
 }
 
 impl Component for ManageModificationFilesets {
@@ -102,24 +77,14 @@ impl Component for ManageModificationFilesets {
         Self {
             error: None,
             request_upload_data: Vec::new(),
-            request_upload_file: link.callback(Msg::ResponseUploadFile),
-            request_upload_confirm: Vec::new(),
             request_fileset_program_id: 1,
-            task_read: Vec::new(),
-            task: Vec::new(),
             props,
             link,
             filesets_program,
             select_fileset_uuid,
             files_list: Vec::new(),
             programs: Vec::new(),
-            put_upload_file: PutUploadFile::new(),
-            files: Vec::new(),
-            files_index: 0,
             open_add_fileset_card: false,
-            get_result_up_file: false,
-            get_result_up_completed: 0,
-            active_loading_files_btn: false,
         }
     }
 
@@ -185,73 +150,27 @@ impl Component for ManageModificationFilesets {
                     })
                 }
             },
-            Msg::RequestUploadFilesOfFileset => {
-                if !self.files.is_empty() && self.select_fileset_uuid.len() == 36 {
-                    // see loading button
-                    self.active_loading_files_btn = true;
-
-                    let mut filenames: Vec<String> = Vec::new();
-                    for file in &self.files {filenames.push(file.name().clone());}
-                    debug!("filenames: {:?}", filenames);
-                    let fileset_uuid = self.select_fileset_uuid.clone();
-
-                    spawn_local(async move {
-                        let ipt_modification_file_from_fileset_data = upload_files_to_fileset::IptModificationFileFromFilesetData{
-                            filesetUuid: fileset_uuid,
-                            filenames,
-                        };
-                        let res = make_query(UploadFilesToFileset::build_query(
-                            upload_files_to_fileset::Variables{ ipt_modification_file_from_fileset_data }
-                        )).await.unwrap();
-                        link.send_message(Msg::GetUploadData(res));
-                    })
+            Msg::RequestUploadFilesOfFileset(filenames) => {
+                debug!("filenames: {:?}", filenames);
+                if self.select_fileset_uuid.len() != 36 || filenames.is_empty() {
+                    return false
                 }
-            },
-            Msg::RequestUploadFile(data) => {
-                if let Some(upload_data) = self.request_upload_data.pop() {
-                    let request = UploadData {
-                        upload_url: upload_data.upload_url.to_string(),
-                        file_data: data,
-                    };
-                    debug!("request: {:?}", request);
-
-                    self.task.push(self.put_upload_file.put_file(request, self.request_upload_file.clone()));
-                    self.request_upload_confirm.push(upload_data.file_uuid.clone());
-                };
-            },
-            Msg::RequestUploadCompleted => {
-                let file_uuids = self.request_upload_confirm.clone();
+                let fileset_uuid = self.select_fileset_uuid.clone();
                 spawn_local(async move {
-                    let res = make_query(ConfirmUploadCompleted::build_query(
-                        confirm_upload_completed::Variables { file_uuids }
+                    let ipt_modification_file_from_fileset_data = upload_files_to_fileset::IptModificationFileFromFilesetData{
+                        filesetUuid: fileset_uuid,
+                        filenames,
+                    };
+                    let res = make_query(UploadFilesToFileset::build_query(
+                        upload_files_to_fileset::Variables{ ipt_modification_file_from_fileset_data }
                     )).await.unwrap();
-                    // debug!("ConfirmUploadCompleted: {:?}", res);
-                    link.send_message(Msg::GetUploadCompleted(res));
-                });
-            },
-            Msg::ResponseUploadFile(Ok(res)) => {
-                debug!("ResponseUploadFile: {:?}", res);
-                link.send_message(Msg::GetUploadFile)
-            },
-            Msg::ResponseUploadFile(Err(err)) => {
-                self.error = Some(err);
-                self.task.clear();
-                self.task_read.clear();
-                self.files_index = 0;
-                self.request_upload_confirm.clear();
-                self.get_result_up_completed = 0;
-                self.active_loading_files_btn = false;
+                    link.send_message(Msg::GetUploadData(res));
+                })
             },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetProgramsListResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        let result: Vec<Program> = serde_json::from_value(
-                            res.get("programs").unwrap().clone()
-                        ).unwrap();
+                match resp_parsing::<Vec<Program>>(res, "programs") {
+                    Ok(result) => {
                         // debug!("programs: {:?}", result);
                         self.programs.clear();
                         for x in result.iter() {
@@ -260,28 +179,20 @@ impl Component for ManageModificationFilesets {
                                 continue;
                             }
                         }
-
                         if let Some(program) = self.programs.first() {
                             self.request_fileset_program_id = program.id;
                         }
                     },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::GetNewFilesetResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        self.select_fileset_uuid = serde_json::from_value(
-                            res.get("registerModificationFileset").unwrap().clone()
-                        ).unwrap();
-                        // debug!("registerModificationFileset: {:?}", self.select_fileset_uuid);
-
+                match resp_parsing(res, "registerModificationFileset") {
+                    Ok(result) => {
+                        self.select_fileset_uuid = result;
+                        debug!("registerModificationFileset: {:?}", self.select_fileset_uuid);
                         // clear shown files (new fileset always empty)
                         self.files_list.clear();
-
                         if let Some(program) = self.programs.iter().find(|x| x.id == self.request_fileset_program_id) {
                             if let None = self.filesets_program.iter().find(|(_, p_name)| p_name == &program.name) {
                                 self.filesets_program.push((
@@ -290,142 +201,72 @@ impl Component for ManageModificationFilesets {
                                 ));
                             }
                         }
-
                         self.open_add_fileset_card = false;
                     },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::GetDeleteFilesetResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        let result: bool = serde_json::from_value(
-                            res.get("deleteModificationFileset").unwrap().clone()
-                        ).unwrap();
-                        // debug!("deleteModificationFileset: {:?}", self.select_fileset_uuid);
-                        if result {
-                            let mut update_filesets: Vec<(UUID, String)> = Vec::new();
-
-                            // for set next item after delete
-                            let delete_fileset_uuid = self.select_fileset_uuid.clone();
-                            self.select_fileset_uuid = String::new();
-                            let mut flag_delete = false;
-
-                            for x in self.filesets_program.iter() {
-                                if flag_delete {
-                                    self.select_fileset_uuid = x.0.clone();
-                                    flag_delete = false;
-                                    // debug!("self.select_fileset_uuid: {:?}", self.select_fileset_uuid);
-                                }
-
-                                if x.0 != delete_fileset_uuid {
-                                    update_filesets.push(x.clone());
-                                } else {
-                                    flag_delete = true;
-                                }
-                            }
-
-                            if self.select_fileset_uuid.is_empty() {
-                                self.select_fileset_uuid = update_filesets
-                                    .first()
-                                    .map(|(fileset_uuid, _)| fileset_uuid.clone())
-                                    .unwrap_or_default();
-                            }
-
-                            self.filesets_program = update_filesets;
-
-                            self.link.send_message(Msg::RequestFilesOfFileset);
+                match resp_parsing::<bool>(res, "deleteModificationFileset") {
+                    Ok(result) => {
+                        debug!("deleteModificationFileset: {:?}", result);
+                        if !result {
+                            return false
                         }
+                        let mut update_filesets: Vec<(UUID, String)> = Vec::new();
+                        // for set next item after delete
+                        let delete_fileset_uuid = self.select_fileset_uuid.clone();
+                        self.select_fileset_uuid = String::new();
+                        let mut flag_delete = false;
+                        for x in self.filesets_program.iter() {
+                            if flag_delete {
+                                self.select_fileset_uuid = x.0.clone();
+                                flag_delete = false;
+                            }
+                            if x.0 != delete_fileset_uuid {
+                                update_filesets.push(x.clone());
+                            } else {
+                                flag_delete = true;
+                            }
+                        }
+                        if self.select_fileset_uuid.is_empty() {
+                            self.select_fileset_uuid = update_filesets
+                                .first()
+                                .map(|(fileset_uuid, _)| fileset_uuid.clone())
+                                .unwrap_or_default();
+                        }
+                        self.filesets_program = update_filesets;
+                        self.link.send_message(Msg::RequestFilesOfFileset);
                     },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::GetFilesOfFilesetResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        self.files_list = serde_json::from_value(
-                            res.get("componentModificationFilesOfFileset").unwrap().clone()
-                        ).unwrap();
+                match resp_parsing(res, "componentModificationFilesOfFileset") {
+                    Ok(result) => {
+                        self.files_list = result;
                         debug!("componentModificationFilesOfFileset: {:?}", self.files_list.len());
                     },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::GetUploadData(res) => {
-                let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        self.request_upload_data = serde_json::from_value(res_value.get("uploadFilesToFileset").unwrap().clone()).unwrap();
-                        debug!("uploadFilesToFileset {:?}", self.request_upload_data);
-
-                        if !self.files.is_empty() {
-                            for file in self.files.iter().rev() {
-                                let file_name = file.name().clone();
-                                debug!("file name: {:?}", file_name);
-                                let task = {
-                                    let callback = self.link
-                                        .callback(move |data: FileData| Msg::RequestUploadFile(data.content));
-                                    ReaderService::read_file(file.clone(), callback).unwrap()
-                                };
-                                self.task_read.push((file_name, task));
-                            }
-                        }
-                        debug!("file: {:#?}", self.files);
+                match resp_parsing(res, "uploadFilesToFileset") {
+                    Ok(result) => {
+                        self.request_upload_data = result;
+                        debug!("uploadFilesToFileset: {:?}", self.request_upload_data);
                     },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
-            Msg::GetUploadFile => {
-                debug!("next: {:?}", self.files_index);
-                self.files_index -= 1;
-                if self.files_index == 0 {
-                    self.get_result_up_file = true;
-                    debug!("finish: {:?}", self.request_upload_confirm.len());
-                    link.send_message(Msg::RequestUploadCompleted);
-                }
-            },
-            Msg::GetUploadCompleted(res) => {
-                let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        self.get_result_up_completed = serde_json::from_value(
-                            res_value.get("uploadCompleted").unwrap().clone()
-                        ).unwrap();
-                        debug!("uploadCompleted: {:?}", self.get_result_up_completed);
-
-                        link.send_message(Msg::FinishUploadFiles);
-                    },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
-                }
-            },
-            Msg::UpdateFiles(files) => {
-                while let Some(file) = files.get(self.files_index) {
-                    debug!("self.files_index: {:?}", self.files_index);
-                    self.files_index += 1;
-                    self.active_loading_files_btn = false;
-                    self.files.push(file.clone());
-                }
-                // self.files_index = 0;
+            Msg::UploadConfirm(confirmations) => {
+                debug!("Confirmation upload of files: {:?}", confirmations);
+                link.send_message(Msg::FinishUploadFiles);
             },
             Msg::FinishUploadFiles => {
+                self.request_upload_data.clear();
                 self.files_list.clear();
                 link.send_message(Msg::RequestFilesOfFileset);
-                self.active_loading_files_btn = false;
-                self.task.clear();
-                self.task_read.clear();
-                self.request_upload_confirm.clear();
-                self.files.clear();
-                self.files_index = 0;
             },
             Msg::SelectFileset(fileset_uuid) => {
                 debug!("SelectFileset: {:?}", fileset_uuid);
@@ -442,12 +283,7 @@ impl Component for ManageModificationFilesets {
                     link.send_message(Msg::RequestProgramsList);
                 }
             },
-            Msg::ClearFilesBoxed => {
-                self.files.clear();
-                self.files_index = 0;
-            },
             Msg::ClearError => self.error = None,
-            Msg::Ignore => {},
         }
         true
     }
@@ -479,7 +315,14 @@ impl Component for ManageModificationFilesets {
 
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
-
+        let callback_upload_filenames =
+            self.link.callback(move |filenames| Msg::RequestUploadFilesOfFileset(filenames));
+        let request_upload_files = match self.request_upload_data.is_empty() {
+            true => None,
+            false => Some(self.request_upload_data.clone()),
+        };
+        let callback_upload_confirm =
+            self.link.callback(|confirmations| Msg::UploadConfirm(confirmations));
         html!{<>
             <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
             {self.modal_add_fileset()}
@@ -487,12 +330,17 @@ impl Component for ManageModificationFilesets {
             // <br/>
             <div class="columns">
                 <div class="column">
-                    <h2>{ get_value_field(&198) }</h2> // Files of fileset
+                    <h2>{get_value_field(&198)}</h2> // Files of fileset
                     {self.show_fileset_files()}
                 </div>
                 <div class="column">
-                    <h2>{ get_value_field(&197) }</h2> // Upload files for fileset
-                    {self.show_frame_upload_files()}
+                    <h2>{get_value_field(&197)}</h2> // Upload files for fileset
+                    <UploaderFiles
+                        text_choose_files={195} // Choose fileset files…
+                        callback_upload_filenames={callback_upload_filenames}
+                        request_upload_files={request_upload_files}
+                        callback_upload_confirm={callback_upload_confirm}
+                        />
                 </div>
             </div>
         </>}
@@ -539,7 +387,7 @@ impl ManageModificationFilesets {
                         <span class="icon" >
                             <i class="fa fa-trash" aria-hidden="true"></i>
                         </span>
-                        <span>{ get_value_field(&135) }</span>
+                        <span>{get_value_field(&135)}</span>
                     </button>
                     <button
                       id="add-modification-fileset"
@@ -549,7 +397,7 @@ impl ManageModificationFilesets {
                         <span class="icon" >
                             <i class="fas fa-plus" aria-hidden="true"></i>
                         </span>
-                        <span>{ get_value_field(&196) }</span> // Add fileset
+                        <span>{get_value_field(&196)}</span> // Add fileset
                     </button>
                 </div>
             </div>
@@ -558,15 +406,12 @@ impl ManageModificationFilesets {
 
     fn modal_add_fileset(&self) -> Html {
         let onclick_new_fileset_card = self.link.callback(|_| Msg::ShowAddFilesetCard);
-
         let onclick_add_fileset_btn = self.link.callback(|_| Msg::RequestNewFileset);
-
-        let onchange_select_program_id = self.link
-            .callback(|ev: ChangeData| Msg::UpdateSelectProgramId(match ev {
+        let onchange_select_program_id =
+            self.link.callback(|ev: ChangeData| Msg::UpdateSelectProgramId(match ev {
               ChangeData::Select(el) => el.value(),
               _ => String::new(),
-          }));
-
+            }));
         let class_modal = match &self.open_add_fileset_card {
             true => "modal is-active",
             false => "modal",
@@ -577,13 +422,13 @@ impl ManageModificationFilesets {
             <div class="card">
               <div class="modal-content">
                 <header class="modal-card-head">
-                    <p class="modal-card-title">{ get_value_field(&206) }</p> // Create new fileset
+                    <p class="modal-card-title">{get_value_field(&206)}</p> // Create new fileset
                     <button class="delete" aria-label="close" onclick=onclick_new_fileset_card.clone() />
                 </header>
                 <div class="box itemBox">
                   <article class="media center-media">
                       <div class="media-content">
-                      <label class="label">{ get_value_field(&207) }</label> // Program for fileset
+                      <label class="label">{get_value_field(&207)}</label> // Program for fileset
                       <div class="select">
                           <select
                               id="set-fileset-program"
@@ -606,7 +451,7 @@ impl ManageModificationFilesets {
                           class="button"
                           disabled={self.props.select_modification_uuid.is_empty()}
                           onclick={onclick_add_fileset_btn} >
-                          { get_value_field(&117) }
+                          {get_value_field(&117)}
                       </button>
                     </div>
                   </article>
@@ -624,85 +469,6 @@ impl ManageModificationFilesets {
                 select_fileset_uuid = self.select_fileset_uuid.clone()
                 files = self.files_list.clone()
             />
-        }
-    }
-
-    fn show_frame_upload_files(&self) -> Html {
-        let onchange_upload_files = self.link.callback(move |value| {
-            if let ChangeData::Files(files) = value {
-                Msg::UpdateFiles(files)
-            } else {
-                Msg::Ignore
-            }
-        });
-
-        html!{<div class="block">
-            <div class="file has-name is-boxed is-centered">
-                <label class="file-label" style="width: 100%">
-                  <input id="component-file-input"
-                  class="file-input"
-                  type="file"
-                  // accept="image/*,application/vnd*,application/rtf,text/*,.pdf"
-                  onchange={onchange_upload_files}
-                  multiple=true />
-                <span class="file-cta">
-                  <span class="file-icon">
-                    <i class="fas fa-upload"></i>
-                  </span>
-                  <span class="file-label">
-                    { get_value_field(&195) } // Choose fileset files…
-                  </span>
-                </span>
-                {match self.files.is_empty() {
-                    true => html!{<span class="file-name">{ get_value_field(&194) }</span>}, // No file uploaded
-                    false => html!{for self.files.iter().map(|f| html!{
-                        <span class="file-name">{f.name().clone()}</span>
-                    })}
-                }}
-              </label>
-            </div>
-            <div class="buttons">
-                {self.show_clear_btn()}
-                {self.show_upload_files_btn()}
-            </div>
-        </div>}
-    }
-
-    fn show_clear_btn(&self) -> Html {
-        let onclick_clear_boxed = self.link.callback(|_| Msg::ClearFilesBoxed);
-
-        html!{
-            <button id="clear-upload-fileset-files"
-              class="button"
-              onclick=onclick_clear_boxed
-              disabled={self.files.is_empty()} >
-                // <span class="icon" >
-                //     <i class="fas fa-boom" aria-hidden="true"></i>
-                // </span>
-                <span>{ get_value_field(&88) }</span>
-            </button>
-        }
-    }
-
-    fn show_upload_files_btn(&self) -> Html {
-        let onclick_upload_files = self.link.callback(|_| Msg::RequestUploadFilesOfFileset);
-
-        let class_upload_btn = match self.active_loading_files_btn {
-            true => "button is-loading",
-            false => "button",
-        };
-
-        html!{
-            <button
-              id="upload-fileset-files"
-              class={class_upload_btn}
-              disabled={self.files.is_empty() || self.select_fileset_uuid.len() != 36}
-              onclick={onclick_upload_files} >
-                // <span class="icon" >
-                //     <i class="fas fa-angle-double-up" aria-hidden="true"></i>
-                // </span>
-                <span>{ get_value_field(&87) }</span>
-            </button>
         }
     }
 }

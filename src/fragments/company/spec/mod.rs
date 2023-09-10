@@ -1,12 +1,10 @@
 mod item;
 mod search;
-
 pub use item::SpecTagItem;
 pub use search::SearchSpecsTags;
 
 use yew::{Callback, Component, ComponentLink, Html, Properties, ShouldRender, html};
 // use log::debug;
-// use crate::error::{get_error, Error};
 use crate::types::{UUID, Spec};
 
 #[derive(Clone, Debug, Properties)]

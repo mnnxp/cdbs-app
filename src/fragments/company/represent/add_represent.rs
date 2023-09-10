@@ -1,15 +1,11 @@
-use yew::{
-    html, Component, Callback, ComponentLink,
-    Html, InputData, ChangeData, Properties, ShouldRender,
-};
+use yew::{html, Component, Callback, ComponentLink, Html, InputData, ChangeData, Properties, ShouldRender};
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
 
-use crate::services::{is_authenticated, get_value_field};
+use crate::services::{is_authenticated, get_value_field, resp_parsing, get_value_response, get_from_value};
 use crate::fragments::list_errors::ListErrors;
-use crate::error::{Error, get_error};
+use crate::error::Error;
 use crate::types::{UUID, Region, RepresentationType, RegisterCompanyRepresentInfo};
 use crate::gqls::make_query;
 use crate::gqls::company::{
@@ -26,6 +22,7 @@ pub enum Msg {
     UpdateAddress(String),
     UpdatePhone(String),
     UpdateList(String),
+    ResponseError(Error),
     ClearData,
     ClearError,
 }
@@ -96,47 +93,29 @@ impl Component for AddCompanyRepresentCard {
                 })
             },
             Msg::GetRegisterResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: bool = serde_json::from_value(res_value.get("registerCompanyRepresent").unwrap().clone()).unwrap();
-                        debug!("Register company represent: {:?}", result);
-                        self.get_result_register = result;
-                    },
-                    true => self.error = Some(get_error(&data)),
+                match resp_parsing(res, "registerCompanyRepresent") {
+                    Ok(result) => self.get_result_register = result,
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
+                debug!("Register company represent: {:?}", self.get_result_register);
             },
-            Msg::UpdateRegionId(region_id) => {
-                self.request_register.region_id = region_id.parse::<usize>().unwrap_or_default();
-            },
-            Msg::UpdateRepresentationTypeId(representation_type_id) => {
-                self.request_register.representation_type_id = representation_type_id.parse::<usize>().unwrap_or_default();
-            },
-            Msg::UpdateName(name) => {
-                self.request_register.name = name;
-            },
-            Msg::UpdateAddress(address) => {
-                self.request_register.address = address;
-            },
-            Msg::UpdatePhone(phone) => {
-                self.request_register.phone = phone;
-            },
+            Msg::UpdateRegionId(region_id) =>
+                self.request_register.region_id = region_id.parse::<usize>().unwrap_or_default(),
+            Msg::UpdateRepresentationTypeId(representation_type_id) =>
+                self.request_register.representation_type_id = representation_type_id.parse::<usize>().unwrap_or_default(),
+            Msg::UpdateName(name) => self.request_register.name = name,
+            Msg::UpdateAddress(address) => self.request_register.address = address,
+            Msg::UpdatePhone(phone) => self.request_register.phone = phone,
             Msg::UpdateList(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-                match res_value.is_null() {
-                    false => {
-                        // debug!("Result: {:#?}", res_value.clone);
-                        self.regions =
-                            serde_json::from_value(res_value.get("regions").unwrap().clone()).unwrap();
-                        self.represent_types =
-                            serde_json::from_value(res_value.get("companyRepresentTypes").unwrap().clone()).unwrap();
+                match get_value_response(res) {
+                    Ok(ref value) => {
+                        self.regions = get_from_value(value, "regions").unwrap_or_default();
+                        self.represent_types = get_from_value(value, "companyRepresentTypes").unwrap_or_default();
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::ClearData => {
                 self.error = None;
                 self.request_register = RegisterCompanyRepresentInfo::default();
@@ -216,24 +195,19 @@ impl AddCompanyRepresentCard {
     }
 
     fn new_represent_block(&self) -> Html {
-        let oninput_region_id = self
-            .link
-            .callback(|ev: ChangeData| Msg::UpdateRegionId(match ev {
+        let oninput_region_id =
+            self.link.callback(|ev: ChangeData| Msg::UpdateRegionId(match ev {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
-          }));
-        let oninput_representation_type_id = self
-            .link
-            .callback(|ev: ChangeData| Msg::UpdateRepresentationTypeId(match ev {
+            }));
+        let oninput_representation_type_id =
+            self.link.callback(|ev: ChangeData| Msg::UpdateRepresentationTypeId(match ev {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
-          }));
-        let oninput_name =
-            self.link.callback(|ev: InputData| Msg::UpdateName(ev.value));
-        let oninput_address =
-            self.link.callback(|ev: InputData| Msg::UpdateAddress(ev.value));
-        let oninput_phone =
-            self.link.callback(|ev: InputData| Msg::UpdatePhone(ev.value));
+            }));
+        let oninput_name = self.link.callback(|ev: InputData| Msg::UpdateName(ev.value));
+        let oninput_address = self.link.callback(|ev: InputData| Msg::UpdateAddress(ev.value));
+        let oninput_phone = self.link.callback(|ev: InputData| Msg::UpdatePhone(ev.value));
 
         html!{<>
             {self.fileset_generator(
@@ -312,11 +286,8 @@ impl AddCompanyRepresentCard {
     }
 
     fn show_manage_buttons(&self) -> Html {
-        let onclick_clear_data =
-            self.link.callback(|_| Msg::ClearData);
-
-        let onclick_create_represent =
-            self.link.callback(|_| Msg::RequestRegisterRepresent);
+        let onclick_clear_data = self.link.callback(|_| Msg::ClearData);
+        let onclick_create_represent = self.link.callback(|_| Msg::RequestRegisterRepresent);
 
         html!{<div class="columns">
             <div class="column">

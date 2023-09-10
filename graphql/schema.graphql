@@ -3,9 +3,6 @@ schema {
   mutation: MutationRoot
 }
 
-# Directs the executor to query only when the field exists.
-directive @ifdef on FIELD
-
 type ActualStatusTranslateList {
   actualStatusId: Int!
   langId: Int!
@@ -36,10 +33,6 @@ input ChangeTypeAccessStandard {
   standardUuid: UUID!
   newTypeAccessId: Int!
 }
-
-# The `Char` scalar type represents a unicode char.
-# The input and output values are a string, and there can only be one unicode character in this string.
-scalar Char
 
 type Claims {
   iss: String!
@@ -289,6 +282,7 @@ input DeleteStandardFileData {
 
 type DownloadFile {
   uuid: UUID!
+  hash: String!
   filename: String!
   filesize: Int!
   downloadUrl: String!
@@ -641,6 +635,8 @@ input IptStandardFaviconData {
 input IptStandardFilesArg {
   standardUuid: UUID!
   filesUuids: [UUID!]
+  limit: Int
+  offset: Int
 }
 
 input IptStandardFilesData {
@@ -999,7 +995,10 @@ type MutationRoot {
   # Сonfirmation of successful upload of files to storage
   uploadCompleted(fileUuids: [UUID!]!): Int!
 
-  # Delete file in storage
+  # Changes active revision of file
+  changeActiveFileRevision(fileUuid: UUID!): Boolean!
+
+  # Sets a flag for delete file in storage
   deleteFile(fileUuid: UUID!): Boolean!
 }
 
@@ -1034,7 +1033,11 @@ type QueryRoot {
   deleteAllTokens: Int!
   notifications(args: IptNotificationArg): [ShowNotification!]!
   components(args: IptComponentsArg): [ShowComponentShort!]!
-  component(componentUuid: UUID!): ComponentAndRelatedData!
+  component(
+    componentUuid: UUID!
+    limit: Int
+    offset: Int
+  ): ComponentAndRelatedData!
   componentModifications(
     args: IptComponentModificationArg!
   ): [ComponentModificationAndRelatedData!]!
@@ -1056,16 +1059,24 @@ type QueryRoot {
   componentModificationFilesets(
     args: IptFilesetProgramArg!
   ): [FilesetProgramRelatedData!]!
+
+  # Returns information about files from a set of component modification files
   componentModificationFilesOfFileset(
     args: IptFileOfFilesetArg!
   ): [ShowFileRelatedData!]!
+
+  # Returns presigned-url and relate data for download files from a modification fileset
   componentModificationFilesetFiles(
     args: IptFileOfFilesetArg!
   ): [DownloadFile!]!
   componentTypes(filter: [Int!]): [ComponentTypeTranslateList!]!
   componentActualStatuses(filter: [Int!]): [ActualStatusTranslateList!]!
   standards(args: IptStandardsArg): [ShowStandardShort!]!
-  standard(standardUuid: UUID!): StandardAndRelatedData!
+  standard(
+    standardUuid: UUID!
+    limit: Int
+    offset: Int
+  ): StandardAndRelatedData!
   standardFiles(args: IptStandardFilesArg!): [DownloadFile!]!
   standardSpecs(args: IptStandardSpecsArg!): [SpecTranslateList!]!
   standardKeywords(args: IptStandardKeywordsArg!): [Keyword!]!
@@ -1098,6 +1109,13 @@ type QueryRoot {
 
   # Presigned URL for download file from storage
   presignedUrl(fileUuid: UUID!): DownloadFile!
+
+  # Returns ShowFile for all (not deleted) file versions
+  showFileRevisions(
+    fileUuid: UUID!
+    limit: Int
+    offset: Int
+  ): [ShowFileRelatedData!]!
   typesAccess(args: IptTypeAccessArg): [TypeAccessTranslateList!]!
 }
 
@@ -1157,6 +1175,7 @@ type ShowComponentShort {
 type ShowFileRelatedData {
   uuid: UUID!
   filename: String!
+  revision: Int!
   parentFileUuid: UUID!
   ownerUser: ShowUserShort!
   contentType: String!
@@ -1279,9 +1298,9 @@ type TypeAccessTranslateList {
   name: String!
 }
 
-# A UUID is a unique 128-bit number, stored as 16 octets. UUIDs are parsed as Strings
-# within GraphQL. UUIDs are used to assign unique identifiers to entities without requiring a central
-# allocating authority.
+# A UUID is a unique 128-bit number, stored as 16 octets. UUIDs are parsed as
+# Strings within GraphQL. UUIDs are used to assign unique identifiers to
+# entities without requiring a central allocating authority.
 #
 # # References
 #

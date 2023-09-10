@@ -58,23 +58,24 @@ pub struct Keyword {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Certificate {
-    pub owner_uuid: String,
     pub file: DownloadFile,
     pub description: String,
 }
 
-impl From<&super::CompanyCertificate> for Certificate {
-    fn from(data: &super::CompanyCertificate) -> Self {
-        let super::CompanyCertificate {
-            company_uuid,
-            file,
-            description,
-        } = data;
-
+impl From<super::CompanyCertificate> for Certificate {
+    fn from(item: super::CompanyCertificate) -> Self {
         Self {
-            owner_uuid: company_uuid.to_string(),
-            file: file.to_owned(),
-            description: description.to_string(),
+            file: item.file,
+            description: item.description,
+        }
+    }
+}
+
+impl From<super::UserCertificate> for Certificate {
+    fn from(item: super::UserCertificate) -> Self {
+        Self {
+            file: item.file,
+            description: item.description,
         }
     }
 }

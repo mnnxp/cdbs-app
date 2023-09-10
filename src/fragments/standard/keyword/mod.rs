@@ -1,12 +1,10 @@
 mod item;
 mod add;
-
 pub use item::KeywordTagItem;
 pub use add::AddKeywordsTags;
 
 use yew::{Callback, Component, ComponentLink, Html, Properties, ShouldRender, html};
 // use log::debug;
-// use crate::error::{get_error, Error};
 use crate::types::{UUID, Keyword};
 
 #[derive(Clone, Debug, Properties)]

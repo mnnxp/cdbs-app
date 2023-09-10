@@ -1,14 +1,13 @@
 use yew::{Component, Callback, ComponentLink, Html, Properties, ShouldRender, html, ChangeData};
 use log::debug;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
-// use chrono::NaiveDateTime;
 
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
+use crate::fragments::file::{FileHeadersShow, FileDownItemShow};
 use crate::types::{UUID, DownloadFile};
-use crate::services::get_value_field;
+use crate::services::{get_value_field, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::component::{ComModFilesetFiles, com_mod_fileset_files};
 
@@ -96,21 +95,15 @@ impl Component for ManageFilesOfFilesetBlock {
             },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetDownloadFilesetFilesResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        self.file_arr = serde_json::from_value(
-                            res.get("componentModificationFilesetFiles").unwrap().clone()
-                        ).unwrap();
+                match resp_parsing(res, "componentModificationFilesetFiles") {
+                    Ok(result) => {
+                        self.file_arr = result;
                         debug!("componentModificationFilesetFiles: {:?}", self.file_arr);
-
                         self.flag_get_dowload_url = true;
                         self.open_modal_download_files = true;
                         self.active_loading_files_btn = false;
                     },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::ParseFirstFilesetUuid => {
@@ -238,30 +231,14 @@ impl ManageFilesOfFilesetBlock {
                 <div class="box itemBox">
                   <article class="media center-media">
                       <div class="media-content">
-                          <table class="table is-fullwidth">
-                              <thead>
-                                <tr>
-                                  <th>{ get_value_field(&120) }</th>
-                                  <th>{ get_value_field(&122) }</th>
-                                  <th>{ get_value_field(&126) }</th>
-                                </tr>
-                              </thead>
-                            <tbody>
-                              {for self.file_arr.iter().map(|file| html!{
-                                  <tr>
-                                    <td>{file.filename.clone()}</td>
-                                    <td>{file.filesize.clone()}</td>
-                                    <td>
-                                        <a class="button is-ghost" href={file.download_url.clone()}  target="_blank">
-                                          <span class="icon" >
-                                            <i class="fas fa-file-download" aria-hidden="true"></i>
-                                          </span>
-                                        </a>
-                                    </td>
-                                  </tr>
-                              })}
-                            </tbody>
-                          </table>
+                        <table class="table is-fullwidth">
+                          <FileHeadersShow show_long={false} />
+                          <tbody>
+                            {for self.file_arr.iter().map(|file| html!{
+                              <FileDownItemShow file_down={file.clone()} />
+                            })}
+                          </tbody>
+                        </table>
                       </div>
                   </article>
                 </div>

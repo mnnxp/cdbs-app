@@ -1,19 +1,17 @@
 mod list_item;
-
 pub use list_item::ListItemCompany;
 
 use yew::{html, Component, ComponentLink, Html, ShouldRender, Properties};
 use yew_router::prelude::RouterAnchor;
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use log::debug;
 
 use crate::routes::AppRoute;
-use crate::error::{Error, get_error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{ShowCompanyShort, CompaniesQueryArg};
-use crate::services::get_value_field;
+use crate::services::{get_value_field, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::company::{GetCompaniesShortList, get_companies_short_list};
 use crate::fragments::ListState;
@@ -21,7 +19,8 @@ use crate::fragments::ListState;
 pub enum Msg {
     SwitchShowType,
     UpdateList(String),
-    GetList
+    GetList,
+    ResponseError(Error),
 }
 
 pub struct CatalogCompanies {
@@ -90,20 +89,12 @@ impl Component for CatalogCompanies {
                 });
             },
             Msg::UpdateList(res) => {
-              let data: Value = serde_json::from_str(res.as_str()).unwrap();
-              let res_value = data.as_object().unwrap().get("data").unwrap();
-
-              // debug!("res value: {:#?}", res_value);
-
-              match res_value.is_null() {
-                  false => {
-                      let result: Vec<ShowCompanyShort> = serde_json::from_value(res_value.get("companies").unwrap().clone()).unwrap();
-                      // debug!("UpdateList result: {:?}", result);
-                      self.list = result;
-                  },
-                  true => self.error = Some(get_error(&data)),
+              match resp_parsing(res, "companies") {
+                  Ok(result) => self.list = result,
+                  Err(err) => link.send_message(Msg::ResponseError(err)),
               }
-          },
+            },
+            Msg::ResponseError(err) => self.error = Some(err),
         }
         true
     }
@@ -114,9 +105,7 @@ impl Component for CatalogCompanies {
             (None, None) => true,
             _ => false,
         };
-
         // debug!("self_arg == arg: {}", flag_change);
-
         if self.props.show_create_btn == props.show_create_btn && flag_change {
             // debug!("if change");
             false
@@ -131,7 +120,6 @@ impl Component for CatalogCompanies {
 
     fn view(&self) -> Html {
         let onclick_change_view = self.link.callback(|_|Msg::SwitchShowType);
-
         let (class_for_icon, class_for_list) = match self.show_type {
             ListState::Box => ("fas fa-bars", "flex-box"),
             ListState::List => ("fas fa-th-large", ""),
@@ -170,13 +158,12 @@ impl Component for CatalogCompanies {
 }
 
 impl CatalogCompanies {
-    fn show_card(
-        &self,
-        show_company: &ShowCompanyShort,
-    ) -> Html {
-        html!{<ListItemCompany
-            data={show_company.clone()}
-            show_list={self.show_type == ListState::List}
-        />}
+    fn show_card(&self, show_company: &ShowCompanyShort) -> Html {
+        html!{
+            <ListItemCompany
+                data={show_company.clone()}
+                show_list={self.show_type == ListState::List}
+                />
+        }
     }
 }

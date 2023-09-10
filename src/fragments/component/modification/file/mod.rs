@@ -9,13 +9,13 @@ pub use table_item::ModificationFileListItem;
 use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
 use log::debug;
 use graphql_client::GraphQLQuery;
-// use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
-use crate::error::{get_error, Error};
+use crate::error::Error;
+use crate::fragments::file::FileHeadersShow;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, ShowFileInfo};
-use crate::services::get_value_field;
+use crate::services::{get_value_field, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::component::{ComponentModificationFilesList, component_modification_files_list};
 
@@ -38,7 +38,6 @@ pub enum Msg {
     RequestModificationFilesList,
     ResponseError(Error),
     GetModificationFilesListResult(String),
-    // ShowFullList,
     ClearError,
 }
 
@@ -85,20 +84,12 @@ impl Component for ModificationFilesTableCard {
             },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetModificationFilesListResult(res) => {
-                let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        self.files_list = serde_json::from_value(
-                            res_value.get("componentModificationFilesList").unwrap().clone()
-                        ).unwrap();
-                        debug!("componentModificationFilesList {:?}", self.files_list.len());
-                    },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                match resp_parsing(res, "componentModificationFilesList") {
+                    Ok(result) => self.files_list = result,
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
+                debug!("componentModificationFilesList {:?}", self.files_list.len());
             },
-            // Msg::ShowFullList => self.show_full_files = !self.show_full_files,
             Msg::ClearError => self.error = None,
         }
         true
@@ -136,20 +127,10 @@ impl ModificationFilesTableCard {
     fn show_files_card(&self) -> Html {
         html!{<div class="card">
             <table class="table is-fullwidth is-striped">
-              <thead>
-                <tr>
-                  <th>{ get_value_field(&120) }</th> // Filename
-                  // <th>{ get_value_field(&121) }</th> // Content
-                  <th>{ get_value_field(&122) }</th> // Filesize
-                  <th>{ get_value_field(&26) }</th> // Program
-                  <th>{ get_value_field(&124) }</th> // Upload by
-                  <th>{ get_value_field(&125) }</th> // Upload at
-                  {match &self.props.show_download_btn {
-                      true => html!{<th>{ get_value_field(&126) }</th>}, // Download
-                      false => html!{},
-                  }}
-                </tr>
-              </thead>
+              <FileHeadersShow
+                show_long={true}
+                show_download_btn={self.props.show_download_btn}
+                />
               <tfoot>
                 {for self.files_list.iter().map(|file| html!{
                     <ModificationFileListItem

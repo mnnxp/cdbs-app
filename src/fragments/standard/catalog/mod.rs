@@ -1,20 +1,17 @@
 mod list_item;
-
 pub use list_item::ListItemStandard;
 
 use yew::{html, Component, ComponentLink, Html, ShouldRender, Properties};
 use yew_router::prelude::RouterAnchor;
-
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
-use log::debug;
+// use log::debug;
 
 use crate::routes::AppRoute;
-use crate::error::{Error, get_error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{ShowStandardShort, StandardsQueryArg};
-use crate::services::get_value_field;
+use crate::services::{get_value_field, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::standard::{GetStandardsShortList, get_standards_short_list};
 use crate::fragments::ListState;
@@ -23,6 +20,7 @@ pub enum Msg {
     SwitchShowType,
     UpdateList(String),
     GetList,
+    ResponseError(Error),
 }
 
 pub struct CatalogStandards {
@@ -70,16 +68,15 @@ impl Component for CatalogStandards {
                 ListState::set_to_storage(&self.show_type);
             },
             Msg::GetList => {
-                let ipt_standards_arg = match &self.props.arguments {
-                    Some(ref arg) => Some(get_standards_short_list::IptStandardsArg {
+                let ipt_standards_arg = self.props.arguments.as_ref().map(|arg| {
+                    get_standards_short_list::IptStandardsArg {
                         standardsUuids: arg.standards_uuids.clone(),
                         companyUuid: arg.company_uuid.to_owned(),
                         favorite: arg.favorite,
                         limit: arg.limit,
                         offset: arg.offset,
-                    }),
-                    None => None,
-                };
+                    }
+                });
                 spawn_local(async move {
                     let res = make_query(GetStandardsShortList::build_query(get_standards_short_list::Variables {
                         ipt_standards_arg
@@ -88,22 +85,12 @@ impl Component for CatalogStandards {
                 });
             },
             Msg::UpdateList(res) => {
-              let data: Value = serde_json::from_str(res.as_str()).unwrap();
-              let res_value = data.as_object().unwrap().get("data").unwrap();
-
-              debug!("res value: {:#?}", res_value);
-
-              match res_value.is_null() {
-                  false => {
-                      let result: Vec<ShowStandardShort> = serde_json::from_value(res_value.get("standards").unwrap().clone()).unwrap();
-
-                      debug!("UpdateList result: {:?}", result);
-
-                      self.list = result;
-                  },
-                  true => self.error = Some(get_error(&data)),
+              match resp_parsing::<Vec<ShowStandardShort>>(res, "standards") {
+                Ok(result) => self.list = result,
+                Err(err) => link.send_message(Msg::ResponseError(err)),
               }
           },
+          Msg::ResponseError(err) => self.error = Some(err),
         }
         true
     }
@@ -117,7 +104,6 @@ impl Component for CatalogStandards {
 
     fn view(&self) -> Html {
         let onclick_change_view = self.link.callback(|_|Msg::SwitchShowType);
-
         let (class_for_icon, class_for_list) = match self.show_type {
             ListState::Box => ("fas fa-bars", "flex-box"),
             ListState::List => ("fas fa-th-large", ""),
@@ -160,8 +146,11 @@ impl CatalogStandards {
         &self,
         show_standard: &ShowStandardShort,
     ) -> Html {
-        html!{<ListItemStandard data={show_standard.clone()}
-            show_list={self.show_type == ListState::List}
-        />}
+        html!{
+            <ListItemStandard
+                data={show_standard.clone()}
+                show_list={self.show_type == ListState::List}
+                />
+        }
     }
 }

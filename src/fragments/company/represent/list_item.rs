@@ -1,4 +1,4 @@
-use yew::prelude::*;
+use yew::{html, Component, ComponentLink, Html, Properties, ShouldRender};
 use crate::types::CompanyRepresentInfo;
 use crate::services::get_value_field;
 

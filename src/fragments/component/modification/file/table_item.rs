@@ -1,14 +1,14 @@
 use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
 
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
 
-use crate::error::{get_error, Error};
+use crate::error::Error;
+use crate::fragments::file::FileInfoItemShow;
 use crate::fragments::list_errors::ListErrors;
+use crate::services::resp_parsing;
 use crate::types::{UUID, ShowFileInfo, DownloadFile};
-use crate::services::get_value_field;
 use crate::gqls::make_query;
 use crate::gqls::component::{ComponentModificationFiles, component_modification_files};
 
@@ -47,6 +47,12 @@ impl Component for ModificationFileListItem {
         }
     }
 
+    fn rendered(&mut self, first_render: bool) {
+        if first_render {
+            self.link.send_message(Msg::RequestDownloadFile);
+        }
+    }
+
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         let link = self.link.clone();
 
@@ -71,16 +77,12 @@ impl Component for ModificationFileListItem {
             },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetDownloadFileResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res = data.as_object().unwrap().get("data").unwrap();
-
-                match res.is_null() {
-                    false => {
-                        let result: Vec<DownloadFile> = serde_json::from_value(res.get("componentModificationFiles").unwrap().clone()).unwrap();
+                match resp_parsing::<Vec<DownloadFile>>(res, "componentModificationFiles") {
+                    Ok(result) => {
                         debug!("componentModificationFiles: {:?}", result);
                         self.download_url = result.first().map(|f| f.download_url.clone()).unwrap_or_default();
                     },
-                    true => link.send_message(Msg::ResponseError(get_error(&data))),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::ClearError => self.error = None,
@@ -111,41 +113,11 @@ impl Component for ModificationFileListItem {
 
 impl ModificationFileListItem {
     fn show_full_info_file(&self) -> Html {
-        html!{<tr>
-          <td>{self.props.file.filename.clone()}</td>
-          // <td>{self.props.file.content_type.clone()}</td>
-          <td>{self.props.file.filesize.clone()}</td>
-          <td>{self.props.file.program.name.clone()}</td>
-          <td>{format!("{} {} (@{})",
-            self.props.file.owner_user.firstname.clone(),
-            self.props.file.owner_user.lastname.clone(),
-            self.props.file.owner_user.username.clone(),
-          )}</td>
-          <td>{format!("{:.*}", 19, self.props.file.updated_at.to_string())}</td>
-          {match &self.props.show_download_tag {
-              true => self.show_download_tag(),
-              false => html!{},
-          }}
-        </tr>}
-    }
-
-    fn show_download_tag(&self) -> Html {
-        let onclick_download_btn =
-            self.link.callback(|_| Msg::RequestDownloadFile);
-
-        match self.download_url.is_empty() {
-            true => html!{<td>
-                <button class="button is-ghost" onclick=onclick_download_btn>
-                  <span>{ get_value_field(&137) }</span>
-                </button>
-            </td>},
-            false => html!{<td>
-                <a class="button is-ghost" href={self.download_url.clone()}  target="_blank">
-                  <span class="icon" >
-                    <i class="fas fa-file-download" aria-hidden="true"></i>
-                  </span>
-                </a>
-            </td>},
+        html!{
+            <FileInfoItemShow
+                file_info={self.props.file.clone()}
+                download_url={self.download_url.clone()}
+                />
         }
     }
 }

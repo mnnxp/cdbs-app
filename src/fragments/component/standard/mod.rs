@@ -1,19 +1,16 @@
 mod standard_item;
-
 pub use standard_item::ComponentStandardItem;
 
 use std::collections::BTreeSet;
-use yew::prelude::*;
-use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
+use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html, ChangeData};
 use log::debug;
 use graphql_client::GraphQLQuery;
-use serde_json::Value;
 use wasm_bindgen_futures::spawn_local;
 
-use crate::error::{get_error, Error};
+use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, ShowStandardShort};
-use crate::services::get_value_field;
+use crate::services::{get_value_field, resp_parsing};
 use crate::gqls::{
     make_query,
     component::{
@@ -28,7 +25,6 @@ pub struct Props {
     pub show_delete_btn: bool,
     pub component_uuid: UUID,
     pub component_standards: Vec<ShowStandardShort>,
-    // pub delete_standard: Option<Callback<UUID>>,
 }
 
 pub struct ComponentStandardsCard {
@@ -54,6 +50,7 @@ pub enum Msg {
     UpdateSelectStandard(String),
     ChangeHideAddStandard,
     SetSelectStandard,
+    ResponseError(Error),
     ClearError,
     Ignore,
 }
@@ -64,11 +61,9 @@ impl Component for ComponentStandardsCard {
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
         let mut standard_uuids: BTreeSet<UUID> = BTreeSet::new();
-
         for standard in props.component_standards.clone() {
             standard_uuids.insert(standard.uuid.clone());
         };
-
         let component_standards = props.component_standards.clone();
 
         Self {
@@ -121,44 +116,28 @@ impl Component for ComponentStandardsCard {
                 })
             },
             Msg::GetStandardsListResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: Vec<ShowStandardShort> =
-                            serde_json::from_value(res_value.get("standards").unwrap().clone()).unwrap();
+                match resp_parsing::<Vec<ShowStandardShort>>(res, "standards") {
+                    Ok(result) => {
                         debug!("standards: {:?}", result);
                         self.standard_list = result;
                         link.send_message(Msg::SetSelectStandard);
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::GetAddStandardResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: bool =
-                            serde_json::from_value(res_value.get("addStandardToComponent").unwrap().clone()).unwrap();
+                match resp_parsing::<bool>(res, "addStandardToComponent") {
+                    Ok(result) => {
                         debug!("addStandardToComponent: {:?}", result);
                         self.hide_add_standard_modal = result;
                         link.send_message(Msg::RequestComponentStandards);
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::GetComponentStandardsResult(res) => {
-                let data: Value = serde_json::from_str(res.as_str()).unwrap();
-                let res_value = data.as_object().unwrap().get("data").unwrap();
-
-                match res_value.is_null() {
-                    false => {
-                        let result: Vec<ShowStandardShort> =
-                            serde_json::from_value(res_value.get("component").unwrap()
-                                .get("componentStandards").unwrap().clone()).unwrap();
+                match resp_parsing(res, "component") {
+                    Ok(result) => {
                         debug!("componentStandards: {:?}", result);
                         self.component_standards = result;
                         self.standard_uuids = BTreeSet::new();
@@ -167,7 +146,7 @@ impl Component for ComponentStandardsCard {
                         };
                         link.send_message(Msg::SetSelectStandard);
                     },
-                    true => self.error = Some(get_error(&data)),
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::UpdateSelectStandard(data) => self.request_add_standard_uuid = data,
@@ -186,6 +165,7 @@ impl Component for ComponentStandardsCard {
                     }
                 }
             },
+            Msg::ResponseError(err) => self.error = Some(err),
             Msg::ClearError => self.error = None,
             Msg::Ignore => {},
         }
@@ -219,11 +199,9 @@ impl Component for ComponentStandardsCard {
 
 impl ComponentStandardsCard {
     fn show_standards(&self) -> Html {
-        let onclick_delete_standard = self.link
-            .callback(|value: UUID| Msg::DeleteComponentStandard(value));
-
-        let onclick_action_btn = self.link
-            .callback(|_| Msg::ChangeHideAddStandard);
+        let onclick_delete_standard =
+            self.link.callback(|value: UUID| Msg::DeleteComponentStandard(value));
+        let onclick_action_btn = self.link.callback(|_| Msg::ChangeHideAddStandard);
 
         html!{<div class="card column">
           <table class="table is-fullwidth">
@@ -262,18 +240,13 @@ impl ComponentStandardsCard {
     }
 
     fn modal_add_standard(&self) -> Html {
-        let onclick_add_standard = self.link
-            .callback(|_| Msg::RequestAddStandard);
-
-        let onclick_hide_modal = self.link
-            .callback(|_| Msg::ChangeHideAddStandard);
-
-        let onchange_select_add_standard = self.link
-            .callback(|ev: ChangeData| Msg::UpdateSelectStandard(match ev {
+        let onclick_add_standard = self.link.callback(|_| Msg::RequestAddStandard);
+        let onclick_hide_modal = self.link.callback(|_| Msg::ChangeHideAddStandard);
+        let onchange_select_add_standard =
+            self.link.callback(|ev: ChangeData| Msg::UpdateSelectStandard(match ev {
               ChangeData::Select(el) => el.value(),
               _ => String::new(),
           }));
-
         let class_modal = match &self.hide_add_standard_modal {
             true => "modal",
             false => "modal is-active",

@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 pub struct ShowFileInfo {
     pub uuid: String,
     pub filename: String,
+    pub revision: usize,
     pub parent_file_uuid: String,
     pub owner_user: ShowUserShort,
     pub content_type: String,
