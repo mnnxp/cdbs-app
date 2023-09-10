@@ -16,11 +16,16 @@ yew = "0.18.0"
 yew-router = "0.15.0"
 yewtil = "0.3.2"
 
-console_error_panic_hook = "0.1.6"
-wasm-bindgen = "0.2.74"
-wasm-bindgen-futures = "0.4.24"
-wasm-logger = "0.2"
+# console_error_panic_hook = "0.1.6"
+# wasm-bindgen = "0.2.74"
+# wasm-bindgen-futures = "0.4.24"
+# wasm-logger = "0.2"
+console_error_panic_hook = "0.1.7"
+wasm-bindgen = "0.2.83"
+wasm-bindgen-futures = "0.4.33"
+wasm-logger = "0.2.0"
 wee_alloc = "0.4.5"
+js-sys = "0.3.60"
 
 getrandom = {version = "0.2", features = ["js"]}
 instant = {version = "0.1", features = ["wasm-bindgen"]}
@@ -46,19 +51,21 @@ toml = "0.5.8"
 
 [dependencies.web-sys]
 features = [
+  "CanvasRenderingContext2d",
   "Document",
   "Element",
   "Node",
   "Window",
   "HtmlCollection",
+  "HtmlCanvasElement",
   "DragEvent",
   "DataTransfer",
   "File",
   "FileList",
+  "TextMetrics",
 ]
-version = "0.3"
+version = "0.3.60"
 
 [dev-dependencies]
-js-sys = "0.3.37"
 wasm-bindgen-futures = "0.4.10"
 wasm-bindgen-test = "0.3.10"

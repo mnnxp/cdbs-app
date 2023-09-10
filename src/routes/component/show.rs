@@ -25,6 +25,7 @@ use crate::fragments::{
         ComponentFilesBlock, ModificationFilesTableCard, SpecsTags, KeywordsTags,
     },
     img_showcase::ImgShowcase,
+    three_showcase::ThreeShowcase,
 };
 use crate::services::{get_logged_user, get_value_field};
 use crate::types::{UUID, ComponentInfo, SlimUser, ComponentParam, ComponentModificationInfo, DownloadFile};
@@ -60,6 +61,7 @@ pub struct ShowComponent {
     open_fileset_files_card: bool,
     show_related_standards: bool,
     file_arr: Vec<DownloadFile>,
+    show_three_view: bool,
 }
 
 #[derive(Properties, Clone)]
@@ -87,6 +89,7 @@ pub enum Msg {
     ShowFilesetFilesBlock(bool),
     OpenComponentSetting,
     GetDownloadFileResult(String),
+    Show3D,
     ClearError,
     Ignore,
 }
@@ -119,6 +122,7 @@ impl Component for ShowComponent {
             open_fileset_files_card: false,
             show_related_standards: false,
             file_arr: Vec::new(),
+            show_three_view: false,
         }
     }
 
@@ -353,6 +357,10 @@ impl Component for ShowComponent {
                     ).into()));
                 }
             },
+            Msg::Show3D => {
+                // self.show_three_view = val;
+                self.show_three_view = !self.show_three_view;
+            },
             Msg::ClearError => self.error = None,
             Msg::Ignore => {},
         }
@@ -413,18 +421,28 @@ impl ShowComponent {
         &self,
         component_data: &ComponentInfo,
     ) -> Html {
-        let onclick_open_owner_company = self.link
-            .callback(|_| Msg::ShowOwnerUserCard);
-
-        let show_description_btn = self.link
-            .callback(|_| Msg::ShowDescription);
+        let onclick_open_owner_company =
+            self.link.callback(|_| Msg::ShowOwnerUserCard);
+        let show_description_btn =
+            self.link.callback(|_| Msg::ShowDescription);
 
         html!{
             <div class="columns">
-                <ImgShowcase
-                    object_uuid=self.current_component_uuid.clone()
-                    file_arr=self.file_arr.clone()
-                />
+                {match self.show_three_view {
+                    true => html!{<>
+                        <ThreeShowcase
+                            fileset_uuid=self.select_fileset_uuid.clone()
+                        />
+                    </>},
+                    false => html!{<>
+                        <ImgShowcase
+                            object_uuid=self.current_component_uuid.clone()
+                            file_arr=self.file_arr.clone()
+                        />
+                    </>},
+                }}
+                // <button onclick={onclick_three_viewer} class={class_three_btn}>{show_btn}</button>
+                // {res_btn(classes!("fa", "fa-cube"), onclick_three_viewer, show_btn)}
                 // <img class="imgBox" src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
 
               <div class="column">
@@ -447,6 +465,7 @@ impl ShowComponent {
                     component_data.name.clone()
                 }</div>
                 <div class="buttons flexBox">
+                    {self.show_three_btn()}
                     {self.show_download_block()}
                     {self.show_setting_btn()}
                     {self.show_followers_btn()}
@@ -907,6 +926,33 @@ impl ShowComponent {
                 <i class={class_fav}></i>
               </span>
               <span>{self.subscribers}</span>
+            </button>
+        </>}
+    }
+
+    fn show_three_btn(&self) -> Html {
+        let onclick_three_viewer =
+            self.link.callback(|_| Msg::Show3D);
+
+        let mut class_btn = classes!("button");
+        let show_btn = match self.show_three_view {
+            true => {
+                class_btn.push("is-focused");
+                get_value_field(&301)
+            },
+            false => get_value_field(&300),
+        };
+        // <button onclick={onclick_three_viewer} class={class_three_btn}>{show_btn}</button>
+
+        html!{<>
+            <button
+                id="three-button"
+                class={class_btn}
+                onclick={onclick_three_viewer} >
+              <span class="icon is-small">
+                <i class={classes!("fa", "fa-cube")} style="color: #1872f0;"></i>
+              </span>
+              <span>{show_btn}</span>
             </button>
         </>}
     }

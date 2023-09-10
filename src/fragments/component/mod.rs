@@ -9,13 +9,18 @@ mod supplier;
 mod standard;
 mod update_favicon;
 
-pub use catalog::*;
-pub use file::*;
-pub use keyword::*;
-pub use license::*;
-pub use modification::*;
-pub use param::*;
-pub use spec::*;
-pub use supplier::*;
-pub use standard::*;
-pub use update_favicon::*;
+pub use catalog::{CatalogComponents, ListItem};
+pub use file::{ComponentFileItem, ComponentFilesBlock};
+pub use keyword::{KeywordsTags, KeywordTagItem, AddKeywordsTags};
+pub use license::{ComponentLicenseTag, ComponentLicensesTags};
+pub use modification::{
+    ModificationsTable, ModificationsTableEdit, ModificationTableItemModule,
+    ModificationTableItem, ModificationTableHeads, ModificationFilesTableCard,
+    ManageModificationFilesCard, ManageFilesOfFilesetBlock, FilesOfFilesetCard,
+    FileOfFilesetItem 
+};
+pub use param::{ComponentParamTag, ComponentParamsTags, RegisterParamnameBlock};
+pub use spec::{SpecsTags, SpecTagItem, SearchSpecsTags};
+pub use supplier::{ComponentSuppliersCard, ComponentSupplierItem};
+pub use standard::{ComponentStandardsCard, ComponentStandardItem};
+pub use update_favicon::UpdateComponentFaviconCard;

@@ -3,6 +3,7 @@
 mod auth;
 mod localisation;
 mod local_storage;
+mod preview_model;
 mod requests;
 mod tags;
 mod upload_file;
@@ -14,7 +15,8 @@ pub use local_storage::{
     get_logged_user, set_logged_user, get_token, is_authenticated,
     set_lang, get_lang, set_token, set_list_view, get_list_view
 };
+pub(crate) use preview_model::preview_model;
 pub use requests::Requests;
 pub use tags::Tags;
 pub use upload_file::{PutUploadFile, UploadData};
-pub(crate) use util::{image_detector, url_decode};
+pub(crate) use util::{image_detector, three_detector, url_decode};
