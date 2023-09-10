@@ -23,12 +23,21 @@
     <link data-trunk rel="scss" href="src/global.scss"/>
     <!-- <script src="https://kit.fontawesome.com/947a5cbc2e.js" crossorigin="anonymous"></script> -->
 
+    <script>
+      if (!HTMLScriptElement.supports('importmap')) {
+        var messageError = `Importmap is required for this site to work. \
+Your browser DOES NOT support the importmap.`;
+        console.error(messageError);
+        window.alert([messageError]);
+      }
+    </script>
+
     <script async type="importmap">
       {
         "imports": {
-          "three": "https://unpkg.com/three@0.152.2//build/three.module.js",
-          "three/addons/": "https://unpkg.com/three@0.152.2//examples/jsm/",
-          "lil-gui": "https://cdn.jsdelivr.net/npm/lil-gui@0.18/+esm"
+          "three": "https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.152.2/examples/jsm/",
+          "lil-gui": "https://cdn.jsdelivr.net/npm/lil-gui@0.18.2/dist/lil-gui.esm.min.js"
         }
       }
     </script>
