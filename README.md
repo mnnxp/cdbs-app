@@ -65,14 +65,14 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-[![Product Name Screen Shot][product-screenshot]](https://cadbase.rs)
+[![Page Component Screen Shot][product-screenshot]](https://cadbase.rs)
 
 This is a digital platform for sharing 3D models, drawings and other engineering data.
 
 At first glance, it may seem that all the challenges of exchanging 3D models, drawings and other engineering data with regard to their versioning and availability have already been solved by existing solutions.
 
 However, I hope that the CADBase project will be able to find its niche for the following reasons:
-* Specific data dependencies may interact, such as file sets for modifying components, facilitating work with various computer-aided design (CAD), CAE, CAM, and other systems.
+* Specific data dependencies may interact, such as file sets for component modifications, facilitating work with various computer-aided design (CAD), CAE, CAM, and other systems
 * All users of the platform have access to the API functionality, and each user can connect to the server using their authorization token
 * The ability to integrate the platform with various computer-aided design systems and other solutions provides platform users with a wide range of opportunities for workflow automation
 * File versioning support allows you to return files to the state they were in before the changes, review the changes, and find out who last changed something and caused the problem
@@ -90,7 +90,7 @@ And if you're not interested in this site and its functionality, you can try to 
 ### Built With
 
 For the creation of this part of the project, the following solutions have been used
-<a href="https://yew.rs"><img src="https://yew.rs/img/logo.svg" width="40"/></a>  <a href="https://bulma.io"><img src="https://bulma.io/images/bulma-logo.png" width="125"/></a>  <a href="https://threejs.org"><img src="https://global.discourse-cdn.com/standard17/uploads/threejs/original/2X/c/c74c5243388bbfa21a39c3e824ddba702a623dec.png" width="45"/></a>
+<a href="https://yew.rs"><img src="https://yew.rs/img/logo.svg" alt="Yew" width="40"/></a>  <a href="https://bulma.io" alt="BULMA"><img src="https://bulma.io/images/bulma-logo.png" width="125"/></a>  <a href="https://threejs.org"><img src="https://global.discourse-cdn.com/standard17/uploads/threejs/original/2X/c/c74c5243388bbfa21a39c3e824ddba702a623dec.png" alt="Three.js" width="45"/></a>
 
 | Libraries used |
 | ------------- |
