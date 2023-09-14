@@ -90,7 +90,7 @@ And if you're not interested in this site and its functionality, you can try to 
 ### Built With
 
 For the creation of this part of the project, the following solutions have been used
-<a href="https://yew.rs"><img src="https://yew.rs/img/logo.svg" alt="Yew" width="40"/></a>  <a href="https://bulma.io" alt="BULMA"><img src="https://bulma.io/images/bulma-logo.png" width="125"/></a>  <a href="https://threejs.org"><img src="https://global.discourse-cdn.com/standard17/uploads/threejs/original/2X/c/c74c5243388bbfa21a39c3e824ddba702a623dec.png" alt="Three.js" width="45"/></a>
+<a href="https://yew.rs"><img src="https://yew.rs/img/logo.svg" alt="Yew" width="40"/></a>  <a href="https://bulma.io"><img src="https://bulma.io/images/bulma-logo.png" alt="BULMA" width="125"/></a>  <a href="https://threejs.org"><img src="https://global.discourse-cdn.com/standard17/uploads/threejs/original/2X/c/c74c5243388bbfa21a39c3e824ddba702a623dec.png" alt="Three.js" width="45"/></a>
 
 | Libraries used |
 | ------------- |
