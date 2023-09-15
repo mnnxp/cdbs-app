@@ -47,6 +47,13 @@
     </li>
     <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#contributing">Contributing</a></li>
+    <li>
+      <a href="#repositories">Repositories</a>
+      <ul>
+        <li><a href="#main">Main</a></li>
+        <li><a href="#mirrors">Mirrors</a></li>
+      </ul>
+    </li>
     <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
     <li><a href="#acknowledgments">Acknowledgments</a></li>
@@ -58,16 +65,17 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-[![Product Name Screen Shot][product-screenshot]](https://cadbase.rs)
+[![Page Component Screen Shot][product-screenshot]](https://cadbase.rs)
 
 This is a digital platform for sharing 3D models, drawings and other engineering data.
 
 At first glance, it may seem that all the challenges of exchanging 3D models, drawings and other engineering data with regard to their versioning and availability have already been solved by existing solutions.
 
-However, I hope that the CADBase project will be able to find its niche for the following reasons:
-* Made it easier to work with different CAD systems by using specific data dependencies
-* All platform users have access to API functionality
-* Possibility to integrate the platform with various CAD systems and other solutions
+Mechanical engineers and other inventors can already take advantage of this platform and gain the following benefits:
+* Specific data dependencies may interact, such as file sets for component modifications, facilitating work with various computer-aided design (CAD), CAE, CAM, and other systems
+* All users of the platform have access to the API functionality, and each user can connect to the server using their authorization token
+* The ability to integrate the platform with various computer-aided design systems and other solutions provides platform users with a wide range of opportunities for workflow automation
+* File versioning support allows you to return files to the state they were in before the changes, review the changes, and find out who last changed something and caused the problem
 
 We have an ambitious goal: to create a design data exchange solution that is suitable for most engineers.
 
@@ -82,7 +90,7 @@ And if you're not interested in this site and its functionality, you can try to 
 ### Built With
 
 For the creation of this part of the project, the following solutions have been used
-<a href="https://yew.rs"><img src="https://yew.rs/img/logo.svg" width="50"/></a>  <a href="https://bulma.io"><img src="https://bulma.io/images/bulma-logo.png" width="125"/></a>
+<a href="https://yew.rs"><img src="https://yew.rs/img/logo.svg" alt="Yew" width="40"/></a>  <a href="https://bulma.io"><img src="https://bulma.io/images/bulma-logo.png" alt="BULMA" width="125"/></a>  <a href="https://threejs.org"><img src="https://global.discourse-cdn.com/standard17/uploads/threejs/original/2X/c/c74c5243388bbfa21a39c3e824ddba702a623dec.png" alt="Three.js" width="45"/></a>
 
 | Libraries used |
 | ------------- |
@@ -186,11 +194,11 @@ This example will run a login test that will be performed using the Firefox brow
 ## Roadmap
 
 - [x] Make an MVP
-- [x] Make blanks for writing tests
 - [ ] Add instructions for site users
-- [ ] Add user interfaces to use all the basic API server functions
-- [ ] Add 3D Viewer (such as [Three.js](https://github.com/mrdoob/three.js))
+- [x] Add versioning support for files
+- [x] Add 3D Viewer (via [Three.js](https://github.com/mrdoob/three.js))
 - [ ] Multi-language Support
+    - [x] English
     - [x] Russian
     - [ ] Chinese
     - [ ] Spanish
@@ -214,6 +222,27 @@ Don't forget to give the project a star! Thanks again!
 3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
 4. Push to the Branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
+
+<div align="right">(<a href="#about-the-project">back to top</a>)</div>
+
+
+
+<!-- REPOSITORIES -->
+## Repositories
+
+The code is distributed in several repositories so that people who want access to the code can get it.
+
+We hope that everyone will be able to access the code published here.
+
+### Main
+
+GitLab - https://gitlab.com/cadbase/cdbs-app
+
+### Mirrors
+
+Codeberg - https://codeberg.org/mnnxp/cdbs-app
+
+GitHub - https://github.com/mnnxp/cdbs-app
 
 <div align="right">(<a href="#about-the-project">back to top</a>)</div>
 
@@ -258,7 +287,7 @@ Xia TianHao - xth@cadbase.rs or [Sansx](https://github.com/sansx) (GitHub)
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[product-screenshot]: data/1440_Main_default.png
+[product-screenshot]: data/Main_default.png
 [router]: https://img.shields.io/badge/router-blue
 [router-url]: https://docs.rs/yew-router
 [yewtil]: https://img.shields.io/badge/yewtil-blue
