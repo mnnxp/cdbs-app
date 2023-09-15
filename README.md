@@ -71,7 +71,7 @@ This is a digital platform for sharing 3D models, drawings and other engineering
 
 At first glance, it may seem that all the challenges of exchanging 3D models, drawings and other engineering data with regard to their versioning and availability have already been solved by existing solutions.
 
-However, I hope that the CADBase project will be able to find its niche for the following reasons:
+Mechanical engineers and other inventors can already take advantage of this platform and gain the following benefits:
 * Specific data dependencies may interact, such as file sets for component modifications, facilitating work with various computer-aided design (CAD), CAE, CAM, and other systems
 * All users of the platform have access to the API functionality, and each user can connect to the server using their authorization token
 * The ability to integrate the platform with various computer-aided design systems and other solutions provides platform users with a wide range of opportunities for workflow automation
