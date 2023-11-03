@@ -20,7 +20,7 @@ use crate::fragments::{
     user::CatalogUsers,
     user::UserCertificatesCard,
 };
-use crate::services::{get_logged_user, get_value_field, resp_parsing};
+use crate::services::{Counter, get_logged_user, get_value_field, resp_parsing};
 use crate::types::{
     UserDataCard, CompaniesQueryArg, ComponentsQueryArg, SelfUserInfo, SlimUser,
     StandardsQueryArg, UserCertificate, UserInfo, UsersQueryArg, UUID,
@@ -49,6 +49,12 @@ pub struct Profile {
     profile_tab: ProfileTab,
     extend_tab: Option<ProfileTab>,
     show_full_user_info: bool,
+}
+
+impl Counter for Profile {
+    fn quantity(&self) -> usize {
+        self.subscribers
+    }
 }
 
 #[derive(Properties, Clone)]
@@ -439,7 +445,7 @@ impl Profile {
                 None => html!{
                     <div>
                         <span>{ get_value_field(&31) }</span>
-                        <span>{self.subscribers}</span>
+                        <span>{self.show_quantity()}</span>
                     </div>
                 },
             }}
@@ -460,7 +466,7 @@ impl Profile {
               <span class="icon is-small">
                 <i class={class_fav}></i>
               </span>
-              <span>{self.subscribers}</span>
+              <span>{self.show_quantity()}</span>
             </button>
         }
     }

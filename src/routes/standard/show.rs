@@ -17,7 +17,7 @@ use crate::fragments::{
     standard::{StandardFilesCard, SpecsTags, KeywordsTags},
     img_showcase::ImgShowcase,
 };
-use crate::services::{get_logged_user, get_value_field, resp_parsing};
+use crate::services::{Counter, get_logged_user, get_value_field, resp_parsing};
 use crate::types::{UUID, StandardInfo, SlimUser, DownloadFile, ComponentsQueryArg};
 use crate::gqls::make_query;
 use crate::gqls::standard::{
@@ -41,6 +41,12 @@ pub struct ShowStandard {
     show_full_description: bool,
     show_related_components: bool,
     file_arr: Vec<DownloadFile>,
+}
+
+impl Counter for ShowStandard {
+    fn quantity(&self) -> usize {
+        self.subscribers
+    }
 }
 
 #[derive(Properties, Clone)]
@@ -465,7 +471,7 @@ impl ShowStandard {
               <span class="icon is-small">
                 <i class={class_fav}></i>
               </span>
-              <span>{self.subscribers}</span>
+              <span>{self.show_quantity()}</span>
             </button>
         </>}
     }

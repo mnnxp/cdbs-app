@@ -19,7 +19,7 @@ use crate::fragments::{
     component::CatalogComponents,
     standard::CatalogStandards,
 };
-use crate::services::{get_logged_user, get_value_field, resp_parsing};
+use crate::services::{Counter, get_logged_user, get_value_field, resp_parsing};
 use crate::types::{UUID, CompanyInfo, SlimUser, ComponentsQueryArg, StandardsQueryArg};
 use crate::gqls::make_query;
 use crate::gqls::company::{
@@ -42,6 +42,12 @@ pub struct ShowCompany {
     company_tab: CompanyTab,
     extend_tab: Option<CompanyTab>,
     show_full_company_info: bool,
+}
+
+impl Counter for ShowCompany {
+    fn quantity(&self) -> usize {
+        self.subscribers
+    }
 }
 
 #[derive(Properties, Clone)]
@@ -340,7 +346,7 @@ impl ShowCompany {
         html!{<>
             {match &self.company {
                 Some(_) => self.show_favorite_btn(),
-                None => html!{<span>{self.subscribers}</span>},
+                None => html!{<span>{self.show_quantity()}</span>},
             }}
         </>}
     }
@@ -359,7 +365,7 @@ impl ShowCompany {
               <span class="icon is-small">
                 <i class={class_fav}></i>
               </span>
-              <span>{self.subscribers}</span>
+              <span>{self.show_quantity()}</span>
             </button>
         }
     }
