@@ -5,7 +5,7 @@ pub trait Counter {
     /// Brings the quantity into a visually beautiful format (like 1000 to 1k)
     fn abbr_number(&self) -> String {
         let (number, add_char) = match self.quantity() {
-            // >1 000 show without adding designations
+            // if number < 1000 show without adding designations
             x @ 0..=999_usize => return format!("{}", x),
             // 1000+ show with adding designations
             x @ 0..=999_999_usize => (x as f64 / 1e+3, 'K'),
