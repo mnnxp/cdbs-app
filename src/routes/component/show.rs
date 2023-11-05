@@ -23,7 +23,7 @@ use crate::fragments::{
     img_showcase::ImgShowcase,
     three_showcase::ThreeShowcase,
 };
-use crate::services::{get_logged_user, get_value_field, resp_parsing};
+use crate::services::{Counter, get_logged_user, get_value_field, resp_parsing};
 use crate::types::{UUID, ComponentInfo, SlimUser, ComponentParam, ComponentModificationInfo, DownloadFile};
 use crate::gqls::make_query;
 use crate::gqls::component::{
@@ -57,6 +57,12 @@ pub struct ShowComponent {
     show_related_standards: bool,
     file_arr: Vec<DownloadFile>,
     show_three_view: bool,
+}
+
+impl Counter for ShowComponent {
+    fn quantity(&self) -> usize {
+        self.subscribers
+    }
 }
 
 #[derive(Properties, Clone)]
@@ -894,7 +900,7 @@ impl ShowComponent {
               <span class="icon is-small">
                 <i class={class_fav}></i>
               </span>
-              <span>{self.subscribers}</span>
+              <span>{self.abbr_number()}</span>
             </button>
         </>}
     }
