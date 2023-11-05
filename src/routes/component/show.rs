@@ -900,7 +900,7 @@ impl ShowComponent {
               <span class="icon is-small">
                 <i class={class_fav}></i>
               </span>
-              <span>{self.show_quantity()}</span>
+              <span>{self.abbr_number()}</span>
             </button>
         </>}
     }

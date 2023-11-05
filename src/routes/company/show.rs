@@ -346,7 +346,7 @@ impl ShowCompany {
         html!{<>
             {match &self.company {
                 Some(_) => self.show_favorite_btn(),
-                None => html!{<span>{self.show_quantity()}</span>},
+                None => html!{<span>{self.abbr_number()}</span>},
             }}
         </>}
     }
@@ -365,7 +365,7 @@ impl ShowCompany {
               <span class="icon is-small">
                 <i class={class_fav}></i>
               </span>
-              <span>{self.show_quantity()}</span>
+              <span>{self.abbr_number()}</span>
             </button>
         }
     }

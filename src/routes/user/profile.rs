@@ -445,7 +445,7 @@ impl Profile {
                 None => html!{
                     <div>
                         <span>{ get_value_field(&31) }</span>
-                        <span>{self.show_quantity()}</span>
+                        <span>{self.abbr_number()}</span>
                     </div>
                 },
             }}
@@ -466,7 +466,7 @@ impl Profile {
               <span class="icon is-small">
                 <i class={class_fav}></i>
               </span>
-              <span>{self.show_quantity()}</span>
+              <span>{self.abbr_number()}</span>
             </button>
         }
     }
