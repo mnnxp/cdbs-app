@@ -1,4 +1,4 @@
-use yew::{html, Callback, MouseEvent, Html, Classes};
+use yew::{html, Callback, Classes, Html, MouseEvent};
 // use yew_router::prelude::*;
 
 // #[derive(PartialEq, Properties, Clone)]
@@ -50,12 +50,22 @@ use yew::{html, Callback, MouseEvent, Html, Classes};
 //     }
 // }
 
-pub fn res_btn (class: Classes, onclick:Callback<MouseEvent>, span_style: String) -> Html {
-  html!{
-    <button class="button" onclick=onclick >
-      <span class="icon is-small" style=span_style >
-        <i class=class></i>
-      </span>
-    </button>
-  }
+pub fn res_btn(class: Classes, onclick: Callback<MouseEvent>, span_style: String) -> Html {
+    html! {
+      <button class="button" onclick=onclick >
+        <span class="icon is-small" style=span_style >
+          <i class=class></i>
+        </span>
+      </button>
+    }
+}
+
+pub fn func_button(text: String, class: Classes, onclick: Callback<MouseEvent>) -> Html {
+    let no_text = text.len() == 0;
+
+    html! {
+      <button class={format!("funcButtonContainer {}",  if no_text {"noPadding".to_string()} else {"".to_string()})} onclick=onclick >
+        <i class=class></i> {text}
+      </button>
+    }
 }

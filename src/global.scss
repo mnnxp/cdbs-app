@@ -75,7 +75,9 @@ body {
 }
 
 .side-menu ul li a span {
-  transition: max-width ease 0.3s, opacity ease-out 0.4s,
+  transition:
+    max-width ease 0.3s,
+    opacity ease-out 0.4s,
     margin-right ease-in-out 0.2s;
 }
 
@@ -289,4 +291,40 @@ scene-hull {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+}
+
+.funcButtonContainer {
+  padding: 0 16px;
+  height: 36px;
+  font-size: 14px;
+  line-height: 36px;
+  border-radius: 18px;
+  color: #f1f1f1;
+  background-color: #272727;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  border: none;
+
+  i {
+    // width: 24px;
+    // height: 24px;
+    // display: flex;
+    margin-right: 6px;
+    font-size: 15px;
+  }
+
+  &.noPadding {
+    i {
+      margin-right: 0;
+    }
+  }
+
+  &:hover {
+    background-color: #3f3f3f;
+  }
+
+  &:active{
+    background: #636363;
+  }
 }
