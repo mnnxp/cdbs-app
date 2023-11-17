@@ -11,6 +11,7 @@ mod upload_file;
 mod util;
 mod response_parsing;
 mod subscribers;
+mod clipboard;
 
 pub use auth::{Auth, get_current_user, logout};
 pub use localisation::get_value_field;
@@ -28,3 +29,4 @@ pub(crate) use response_parsing::{
     resp_parsing, resp_parsing_two_level, get_value_response, get_from_value
 };
 pub(crate) use subscribers::Counter;
+pub(crate) use clipboard::set_clipboard;

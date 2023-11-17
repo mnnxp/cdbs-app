@@ -27,13 +27,13 @@ wasm-logger = "0.2.0"
 wee_alloc = "0.4.5"
 js-sys = "0.3.60"
 
-getrandom = {version = "0.2", features = ["js"]}
-instant = {version = "0.1", features = ["wasm-bindgen"]}
+getrandom = { version = "0.2", features = ["js"] }
+instant = { version = "0.1", features = ["wasm-bindgen"] }
 lipsum = "0.7"
-rand = {version = "0.7", features = ["small_rng", "wasm-bindgen"]}
+rand = { version = "0.7", features = ["small_rng", "wasm-bindgen"] }
 regex = "1.5.4"
 
-chrono = {version = "0.4.10", features = ["serde"]}
+chrono = { version = "0.4.10", features = ["serde"] }
 log = "0.4.8"
 parking_lot = "0.10.0"
 pulldown-cmark = "0.6.1"
@@ -41,7 +41,7 @@ thiserror = "1"
 
 anyhow = "1.0.41"
 graphql_client = "0.10.0"
-serde = {version = "1.0.126", features = ["derive"]}
+serde = { version = "1.0.126", features = ["derive"] }
 serde_json = "1.0.64"
 
 dotenv_codegen = "0.15.0"
@@ -63,9 +63,13 @@ features = [
   "File",
   "FileList",
   "TextMetrics",
+  "ClipboardEvent",
 ]
 version = "0.3.60"
 
 [dev-dependencies]
 wasm-bindgen-futures = "0.4.10"
 wasm-bindgen-test = "0.3.10"
+
+[build]
+rustflags = ["web_sys_unstable_apis"]   

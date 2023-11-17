@@ -1,18 +1,19 @@
-use yew::{
-  agent::Bridged, html, Bridge, Callback, Component, ComponentLink,
-  classes, MouseEvent, Html, Properties, ShouldRender,
-};
-use yew_router::{
-    service::RouteService,
-    agent::RouteRequest::ChangeRoute,
-    prelude::*
-};
-use wasm_bindgen_futures::spawn_local;
 use log::debug;
+use wasm_bindgen_futures::spawn_local;
+use yew::{
+    agent::Bridged, classes, html, Bridge, Callback, Component, ComponentLink, Html, MouseEvent,
+    Properties, ShouldRender,
+};
+use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*, service::RouteService};
 
-use crate::services::{set_token, get_logged_user, set_logged_user, logout, get_value_field};
 use crate::routes::AppRoute;
+use crate::services::{get_logged_user, get_value_field, logout, set_logged_user, set_token};
 use crate::types::SlimUser;
+
+use crate::fragments::{modal::Modal, switch_icon::res_btn};
+
+
+use crate::services::set_clipboard;
 
 pub struct Header {
     props: Props,
@@ -23,6 +24,7 @@ pub struct Header {
     open_notifications_page: bool,
     open_home_page: bool,
     is_active: bool,
+    show_modal: bool,
 }
 
 #[derive(Properties, Clone)]
@@ -32,12 +34,13 @@ pub struct Props {
 }
 
 pub enum Msg {
-  Logout,
-  LogoutComplete(String),
-  TriggerMenu,
-  CheckPath,
-  SetActive(bool),
-  Ignore,
+    Logout,
+    LogoutComplete(String),
+    TriggerMenu,
+    CheckPath,
+    SetActive(bool),
+    ShowModal(bool),
+    Ignore,
 }
 
 impl Component for Header {
@@ -54,6 +57,7 @@ impl Component for Header {
             open_notifications_page: false,
             open_home_page: false,
             is_active: false,
+            show_modal: false,
         }
     }
 
@@ -69,42 +73,46 @@ impl Component for Header {
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
-          Msg::Logout => {
-              let link = self.link.clone();
-              spawn_local(async move {
-                  let res = logout().await;
-                  link.send_message(Msg::LogoutComplete(res))
-              })
-          },
-          Msg::LogoutComplete(res) => {
-              debug!("logout: {:?}", res);
-              // Clear global token and logged user after logged out
-              set_token(None);
-              set_logged_user(None);
-              self.current_user = None;
-              // Notify app to clear current user info
-              self.props.callback.emit(());
-              // Redirect to home page
-              self.router_agent.send(ChangeRoute(AppRoute::Home.into()));
-          },
-          Msg::TriggerMenu => {
-              self.is_active = !self.is_active;
-          },
-          Msg::SetActive(active) => {
-              self.is_active = active;
-          },
-          Msg::CheckPath => {
-              // debug!("route_service: {:?}", route_service.get_fragment().as_str());
-              // get current url
-              let route_service: RouteService<()> = RouteService::new();
+            Msg::Logout => {
+                let link = self.link.clone();
+                spawn_local(async move {
+                    let res = logout().await;
+                    link.send_message(Msg::LogoutComplete(res))
+                })
+            }
+            Msg::LogoutComplete(res) => {
+                debug!("logout: {:?}", res);
+                // Clear global token and logged user after logged out
+                set_token(None);
+                set_logged_user(None);
+                self.current_user = None;
+                // Notify app to clear current user info
+                self.props.callback.emit(());
+                // Redirect to home page
+                self.router_agent.send(ChangeRoute(AppRoute::Home.into()));
+            }
+            Msg::TriggerMenu => {
+                self.is_active = !self.is_active;
+            }
+            Msg::SetActive(active) => {
+                self.is_active = active;
+            }
+            Msg::ShowModal(active) => {
+                self.show_modal = !self.show_modal;
+            }
+            Msg::CheckPath => {
+                // debug!("route_service: {:?}", route_service.get_fragment().as_str());
+                // get current url
+                let route_service: RouteService<()> = RouteService::new();
 
-              // check open home page
-              self.open_home_page = route_service.get_fragment().len() < 3;
+                // check open home page
+                self.open_home_page = route_service.get_fragment().len() < 3;
 
-              // check open notifications page
-              self.open_notifications_page = "#/notifications" == route_service.get_fragment().as_str();
-          }
-          Msg::Ignore => {}
+                // check open notifications page
+                self.open_notifications_page =
+                    "#/notifications" == route_service.get_fragment().as_str();
+            }
+            Msg::Ignore => {}
         }
 
         true
@@ -117,7 +125,7 @@ impl Component for Header {
             false
         } else {
             if self.is_active {
-              self.link.send_message(Msg::TriggerMenu)
+                self.link.send_message(Msg::TriggerMenu)
             }
 
             // update current path
@@ -134,8 +142,8 @@ impl Component for Header {
     }
 
     fn view(&self) -> Html {
-        let onclick : Callback<MouseEvent> = self.link.callback(|_| Msg::Logout);
-        let triggrt_menu : Callback<MouseEvent> = self.link.callback(|_| Msg::TriggerMenu);
+        let onclick: Callback<MouseEvent> = self.link.callback(|_| Msg::Logout);
+        let triggrt_menu: Callback<MouseEvent> = self.link.callback(|_| Msg::TriggerMenu);
 
         let mut logo_classes = classes!("navbar-item", "is-size-3", "header-logo");
         match self.open_home_page {
@@ -145,37 +153,65 @@ impl Component for Header {
 
         let active_menu = if self.is_active { "is-active" } else { "" };
 
-        html!{
-            <nav class="navbar" role="navigation" aria-label="main navigation">
-                <div class="navbar-brand">
-                    <h1 class=logo_classes>
-                        <RouterAnchor<AppRoute> route=AppRoute::Home>
-                            {self.show_logo()}
-                        </RouterAnchor<AppRoute>>
-                    </h1>
-                    <div role="button" class=classes!("navbar-burger", active_menu) onclick=triggrt_menu aria-label="menu" aria-expanded="false">
-                      <span aria-hidden="true"></span>
-                      <span aria-hidden="true"></span>
-                      <span aria-hidden="true"></span>
-                    </div>
-                </div>
-                <div class=classes!("navbar-menu", active_menu)>
-                    <div class="navbar-end">
-                        {match &self.current_user {
-                            Some(user_info) => self.logged_in_view(&user_info, onclick),
-                            None => self.logged_out_view(),
-                        }}
-                    </div>
-                </div>
-            </nav>
-        }
+        let show_modal: Callback<MouseEvent> = self.link.callback(|_| {
+          set_clipboard("#foo");
+          Msg::ShowModal(true)});
+        let hide_modal = self.link.callback(|_| Msg::ShowModal(false));
+
+        let active_modal = if self.show_modal { "is-active" } else { "" };
+
+        let testRes = if cfg!(web_sys_unstable_apis) {
+            "with"
+        } else {
+            "without"
+        };
+
+        html! {
+                    <nav class="navbar" role="navigation" aria-label="main navigation">
+                    <input id="foo" value="https://github.com/zenorocha/clipboard.js.git" />
+                    <button class="btn" data-clipboard-text="Just because you can doesn't mean you should — clipboard.js">
+            {"Copy to clipboard"}
+        </button>
+                    <button class="btn" data-clipboard-target="#foo">
+                      {"zzz1z"}
+                    </button>
+                    <Modal show_modal={self.show_modal} onclose={hide_modal}>
+                      <div>{"asd"}</div>
+                    </Modal>
+                    {testRes}
+                    {res_btn(
+                      classes!("fas", "fa-eye"),
+                      show_modal,
+                      String::new())}
+                        <div class="navbar-brand">
+                            <h1 class=logo_classes>
+                                <RouterAnchor<AppRoute> route=AppRoute::Home>
+                                    {self.show_logo()}
+                                </RouterAnchor<AppRoute>>
+                            </h1>
+                            <div role="button" class=classes!("navbar-burger", active_menu) onclick=triggrt_menu aria-label="menu" aria-expanded="false">
+                              <span aria-hidden="true"></span>
+                              <span aria-hidden="true"></span>
+                              <span aria-hidden="true"></span>
+                            </div>
+                        </div>
+                        <div class=classes!("navbar-menu", active_menu)>
+                            <div class="navbar-end">
+                                {match &self.current_user {
+                                    Some(user_info) => self.logged_in_view(&user_info, onclick),
+                                    None => self.logged_out_view(),
+                                }}
+                            </div>
+                        </div>
+                    </nav>
+                }
     }
 }
 
 impl Header {
     fn show_logo(&self) -> Html {
         match self.open_home_page {
-            true => html!{
+            true => html! {
                 <svg width="66" height="91" viewBox="0 0 66 91" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M0 0H66V82C66 86.9706 61.9706 91 57 91H9C4.02944 91 0 86.9706 0 82V0Z" fill="#F3F6FF"/>
                     <path d="M32.6316 39.0202C32.1719 39.0202 31.7988 38.6471 31.7988 38.1875V33.8327C31.7988 33.3731 32.1719 33 32.6316 33C33.0912 33 33.4643 33.3731 33.4643 33.8327V38.1875C33.4643 38.6471 33.0912 39.0202 32.6316 39.0202Z" fill="#1872F0"/>
@@ -186,7 +222,7 @@ impl Header {
                     <path d="M34.9049 50.8456C34.6006 50.8456 34.3064 50.678 34.1609 50.3871C33.9544 49.9763 34.1187 49.4755 34.5307 49.269C35.9874 48.5362 36.8934 47.0827 36.8934 45.4761C36.8934 43.1266 34.9815 41.2147 32.632 41.2147C30.2814 41.2147 28.3706 43.1266 28.3706 45.4761C28.3706 47.0827 29.2755 48.5362 30.7333 49.269C31.1442 49.4755 31.3096 49.9763 31.1031 50.3871C30.8966 50.7979 30.3958 50.9644 29.985 50.7568C27.962 49.7398 26.7051 47.7167 26.7051 45.4761C26.7051 42.2084 29.3632 39.5492 32.632 39.5492C35.8997 39.5492 38.5589 42.2084 38.5589 45.4761C38.5589 47.7167 37.302 49.7398 35.2779 50.7568C35.1591 50.8179 35.0303 50.8456 34.9049 50.8456Z" fill="#2C72F0"/>
                 </svg>
             },
-            false => html!{
+            false => html! {
                 <svg width="145" height="35" xmlns="http://www.w3.org/2000/svg">
                         <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
                         <g id="1-copy" transform="translate(-136.000000, -89.000000)">
@@ -212,7 +248,7 @@ impl Header {
     }
 
     fn logged_out_view(&self) -> Html {
-        html!{
+        html! {
           <div class="navbar-item">
             <RouterAnchor<AppRoute> route=AppRoute::Login classes="button">
               { get_value_field(&13) }
@@ -224,16 +260,12 @@ impl Header {
         }
     }
 
-    fn logged_in_view(
-        &self,
-        user_info: &SlimUser,
-        logout: Callback<MouseEvent>,
-    ) -> Html {
+    fn logged_in_view(&self, user_info: &SlimUser, logout: Callback<MouseEvent>) -> Html {
         let active_menu = if self.is_active { "is-active" } else { "" };
-        let triggrt_menu : Callback<MouseEvent> = self.link.callback(|_| Msg::SetActive(true));
-        let out_menu : Callback<MouseEvent> = self.link.callback(|_| Msg::SetActive(false));
+        let triggrt_menu: Callback<MouseEvent> = self.link.callback(|_| Msg::SetActive(true));
+        let out_menu: Callback<MouseEvent> = self.link.callback(|_| Msg::SetActive(false));
 
-        html!{
+        html! {
             <div class="buttons navbar-item">
                  {match self.open_notifications_page {
                      true => html!{
