@@ -154,21 +154,22 @@ impl Component for Header {
         let active_menu = if self.is_active { "is-active" } else { "" };
 
         let show_modal: Callback<MouseEvent> = self.link.callback(|_| {
-          set_clipboard("#foo");
-          Msg::ShowModal(true)});
+          set_clipboard("it works!");
+          Msg::Ignore
+        });
         let hide_modal = self.link.callback(|_| Msg::ShowModal(false));
 
         let active_modal = if self.show_modal { "is-active" } else { "" };
 
-        let testRes = if cfg!(web_sys_unstable_apis) {
-            "with"
-        } else {
-            "without"
-        };
+        // let testRes = if cfg!(web_sys_unstable_apis) {
+        //     "with"
+        // } else {
+        //     "without"
+        // };
 
         html! {
                     <nav class="navbar" role="navigation" aria-label="main navigation">
-                    <input id="foo" value="https://github.com/zenorocha/clipboard.js.git" />
+                    <input id="foo" value="..........." />
                     <button class="btn" data-clipboard-text="Just because you can doesn't mean you should — clipboard.js">
             {"Copy to clipboard"}
         </button>
@@ -178,7 +179,7 @@ impl Component for Header {
                     <Modal show_modal={self.show_modal} onclose={hide_modal}>
                       <div>{"asd"}</div>
                     </Modal>
-                    {testRes}
+                    // {testRes}
                     {res_btn(
                       classes!("fas", "fa-eye"),
                       show_modal,

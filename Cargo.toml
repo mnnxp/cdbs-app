@@ -63,7 +63,7 @@ features = [
   "File",
   "FileList",
   "TextMetrics",
-  "ClipboardEvent",
+  # "ClipboardEvent",
 ]
 version = "0.3.60"
 
@@ -71,5 +71,5 @@ version = "0.3.60"
 wasm-bindgen-futures = "0.4.10"
 wasm-bindgen-test = "0.3.10"
 
-[build]
-rustflags = ["web_sys_unstable_apis"]   
+# [build]
+# rustflags = ["web_sys_unstable_apis"]
