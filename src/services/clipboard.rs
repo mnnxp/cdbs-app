@@ -4,7 +4,7 @@ use log::debug;
 
 use crate::services::get_value_field;
 
-#[wasm_bindgen(module = "/assets/js/clipboard.js")]
+#[wasm_bindgen(module = "/assets/js/clipboard2.js")]
 extern "C" {
     type Clipboard;
 
@@ -19,5 +19,5 @@ pub(crate) fn set_clipboard(value: &str) {
     debug!("set_clipboard");
     let x = Clipboard::new(value);
     debug!("run click");
-    x.click();
+    // x.click();
 }

@@ -290,3 +290,25 @@ scene-hull {
   left: 50%;
   transform: translate(-50%, -50%);
 }
+
+.clipboardBox{
+  display: flex;
+  width: 100%;
+  background: #e7e7e7;
+  padding: 10px 30px;
+  border-radius: 99px;
+  justify-content: space-between;
+  align-items: center;
+
+  #inputBox{
+    flex: none;
+    width: 70%;
+    border: none;
+    background: transparent;
+    height: fit-content;
+  }
+
+  .copyIcon{
+    margin-left: 6px;
+  }
+}

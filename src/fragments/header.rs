@@ -12,6 +12,7 @@ use crate::types::SlimUser;
 
 use crate::fragments::{modal::Modal, switch_icon::res_btn};
 
+use web_sys;
 
 use crate::services::set_clipboard;
 
@@ -25,6 +26,7 @@ pub struct Header {
     open_home_page: bool,
     is_active: bool,
     show_modal: bool,
+    copyed: bool
 }
 
 #[derive(Properties, Clone)]
@@ -40,6 +42,7 @@ pub enum Msg {
     CheckPath,
     SetActive(bool),
     ShowModal(bool),
+    Copyed(bool),
     Ignore,
 }
 
@@ -58,6 +61,7 @@ impl Component for Header {
             open_home_page: false,
             is_active: false,
             show_modal: false,
+            copyed: false
         }
     }
 
@@ -99,6 +103,9 @@ impl Component for Header {
             }
             Msg::ShowModal(active) => {
                 self.show_modal = !self.show_modal;
+                if active {
+                    self.copyed = false;
+                }
             }
             Msg::CheckPath => {
                 // debug!("route_service: {:?}", route_service.get_fragment().as_str());
@@ -111,6 +118,9 @@ impl Component for Header {
                 // check open notifications page
                 self.open_notifications_page =
                     "#/notifications" == route_service.get_fragment().as_str();
+            }
+            Msg::Copyed(value) => {
+              self.copyed = value;
             }
             Msg::Ignore => {}
         }
@@ -154,36 +164,34 @@ impl Component for Header {
         let active_menu = if self.is_active { "is-active" } else { "" };
 
         let show_modal: Callback<MouseEvent> = self.link.callback(|_| {
-          set_clipboard("it works!");
-          Msg::Ignore
+            set_clipboard(".btn");
+            Msg::ShowModal(true)
         });
         let hide_modal = self.link.callback(|_| Msg::ShowModal(false));
 
-        let active_modal = if self.show_modal { "is-active" } else { "" };
-
-        // let testRes = if cfg!(web_sys_unstable_apis) {
-        //     "with"
-        // } else {
-        //     "without"
-        // };
+        let window = web_sys::window().expect("no global `window` exists");
+        let document = window.document().expect("should have a document on window");
+        let location = document.location().expect("document should have a location");
+        let oncopyed: Callback<MouseEvent> = self.link.callback(|_| Msg::Copyed(true));
 
         html! {
                     <nav class="navbar" role="navigation" aria-label="main navigation">
-                    <input id="foo" value="..........." />
-                    <button class="btn" data-clipboard-text="Just because you can doesn't mean you should — clipboard.js">
-            {"Copy to clipboard"}
-        </button>
-                    <button class="btn" data-clipboard-target="#foo">
-                      {"zzz1z"}
-                    </button>
                     <Modal show_modal={self.show_modal} onclose={hide_modal}>
-                      <div>{"asd"}</div>
+                      <div class="clipboardBox" > 
+                        <input id="inputBox" readonly={true} value={location.href().unwrap()} />
+                        <button class="btn button is-info" onclick={oncopyed} data-clipboard-target="#inputBox">
+                          {if self.copyed { html!{
+                            <>
+                            {"Copyed"}<i class="copyIcon fas fa-check"></i>
+                            </>
+                      } } else { html!{{"Copy"}} } }
+                        </button>
+                      </div>
                     </Modal>
-                    // {testRes}
                     {res_btn(
-                      classes!("fas", "fa-eye"),
+                      classes!("fas", "fa-share"),
                       show_modal,
-                      String::new())}
+                      String::from("Share"))}
                         <div class="navbar-brand">
                             <h1 class=logo_classes>
                                 <RouterAnchor<AppRoute> route=AppRoute::Home>

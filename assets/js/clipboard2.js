@@ -1,8 +1,151 @@
 import Emitter from 'tiny-emitter';
 import listen from 'good-listener';
-import ClipboardActionDefault from './actions/default';
-import ClipboardActionCut from './actions/cut';
-import ClipboardActionCopy from './actions/copy';
+import select from 'select';
+
+/**
+ * Create fake copy action wrapper using a fake element.
+ * @param {String} target
+ * @param {Object} options
+ * @return {String}
+ */
+const fakeCopyAction = (value, options) => {
+  const fakeElement = createFakeElement(value);
+  options.container.appendChild(fakeElement);
+  const selectedText = select(fakeElement);
+  command('copy');
+  fakeElement.remove();
+
+  return selectedText;
+};
+
+/**
+ * Copy action wrapper.
+ * @param {String|HTMLElement} target
+ * @param {Object} options
+ * @return {String}
+ */
+const ClipboardActionCopy = (
+  target,
+  options = { container: document.body }
+) => {
+  let selectedText = '';
+  if (typeof target === 'string') {
+    selectedText = fakeCopyAction(target, options);
+  } else if (
+    target instanceof HTMLInputElement &&
+    !['text', 'search', 'url', 'tel', 'password'].includes(target?.type)
+  ) {
+    // If input type doesn't support `setSelectionRange`. Simulate it. https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement/setSelectionRange
+    selectedText = fakeCopyAction(target.value, options);
+  } else {
+    selectedText = select(target);
+    command('copy');
+  }
+  return selectedText;
+};
+
+/**
+ * Cut action wrapper.
+ * @param {String|HTMLElement} target
+ * @return {String}
+ */
+const ClipboardActionCut = (target) => {
+  const selectedText = select(target);
+  command('cut');
+  return selectedText;
+};
+
+
+/**
+ * Inner function which performs selection from either `text` or `target`
+ * properties and then executes copy or cut operations.
+ * @param {Object} options
+ */
+const ClipboardActionDefault = (options = {}) => {
+  // Defines base properties passed from constructor.
+  const { action = 'copy', container, target, text } = options;
+
+  // Sets the `action` to be performed which can be either 'copy' or 'cut'.
+  if (action !== 'copy' && action !== 'cut') {
+    throw new Error('Invalid "action" value, use either "copy" or "cut"');
+  }
+
+  // Sets the `target` property using an element that will be have its content copied.
+  if (target !== undefined) {
+    if (target && typeof target === 'object' && target.nodeType === 1) {
+      if (action === 'copy' && target.hasAttribute('disabled')) {
+        throw new Error(
+          'Invalid "target" attribute. Please use "readonly" instead of "disabled" attribute'
+        );
+      }
+
+      if (
+        action === 'cut' &&
+        (target.hasAttribute('readonly') || target.hasAttribute('disabled'))
+      ) {
+        throw new Error(
+          'Invalid "target" attribute. You can\'t cut text from elements with "readonly" or "disabled" attributes'
+        );
+      }
+    } else {
+      throw new Error('Invalid "target" value, use a valid Element');
+    }
+  }
+
+  // Define selection strategy based on `text` property.
+  if (text) {
+    return ClipboardActionCopy(text, { container });
+  }
+
+  // Defines which selection strategy based on `target` property.
+  if (target) {
+    return action === 'cut'
+      ? ClipboardActionCut(target)
+      : ClipboardActionCopy(target, { container });
+  }
+};
+
+/**
+ * Creates a fake textarea element with a value.
+ * @param {String} value
+ * @return {HTMLElement}
+ */
+export function createFakeElement(value) {
+  const isRTL = document.documentElement.getAttribute('dir') === 'rtl';
+  const fakeElement = document.createElement('textarea');
+  // Prevent zooming on iOS
+  fakeElement.style.fontSize = '12pt';
+  // Reset box model
+  fakeElement.style.border = '0';
+  fakeElement.style.padding = '0';
+  fakeElement.style.margin = '0';
+  // Move element out of screen horizontally
+  fakeElement.style.position = 'absolute';
+  fakeElement.style[isRTL ? 'right' : 'left'] = '-9999px';
+  // Move element to the same position vertically
+  let yPosition = window.pageYOffset || document.documentElement.scrollTop;
+  fakeElement.style.top = `${yPosition}px`;
+
+  fakeElement.setAttribute('readonly', '');
+  fakeElement.value = value;
+
+  return fakeElement;
+}
+
+
+/**
+ * Executes a given operation type.
+ * @param {String} type
+ * @return {Boolean}
+ */
+export function command(type) {
+  try {
+    return document.execCommand(type);
+  } catch (err) {
+    return false;
+  }
+}
+
 
 /**
  * Helper function to retrieve attribute value.
