@@ -294,8 +294,8 @@ scene-hull {
 .clipboardBox{
   display: flex;
   width: 100%;
-  background: #e7e7e7;
-  padding: 10px 30px;
+  // background: #e7e7e7;
+  // padding: 10px 30px;
   border-radius: 99px;
   justify-content: space-between;
   align-items: center;
@@ -303,9 +303,17 @@ scene-hull {
   #inputBox{
     flex: none;
     width: 70%;
-    border: none;
-    background: transparent;
-    height: fit-content;
+    // border: none;
+    // background: transparent;
+    // height: fit-content;
+  }
+
+  @media screen and (max-width: 800px) {
+    flex-direction: column;
+    #inputBox{ 
+      width: 100%;
+      margin-bottom: 12px;
+    }
   }
 
   .copyIcon{
