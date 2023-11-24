@@ -178,7 +178,7 @@ impl Component for Header {
                     <nav class="navbar" role="navigation" aria-label="main navigation">
                     <Modal show_modal={self.show_modal} onclose={hide_modal}>
                       <div class="clipboardBox" > 
-                        <input id="inputBox" readonly={true} value={location.href().unwrap()} />
+                        <input id="inputBox" type="text" class="input is-link" readonly={true} value={location.href().unwrap()} />
                         <button class="btn button is-info" onclick={oncopyed} data-clipboard-target="#inputBox">
                           {if self.copyed { html!{
                             <>
