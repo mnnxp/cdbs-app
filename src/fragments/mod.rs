@@ -7,6 +7,7 @@ pub mod standard;
 pub mod user;
 
 pub mod file;
+pub mod clipboard;
 pub mod footer;
 pub mod header;
 pub mod list_errors;

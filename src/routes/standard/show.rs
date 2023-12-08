@@ -8,6 +8,7 @@ use log::debug;
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
+use crate::fragments::clipboard::ShareLinkBtn;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{
@@ -334,10 +335,9 @@ impl ShowStandard {
                 </div>
                 <div class="buttons flexBox">
                     {self.show_related_components_btn()}
-                    // {self.show_download_btn()}
                     {self.show_setting_btn()}
                     {self.show_followers_btn()}
-                    // {self.show_share_btn()}
+                    <ShareLinkBtn />
                 </div>
                 <div class="standard-description">{
                     match self.show_full_description {
