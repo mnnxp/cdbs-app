@@ -73,7 +73,8 @@ impl Component for Home {
                             </svg>
                         </h1>
                         // the button is placed here for testing (so as not to start db etc)
-                        <ShareLinkBtn />
+                        <ShareLinkBtn share_link={"asdasd".to_string()} />
+                        <ShareLinkBtn/>
                         <div class="media">
                             <div class="media-left">
                                 <h2 class="subtitle"> { get_value_field(&1) } </h2>
