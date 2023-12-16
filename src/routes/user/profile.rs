@@ -105,8 +105,8 @@ impl Component for Profile {
             link,
             subscribers: 0,
             is_followed: false,
-            profile_tab: ProfileTab::Certificates,
-            extend_tab: Some(ProfileTab::Certificates),
+            profile_tab: ProfileTab::Components,
+            extend_tab: Some(ProfileTab::Components),
             show_full_user_info: false,
         }
     }
