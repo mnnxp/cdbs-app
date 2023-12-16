@@ -100,7 +100,7 @@ impl ShareLinkBtn {
                 <div class="card column">
                   <div class="clipboardBox" > 
                         <input id={self.input_id.clone()} type="text" class="input is-link inputBox" readonly={true} value={self.share_link.clone()} />
-                        <button class={format!("btn button is-info {}", self.input_id.clone())} onclick={oncopyed} data-clipboard-target={format!("#{}", self.input_id)}>
+                        <button class={format!("btn button is-info {}", self.input_id.clone())} onclick={oncopyed} data-clipboard-target={format!("#{}", self.input_id)} style="margin-bottom: 0;">
                           {if self.copyed { html!{
                             <>
                             {get_value_field(&323)}<i class="copyIcon fas fa-check"></i>
