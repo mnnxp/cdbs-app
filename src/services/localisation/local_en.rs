@@ -327,5 +327,6 @@ lazy_static! {
             (321, "Note: fields are case sensitive"),
             (322, "Copy"),
             (323, "Copyed"),
+            (324, "No result"),
         ]);
 }

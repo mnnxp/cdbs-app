@@ -15,6 +15,7 @@ use crate::fragments::{
     company::CatalogCompanies,
     component::CatalogComponents,
     list_errors::ListErrors,
+    list_empty::ListEmpty,
     side_menu::{MenuItem, SideMenu},
     standard::CatalogStandards,
     user::CatalogUsers,
@@ -615,16 +616,20 @@ impl Profile {
         &self,
         certificates: Vec<UserCertificate>
     ) -> Html {
-        html!{
-          <div class="profileBox" >
-            <UserCertificatesCard
-                  user_uuid = self.current_user_uuid.clone()
-                  certificates = certificates
-                  show_cert_btn = false
-                  download_btn = false
-                  manage_btn = false
-             />
-          </div>
+        if certificates.is_empty() {
+            html!{<ListEmpty />}
+        } else {
+            html!{
+                <div class="profileBox" >
+                    <UserCertificatesCard
+                        user_uuid = self.current_user_uuid.clone()
+                        certificates = certificates
+                        show_cert_btn = false
+                        download_btn = false
+                        manage_btn = false
+                    />
+                </div>
+            }
         }
     }
 

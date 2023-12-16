@@ -9,7 +9,7 @@ use graphql_client::GraphQLQuery;
 
 use crate::routes::AppRoute;
 use crate::error::Error;
-use crate::fragments::list_errors::ListErrors;
+use crate::fragments::{list_errors::ListErrors, list_empty::ListEmpty};
 use crate::types::{ShowStandardShort, StandardsQueryArg};
 use crate::services::{get_value_field, resp_parsing};
 use crate::gqls::make_query;
@@ -133,9 +133,13 @@ impl Component for CatalogStandards {
                     </div>
                 </div>
               </div>
-              <div class={class_for_list}>
-                {for self.list.iter().map(|x| self.show_card(&x))}
-              </div>
+              {if self.list.is_empty() {
+                html!{<ListEmpty />}
+              } else { html!{
+                <div class={class_for_list}>
+                  {for self.list.iter().map(|x| self.show_card(&x))}
+                </div>
+              }}}
             </div>
         }
     }

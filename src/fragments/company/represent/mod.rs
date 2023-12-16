@@ -9,7 +9,7 @@ use change_item::ChangeItem;
 use yew::{html, Component, ComponentLink, Html, Properties, ShouldRender};
 // use log::debug;
 use crate::error::Error;
-use crate::fragments::list_errors::ListErrors;
+use crate::fragments::{list_errors::ListErrors, list_empty::ListEmpty};
 use crate::types::CompanyRepresentInfo;
 use crate::fragments::ListState;
 
@@ -108,16 +108,20 @@ impl CompanyRepresents {
                 </button>
               </div>
             </div>
-            <div class={class_for_list}>
-              {for self.props.list.iter().map(|represent|
-                  html!{
-                      <ListItem
-                          data={represent.clone()}
-                          show_list={self.show_type == ListState::List}
-                      />
-                  }
-              )}
-            </div>
+            {if self.props.list.is_empty() {
+                html!{<ListEmpty />}
+            } else { html!{
+                <div class={class_for_list}>
+                    {for self.props.list.iter().map(|represent|
+                        html!{
+                            <ListItem
+                                data={represent.clone()}
+                                show_list={self.show_type == ListState::List}
+                            />
+                        }
+                    )}
+                </div>
+            }}}
         </>}
     }
 }
