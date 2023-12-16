@@ -324,5 +324,6 @@ lazy_static! {
             (318, "MB"),
             (319, "GB"),
             (320, "TB"),
+            (321, "Note: fields are case sensitive"),
         ]);
 }
