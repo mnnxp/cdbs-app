@@ -3,7 +3,6 @@ mod main_view;
 
 use yew::{Bridged, classes, html, Bridge, Component, ComponentLink, Html, ShouldRender};
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
-use crate::fragments::clipboard::ShareLinkBtn;
 use crate::routes::AppRoute;
 use crate::services::{get_logged_user, get_value_field};
 
@@ -72,9 +71,6 @@ impl Component for Home {
                                 </g>
                             </svg>
                         </h1>
-                        // the button is placed here for testing (so as not to start db etc)
-                        <ShareLinkBtn share_link={"asdasd".to_string()} />
-                        <ShareLinkBtn/>
                         <div class="media">
                             <div class="media-left">
                                 <h2 class="subtitle"> { get_value_field(&1) } </h2>

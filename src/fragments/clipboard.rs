@@ -2,7 +2,7 @@ use yew::{html, Component, ComponentLink, Html, ShouldRender, MouseEvent, Callba
 use web_sys;
 use rand;
 
-use crate::services::set_clipboard;
+use crate::services::{set_clipboard, get_value_field};
 
 
 pub struct ShareLinkBtn {
@@ -103,9 +103,9 @@ impl ShareLinkBtn {
                         <button class={format!("btn button is-info {}", self.input_id.clone())} onclick={oncopyed} data-clipboard-target={format!("#{}", self.input_id)}>
                           {if self.copyed { html!{
                             <>
-                            {"Copyed"}<i class="copyIcon fas fa-check"></i>
+                            {get_value_field(&323)}<i class="copyIcon fas fa-check"></i>
                             </>
-                          }} else { html!{{"Copy"}} }}
+                          }} else { html!{{get_value_field(&322)}} }}
                         </button>
                       </div>
                 </div>
