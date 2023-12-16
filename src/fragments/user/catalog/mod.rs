@@ -6,8 +6,7 @@ use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use log::debug;
 use crate::error::Error;
-use crate::fragments::list_errors::ListErrors;
-use crate::fragments::ListState;
+use crate::fragments::{ListState, list_errors::ListErrors, list_empty::ListEmpty};
 use crate::services::resp_parsing;
 use crate::types::{UUID, ShowUserShort, UsersQueryArg};
 use crate::gqls::make_query;
@@ -157,9 +156,13 @@ impl Component for CatalogUsers {
                   </button>
                 </div>
               </div>
-              <div class={class_for_list}>
-                {for self.list.iter().map(|x| self.show_card(&x))}
-              </div>
+              {if self.list.is_empty() {
+                html!{<ListEmpty />}
+              } else { html!{
+                <div class={class_for_list}>
+                  {for self.list.iter().map(|x| self.show_card(&x))}
+                </div>
+              }}}
             </div>
         }
     }

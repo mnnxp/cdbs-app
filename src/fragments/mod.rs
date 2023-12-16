@@ -7,8 +7,10 @@ pub mod standard;
 pub mod user;
 
 pub mod file;
+pub mod clipboard;
 pub mod footer;
 pub mod header;
+pub mod list_empty;
 pub mod list_errors;
 pub mod list_item;
 pub mod switch_icon;

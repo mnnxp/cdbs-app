@@ -22,6 +22,7 @@ use crate::fragments::{
     },
     img_showcase::ImgShowcase,
     three_showcase::ThreeShowcase,
+    clipboard::ShareLinkBtn,
 };
 use crate::services::{Counter, get_logged_user, get_value_field, resp_parsing};
 use crate::types::{UUID, ComponentInfo, SlimUser, ComponentParam, ComponentModificationInfo, DownloadFile};
@@ -416,9 +417,6 @@ impl ShowComponent {
                         />
                     </>},
                 }}
-                // <button onclick={onclick_three_viewer} class={class_three_btn}>{show_btn}</button>
-                // {res_btn(classes!("fa", "fa-cube"), onclick_three_viewer, show_btn)}
-                // <img class="imgBox" src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
 
               <div class="column">
                 <div class="media">
@@ -444,7 +442,7 @@ impl ShowComponent {
                     {self.show_download_block()}
                     {self.show_setting_btn()}
                     {self.show_followers_btn()}
-                    // {self.show_share_btn()}
+                    <ShareLinkBtn />
                     {match component_data.licenses.is_empty() {
                         true => html!{},
                         false => self.show_component_licenses(component_data),
@@ -931,18 +929,4 @@ impl ShowComponent {
             </button>
         </>}
     }
-
-    // fn show_share_btn(&self) -> Html {
-    //     html!{
-    //         <div class="media-right flexBox" >
-    //           <button
-    //               id="share-button"
-    //               class="button" >
-    //             <span class="icon is-small">
-    //               <i class="fas fa-share-alt"></i>
-    //             </span>
-    //           </button>
-    //         </div>
-    //     }
-    // }
 }

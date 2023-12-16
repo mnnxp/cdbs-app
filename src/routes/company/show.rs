@@ -14,6 +14,7 @@ use crate::error::Error;
 use crate::fragments::{
     switch_icon::res_btn,
     list_errors::ListErrors,
+    list_empty::ListEmpty,
     side_menu::{MenuItem, SideMenu},
     company::{CompanyCertificatesCard, CompanyRepresents, SpecsTags},
     component::CatalogComponents,
@@ -538,14 +539,18 @@ impl ShowCompany {
         &self,
         company_data: &CompanyInfo,
     ) -> Html {
-        html!{<div class="profileBox" >
-            <CompanyCertificatesCard
-                certificates = company_data.company_certificates.clone()
-                show_cert_btn = false
-                download_btn = false
-                manage_btn = false
-             />
-        </div>}
+        if company_data.company_certificates.is_empty() {
+            html!{<ListEmpty />}
+        } else {
+            html!{<div class="profileBox" >
+                <CompanyCertificatesCard
+                    certificates = company_data.company_certificates.clone()
+                    show_cert_btn = false
+                    download_btn = false
+                    manage_btn = false
+                 />
+            </div>}
+        }
     }
 
     fn view_represents(

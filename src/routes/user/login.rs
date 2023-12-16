@@ -134,6 +134,7 @@ impl Component for Login {
                 <ListErrors error=self.error.clone() />
                 <form onsubmit=onsubmit>
                     <fieldset class="box">
+                        <p class="help">{get_value_field(&321)}</p>
                         <fieldset class="field">
                             <label class="label">{ get_value_field(&19) }</label>
                             <div class="control has-icons-left has-icons-right">
@@ -148,11 +149,7 @@ impl Component for Login {
                                 <span class="icon is-small is-left">
                                   <i class="fas fa-user"></i>
                                 </span>
-                                <span class="icon is-small is-right">
-                                  <i class="fas fa-check"></i>
-                                </span>
                             </div>
-                            // <p class="help is-success">{"This username is available"}</p>
                         </fieldset>
                         <fieldset class="field">
                             <label class="label">{ get_value_field(&20) }</label>
