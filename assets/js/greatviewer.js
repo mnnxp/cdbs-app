@@ -1,8 +1,8 @@
-import * as THREE from '../../../../cdn/three/three.module.js';
-import { STLLoader } from '../../../../cdn/three/STLLoader.js';
-import { OrbitControls } from '../../../../cdn/three/OrbitControls.js';
-import Stats from '../../../../cdn/three/stats.module.js';
-import { GUI } from '../../../../cdn/three/lil-gui.js';
+import * as THREE from '../../../../three/three.module.js';
+import { STLLoader } from '../../../../three/STLLoader.js';
+import { OrbitControls } from '../../../../three/OrbitControls.js';
+import Stats from '../../../../three/stats.module.js';
+import { GUI } from '../../../../three/lil-gui.js';
 
 export class GreatViewer {
     constructor(model_path, size_flag, i18n_str) {
