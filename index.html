@@ -16,28 +16,6 @@
     <link data-trunk rel="css" href="assets/css/lil-gui-theme.css" />
     <link data-trunk rel="copy-dir" href="assets/webfonts"/>
     <link data-trunk rel="scss" href="src/global.scss"/>
-    <!-- <script src="https://kit.fontawesome.com/947a5cbc2e.js" crossorigin="anonymous"></script> -->
-
-    <script>
-      if (!HTMLScriptElement.supports('importmap')) {
-        var messageError = `Importmap is required for this site to work. \
-Your browser DOES NOT support the importmap.`;
-        console.error(messageError);
-        window.alert([messageError]);
-      }
-    </script>
-
-    <script async type="importmap">
-      {
-        "imports": {
-          "three": "https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js",
-          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.152.2/examples/jsm/",
-          "lil-gui": "https://cdn.jsdelivr.net/npm/lil-gui@0.18.2/dist/lil-gui.esm.min.js",
-          "good-listener":"https://cdn.jsdelivr.net/npm/good-listener@1.2.2/+esm",
-          "tiny-emitter":"https://cdn.jsdelivr.net/npm/tiny-emitter@2.1.0/+esm",
-          "select" : "https://cdn.jsdelivr.net/npm/select@1.1.2/+esm"
-        }
-      }
-    </script>
+    <link data-trunk rel="copy-dir" href="assets/js/three"/>
   </head>
 </html>
