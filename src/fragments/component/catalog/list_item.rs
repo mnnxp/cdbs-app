@@ -87,7 +87,7 @@ impl ListItem {
             name,
             description,
             image_file,
-            owner_user,
+            // owner_user,
             // type_access,
             actual_status,
             is_followed,
@@ -95,7 +95,7 @@ impl ListItem {
             updated_at,
             licenses,
             // files,
-            component_suppliers,
+            // component_suppliers,
             ..
         } = &self.props.data;
 
@@ -127,20 +127,7 @@ impl ListItem {
               <div class="media-content">
                 <div class="columns is-gapless" style="margin-bottom:0">
                     <div class="column">
-                        {match component_suppliers.first() {
-                            Some(x) => html!{<>
-                                { get_value_field(&158) } // supplier
-                                <span class="id-box has-text-grey-light has-text-weight-bold">
-                                  {x.supplier.shortname.clone()}
-                                </span>
-                            </>},
-                            None => html!{<>
-                                { get_value_field(&118) } // user uploaded
-                                <span class="id-box has-text-grey-light has-text-weight-bold">
-                                  {format!("@{}",&owner_user.username)}
-                                </span>
-                            </>},
-                        }}
+                        {self.show_owner()}
                     </div>
                     <div class="column">
                         { get_value_field(&159) } // actual status
@@ -196,11 +183,6 @@ impl ListItem {
             ..
         } = self.props.data.clone();
 
-        let component_supplier = self.props.data.component_suppliers
-            .first()
-            .map(|s| s.supplier.shortname.clone())
-            .unwrap_or_default();
-
         let onclick_open_component = self.link
             .callback(|_| Msg::OpenComponent);
 
@@ -226,8 +208,7 @@ impl ListItem {
                 <img src={image_file.download_url.clone()} alt="Image" />
               </div>
               <div>
-                { get_value_field(&160) } // manufactured by
-                <span class="id-box has-text-grey-light has-text-weight-bold">{component_supplier}</span>
+                {self.show_owner()}
               </div>
               <div class="overflow-title has-text-weight-bold is-size-4" >{name}</div>
                 <div class="btnBox">
@@ -245,6 +226,23 @@ impl ListItem {
                 </div>
             </div>
           </div>
+        }
+    }
+
+    fn show_owner(&self) -> Html {
+        match &self.props.data.component_suppliers.first() {
+            Some(x) => html!{<>
+                { get_value_field(&158) } // supplier / manufactured by
+                <span class="id-box has-text-grey-light has-text-weight-bold">
+                  {x.supplier.shortname.clone()}
+                </span>
+            </>},
+            None => html!{<>
+                { get_value_field(&118) } // user uploaded
+                <span class="id-box has-text-grey-light has-text-weight-bold">
+                  {format!("@{}",&self.props.data.owner_user.username)}
+                </span>
+            </>},
         }
     }
 }
