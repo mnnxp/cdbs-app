@@ -11,7 +11,7 @@ use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::services::{get_logged_user, get_value_field, get_value_response, get_from_value, resp_parsing};
-use crate::types::{UUID, ComponentCreateData, TypeAccessInfo, ActualStatus, ComponentType};
+use crate::types::{UUID, ComponentCreateData, TypeAccessInfo, ActualStatus};
 use crate::gqls::make_query;
 use crate::gqls::component::{
     GetComponentDataOpt, get_component_data_opt,
@@ -24,7 +24,6 @@ pub struct CreateComponent {
     request_component: ComponentCreateData,
     router_agent: Box<dyn Bridge<RouteAgent>>,
     link: ComponentLink<Self>,
-    component_types: Vec<ComponentType>,
     actual_statuses: Vec<ActualStatus>,
     types_access: Vec<TypeAccessInfo>,
     disable_create_btn: bool,
@@ -40,7 +39,6 @@ pub enum Msg {
     UpdateName(String),
     UpdateDescription(String),
     UpdateTypeAccessId(String),
-    UpdateComponentTypeId(String),
     UpdateActualStatusId(String),
     ClearError,
     Ignore,
@@ -56,7 +54,6 @@ impl Component for CreateComponent {
             request_component: ComponentCreateData::new(),
             router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             link,
-            component_types: Vec::new(),
             actual_statuses: Vec::new(),
             types_access: Vec::new(),
             disable_create_btn: false,
@@ -130,7 +127,6 @@ impl Component for CreateComponent {
             Msg::GetListOpt(res) => {
                 match get_value_response(res) {
                     Ok(ref value) => {
-                        self.component_types = get_from_value(value, "componentTypes").unwrap_or_default();
                         self.actual_statuses = get_from_value(value, "componentActualStatuses").unwrap_or_default();
                         self.types_access = get_from_value(value, "typesAccess").unwrap_or_default();
                     },
@@ -156,8 +152,6 @@ impl Component for CreateComponent {
             Msg::UpdateDescription(data) => self.request_component.description = data,
             Msg::UpdateTypeAccessId(data) =>
                 self.request_component.type_access_id = data.parse::<usize>().unwrap_or_default(),
-            Msg::UpdateComponentTypeId(data) =>
-                self.request_component.component_type_id = data.parse::<usize>().unwrap_or_default(),
             Msg::UpdateActualStatusId(data) =>
                 self.request_component.actual_status_id = data.parse::<usize>().unwrap_or_default(),
             Msg::ClearError => self.error = None,
@@ -197,13 +191,6 @@ impl CreateComponent {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
-
-        let onchange_change_component_type = self.link
-            .callback(|ev: ChangeData| Msg::UpdateComponentTypeId(match ev {
-              ChangeData::Select(el) => el.value(),
-              _ => "1".to_string(),
-          }));
-
         let onchange_change_type_access = self.link
             .callback(|ev: ChangeData| Msg::UpdateTypeAccessId(match ev {
               ChangeData::Select(el) => el.value(),
@@ -236,25 +223,6 @@ impl CreateComponent {
                                         </option>
                                     }
                                 )}
-                              </select>
-                            </div>
-                        </div>
-                        <div class="column" style="margin-right: 1rem">
-                            <label class="label">{ get_value_field(&97) }</label>
-                            <div class="select">
-                              <select
-                                  id="set-component-type"
-                                  select={self.request_component.component_type_id.to_string()}
-                                  onchange=onchange_change_component_type
-                                >
-                              { for self.component_types.iter().map(|x|
-                                  html!{
-                                      <option value={x.component_type_id.to_string()}
-                                            selected={x.component_type_id == self.request_component.component_type_id} >
-                                          {&x.component_type}
-                                      </option>
-                                  }
-                              )}
                               </select>
                             </div>
                         </div>

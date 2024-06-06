@@ -26,7 +26,7 @@ use crate::fragments::{
 use crate::services::{get_logged_user, get_value_field, resp_parsing, get_value_response, get_from_value};
 use crate::types::{
     UUID, ComponentInfo, SlimUser, TypeAccessInfo, UploadFile, ActualStatus, ComponentUpdatePreData,
-    ComponentUpdateData, ComponentType, ShowCompanyShort, ComponentModificationInfo, ShowFileInfo,
+    ComponentUpdateData, ShowCompanyShort, ComponentModificationInfo, ShowFileInfo,
 };
 use crate::gqls::make_query;
 use crate::gqls::component::{
@@ -53,7 +53,6 @@ pub struct ComponentSettings {
     props: Props,
     link: ComponentLink<Self>,
     supplier_list: Vec<ShowCompanyShort>,
-    component_types: Vec<ComponentType>,
     actual_statuses: Vec<ActualStatus>,
     types_access: Vec<TypeAccessInfo>,
     update_component: bool,
@@ -95,7 +94,6 @@ pub enum Msg {
     GetDeleteComponentResult(String),
     UpdateTypeAccessId(String),
     UpdateActualStatusId(String),
-    UpdateComponentTypeId(String),
     UpdateName(String),
     UpdateDescription(String),
     UpdateConfirmDelete(String),
@@ -125,7 +123,6 @@ impl Component for ComponentSettings {
             props,
             link,
             supplier_list: Vec::new(),
-            component_types: Vec::new(),
             actual_statuses: Vec::new(),
             types_access: Vec::new(),
             update_component: false,
@@ -339,7 +336,6 @@ impl Component for ComponentSettings {
                 match get_value_response(res) {
                     Ok(value) => {
                         self.supplier_list = get_from_value(&value, "companies").unwrap_or_default();
-                        self.component_types = get_from_value(&value, "componentTypes").unwrap_or_default();
                         self.actual_statuses = get_from_value(&value, "componentActualStatuses").unwrap_or_default();
                         self.types_access = get_from_value(&value, "typesAccess").unwrap_or_default();
                     },
@@ -386,11 +382,6 @@ impl Component for ComponentSettings {
             },
             Msg::UpdateActualStatusId(data) => {
                 self.request_component.actual_status_id = data.parse::<usize>().unwrap_or_default();
-                self.update_component = true;
-                self.disable_save_changes_btn = false;
-            },
-            Msg::UpdateComponentTypeId(data) => {
-                self.request_component.component_type_id = data.parse::<usize>().unwrap_or_default();
                 self.update_component = true;
                 self.disable_save_changes_btn = false;
             },
@@ -535,12 +526,6 @@ impl ComponentSettings {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
-
-        let onchange_change_component_type = self.link.callback(|ev: ChangeData| Msg::UpdateComponentTypeId(match ev {
-              ChangeData::Select(el) => el.value(),
-              _ => "1".to_string(),
-          }));
-
         let onchange_change_type_access = self.link.callback(|ev: ChangeData| Msg::UpdateTypeAccessId(match ev {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
@@ -565,25 +550,6 @@ impl ComponentSettings {
                               }
                           )}
                         </select>
-                    </div>
-                </div>
-                <div class="column">
-                    <label class="label">{ get_value_field(&97) }</label>
-                    <div class="select is-fullwidth">
-                      <select
-                          id="set-component-type"
-                          select={self.request_component.component_type_id.to_string()}
-                          onchange=onchange_change_component_type
-                        >
-                      { for self.component_types.iter().map(|x|
-                          html!{
-                              <option value={x.component_type_id.to_string()}
-                                    selected={x.component_type_id == self.request_component.component_type_id} >
-                                  {&x.component_type}
-                              </option>
-                          }
-                      )}
-                      </select>
                     </div>
                 </div>
                 <div class="column">

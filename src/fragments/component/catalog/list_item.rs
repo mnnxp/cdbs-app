@@ -89,7 +89,6 @@ impl ListItem {
             image_file,
             owner_user,
             // type_access,
-            // component_type,
             actual_status,
             is_followed,
             is_base,
@@ -173,16 +172,10 @@ impl ListItem {
                   </div>
                   <div class="columns" style="margin-bottom:0">
                       <div class="column">
-                        // {format!("Component type: {}", component_type.component_type.to_string())}
                         {match licenses.first() {
                             Some(l) => html!{format!("{}: {}", get_value_field(&162), &l.name)}, // License
                             None => html!{},
                         }}
-                        // <div>
-                        //   {for licenses.iter().map(|x| html!{
-                        //       <span class="tag is-info is-light">{x.name.clone()}</span>
-                        //   })}
-                        // </div>
                       </div>
                       <div class="column">
                         {format!("{}{:.*}", get_value_field(&30), 10, updated_at.to_string())}

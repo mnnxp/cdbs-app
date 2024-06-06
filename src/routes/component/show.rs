@@ -551,10 +551,6 @@ impl ShowComponent {
                     {component_data.actual_status.name.clone()}
                 </div>
                 <div class="column">
-                    <label class="label">{ get_value_field(&97) }</label>
-                    {component_data.component_type.component_type.clone()}
-                </div>
-                <div class="column">
                     <label class="label">{ get_value_field(&114) }</label>
                     {component_data.type_access.name.clone()}
                 </div>

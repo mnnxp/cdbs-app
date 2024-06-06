@@ -15,7 +15,6 @@ pub struct ComponentInfo {
   pub image_file: DownloadFile,
   pub owner_user: ShowUserShort,
   pub type_access: TypeAccessInfo,
-  pub component_type: ComponentType,
   pub actual_status: ActualStatus,
   pub is_base: bool,
   pub subscribers: usize,
@@ -67,7 +66,6 @@ pub struct ShowComponentShort {
     pub image_file: DownloadFile,
     pub owner_user: ShowUserShort,
     pub type_access: TypeAccessInfo,
-    pub component_type: ComponentType,
     pub actual_status: ActualStatus,
     pub is_followed: bool,
     pub is_base: bool,
@@ -93,7 +91,7 @@ impl From<ComponentInfo> for ComponentUpdatePreData {
             parent_component_uuid: data.parent_component_uuid,
             name: data.name,
             description: data.description,
-            component_type_id: data.component_type.component_type_id,
+            component_type_id: 1,
             actual_status_id: data.actual_status.actual_status_id,
         }
     }
@@ -115,7 +113,7 @@ impl From<&ComponentUpdatePreData> for ComponentUpdateData {
             parent_component_uuid: Some(new_data.parent_component_uuid.clone()),
             name: Some(new_data.name.clone()),
             description: Some(new_data.description.clone()),
-            component_type_id: Some(new_data.component_type_id  as i64),
+            component_type_id: None,
             actual_status_id: Some(new_data.actual_status_id as i64),
         }
     }
@@ -127,14 +125,6 @@ pub struct Supplier{
   pub supplier:SlimCompany,
   pub component_uuid: UUID,
   pub description: String
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct ComponentType{
-  pub component_type_id: usize,
-  pub lang_id: usize,
-  pub component_type: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
