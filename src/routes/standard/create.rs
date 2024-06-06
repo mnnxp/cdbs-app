@@ -32,7 +32,7 @@ pub struct CreateStandard {
     router_agent: Box<dyn Bridge<RouteAgent>>,
     props: Props,
     link: ComponentLink<Self>,
-    supplier_list: Vec<ShowCompanyShort>,
+    company_list: Vec<ShowCompanyShort>,
     standard_statuses: Vec<StandardStatus>,
     regions: Vec<Region>,
     types_access: Vec<TypeAccessInfo>,
@@ -77,7 +77,7 @@ impl Component for CreateStandard {
             router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             props,
             link,
-            supplier_list: Vec::new(),
+            company_list: Vec::new(),
             standard_statuses: Vec::new(),
             regions: Vec::new(),
             types_access: Vec::new(),
@@ -103,7 +103,7 @@ impl Component for CreateStandard {
                     companiesUuids: None,
                     userUuid: Some(logged_user_uuid),
                     favorite: None,
-                    supplier: Some(true),
+                    supplier: None,
                     limit: None,
                     offset: None,
                 };
@@ -125,10 +125,10 @@ impl Component for CreateStandard {
                 // checking have data
                 if self.request_standard.company_uuid.is_empty() {
                     debug!("company_uuid is empty: {:?}", self.request_standard.classifier);
-                    match self.supplier_list.first() {
+                    match self.company_list.first() {
                         Some(company) => self.request_standard.company_uuid = company.uuid.clone(),
                         None => {
-                            debug!("supplier_list is none: {:?}", self.supplier_list);
+                            debug!("company_list is none: {:?}", self.company_list);
                             flag = false;
                         },
                     }
@@ -197,7 +197,7 @@ impl Component for CreateStandard {
             Msg::GetListOpt(res) => {
                 match get_value_response(res) {
                     Ok(ref value) => {
-                        self.supplier_list = get_from_value(value, "companies").unwrap_or_default();
+                        self.company_list = get_from_value(value, "companies").unwrap_or_default();
                         self.standard_statuses = get_from_value(value, "standardStatuses").unwrap_or_default();
                         self.regions = get_from_value(value, "regions").unwrap_or_default();
                         self.types_access = get_from_value(value, "typesAccess").unwrap_or_default();
@@ -314,7 +314,7 @@ impl CreateStandard {
                                   select={self.request_standard.company_uuid.clone()}
                                   onchange=onchange_change_owner_company
                                 >
-                              { for self.supplier_list.iter().map(|x|
+                              { for self.company_list.iter().map(|x|
                                   html!{
                                       <option value={x.uuid.to_string()}
                                             selected={x.uuid == self.request_standard.company_uuid} >
@@ -495,7 +495,7 @@ impl CreateStandard {
         let onclick_create_changes =
             self.link.callback(|_| Msg::RequestManager);
 
-        {match self.supplier_list.is_empty() {
+        {match self.company_list.is_empty() {
             true => html!{},
             false => html!{
                 <button
