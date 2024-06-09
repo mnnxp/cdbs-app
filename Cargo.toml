@@ -36,7 +36,7 @@ regex = "1.5.4"
 chrono = {version = "0.4.10", features = ["serde"]}
 log = "0.4.8"
 parking_lot = "0.10.0"
-pulldown-cmark = "0.6.1"
+pulldown-cmark = "0.9.6"
 thiserror = "1"
 
 anyhow = "1.0.41"
