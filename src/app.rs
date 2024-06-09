@@ -21,7 +21,7 @@ use crate::routes::{
     register::Register,
     settings::Settings,
     component::{ShowComponent, ComponentSettings, CreateComponent},
-    company::{ShowCompany, CompanySettings, CreateCompany},
+    company::{ShowSupplierCompany, ShowCompany, CompanySettings, CreateCompany},
     standard::{ShowStandard, StandardSettings, CreateStandard},
     AppRoute,
 };
@@ -126,7 +126,8 @@ impl Component for App {
                             AppRoute::Home => html!{<Home />},
                             AppRoute::Notifications => html!{<Notifications />},
                             AppRoute::Settings => html!{<Settings />},
-                            AppRoute::Profile(_username) => html!{<Profile current_user=self.current_user.clone()/>},
+                            AppRoute::Profile(_username) =>
+                                html!{<Profile current_user=self.current_user.clone()/>},
                             AppRoute::CompanySettings(company_uuid) => html!{<CompanySettings
                                 current_user=self.current_user.clone()
                                 company_uuid=company_uuid.to_string()
@@ -135,6 +136,8 @@ impl Component for App {
                                 current_user=self.current_user.clone()
                                 company_uuid=company_uuid.to_string()
                             />},
+                            AppRoute::ShowSupplierCompany(company_uuid) =>
+                                html!{<ShowSupplierCompany company_uuid=company_uuid.to_string()/>},
                             AppRoute::CreateCompany => html!{<CreateCompany />},
                             AppRoute::StandardSettings(standard_uuid) => html!{<StandardSettings
                                 current_user=self.current_user.clone()

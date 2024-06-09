@@ -47,6 +47,8 @@ pub enum AppRoute {
     CreateCompany,
     #[to = "#/company/{uuid}"]
     ShowCompany(String),
+    #[to = "#/supplier/{uuid}"]
+    ShowSupplierCompany(String),
     #[to = "#/standard/settings/{uuid}"]
     StandardSettings(String),
     #[to = "#/standard/create"]
