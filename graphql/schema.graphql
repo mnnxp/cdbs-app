@@ -40,6 +40,7 @@ type Claims {
   sub: String!
   iat: String!
   exp: String!
+  programId: Int!
 }
 
 type CompanyAccessComponentAndRelatedData {
@@ -862,8 +863,6 @@ type MutationRoot {
   putUserUpdate(args: IptUpdateUserData!): Int!
   uploadFavicon(filename: String!): UploadFile!
   uploadUserCertificate(certData: IptUserCertificateData!): UploadFile!
-
-  # Update user certificate description
   updateUserCertificate(args: IptUpdateUserCertificateData!): Boolean!
   deleteUserCertificate(args: DelUserCertificateData!): Boolean!
   addCompanyFav(companyUuid: UUID!): Boolean!
@@ -878,11 +877,7 @@ type MutationRoot {
   deleteNotifications(notificationsIds: [Int!]!): Int!
   logout: String!
   registerComponent(args: IptComponentData!): UUID!
-
-  # Transfer component ownership to another user
   transferComponentOwnership(args: ChangeOwnerComponent!): Boolean!
-
-  # Change component type access
   changeComponentAccess(args: ChangeTypeAccessComponent!): Boolean!
   putComponentUpdate(componentUuid: UUID!, args: IptUpdateComponentData!): Int!
   deleteComponent(componentUuid: UUID!): UUID!
@@ -922,11 +917,7 @@ type MutationRoot {
   ): [UploadFile!]!
   deleteFilesFromFileset(args: DelModificationFileFromFilesetData!): Boolean!
   registerStandard(args: IptStandardData!): UUID!
-
-  # Transfer component ownership to another user
   transferStandardOwnership(args: ChangeOwnerStandard!): Boolean!
-
-  # Change standard type access
   changeStandardAccess(args: ChangeTypeAccessStandard!): Boolean!
   putStandardUpdate(standardUuid: UUID!, args: IptUpdateStandardData!): Int!
   deleteStandard(standardUuid: UUID!): UUID!
@@ -944,14 +935,10 @@ type MutationRoot {
   deleteStandardFile(args: DeleteStandardFileData!): Boolean!
   registerCompany(args: IptCompanyData!): UUID!
   putCompanyUpdate(companyUuid: UUID!, args: IptUpdateCompanyData!): Int!
-
-  # Change company type access
   changeCompanyAccess(args: ChangeTypeAccessCompany!): Boolean!
   deleteCompany(companyUuid: UUID!): UUID!
   uploadCompanyFavicon(companyUuid: UUID!, filename: String!): UploadFile!
   uploadCompanyCertificate(certData: IptCompanyCertificateData!): UploadFile!
-
-  # Update company certificate description
   updateCompanyCertificate(args: IptUpdateCompanyCertificateData!): Boolean!
   deleteCompanyCertificate(args: DelCompanyCertificateData!): Boolean!
   addCompanySpecs(args: IptCompanySpecsData!): Int!
@@ -967,8 +954,6 @@ type MutationRoot {
     companyRepresentUuid: UUID!
   ): Boolean!
   addCompanyMember(args: IptCompanyMemberData!): Boolean!
-
-  # Change access role for member
   changeRoleMember(args: IptCompanyMemberData!): Boolean!
   deleteCompanyMember(args: DelCompanyMemberData!): Boolean!
   registerCompanyRole(args: IptRoleMemberData!): Int!
@@ -976,14 +961,8 @@ type MutationRoot {
   deleteCompanyRole(args: DelRoleMemberData!): Int!
   addAccessRole(args: IptRoleAccessData!): Boolean!
   deleteAccessRole(args: DelRoleAccessData!): Int!
-
-  # Add company to suppliers list component
   addComponentSupplier(args: IptSupplierComponentData!): Boolean!
-
-  # Set company as main supplier component
   setCompanyOwnerSupplier(args: IptSupplierComponentData!): Boolean!
-
-  # Delete company of suppliers list
   deleteSupplierCompany(args: DelCompanyOfSuppliersData!): Boolean!
   registerExtension(args: IptExtensionData!): Extension!
   registerKeyword(args: IptKeywordData!): Keyword!
@@ -991,22 +970,11 @@ type MutationRoot {
   registerParam(args: IptParamTranslateListData!): Int!
   registerProgram(args: IptProgramData!): Program!
   registerRegion(args: IptRegionTranslateListData!): RegionTranslateList!
-
-  # Сonfirmation of successful upload of files to storage
   uploadCompleted(fileUuids: [UUID!]!): Int!
-
-  # Changes active revision of file
   changeActiveFileRevision(fileUuid: UUID!): Boolean!
-
-  # Sets a flag for delete file in storage
   deleteFile(fileUuid: UUID!): Boolean!
 }
 
-# ISO 8601 combined date and time without timezone.
-#
-# # Examples
-#
-# * `2015-07-01T08:59:60.123`,
 scalar NaiveDateTime
 
 type ParamTranslateList {
@@ -1059,13 +1027,9 @@ type QueryRoot {
   componentModificationFilesets(
     args: IptFilesetProgramArg!
   ): [FilesetProgramRelatedData!]!
-
-  # Returns information about files from a set of component modification files
   componentModificationFilesOfFileset(
     args: IptFileOfFilesetArg!
   ): [ShowFileRelatedData!]!
-
-  # Returns presigned-url and relate data for download files from a modification fileset
   componentModificationFilesetFiles(
     args: IptFileOfFilesetArg!
   ): [DownloadFile!]!
@@ -1089,6 +1053,7 @@ type QueryRoot {
   standardStatuses(filter: [Int!]): [StandardStatusTranslateList!]!
   companies(args: IptCompaniesArg): [ShowCompanyShort!]!
   company(companyUuid: UUID!): CompanyAndRelatedData!
+  supplierCompany(companyUuid: UUID!): CompanyAndRelatedData!
   companyRepresents(
     args: IptCompanyRepresentsArg!
   ): [CompanyRepresentAndRelatedData!]!
@@ -1106,11 +1071,7 @@ type QueryRoot {
   specs(args: IptSpecArg): [SpecTranslateList!]!
   specsPaths(args: IptSpecPathArg): [SpecPath!]!
   searchSpecs(args: IptSearchSpecArg!): [SpecPath!]!
-
-  # Presigned URL for download file from storage
   presignedUrl(fileUuid: UUID!): DownloadFile!
-
-  # Returns ShowFile for all (not deleted) file versions
   showFileRevisions(
     fileUuid: UUID!
     limit: Int
@@ -1207,7 +1168,6 @@ type ShowStandardShort {
   isFollowed: Boolean!
 }
 
-# For show data about profile
 type ShowUserAndRelatedData {
   uuid: UUID!
   firstname: String!
@@ -1298,14 +1258,8 @@ type TypeAccessTranslateList {
   name: String!
 }
 
-# A UUID is a unique 128-bit number, stored as 16 octets. UUIDs are parsed as
-# Strings within GraphQL. UUIDs are used to assign unique identifiers to
-# entities without requiring a central allocating authority.
 #
-# # References
 #
-# * [Wikipedia: Universally Unique Identifier](http://en.wikipedia.org/wiki/Universally_unique_identifier)
-# * [RFC4122: A Universally Unique IDentifier (UUID) URN Namespace](http://tools.ietf.org/html/rfc4122)
 scalar UUID
 
 type UploadFile {

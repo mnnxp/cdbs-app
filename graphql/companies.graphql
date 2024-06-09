@@ -4,6 +4,12 @@ query GetCompanyData($companyUuid: UUID!) {
   }
 }
 
+query GetSupplierCompanyData($companyUuid: UUID!) {
+  supplierCompany(companyUuid: $companyUuid) {
+    ...companyFields
+  }
+}
+
 query GetCompaniesShortList($iptCompaniesArg: IptCompaniesArg) {
   companies(args: $iptCompaniesArg) {
     ...companyShortFields
