@@ -38,6 +38,15 @@ pub(crate) struct GetCompanySettingDataOpt;
 )]
 pub(crate) struct GetCompanyData;
 
+/// Получение данных о компании со статусом поставщика (без токена)
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/companies.graphql",
+    response_derives = "Debug"
+)]
+pub(crate) struct GetSupplierCompanyData;
+
 /// Обновление данных компании
 #[derive(GraphQLQuery)]
 #[graphql(
