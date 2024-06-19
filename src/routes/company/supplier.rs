@@ -20,7 +20,7 @@ use crate::fragments::{
     component::CatalogComponents,
     standard::CatalogStandards,
 };
-use crate::services::{ContentAdapter, Counter, get_value_field, resp_parsing};
+use crate::services::{ContentAdapter, Counter, get_value_field, resp_parsing, title_changer};
 use crate::types::{UUID, CompanyInfo, ComponentsQueryArg, StandardsQueryArg};
 use crate::gqls::make_query;
 use crate::gqls::company::{
@@ -106,6 +106,10 @@ impl Component for ShowSupplierCompany {
         // get flag changing current company in route
         let not_matches_company_uuid = target_company_uuid != self.current_company_uuid;
         // debug!("self.current_company_uuid {:#?}", self.current_company_uuid);
+
+        if let Some(company) = &self.company {
+            title_changer::set_title(company.shortname.as_str());
+        }
 
         if first_render || not_matches_company_uuid {
             let link = self.link.clone();

@@ -18,7 +18,7 @@ use crate::fragments::{
     standard::{StandardFilesCard, SpecsTags, KeywordsTags},
     img_showcase::ImgShowcase,
 };
-use crate::services::{Counter, get_logged_user, get_value_field, resp_parsing};
+use crate::services::{Counter, get_logged_user, get_value_field, resp_parsing, title_changer};
 use crate::types::{UUID, StandardInfo, SlimUser, DownloadFile, ComponentsQueryArg};
 use crate::gqls::make_query;
 use crate::gqls::standard::{
@@ -111,6 +111,10 @@ impl Component for ShowStandard {
         // get flag changing current standard in route
         let not_matches_standard_uuid = target_standard_uuid != self.current_standard_uuid;
         // debug!("self.current_standard_uuid {:#?}", self.current_standard_uuid);
+
+        if let Some(standard) = &self.standard {
+            title_changer::set_title(standard.name.as_str());
+        }
 
         if first_render || not_matches_standard_uuid {
             let link = self.link.clone();

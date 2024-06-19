@@ -21,7 +21,7 @@ use crate::fragments::{
     user::CatalogUsers,
     user::UserCertificatesCard,
 };
-use crate::services::{Counter, get_logged_user, get_value_field, resp_parsing};
+use crate::services::{Counter, get_logged_user, get_value_field, resp_parsing, title_changer};
 use crate::types::{
     UserDataCard, CompaniesQueryArg, ComponentsQueryArg, SelfUserInfo, SlimUser,
     StandardsQueryArg, UserCertificate, UserInfo, UsersQueryArg, UUID,
@@ -134,6 +134,8 @@ impl Component for Profile {
         // check get self data
         let get_self = logged_username == target_username;
         // debug!("get_self {:?}", get_self);
+
+        title_changer::set_title(self.current_username.as_str());
 
         if first_render || not_matches_username {
             // clear old data

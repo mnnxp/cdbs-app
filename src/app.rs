@@ -25,7 +25,7 @@ use crate::routes::{
     standard::{ShowStandard, StandardSettings, CreateStandard},
     AppRoute,
 };
-use crate::services::{is_authenticated, get_current_user, get_value_field};
+use crate::services::{is_authenticated, get_current_user, get_value_field, title_changer};
 use crate::types::SlimUser;
 
 /// The root app component
@@ -113,6 +113,9 @@ impl Component for App {
         let callback_login = self.link.callback(Msg::Authenticated);
         // let callback_register = self.link.callback(Msg::Authenticated);
         let callback_logout = self.link.callback(|_| Msg::Logout);
+
+        // old title purge
+        title_changer::set_title("");
 
         html!{
             <>

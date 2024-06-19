@@ -24,7 +24,7 @@ use crate::fragments::{
     three_showcase::ThreeShowcase,
     clipboard::ShareLinkBtn,
 };
-use crate::services::{Counter, get_logged_user, get_value_field, resp_parsing};
+use crate::services::{Counter, get_logged_user, get_value_field, resp_parsing, title_changer};
 use crate::types::{UUID, ComponentInfo, SlimUser, ComponentParam, ComponentModificationInfo, DownloadFile};
 use crate::gqls::make_query;
 use crate::gqls::component::{
@@ -146,7 +146,9 @@ impl Component for ShowComponent {
 
         let link = self.link.clone();
 
-        // debug!("get_self {:?}", get_self);
+        if let Some(component) = &self.component {
+            title_changer::set_title(component.name.as_str());
+        }
 
         if first_render || not_matches_component_uuid {
             self.error = None;

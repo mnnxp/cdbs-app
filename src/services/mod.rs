@@ -14,6 +14,7 @@ mod util;
 mod response_parsing;
 mod subscribers;
 mod clipboard;
+pub(crate) mod title_changer;
 
 pub use auth::{Auth, get_current_user, logout};
 pub use localisation::get_value_field;
