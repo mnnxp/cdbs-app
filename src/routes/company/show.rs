@@ -306,14 +306,9 @@ impl ShowCompany {
                   }}
                 </div>
                 <div class="column">
-                    {match self.show_full_company_info {
-                        true => html!{
-                            <p class="subtitle is-6 has-text-right">
-                                {company_data.date_with_abbr()}
-                            </p>
-                        },
-                        false => html!{},
-                    }}
+                    <p class="subtitle is-6 has-text-right">
+                        {company_data.date_with_abbr()}
+                    </p>
                     <div class="buttons flexBox" >
                       {res_btn(classes!(
                           String::from("fas fa-user")),
