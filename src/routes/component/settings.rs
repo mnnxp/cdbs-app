@@ -475,12 +475,6 @@ impl ComponentSettings {
 
         html!{<div class="card">
             <div class="column">
-                <span class="id-box has-text-grey-light has-text-weight-bold">
-                    {match self.current_component_is_base {
-                        true => { get_value_field(&208) }, // base
-                        false => { get_value_field(&209) }, // no base
-                    }}
-                </span>
                 <div class="column" style="margin-right: 1rem">
                     <label class="label">{ get_value_field(&110) }</label>
                     <input
