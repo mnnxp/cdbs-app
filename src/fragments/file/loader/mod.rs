@@ -316,7 +316,7 @@ impl UploaderFiles {
             <div class="columns">
                 <div class="column">{self.select_files()}</div>
                 <div class="column">
-                    <span class="has-text-grey-light is-size-6" style="overflow-wrap: anywhere">
+                    <span class="is-size-6" style="overflow-wrap: anywhere">
                         {get_value_field(&183)}
                         {": .apng, .avif, .gif, .jpg, .jpeg, .jpe, .jif, .jfif, .png, .svg, .webp."}
                     </span>

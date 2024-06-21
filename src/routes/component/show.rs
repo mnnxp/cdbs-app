@@ -14,7 +14,7 @@ use crate::error::Error;
 use crate::fragments::{
     switch_icon::res_btn,
     list_errors::ListErrors,
-    user::ListItemUser,
+    user::ModalCardUser,
     component::{
         ComponentStandardItem, ComponentSupplierItem, ComponentLicenseTag, ComponentParamTag,
         ModificationsTable, FilesOfFilesetCard, ManageFilesOfFilesetBlock,
@@ -24,6 +24,7 @@ use crate::fragments::{
     three_showcase::ThreeShowcase,
     clipboard::ShareLinkBtn,
 };
+use crate::services::content_adapter::{DateDisplay, Markdownable};
 use crate::services::{Counter, get_logged_user, get_value_field, resp_parsing, title_changer};
 use crate::types::{UUID, ComponentInfo, SlimUser, ComponentParam, ComponentModificationInfo, DownloadFile};
 use crate::gqls::make_query;
@@ -51,7 +52,6 @@ pub struct ShowComponent {
     current_filesets_program: Vec<(UUID, String)>,
     show_full_description: bool,
     show_full_characteristics: bool,
-    open_owner_user_info: bool,
     open_modification_card: bool,
     open_modification_files_card: bool,
     open_fileset_files_card: bool,
@@ -85,7 +85,6 @@ pub enum Msg {
     ShowDescription,
     ShowFullCharacteristics,
     ShowStandardsList,
-    ShowOwnerUserCard,
     ShowModificationCard,
     ShowModificationFilesList,
     ShowFilesetFilesBlock(bool),
@@ -117,7 +116,6 @@ impl Component for ShowComponent {
             current_filesets_program: Vec::new(),
             show_full_description: false,
             show_full_characteristics: false,
-            open_owner_user_info: false,
             open_modification_card: false,
             open_modification_files_card: false,
             open_fileset_files_card: false,
@@ -323,7 +321,6 @@ impl Component for ShowComponent {
             Msg::ShowDescription => self.show_full_description = !self.show_full_description,
             Msg::ShowFullCharacteristics => self.show_full_characteristics = !self.show_full_characteristics,
             Msg::ShowStandardsList => self.show_related_standards = !self.show_related_standards,
-            Msg::ShowOwnerUserCard => self.open_owner_user_info = !self.open_owner_user_info,
             Msg::ShowModificationCard => self.open_modification_card = !self.open_modification_card,
             Msg::ShowModificationFilesList => self.open_modification_files_card = !self.open_modification_files_card,
             Msg::ShowFilesetFilesBlock(value) => self.open_fileset_files_card = value,
@@ -363,8 +360,6 @@ impl Component for ShowComponent {
                     <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
                     <div class="container page">
                         <div class="row">
-                            // modals cards
-                            {self.show_modal_owner_user(component_data)}
                             {match self.open_modification_card {
                                 true => self.show_modal_modification_card(component_data),
                                 false => html!{},
@@ -399,8 +394,6 @@ impl ShowComponent {
         &self,
         component_data: &ComponentInfo,
     ) -> Html {
-        let onclick_open_owner_company =
-            self.link.callback(|_| Msg::ShowOwnerUserCard);
         let show_description_btn =
             self.link.callback(|_| Msg::ShowDescription);
 
@@ -424,14 +417,11 @@ impl ShowComponent {
                 <div class="media">
                     <div class="media-content">
                         { get_value_field(&94) }
-                        <a class="id-box has-text-grey-light has-text-weight-bold"
-                            onclick={onclick_open_owner_company} >
-                          {format!("@{}",&component_data.owner_user.username)}
-                        </a>
+                        <ModalCardUser data = {component_data.owner_user.clone()} />
                     </div>
                     <div class="media-right" style="margin-right: 1rem">
-                        { get_value_field(&95) }<span class="id-box has-text-grey-light has-text-weight-bold">
-                            {format!("{:.*}", 10, component_data.updated_at.to_string())}
+                        { get_value_field(&95) }<span class="id-box">
+                            {component_data.updated_at.date_to_display()}
                         </span>
                     </div>
                 </div>
@@ -454,7 +444,7 @@ impl ShowComponent {
                 <div class="component-description">{
                     match self.show_full_description {
                         true => html!{<>
-                          {component_data.description.clone()}
+                          {component_data.description.to_markdown()}
                           {match component_data.description.len() {
                               250.. => html!{<>
                                 <br/>
@@ -760,32 +750,6 @@ impl ShowComponent {
         </div>}
     }
 
-    fn show_modal_owner_user(
-        &self,
-        component_data: &ComponentInfo,
-    ) -> Html {
-        let onclick_owner_user_info = self.link
-            .callback(|_| Msg::ShowOwnerUserCard);
-
-        let class_modal = match &self.open_owner_user_info {
-            true => "modal is-active",
-            false => "modal",
-        };
-
-        html!{<div class=class_modal>
-          <div class="modal-background" onclick=onclick_owner_user_info.clone() />
-          <div class="modal-content">
-              <div class="card">
-                <ListItemUser
-                    data = component_data.owner_user.clone()
-                    show_list = true
-                  />
-              </div>
-          </div>
-          <button class="modal-close is-large" aria-label="close" onclick=onclick_owner_user_info />
-        </div>}
-    }
-
     fn show_modal_modification_card(
         &self,
         component_data: &ComponentInfo,
@@ -816,7 +780,7 @@ impl ShowComponent {
                                         {mod_data.modification_name.clone()}
                                     </div>
                                     <p class="overflow-title">{ get_value_field(&61) }</p> // Description
-                                    <p>{mod_data.description.clone()}</p>
+                                    <p>{mod_data.description.to_markdown()}</p>
                                 </div>
                             </div>
                             <div class="columns" style="margin-bottom:0">
@@ -824,7 +788,8 @@ impl ShowComponent {
                                   {format!("{}: {}", get_value_field(&96), &mod_data.actual_status.name)}
                                 </div>
                                 <div class="column">
-                                  {format!("{} {:.*}", get_value_field(&30), 10, mod_data.updated_at.to_string())}
+                                  {get_value_field(&30)}
+                                  {mod_data.updated_at.date_to_display()}
                                 </div>
                             </div>
                           </div>

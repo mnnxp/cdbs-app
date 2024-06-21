@@ -12,12 +12,14 @@ use crate::fragments::clipboard::ShareLinkBtn;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{
+    user::ModalCardUser,
     switch_icon::res_btn,
     list_errors::ListErrors,
     component::CatalogComponents,
     standard::{StandardFilesCard, SpecsTags, KeywordsTags},
     img_showcase::ImgShowcase,
 };
+use crate::services::content_adapter::{DateDisplay, Markdownable};
 use crate::services::{Counter, get_logged_user, get_value_field, resp_parsing, title_changer};
 use crate::types::{UUID, StandardInfo, SlimUser, DownloadFile, ComponentsQueryArg};
 use crate::gqls::make_query;
@@ -67,7 +69,6 @@ pub enum Msg {
     GetStandardData(String),
     ShowDescription,
     ShowComponentsList,
-    OpenStandardOwner,
     OpenStandardSetting,
     ResponseError(Error),
     Ignore,
@@ -232,14 +233,6 @@ impl Component for ShowStandard {
             },
             Msg::ShowDescription => self.show_full_description = !self.show_full_description,
             Msg::ShowComponentsList => self.show_related_components = !self.show_related_components,
-            Msg::OpenStandardOwner => {
-                if let Some(standard_data) = &self.standard {
-                    // Redirect to owner standard page
-                    self.router_agent.send(ChangeRoute(AppRoute::ShowCompany(
-                        standard_data.owner_company.uuid.to_string()
-                    ).into()));
-                }
-            },
             Msg::OpenStandardSetting => {
                 if let Some(standard_data) = &self.standard {
                     // Redirect to page for change and update standard
@@ -303,7 +296,6 @@ impl ShowStandard {
         &self,
         standard_data: &StandardInfo,
     ) -> Html {
-        let onclick_open_owner_company = self.link.callback(|_| Msg::OpenStandardOwner);
         let show_description_btn = self.link.callback(|_| Msg::ShowDescription);
 
         html!{
@@ -312,23 +304,15 @@ impl ShowStandard {
                 object_uuid=self.current_standard_uuid.clone()
                 file_arr=self.file_arr.clone()
               />
-              // <div class="column is-one-quarter">
-              //   <img class="imgBox" src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
-              // </div>
               <div class="column">
                 <div class="media">
                     <div class="media-content">
                         { get_value_field(&94) }
-                        <a class="id-box has-text-grey-light has-text-weight-bold"
-                              onclick={onclick_open_owner_company}
-                            >{format!("{} {}",
-                            &standard_data.owner_company.shortname,
-                            &standard_data.owner_company.company_type.shortname
-                        )}</a>
+                        <ModalCardUser data = {standard_data.owner_user.clone()} />
                     </div>
                     <div class="media-right" style="margin-right: 1rem">
                         { get_value_field(&145) } // type access
-                        <span class="id-box has-text-grey-light has-text-weight-bold">
+                        <span class="id-box has-text-weight-bold">
                             {standard_data.type_access.name.clone()}
                         </span>
                     </div>
@@ -346,7 +330,7 @@ impl ShowStandard {
                 <div class="standard-description">{
                     match self.show_full_description {
                         true => html!{<>
-                          {standard_data.description.clone()}
+                          {standard_data.description.to_markdown()}
                           {match standard_data.description.len() {
                               250.. => html!{<>
                                 <br/>
@@ -395,7 +379,7 @@ impl ShowStandard {
                       </tr>
                       <tr>
                         <td>{ get_value_field(&149) }</td> // publication_at
-                        <td>{format!("{:.*}", 10, standard_data.publication_at.to_string())}</td>
+                        <td>{standard_data.publication_at.date_to_display()}</td>
                       </tr>
                       <tr>
                         <td>{ get_value_field(&150) }</td> // standard_status

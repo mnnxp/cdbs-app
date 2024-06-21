@@ -58,20 +58,13 @@ impl ListItem {
         html!{
           <div class="box itemBox">
             <article class="media center-media">
-              // <div class="media-left">
-              //   <figure class="image is-96x96">
-              //     // <div hidden={!is_supplier} class="top-tag" >{ get_value_field(&3) }</div> // supplier
-              //     <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
-              //     // <img src={image_file.download_url.to_string()} alt="Favicon profile"/>
-              //   </figure>
-              // </div>
               <div class="media-content" style="min-width: 0px;">
                 <div class="content">
                   <p>
                   <div style="margin-bottom:0" >
                       <span class="title is-5">{name.to_string()}</span>
                       { get_value_field(&231) }
-                      <span class="id-box has-text-grey-light has-text-weight-bold">{region.region.to_string()}</span>
+                      <span class="id-box has-text-weight-bold">{region.region.to_string()}</span>
                     </div>
                     {format!("{}: {}", get_value_field(&232), address)}
                   </p>
@@ -102,15 +95,10 @@ impl ListItem {
         html!{
           <div class="boxItem" >
             <div class="innerBox" >
-              // <div class="imgBox" >
-              //   // <div class="top-tag" hidden={!is_supplier} >{ get_value_field(&3) }</div> // supplier
-              //   <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
-              //   // <img src={image_file.download_url.to_string()} alt="Favicon profile"/>
-              // </div>
               <div style="margin-bottom:0" >
                   <span class="title is-5">{name.to_string()}</span>
                   { get_value_field(&231) }
-                  <span class="id-box has-text-grey-light has-text-weight-bold">{region.region.to_string()}</span>
+                  <span class="id-box has-text-weight-bold">{region.region.to_string()}</span>
               </div>
               <div class="overflow-title">{
                   format!("{}: {}", get_value_field(&232), address)

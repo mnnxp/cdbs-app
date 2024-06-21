@@ -8,25 +8,9 @@ use log::debug;
 use crate::error::Error;
 use crate::fragments::{ListState, list_errors::ListErrors, list_empty::ListEmpty};
 use crate::services::resp_parsing;
-use crate::types::{UUID, ShowUserShort, UsersQueryArg};
+use crate::types::{ShowUserShort, UsersQueryArg};
 use crate::gqls::make_query;
 use crate::gqls::user::{GetUsersShortList, get_users_short_list};
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/user.graphql",
-    response_derives = "Debug"
-)]
-struct AddUserFav;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/user.graphql",
-    response_derives = "Debug"
-)]
-struct DeleteUserFav;
 
 pub enum Msg {
     SwitchShowType,
@@ -118,12 +102,7 @@ impl Component for CatalogUsers {
     }
 
     fn view(&self) -> Html {
-        // let list = self.list.clone();
-
-        let onclick_change_view = self
-            .link
-            .callback(|_|Msg::SwitchShowType);
-
+        let onclick_change_view = self.link.callback(|_|Msg::SwitchShowType);
         let class_for_icon: &str;
         let mut class_for_list = "";
         match self.show_type {
@@ -131,9 +110,7 @@ impl Component for CatalogUsers {
                 class_for_icon = "fas fa-bars";
                 class_for_list = "flex-box";
             },
-            ListState::List => {
-                class_for_icon = "fas fa-th-large";
-            },
+            ListState::List => class_for_icon = "fas fa-th-large",
         };
 
         html!{
@@ -143,12 +120,6 @@ impl Component for CatalogUsers {
                 <div class="level-left ">
                 </div>
                 <div class="level-right">
-                  // <div class="select">
-                  //   <select>
-                  //     <option>{"Select dropdown"}</option>
-                  //     <option>{"With options"}</option>
-                  //   </select>
-                  // </div>
                   <button class="button" onclick={onclick_change_view} >
                     <span class={"icon is-small"}>
                       <i class={class_for_icon}></i>
@@ -174,9 +145,10 @@ impl CatalogUsers {
         show_comp: &ShowUserShort,
     ) -> Html {
         html!{
-            <ListItemUser data={show_comp.clone()}
+            <ListItemUser
+                data={show_comp.clone()}
                 show_list={self.show_type == ListState::List}
-                />
+            />
         }
     }
 }

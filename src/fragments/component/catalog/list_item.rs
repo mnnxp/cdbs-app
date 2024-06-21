@@ -3,7 +3,7 @@ use yew_router::{
     agent::RouteRequest::ChangeRoute,
     prelude::RouteAgent,
 };
-// use log::debug;
+use crate::services::content_adapter::DateDisplay;
 use crate::services::get_value_field;
 use crate::routes::AppRoute;
 use crate::fragments::switch_icon::res_btn;
@@ -99,9 +99,7 @@ impl ListItem {
             ..
         } = &self.props.data;
 
-        let onclick_open_component = self.link
-            .callback(|_| Msg::OpenComponent);
-
+        let onclick_open_component = self.link.callback(|_| Msg::OpenComponent);
         let trigger_fab_btn = self.link.callback(|_| Msg::TriggerFav);
 
         let mut class_res_btn = vec!["fa-bookmark"];
@@ -131,7 +129,7 @@ impl ListItem {
                     </div>
                     <div class="column">
                         { get_value_field(&159) } // actual status
-                        <span class="id-box has-text-grey-light has-text-weight-bold">
+                        <span class="id-box has-text-weight-bold">
                             {actual_status.name.clone()}
                         </span>
                     </div>
@@ -160,12 +158,13 @@ impl ListItem {
                   <div class="columns" style="margin-bottom:0">
                       <div class="column">
                         {match licenses.first() {
-                            Some(l) => html!{format!("{}: {}", get_value_field(&162), &l.name)}, // License
+                            Some(l) => html!{l.name.clone()},
                             None => html!{},
                         }}
                       </div>
                       <div class="column">
-                        {format!("{}{:.*}", get_value_field(&30), 10, updated_at.to_string())}
+                        {get_value_field(&30)}
+                        {updated_at.date_to_display()}
                       </div>
                   </div>
                 </div>
@@ -233,13 +232,13 @@ impl ListItem {
         match &self.props.data.component_suppliers.first() {
             Some(x) => html!{<>
                 { get_value_field(&158) } // supplier / manufactured by
-                <span class="id-box has-text-grey-light has-text-weight-bold">
+                <span class="id-box has-text-weight-bold">
                   {x.supplier.shortname.clone()}
                 </span>
             </>},
             None => html!{<>
                 { get_value_field(&118) } // user uploaded
-                <span class="id-box has-text-grey-light has-text-weight-bold">
+                <span class="id-box has-text-weight-bold">
                   {format!("@{}",&self.props.data.owner_user.username)}
                 </span>
             </>},

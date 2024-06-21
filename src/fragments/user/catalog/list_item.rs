@@ -115,7 +115,6 @@ impl ListItemUser {
             <article class="media center-media">
               <div class="media-left">
                 <figure class="image is-96x96">
-                  // <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
                   <img
                     src={image_file.download_url.to_string()} alt="Favicon profile"
                     loading="lazy"
@@ -131,7 +130,6 @@ impl ListItemUser {
                       </div>
                       <span class="overflow-title">{format!("@{}", username)}</span>
                     </div>
-                    // <div class="overflow-title has-text-weight-bold	is-size-4" >{username}</div>
                   </p>
                 </div>
               </div>
@@ -156,7 +154,6 @@ impl ListItemUser {
           <div class="boxItem" >
             <div class="innerBox" >
               <div class="imgBox" >
-                // <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
                 <img
                     src={image_file.download_url.to_string()} alt="Favicon profile"
                     loading="lazy"
@@ -166,9 +163,7 @@ impl ListItemUser {
                 {format!("{} {}", firstname, lastname)}
               </div>
               <span class="overflow-title">{format!("@{}", username)}</span>
-              // <div class="overflow-title has-text-weight-bold	is-size-4" >{username}</div>
             </div>
-            // <div class="overflow-title has-text-weight-bold	is-size-4" >{username}</div>
             <div class="btnBox">
                 {self.open_profile_page(false)}
             </div>
