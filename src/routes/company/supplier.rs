@@ -1,18 +1,13 @@
-use yew::{agent::Bridged, classes, html, Bridge, Callback, Component, Properties, ComponentLink, Html, ShouldRender};
-use yew_router::{
-    service::RouteService,
-    agent::RouteRequest::ChangeRoute,
-    prelude::RouteAgent,
-};
+use yew::{classes, html, Callback, Component, Properties, ComponentLink, Html, ShouldRender};
+use yew_router::service::RouteService;
 use web_sys::MouseEvent;
 use log::debug;
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
-use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{
-    switch_icon::res_btn,
+    user::ModalCardUser,
     list_errors::ListErrors,
     list_empty::ListEmpty,
     side_menu::{MenuItem, SideMenu},
@@ -20,7 +15,10 @@ use crate::fragments::{
     component::CatalogComponents,
     standard::CatalogStandards,
 };
-use crate::services::{ContentAdapter, Counter, get_value_field, resp_parsing, title_changer};
+use crate::services::content_adapter::{
+    ContentDisplay, Markdownable, DateDisplay, ContactDisplay, SpecDisplay
+};
+use crate::services::{Counter, get_value_field, resp_parsing, title_changer};
 use crate::types::{UUID, CompanyInfo, ComponentsQueryArg, StandardsQueryArg};
 use crate::gqls::make_query;
 use crate::gqls::company::{
@@ -34,7 +32,6 @@ pub struct ShowSupplierCompany {
     error: Option<Error>,
     company: Option<CompanyInfo>,
     current_company_uuid: UUID,
-    router_agent: Box<dyn Bridge<RouteAgent>>,
     props: Props,
     link: ComponentLink<Self>,
     subscribers: usize,
@@ -62,7 +59,6 @@ pub enum Msg {
     DelFollow(String),
     GetCompanyResult(String),
     ChangeTab(CompanyTab),
-    OpenOwnerCompany,
     ResponseError(Error),
     ClearError,
     Ignore,
@@ -85,7 +81,6 @@ impl Component for ShowSupplierCompany {
             error: None,
             company: None,
             current_company_uuid: String::new(),
-            router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             props,
             link,
             subscribers: 0,
@@ -194,14 +189,6 @@ impl Component for ShowSupplierCompany {
                 }
             },
             Msg::ChangeTab(set_tab) => self.company_tab = set_tab,
-            Msg::OpenOwnerCompany => {
-                if let Some(company_data) = &self.company {
-                    // Redirect to owner company page
-                    self.router_agent.send(ChangeRoute(AppRoute::Profile(
-                        company_data.owner_user.username.to_string()
-                    ).into()));
-                }
-            },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::ClearError => self.error = None,
             Msg::Ignore => {},
@@ -247,7 +234,6 @@ impl Component for ShowSupplierCompany {
 
 impl ShowSupplierCompany {
     fn view_card(&self) -> Html {
-        let onclick_owner_company_btn = self.link.callback(|_| Msg::OpenOwnerCompany);
         match &self.company {
             Some(company_data) => html!{
               <div class="columns">
@@ -263,17 +249,14 @@ impl ShowSupplierCompany {
                 <abbr title={ get_value_field(&275) } style="position: absolute;margin-left: 10rem;">
                     {diamond_svg(company_data.is_supplier, "175")}
                 </abbr>
-                  {company_data.converter()}
+                  {company_data.to_display()}
+                  <ModalCardUser data = {company_data.owner_user.clone()} />
                 </div>
                 <div class="column">
                   <p class="subtitle is-6 has-text-right">
-                    {company_data.date_with_abbr()}
+                    {company_data.date_to_display()}
                   </p>
                   <div class="buttons flexBox" >
-                    {res_btn(classes!(
-                        String::from("fas fa-user")),
-                        onclick_owner_company_btn,
-                        String::new())}
                     {self.show_favorite_btn()}
                   </div>
                 </div>
@@ -310,7 +293,7 @@ impl ShowSupplierCompany {
             <div class="columns">
                 <div class="column is-two-thirds">
                     <div id="description" class="content">
-                      {company_data.description_md()}
+                      {company_data.description.to_markdown()}
                     </div>
                 </div>
                 <div class="column">

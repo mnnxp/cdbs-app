@@ -12,6 +12,7 @@ use wasm_bindgen_futures::spawn_local;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{
+    user::ModalCardUser,
     switch_icon::res_btn,
     list_errors::ListErrors,
     list_empty::ListEmpty,
@@ -20,7 +21,10 @@ use crate::fragments::{
     component::CatalogComponents,
     standard::CatalogStandards,
 };
-use crate::services::{ContentAdapter, Counter, get_logged_user, get_value_field, resp_parsing, title_changer};
+use crate::services::content_adapter::{
+    ContentDisplay, Markdownable, DateDisplay, ContactDisplay, SpecDisplay
+};
+use crate::services::{Counter, get_logged_user, get_value_field, resp_parsing, title_changer};
 use crate::types::{UUID, CompanyInfo, SlimUser, ComponentsQueryArg, StandardsQueryArg};
 use crate::gqls::make_query;
 use crate::gqls::company::{
@@ -65,7 +69,6 @@ pub enum Msg {
     DelFollow(String),
     GetCompanyResult(String),
     ChangeTab(CompanyTab),
-    OpenOwnerCompany,
     OpenSettingCompany,
     ShowFullCompanyInfo,
     ResponseError(Error),
@@ -210,14 +213,6 @@ impl Component for ShowCompany {
                 }
             },
             Msg::ChangeTab(set_tab) => self.company_tab = set_tab,
-            Msg::OpenOwnerCompany => {
-                if let Some(company_data) = &self.company {
-                    // Redirect to owner company page
-                    self.router_agent.send(ChangeRoute(AppRoute::Profile(
-                        company_data.owner_user.username.to_string()
-                    ).into()));
-                }
-            },
             Msg::OpenSettingCompany => {
                 if let Some(company_data) = &self.company {
                     // Redirect to owner company page
@@ -272,12 +267,11 @@ impl Component for ShowCompany {
 
 impl ShowCompany {
     fn view_card(&self) -> Html {
-        let onclick_owner_company_btn = self.link.callback(|_| Msg::OpenOwnerCompany);
         let onclick_setting_company_btn = self.link.callback(|_| Msg::OpenSettingCompany);
 
         let size_favicon = match self.show_full_company_info {
             true => "is-128x128",
-            false => "is-48x48",
+            false => "is-64x64",
         };
 
         match &self.company {
@@ -296,24 +290,20 @@ impl ShowCompany {
                       {diamond_svg(company_data.is_supplier, "25")}
                   </abbr>
                   {match self.show_full_company_info {
-                      true => {company_data.converter()},
+                      true => {company_data.to_display()},
                       false => html!{
                           <p id="subtitle-shortname">
-                            <strong>{format!("{} ", &company_data.shortname)}</strong>
-                            {company_data.company_type.shortname.clone()}
+                            <strong>{company_data.shortname.clone()}</strong>
                           </p>
                       },
                   }}
+                  <ModalCardUser data = {company_data.owner_user.clone()} />
                 </div>
                 <div class="column">
                     <p class="subtitle is-6 has-text-right">
-                        {company_data.date_with_abbr()}
+                        {company_data.date_to_display()}
                     </p>
                     <div class="buttons flexBox" >
-                      {res_btn(classes!(
-                          String::from("fas fa-user")),
-                          onclick_owner_company_btn,
-                          String::new())}
                       {match &self.current_user_owner {
                           true => {res_btn(
                               classes!("fa", "fa-tools"),
@@ -359,7 +349,7 @@ impl ShowCompany {
                 <div class="columns">
                     <div class="column is-two-thirds">
                         <div id="description" class="content">
-                          {company_data.description_md()}
+                          {company_data.description.to_markdown()}
                         </div>
                     </div>
                     <div class="column">
