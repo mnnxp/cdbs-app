@@ -407,52 +407,50 @@ impl Profile {
             (None, None) => UserDataCard::default(),
         };
 
-        html!{<div class="media">
-            <div class="media-left">
-              <figure class="image is-48x48">
-                // <img src="https://bulma.io/images/placeholders/96x96.png" alt="Placeholder image"/>
-                <img
-                    src={image_file.clone()} alt="Favicon profile"
-                    loading="lazy"
-                />
-              </figure>
+        html!{
+            <div class="columns">
+                <div class="box">
+                    <figure class=classes!("container", "image", "is-48x48")>
+                        <img
+                            src={image_file.clone()} alt="Favicon profile"
+                            loading="lazy"
+                        />
+                    </figure>
+                </div>
+                <div id="profile-region" class=classes!("column", "is-three-fifths")>
+                <p id="title-fl" class="title is-4">
+                    {format!("{} {}", firstname, lastname)}
+                </p>
+                <p id="subtitle-username" class="subtitle is-6">
+                    {format!("@{}", username)}
+                </p>
+                </div>
+                <div class="column">
+                    // for self user data not show button "following"
+                    {match &self.profile {
+                        Some(_) => html!{<>
+                            <p class="subtitle is-6 has-text-right">
+                                {get_value_field(&30)}
+                                {" "}
+                                {updated_at}
+                            </p>
+                            {self.show_favorite_btn()}
+                        </>},
+                        None => html!{
+                            <div class="subtitle is-6 has-text-right">
+                                {get_value_field(&30)}
+                                {" "}
+                                {updated_at}
+                                <p>
+                                    <span>{ get_value_field(&31) }</span>
+                                    <span>{self.abbr_number()}</span>
+                                </p>
+                            </div>
+                        },
+                    }}
+                </div>
             </div>
-            <div class="media-content">
-              <p id="title-fl" class="title is-4">{
-                  format!("{} {}", firstname, lastname)
-              }</p>
-              <p id="subtitle-username" class="subtitle is-6">{
-                  format!("@{}", username)
-              }</p>
-            </div>
-            <div class="media-right">
-                {match self.show_full_user_info {
-                    true => html!{
-                        <div>
-                            <span>{ get_value_field(&30) }</span>
-                            <span>{updated_at}</span>
-                        </div>
-                    },
-                    false => html!{},
-                }}
-                { self.show_profile_followers() }
-            </div>
-        </div>}
-    }
-
-    fn show_profile_followers(&self) -> Html {
-        html! {<>
-            // for self user data not show button "following"
-            {match &self.profile {
-                Some(_) => self.show_favorite_btn(),
-                None => html!{
-                    <div>
-                        <span>{ get_value_field(&31) }</span>
-                        <span>{self.abbr_number()}</span>
-                    </div>
-                },
-            }}
-        </>}
+        }
     }
 
     fn show_favorite_btn(&self) -> Html {
@@ -577,25 +575,23 @@ impl Profile {
         match self.show_full_user_info {
             true => html! {<>
                 <div class="columns">
-                    <div class="column">
+                    <div class="column is-two-thirds">
                         <div id="description" class="content">
                           {description}
                         </div>
                     </div>
                     <div class="column">
-                        <div id="position">
+                        <div id="position" hidden={position.is_empty()}>
                             <span class="icon is-small"><i class="fas fa-briefcase" /></span>
                             <span>{ get_value_field(&39) }</span>
                             <span class="overflow-title has-text-weight-bold">{position}</span>
                         </div>
-                        // <br/>
                         <div id="region">
                             <span class="icon is-small"><i class="fas fa-map-marker-alt" /></span>
                             <span>{ get_value_field(&40) }</span>
                             <span class="overflow-title has-text-weight-bold">{region}</span>
                         </div>
-                        // <br/>
-                        <div id="program">
+                        <div id="program" hidden={program == "Unknown"}>
                             <span class="icon is-small"><i class="fas fa-drafting-compass" /></span>
                             <span>{ get_value_field(&41) }</span>
                             <span class="overflow-title has-text-weight-bold">{program}</span>
