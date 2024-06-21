@@ -23,6 +23,7 @@ use crate::fragments::{
     side_menu::{MenuItem, SideMenu},
     upload_favicon::UpdateFaviconBlock,
 };
+use crate::services::content_adapter::DateDisplay;
 use crate::services::{get_logged_user, get_value_field, resp_parsing, get_value_response, get_from_value};
 use crate::types::{
     UUID, SlimUser, CompanyUpdateInfo, CompanyInfo, Region,
@@ -497,7 +498,7 @@ impl CompanySettings {
                         {match &self.current_data {
                             Some(data) => html!{
                                 <span class="overflow-title">
-                                    {format!("{:.*}", 19, data.updated_at.to_string())}
+                                    {data.updated_at.date_to_display()}
                                 </span>
                             },
                             None => html!{<span>{ get_value_field(&75) }</span>},

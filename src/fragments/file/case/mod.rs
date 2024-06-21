@@ -7,6 +7,7 @@ use log::debug;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{ShowFileInfo, UUID};
+use crate::services::content_adapter::{ContentDisplay, DateDisplay};
 use crate::services::{Size, get_value_field, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::relate::{
@@ -241,20 +242,10 @@ impl FileShowcase {
     };
     html!{
       <tr class={select_str}>
-        // <td>{file_info.revision.clone()}</td>
         <td><abbr title={file_info.uuid.clone()}>{file_info.revision.clone()}</abbr></td>
-        // <td>{file_info.filename.clone()}</td>
-        // <td>{file_info.content_type.clone()}</td>
         <td>{file_info.show_size()}</td>
-        // <td>{file_info.program.name.clone()}</td>
-        // <td>{file_info.parent_file_uuid.clone()}</td>
-        <td>{format!("{} {} (@{})",
-          file_info.owner_user.firstname.clone(),
-          file_info.owner_user.lastname.clone(),
-          file_info.owner_user.username.clone(),
-        )}</td>
-        <td>{format!("{:.*}", 19, file_info.created_at.to_string())}</td>
-        // <td>{format!("{:.*}", 19, file_info.updated_at.to_string())}</td>
+        <td>{file_info.owner_user.to_display()}</td>
+        <td>{file_info.updated_at.date_to_display()}</td>
         <td>{match select_str.is_empty() {
           true => html!{
             <div class="buttons">
@@ -264,7 +255,6 @@ impl FileShowcase {
           },
           false => html!{
             <div class="buttons">
-              // {self.show_set_active_btn(file_info.uuid.clone())}
               {self.show_download_btn()}
               {self.show_delete_btn(file_info.uuid.clone())}
             </div>
@@ -310,34 +300,18 @@ impl FileShowcase {
               <td>{get_value_field(&308)}</td> // Revision
               <td>{self.props.file_info.revision}</td>
             </tr>
-            // <tr>
-            //   <td>{get_value_field(&237)}</td> // Content type
-            //   <td>{self.props.file_info.content_type.clone()}</td>
-            // </tr>
             <tr>
               <td>{get_value_field(&238)}</td> // Filesize
               <td>{self.props.file_info.show_size()}</td>
             </tr>
-            // <tr>
-            //   <td>{get_value_field(&239)}</td> // Program
-            //   <td>{self.props.file_info.program.name.clone()}</td>
-            // </tr>
             <tr>
               <td>{get_value_field(&240)}</td> // Upload by
-              <td>{format!("{} {} (@{})",
-                self.props.file_info.owner_user.firstname.clone(),
-                self.props.file_info.owner_user.lastname.clone(),
-                self.props.file_info.owner_user.username.clone(),
-              )}</td>
+              <td>{self.props.file_info.owner_user.to_display()}</td>
             </tr>
             <tr>
               <td>{get_value_field(&242)}</td> // Created at
-              <td>{format!("{:.*}", 19, self.props.file_info.created_at.to_string())}</td>
+              <td>{self.props.file_info.created_at.date_to_display()}</td>
             </tr>
-            // <tr>
-            //   <td>{get_value_field(&241)}</td> // Upload at
-            //   <td>{format!("{:.*}", 19, self.props.file_info.updated_at.to_string())}</td>
-            // </tr>
           </tbody>
         </table>
       </div>

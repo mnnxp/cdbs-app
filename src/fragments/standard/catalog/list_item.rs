@@ -13,6 +13,7 @@ use crate::fragments::{
     switch_icon::res_btn,
 };
 use crate::types::ShowStandardShort;
+use crate::services::content_adapter::DateDisplay;
 use crate::services::{get_value_field, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::standard::{
@@ -182,11 +183,11 @@ impl ListItemStandard {
                     <div class="columns is-gapless" style="margin-bottom:0">
                       <div class="column">
                           { get_value_field(&142) } // classifier
-                          <span class="id-box has-text-grey-light has-text-weight-bold">{classifier}</span>
+                          <span class="id-box has-text-weight-bold">{classifier}</span>
                       </div>
                       <div class="column">
                           { get_value_field(&144) } // specified tolerance
-                          <span class="id-box has-text-grey-light has-text-weight-bold">{specified_tolerance}</span>
+                          <span class="id-box has-text-weight-bold">{specified_tolerance}</span>
                       </div>
                     </div>
                     <div class="columns" style="margin-bottom:0">
@@ -223,10 +224,12 @@ impl ListItemStandard {
                     </div>
                     <div class="columns is-gapless" style="margin-bottom:0">
                         <div class="column">
-                          {format!("{}: {:.*}", get_value_field(&155), 10, publication_at.to_string())}
+                            {format!("{}: ", get_value_field(&155))}
+                            {publication_at.date_to_display()}
                         </div>
                         <div class="column">
-                          {format!("{}: {:.*}", get_value_field(&156), 10, updated_at.to_string())}
+                            {format!("{}: ", get_value_field(&156))}
+                            {updated_at.date_to_display()}
                         </div>
                     </div>
                   </div>
@@ -275,7 +278,7 @@ impl ListItemStandard {
               </div>
               <div>
                 { get_value_field(&142) } // classifier
-                <span class="id-box has-text-grey-light has-text-weight-bold">{classifier}</span>
+                <span class="id-box has-text-weight-bold">{classifier}</span>
                 <br/>
               </div>
               <div class="has-text-weight-bold is-size-4">{name}</div>

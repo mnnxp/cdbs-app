@@ -13,6 +13,7 @@ use crate::fragments::{
     switch_icon::res_btn,
 };
 use crate::types::{UUID, ShowCompanyShort};
+use crate::services::content_adapter::DateDisplay;
 use crate::services::{get_value_field, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::company::{
@@ -189,7 +190,7 @@ impl ListItemCompany {
                     </figure>
                   </div>
                   <div class="media-content">
-                    { get_value_field(&164) } <span class="id-box has-text-grey-light has-text-weight-bold">{region.region.clone()}</span>
+                    { get_value_field(&164) } <span class="id-box has-text-weight-bold">{region.region.clone()}</span>
                     <div class="columns" style="margin-bottom:0">
                         <div class="column">
                             <div class="overflow-title has-text-weight-bold is-size-4">{
@@ -217,11 +218,11 @@ impl ListItemCompany {
                     <div class="columns is-gapless">
                         <div class="column">
                             { get_value_field(&163) }
-                            <span class="id-box has-text-grey-light has-text-weight-bold">{inn.clone()}</span>
+                            <span class="id-box has-text-weight-bold">{inn.clone()}</span>
                         </div>
                         <div class="column">
                           { get_value_field(&30) }
-                          {format!("{:.*}", 10, updated_at.to_string())}
+                          { updated_at.date_to_display() }
                         </div>
                     </div>
                   </div>
@@ -260,14 +261,13 @@ impl ListItemCompany {
             <div class="innerBox" >
               <div class="imgBox" >
                 <div class="top-tag" hidden={!is_supplier} >{ get_value_field(&3) }</div> // supplier
-                // <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
                 <img
                     src={image_file.download_url.to_string()} alt="Favicon profile"
                     loading="lazy"
                 />
               </div>
               <div>
-                { get_value_field(&164) }<span class="id-box has-text-grey-light has-text-weight-bold">{region.region.to_string()}</span>
+                { get_value_field(&164) }<span class="id-box has-text-weight-bold">{region.region.to_string()}</span>
               </div>
               <div class="overflow-title has-text-weight-bold is-size-4">{shortname}</div>
               <div class="has-text-weight-bold">{company_type.shortname.to_string()}</div>

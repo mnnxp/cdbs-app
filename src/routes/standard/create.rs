@@ -437,9 +437,7 @@ impl CreateStandard {
                             class="input"
                             type="date"
                             placeholder=get_value_field(&149)
-                            value={format!("{:.*}", 10,
-                                self.request_standard.publication_at.to_string()
-                            )}
+                            value={format!("{:.*}", 10, self.request_standard.publication_at.to_string())}
                             oninput=oninput_publication_at
                             /></td>
                       </tr>

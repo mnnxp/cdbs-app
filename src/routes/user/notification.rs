@@ -7,6 +7,7 @@ use wasm_bindgen_futures::spawn_local;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
+use crate::services::content_adapter::DateDisplay;
 use crate::services::{get_logged_user, get_value_field, resp_parsing};
 use crate::types::{ShowNotification, DegreeImportanceTranslateList};
 use crate::gqls::make_query;
@@ -246,7 +247,10 @@ impl Notifications {
                     <div class="media">
                         <div class="media-left">
                             <span class="content is-small">
-                                { format!("{} created at {:.*}", degree, 19, created_at.to_string()) }
+                                {get_value_field(&276)}
+                                {" "}
+                                {created_at.date_to_display()}
+                                {format!(" ({})", degree)}
                             </span>
                         </div>
                         <div class="media-content"></div>
