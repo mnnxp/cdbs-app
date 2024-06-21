@@ -1,5 +1,7 @@
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
+use yew::virtual_dom::VNode;
+use crate::services::content_adapter::DateDisplay;
 use super::file::DownloadFile;
 use super::relate::{Region, Program, TypeAccessInfo};
 use super::UUID;
@@ -80,7 +82,7 @@ pub struct UserDataCard{
     pub firstname: String,
     pub lastname: String,
     pub username: String,
-    pub updated_at: String,
+    pub updated_at: VNode,
 }
 
 impl From<&SelfUserInfo> for UserDataCard {
@@ -90,7 +92,7 @@ impl From<&SelfUserInfo> for UserDataCard {
             firstname: data.firstname.clone(),
             lastname: data.lastname.clone(),
             username: data.username.clone(),
-            updated_at: format!("{:.*}", 10, data.updated_at.to_string()),
+            updated_at: data.updated_at.date_to_display(),
         }
     }
 }
@@ -102,7 +104,7 @@ impl From<&UserInfo> for UserDataCard {
             firstname: data.firstname.clone(),
             lastname: data.lastname.clone(),
             username: data.username.clone(),
-            updated_at: format!("{:.*}", 10, data.updated_at.to_string()),
+            updated_at: data.updated_at.date_to_display(),
         }
     }
 }
