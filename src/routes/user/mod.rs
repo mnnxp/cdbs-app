@@ -9,12 +9,12 @@ use crate::services::content_adapter::ContentDisplay;
 use crate::types::ShowUserShort;
 
 impl ContentDisplay for ShowUserShort {
-    /// Returns a username and firstname with lastname in abbr tag
+    /// Returns a username and firstname with lastname in p tag
     fn to_display(&self) -> Html {
         html!{
-            <abbr title = {{format!("{} {}", self.firstname, self.lastname)}}>
+            <p title = {{format!("{} {}", self.firstname, self.lastname)}}>
                 {format!("@{}", self.username)}
-            </abbr>
+            </p>
         }
     }
 }
