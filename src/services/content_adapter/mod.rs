@@ -31,7 +31,7 @@ pub(crate) trait DateDisplay {
 
 impl DateDisplay for NaiveDateTime {
     /// Returns VNode (Html) with date information for displayed,
-    /// adds date and time information in addr tag.
+    /// adds date and time information in time tag.
     fn date_to_display(&self) -> Html {
         date_display(&self)
     }
