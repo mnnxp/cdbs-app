@@ -149,9 +149,18 @@ impl Component for Header {
             <nav class="navbar" role="navigation" aria-label="main navigation">
                 <div class="navbar-brand">
                     <h1 class=logo_classes>
-                        <RouterAnchor<AppRoute> route=AppRoute::Home>
-                            {self.show_logo()}
-                        </RouterAnchor<AppRoute>>
+                        {match &self.current_user {
+                            Some(user_info) => html!{
+                                <RouterAnchor<AppRoute> route=AppRoute::Profile(user_info.username.clone())>
+                                    {self.show_logo()}
+                                </RouterAnchor<AppRoute>>
+                            },
+                            None => html!{
+                                <RouterAnchor<AppRoute> route=AppRoute::Home>
+                                    {self.show_logo()}
+                                </RouterAnchor<AppRoute>>
+                            },
+                        }}
                     </h1>
                     <div role="button" class=classes!("navbar-burger", active_menu) onclick=triggrt_menu aria-label="menu" aria-expanded="false">
                       <span aria-hidden="true"></span>
