@@ -142,7 +142,7 @@ impl Component for ComponentLicensesTags {
                         debug!("licenses: {:?}", result);
                         self.component_licenses = result;
                         self.license_ids = BTreeSet::new();
-                        for license in self.component_licenses.clone() {
+                        for license in &self.component_licenses {
                             self.license_ids.insert(license.id);
                         }
                         link.send_message(Msg::SetSelectLicense);

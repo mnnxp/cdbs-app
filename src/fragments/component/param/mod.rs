@@ -152,7 +152,7 @@ impl Component for ComponentParamsTags {
                         debug!("componentParams: {:?}", result);
                         self.component_params = result;
                         self.param_ids = BTreeSet::new();
-                        for param in self.component_params.clone() {
+                        for param in &self.component_params {
                             self.param_ids.insert(param.param.param_id);
                         };
                         link.send_message(Msg::SetSelectParam);

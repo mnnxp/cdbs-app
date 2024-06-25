@@ -10,7 +10,7 @@ use wasm_bindgen_futures::spawn_local;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, ShowStandardShort};
-use crate::services::{get_value_field, resp_parsing};
+use crate::services::{get_value_field, resp_parsing, resp_parsing_two_level};
 use crate::gqls::{
     make_query,
     component::{
@@ -136,12 +136,12 @@ impl Component for ComponentStandardsCard {
                 }
             },
             Msg::GetComponentStandardsResult(res) => {
-                match resp_parsing(res, "component") {
+                match resp_parsing_two_level(res, "component", "componentStandards") {
                     Ok(result) => {
                         debug!("componentStandards: {:?}", result);
                         self.component_standards = result;
                         self.standard_uuids = BTreeSet::new();
-                        for standard in self.component_standards.clone() {
+                        for standard in &self.component_standards {
                             self.standard_uuids.insert(standard.uuid.clone());
                         };
                         link.send_message(Msg::SetSelectStandard);
