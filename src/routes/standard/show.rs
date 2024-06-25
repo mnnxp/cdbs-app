@@ -418,7 +418,7 @@ impl ShowStandard {
         standard_data: &StandardInfo,
     ) -> Html {
         html!{<>
-              <h2 class="has-text-weight-bold">{ get_value_field(&104) }</h2> // Specs
+              <h2 class="has-text-weight-bold">{ get_value_field(&104) }</h2> // Catalogs
               <div class="card column">
                 <SpecsTags
                     show_manage_btn = false

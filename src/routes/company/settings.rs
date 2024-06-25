@@ -535,7 +535,7 @@ impl CompanySettings {
                 <br/>
                 { self.represents_block() }
             </>},
-            // Show interface for add and update company Specs
+            // Show interface for add and update company catalogs
             Menu::Spec => html!{<>
                 <h4 id="updated-specs" class="title is-4">{ get_value_field(&104) }</h4>
                 {self.manage_specs_block()}
