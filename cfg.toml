@@ -1,4 +1,4 @@
 [gql]
-addr = "0.0.0.0"
+addr = "127.0.0.1"
 port = 3000
 path = "graphql"
