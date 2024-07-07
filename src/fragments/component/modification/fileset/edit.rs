@@ -37,6 +37,7 @@ pub struct ManageModificationFilesets {
     files_list: Vec<ShowFileInfo>,
     programs: Vec<Program>,
     open_add_fileset_card: bool,
+    get_confirm: UUID,
 }
 
 pub enum Msg {
@@ -85,6 +86,7 @@ impl Component for ManageModificationFilesets {
             files_list: Vec::new(),
             programs: Vec::new(),
             open_add_fileset_card: false,
+            get_confirm: String::new(),
         }
     }
 
@@ -121,17 +123,20 @@ impl Component for ManageModificationFilesets {
                 })
             },
             Msg::RequestDeleteFileset => {
-                let del_fileset_program_data = delete_modification_fileset::DelFilesetProgramData{
-                    modificationUuid: self.props.select_modification_uuid.clone(),
-                    filesetUuid: self.select_fileset_uuid.clone(),
-                };
-                spawn_local(async move {
-                    let res = make_query(DeleteModificationFileset::build_query(
-                        delete_modification_fileset::Variables { del_fileset_program_data }
-                    )).await.unwrap();
-
-                    link.send_message(Msg::GetDeleteFilesetResult(res));
-                })
+                if self.get_confirm == self.select_fileset_uuid {
+                    let del_fileset_program_data = delete_modification_fileset::DelFilesetProgramData{
+                        modificationUuid: self.props.select_modification_uuid.clone(),
+                        filesetUuid: self.select_fileset_uuid.clone(),
+                    };
+                    spawn_local(async move {
+                        let res = make_query(DeleteModificationFileset::build_query(
+                            delete_modification_fileset::Variables { del_fileset_program_data }
+                        )).await.unwrap();
+                        link.send_message(Msg::GetDeleteFilesetResult(res));
+                    })
+                } else {
+                    self.get_confirm = self.select_fileset_uuid.clone();
+                }
             },
             Msg::RequestFilesOfFileset => {
                 if self.select_fileset_uuid.len() == 36 {
@@ -354,10 +359,7 @@ impl ManageModificationFilesets {
               ChangeData::Select(el) => el.value(),
               _ => String::new(),
           }));
-
         let onclick_new_fileset_card = self.link.callback(|_| Msg::ShowAddFilesetCard);
-
-        let onclick_delete_fileset_btn = self.link.callback(|_| Msg::RequestDeleteFileset);
 
         html!{<div class="columns">
             <div class="column">
@@ -379,16 +381,7 @@ impl ManageModificationFilesets {
             </div>
             <div class="column">
                 <div class="buttons">
-                    <button
-                      id="delete-fileset-program"
-                      class="button is-danger"
-                      disabled={self.select_fileset_uuid.is_empty()}
-                      onclick={onclick_delete_fileset_btn} >
-                        <span class="icon" >
-                            <i class="fa fa-trash" aria-hidden="true"></i>
-                        </span>
-                        <span>{get_value_field(&135)}</span>
-                    </button>
+                    {self.show_delete_btn()}
                     <button
                       id="add-modification-fileset"
                       class="button is-success"
@@ -420,14 +413,13 @@ impl ManageModificationFilesets {
         html!{<div class=class_modal>
           <div class="modal-background" onclick=onclick_new_fileset_card.clone() />
             <div class="card">
-              <div class="modal-content">
-                <header class="modal-card-head">
-                    <p class="modal-card-title">{get_value_field(&206)}</p> // Create new fileset
+              <div class="column">
+                <header class="column">
+                    <span class="has-text-weight-bold is-size-4">{get_value_field(&206)}</span>
                     <button class="delete" aria-label="close" onclick=onclick_new_fileset_card.clone() />
                 </header>
-                <div class="box itemBox">
-                  <article class="media center-media">
-                      <div class="media-content">
+                <div class="box">
+                  <div class="column">
                       <label class="label">{get_value_field(&207)}</label> // Program for fileset
                       <div class="select">
                           <select
@@ -445,16 +437,15 @@ impl ManageModificationFilesets {
                             )}
                           </select>
                       </div>
-                      <br/>
-                      <button
-                          id="add-fileset-program"
-                          class="button"
-                          disabled={self.props.select_modification_uuid.is_empty()}
-                          onclick={onclick_add_fileset_btn} >
-                          {get_value_field(&117)}
-                      </button>
                     </div>
-                  </article>
+                    <hr/>
+                    <button
+                        id="add-fileset-program"
+                        class="button is-fullwidth"
+                        disabled={self.props.select_modification_uuid.is_empty()}
+                        onclick={onclick_add_fileset_btn} >
+                        {get_value_field(&117)}
+                    </button>
                 </div>
               </div>
           </div>
@@ -469,6 +460,37 @@ impl ManageModificationFilesets {
                 select_fileset_uuid = self.select_fileset_uuid.clone()
                 files = self.files_list.clone()
             />
+        }
+    }
+
+    fn show_delete_btn(&self) -> Html {
+        let onclick_delete_fileset_btn = self.link.callback(|_| Msg::RequestDeleteFileset);
+
+        match self.get_confirm == self.select_fileset_uuid {
+            true => html!{
+                <button
+                    id="delete-fileset-program"
+                    class="button is-danger"
+                    disabled={self.select_fileset_uuid.is_empty()}
+                    onclick={onclick_delete_fileset_btn} >
+                    <span class="icon" >
+                        <i class="fa fa-trash" aria-hidden="true"></i>
+                    </span>
+                    <span>{get_value_field(&220)}</span>
+                </button>
+            },
+            false => html!{
+                <button
+                    id="delete-fileset-program"
+                    class="button is-danger"
+                    disabled={self.select_fileset_uuid.is_empty()}
+                    onclick={onclick_delete_fileset_btn} >
+                    <span class="icon" >
+                        <i class="fa fa-trash" aria-hidden="true"></i>
+                    </span>
+                    <span>{get_value_field(&135)}</span>
+                </button>
+            },
         }
     }
 }
