@@ -257,8 +257,7 @@ impl Component for CreateStandard {
     }
 
     fn view(&self) -> Html {
-        let onclick_clear_error = self.link
-            .callback(|_| Msg::ClearError);
+        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
 
         html!{
             <div class="standard-page">
@@ -280,26 +279,18 @@ impl Component for CreateStandard {
 
 impl CreateStandard {
     fn show_main_card(&self) -> Html {
-        // let default_company_uuid = self.current_standard.as_ref().map(|x| x.owner_company.uuid.clone()).unwrap_or_default();
-        let onchange_change_owner_company = self.link
-            .callback(|ev: ChangeData| Msg::UpdateCompanyUuid(match ev {
+        let onchange_change_owner_company =
+            self.link.callback(|ev: ChangeData| Msg::UpdateCompanyUuid(match ev {
               ChangeData::Select(el) => el.value(),
               _ => String::new(),
-          }));
-
-        let onchange_change_type_access = self.link
-            .callback(|ev: ChangeData| Msg::UpdateTypeAccessId(match ev {
+            }));
+        let onchange_change_type_access =
+            self.link.callback(|ev: ChangeData| Msg::UpdateTypeAccessId(match ev {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
-          }));
-
-        let oninput_name = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateName(ev.value));
-
-        let oninput_description = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateDescription(ev.value));
+            }));
+        let oninput_name = self.link.callback(|ev: InputData| Msg::UpdateName(ev.value));
+        let oninput_description = self.link.callback(|ev: InputData| Msg::UpdateDescription(ev.value));
 
         html!{
             <div class="card">
@@ -369,29 +360,24 @@ impl CreateStandard {
     }
 
     fn show_standard_params(&self) -> Html {
-        let oninput_classifier = self.link
-            .callback(|ev: InputData| Msg::UpdateClassifier(ev.value));
-
-        let oninput_specified_tolerance = self.link
-            .callback(|ev: InputData| Msg::UpdateSpecifiedTolerance(ev.value));
-
-        let oninput_technical_committee = self.link
-            .callback(|ev: InputData| Msg::UpdateTechnicalCommittee(ev.value));
-
-        let oninput_publication_at = self.link
-            .callback(|ev: InputData| Msg::UpdatePublicationAt(ev.value));
-
-        let onchange_standard_status_id = self.link
-            .callback(|ev: ChangeData| Msg::UpdateStandardStatusId(match ev {
+        let oninput_classifier =
+            self.link.callback(|ev: InputData| Msg::UpdateClassifier(ev.value));
+        let oninput_specified_tolerance =
+            self.link.callback(|ev: InputData| Msg::UpdateSpecifiedTolerance(ev.value));
+        let oninput_technical_committee =
+            self.link.callback(|ev: InputData| Msg::UpdateTechnicalCommittee(ev.value));
+        let oninput_publication_at =
+            self.link.callback(|ev: InputData| Msg::UpdatePublicationAt(ev.value));
+        let onchange_standard_status_id =
+            self.link.callback(|ev: ChangeData| Msg::UpdateStandardStatusId(match ev {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
-          }));
-
-        let onchange_region_id = self.link
-            .callback(|ev: ChangeData| Msg::UpdateRegionId(match ev {
+            }));
+        let onchange_region_id =
+            self.link.callback(|ev: ChangeData| Msg::UpdateRegionId(match ev {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
-          }));
+            }));
 
         html!{
             <>
@@ -490,8 +476,7 @@ impl CreateStandard {
     }
 
     fn show_manage_btn(&self) -> Html {
-        let onclick_create_changes =
-            self.link.callback(|_| Msg::RequestManager);
+        let onclick_create_changes = self.link.callback(|_| Msg::RequestManager);
 
         {match self.company_list.is_empty() {
             true => html!{},
