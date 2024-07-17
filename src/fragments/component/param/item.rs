@@ -5,6 +5,7 @@ use wasm_bindgen_futures::spawn_local;
 
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
+use crate::fragments::buttons::ft_save_btn;
 use crate::types::{UUID, ComponentParam};
 use crate::services::{get_value_field, resp_parsing};
 use crate::gqls::make_query;
@@ -162,12 +163,12 @@ impl ComponentParamTag {
             <td>{self.current_param_value.clone()}</td>
             {match self.props.show_manage_btn {
                 true => html!{<>
-                    <td><a onclick={onclick_change_param.clone()}>
+                    <td><a onclick={onclick_change_param.clone()} title={get_value_field(&59)}>
                         <span class="icon" >
-                            <i class="fas fa-pen" aria-hidden="true"></i>
+                            <i class="fas fa-pencil-alt" aria-hidden="true"></i>
                         </span>
                     </a></td>
-                    <td><a onclick={onclick_delete_param.clone()}>
+                    <td><a onclick={onclick_delete_param.clone()} title={get_value_field(&135)}>
                         <span class="icon" >
                           <i class="fa fa-trash" aria-hidden="true"></i>
                         </span>
@@ -209,14 +210,13 @@ impl ComponentParamTag {
                                 />
                         </div>
                         <div class="column">
-                            <button
-                                id="change-param-value"
-                                class="button is-fullwidth"
-                                disabled={self.request_set_param_value.is_empty() ||
-                                    self.current_param_value == self.request_set_param_value}
-                                onclick={onclick_change_param_value} >
-                                { get_value_field(&59) } // Change
-                            </button>
+                            {ft_save_btn(
+                                "save-param-value",
+                                onclick_change_param_value,
+                                true,
+                                self.request_set_param_value.is_empty() ||
+                                    self.current_param_value == self.request_set_param_value
+                            )}
                         </div>
                       </section>
                   </div>

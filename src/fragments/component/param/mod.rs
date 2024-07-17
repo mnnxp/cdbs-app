@@ -11,6 +11,7 @@ use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::error::Error;
+use crate::fragments::buttons::ft_add_btn;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, ComponentParam, Param};
 use crate::services::{get_value_field, resp_parsing_two_level, resp_parsing};
@@ -239,15 +240,13 @@ impl ComponentParamsTags {
                })}
             </tbody>
           </table>
-          <button
-                id="add-param-component"
-                class="button is-fullwidth"
-                onclick={onclick_action_btn} >
-              <span class="icon" >
-                  <i class="fas fa-plus" aria-hidden="true"></i>
-              </span>
-              <span>{ get_value_field(&180) }</span> // Add component parameter name
-          </button>
+          {ft_add_btn(
+            "add-param-component",
+            get_value_field(&180),
+            onclick_action_btn,
+            true,
+            false
+          )}
         </div>}
     }
 

@@ -5,6 +5,7 @@ use wasm_bindgen_futures::spawn_local;
 
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
+use crate::fragments::buttons::ft_save_btn;
 use crate::services::{get_value_field, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::relate::{RegisterParam, register_param};
@@ -112,15 +113,8 @@ impl Component for RegisterParamnameBlock {
 impl RegisterParamnameBlock {
     fn add_paramname(&self) -> Html {
         let onclick_register_paramname = self.link.callback(|_| Msg::RequestRegisterParamname);
-
         let oninput_set_paramname = self.link.callback(|ev: InputData| Msg::UpdateParamname(ev.value));
-
         let oninput_set_param_value = self.link.callback(|ev: InputData| Msg::UpdateParamValue(ev.value));
-
-        let class_btn = match self.active_loading_btn {
-            true => "button is-loading is-fullwidth",
-            false => "button is-fullwidth",
-        };
 
         html!{<>
             <div class="column">
@@ -146,14 +140,13 @@ impl RegisterParamnameBlock {
                     />
             </div>
             <div class="column">
-                <button
-                    id="add-paramname"
-                    class=class_btn
-                    disabled={self.disable_btn || self.request_new_paramname.is_empty() ||
-                        self.set_param_value.is_empty()}
-                    onclick={onclick_register_paramname} >
-                    { get_value_field(&117) }
-                </button>
+                {ft_save_btn(
+                    "add-paramname",
+                    onclick_register_paramname,
+                    self.disable_btn || self.request_new_paramname.is_empty() ||
+                        self.set_param_value.is_empty(),
+                    self.set_param_value.is_empty()
+                )}
             </div>
         </>}
     }

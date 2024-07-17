@@ -4,6 +4,7 @@ use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::error::Error;
+use crate::fragments::switch_icon::res_file_btn;
 use crate::fragments::file::FileShowcase;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, ShowFileInfo, DownloadFile};
@@ -161,16 +162,6 @@ impl Component for ComponentFileItem {
 impl ComponentFileItem {
     fn show_file(&self) -> Html {
         let onclick_file_info = self.link.callback(|_| Msg::ClickFileInfo);
-
-        html!{
-            <div class="buttons">
-                <div class="button is-white" onclick=onclick_file_info>
-                    <span class="icon">
-                      <i class="fas fa-file"></i>
-                    </span>
-                    <span>{self.props.file.filename.clone()}</span>
-                </div>
-            </div>
-        }
+        res_file_btn(onclick_file_info.clone(), self.props.file.filename.clone())
     }
 }

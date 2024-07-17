@@ -1,61 +1,79 @@
-use yew::{html, Callback, MouseEvent, Html, Classes};
-// use yew_router::prelude::*;
+use yew::{html, Callback, MouseEvent, Html, Classes, classes};
+use crate::services::{ext_str, image_detector};
 
-// #[derive(PartialEq, Properties, Clone)]
-// pub struct BtnItem{
-//   pub class: String,
-//   pub clickEvent: yew::Callback<MouseEvent>
-// }
-
-// #[derive(PartialEq, Properties, Clone)]
-// pub struct Props {
-//     /// Callback when user is logged in successfully
-//     pub callback: BtnItem,
-// }
-
-// pub struct SwitchIcon {
-//     // `ComponentLink` is like a reference to a component.
-//     // It can be used to send messages to the component
-//     // link: ComponentLink<Self>
-//     props: Props,
-// }
-
-// impl Component for SwitchIcon {
-//     type Message = ();
-//     type Properties = Props;
-
-//     fn create(props: Self::Properties, _link: ComponentLink<Self>) -> Self {
-//         Self { props }
-//     }
-
-//     fn update(&mut self, msg: Self::Message) -> ShouldRender {
-//         true
-//     }
-
-//     fn change(&mut self, _props: Self::Properties) -> ShouldRender {
-//         // Should only return "true" if new properties are different to
-//         // previously received properties.
-//         // This component has no properties so we will always return "false".
-//         false
-//     }
-
-//     fn view(&self) -> Html {
-//         html!{
-//           <button class="button" onclick={self.props.callback.clickEvent.clone()} >
-//             <span class="icon is-small">
-//               <i class=classes!(self.props.callback.class.clone())></i>
-//             </span>
-//           </button>
-//         }
-//     }
-// }
-
-pub fn res_btn (class: Classes, onclick:Callback<MouseEvent>, span_style: String) -> Html {
+pub fn res_btn(
+  classes_icon: Classes,
+  onclick: Callback<MouseEvent>,
+  span_style: String,
+  title: &str,
+) -> Html {
   html!{
-    <button class="button" onclick=onclick >
-      <span class="icon is-small" style=span_style >
-        <i class=class></i>
+    <button class="button" onclick={onclick} title={title.to_string()}>
+      <span class="icon is-small" style={span_style} >
+        <i class={classes_icon}></i>
       </span>
     </button>
+  }
+}
+
+pub fn res_file_btn(onclick: Callback<MouseEvent>, filename: String) -> Html {
+  let mut style_color = "color: #767676;";
+  let classes_icon = match ext_str(&filename).as_str() {
+    ".txt" => classes!("far", "fa-file-alt"),
+    ".pdf" => {
+      style_color = "color: #e50707";
+      classes!("far", "fa-file-pdf")
+    },
+    // OpenDocument Format is standardised by OASIS and adopted by ISO/IEC JTC1 SC34 (but are no icons)
+    ".odt" | ".ods" | ".odp" => {
+      style_color = "color: #43C330";
+      classes!("far", "fa-file-alt")
+    },
+    ".docx" | ".doc" | ".rtf" => {
+      style_color = "color: #0058a5";
+      classes!("far", "fa-file-word")
+    },
+    ".xls" | ".xlsx" => {
+      style_color = "color: #4aa500";
+      classes!("far", "fa-file-excel")
+    },
+    ".ppt" | ".pptx" => {
+      style_color = "color: #f78b67";
+      classes!("far", "fa-file-powerpoint")
+    },
+    ".zip" | ".tar" | ".gz" | ".7z" | ".rar" => {
+      style_color = "color: #1b1b1b";
+      classes!("far", "fa-file-archive")
+    },
+    ".mp4" | ".mov" | ".flv" | ".avi" => {
+      style_color = "color: #1872f0";
+      classes!("far", "fa-file-video")
+    },
+    ".mp3" | ".ogg" | ".aac" | ".wav" => {
+      style_color = "color: #1872f0";
+      classes!("far", "fa-file-audio")
+    },
+    ".FCStd" | ".blend" | ".stl" | ".step" | ".stp" => {
+      style_color = "color: #1872f0";
+      classes!("far", "fa-file")
+    },
+    ".py" | ".sh" => classes!("far", "fa-file-code"),
+    _ => {
+      if image_detector(&filename) {
+        style_color = "color: #1872f0";
+        classes!("far", "fa-file-image")
+      } else {
+        classes!("far", "fa-file")
+      }
+    },
+  };
+
+  html!{
+    <div class="button is-white" onclick={onclick}>
+      <span class="icon">
+        <i class={classes_icon} style={style_color}></i>
+      </span>
+      <span>{filename}</span>
+    </div>
   }
 }

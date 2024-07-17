@@ -49,7 +49,7 @@ lazy_static! {
             (43, "Show info"),
             (44, "Enter"),
             (45, "Create"),
-            (46, "Update"),
+            (46, "Save"),
             (47, "Delete profile data"),
             (48, "Old password"),
             (49, "New password"),
@@ -118,7 +118,7 @@ lazy_static! {
             (112, "Classifier"),
             (113, "Specified tolerance"),
             (114, "Type access "),
-            (115, "Action | files"),
+            (115, "Action | Files"),
             (116, "Modification"),
             (117, "Add"),
             (118, "User uploaded: "),
@@ -328,5 +328,10 @@ lazy_static! {
             (322, "Copy"),
             (323, "Copyed"),
             (324, "No result"),
+            (325, "Open 3D view"),
+            (326, "Add to bookmarks"),
+            (327, "Remove from bookmarks"),
+            (328, "Share"),
+            (329, "Show files of the selected modification"),
         ]);
 }

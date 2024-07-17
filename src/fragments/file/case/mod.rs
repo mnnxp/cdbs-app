@@ -6,6 +6,7 @@ use log::debug;
 
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
+use crate::fragments::buttons::{ft_download_btn, ft_download_full_btn};
 use crate::types::{ShowFileInfo, UUID};
 use crate::services::content_adapter::{ContentDisplay, DateDisplay};
 use crate::services::{Size, get_value_field, resp_parsing};
@@ -260,7 +261,7 @@ impl FileShowcase {
           },
           false => html!{
             <div class="buttons">
-              {self.show_download_btn()}
+              {ft_download_btn(self.download_url.clone(), true)}
               {self.show_delete_btn(file_info.uuid.clone())}
             </div>
           },
@@ -275,11 +276,11 @@ impl FileShowcase {
       {match &self.props.file_delete_callback.is_some() {
         true => html!{
           <div class="buttons">
-            {self.show_download_full_btn()}
+            {ft_download_full_btn(self.download_url.clone())}
             {self.show_delete_full_btn(file_uuid)}
           </div>
         },
-        false => {self.show_download_full_btn()},
+        false => {ft_download_full_btn(self.download_url.clone())},
       }}
     </>}
   }
@@ -313,35 +314,6 @@ impl FileShowcase {
           </tbody>
         </table>
       </div>
-    }
-  }
-
-  fn show_download_btn(&self) -> Html {
-    html!{
-      <a class="button is-white"
-          href={self.download_url.clone()}
-          disabled={self.download_url.is_empty()}
-          target="_blank"
-          >
-        <span class="icon">
-          <i class="fas fa-file-download" style="color: #1872f0;" aria-hidden="true"></i>
-        </span>
-      </a>
-    }
-  }
-
-  fn show_download_full_btn(&self) -> Html {
-    html!{
-      <a class="button is-info is-fullwidth"
-          href={self.download_url.clone()}
-          disabled={self.download_url.is_empty()}
-          target="_blank"
-          >
-        <span class="icon">
-          <i class="fas fa-file-download" aria-hidden="true"></i>
-        </span>
-        <span>{get_value_field(&126)}</span>
-      </a>
     }
   }
 

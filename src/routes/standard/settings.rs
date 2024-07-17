@@ -15,6 +15,7 @@ use wasm_bindgen_futures::spawn_local;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{
+    buttons::ft_save_btn,
     file::UploaderFiles,
     list_errors::ListErrors,
     standard::{
@@ -778,13 +779,12 @@ impl StandardSettings {
                             onclick={onclick_show_delete_modal} >
                             {get_value_field(&135)}
                         </button>
-                        <button
-                            id="update-data"
-                            class="button"
-                            onclick={onclick_save_changes}
-                            disabled={self.disable_save_changes_btn} >
-                            {get_value_field(&46)}
-                        </button>
+                        {ft_save_btn(
+                            "update-standard-data",
+                            onclick_save_changes,
+                            false,
+                            self.disable_save_changes_btn
+                        )}
                     </div>
                 </div>
             </div>

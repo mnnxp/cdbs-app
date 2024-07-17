@@ -16,7 +16,7 @@ use crate::error::Error;
 use crate::fragments::{
     file::UploaderFiles,
     list_errors::ListErrors,
-    // catalog_component::CatalogComponents,
+    buttons::ft_save_btn,
     component::{
         ComponentStandardsCard, ComponentSuppliersCard,
         ComponentLicensesTags, ComponentParamsTags, UpdateComponentFaviconCard,
@@ -736,13 +736,12 @@ impl ComponentSettings {
                             onclick={onclick_show_delete_modal} >
                             { get_value_field(&135) }
                         </button>
-                        <button
-                            id="update-data"
-                            class="button"
-                            onclick={onclick_save_changes}
-                            disabled={self.disable_save_changes_btn} >
-                            {  get_value_field(&46) }
-                        </button>
+                        {ft_save_btn(
+                            "update-component-data",
+                            onclick_save_changes,
+                            false,
+                            self.disable_save_changes_btn
+                        )}
                     </div>
                 </div>
             </div>

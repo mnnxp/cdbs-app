@@ -9,6 +9,7 @@ use crate::services::{get_value_field, resp_parsing};
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::file::UploaderFiles;
+use crate::fragments::buttons::ft_see_btn;
 use crate::types::{UUID, ShowFileInfo, UploadFile};
 use crate::gqls::make_query;
 use crate::gqls::component::{
@@ -231,20 +232,7 @@ impl ManageModificationFilesCard {
     }
 
     fn show_see_btn(&self) -> Html {
-        let show_full_files_btn =
-            self.link.callback(|_| Msg::ShowFullList);
-
-        match self.show_full_files {
-            true => html!{<>
-              <button class="button is-white"
-                  onclick=show_full_files_btn
-                >{get_value_field(&99)}</button>
-            </>},
-            false => html!{<>
-              <button class="button is-white"
-                  onclick=show_full_files_btn
-                >{get_value_field(&98)}</button>
-            </>},
-        }
+        let show_full_files_btn = self.link.callback(|_| Msg::ShowFullList);
+        ft_see_btn(show_full_files_btn, self.show_full_files)
     }
 }

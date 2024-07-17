@@ -132,23 +132,4 @@ impl ComponentLicenseTag {
             }}
         </>}
     }
-    // fn show_modal_license_info(&self) -> Html {
-    //     let onclick_license_data_info = self.link
-    //         .callback(|_| Msg::ShowLicenseCard);
-    //
-    //     let class_modal = match &self.open_license_info {
-    //         true => "modal is-active",
-    //         false => "modal",
-    //     };
-    //
-    //     html!{<div class=class_modal>
-    //       <div class="modal-background" onclick=onclick_license_data_info.clone() />
-    //       <div class="modal-content">
-    //           <div class="card">
-    //
-    //           </div>
-    //       </div>
-    //       <button class="modal-close is-large" aria-label="close" onclick=onclick_license_data_info />
-    //     </div>}
-    // }
 }

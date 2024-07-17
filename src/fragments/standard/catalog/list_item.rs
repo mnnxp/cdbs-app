@@ -9,6 +9,7 @@ use log::debug;
 use crate::error::Error;
 use crate::routes::AppRoute;
 use crate::fragments::{
+    buttons::ft_follow_btn,
     list_errors::ListErrors,
     switch_icon::res_btn,
 };
@@ -154,17 +155,7 @@ impl ListItemStandard {
         } = &self.props.data;
 
         let show_standard_btn = self.link.callback(|_| Msg::OpenStandard);
-        let trigger_fab_btn = self.link.callback(|_| Msg::TriggerFav);
-
-        let mut class_res_btn = vec!["fa-bookmark"];
-        let mut class_color_btn = "";
-        match &self.is_followed {
-            true => {
-                class_res_btn.push("fas");
-                class_color_btn = "color: #1872F0;";
-            },
-            false => class_res_btn.push("far"),
-        }
+        let trigger_fav_btn = self.link.callback(|_| Msg::TriggerFav);
 
         html!{
           <div class="box itemBox">
@@ -211,14 +202,15 @@ impl ListItemStandard {
                         </div>
                         <div class="column buttons is-one-quarter flexBox" >
                           {res_btn(
-                            classes!("fas", "fa-eye"),
+                            classes!("far", "fa-folder"),
                             show_standard_btn,
-                            String::new()
+                            String::new(),
+                            get_value_field(&315)
                           )}
-                          {res_btn(
-                            classes!(class_res_btn),
-                            trigger_fab_btn,
-                            class_color_btn.to_string()
+                          {ft_follow_btn(
+                            trigger_fav_btn,
+                            self.is_followed,
+                            String::new(),
                           )}
                         </div>
                     </div>
@@ -252,18 +244,7 @@ impl ListItemStandard {
         } = self.props.data.clone();
 
         let show_standard_btn = self.link.callback(|_| Msg::OpenStandard);
-        let trigger_fab_btn = self.link.callback(|_| Msg::TriggerFav);
-
-        let mut class_res_btn = vec![];
-        let mut class_color_btn = "";
-        match &self.is_followed {
-            true => {
-                class_res_btn.push("fas");
-                class_color_btn = "color: #1872F0;";
-            },
-            false => class_res_btn.push("far"),
-        }
-        class_res_btn.push("fa-bookmark");
+        let trigger_fav_btn = self.link.callback(|_| Msg::TriggerFav);
 
         html!{
           <div class="boxItem" >
@@ -297,10 +278,10 @@ impl ListItemStandard {
                     { get_value_field(&143) } // Show standard
                 </button>
                 <div style="margin-left: 8px;">
-                {res_btn(
-                    classes!(class_res_btn),
-                    trigger_fab_btn,
-                    class_color_btn.to_string()
+                {ft_follow_btn(
+                    trigger_fav_btn,
+                    self.is_followed,
+                    String::new(),
                 )}
                 </div>
               </div>

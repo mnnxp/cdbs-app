@@ -7,6 +7,7 @@ use super::FilesetFilesBlock;
 use crate::services::{get_value_field, resp_parsing};
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
+use crate::fragments::buttons::{ft_delete_btn, ft_cancel_btn, ft_save_btn, ft_add_btn};
 use crate::fragments::file::UploaderFiles;
 use crate::types::{UUID, ShowFileInfo, Program, UploadFile};
 use crate::gqls::make_query;
@@ -277,6 +278,7 @@ impl Component for ManageModificationFilesets {
                 debug!("SelectFileset: {:?}", fileset_uuid);
                 self.select_fileset_uuid = fileset_uuid;
                 self.files_list.clear();
+                self.get_confirm.clear(); // clear the check flag
                 self.link.send_message(Msg::RequestFilesOfFileset);
             },
             Msg::UpdateSelectProgramId(program_id) =>
@@ -392,16 +394,13 @@ impl ManageModificationFilesets {
                         />
                 </div>
             </div>
-            <button
-              id="add-modification-fileset"
-              class={classes!("button", "is-fullwidth")}
-              disabled={self.props.select_modification_uuid.is_empty()}
-              onclick={onclick_new_fileset_card} >
-                <span class="icon" >
-                    <i class="fas fa-plus" aria-hidden="true"></i>
-                </span>
-                <span>{get_value_field(&196)}</span> // Add fileset
-            </button>
+            {ft_add_btn(
+                "create-new-fileset",
+                get_value_field(&196),
+                onclick_new_fileset_card,
+                true,
+                self.props.select_modification_uuid.is_empty()
+            )}
         </>}
     }
 
@@ -421,22 +420,16 @@ impl ManageModificationFilesets {
                 </div>
                 <hr/>
                 <div class="buttons">
-                    <button
-                    id="add-fileset-program"
-                    class="button"
-                    onclick={close_add_fileset_block}>
-                        {get_value_field(&221)}
-                    </button>
-                    <button
-                    id="add-modification-fileset"
-                    class={classes!("button", "is-success")}
-                    disabled={self.props.select_modification_uuid.is_empty()}
-                    onclick={onclick_add_fileset_btn}>
-                        <span class="icon" >
-                            <i class="fas fa-plus" aria-hidden="true"></i>
-                        </span>
-                        <span>{get_value_field(&196)}</span> // Add fileset
-                    </button>
+                    {ft_cancel_btn(
+                        "close-add-fileset-program",
+                        close_add_fileset_block
+                    )}
+                    {ft_save_btn(
+                        "add-modification-fileset",
+                        onclick_add_fileset_btn,
+                        true,
+                        self.props.select_modification_uuid.is_empty()
+                    )}
                 </div>
             </div>
         }
@@ -455,33 +448,12 @@ impl ManageModificationFilesets {
 
     fn show_delete_btn(&self) -> Html {
         let onclick_delete_fileset_btn = self.link.callback(|_| Msg::RequestDeleteFileset);
-
-        match self.get_confirm == self.select_fileset_uuid {
-            true => html!{
-                <button
-                    id="delete-fileset-program"
-                    class="button is-danger"
-                    disabled={self.select_fileset_uuid.is_empty()}
-                    onclick={onclick_delete_fileset_btn} >
-                    <span class="icon" >
-                        <i class="fa fa-trash" aria-hidden="true"></i>
-                    </span>
-                    <span>{get_value_field(&220)}</span>
-                </button>
-            },
-            false => html!{
-                <button
-                    id="delete-fileset-program"
-                    class="button is-danger"
-                    disabled={self.select_fileset_uuid.is_empty()}
-                    onclick={onclick_delete_fileset_btn} >
-                    <span class="icon" >
-                        <i class="fa fa-trash" aria-hidden="true"></i>
-                    </span>
-                    <span>{get_value_field(&135)}</span>
-                </button>
-            },
-        }
+        ft_delete_btn(
+            "delete-fileset-program",
+            onclick_delete_fileset_btn,
+            self.get_confirm == self.select_fileset_uuid,
+            self.select_fileset_uuid.is_empty()
+        )
     }
 
     fn fileset_items(&self, program_id: usize, program_name: &str) -> Html {

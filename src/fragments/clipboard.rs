@@ -76,8 +76,8 @@ impl Component for ShareLinkBtn {
         });
         html!{<>
             {self.share_window()}
-            <button id="share-btn" class="button" onclick={onclick_share_btn} >
-              <span class="icon is-small"><i class="fas fa-share" /></span>
+            <button id="share-btn" class="button" onclick={onclick_share_btn} title={get_value_field(&328)}>
+              <span class="icon is-small" style="color: #1872f0;"><i class="fas fa-share" /></span>
             </button>
         </>}
     }

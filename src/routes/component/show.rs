@@ -12,6 +12,7 @@ use wasm_bindgen_futures::spawn_local;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{
+    buttons::{ft_see_btn, ft_follow_btn},
     switch_icon::res_btn,
     list_errors::ListErrors,
     user::ModalCardUser,
@@ -400,17 +401,17 @@ impl ShowComponent {
         html!{
             <div class="columns">
                 {match self.show_three_view {
-                    true => html!{<>
+                    true => html!{
                         <ThreeShowcase
                             fileset_uuid=self.select_fileset_uuid.clone()
                         />
-                    </>},
-                    false => html!{<>
+                    },
+                    false => html!{
                         <ImgShowcase
                             object_uuid=self.current_component_uuid.clone()
                             file_arr=self.file_arr.clone()
                         />
-                    </>},
+                    },
                 }}
 
               <div class="column">
@@ -441,31 +442,18 @@ impl ShowComponent {
                     }}
                 </div>
                 {self.show_component_params(component_data)}
-                <div class="component-description">{
-                    match self.show_full_description {
-                        true => html!{<>
-                          {component_data.description.to_markdown()}
-                          {match component_data.description.len() {
-                              250.. => html!{<>
-                                <br/>
-                                <button class="button is-white"
-                                    onclick=show_description_btn >
-                                  { get_value_field(&99) }
-                                </button>
-                              </>},
-                              _ => html!{},
-                          }}
+                <div class="component-description">
+                    {match component_data.description.len() {
+                        250.. => html!{<>
+                            {match self.show_full_description {
+                                true => component_data.description.to_markdown(),
+                                false => format!("{:.*}", 200, component_data.description).to_markdown(),
+                            }}
+                            {ft_see_btn(show_description_btn, self.show_full_description)}
                         </>},
-                        false => html!{<>
-                          {format!("{:.*}", 200, component_data.description)}
-                          <br/>
-                          <button class="button is-white"
-                              onclick=show_description_btn >
-                            { get_value_field(&98) }
-                          </button>
-                        </>},
-                    }
-                }</div>
+                        _ => component_data.description.to_markdown(),
+                    }}
+                </div>
               </div>
             </div>
         }
@@ -569,13 +557,13 @@ impl ShowComponent {
                               _ => html!{},
                           }
                       })}
-                      {match component_data.component_params.len() {
-                          0 => html!{<span>{ get_value_field(&136) }</span>},
-                          0..=3 => html!{},
-                          _ => self.show_see_characteristic_btn(),
-                      }}
                     </tbody>
-                  </table>
+                </table>
+                {match component_data.component_params.len() {
+                    0 => html!{<span>{ get_value_field(&136) }</span>},
+                    0..=3 => html!{},
+                    _ => self.show_see_characteristic_btn(),
+                }}
               </div>
             </div>
         }
@@ -594,21 +582,8 @@ impl ShowComponent {
     }
 
     fn show_see_characteristic_btn(&self) -> Html {
-        let show_full_characteristics_btn = self.link
-            .callback(|_| Msg::ShowFullCharacteristics);
-
-        match self.show_full_characteristics {
-            true => html!{<>
-              <button class="button is-white"
-                  onclick=show_full_characteristics_btn
-                >{ get_value_field(&99) }</button>
-            </>},
-            false => html!{<>
-              <button class="button is-white"
-                  onclick=show_full_characteristics_btn
-                >{ get_value_field(&98) }</button>
-            </>},
-        }
+        let show_full_characteristics_btn = self.link.callback(|_| Msg::ShowFullCharacteristics);
+        ft_see_btn(show_full_characteristics_btn, self.show_full_characteristics)
     }
 
     fn show_cards(
@@ -639,14 +614,16 @@ impl ShowComponent {
         &self,
         component_data: &ComponentInfo,
     ) -> Html {
-        html!{<div id="files" class="card">
-            <ComponentFilesBlock
-                  show_download_btn = true
-                  show_delete_btn = false
-                  component_uuid = component_data.uuid.clone()
-                  files = component_data.files.clone()
-                />
-        </div>}
+        html!{
+            <div id="files" class="card column">
+                <ComponentFilesBlock
+                    show_download_btn = true
+                    show_delete_btn = false
+                    component_uuid = component_data.uuid.clone()
+                    files = component_data.files.clone()
+                    />
+            </div>
+        }
     }
 
     fn show_component_specs(
@@ -754,16 +731,15 @@ impl ShowComponent {
         &self,
         component_data: &ComponentInfo,
     ) -> Html {
-        let onclick_modification_card = self.link
-            .callback(|_| Msg::ShowModificationCard);
-
+        let onclick_modification_card =
+            self.link.callback(|_| Msg::ShowModificationCard);
         let class_modal = match &self.open_modification_card {
             true => "modal is-active",
             false => "modal",
         };
-
-        let modification_data: Option<&ComponentModificationInfo> = component_data.component_modifications.iter()
-            .find(|x| x.uuid == self.select_modification_uuid);
+        let modification_data: Option<&ComponentModificationInfo> =
+            component_data.component_modifications.iter()
+                .find(|x| x.uuid == self.select_modification_uuid);
 
         match modification_data {
             Some(mod_data) => html!{<div class=class_modal>
@@ -773,24 +749,22 @@ impl ShowComponent {
                     <div class="box itemBox">
                       <article class="media center-media">
                           <div class="media-content">
-                            <div class="columns" style="margin-bottom:0">
-                                <div class="column">
-                                    <p class="overflow-title">{ get_value_field(&116) }</p> // Modification
-                                    <div class="has-text-weight-bold">
-                                        {mod_data.modification_name.clone()}
-                                    </div>
-                                    <p class="overflow-title">{ get_value_field(&61) }</p> // Description
-                                    <p>{mod_data.description.to_markdown()}</p>
+                            <div class="columns">
+                                <div class="column" title={get_value_field(&96)}>
+                                    {&mod_data.actual_status.name}
+                                </div>
+                                <div class="column is-4">
+                                    {get_value_field(&30)}
+                                    {mod_data.updated_at.date_to_display()}
                                 </div>
                             </div>
-                            <div class="columns" style="margin-bottom:0">
-                                <div class="column">
-                                  {format!("{}: {}", get_value_field(&96), &mod_data.actual_status.name)}
-                                </div>
-                                <div class="column">
-                                  {get_value_field(&30)}
-                                  {mod_data.updated_at.date_to_display()}
-                                </div>
+                            <div class="column" title={get_value_field(&176)}>
+                                <p class="overflow-title has-text-weight-bold">
+                                    {mod_data.modification_name.clone()}
+                                </p>
+                            </div>
+                            <div class="column" title={{get_value_field(&61)}}> // Description
+                                <p>{mod_data.description.to_markdown()}</p>
                             </div>
                           </div>
                       </article>
@@ -820,7 +794,6 @@ impl ShowComponent {
     fn show_download_block(&self) -> Html {
         let callback_select_fileset_uuid =
             self.link.callback(|value: UUID| Msg::SelectFileset(value));
-
         let callback_open_fileset_uuid =
             self.link.callback(|value: bool| Msg::ShowFilesetFilesBlock(value));
 
@@ -842,34 +815,28 @@ impl ShowComponent {
             true => {res_btn(
                 classes!("fa", "fa-tools"),
                 onclick_setting_standard_btn,
-                String::new())},
+                String::new(),
+                get_value_field(&16)
+            )},
             false => html!{},
         }
     }
 
     fn show_followers_btn(&self) -> Html {
-        let (class_fav, onclick_following) = match self.is_followed {
-            true => ("fas fa-bookmark", self.link.callback(|_| Msg::UnFollow)),
-            false => ("far fa-bookmark", self.link.callback(|_| Msg::Follow)),
+        let onclick_following = match self.is_followed {
+            true => self.link.callback(|_| Msg::UnFollow),
+            false => self.link.callback(|_| Msg::Follow),
         };
 
-        html!{<>
-            <button
-                id="following-button"
-                class="button"
-                onclick=onclick_following >
-              <span class="icon is-small">
-                <i class={class_fav}></i>
-              </span>
-              <span>{self.abbr_number()}</span>
-            </button>
-        </>}
+        ft_follow_btn(
+            onclick_following,
+            self.is_followed,
+            self.abbr_number(),
+        )
     }
 
     fn show_three_btn(&self) -> Html {
-        let onclick_three_viewer =
-            self.link.callback(|_| Msg::Show3D);
-
+        let onclick_three_viewer = self.link.callback(|_| Msg::Show3D);
         let mut class_btn = classes!("button");
         let show_btn = match self.show_three_view {
             true => {
@@ -878,13 +845,13 @@ impl ShowComponent {
             },
             false => get_value_field(&300),
         };
-        // <button onclick={onclick_three_viewer} class={class_three_btn}>{show_btn}</button>
 
         html!{<>
             <button
-                id="three-button"
-                class={class_btn}
-                onclick={onclick_three_viewer} >
+            id="three-button"
+            class={class_btn}
+            onclick={onclick_three_viewer}
+            title={get_value_field(&325)}>
               <span class="icon is-small">
                 <i class={classes!("fa", "fa-cube")} style="color: #1872f0;"></i>
               </span>

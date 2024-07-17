@@ -8,6 +8,7 @@ use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::error::Error;
+use crate::fragments::buttons::{ft_add_btn, ft_save_btn};
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, ShowStandardShort};
 use crate::services::{get_value_field, resp_parsing, resp_parsing_two_level};
@@ -227,15 +228,13 @@ impl ComponentStandardsCard {
             </tbody>
           </table>
           {self.modal_add_standard()}
-          <button
-                id="add-standard-component"
-                class="button is-fullwidth"
-                onclick={onclick_action_btn} >
-              <span class="icon" >
-                  <i class="fas fa-plus" aria-hidden="true"></i>
-              </span>
-              <span>{ get_value_field(&191) }</span> // Add a standard to a component
-          </button>
+          {ft_add_btn(
+            "add-standard-for-component",
+            get_value_field(&191),
+            onclick_action_btn,
+            true,
+            false
+          )}
         </div>}
     }
 
@@ -254,44 +253,43 @@ impl ComponentStandardsCard {
 
         html!{
             <div class=class_modal>
-              <div class="modal-background" onclick=onclick_hide_modal.clone() />
+              <div class="modal-background" onclick={onclick_hide_modal.clone()} />
                 <div class="modal-content">
                   <div class="card">
                     <header class="modal-card-head">
                       <p class="modal-card-title">{ get_value_field(&191) }</p> // Add a standard to a component
-                      <button class="delete" aria-label="close" onclick=onclick_hide_modal.clone() />
+                      <button class="delete" aria-label="close" onclick={onclick_hide_modal.clone()} />
                     </header>
                     <section class="modal-card-body">
-                        <label class="label">{ get_value_field(&212) }</label> // Select standard
-                        // <div class="columns">
-                            <div class="column">
-                                <div class="select">
-                                  <select
-                                      id="add-standard"
-                                      select={self.request_add_standard_uuid.clone()}
-                                      onchange=onchange_select_add_standard
-                                    >
-                                  { for self.standard_list.iter().map(|x|
-                                      match self.standard_uuids.get(&x.uuid) {
-                                          Some(_) => html!{}, // this standard already has
-                                          None => html!{ <option value={x.uuid.to_string()}>{
-                                              format!("{} ({})", &x.classifier, &x.name)
-                                          }</option> },
-                                      }
-                                  )}
-                                  </select>
-                                </div>
+                        <div class="column">
+                            <label class="label">{get_value_field(&212)}</label> // Select standard
+                        </div>
+                        <div class="column">
+                            <div class="select">
+                                <select
+                                    id="add-standard"
+                                    select={self.request_add_standard_uuid.clone()}
+                                    onchange={onchange_select_add_standard}
+                                >
+                                { for self.standard_list.iter().map(|x|
+                                    match self.standard_uuids.get(&x.uuid) {
+                                        Some(_) => html!{}, // this standard already has
+                                        None => html!{ <option value={x.uuid.to_string()}>{
+                                            format!("{} ({})", &x.classifier, &x.name)
+                                        }</option> },
+                                    }
+                                )}
+                                </select>
                             </div>
-                            <div class="column">
-                                <button
-                                    id="standard-component"
-                                    class="button is-fullwidth"
-                                    disabled={self.request_add_standard_uuid.is_empty()}
-                                    onclick={onclick_add_standard} >
-                                    { get_value_field(&117) }
-                                </button>
-                            </div>
-                        // </div>
+                        </div>
+                        <div class="column">
+                            {ft_save_btn(
+                                "standard-component",
+                                onclick_add_standard,
+                                true,
+                                self.request_add_standard_uuid.is_empty()
+                            )}
+                        </div>
                     </section>
                   </div>
                 </div>

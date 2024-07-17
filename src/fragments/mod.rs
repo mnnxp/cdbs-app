@@ -5,7 +5,7 @@ pub mod component;
 // pub mod spec;
 pub mod standard;
 pub mod user;
-
+pub mod buttons;
 pub mod file;
 pub mod clipboard;
 pub mod footer;

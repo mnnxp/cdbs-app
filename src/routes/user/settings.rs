@@ -324,22 +324,18 @@ impl Component for Settings {
 
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
-
         let onsubmit_update_profile = self.link.callback(|ev: FocusEvent| {
             ev.prevent_default();
             Msg::RequestUpdateProfile
         });
-
         let onsubmit_update_access = self.link.callback(|ev: FocusEvent| {
             ev.prevent_default();
             Msg::RequestChangeAccess
         });
-
         let onsubmit_update_password = self.link.callback(|ev: FocusEvent| {
             ev.prevent_default();
             Msg::RequestUpdatePassword
         });
-
         let onsubmit_remove_profile = self.link.callback(|ev: FocusEvent| {
             ev.prevent_default();
             Msg::RequestRemoveProfile
@@ -361,14 +357,8 @@ impl Component for Settings {
                                             <h4 id="change-profile" class="title is-4">{ get_value_field(&63) }</h4> // "Profile"
                                             {self.show_update_profile_info()}
                                             <form onsubmit=onsubmit_update_profile>
-                                                { self.change_profile_card() }
-                                                <button
-                                                    id="update-settings"
-                                                    class=classes!("button", "is-fullwidth")
-                                                    type="submit"
-                                                    disabled=false>
-                                                    { get_value_field(&46) }
-                                                </button>
+                                                {self.change_profile_card()}
+                                                {self.show_update_btn("update-settings")}
                                             </form>
                                         </>},
                                         // Show interface for change favicon user
@@ -386,14 +376,8 @@ impl Component for Settings {
                                                 { format!("{}: {}", get_value_field(&68), self.get_result_access.clone()) } // Updated access
                                             </span>
                                             <form onsubmit=onsubmit_update_access>
-                                                { self.change_access_card() }
-                                                <button
-                                                    id="update-access"
-                                                    class=classes!("button", "is-fullwidth")
-                                                    type="submit"
-                                                    disabled=false>
-                                                    { get_value_field(&46) }
-                                                </button>
+                                                {self.change_access_card()}
+                                                {self.show_update_btn("update-access")}
                                             </form>
                                             // todo!(tasks:)
                                             // show Tokens
@@ -409,14 +393,8 @@ impl Component for Settings {
                                               { format!("{}: {}", get_value_field(&69), self.get_result_pwd.clone()) } // Updated password
                                             </span>
                                             <form onsubmit=onsubmit_update_password>
-                                                { self.update_password_card() }
-                                                <button
-                                                    id="update-password"
-                                                    class=classes!("button", "is-fullwidth")
-                                                    type="submit"
-                                                    disabled=false>
-                                                    { get_value_field(&46) }
-                                                </button>
+                                                {self.update_password_card()}
+                                                {self.show_update_btn("update-password")}
                                             </form>
                                         </>},
                                         // Show interface for remove profile
@@ -844,5 +822,23 @@ impl Settings {
             self.request_user_password.to_string(),
             oninput_user_password,
         )
+    }
+
+    fn show_update_btn(&self, id_btn: &str) -> Html {
+        let title_text = get_value_field(&46);
+
+        html!{
+            <button
+                id={id_btn.to_string()}
+                class={classes!("button", "is-link", "is-fullwidth")}
+                type={"submit"}
+                disabled={false}
+                title={title_text}>
+                <span class={"icon"}>
+                    <i class={"far fa-save"} aria-hidden={"true"}></i>
+                </span>
+                <span>{title_text}</span>
+            </button>
+        }
     }
 }

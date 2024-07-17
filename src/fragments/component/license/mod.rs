@@ -8,6 +8,7 @@ use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::error::Error;
+use crate::fragments::buttons::ft_save_btn;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, LicenseInfo};
 use crate::services::{get_value_field, resp_parsing_two_level, resp_parsing};
@@ -293,13 +294,12 @@ impl ComponentLicensesTags {
                                 </div>
                             </div>
                             <div class="column">
-                                <button
-                                    id="license-component"
-                                    class="button is-fullwidth"
-                                    disabled={self.request_add_license_id == 0}
-                                    onclick={onclick_add_license} >
-                                    { get_value_field(&117) }
-                                </button>
+                                {ft_save_btn(
+                                    "add-license-component",
+                                    onclick_add_license,
+                                    true,
+                                    self.request_add_license_id == 0
+                                )}
                             </div>
                         </div>
                     </section>

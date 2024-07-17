@@ -158,25 +158,21 @@ impl Component for ManageFilesOfFilesetBlock {
 
 impl ManageFilesOfFilesetBlock {
     fn show_download_block(&self) -> Html {
-        let onchange_select_fileset_btn = self.link
-            .callback(|ev: ChangeData| Msg::SelectFilesetUuid(match ev {
-              ChangeData::Select(el) => el.value(),
-              _ => String::new(),
-          }));
-
-        let onclick_open_fileset_files_list_btn = self.link
-            .callback(|_| Msg::OpenFilesetFilesBlock);
-
+        let onchange_select_fileset_btn =
+            self.link.callback(|ev: ChangeData| Msg::SelectFilesetUuid(match ev {
+                ChangeData::Select(el) => el.value(),
+                _ => String::new(),
+            }));
+        let onclick_open_fileset_files_list_btn =
+            self.link.callback(|_| Msg::OpenFilesetFilesBlock);
         let onclick_download_fileset_btn = match self.flag_get_dowload_url {
             true => self.link.callback(|_| Msg::ShowModalDownloadFiles),
             false => self.link.callback(|_| Msg::RequestDownloadFilesetFiles),
         };
-
         let class_fileset_btn = match self.open_fileset_files_card {
             true => "button is-light is-active",
             false => "button",
         };
-
         let class_download_btn = match self.active_loading_files_btn {
             true => "button is-info is-active is-loading",
             false => "button is-info",
@@ -184,10 +180,11 @@ impl ManageFilesOfFilesetBlock {
 
         html!{<div style="margin-right: .5rem">
             <div class="select" style="margin-right: .5rem">
-              <select
-                    id="select-fileset-program"
-                    select={self.select_fileset_uuid.clone()}
-                    onchange=onchange_select_fileset_btn >
+                <select
+                id={"select-fileset-program"}
+                select={self.select_fileset_uuid.clone()}
+                onchange={onchange_select_fileset_btn}
+                title={get_value_field(&207)}>
                   {for self.props.current_filesets_program.iter().map(|(fileset_uuid, program_name)|
                       html!{
                           <option value={fileset_uuid.to_string()}
@@ -196,17 +193,21 @@ impl ManageFilesOfFilesetBlock {
                           </option>
                       }
                   )}
-              </select>
+                </select>
             </div>
-            <button class={class_fileset_btn}
-                // disabled = self.select_fileset_uuid.len() != 36
-                onclick = onclick_open_fileset_files_list_btn >
+            <button
+            class={class_fileset_btn}
+            // disabled = self.select_fileset_uuid.len() != 36
+            onclick={onclick_open_fileset_files_list_btn}
+            title={get_value_field(&106)}>
                 <span class="icon is-small"><i class="fa fa-list"></i></span>
             </button>
-            <button class=class_download_btn
-                disabled = self.select_fileset_uuid.len() != 36
-                onclick=onclick_download_fileset_btn >
-              <span class="has-text-weight-bold">{ get_value_field(&126) }</span>
+            <button
+            class={class_download_btn}
+            disabled={self.select_fileset_uuid.len() != 36}
+            onclick={onclick_download_fileset_btn}
+            title={get_value_field(&126)}>
+              <span class="has-text-weight-bold">{get_value_field(&126)}</span>
             </button>
         </div>}
     }
@@ -214,7 +215,6 @@ impl ManageFilesOfFilesetBlock {
     fn modal_download_files(&self) -> Html {
         let onclick_modal_download_btn =
             self.link.callback(|_| Msg::ShowModalDownloadFiles);
-
         let class_modal = match &self.open_modal_download_files {
             true => "modal is-active",
             false => "modal",
@@ -225,7 +225,7 @@ impl ManageFilesOfFilesetBlock {
             <div class="card">
               <div class="modal-content">
                 <header class="modal-card-head">
-                    <p class="modal-card-title">{ get_value_field(&138) }</p> // Temp solution for download files
+                    <p class="modal-card-title">{get_value_field(&138)}</p> // Temp solution for download files
                     <button class="delete" aria-label="close" onclick=onclick_modal_download_btn.clone() />
                 </header>
                 <div class="box itemBox">

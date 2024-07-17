@@ -12,6 +12,7 @@ use crate::fragments::clipboard::ShareLinkBtn;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{
+    buttons::{ft_see_btn, ft_follow_btn},
     user::ModalCardUser,
     switch_icon::res_btn,
     list_errors::ListErrors,
@@ -327,29 +328,18 @@ impl ShowStandard {
                     {self.show_followers_btn()}
                     <ShareLinkBtn />
                 </div>
-                <div class="standard-description">{
-                    match self.show_full_description {
-                        true => html!{<>
-                          {standard_data.description.to_markdown()}
-                          {match standard_data.description.len() {
-                              250.. => html!{<>
-                                <br/>
-                                <button class="button is-white" onclick=show_description_btn>
-                                    { get_value_field(&99) }
-                                </button>
-                              </>},
-                              _ => html!{},
-                          }}
+                <div class="standard-description">
+                    {match standard_data.description.len() {
+                        250.. => html!{<>
+                            {match self.show_full_description {
+                                true => standard_data.description.to_markdown(),
+                                false => format!("{:.*}", 200, standard_data.description).to_markdown(),
+                            }}
+                            {ft_see_btn(show_description_btn, self.show_full_description)}
                         </>},
-                        false => html!{<>
-                          {format!("{:.*}", 200, standard_data.description)}
-                          <br/>
-                          <button class="button is-white" onclick=show_description_btn>
-                            { get_value_field(&98) }
-                          </button>
-                        </>},
-                    }
-                }</div>
+                        _ => standard_data.description.to_markdown(),
+                    }}
+                </div>
               </div>
             </div>
         }
@@ -446,22 +436,16 @@ impl ShowStandard {
     }
 
     fn show_followers_btn(&self) -> Html {
-        let (class_fav, onclick_following) = match self.is_followed {
-            true => ("fas fa-bookmark", self.link.callback(|_| Msg::UnFollow)),
-            false => ("far fa-bookmark", self.link.callback(|_| Msg::Follow)),
+        let onclick_following = match self.is_followed {
+            true => self.link.callback(|_| Msg::UnFollow),
+            false => self.link.callback(|_| Msg::Follow),
         };
 
-        html!{<>
-            <button
-                id="following-button"
-                class="button"
-                onclick=onclick_following >
-              <span class="icon is-small">
-                <i class={class_fav}></i>
-              </span>
-              <span>{self.abbr_number()}</span>
-            </button>
-        </>}
+        ft_follow_btn(
+            onclick_following,
+            self.is_followed,
+            self.abbr_number(),
+        )
     }
 
     fn show_related_components_btn(&self) -> Html {
@@ -501,7 +485,9 @@ impl ShowStandard {
             true => {res_btn(
                 classes!("fa", "fa-tools"),
                 onclick_setting_standard_btn,
-                String::new())},
+                String::new(),
+                get_value_field(&16)
+            )},
             false => html!{},
         }
     }

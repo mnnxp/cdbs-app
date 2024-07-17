@@ -5,6 +5,7 @@ use log::debug;
 
 use crate::services::{is_authenticated, get_value_field, resp_parsing, get_value_response, get_from_value};
 use crate::fragments::list_errors::ListErrors;
+use crate::fragments::buttons::{ft_delete_btn, ft_save_btn};
 use crate::error::Error;
 use crate::types::{UUID, Region, RepresentationType, CompanyRepresentInfo, CompanyRepresentUpdateInfo};
 use crate::gqls::make_query;
@@ -45,6 +46,7 @@ pub struct ChangeItem {
     regions: Vec<Region>,
     represent_types: Vec<RepresentationType>,
     get_result_delete: bool,
+    get_confirm: UUID,
 }
 
 impl Component for ChangeItem {
@@ -63,6 +65,7 @@ impl Component for ChangeItem {
             regions: Vec::new(),
             represent_types: Vec::new(),
             get_result_delete: false,
+            get_confirm: String::new(),
         }
     }
 
@@ -114,18 +117,22 @@ impl Component for ChangeItem {
                 })
             },
             Msg::RequestDeleteRepresent => {
-                debug!("Update company represent: {:?}", &self.request_update);
-                let company_uuid = self.company_uuid.clone();
-                let company_represent_uuid = self.company_represent_uuid.clone();
-                spawn_local(async move {
-                    let res = make_query(DeleteCompanyRepresent::build_query(
-                        delete_company_represent::Variables {
-                            company_uuid,
-                            company_represent_uuid,
-                        }
-                    )).await.unwrap();
-                    link.send_message(Msg::GetDeleteRepresentResult(res));
-                })
+                if self.get_confirm == self.company_represent_uuid {
+                    debug!("Update company represent: {:?}", &self.request_update);
+                    let company_uuid = self.company_uuid.clone();
+                    let company_represent_uuid = self.company_represent_uuid.clone();
+                    spawn_local(async move {
+                        let res = make_query(DeleteCompanyRepresent::build_query(
+                            delete_company_represent::Variables {
+                                company_uuid,
+                                company_represent_uuid,
+                            }
+                        )).await.unwrap();
+                        link.send_message(Msg::GetDeleteRepresentResult(res));
+                    })
+                } else {
+                    self.get_confirm = self.company_represent_uuid.clone();
+                }
             },
             Msg::GetUpdateResult(res) => {
                 match resp_parsing(res, "updateCompanyRepresent") {
@@ -210,29 +217,19 @@ impl ChangeItem {
         &self,
         id: &str,
         label: &str,
-        // placeholder: &str,
         value: String,
         oninput: Callback<InputData>,
     ) -> Html {
         let placeholder = label;
-        let mut class = "input";
-        let (input_tag, input_type) = match id {
-            "email" => ("input", "email"),
-            "description" => {
-                class = "textarea";
-                ("textarea", "text")
-            },
-            "password" => ("input", "password"),
-            _ => ("input", "text"),
-        };
+        let input_tag = "input";
 
         html!{
             <fieldset class="field">
                 <label class="label">{label.to_string()}</label>
                 <@{input_tag}
                     id={id.to_string()}
-                    class={class}
-                    type={input_type}
+                    class={input_tag}
+                    type={"text"}
                     placeholder={placeholder.to_string()}
                     value={value}
                     oninput=oninput ></@>
@@ -261,9 +258,6 @@ impl ChangeItem {
                 self.request_update.name.as_ref().map(|x| x.to_string()).unwrap_or_default(),
                 oninput_name
             )}
-            // <div class="column">
-            // </div>
-
             <div class="columns">
                 <div class="column">
                     {self.fileset_generator(
@@ -337,18 +331,20 @@ impl ChangeItem {
 
         html!{<div class="columns">
             <div class="column">
-                <button id={"btn-delete-represent"}
-                    class="button is-danger is-fullwidth"
-                    onclick=onclick_delete_represent>
-                    { get_value_field(&135) }
-                </button>
+                {ft_delete_btn(
+                    "btn-delete-represent",
+                    onclick_delete_represent,
+                    self.get_confirm == self.company_represent_uuid,
+                    false
+                )}
             </div>
             <div class="column">
-                <button id={"btn-change-represent"}
-                    class="button is-fullwidth"
-                    onclick=onclick_change_represent>
-                    { get_value_field(&46) }
-                </button>
+                {ft_save_btn(
+                    "btn-change-represent",
+                    onclick_change_represent,
+                    true,
+                    false
+                )}
             </div>
         </div>}
     }

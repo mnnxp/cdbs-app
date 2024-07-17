@@ -79,23 +79,20 @@ impl ListItemUser {
         &self,
         small_button: bool,
     ) -> Html {
-        let onclick_open_profile = self
-            .link
-            .callback(|_| Msg::ShowProfile);
+        let onclick_open_profile = self.link.callback(|_| Msg::ShowProfile);
 
         match small_button {
-            true => html!{
-                {res_btn(
-                    classes!(String::from("fas  fa-user-o")),
-                    onclick_open_profile,
-                    String::new()
-                )}
-            },
+            true => {res_btn(
+                classes!("fas", "fa-user-o"),
+                onclick_open_profile,
+                String::new(),
+                get_value_field(&261)
+            )},
             false => html!{
                 <button
-                      class="button is-light is-fullwidth has-text-weight-bold"
-                      onclick=onclick_open_profile >
-                    { get_value_field(&261) }
+                class="button is-light is-fullwidth has-text-weight-bold"
+                onclick={onclick_open_profile}>
+                    {get_value_field(&261)}
                 </button>
             },
         }

@@ -7,6 +7,7 @@ use wasm_bindgen_futures::spawn_local;
 use super::ModificationTableItemModule;
 use crate::error::Error;
 use crate::fragments::{
+    buttons::{ft_delete_btn, ft_save_btn},
     list_errors::ListErrors,
     component::param::RegisterParamnameBlock,
 };
@@ -51,6 +52,7 @@ pub struct ModificationTableItem {
     open_edit_param_card: bool,
     get_add_param_card: usize,
     get_change_param_card: usize,
+    get_confirm: usize,
 }
 
 pub enum Msg {
@@ -98,6 +100,7 @@ impl Component for ModificationTableItem {
             open_edit_param_card: false,
             get_add_param_card: 0,
             get_change_param_card: 0,
+            get_confirm: 0,
         }
     }
 
@@ -154,17 +157,21 @@ impl Component for ModificationTableItem {
                 })
             },
             Msg::RequestDeleteParamData => {
-                debug!("RequestDeleteParamData");
-                let del_modification_param_data = delete_modification_params::DelModificationParamData{
-                    modificationUuid: self.props.modification_uuid.clone(),
-                    paramIds: vec![self.request_edit_param.param_id as i64],
-                };
-                spawn_local(async move {
-                    let res = make_query(DeleteModificationParams::build_query(
-                        delete_modification_params::Variables { del_modification_param_data }
-                    )).await.unwrap();
-                    link.send_message(Msg::GetDeleteParamResult(res));
-                })
+                if self.get_confirm == self.request_edit_param.param_id {
+                    debug!("RequestDeleteParamData");
+                    let del_modification_param_data = delete_modification_params::DelModificationParamData{
+                        modificationUuid: self.props.modification_uuid.clone(),
+                        paramIds: vec![self.request_edit_param.param_id as i64],
+                    };
+                    spawn_local(async move {
+                        let res = make_query(DeleteModificationParams::build_query(
+                            delete_modification_params::Variables { del_modification_param_data }
+                        )).await.unwrap();
+                        link.send_message(Msg::GetDeleteParamResult(res));
+                    })
+                } else {
+                    self.get_confirm = self.request_edit_param.param_id;
+                }
             },
             Msg::GetParamsListResult(res) => {
                 match resp_parsing::<Vec<Param>>(res, "params") {
@@ -296,6 +303,9 @@ impl Component for ModificationTableItem {
             Msg::ShowEditParamCard(param_id) => {
                 self.open_edit_param_card = !self.open_edit_param_card;
                 if self.open_edit_param_card {
+                    // clear the check flags
+                    self.get_confirm = 0;
+                    self.update_edit_param = false;
                     if let Some(value) = self.collect_item.get(&param_id) {
                         self.request_edit_param.value = value.clone();
                     }
@@ -349,34 +359,25 @@ impl ModificationTableItem {
             true => "far fa-folder-open",
             false => "far fa-folder",
         };
-        let (double_click_text, double_click_icon) = match &self.props.show_manage_btn {
-            true => (get_value_field(&127), "fas fa-pencil-ruler"), // edit
-            false => (get_value_field(&128), "fas fa-info"), // info
+        let (title_text, click_icon) =
+        match (&self.props.show_manage_btn, &self.props.select_item) {
+            (true, true) => (get_value_field(&127), "fas fa-pencil-alt"),   // edit
+            (false, true) => (get_value_field(&128), "fas fa-info"),        // info
+            (_, false) => (get_value_field(&129), "far fa-hand-pointer"),   // select
         };
 
         html!{<tr class={class_style}>
             <td>
-                <a onclick={onclick_select_modification}>
-                    {match &self.props.select_item {
-                        true => html!{<>
-                            <span>{double_click_text}</span>
-                            <span class="icon">
-                                <i class={double_click_icon} aria-hidden="true"></i>
-                            </span>
-                        </>},
-                        false => html!{<>
-                            <span>{ get_value_field(&129) }</span> // select
-                            <span class="icon is-small">
-                                <i class="far fa-hand-pointer" aria-hidden="true"></i>
-                            </span>
-                        </>},
-                    }}
+                <a onclick={onclick_select_modification} title={title_text}>
+                    // <span>{title_text}</span>
+                    <span class="icon">
+                        <i class={click_icon} aria-hidden="true"></i>
+                    </span>
                 </a>
                 {match self.props.select_item && !self.props.show_manage_btn {
                     true => html!{<>
                         <span>{" | "}</span>
-                        <a onclick={onclick_show_modification_files}>
-                            // <span>{files_click_text}</span>
+                        <a onclick={onclick_show_modification_files} title={get_value_field(&329)}>
                             <span class="icon">
                                 <i class={files_click_icon} aria-hidden="true"></i>
                             </span>
@@ -504,13 +505,12 @@ impl ModificationTableItem {
                               value={self.request_add_param.value.clone()}
                               oninput=oninput_param_value />
                       <br/>
-                      <button
-                          id="update-modification-param"
-                          class="button is-fullwidth"
-                          disabled={!self.update_add_param}
-                          onclick={onclick_param_add} >
-                          { get_value_field(&117) }
-                      </button>
+                      {ft_save_btn(
+                        "update-modification-param",
+                        onclick_param_add,
+                        true,
+                        !self.update_add_param
+                      )}
                     </div>
                   </article>
                 </div>
@@ -552,23 +552,22 @@ impl ModificationTableItem {
                               oninput=oninput_param_value />
                       <br/>
                       <div class="columns">
-                          <div class="column">
-                              <button
-                                  id="delete-modification-param"
-                                  class="button is-danger is-fullwidth"
-                                  onclick={onclick_delete_param} >
-                                  { get_value_field(&135) }
-                              </button>
-                          </div>
-                          <div class="column">
-                              <button
-                                  id="update-modification-param"
-                                  class="button is-fullwidth"
-                                  disabled={!self.update_edit_param}
-                                  onclick={onclick_param_update} >
-                                  { get_value_field(&46) }
-                              </button>
-                          </div>
+                        <div class="column">
+                          {ft_delete_btn(
+                              "delete-modification-param",
+                              onclick_delete_param,
+                              self.get_confirm == self.request_edit_param.param_id,
+                              false
+                          )}
+                        </div>
+                        <div class="column">
+                          {ft_save_btn(
+                            "update-modification-param",
+                            onclick_param_update,
+                            true,
+                            !self.update_edit_param
+                          )}
+                        </div>
                       </div>
                     </div>
                   </article>

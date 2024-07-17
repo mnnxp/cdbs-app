@@ -12,6 +12,7 @@ use wasm_bindgen_futures::spawn_local;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{
+    buttons::ft_follow_btn,
     user::ModalCardUser,
     switch_icon::res_btn,
     list_errors::ListErrors,
@@ -305,11 +306,13 @@ impl ShowCompany {
                     </p>
                     <div class="buttons flexBox" >
                       {match &self.current_user_owner {
-                          true => {res_btn(
-                              classes!("fa", "fa-tools"),
-                              onclick_setting_company_btn,
-                              String::new())},
-                          false => html!{},
+                        true => {res_btn(
+                            classes!("fa", "fa-tools"),
+                            onclick_setting_company_btn,
+                            String::new(),
+                            get_value_field(&16)
+                        )},
+                        false => html!{},
                       }}
                       {self.show_favorite_btn()}
                     </div>
@@ -320,22 +323,16 @@ impl ShowCompany {
     }
 
     fn show_favorite_btn(&self) -> Html {
-        let (class_fav, onclick_following) = match self.is_followed {
-            true => ("fas fa-bookmark", self.link.callback(|_| Msg::UnFollow)),
-            false => ("far fa-bookmark", self.link.callback(|_| Msg::Follow)),
+        let onclick_following = match self.is_followed {
+            true => self.link.callback(|_| Msg::UnFollow),
+            false => self.link.callback(|_| Msg::Follow),
         };
 
-        html!{
-            <button
-                id="following-button"
-                class="button"
-                onclick=onclick_following >
-              <span class="icon is-small">
-                <i class={class_fav}></i>
-              </span>
-              <span>{self.abbr_number()}</span>
-            </button>
-        }
+        ft_follow_btn(
+            onclick_following,
+            self.is_followed,
+            self.abbr_number(),
+        )
     }
 
     fn view_content(

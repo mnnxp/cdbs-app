@@ -5,6 +5,7 @@ pub use list_item::FilesetFileItem;
 use std::collections::BTreeSet;
 use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
 use log::debug;
+use crate::fragments::buttons::ft_see_btn;
 use crate::types::{UUID, ShowFileInfo};
 use crate::services::get_value_field;
 
@@ -110,20 +111,7 @@ impl FilesetFilesBlock {
     }
 
     fn show_see_btn(&self) -> Html {
-        let show_full_files_btn = self.link
-            .callback(|_| Msg::ShowFullList);
-
-        match self.show_full_files {
-            true => html!{
-              <button class="button is-white" onclick=show_full_files_btn>
-                  { get_value_field(&99) }
-              </button>
-            },
-            false => html!{
-              <button class="button is-white" onclick=show_full_files_btn>
-                  { get_value_field(&98) }
-              </button>
-            },
-        }
+        let show_full_files_btn = self.link.callback(|_| Msg::ShowFullList);
+        ft_see_btn(show_full_files_btn, self.show_full_files)
     }
 }

@@ -6,7 +6,10 @@ use yew_router::{
 use crate::services::content_adapter::DateDisplay;
 use crate::services::get_value_field;
 use crate::routes::AppRoute;
-use crate::fragments::switch_icon::res_btn;
+use crate::fragments::{
+    buttons::ft_follow_btn,
+    switch_icon::res_btn,
+};
 use crate::types::ShowComponentShort;
 
 pub enum Msg {
@@ -83,43 +86,21 @@ impl Component for ListItem {
 impl ListItem {
     fn showing_in_list(&self) -> Html {
         let ShowComponentShort {
-            // uuid,
             name,
             description,
-            image_file,
-            // owner_user,
-            // type_access,
-            actual_status,
-            is_followed,
-            is_base,
             updated_at,
-            licenses,
-            // files,
-            // component_suppliers,
             ..
         } = &self.props.data;
 
         let onclick_open_component = self.link.callback(|_| Msg::OpenComponent);
-        let trigger_fab_btn = self.link.callback(|_| Msg::TriggerFav);
-
-        let mut class_res_btn = vec!["fa-bookmark"];
-        let mut class_color_btn = "";
-
-        match is_followed {
-            true => {
-                class_res_btn.push("fas");
-                class_color_btn = "color: #1872F0;";
-            },
-            false => class_res_btn.push("far"),
-        }
+        let trigger_fav_btn = self.link.callback(|_| Msg::TriggerFav);
 
         html!{
           <div class="box itemBox componentListItem">
             <article class="media center-media">
               <div class="media-left">
                 <figure class="image is-96x96">
-                  <div hidden={!is_base} class="top-tag" >{ get_value_field(&157) }</div> // standard
-                  <img src={image_file.download_url.clone()} alt="Image" />
+                  <img src={self.props.data.image_file.download_url.clone()} alt="Image" />
                 </figure>
               </div>
               <div class="media-content">
@@ -130,7 +111,7 @@ impl ListItem {
                     <div class="column">
                         { get_value_field(&159) } // actual status
                         <span class="id-box has-text-weight-bold">
-                            {actual_status.name.clone()}
+                            {self.props.data.actual_status.name.clone()}
                         </span>
                     </div>
                   </div>
@@ -145,19 +126,22 @@ impl ListItem {
                           </div>
                       </div>
                       <div class="column buttons is-one-quarter flexBox" >
-                          {res_btn(classes!("fas", "fa-eye"),
-                              onclick_open_component,
-                              String::new())}
                           {res_btn(
-                              classes!(class_res_btn),
-                              trigger_fab_btn,
-                              class_color_btn.to_string()
+                            classes!("far", "fa-folder"),
+                            onclick_open_component,
+                            String::new(),
+                            get_value_field(&315)
+                          )}
+                          {ft_follow_btn(
+                            trigger_fav_btn,
+                            self.props.data.is_followed,
+                            String::new(),
                           )}
                       </div>
                   </div>
                   <div class="columns" style="margin-bottom:0">
                       <div class="column">
-                        {match licenses.first() {
+                        {match self.props.data.licenses.first() {
                             Some(l) => html!{l.name.clone()},
                             None => html!{},
                         }}
@@ -174,53 +158,30 @@ impl ListItem {
     }
 
     fn showing_in_box(&self) -> Html {
-        let ShowComponentShort {
-            is_base,
-            is_followed,
-            image_file,
-            name,
-            ..
-        } = self.props.data.clone();
-
-        let onclick_open_component = self.link
-            .callback(|_| Msg::OpenComponent);
-
-        let trigger_fab_btn = self.link
-            .callback(|_| Msg::TriggerFav);
-
-        let mut class_res_btn = vec![];
-        let mut class_color_btn = "";
-        match is_followed {
-            true => {
-                class_res_btn.push("fas");
-                class_color_btn = "color: #1872F0;";
-            },
-            false => class_res_btn.push("far"),
-        }
-        class_res_btn.push("fa-bookmark");
+        let onclick_open_component = self.link.callback(|_| Msg::OpenComponent);
+        let trigger_fav_btn = self.link.callback(|_| Msg::TriggerFav);
 
         html!{
           <div class="boxItem" >
             <div class="innerBox" >
               <div class="imgBox" >
-                <div class="top-tag" hidden={!is_base} >{ get_value_field(&157) }</div> // standard
-                <img src={image_file.download_url.clone()} alt="Image" />
+                <img src={self.props.data.image_file.download_url.clone()} alt="Image" />
               </div>
               <div>
                 {self.show_owner()}
               </div>
-              <div class="overflow-title has-text-weight-bold is-size-4" >{name}</div>
+              <div class="overflow-title has-text-weight-bold is-size-4" >{self.props.data.name.clone()}</div>
                 <div class="btnBox">
                   <button class="button is-light is-fullwidth has-text-weight-bold"
                         onclick={onclick_open_component} >
                     { get_value_field(&161) }
                   </button>
                   <div style="margin-left: 8px;">
-                      {res_btn(
-                          classes!(class_res_btn),
-                          trigger_fab_btn,
-                          class_color_btn.to_string()
-                      )}
+                    {ft_follow_btn(
+                        trigger_fav_btn,
+                        self.props.data.is_followed,
+                        String::new(),
+                    )}
                   </div>
                 </div>
             </div>
