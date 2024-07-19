@@ -143,9 +143,10 @@ impl RegisterParamnameBlock {
                 {ft_save_btn(
                     "add-paramname",
                     onclick_register_paramname,
-                    self.disable_btn || self.request_new_paramname.is_empty() ||
-                        self.set_param_value.is_empty(),
-                    self.set_param_value.is_empty()
+                    true,
+                    self.disable_btn ||
+                        self.request_new_paramname.is_empty() ||
+                        self.set_param_value.is_empty()
                 )}
             </div>
         </>}
