@@ -53,7 +53,7 @@ pub fn res_file_btn(onclick: Callback<MouseEvent>, filename: String) -> Html {
       style_color = "color: #1872f0";
       classes!("far", "fa-file-audio")
     },
-    ".FCStd" | ".blend" | ".stl" | ".step" | ".stp" => {
+    ".fcstd" | ".blend" | ".stl" | ".step" | ".stp" => {
       style_color = "color: #1872f0";
       classes!("far", "fa-file")
     },
