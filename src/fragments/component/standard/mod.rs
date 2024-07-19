@@ -257,7 +257,7 @@ impl ComponentStandardsCard {
                 <div class="modal-content">
                   <div class="card">
                     <header class="modal-card-head">
-                      <p class="modal-card-title">{ get_value_field(&191) }</p> // Add a standard to a component
+                      <p class="modal-card-title">{get_value_field(&263)}</p> // Add a standard to the component
                       <button class="delete" aria-label="close" onclick={onclick_hide_modal.clone()} />
                     </header>
                     <section class="modal-card-body">
