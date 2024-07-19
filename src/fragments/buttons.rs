@@ -1,4 +1,4 @@
-use yew::{html, Html, classes, Callback, MouseEvent};
+use yew::{html, Html, classes, Classes, Callback, MouseEvent};
 use crate::services::get_value_field;
 
 /// Returns a VNode with Html code of button to download url in the <a> tag
@@ -172,6 +172,28 @@ pub fn ft_add_btn(
             <span class="icon">
                 <i class="fas fa-plus" aria-hidden="true"></i>
             </span>
+            <span>{title_text.to_string()}</span>
+        </button>
+    }
+}
+
+/// Returns a VNode with Html code of a create button
+pub fn ft_create_btn(
+    id_btn: &str,
+    class_btn: Classes,
+    trigger_btn: Callback<MouseEvent>,
+    disabled: bool,
+) -> Html {
+    let title_text = get_value_field(&45);
+    let class_btn = classes!("button", "is-fullwidth", "is-success", class_btn);
+
+    html!{
+        <button
+            id={id_btn.to_string()}
+            class={class_btn}
+            disabled={disabled}
+            onclick={trigger_btn}
+            title={title_text.to_string()}>
             <span>{title_text.to_string()}</span>
         </button>
     }

@@ -13,6 +13,7 @@ use log::debug;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
+use crate::fragments::buttons::ft_create_btn;
 use crate::services::{get_logged_user, get_value_field, resp_parsing, get_value_response, get_from_value};
 use crate::types::{UUID, SlimUser, CompanyCreateInfo, Region, CompanyType, TypeAccessInfo};
 use crate::gqls::make_query;
@@ -205,15 +206,12 @@ impl Component for CreateCompany {
                             { self.fieldset_company() }
                         </div>
                         <br/>
-                        <button
-                            id="create-company"
-                            class="button is-success is-medium is-fullwidth"
-                            type="submit"
-                            disabled=false
-                            onclick=onclick_create_company
-                            >
-                            { get_value_field(&45) } // Create
-                        </button>
+                        {ft_create_btn(
+                            "create-company",
+                            "is-medium".into(),
+                            onclick_create_company,
+                            false,
+                        )}
                     </div>
                 </div>
             </div>
@@ -270,39 +268,35 @@ impl CreateCompany {
         }
     }
 
-    fn fieldset_company(
-        &self
-    ) -> Html {
-        let oninput_orgname = self.link
-            .callback(|ev: InputData| Msg::UpdateOrgname(ev.value));
-        let oninput_shortname = self.link
-            .callback(|ev: InputData| Msg::UpdateShortname(ev.value));
-        let oninput_inn = self.link
-            .callback(|ev: InputData| Msg::UpdateInn(ev.value));
-        let oninput_email = self.link
-            .callback(|ev: InputData| Msg::UpdateEmail(ev.value));
-        let oninput_description = self.link
-            .callback(|ev: InputData| Msg::UpdateDescription(ev.value));
-        let oninput_phone = self.link
-            .callback(|ev: InputData| Msg::UpdatePhone(ev.value));
-        let oninput_address = self.link
-            .callback(|ev: InputData| Msg::UpdateAddress(ev.value));
-        let oninput_site_url = self.link
-            .callback(|ev: InputData| Msg::UpdateSiteUrl(ev.value));
-        // let oninput_time_zone = self.link
-        //     .callback(|ev: InputData| Msg::UpdateTimeZone(ev.value));
-        let onchange_region_id = self.link
-            .callback(|ev: ChangeData| Msg::UpdateRegionId(match ev {
-              ChangeData::Select(el) => el.value(),
-              _ => "1".to_string(),
-          }));
-        let onchange_company_type_id = self.link
-            .callback(|ev: ChangeData| Msg::UpdateCompanyTypeId(match ev {
+    fn fieldset_company(&self) -> Html {
+        let oninput_orgname =
+            self.link.callback(|ev: InputData| Msg::UpdateOrgname(ev.value));
+        let oninput_shortname =
+            self.link.callback(|ev: InputData| Msg::UpdateShortname(ev.value));
+        let oninput_inn =
+            self.link.callback(|ev: InputData| Msg::UpdateInn(ev.value));
+        let oninput_email =
+            self.link.callback(|ev: InputData| Msg::UpdateEmail(ev.value));
+        let oninput_description =
+            self.link.callback(|ev: InputData| Msg::UpdateDescription(ev.value));
+        let oninput_phone =
+            self.link.callback(|ev: InputData| Msg::UpdatePhone(ev.value));
+        let oninput_address =
+            self.link.callback(|ev: InputData| Msg::UpdateAddress(ev.value));
+        let oninput_site_url =
+            self.link.callback(|ev: InputData| Msg::UpdateSiteUrl(ev.value));
+        let onchange_region_id =
+            self.link.callback(|ev: ChangeData| Msg::UpdateRegionId(match ev {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
             }));
-        let onchange_type_access_id = self.link
-              .callback(|ev: ChangeData| Msg::UpdateTypeAccessId(match ev {
+        let onchange_company_type_id =
+            self.link.callback(|ev: ChangeData| Msg::UpdateCompanyTypeId(match ev {
+              ChangeData::Select(el) => el.value(),
+              _ => "1".to_string(),
+            }));
+        let onchange_type_access_id =
+            self.link.callback(|ev: ChangeData| Msg::UpdateTypeAccessId(match ev {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
             }));

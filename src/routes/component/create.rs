@@ -10,6 +10,7 @@ use wasm_bindgen_futures::spawn_local;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
+use crate::fragments::buttons::ft_create_btn;
 use crate::services::{get_logged_user, get_value_field, get_value_response, get_from_value, resp_parsing};
 use crate::types::{UUID, ComponentCreateData, TypeAccessInfo, ActualStatus};
 use crate::gqls::make_query;
@@ -172,16 +173,22 @@ impl Component for CreateComponent {
 
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+        let onclick_create_component = self.link.callback(|_| Msg::RequestManager);
 
         html!{
             <div class="component-page">
                 <div class="container page">
                     <div class="row">
                         <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
-                        <h1 class="title">{ get_value_field(&290) }</h1>
+                        <h1 class="title">{get_value_field(&290)}</h1>
                         {self.show_main_card()}
                         <br/>
-                        {self.show_manage_btn()}
+                        {ft_create_btn(
+                            "create-component",
+                            "is-medium".into(),
+                            onclick_create_component,
+                            self.disable_create_btn,
+                        )}
                     </div>
                 </div>
             </div>
@@ -191,16 +198,16 @@ impl Component for CreateComponent {
 
 impl CreateComponent {
     fn show_main_card(&self) -> Html {
-        let onchange_actual_status_id = self.link
-            .callback(|ev: ChangeData| Msg::UpdateActualStatusId(match ev {
+        let onchange_actual_status_id =
+            self.link.callback(|ev: ChangeData| Msg::UpdateActualStatusId(match ev {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
-          }));
-        let onchange_change_type_access = self.link
-            .callback(|ev: ChangeData| Msg::UpdateTypeAccessId(match ev {
+            }));
+        let onchange_change_type_access =
+            self.link.callback(|ev: ChangeData| Msg::UpdateTypeAccessId(match ev {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
-          }));
+            }));
         let oninput_name =
             self.link.callback(|ev: InputData| Msg::UpdateName(ev.value));
         let oninput_description =
@@ -274,20 +281,6 @@ impl CreateComponent {
                     </div>
                 </div>
             </div>
-        }
-    }
-
-    fn show_manage_btn(&self) -> Html {
-        let onclick_create_changes = self.link.callback(|_| Msg::RequestManager);
-
-        html!{
-            <button
-                id="create-data"
-                class="button is-success is-medium is-fullwidth"
-                onclick={onclick_create_changes}
-                disabled={self.disable_create_btn} >
-                { get_value_field(&45) } // Create
-            </button>
         }
     }
 }

@@ -14,6 +14,7 @@ use wasm_bindgen_futures::spawn_local;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
+use crate::fragments::buttons::ft_create_btn;
 use crate::services::{get_logged_user, get_value_field, get_value_response, get_from_value, resp_parsing};
 use crate::types::{
     UUID, StandardCreateData, SlimUser, Region, TypeAccessInfo,
@@ -480,15 +481,12 @@ impl CreateStandard {
 
         {match self.company_list.is_empty() {
             true => html!{},
-            false => html!{
-                <button
-                    id="create-data"
-                    class="button is-success is-medium is-fullwidth"
-                    onclick={onclick_create_changes}
-                    disabled={self.disable_create_btn} >
-                    { get_value_field(&45) } // Create
-                </button>
-            },
+            false => ft_create_btn(
+                "create-standard",
+                "is-medium".into(),
+                onclick_create_changes,
+                self.disable_create_btn,
+            ),
         }}
     }
 }

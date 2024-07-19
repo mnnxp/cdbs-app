@@ -169,10 +169,10 @@ impl Component for Login {
                         </fieldset>
                         <button
                             id="submit-button"
-                            class=classes!("button", "is-fullwidth", "is-large")
+                            class=classes!("button", "is-info", "is-fullwidth", "is-large")
                             type="submit"
                             disabled=false>
-                            { get_value_field(&44) }
+                            {get_value_field(&44)}
                         </button>
                     </fieldset>
                 </form>

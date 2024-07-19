@@ -1,4 +1,4 @@
-use yew::{agent::Bridged, classes, html, Bridge, Callback, Component, ComponentLink, Html, InputData, ChangeData, ShouldRender};
+use yew::{agent::Bridged, html, Bridge, Callback, Component, ComponentLink, Html, InputData, ChangeData, ShouldRender};
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
@@ -7,6 +7,7 @@ use log::debug;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
+use crate::fragments::buttons::ft_create_btn;
 use crate::services::{get_logged_user, get_value_field, get_value_response, get_from_value};
 use crate::types::{RegisterInfo, Program, TypeAccessInfo};
 use crate::gqls::make_query;
@@ -165,16 +166,14 @@ impl Component for Register {
                     {self.fieldset_profile()}
                     <div class="columns">
                         <div class="column">
-                            <button
-                                id="signup-button"
-                                class=classes!("button", "is-fullwidth", "is-large")
-                                onclick={onclick_signup_btn}
-                                disabled=self.request.username.is_empty() ||
+                            {ft_create_btn(
+                                "signup-button",
+                                "is-large".into(),
+                                onclick_signup_btn,
+                                self.request.username.is_empty() ||
                                     self.request.email.is_empty() ||
-                                    self.request.password.is_empty()
-                            >
-                                { get_value_field(&45) }
-                            </button>
+                                    self.request.password.is_empty(),
+                            )}
                         </div>
                         <div class="column">
                             <div class="column is-flex is-vcentered">

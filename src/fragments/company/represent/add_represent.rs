@@ -5,6 +5,7 @@ use log::debug;
 
 use crate::services::{is_authenticated, get_value_field, resp_parsing, get_value_response, get_from_value};
 use crate::fragments::list_errors::ListErrors;
+use crate::fragments::buttons::ft_create_btn;
 use crate::error::Error;
 use crate::types::{UUID, Region, RepresentationType, RegisterCompanyRepresentInfo};
 use crate::gqls::make_query;
@@ -215,9 +216,6 @@ impl AddCompanyRepresentCard {
                 self.request_register.name.clone(),
                 oninput_name
             )}
-            // <div class="column">
-            // </div>
-
             <div class="columns">
                 <div class="column">
                     {self.fileset_generator(
@@ -292,17 +290,18 @@ impl AddCompanyRepresentCard {
         html!{<div class="columns">
             <div class="column">
                 <button id={"btn-clear-represent"}
-                    class="button is-fullwidth"
+                    class="button is-fullwidth is-warning"
                     onclick=onclick_clear_data>
                     { get_value_field(&88) }
                 </button>
             </div>
             <div class="column">
-                <button id={"btn-new-represent"}
-                    class="button is-success is-fullwidth"
-                    onclick=onclick_create_represent>
-                    { get_value_field(&45) } // Create
-                </button>
+                {ft_create_btn(
+                    "btn-new-represent",
+                    "".into(),
+                    onclick_create_represent,
+                    false,
+                )}
             </div>
         </div>}
     }
