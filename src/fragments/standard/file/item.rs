@@ -17,7 +17,6 @@ use crate::gqls::standard::{
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
-    pub show_download_btn: bool,
     pub show_delete_btn: bool,
     pub standard_uuid: UUID,
     pub file: ShowFileInfo,

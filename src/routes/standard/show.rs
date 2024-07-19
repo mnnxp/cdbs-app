@@ -394,7 +394,6 @@ impl ShowStandard {
             <div class="column">
               <h2 class="has-text-weight-bold">{ get_value_field(&153) }</h2> // Files
               <StandardFilesCard
-                  show_download_btn = true
                   show_delete_btn = false
                   standard_uuid = standard_data.uuid.clone()
                   files = standard_data.standard_files.clone()

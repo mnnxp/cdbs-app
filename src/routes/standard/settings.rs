@@ -713,7 +713,6 @@ impl StandardSettings {
                     callback_upload_confirm={callback_upload_confirm}
                     />
                 <StandardFilesCard
-                    show_download_btn = false
                     show_delete_btn = true
                     standard_uuid = standard_data.uuid.clone()
                     files = self.files_list.clone()
