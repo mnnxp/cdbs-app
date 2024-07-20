@@ -88,7 +88,7 @@ lazy_static! {
             (82, "Remove profile"),
             (83, "Upload new certificate"),
             (84, "It is recommended to upload the certificate in image format."),
-            (85, "Select file: "),
+            (85, "Files selected for upload"),
             (86, "Drop certificate file here"),
             (87, "Upload"),
             (88, "Clear"),

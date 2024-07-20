@@ -193,9 +193,10 @@ impl Component for UploaderFiles {
                 }
             },
             Msg::UpdateFiles(files) => {
-                while let Some(file) = files.get(self.files_index) {
-                    debug!("self.files_index: {:?}", self.files_index);
-                    if !self.props.multiple && self.files_index != 0 {
+                let mut temp_index = 0;
+                while let Some(file) = files.get(temp_index) {
+                    debug!("temp_index: {:?}", temp_index);
+                    if !self.props.multiple && temp_index != 0 {
                         debug!("Multiple disabled");
                         return true
                     }
@@ -203,9 +204,11 @@ impl Component for UploaderFiles {
                         debug!("File is not recognized as a picture");
                         return true
                     }
-                    self.files_index += 1;
+                    temp_index += 1;
                     self.files.push(file.clone());
                 }
+                self.files_index += temp_index;
+                debug!("files_index: {:?}", self.files_index);
             },
             Msg::FinishUploadFiles => {
                 self.props.callback_upload_confirm.emit(self.get_result_up_completed);
@@ -282,46 +285,50 @@ impl UploaderFiles {
                   accept={self.props.accept.clone()}
                   onchange={onchange_upload_files}
                   multiple={self.props.multiple} />
-                <span class="file-cta" ondrop=ondrop_upload_files ondragover=ondragover_upload_files>
+                <span class="file-cta" ondrop={ondrop_upload_files} ondragover={ondragover_upload_files}>
                   <span class="file-icon">
                     <i class="fas fa-upload"></i>
                   </span>
                   // Choose files…
                   <span class="file-label">{get_value_field(&self.props.text_choose_files)}</span>
+                  {self.accept_image()}
                 </span>
-                {match &self.props.accept == "image/*" {
-                    true => self.accept_image(),
-                    false => self.select_files(),
-                }}
+                <div class="column" title={get_value_field(&85)}>
+                    {self.select_files()}
+                </div>
+                <div class="buttons">
+                    {self.show_clear_btn()}
+                    {self.show_upload_files_btn()}
+                </div>
               </label>
-            </div>
-            <div class="buttons">
-                {self.show_clear_btn()}
-                {self.show_upload_files_btn()}
             </div>
         </>}
     }
 
     fn select_files(&self) -> Html {
         match self.files.is_empty() {
-            true => html!{<span class="file-name">{get_value_field(&194)}</span>}, // No file uploaded
-            false => html!{for self.files.iter().map(|f| html!{
-                <span class="file-name">{f.name().clone()}</span>
-            })}
+            true => html!{<span>{get_value_field(&194)}</span>}, // No file uploaded
+            false => html!{
+                <div class="tags">
+                    {for self.files.iter().map(|f| html!{
+                        <span class="file-name mb-1 mr-1">
+                            {f.name().clone()}
+                        </span>
+                    })}
+                </div>
+            }
         }
     }
 
     fn accept_image(&self) -> Html {
-        html!{
-            <div class="columns">
-                <div class="column">{self.select_files()}</div>
-                <div class="column">
-                    <span class="is-size-6" style="overflow-wrap: anywhere">
-                        {get_value_field(&183)}
-                        {": .apng, .avif, .gif, .jpg, .jpeg, .jpe, .jif, .jfif, .png, .svg, .webp."}
-                    </span>
-                </div>
-            </div>
+        match &self.props.accept == "image/*" {
+            true => html!{
+                <span class="is-size-7" style="overflow-wrap: anywhere">
+                    {get_value_field(&183)}
+                    {": .apng, .avif, .gif, .jpg, .jpeg, .jpe, .jif, .jfif, .png, .svg, .webp"}
+                </span>
+            },
+            false => html!{},
         }
     }
 
@@ -329,7 +336,7 @@ impl UploaderFiles {
         let onclick_clear_boxed = self.link.callback(|_| Msg::ClearFilesBoxed);
         html!{
             <button
-              class="button"
+              class="button is-fullwidth is-warning"
               onclick=onclick_clear_boxed
               disabled={self.files.is_empty() || self.active_loading_files_btn} >
                 <span>{get_value_field(&88)}</span>
@@ -340,8 +347,8 @@ impl UploaderFiles {
     fn show_upload_files_btn(&self) -> Html {
         let onclick_upload_files = self.link.callback(|_| Msg::UploadFiles);
         let class_upload_btn = match self.active_loading_files_btn {
-            true => "button is-loading",
-            false => "button",
+            true => "button is-fullwidth is-success is-loading",
+            false => "button is-fullwidth is-success",
         };
         html!{
             <button
