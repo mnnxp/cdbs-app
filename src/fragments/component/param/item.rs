@@ -42,6 +42,7 @@ pub enum Msg {
     GetDeleteParamResult(String),
     GetChangeValueResult(String),
     UpdateParamValue(String),
+    ClearError,
 }
 
 impl Component for ComponentParamTag {
@@ -124,6 +125,7 @@ impl Component for ComponentParamTag {
                 }
             },
             Msg::UpdateParamValue(data) => self.request_set_param_value = data,
+            Msg::ClearError => self.error = None,
         }
         true
     }
@@ -142,8 +144,9 @@ impl Component for ComponentParamTag {
     }
 
     fn view(&self) -> Html {
+        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         html!{<>
-            <ListErrors error=self.error.clone()/>
+            <ListErrors error=self.error.clone() clear_error=onclick_clear_error />
             {self.modal_change_param_value()}
             {match self.get_result_delete {
                 true => html!{},

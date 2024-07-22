@@ -108,7 +108,7 @@ impl Component for AddUserCertificateCard {
         let callback_upload_confirm =
             self.link.callback(|confirmations| Msg::UploadConfirm(confirmations));
         html!{<div class="card">
-          <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
+          <ListErrors error=self.error.clone() clear_error=onclick_clear_error.clone()/>
           <div class="block">
             {match self.get_result_up_completed {
                 true => html!{<div class="column">{self.show_success_upload()}</div>},

@@ -72,6 +72,7 @@ pub enum Msg {
     ShowComponentsList,
     OpenStandardSetting,
     ResponseError(Error),
+    ClearError,
     Ignore,
 }
 
@@ -243,6 +244,7 @@ impl Component for ShowStandard {
                 }
             },
             Msg::ResponseError(err) => self.error = Some(err),
+            Msg::ClearError => self.error = None,
             Msg::Ignore => {}
         }
         true
@@ -258,10 +260,12 @@ impl Component for ShowStandard {
     }
 
     fn view(&self) -> Html {
+        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+
         match &self.standard {
             Some(standard_data) => html!{
                 <div class="standard-page">
-                    <ListErrors error=self.error.clone()/>
+                    <ListErrors error=self.error.clone() clear_error=onclick_clear_error />
                     <div class="container page">
                         <div class="row">
                             <div class="card column">
@@ -284,10 +288,9 @@ impl Component for ShowStandard {
                     </div>
                 </div>
             },
-            None => html!{<div>
-                <ListErrors error=self.error.clone()/>
-                // <h1>{"Not data"}</h1>
-            </div>},
+            None => html!{
+                <ListErrors error=self.error.clone() clear_error=onclick_clear_error />
+            },
         }
     }
 }

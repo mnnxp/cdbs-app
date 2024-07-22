@@ -358,7 +358,7 @@ impl Component for ShowComponent {
         match &self.component {
             Some(component_data) => html!{
                 <div class="component-page">
-                    <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
+                    <ListErrors error=self.error.clone() clear_error=onclick_clear_error.clone()/>
                     <div class="container page">
                         <div class="row">
                             {match self.open_modification_card {
@@ -383,7 +383,7 @@ impl Component for ShowComponent {
                 </div>
             },
             None => html!{<div>
-                <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
+                <ListErrors error=self.error.clone() clear_error=onclick_clear_error.clone()/>
                 // <h1>{"Not data"}</h1>
             </div>},
         }

@@ -137,7 +137,7 @@ impl Component for AddCompanyRepresentCard {
         let onclick_hide_notification = self.link.callback(|_| Msg::ClearData);
 
         html!{<div class="card">
-            <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
+            <ListErrors error=self.error.clone() clear_error=onclick_clear_error.clone()/>
             {match &self.get_result_register {
                 true => html!{
                     <article class="message is-success">

@@ -180,7 +180,7 @@ impl Component for SpecTagItem {
         match &self.error {
             Some(err) => html!{
                 <ListErrors error=err.clone()
-                    clear_error=Some(onclick_clear_error.clone())
+                    clear_error=onclick_clear_error.clone()
                   />
             },
             None => match self.get_result_delete {

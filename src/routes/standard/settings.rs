@@ -454,7 +454,7 @@ impl Component for StandardSettings {
             <div class="standard-page">
                 <div class="container page">
                     <div class="row">
-                        <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
+                        <ListErrors error=self.error.clone() clear_error=onclick_clear_error.clone()/>
                         // <br/>
                         {self.show_manage_btn()}
                         <br/>

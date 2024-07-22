@@ -280,11 +280,14 @@ impl Component for Profile {
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
 
-        match (&self.self_profile, &self.profile) {
-            (Some(self_data), _) => self.self_user_card(self_data),
-            (_, Some(user_data)) => self.other_user_card(user_data),
-            _ => html!{<ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error) />},
-        }
+        html!{<>
+            <ListErrors error=self.error.clone() clear_error=onclick_clear_error />
+            {match (&self.self_profile, &self.profile) {
+                (Some(self_data), _) => self.self_user_card(self_data),
+                (_, Some(user_data)) => self.other_user_card(user_data),
+                _ => html!{},
+            }}
+        </>}
     }
 }
 
@@ -295,7 +298,6 @@ impl Profile {
     ) -> Html {
         html! {
             <div class="profile-page">
-                <ListErrors error=self.error.clone()/>
                 <div class="container page">
                     <div class="row">
                         <div class="card">
@@ -348,7 +350,6 @@ impl Profile {
     ) -> Html {
         html! {
             <div class="profile-page">
-                <ListErrors error=self.error.clone()/>
                 <div class="container page">
                     <div class="row">
                         <div class="card">

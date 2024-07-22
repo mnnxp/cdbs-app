@@ -173,7 +173,7 @@ impl Component for ManageModificationFilesCard {
             self.link.callback(|confirmations| Msg::UploadConfirm(confirmations));
 
         html!{<>
-            <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
+            <ListErrors error=self.error.clone() clear_error=onclick_clear_error.clone()/>
             <div class="columns">
                 <div class="column">
                   <h2>{get_value_field(&203)}</h2> // Files for modification

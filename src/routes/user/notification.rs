@@ -53,6 +53,7 @@ pub enum Msg {
     GetRemoveNotification(String),
     // GetCurrentData,
     ResponseError(Error),
+    ClearError,
     Ignore,
 }
 
@@ -162,6 +163,7 @@ impl Component for Notifications {
             },
             // Msg::GetCurrentData => {},
             Msg::ResponseError(err) => self.error = Some(err),
+            Msg::ClearError => self.error = None,
             Msg::Ignore => {},
         }
         true
@@ -172,9 +174,10 @@ impl Component for Notifications {
     }
 
     fn view(&self) -> Html {
+        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         html!{
             <div class="settings-page">
-                <ListErrors error=self.error.clone()/>
+            <ListErrors error=self.error.clone() clear_error=onclick_clear_error />
                 <div class="container page">
                     <div class="row">
                         <h4 id="show-notifications" class="title is-4">{ get_value_field(&284) }</h4>

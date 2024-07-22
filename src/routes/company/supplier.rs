@@ -212,7 +212,7 @@ impl Component for ShowSupplierCompany {
         match &self.company {
             Some(company_data) => html!{
                 <div class="company-page">
-                    <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error) />
+                    <ListErrors error=self.error.clone() clear_error=onclick_clear_error />
                     <div class="container page">
                         <div class="row">
                             <div class="card">
@@ -228,7 +228,7 @@ impl Component for ShowSupplierCompany {
                     </div>
                 </div>
             },
-            None => html!{<ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error) />},
+            None => html!{<ListErrors error=self.error.clone() clear_error=onclick_clear_error />},
         }
     }
 }

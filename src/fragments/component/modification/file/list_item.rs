@@ -136,7 +136,7 @@ impl Component for ModificationFileItem {
             self.link.callback(|delete_file_uuid| Msg::RequestDeleteFile(delete_file_uuid));
 
         html!{<>
-            <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
+            <ListErrors error=self.error.clone() clear_error=onclick_clear_error.clone()/>
             {match self.get_result_delete {
                 true => html!{},
                 false => html!{<>

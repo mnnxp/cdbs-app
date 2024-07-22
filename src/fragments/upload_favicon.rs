@@ -123,7 +123,7 @@ impl Component for UpdateFaviconBlock {
         let callback_upload_confirm =
             self.link.callback(|confirmations| Msg::UploadConfirm(confirmations));
         html!{<>
-          <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
+          <ListErrors error=self.error.clone() clear_error=onclick_clear_error.clone()/>
           <div class="column">
               {match self.get_result_up_completed {
                   true => self.show_success_upload(),

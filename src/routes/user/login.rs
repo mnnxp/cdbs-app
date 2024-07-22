@@ -38,9 +38,10 @@ pub struct Login {
 pub enum Msg {
     Request,
     Response(Result<UserToken, Error>),
-    Ignore,
     UpdateUsername(String),
     UpdatePassword(String),
+    ClearError,
+    Ignore,
 }
 
 impl Component for Login {
@@ -102,6 +103,7 @@ impl Component for Login {
             },
             Msg::UpdateUsername(username) => self.request.username = username,
             Msg::UpdatePassword(password) => self.request.password = password,
+            Msg::ClearError => self.error = None,
             Msg::Ignore => {},
         }
         true
@@ -112,16 +114,15 @@ impl Component for Login {
     }
 
     fn view(&self) -> Html {
+        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         let onsubmit = self.link.callback(|ev: FocusEvent| {
             ev.prevent_default(); /* Prevent event propagation */
             Msg::Request
         });
-        let oninput_username = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateUsername(ev.value));
-        let oninput_password = self
-            .link
-            .callback(|ev: InputData| Msg::UpdatePassword(ev.value));
+        let oninput_username =
+            self.link.callback(|ev: InputData| Msg::UpdateUsername(ev.value));
+        let oninput_password =
+            self.link.callback(|ev: InputData| Msg::UpdatePassword(ev.value));
 
         html!{<div class="container page">
             <div class="auth-page">
@@ -131,7 +132,7 @@ impl Component for Login {
                         { get_value_field(&18) }
                     </RouterAnchor<AppRoute>>
                 </h2>
-                <ListErrors error=self.error.clone() />
+                <ListErrors error=self.error.clone() clear_error=onclick_clear_error />
                 <form onsubmit=onsubmit>
                     <fieldset class="box">
                         <p class="help">{get_value_field(&321)}</p>

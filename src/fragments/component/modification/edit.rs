@@ -496,7 +496,7 @@ impl ModificationsTableEdit {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
 
         html!{<div class="card">
-            <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
+            <ListErrors error=self.error.clone() clear_error=onclick_clear_error.clone()/>
             {self.modal_add_modification_card()}
             {self.modal_edit_modification_card()}
             <div class="table-container">

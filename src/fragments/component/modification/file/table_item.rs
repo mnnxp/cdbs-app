@@ -105,7 +105,7 @@ impl Component for ModificationFileListItem {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
 
         html!{<>
-            <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
+            <ListErrors error=self.error.clone() clear_error=onclick_clear_error.clone()/>
             {self.show_full_info_file()}
         </>}
     }

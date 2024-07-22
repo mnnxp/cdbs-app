@@ -17,6 +17,7 @@ pub enum Msg {
     UpdateList(String),
     GetList,
     ResponseError(Error),
+    ClearError,
 }
 
 #[derive(Properties, Clone)]
@@ -90,6 +91,7 @@ impl Component for CatalogUsers {
                 debug!("users list: {:?}", self.list);
             }
             Msg::ResponseError(err) => self.error = Some(err),
+            Msg::ClearError => self.error = None,
         }
         true
     }
@@ -102,6 +104,7 @@ impl Component for CatalogUsers {
     }
 
     fn view(&self) -> Html {
+        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         let onclick_change_view = self.link.callback(|_|Msg::SwitchShowType);
         let class_for_icon: &str;
         let mut class_for_list = "";
@@ -115,7 +118,7 @@ impl Component for CatalogUsers {
 
         html!{
             <div class="usersBox" >
-              <ListErrors error=self.error.clone()/>
+              <ListErrors error=self.error.clone() clear_error=onclick_clear_error />
               <div class="level" >
                 <div class="level-left ">
                 </div>

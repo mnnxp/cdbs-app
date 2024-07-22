@@ -56,6 +56,7 @@ pub enum Msg {
     UpdateCompanyTypeId(String),
     UpdateRegionId(String),
     UpdateList(String),
+    ClearError,
     Ignore,
 }
 
@@ -178,6 +179,7 @@ impl Component for CreateCompany {
                     Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
+            Msg::ClearError => self.error = None,
             Msg::Ignore => {},
         }
         true
@@ -193,12 +195,12 @@ impl Component for CreateCompany {
     }
 
     fn view(&self) -> Html {
+        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         let onclick_create_company =
             self.link.callback(|_| Msg::RequestCreateCompany);
-
         html!{
             <div class="settings-page">
-                <ListErrors error=self.error.clone()/>
+                <ListErrors error=self.error.clone() clear_error=onclick_clear_error />
                 <div class="container page">
                     <div class="row">
                         <h1 class="title">{ get_value_field(&289) }</h1>

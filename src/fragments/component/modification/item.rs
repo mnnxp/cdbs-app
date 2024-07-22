@@ -463,7 +463,7 @@ impl ModificationTableItem {
                 </header>
                 <div class="box itemBox">
                   <article class="media center-media">
-                      <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
+                      <ListErrors error=self.error.clone() clear_error=onclick_clear_error.clone()/>
                       <div class="media-content">
                           <RegisterParamnameBlock callback_add_param=onclick_add_new_param.clone() />
                       </div>
@@ -494,7 +494,7 @@ impl ModificationTableItem {
                 </header>
                 <div class="box itemBox">
                   <article class="media center-media">
-                      <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
+                      <ListErrors error=self.error.clone() clear_error=onclick_clear_error.clone()/>
                       <div class="media-content">
                           <label class="label">{ get_value_field(&133) }</label> // Set a value
                           <input
@@ -538,7 +538,7 @@ impl ModificationTableItem {
                     <p class="modal-card-title">{ get_value_field(&132) }</p> // Change the value
                     <button class="delete" aria-label="close" onclick=onclick_edit_param_card />
                 </header>
-                <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
+                <ListErrors error=self.error.clone() clear_error=onclick_clear_error.clone()/>
                 <div class="box itemBox">
                   <article class="media center-media">
                       <div class="media-content">

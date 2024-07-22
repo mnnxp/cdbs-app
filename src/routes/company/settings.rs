@@ -336,7 +336,7 @@ impl Component for CompanySettings {
 
         html!{
             <div class="settings-page">
-                <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error) />
+                <ListErrors error=self.error.clone() clear_error=onclick_clear_error />
                 <div class="container page">
                     <div class="row">
                         <div class="columns">

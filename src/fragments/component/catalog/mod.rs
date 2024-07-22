@@ -27,6 +27,7 @@ pub enum Msg {
     DelFav(UUID),
     GetList,
     ResponseError(Error),
+    ClearError,
 }
 
 pub struct CatalogComponents {
@@ -125,6 +126,7 @@ impl Component for CatalogComponents {
                 });
             },
             Msg::ResponseError(err) => self.error = Some(err),
+            Msg::ClearError => self.error = None,
         }
         true
     }
@@ -151,6 +153,7 @@ impl Component for CatalogComponents {
     }
 
     fn view(&self) -> Html {
+        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         let onclick_change_view = self.link.callback(|_| Msg::SwitchShowType);
         let (class_for_icon, class_for_list) = match self.show_type {
             ListState::Box => ("fas fa-bars", "flex-box"),
@@ -159,7 +162,7 @@ impl Component for CatalogComponents {
 
         html! {
             <div class="componentsBox" >
-              <ListErrors error=self.error.clone()/>
+              <ListErrors error=self.error.clone() clear_error=onclick_clear_error />
               <div class="level" >
                 <div class="level-left ">
                 </div>

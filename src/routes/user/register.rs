@@ -42,6 +42,7 @@ pub enum Msg {
     GetRegister(String),
     ShowConditions,
     ResponseError(Error),
+    ClearError,
     Ignore,
 }
 
@@ -138,6 +139,7 @@ impl Component for Register {
                 self.request.type_access_id = type_access_id.parse::<usize>().unwrap_or(1),
             Msg::ShowConditions => self.show_conditions = !self.show_conditions,
             Msg::ResponseError(err) => self.error = Some(err),
+            Msg::ClearError => self.error = None,
             Msg::Ignore => {}
         }
         true
@@ -148,8 +150,8 @@ impl Component for Register {
     }
 
     fn view(&self) -> Html {
+        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         let onclick_show_conditions = self.link.callback(|_| Msg::ShowConditions);
-
         let onclick_signup_btn = self.link.callback(|_| Msg::Request);
 
         html!{<div class="container page">
@@ -160,7 +162,7 @@ impl Component for Register {
                         { get_value_field(&21) }
                     </RouterAnchor<AppRoute>>
                 </h2>
-                <ListErrors error=self.error.clone() />
+                <ListErrors error=self.error.clone() clear_error=onclick_clear_error />
                 {self.modal_conditions()}
                 <div class="card column">
                     {self.fieldset_profile()}

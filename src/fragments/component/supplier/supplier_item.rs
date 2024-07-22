@@ -41,6 +41,7 @@ pub enum Msg {
     ResponseError(Error),
     GetCompanyDataResult(String),
     GetDeleteSupplierResult(String),
+    ClearError,
 }
 
 impl Component for ComponentSupplierItem {
@@ -119,6 +120,7 @@ impl Component for ComponentSupplierItem {
                     Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
+            Msg::ClearError => self.error = None,
         }
         true
     }
@@ -135,11 +137,12 @@ impl Component for ComponentSupplierItem {
     }
 
     fn view(&self) -> Html {
+        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         let onclick_supplier_data_info = self.link.callback(|_| Msg::ShowCompanyCard);
         let onclick_delete_supplier = self.link.callback(|_| Msg::RequestDeleteSupplier);
 
         html!{<>
-            <ListErrors error=self.error.clone()/>
+            <ListErrors error=self.error.clone() clear_error=onclick_clear_error />
             {self.show_modal_company_info()}
             <tr>
                 <td>{self.props.supplier_data.supplier.shortname.clone()}</td>

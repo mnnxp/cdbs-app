@@ -30,6 +30,7 @@ pub enum Msg {
     RequestDeleteKeyword,
     ResponseError(Error),
     GetDeleteKeywordResult(String),
+    ClearError,
 }
 
 impl Component for KeywordTagItem {
@@ -78,6 +79,7 @@ impl Component for KeywordTagItem {
                     Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
+            Msg::ClearError => self.error = None,
         }
         true
     }
@@ -87,8 +89,9 @@ impl Component for KeywordTagItem {
     }
 
     fn view(&self) -> Html {
+        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         html!{<>
-            <ListErrors error=self.error.clone()/>
+            <ListErrors error=self.error.clone() clear_error=onclick_clear_error />
             {match self.get_result_delete {
                 true => html!{},
                 false => self.show_keyword(),

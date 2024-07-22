@@ -29,6 +29,7 @@ pub enum Msg {
     DelFav,
     GetFavResult(String),
     ResponseError(Error),
+    ClearError,
     Ignore,
 }
 
@@ -111,6 +112,7 @@ impl Component for ListItemStandard {
                 }
             },
             Msg::ResponseError(err) => self.error = Some(err),
+            Msg::ClearError => self.error = None,
             Msg::Ignore => {},
         }
         true
@@ -128,13 +130,14 @@ impl Component for ListItemStandard {
     }
 
     fn view(&self) -> Html {
-      html!{<>
-        <ListErrors error=self.error.clone()/>
-        {match self.props.show_list {
-            true => { self.showing_in_list() },
-            false => { self.showing_in_box() },
-        }}
-      </>}
+        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+        html!{<>
+            <ListErrors error=self.error.clone() clear_error=onclick_clear_error />
+            {match self.props.show_list {
+                true => { self.showing_in_list() },
+                false => { self.showing_in_box() },
+            }}
+        </>}
     }
 }
 

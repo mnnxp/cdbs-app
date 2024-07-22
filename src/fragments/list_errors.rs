@@ -12,7 +12,7 @@ pub struct ListErrors {
 #[derive(Properties, Clone)]
 pub struct Props {
     pub error: Option<Error>,
-    pub clear_error: Option<Callback<()>>,
+    pub clear_error: Callback<()>,
 }
 
 pub enum Msg {
@@ -37,9 +37,7 @@ impl Component for ListErrors {
         match msg {
             Msg::CloseError => {
                 self.props.error = None;
-                if let Some(clear) = &self.props.clear_error {
-                    clear.emit(());
-                };
+                self.props.clear_error.emit(());
             },
             Msg::RedirectToLogin => {
                 // Redirect to login page

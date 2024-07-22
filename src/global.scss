@@ -278,6 +278,14 @@ body {
   }
 }
 
+.notification {
+  position: fixed;
+  z-index: 70;
+  top: 3.25rem;
+  right: 1rem;
+  left: 1rem;
+}
+
 .footer {
   background-color: #fff;
   // padding: 1rem 1.5rem 1rem;
