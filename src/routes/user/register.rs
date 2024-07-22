@@ -156,13 +156,13 @@ impl Component for Register {
 
         html!{<div class="container page">
             <div class="auth-page">
-                <h1 class="title">{ get_value_field(&14) }</h1>
+                <h1 class="title">{get_value_field(&14)}</h1>
                 <h2 class="subtitle">
-                    <RouterAnchor<AppRoute> route=AppRoute::Login>
-                        { get_value_field(&21) }
+                    <RouterAnchor<AppRoute> route={AppRoute::Login}>
+                        {get_value_field(&21)}
                     </RouterAnchor<AppRoute>>
                 </h2>
-                <ListErrors error=self.error.clone() clear_error=onclick_clear_error />
+                <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
                 {self.modal_conditions()}
                 <div class="card column">
                     {self.fieldset_profile()}
@@ -180,8 +180,8 @@ impl Component for Register {
                         <div class="column">
                             <div class="column is-flex is-vcentered">
                                 <span>
-                                    { get_value_field(&28) }
-                                    {" ["}<a onclick=onclick_show_conditions>{ get_value_field(&29)}</a>{"]"}
+                                    {get_value_field(&28)}
+                                    {" ["}<a onclick={onclick_show_conditions}>{ get_value_field(&29)}</a>{"]"}
                                 </span>
                             </div>
                         </div>
@@ -271,13 +271,13 @@ impl Register {
             // fourth columns (program, access)
             <div class="columns">
                 <div class="column">
-                    <label class="label">{ get_value_field(&26) }</label>
+                    <label class="label">{get_value_field(&26)}</label>
                     <div class="control">
                         <div class="select">
                           <select
                               id="program"
-                              select=self.request.program_id.to_string()
-                              onchange=oninput_program_id
+                              select={self.request.program_id.to_string()}
+                              onchange={oninput_program_id}
                               >
                             { for self.programs.iter().map(|x| html!{
                               <option value={x.id.to_string()} >{&x.name}</option>
@@ -287,13 +287,13 @@ impl Register {
                     </div>
                 </div>
                 <div class="column">
-                    <label class="label">{ get_value_field(&58) }</label> // "Type Access"
+                    <label class="label">{get_value_field(&58)}</label> // "Type Access"
                     <div class="control">
                         <div class="select">
                           <select
                               id="types-access"
-                              select=self.request.type_access_id.to_string()
-                              onchange=onchange_type_access_id
+                              select={self.request.type_access_id.to_string()}
+                              onchange={onchange_type_access_id}
                               >
                               { for self.types_access.iter().map(|x|
                                   html!{
@@ -338,7 +338,7 @@ impl Register {
                             type={input_type}
                             placeholder={placeholder.to_string()}
                             value={value}
-                            oninput=oninput />
+                            oninput={oninput} />
                     },
                     false => html!{
                         <div class="control has-icons-left">
@@ -348,7 +348,7 @@ impl Register {
                                 type={input_type}
                                 placeholder={placeholder.to_string()}
                                 value={value}
-                                oninput=oninput />
+                                oninput={oninput} />
                             <span class="icon is-small is-left">
                               <i class={icon_left.to_string()}></i>
                             </span>
@@ -367,22 +367,22 @@ impl Register {
             false => "modal",
         };
 
-        html!{<div class=class_modal>
-          <div class="modal-background" onclick=onclick_show_conditions.clone() />
+        html!{<div class={class_modal}>
+          <div class="modal-background" onclick={onclick_show_conditions.clone()} />
           <div class="modal-card">
             <header class="modal-card-head">
-              <p class="modal-card-title">{ get_value_field(&285) }</p>
-              <button class="delete" aria-label="close" onclick=onclick_show_conditions.clone() />
+              <p class="modal-card-title">{get_value_field(&285)}</p>
+              <button class="delete" aria-label="close" onclick={onclick_show_conditions.clone()} />
             </header>
             <section class="modal-card-body">
-              <span>{ get_value_field(&251) }</span>
+              <span>{get_value_field(&251)}</span>
               <br/>
-              <span class="has-text-weight-bold">{ get_value_field(&287) }</span>
+              <span class="has-text-weight-bold">{get_value_field(&287)}</span>
               <a href="mailto:support@cadbase.rs">{"support@cadbase.rs"}</a>
             </section>
             <footer class="modal-card-foot">
-              <button class="button is-fullwidth is-large" onclick=onclick_show_conditions>
-                { get_value_field(&288) }
+              <button class="button is-fullwidth is-large" onclick={onclick_show_conditions}>
+                {get_value_field(&288)}
               </button>
             </footer>
           </div>

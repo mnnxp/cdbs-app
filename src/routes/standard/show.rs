@@ -265,7 +265,7 @@ impl Component for ShowStandard {
         match &self.standard {
             Some(standard_data) => html!{
                 <div class="standard-page">
-                    <ListErrors error=self.error.clone() clear_error=onclick_clear_error />
+                    <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
                     <div class="container page">
                         <div class="row">
                             <div class="card column">
@@ -289,7 +289,7 @@ impl Component for ShowStandard {
                 </div>
             },
             None => html!{
-                <ListErrors error=self.error.clone() clear_error=onclick_clear_error />
+                <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
             },
         }
     }
@@ -305,17 +305,17 @@ impl ShowStandard {
         html!{
             <div class="columns">
               <ImgShowcase
-                object_uuid=self.current_standard_uuid.clone()
-                file_arr=self.file_arr.clone()
+                object_uuid={self.current_standard_uuid.clone()}
+                file_arr={self.file_arr.clone()}
               />
               <div class="column">
                 <div class="media">
                     <div class="media-content">
-                        { get_value_field(&94) }
+                        {get_value_field(&94)}
                         <ModalCardUser data = {standard_data.owner_user.clone()} />
                     </div>
                     <div class="media-right" style="margin-right: 1rem">
-                        { get_value_field(&145) } // type access
+                        {get_value_field(&145)} // type access
                         <span class="id-box has-text-weight-bold">
                             {standard_data.type_access.name.clone()}
                         </span>
@@ -354,32 +354,32 @@ impl ShowStandard {
     ) -> Html {
         html!{
             <div class="column">
-              <h2 class="has-text-weight-bold">{ get_value_field(&152) }</h2> // Сharacteristics of the standard
+              <h2 class="has-text-weight-bold">{get_value_field(&152)}</h2> // Сharacteristics of the standard
               <div class="card column">
                 <table class="table is-fullwidth">
                     <tbody>
                       <tr>
-                        <td>{ get_value_field(&146) }</td> // classifier
+                        <td>{get_value_field(&146)}</td> // classifier
                         <td>{standard_data.classifier.clone()}</td>
                       </tr>
                       <tr>
-                        <td>{ get_value_field(&147) }</td> // specified_tolerance
+                        <td>{get_value_field(&147)}</td> // specified_tolerance
                         <td>{standard_data.specified_tolerance.clone()}</td>
                       </tr>
                       <tr>
-                        <td>{ get_value_field(&148) }</td> // technical_committee
+                        <td>{get_value_field(&148)}</td> // technical_committee
                         <td>{standard_data.technical_committee.clone()}</td>
                       </tr>
                       <tr>
-                        <td>{ get_value_field(&149) }</td> // publication_at
+                        <td>{get_value_field(&149)}</td> // publication_at
                         <td>{standard_data.publication_at.date_to_display()}</td>
                       </tr>
                       <tr>
-                        <td>{ get_value_field(&150) }</td> // standard_status
+                        <td>{get_value_field(&150)}</td> // standard_status
                         <td>{standard_data.standard_status.name.clone()}</td>
                       </tr>
                       <tr>
-                        <td>{ get_value_field(&151) }</td> // region
+                        <td>{get_value_field(&151)}</td> // region
                         <td>{standard_data.region.region.clone()}</td>
                       </tr>
                     </tbody>
@@ -395,11 +395,11 @@ impl ShowStandard {
     ) -> Html {
         html!{
             <div class="column">
-              <h2 class="has-text-weight-bold">{ get_value_field(&153) }</h2> // Files
+              <h2 class="has-text-weight-bold">{get_value_field(&153)}</h2> // Files
               <StandardFilesCard
-                  show_delete_btn = false
-                  standard_uuid = standard_data.uuid.clone()
-                  files = standard_data.standard_files.clone()
+                  show_delete_btn={false}
+                  standard_uuid={standard_data.uuid.clone()}
+                  files={standard_data.standard_files.clone()}
                 />
             </div>
         }
@@ -410,12 +410,12 @@ impl ShowStandard {
         standard_data: &StandardInfo,
     ) -> Html {
         html!{<>
-              <h2 class="has-text-weight-bold">{ get_value_field(&104) }</h2> // Catalogs
+              <h2 class="has-text-weight-bold">{get_value_field(&104)}</h2> // Catalogs
               <div class="card column">
                 <SpecsTags
-                    show_manage_btn = false
-                    standard_uuid = standard_data.uuid.clone()
-                    specs = standard_data.standard_specs.clone()
+                    show_manage_btn={false}
+                    standard_uuid={standard_data.uuid.clone()}
+                    specs={standard_data.standard_specs.clone()}
                   />
               </div>
         </>}
@@ -426,12 +426,12 @@ impl ShowStandard {
         standard_data: &StandardInfo,
     ) -> Html {
         html!{<>
-              <h2 class="has-text-weight-bold">{ get_value_field(&105) }</h2> // Keywords
+              <h2 class="has-text-weight-bold">{get_value_field(&105)}</h2> // Keywords
               <div class="card column">
                 <KeywordsTags
-                    show_delete_btn = false
-                    standard_uuid = standard_data.uuid.clone()
-                    keywords = standard_data.standard_keywords.clone()
+                    show_delete_btn={false}
+                    standard_uuid={standard_data.uuid.clone()}
+                    keywords={standard_data.standard_keywords.clone()}
                   />
               </div>
         </>}
@@ -458,8 +458,8 @@ impl ShowStandard {
         };
 
         html!{
-            <button class=classes_btn
-                onclick=onclick_related_components_btn >
+            <button class={classes_btn}
+                onclick={onclick_related_components_btn} >
               <span class="has-text-black">{text_btn}</span>
             </button>
         }
@@ -471,11 +471,11 @@ impl ShowStandard {
     ) -> Html {
         html!{<>
             <br/>
-            <h2 class="has-text-weight-bold">{ get_value_field(&154) }</h2> // Components
+            <h2 class="has-text-weight-bold">{get_value_field(&154)}</h2> // Components
             <div class="card">
               <CatalogComponents
-                  show_create_btn = false
-                  arguments = ComponentsQueryArg::set_standard_uuid(standard_uuid)
+                  show_create_btn={false}
+                  arguments={ComponentsQueryArg::set_standard_uuid(standard_uuid)}
                 />
             </div>
         </>}

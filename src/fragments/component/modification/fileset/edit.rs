@@ -323,7 +323,7 @@ impl Component for ManageModificationFilesets {
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         html!{<>
-            <ListErrors error=self.error.clone() clear_error=onclick_clear_error.clone()/>
+            <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
             {match &self.open_add_fileset_card {
                 true => self.add_fileset_block(),
                 false => html!{<>
@@ -349,7 +349,7 @@ impl ManageModificationFilesets {
                   <select
                         id="select-fileset-program"
                         select={self.select_fileset_uuid.clone()}
-                        onchange=onchange_select_fileset_btn >
+                        onchange={onchange_select_fileset_btn} >
                       {for self.filesets_program.iter().map(|(fileset_uuid, program_name)|
                           html!{
                               <option value={fileset_uuid.to_string()}
@@ -438,10 +438,10 @@ impl ManageModificationFilesets {
     fn show_fileset_files(&self) -> Html {
         html!{
             <FilesetFilesBlock
-                show_download_btn = false
-                show_delete_btn = true
-                select_fileset_uuid = self.select_fileset_uuid.clone()
-                files = self.files_list.clone()
+                show_download_btn={false}
+                show_delete_btn={true}
+                select_fileset_uuid={self.select_fileset_uuid.clone()}
+                files={self.files_list.clone()}
             />
         }
     }

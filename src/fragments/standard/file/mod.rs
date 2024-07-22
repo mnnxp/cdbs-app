@@ -102,10 +102,10 @@ impl StandardFilesCard {
             Some(_) => html!{}, // removed file
             None => html!{
                 <FileItem
-                  show_delete_btn = self.props.show_delete_btn
-                  standard_uuid = self.props.standard_uuid.clone()
-                  file = file.clone()
-                  callback_delete_file = Some(callback_delete_file.clone())
+                  show_delete_btn={self.props.show_delete_btn}
+                  standard_uuid={self.props.standard_uuid.clone()}
+                  file={file.clone()}
+                  callback_delete_file={Some(callback_delete_file.clone())}
                 />
             },
         }

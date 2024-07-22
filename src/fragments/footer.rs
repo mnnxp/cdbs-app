@@ -75,27 +75,27 @@ impl Component for Footer {
                     <div class="column">
                         <div class="tags">
                             <div class="tag is-white is-medium">
-                                <a class=vec!("social-network") href="mailto:info@cadbase.rs" title="Email"  style="margin-right: 0.1rem;">
-                                    <i class=vec!("fas", "fa-lg", "fa-envelope")></i>
+                                <a class={vec!("social-network")} href="mailto:info@cadbase.rs" title="Email"  style="margin-right: 0.1rem;">
+                                    <i class={vec!("fas", "fa-lg", "fa-envelope")}></i>
                                 </a>
                             </div>
                             <div class="tag is-white is-medium">
-                                <a class=vec!("social-network") href="https://www.youtube.com/channel/UC-dHiTHBGV88ScxFKSC3srw" title="Youtube Channel" rel="noreferrer">
-                                    <i class=vec!("fab", "fa-lg", "fa-youtube")></i>
+                                <a class={vec!("social-network")} href="https://www.youtube.com/channel/UC-dHiTHBGV88ScxFKSC3srw" title="Youtube Channel" rel="noreferrer">
+                                    <i class={vec!("fab", "fa-lg", "fa-youtube")}></i>
                                 </a>
                             </div>
                             <div class="tag is-white is-medium">
-                                <a class=vec!("social-network") href="https://gitlab.com/cadbase" title="CADBase Source Codes" rel="noreferrer">
-                                    <i class=vec!("fab", "fa-lg", "fa-brands", "fa-gitlab")></i>
+                                <a class={vec!("social-network")} href="https://gitlab.com/cadbase" title="CADBase Source Codes" rel="noreferrer">
+                                    <i class={vec!("fab", "fa-lg", "fa-brands", "fa-gitlab")}></i>
                                 </a>
                             </div>
                         </div>
                         <div class="buttons">
-                            <a class=button_en onclick=onclick_lang_en>
-                                { get_value_field(&8) }
+                            <a class={button_en} onclick={onclick_lang_en}>
+                                {get_value_field(&8)}
                             </a>
-                            <a class=button_ru onclick=onclick_lang_ru>
-                                { get_value_field(&9) }
+                            <a class={button_ru} onclick={onclick_lang_ru}>
+                                {get_value_field(&9)}
                             </a>
                         </div>
                     </div>
@@ -104,16 +104,16 @@ impl Component for Footer {
                     </div>
                     // 2 center footer
                     <div class="column">
-                        <a onclick=onclick_show_about >
-                            { get_value_field(&11) }
+                        <a onclick={onclick_show_about} >
+                            {get_value_field(&11)}
                         </a>
                         <br/>
-                        <a onclick=onclick_show_terms >
-                            { get_value_field(&10) }
+                        <a onclick={onclick_show_terms} >
+                            {get_value_field(&10)}
                         </a>
                         <br/>
                         <a href="https://docs.cadbase.rs/" >
-                            { get_value_field(&12) }
+                            {get_value_field(&12)}
                         </a>
                     </div>
                     // right footer
@@ -137,19 +137,19 @@ impl Footer {
 
         html!{
             <div class={class_modal}>
-              <div class="modal-background" onclick=onclick_show_terms.clone() />
+              <div class="modal-background" onclick={onclick_show_terms.clone()} />
               <div class="modal-card">
                 <header class="modal-card-head">
-                  <p class="modal-card-title">{ get_value_field(&248) }</p> // Terms CADBase
-                  <button class="delete" aria-label="close" onclick=onclick_show_terms />
+                  <p class="modal-card-title">{get_value_field(&248)}</p> // Terms CADBase
+                  <button class="delete" aria-label="close" onclick={onclick_show_terms} />
                 </header>
                 <section class="modal-card-body">
                     <div class="content">
-                        <h1>{ get_value_field(&249) }</h1> // Thank you for using CADBase
-                        <p>{ get_value_field(&250) }</p>
-                        <blockquote>{ get_value_field(&251) }</blockquote>
-                        <p>{ get_value_field(&252) }</p>
-                        <p>{ get_value_field(&253) } <a href="mailto:support@cadbase.rs" title="Email">{"support@cadbase.rs"}</a></p>
+                        <h1>{get_value_field(&249)}</h1> // Thank you for using CADBase
+                        <p>{get_value_field(&250)}</p>
+                        <blockquote>{get_value_field(&251)}</blockquote>
+                        <p>{get_value_field(&252)}</p>
+                        <p>{get_value_field(&253)} <a href="mailto:support@cadbase.rs" title="Email">{"support@cadbase.rs"}</a></p>
                     </div>
                 </section>
               </div>
@@ -167,22 +167,22 @@ impl Footer {
 
         html!{
             <div class={class_modal}>
-              <div class="modal-background" onclick=onclick_show_about.clone() />
+              <div class="modal-background" onclick={onclick_show_about.clone()} />
               <div class="modal-card">
                 <header class="modal-card-head">
-                  <p class="modal-card-title">{ get_value_field(&11) }</p> // About us
-                  <button class="delete" aria-label="close" onclick=onclick_show_about />
+                  <p class="modal-card-title">{get_value_field(&11)}</p> // About us
+                  <button class="delete" aria-label="close" onclick={onclick_show_about} />
                 </header>
                 <section class="modal-card-body">
                     <div class="content">
-                        <h1>{ get_value_field(&254) }</h1>
-                        <p>{ get_value_field(&255) }</p>
-                        <p>{ get_value_field(&256) }</p>
-                        <p>{ get_value_field(&257) }</p>
-                        <p>{ get_value_field(&258) }</p>
-                        <p>{ get_value_field(&259) }</p>
-                        <p>{ get_value_field(&253) } <a href="mailto:info@cadbase.rs" title="Email">{"info@cadbase.rs"}</a></p>
-                        <h4>{ get_value_field(&260) }</h4>
+                        <h1>{get_value_field(&254)}</h1>
+                        <p>{get_value_field(&255)}</p>
+                        <p>{get_value_field(&256)}</p>
+                        <p>{get_value_field(&257)}</p>
+                        <p>{get_value_field(&258)}</p>
+                        <p>{get_value_field(&259)}</p>
+                        <p>{get_value_field(&253)} <a href="mailto:info@cadbase.rs" title="Email">{"info@cadbase.rs"}</a></p>
+                        <h4>{get_value_field(&260)}</h4>
                     </div>
                 </section>
               </div>

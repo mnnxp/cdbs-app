@@ -148,27 +148,27 @@ impl Component for Header {
         html!{
             <nav class="navbar" role="navigation" aria-label="main navigation">
                 <div class="navbar-brand">
-                    <h1 class=logo_classes>
+                    <h1 class={logo_classes}>
                         {match &self.current_user {
                             Some(user_info) => html!{
-                                <RouterAnchor<AppRoute> route=AppRoute::Profile(user_info.username.clone())>
+                                <RouterAnchor<AppRoute> route={AppRoute::Profile(user_info.username.clone())}>
                                     {self.show_logo()}
                                 </RouterAnchor<AppRoute>>
                             },
                             None => html!{
-                                <RouterAnchor<AppRoute> route=AppRoute::Home>
+                                <RouterAnchor<AppRoute> route={AppRoute::Home}>
                                     {self.show_logo()}
                                 </RouterAnchor<AppRoute>>
                             },
                         }}
                     </h1>
-                    <div role="button" class=classes!("navbar-burger", active_menu) onclick=triggrt_menu aria-label="menu" aria-expanded="false">
+                    <div role="button" class={classes!("navbar-burger", active_menu)} onclick={triggrt_menu} aria-label="menu" aria-expanded="false">
                       <span aria-hidden="true"></span>
                       <span aria-hidden="true"></span>
                       <span aria-hidden="true"></span>
                     </div>
                 </div>
-                <div class=classes!("navbar-menu", active_menu)>
+                <div class={classes!("navbar-menu", active_menu)}>
                     <div class="navbar-end">
                         {match &self.current_user {
                             Some(user_info) => self.logged_in_view(&user_info, onclick),
@@ -223,11 +223,11 @@ impl Header {
     fn logged_out_view(&self) -> Html {
         html!{
           <div class="navbar-item">
-            <RouterAnchor<AppRoute> route=AppRoute::Login classes="button">
-              { get_value_field(&13) }
+            <RouterAnchor<AppRoute> route={AppRoute::Login} classes="button">
+              {get_value_field(&13)}
             </RouterAnchor<AppRoute>>
-            <RouterAnchor<AppRoute> route=AppRoute::Register classes="button">
-              { get_value_field(&14) }
+            <RouterAnchor<AppRoute> route={AppRoute::Register} classes="button">
+              {get_value_field(&14)}
             </RouterAnchor<AppRoute>>
           </div>
         }
@@ -248,21 +248,21 @@ impl Header {
                      true => html!{
                          <button id="header-notifications"
                             class="button is-active"
-                            disabled=true >
+                            disabled={true} >
                              <span class="icon is-small" >
                                <i class="far fa-bell"></i>
                              </span>
                          </button>
                      },
                      false => html!{
-                         <RouterAnchor<AppRoute> route=AppRoute::Notifications classes="button navbar-item" >
+                         <RouterAnchor<AppRoute> route={AppRoute::Notifications} classes="button navbar-item" >
                              <span class="icon is-small" >
                                <i class="far fa-bell"></i>
                              </span>
                          </RouterAnchor<AppRoute>>
                      },
                  }}
-                 <div class=classes!("navbar-item", "has-dropdown", active_menu) onmouseover=triggrt_menu onmouseout=out_menu >
+                 <div class={classes!("navbar-item", "has-dropdown", active_menu)} onmouseover={triggrt_menu} onmouseout={out_menu} >
                   <a id="header-menu-button"
                     class="navbar-link"
                     aria-haspopup="true"
@@ -270,15 +270,15 @@ impl Header {
                       <span>{ &user_info.username }</span>
                   </a>
                   <div class="navbar-dropdown is-boxed is-right" id="dropdown-menu" role="menu">
-                    <RouterAnchor<AppRoute> classes="navbar-item" route=AppRoute::Profile(user_info.username.clone()) >
-                        { get_value_field(&15) }
+                    <RouterAnchor<AppRoute> classes="navbar-item" route={AppRoute::Profile(user_info.username.clone())} >
+                        {get_value_field(&15)}
                     </RouterAnchor<AppRoute>>
-                    <RouterAnchor<AppRoute> classes="navbar-item" route=AppRoute::Settings>
-                        { get_value_field(&16) }
+                    <RouterAnchor<AppRoute> classes="navbar-item" route={AppRoute::Settings}>
+                        {get_value_field(&16)}
                     </RouterAnchor<AppRoute>>
                     <hr class="navbar-divider" />
-                    <a class="navbar-item" onclick=logout >
-                        { get_value_field(&17) }
+                    <a class="navbar-item" onclick={logout} >
+                        {get_value_field(&17)}
                     </a>
                   </div>
                 </div>

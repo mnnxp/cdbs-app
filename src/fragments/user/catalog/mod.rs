@@ -118,7 +118,7 @@ impl Component for CatalogUsers {
 
         html!{
             <div class="usersBox" >
-              <ListErrors error=self.error.clone() clear_error=onclick_clear_error />
+              <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
               <div class="level" >
                 <div class="level-left ">
                 </div>

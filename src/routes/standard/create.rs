@@ -264,8 +264,8 @@ impl Component for CreateStandard {
             <div class="standard-page">
                 <div class="container page">
                     <div class="row">
-                        <ListErrors error=self.error.clone() clear_error=onclick_clear_error.clone()/>
-                        <h1 class="title">{ get_value_field(&291) }</h1>
+                        <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
+                        <h1 class="title">{get_value_field(&291)}</h1>
                         {self.show_main_card()}
                         <br/>
                         {self.show_standard_params()}
@@ -299,12 +299,12 @@ impl CreateStandard {
                 <div class="control">
                     <div class="media">
                         <div class="media-content">
-                            <label class="label">{ get_value_field(&223) }</label> // Owner company
+                            <label class="label">{get_value_field(&223)}</label> // Owner company
                             <div class="select">
                               <select
                                   id="set-owner-company"
                                   select={self.request_standard.company_uuid.clone()}
-                                  onchange=onchange_change_owner_company
+                                  onchange={onchange_change_owner_company}
                                 >
                               { for self.company_list.iter().map(|x|
                                   html!{
@@ -318,12 +318,12 @@ impl CreateStandard {
                             </div>
                         </div>
                         <div class="media-right" style="margin-right: 1rem">
-                            <label class="label">{ get_value_field(&114) }</label>
+                            <label class="label">{get_value_field(&114)}</label>
                             <div class="select">
                               <select
                                   id="set-type-access"
                                   select={self.request_standard.type_access_id.to_string()}
-                                  onchange=onchange_change_type_access
+                                  onchange={onchange_change_type_access}
                                 >
                               { for self.types_access.iter().map(|x|
                                   html!{
@@ -338,23 +338,23 @@ impl CreateStandard {
                         </div>
                     </div>
                 </div>
-                <label class="label">{ get_value_field(&110) }</label>
+                <label class="label">{get_value_field(&110)}</label>
                 <input
                     id="update-name"
                     class="input"
                     type="text"
-                    placeholder=get_value_field(&110)
+                    placeholder={get_value_field(&110)}
                     value={self.request_standard.name.clone()}
-                    oninput=oninput_name />
-                <label class="label">{ get_value_field(&61) }</label>
+                    oninput={oninput_name} />
+                <label class="label">{get_value_field(&61)}</label>
                 <textarea
                     id="update-description"
                     class="textarea"
                     // rows="10"
                     type="text"
-                    placeholder=get_value_field(&61)
+                    placeholder={get_value_field(&61)}
                     value={self.request_standard.description.clone()}
-                    oninput=oninput_description />
+                    oninput={oninput_description} />
               </div>
             </div>
         }
@@ -382,60 +382,60 @@ impl CreateStandard {
 
         html!{
             <>
-              <h2 class="has-text-weight-bold">{ get_value_field(&229) }</h2> // Set standard characteristics
+              <h2 class="has-text-weight-bold">{get_value_field(&229)}</h2> // Set standard characteristics
               <div class="card column">
                 <table class="table is-fullwidth">
                     <tbody>
                       <tr>
-                        <td>{ get_value_field(&146) }</td> // classifier
+                        <td>{get_value_field(&146)}</td> // classifier
                         <td><input
                             id="update-classifier"
                             class="input"
                             type="text"
-                            placeholder=get_value_field(&146)
+                            placeholder={get_value_field(&146)}
                             value={self.request_standard.classifier.clone()}
-                            oninput=oninput_classifier /></td>
+                            oninput={oninput_classifier} /></td>
                       </tr>
                       <tr>
-                        <td>{ get_value_field(&147) }</td> // specified_tolerance
+                        <td>{get_value_field(&147)}</td> // specified_tolerance
                         // <td>{self.request_standard.specified_tolerance.as_ref().map(|x| x.clone()).unwrap_or_default()}</td>
                         <td><input
                             id="update-specified-tolerance"
                             class="input"
                             type="text"
-                            placeholder=get_value_field(&147)
+                            placeholder={get_value_field(&147)}
                             value={self.request_standard.specified_tolerance.clone()}
-                            oninput=oninput_specified_tolerance /></td>
+                            oninput={oninput_specified_tolerance} /></td>
                       </tr>
                       <tr>
-                        <td>{ get_value_field(&148) }</td> // technical_committee
+                        <td>{get_value_field(&148)}</td> // technical_committee
                         <td><input
                             id="update-technical-committee"
                             class="input"
                             type="text"
-                            placeholder=get_value_field(&148)
+                            placeholder={get_value_field(&148)}
                             value={self.request_standard.technical_committee.clone()}
-                            oninput=oninput_technical_committee /></td>
+                            oninput={oninput_technical_committee} /></td>
                       </tr>
                       <tr>
-                        <td>{ get_value_field(&149) }</td> // publication_at
+                        <td>{get_value_field(&149)}</td> // publication_at
                         <td><input
                             id="update-publication-at"
                             class="input"
                             type="date"
-                            placeholder=get_value_field(&149)
+                            placeholder={get_value_field(&149)}
                             value={format!("{:.*}", 10, self.request_standard.publication_at.to_string())}
-                            oninput=oninput_publication_at
+                            oninput={oninput_publication_at}
                             /></td>
                       </tr>
                       <tr>
-                        <td>{ get_value_field(&150) }</td> // standard_status
+                        <td>{get_value_field(&150)}</td> // standard_status
                         <td><div class="control">
                             <div class="select">
                               <select
                                   id="standard-status-id"
                                   select={self.request_standard.standard_status_id.to_string()}
-                                  onchange=onchange_standard_status_id
+                                  onchange={onchange_standard_status_id}
                                   >
                                 { for self.standard_statuses.iter().map(|x|
                                     html!{
@@ -450,12 +450,12 @@ impl CreateStandard {
                         </div></td>
                       </tr>
                       <tr>
-                        <td>{ get_value_field(&151) }</td> // region
+                        <td>{get_value_field(&151)}</td> // region
                         <td><div class="select">
                               <select
                                   id="region"
                                   select={self.request_standard.region_id.to_string()}
-                                  onchange=onchange_region_id
+                                  onchange={onchange_region_id}
                                   >
                                 { for self.regions.iter().map(|x|
                                     html!{

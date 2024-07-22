@@ -107,13 +107,13 @@ impl Component for AddCompanyCertificateCard {
         let callback_upload_confirm =
             self.link.callback(|confirmations| Msg::UploadConfirm(confirmations));
         html!{<div class="card">
-          <ListErrors error=self.error.clone() clear_error=onclick_clear_error.clone()/>
+          <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
           <div class="block">
             {match self.get_result_up_completed {
                 true => html!{<div class="column">{self.show_success_upload()}</div>},
                 false => html!{
                     <div class="column">
-                        <label class="label">{ get_value_field(&83) }</label> // Upload new certificate
+                        <label class="label">{get_value_field(&83)}</label> // Upload new certificate
                         {self.show_input_description()}
                         <UploaderFiles
                             text_choose_files={86} // Drop certificate file here
@@ -136,15 +136,15 @@ impl AddCompanyCertificateCard {
         let oninput_cert_description = self.link.callback(|ev: InputData| Msg::UpdateDescription(ev.value));
 
         html!{<div class="block">
-            <label class="label">{ get_value_field(&61) }</label>
+            <label class="label">{get_value_field(&61)}</label>
 
             <input
                 id={"new-cert-description"}
                 class="input"
                 type="text"
-                placeholder=get_value_field(&61)
+                placeholder={get_value_field(&61)}
                 value={self.description.to_string()}
-                oninput=oninput_cert_description />
+                oninput={oninput_cert_description} />
         </div>}
     }
 
@@ -153,11 +153,11 @@ impl AddCompanyCertificateCard {
         html!{
             <article class="message is-success">
               <div class="message-header">
-                <p>{ get_value_field(&89) }</p>
-                <button class="delete" aria-label="close" onclick=onclick_hide_notification.clone() />
+                <p>{get_value_field(&89)}</p>
+                <button class="delete" aria-label="close" onclick={onclick_hide_notification.clone()} />
               </div>
               <div class="message-body">
-                { get_value_field(&90) }
+                {get_value_field(&90)}
               </div>
             </article>
         }

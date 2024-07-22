@@ -74,7 +74,7 @@ impl Component for CompanyRepresents {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         html!{
             <div class="representsBox">
-                <ListErrors error=self.error.clone() clear_error=onclick_clear_error />
+                <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
                 {match &self.props.show_manage_btn {
                     true => html!{<>
                         {for self.props.list.iter().map(|represent|

@@ -162,7 +162,7 @@ impl Component for CatalogComponents {
 
         html! {
             <div class="componentsBox" >
-              <ListErrors error=self.error.clone() clear_error=onclick_clear_error />
+              <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
               <div class="level" >
                 <div class="level-left ">
                 </div>
@@ -170,8 +170,8 @@ impl Component for CatalogComponents {
                     <div class="buttons">
                         {match &self.props.show_create_btn {
                           true => html!{
-                              <RouterAnchor<AppRoute> route=AppRoute::CreateComponent classes="button is-info">
-                                  { get_value_field(&45) } // Create
+                              <RouterAnchor<AppRoute> route={AppRoute::CreateComponent} classes="button is-info">
+                                  {get_value_field(&45)} // Create
                               </RouterAnchor<AppRoute>>
                           },
                           false => html!{},

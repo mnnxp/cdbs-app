@@ -431,7 +431,7 @@ impl Component for ComponentSettings {
             <div class="component-page">
                 <div class="container page">
                     <div class="row">
-                        <ListErrors error=self.error.clone() clear_error=onclick_clear_error.clone()/>
+                        <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
                         // <br/>
                         {self.show_manage_btn()}
                         <br/>
@@ -476,23 +476,23 @@ impl ComponentSettings {
         html!{<div class="card">
             <div class="column">
                 <div class="column" style="margin-right: 1rem">
-                    <label class="label">{ get_value_field(&110) }</label>
+                    <label class="label">{get_value_field(&110)}</label>
                     <input
                         id="update-name"
                         class="input"
                         type="text"
-                        placeholder=get_value_field(&110)
+                        placeholder={get_value_field(&110)}
                         value={self.request_component.name.clone()}
-                        oninput=oninput_name />
-                    <label class="label">{ get_value_field(&61) }</label>
+                        oninput={oninput_name} />
+                    <label class="label">{get_value_field(&61)}</label>
                     <textarea
                         id="update-description"
                         class="textarea"
                         // rows="10"
                         type="text"
-                        placeholder=get_value_field(&61)
+                        placeholder={get_value_field(&61)}
                         value={self.request_component.description.clone()}
-                        oninput=oninput_description />
+                        oninput={oninput_description} />
                     <br/>
                     {match &self.current_component {
                         Some(component_data) => self.show_component_licenses(component_data),
@@ -509,9 +509,9 @@ impl ComponentSettings {
         component_data: &ComponentInfo,
     ) -> Html {
         html!{<ComponentLicensesTags
-            show_delete_btn = true
-            component_uuid = self.current_component_uuid.clone()
-            component_licenses = component_data.licenses.clone()
+            show_delete_btn={true}
+            component_uuid={self.current_component_uuid.clone()}
+            component_licenses={component_data.licenses.clone()}
         />}
     }
 
@@ -528,12 +528,12 @@ impl ComponentSettings {
         html!{
             <div class="columns">
                 <div class="column">
-                    <label class="label">{ get_value_field(&96) }</label>
+                    <label class="label">{get_value_field(&96)}</label>
                     <div class="select is-fullwidth">
                         <select
                             id="component-actual-status"
                             select={self.request_component.actual_status_id.to_string()}
-                            onchange=onchange_actual_status_id
+                            onchange={onchange_actual_status_id}
                             >
                           { for self.actual_statuses.iter().map(|x|
                               html!{
@@ -547,12 +547,12 @@ impl ComponentSettings {
                     </div>
                 </div>
                 <div class="column">
-                    <label class="label">{ get_value_field(&114) }</label>
+                    <label class="label">{get_value_field(&114)}</label>
                     <div class="select is-fullwidth">
                       <select
                           id="set-type-access"
                           select={self.request_access.to_string()}
-                          onchange=onchange_change_type_access
+                          onchange={onchange_change_type_access}
                         >
                       { for self.types_access.iter().map(|x|
                           html!{
@@ -571,10 +571,10 @@ impl ComponentSettings {
 
     fn show_modifications_table(&self) -> Html {
         html!{<>
-            <h2 class="has-text-weight-bold">{ get_value_field(&60) }</h2> // Manage component modifications
+            <h2 class="has-text-weight-bold">{get_value_field(&60)}</h2> // Manage component modifications
             <ModificationsTableEdit
-                current_component_uuid = self.current_component_uuid.clone()
-                component_modifications = self.current_modifications.clone()
+                current_component_uuid={self.current_component_uuid.clone()}
+                component_modifications={self.current_modifications.clone()}
               />
         </>}
     }
@@ -584,11 +584,11 @@ impl ComponentSettings {
         component_data: &ComponentInfo,
     ) -> Html {
         html!{<div class="column">
-              <h2 class="has-text-weight-bold">{ get_value_field(&185) }</h2> // Manage component characteristics
+              <h2 class="has-text-weight-bold">{get_value_field(&185)}</h2> // Manage component characteristics
               <ComponentParamsTags
-                  show_manage_btn = true
-                  component_uuid = self.current_component_uuid.clone()
-                  component_params = component_data.component_params.clone()
+                  show_manage_btn={true}
+                  component_uuid={self.current_component_uuid.clone()}
+                  component_params={component_data.component_params.clone()}
               />
         </div>}
     }
@@ -597,11 +597,11 @@ impl ComponentSettings {
         let callback_update_favicon = self.link.callback(|_| Msg::Ignore);
 
         html!{<div class="column">
-            <h2 class="has-text-weight-bold">{ get_value_field(&184) }</h2> // Update image for preview
+            <h2 class="has-text-weight-bold">{get_value_field(&184)}</h2> // Update image for preview
             <div class="card column">
                 <UpdateComponentFaviconCard
-                    component_uuid=self.current_component_uuid.clone()
-                    callback=callback_update_favicon.clone()
+                    component_uuid={self.current_component_uuid.clone()}
+                    callback={callback_update_favicon.clone()}
                 />
             </div>
         </div>}
@@ -617,20 +617,20 @@ impl ComponentSettings {
         let callback_upload_confirm =
             self.link.callback(|confirmations| Msg::UploadConfirm(confirmations));
         html!{<>
-            <h2 class="has-text-weight-bold">{ get_value_field(&187) }</h2> // Manage component files
+            <h2 class="has-text-weight-bold">{get_value_field(&187)}</h2> // Manage component files
             <div class="card column">
                 <div class="columns">
                     <div class="column">
-                      <h2 class="has-text-weight-bold">{ get_value_field(&188) }</h2> // Files for component
+                      <h2 class="has-text-weight-bold">{get_value_field(&188)}</h2> // Files for component
                       <ComponentFilesBlock
-                          show_download_btn = false
-                          show_delete_btn = true
-                          component_uuid = self.current_component_uuid.clone()
-                          files = self.files_list.clone()
+                          show_download_btn={false}
+                          show_delete_btn={true}
+                          component_uuid={self.current_component_uuid.clone()}
+                          files={self.files_list.clone()}
                         />
                     </div>
                     <div class="column">
-                      <h2 class="has-text-weight-bold">{ get_value_field(&186) }</h2> // Upload component files
+                      <h2 class="has-text-weight-bold">{get_value_field(&186)}</h2> // Upload component files
                       <UploaderFiles
                         text_choose_files={200} // Choose component files…
                         callback_upload_filenames={callback_upload_filenames}
@@ -648,12 +648,12 @@ impl ComponentSettings {
         component_data: &ComponentInfo,
     ) -> Html {
         html!{<div class="column">
-          <h2 class="has-text-weight-bold">{ get_value_field(&189) }</h2> // Manage component standards
+          <h2 class="has-text-weight-bold">{get_value_field(&189)}</h2> // Manage component standards
           <ComponentStandardsCard
-              show_delete_btn = true
-              component_uuid = component_data.uuid.clone()
-              component_standards = component_data.component_standards.clone()
-              // delete_standard = Some(onclick_delete_standard.clone())
+              show_delete_btn={true}
+              component_uuid={component_data.uuid.clone()}
+              component_standards={component_data.component_standards.clone()}
+              // delete_standard={Some(onclick_delete_standard.clone())}
             />
         </div>}
     }
@@ -663,13 +663,13 @@ impl ComponentSettings {
         component_data: &ComponentInfo,
     ) -> Html {
         html!{<div class="column">
-          <h2 class="has-text-weight-bold">{ get_value_field(&190) }</h2> // Manage component suppliers
+          <h2 class="has-text-weight-bold">{get_value_field(&190)}</h2> // Manage component suppliers
           <ComponentSuppliersCard
-              show_delete_btn = true
-              component_uuid = component_data.uuid.clone()
-              component_suppliers = component_data.component_suppliers.clone()
-              supplier_list = self.supplier_list.clone()
-              is_base = self.current_component_is_base
+              show_delete_btn={true}
+              component_uuid={component_data.uuid.clone()}
+              component_suppliers={component_data.component_suppliers.clone()}
+              supplier_list={self.supplier_list.clone()}
+              is_base={self.current_component_is_base}
             />
         </div>}
     }
@@ -679,11 +679,11 @@ impl ComponentSettings {
         component_data: &ComponentInfo,
     ) -> Html {
         html!{<>
-            <h2 class="has-text-weight-bold">{ get_value_field(&104) }</h2>
+            <h2 class="has-text-weight-bold">{get_value_field(&104)}</h2>
             <div class="card">
               <SearchSpecsTags
-                  component_specs = component_data.component_specs.clone()
-                  component_uuid = component_data.uuid.clone()
+                  component_specs={component_data.component_specs.clone()}
+                  component_uuid={component_data.uuid.clone()}
                 />
             </div>
         </>}
@@ -695,11 +695,11 @@ impl ComponentSettings {
     ) -> Html {
         // debug!("Keywords: {:?}", &component_data.uuid);
         html!{<>
-              <h2 class="has-text-weight-bold">{ get_value_field(&105) }</h2>
+              <h2 class="has-text-weight-bold">{get_value_field(&105)}</h2>
               <div class="card">
                 <AddKeywordsTags
-                    component_keywords = component_data.component_keywords.clone()
-                    component_uuid = component_data.uuid.clone()
+                    component_keywords={component_data.component_keywords.clone()}
+                    component_uuid={component_data.uuid.clone()}
                   />
               </div>
         </>}
@@ -717,7 +717,7 @@ impl ComponentSettings {
                         id="open-component"
                         class="button"
                         onclick={onclick_open_component} >
-                        { get_value_field(&199) } // Show component
+                        {get_value_field(&199)} // Show component
                     </button>
                 </div>
                 <div class="media-content">
@@ -734,7 +734,7 @@ impl ComponentSettings {
                             id="delete-component"
                             class="button is-danger"
                             onclick={onclick_show_delete_modal} >
-                            { get_value_field(&135) }
+                            {get_value_field(&135)}
                         </button>
                         {ft_save_btn(
                             "update-component-data",
@@ -758,19 +758,19 @@ impl ComponentSettings {
         };
 
         html!{
-            <div class=class_modal>
-              <div class="modal-background" onclick=onclick_hide_modal.clone() />
+            <div class={class_modal}>
+              <div class="modal-background" onclick={onclick_hide_modal.clone()} />
                 <div class="modal-content">
                   <div class="card">
                     <header class="modal-card-head">
-                      <p class="modal-card-title">{ get_value_field(&217) }</p> // Delete component
-                      <button class="delete" aria-label="close" onclick=onclick_hide_modal.clone() />
+                      <p class="modal-card-title">{get_value_field(&217)}</p> // Delete component
+                      <button class="delete" aria-label="close" onclick={onclick_hide_modal.clone()} />
                     </header>
                     <section class="modal-card-body">
                         <p class="is-size-6">
-                            { get_value_field(&218) } // For confirm deleted all data this
+                            {get_value_field(&218)} // For confirm deleted all data this
                             <span class="has-text-danger-dark">{self.request_component.name.clone()}</span>
-                            { get_value_field(&219) } // component enter this uuid
+                            {get_value_field(&219)} // component enter this uuid
                             <br/>
                             <span class="has-text-weight-bold is-size-6">{self.current_component_uuid.clone()}</span>
                         </p>
@@ -781,15 +781,15 @@ impl ComponentSettings {
                            type="text"
                            placeholder="uuid"
                            value={self.confirm_delete_component.clone()}
-                           oninput=oninput_delete_component />
+                           oninput={oninput_delete_component} />
                     </section>
                     <footer class="modal-card-foot">
                         <button
                             id="delete-component"
                             class="button is-danger"
                             disabled={self.disable_delete_component_btn}
-                            onclick={onclick_delete_component} >{ get_value_field(&220) }</button> // Yes, delete
-                        <button class="button" onclick=onclick_hide_modal.clone()>{ get_value_field(&221) }</button> // Cancel
+                            onclick={onclick_delete_component} >{get_value_field(&220)}</button> // Yes, delete
+                        <button class="button" onclick={onclick_hide_modal.clone()}>{get_value_field(&221)}</button> // Cancel
                     </footer>
                 </div>
               </div>

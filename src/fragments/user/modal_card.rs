@@ -55,13 +55,13 @@ impl Component for ModalCardUser {
             onclick={onclick_open_owner.clone()} >
           {self.props.data.to_display()}
         </a>
-        <div class=class_modal>
+        <div class={class_modal}>
           <div class="modal-background" onclick={onclick_open_owner.clone()} />
           <div class="modal-content">
               <div class="card">
                 <ListItemUser
-                    data = self.props.data.clone()
-                    show_list = true
+                    data={self.props.data.clone()}
+                    show_list={true}
                   />
               </div>
           </div>

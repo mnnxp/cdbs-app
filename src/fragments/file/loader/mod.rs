@@ -248,7 +248,7 @@ impl Component for UploaderFiles {
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         html!{<>
-            <ListErrors error=self.error.clone() clear_error=onclick_clear_error.clone()/>
+            <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
             {self.show_frame_upload_files()}
         </>}
     }
@@ -337,7 +337,7 @@ impl UploaderFiles {
         html!{
             <button
               class="button is-fullwidth is-warning"
-              onclick=onclick_clear_boxed
+              onclick={onclick_clear_boxed}
               disabled={self.files.is_empty() || self.active_loading_files_btn} >
                 <span>{get_value_field(&88)}</span>
             </button>

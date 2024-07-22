@@ -143,7 +143,7 @@ impl Component for ListItemCompany {
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         html!{<>
-          <ListErrors error=self.error.clone() clear_error=onclick_clear_error />
+          <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
           {match self.props.show_list {
               true => { self.showing_in_list() },
               false => { self.showing_in_box() },
@@ -175,7 +175,7 @@ impl ListItemCompany {
               <article class="media center-media">
                   <div class="media-left">
                     <figure class="image is-96x96">
-                        <div hidden={!is_supplier} class="top-tag" >{ get_value_field(&3) }</div> // supplier
+                        <div hidden={!is_supplier} class="top-tag" >{get_value_field(&3)}</div> // supplier
                         // <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
                         <img
                             src={image_file.download_url.clone()} alt="Favicon profile"
@@ -184,7 +184,7 @@ impl ListItemCompany {
                     </figure>
                   </div>
                   <div class="media-content">
-                    { get_value_field(&164) } <span class="id-box has-text-weight-bold">{region.region.clone()}</span>
+                    {get_value_field(&164)} <span class="id-box has-text-weight-bold">{region.region.clone()}</span>
                     <div class="columns" style="margin-bottom:0">
                         <div class="column">
                             <div class="overflow-title has-text-weight-bold is-size-4">{
@@ -213,11 +213,11 @@ impl ListItemCompany {
                     </div>
                     <div class="columns is-gapless">
                         <div class="column">
-                            { get_value_field(&163) }
+                            {get_value_field(&163)}
                             <span class="id-box has-text-weight-bold">{inn.clone()}</span>
                         </div>
                         <div class="column">
-                          { get_value_field(&30) }
+                          {get_value_field(&30)}
                           { updated_at.date_to_display() }
                         </div>
                     </div>
@@ -245,20 +245,20 @@ impl ListItemCompany {
           <div class="boxItem" >
             <div class="innerBox" >
               <div class="imgBox" >
-                <div class="top-tag" hidden={!is_supplier} >{ get_value_field(&3) }</div> // supplier
+                <div class="top-tag" hidden={!is_supplier} >{get_value_field(&3)}</div> // supplier
                 <img
                     src={image_file.download_url.to_string()} alt="Favicon profile"
                     loading="lazy"
                 />
               </div>
               <div>
-                { get_value_field(&164) }<span class="id-box has-text-weight-bold">{region.region.to_string()}</span>
+                {get_value_field(&164)}<span class="id-box has-text-weight-bold">{region.region.to_string()}</span>
               </div>
               <div class="overflow-title has-text-weight-bold is-size-4">{shortname}</div>
               <div class="has-text-weight-bold">{company_type.shortname.to_string()}</div>
               <div class="btnBox">
-                <button class="button is-light is-fullwidth has-text-weight-bold" onclick=show_company_btn>
-                    { get_value_field(&165) } // Show company
+                <button class="button is-light is-fullwidth has-text-weight-bold" onclick={show_company_btn}>
+                    {get_value_field(&165)} // Show company
                 </button>
                 <div style="margin-left: 8px;">
                 {ft_follow_btn(

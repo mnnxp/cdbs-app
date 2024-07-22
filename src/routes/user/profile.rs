@@ -281,7 +281,7 @@ impl Component for Profile {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
 
         html!{<>
-            <ListErrors error=self.error.clone() clear_error=onclick_clear_error />
+            <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
             {match (&self.self_profile, &self.profile) {
                 (Some(self_data), _) => self.self_user_card(self_data),
                 (_, Some(user_data)) => self.other_user_card(user_data),
@@ -336,7 +336,7 @@ impl Profile {
                             ProfileTab::FavoriteComponents => self.view_favorite_components(None),
                             ProfileTab::FavoriteCompanies => self.view_favorite_companies(None),
                             ProfileTab::FavoriteStandards => self.view_favorite_standards(),
-                            ProfileTab::FavoriteUsers => html!{<CatalogUsers arguments = UsersQueryArg::set_favorite() />},
+                            ProfileTab::FavoriteUsers => html!{<CatalogUsers arguments={UsersQueryArg::set_favorite()} />},
                         }}
                     </div>
                 </div>
@@ -412,14 +412,14 @@ impl Profile {
         html!{
             <div class="columns">
                 <div class="box">
-                    <figure class=classes!("container", "image", "is-48x48")>
+                    <figure class={classes!("container", "image", "is-48x48")}>
                         <img
                             src={image_file.clone()} alt="Favicon profile"
                             loading="lazy"
                         />
                     </figure>
                 </div>
-                <div id="profile-region" class=classes!("column", "is-three-fifths")>
+                <div id="profile-region" class={classes!("column", "is-three-fifths")}>
                 <p id="title-fl" class="title is-4">
                     {format!("{} {}", firstname, lastname)}
                 </p>
@@ -444,7 +444,7 @@ impl Profile {
                                 {" "}
                                 {updated_at}
                                 <p>
-                                    <span>{ get_value_field(&31) }</span>
+                                    <span>{get_value_field(&31)}</span>
                                     <span>{self.abbr_number()}</span>
                                 </p>
                             </div>
@@ -579,28 +579,28 @@ impl Profile {
                     <div class="column">
                         <div id="position" hidden={position.is_empty()}>
                             <span class="icon is-small"><i class="fas fa-briefcase" /></span>
-                            <span>{ get_value_field(&39) }</span>
+                            <span>{get_value_field(&39)}</span>
                             <span class="overflow-title has-text-weight-bold">{position}</span>
                         </div>
                         <div id="region">
                             <span class="icon is-small"><i class="fas fa-map-marker-alt" /></span>
-                            <span>{ get_value_field(&40) }</span>
+                            <span>{get_value_field(&40)}</span>
                             <span class="overflow-title has-text-weight-bold">{region}</span>
                         </div>
                         <div id="program" hidden={program == "Unknown"}>
                             <span class="icon is-small"><i class="fas fa-drafting-compass" /></span>
-                            <span>{ get_value_field(&41) }</span>
+                            <span>{get_value_field(&41)}</span>
                             <span class="overflow-title has-text-weight-bold">{program}</span>
                         </div>
                     </div>
                 </div>
                 <button class="button is-ghost" onclick={onclick_change_full_show}>
-                    <span>{ get_value_field(&42) }</span>
+                    <span>{get_value_field(&42)}</span>
                 </button>
             </>},
             false => html!{
                 <button class="button is-ghost" onclick={onclick_change_full_show}>
-                    <span>{ get_value_field(&43) }</span>
+                    <span>{get_value_field(&43)}</span>
                 </button>
             },
         }
@@ -616,11 +616,11 @@ impl Profile {
             html!{
                 <div class="profileBox" >
                     <UserCertificatesCard
-                        user_uuid = self.current_user_uuid.clone()
-                        certificates = certificates
-                        show_cert_btn = false
-                        download_btn = false
-                        manage_btn = false
+                        user_uuid={self.current_user_uuid.clone()}
+                        certificates={certificates}
+                        show_cert_btn={false}
+                        download_btn={false}
+                        manage_btn={false}
                     />
                 </div>
             }
@@ -630,8 +630,8 @@ impl Profile {
     fn view_favorite_components(&self, user_uuid: Option<UUID>) -> Html {
         html! {
             <CatalogComponents
-                show_create_btn = self.self_profile.is_some()
-                arguments = ComponentsQueryArg::set_favorite(user_uuid)
+                show_create_btn={self.self_profile.is_some()}
+                arguments={ComponentsQueryArg::set_favorite(user_uuid)}
             />
         }
     }
@@ -639,8 +639,8 @@ impl Profile {
     fn view_components(&self, user_uuid: &UUID) -> Html {
         html! {
             <CatalogComponents
-                show_create_btn = self.self_profile.is_some()
-                arguments = ComponentsQueryArg::set_user_uuid(user_uuid)
+                show_create_btn={self.self_profile.is_some()}
+                arguments={ComponentsQueryArg::set_user_uuid(user_uuid)}
             />
         }
     }
@@ -648,8 +648,8 @@ impl Profile {
     fn view_favorite_companies(&self, user_uuid: Option<UUID>) -> Html {
         html! {
             <CatalogCompanies
-                show_create_btn = self.self_profile.is_some()
-                arguments = CompaniesQueryArg::set_favorite(user_uuid)
+                show_create_btn={self.self_profile.is_some()}
+                arguments={CompaniesQueryArg::set_favorite(user_uuid)}
             />
         }
     }
@@ -657,8 +657,8 @@ impl Profile {
     fn view_companies(&self, user_uuid: &UUID) -> Html {
         html! {
             <CatalogCompanies
-                show_create_btn = self.self_profile.is_some()
-                arguments = CompaniesQueryArg::set_user_uuid(user_uuid)
+                show_create_btn={self.self_profile.is_some()}
+                arguments={CompaniesQueryArg::set_user_uuid(user_uuid)}
             />
         }
     }
@@ -666,8 +666,8 @@ impl Profile {
     fn view_favorite_standards(&self) -> Html {
         html! {
             <CatalogStandards
-                show_create_btn = false
-                arguments = StandardsQueryArg::set_favorite()
+                show_create_btn={false}
+                arguments={StandardsQueryArg::set_favorite()}
             />
         }
     }

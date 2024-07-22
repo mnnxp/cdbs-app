@@ -406,36 +406,36 @@ impl ModificationTableItem {
                 {for self.props.collect_heads.iter().map(|param| {
                     match self.collect_item.get(&param.param_id) {
                         Some(value) => html!{<ModificationTableItemModule
-                            param_id = param.param_id
-                            value = Some(value.clone())
-                            callback_change_param = Some(onclick_edit_param_card.clone())
+                            param_id={param.param_id}
+                            value={Some(value.clone())}
+                            callback_change_param={Some(onclick_edit_param_card.clone())}
                         />},
                         None => html!{<ModificationTableItemModule
-                            param_id = param.param_id
-                            value = None
-                            callback_change_param = Some(onclick_add_param_card.clone())
+                            param_id={param.param_id}
+                            value={None}
+                            callback_change_param={Some(onclick_add_param_card.clone())}
                         />},
                     }
                 })}
                 // for add new param
                 <ModificationTableItemModule
-                    param_id = 0
-                    value = None
-                    callback_change_param = Some(onclick_new_param_card)
+                    param_id={0}
+                    value={None}
+                    callback_change_param={Some(onclick_new_param_card)}
                 />
             </>},
             false => html!{<>
                 {for self.props.collect_heads.iter().map(|param| {
                     match self.collect_item.get(&param.param_id) {
                         Some(value) => html!{<ModificationTableItemModule
-                            param_id = param.param_id
-                            value = Some(value.clone())
-                            callback_change_param = None
+                            param_id={param.param_id}
+                            value={Some(value.clone())}
+                            callback_change_param={None}
                         />},
                         None => html!{<ModificationTableItemModule
-                            param_id = param.param_id
-                            value = None
-                            callback_change_param = None
+                            param_id={param.param_id}
+                            value={None}
+                            callback_change_param={None}
                         />},
                     }
                 })}
@@ -453,19 +453,19 @@ impl ModificationTableItem {
             false => "modal",
         };
 
-        html!{<div class=class_modal>
-          <div class="modal-background" onclick=onclick_close_param_card.clone() />
+        html!{<div class={class_modal}>
+          <div class="modal-background" onclick={onclick_close_param_card.clone()} />
           <div class="card">
             <div class="modal-content">
                 <header class="modal-card-head">
-                    <p class="modal-card-title">{ get_value_field(&130) }</p> // Add new parameter name
-                    <button class="delete" aria-label="close" onclick=onclick_close_param_card />
+                    <p class="modal-card-title">{get_value_field(&130)}</p> // Add new parameter name
+                    <button class="delete" aria-label="close" onclick={onclick_close_param_card} />
                 </header>
                 <div class="box itemBox">
                   <article class="media center-media">
-                      <ListErrors error=self.error.clone() clear_error=onclick_clear_error.clone()/>
+                      <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
                       <div class="media-content">
-                          <RegisterParamnameBlock callback_add_param=onclick_add_new_param.clone() />
+                          <RegisterParamnameBlock callback_add_param={onclick_add_new_param.clone()} />
                       </div>
                   </article>
                 </div>
@@ -484,26 +484,26 @@ impl ModificationTableItem {
             false => "modal",
         };
 
-        html!{<div class=class_modal>
-          <div class="modal-background" onclick=onclick_close_add_param.clone() />
+        html!{<div class={class_modal}>
+          <div class="modal-background" onclick={onclick_close_add_param.clone()} />
           <div class="card">
             <div class="modal-content">
                 <header class="modal-card-head">
-                    <p class="modal-card-title">{ get_value_field(&131) }</p> // Add a parameter to modification
-                    <button class="delete" aria-label="close" onclick=onclick_close_add_param />
+                    <p class="modal-card-title">{get_value_field(&131)}</p> // Add a parameter to modification
+                    <button class="delete" aria-label="close" onclick={onclick_close_add_param} />
                 </header>
                 <div class="box itemBox">
                   <article class="media center-media">
-                      <ListErrors error=self.error.clone() clear_error=onclick_clear_error.clone()/>
+                      <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
                       <div class="media-content">
-                          <label class="label">{ get_value_field(&133) }</label> // Set a value
+                          <label class="label">{get_value_field(&133)}</label> // Set a value
                           <input
                               id="change-modification-param-value"
                               class="input is-fullwidth"
                               type="text"
-                              placeholder={ get_value_field(&133) }
+                              placeholder={get_value_field(&133)}
                               value={self.request_add_param.value.clone()}
-                              oninput=oninput_param_value />
+                              oninput={oninput_param_value} />
                       <br/>
                       {ft_save_btn(
                         "update-modification-param",
@@ -530,26 +530,26 @@ impl ModificationTableItem {
             false => "modal",
         };
 
-        html!{<div class=class_modal>
-          <div class="modal-background" onclick=onclick_edit_param_card.clone() />
+        html!{<div class={class_modal}>
+          <div class="modal-background" onclick={onclick_edit_param_card.clone()} />
           <div class="card">
             <div class="modal-content">
                 <header class="modal-card-head">
-                    <p class="modal-card-title">{ get_value_field(&132) }</p> // Change the value
-                    <button class="delete" aria-label="close" onclick=onclick_edit_param_card />
+                    <p class="modal-card-title">{get_value_field(&132)}</p> // Change the value
+                    <button class="delete" aria-label="close" onclick={onclick_edit_param_card} />
                 </header>
-                <ListErrors error=self.error.clone() clear_error=onclick_clear_error.clone()/>
+                <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
                 <div class="box itemBox">
                   <article class="media center-media">
                       <div class="media-content">
-                          <label class="label">{ get_value_field(&134) }</label> // Change value
+                          <label class="label">{get_value_field(&134)}</label> // Change value
                           <input
                               id="change-modification-param-value"
                               class="input is-fullwidth"
                               type="text"
-                              placeholder={ get_value_field(&134) }
+                              placeholder={get_value_field(&134)}
                               value={self.request_edit_param.value.clone()}
-                              oninput=oninput_param_value />
+                              oninput={oninput_param_value} />
                       <br/>
                       <div class="columns">
                         <div class="column">

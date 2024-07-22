@@ -179,7 +179,7 @@ impl Component for CreateComponent {
             <div class="component-page">
                 <div class="container page">
                     <div class="row">
-                        <ListErrors error=self.error.clone() clear_error=onclick_clear_error.clone()/>
+                        <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
                         <h1 class="title">{get_value_field(&290)}</h1>
                         {self.show_main_card()}
                         <br/>
@@ -220,15 +220,15 @@ impl CreateComponent {
         html!{
             <div class="card">
                 <div class="column">
-                  <label class="label">{ get_value_field(&110) }</label>
+                  <label class="label">{get_value_field(&110)}</label>
                   <input
                       id="update-name"
                       class={class_name}
                       type="text"
                       placeholder={get_value_field(&110)}
                       value={self.request_component.name.clone()}
-                      oninput=oninput_name />
-                  <label class="label">{ get_value_field(&61) }</label>
+                      oninput={oninput_name} />
+                  <label class="label">{get_value_field(&61)}</label>
                   <textarea
                       id="update-description"
                       class="textarea"
@@ -236,17 +236,17 @@ impl CreateComponent {
                       type="text"
                       placeholder={get_value_field(&61)}
                       value={self.request_component.description.clone()}
-                      oninput=oninput_description />
+                      oninput={oninput_description} />
                 </div>
                 <div class="column">
                     <div class="columns">
                         <div class="column" style="margin-right: 1rem">
-                            <label class="label">{ get_value_field(&96) }</label>
+                            <label class="label">{get_value_field(&96)}</label>
                             <div class="select">
                               <select
                                   id="component-status-id"
                                   select={self.request_component.actual_status_id.to_string()}
-                                  onchange=onchange_actual_status_id
+                                  onchange={onchange_actual_status_id}
                                   >
                                 { for self.actual_statuses.iter().map(|x|
                                     html!{
@@ -260,12 +260,12 @@ impl CreateComponent {
                             </div>
                         </div>
                         <div class="column" style="margin-right: 1rem">
-                            <label class="label">{ get_value_field(&114) }</label>
+                            <label class="label">{get_value_field(&114)}</label>
                             <div class="select">
                               <select
                                   id="set-type-access"
                                   select={self.request_component.type_access_id.to_string()}
-                                  onchange=onchange_change_type_access
+                                  onchange={onchange_change_type_access}
                                 >
                               { for self.types_access.iter().map(|x|
                                   html!{

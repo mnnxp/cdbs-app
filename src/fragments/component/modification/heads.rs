@@ -45,15 +45,15 @@ impl ModificationTableHeads {
     fn show_modification_head(&self) -> Html {
         html!{<>
             {match self.props.show_new_column {
-                true => html!{<th>{ get_value_field(&111) }</th>}, // Action
-                false => html!{<th>{ get_value_field(&115) }</th>}, // Action | files
+                true => html!{<th>{get_value_field(&111)}</th>}, // Action
+                false => html!{<th>{get_value_field(&115)}</th>}, // Action | files
             }}
-            <th>{ get_value_field(&116) }</th> // modification
+            <th>{get_value_field(&116)}</th> // modification
             {for self.props.params.iter().map(|head| {
                 html!{<th>{ head.paramname.clone() }</th>}
             })}
             {match self.props.show_new_column {
-                true => html!{<th>{ get_value_field(&117) }</th>}, // add
+                true => html!{<th>{get_value_field(&117)}</th>}, // add
                 false => html!{},
             }}
         </>}

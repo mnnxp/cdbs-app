@@ -173,7 +173,7 @@ impl Component for ManageModificationFilesCard {
             self.link.callback(|confirmations| Msg::UploadConfirm(confirmations));
 
         html!{<>
-            <ListErrors error=self.error.clone() clear_error=onclick_clear_error.clone()/>
+            <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
             <div class="columns">
                 <div class="column">
                   <h2>{get_value_field(&203)}</h2> // Files for modification
@@ -221,11 +221,11 @@ impl ManageModificationFilesCard {
             Some(_) => html!{}, // removed file
             None => html!{
                 <ModificationFileItem
-                  show_download_btn = self.props.show_download_btn
-                  show_delete_btn = true
-                  modification_uuid = self.props.modification_uuid.clone()
-                  file = file_info.clone()
-                  callback_delete_file = callback_delete_file.clone()
+                  show_download_btn={self.props.show_download_btn}
+                  show_delete_btn={true}
+                  modification_uuid={self.props.modification_uuid.clone()}
+                  file={file_info.clone()}
+                  callback_delete_file={callback_delete_file.clone()}
                 />
             },
         }

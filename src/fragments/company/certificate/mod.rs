@@ -73,11 +73,11 @@ impl Component for CompanyCertificatesCard {
                 Some(_) => html!{}, // deleted certificate
                 None => html!{
                     <CompanyCertificateItem
-                        certificate = certificate.clone()
-                        show_cert_btn = self.props.show_cert_btn
-                        download_btn = self.props.download_btn
-                        manage_btn = self.props.manage_btn
-                        callback_delete_cert = callback_delete_cert.clone()
+                        certificate={certificate.clone()}
+                        show_cert_btn={self.props.show_cert_btn}
+                        download_btn={self.props.download_btn}
+                        manage_btn={self.props.manage_btn}
+                        callback_delete_cert={callback_delete_cert.clone()}
                     />
                 },
             }

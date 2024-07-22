@@ -200,10 +200,10 @@ impl Component for CreateCompany {
             self.link.callback(|_| Msg::RequestCreateCompany);
         html!{
             <div class="settings-page">
-                <ListErrors error=self.error.clone() clear_error=onclick_clear_error />
+                <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
                 <div class="container page">
                     <div class="row">
-                        <h1 class="title">{ get_value_field(&289) }</h1>
+                        <h1 class="title">{get_value_field(&289)}</h1>
                         <div class="card column">
                             { self.fieldset_company() }
                         </div>
@@ -249,7 +249,7 @@ impl CreateCompany {
                             type={input_type}
                             placeholder={placeholder.to_string()}
                             value={value}
-                            oninput=oninput />
+                            oninput={oninput} />
                     },
                     false => html!{
                         <div class="control has-icons-left">
@@ -259,7 +259,7 @@ impl CreateCompany {
                                 type={input_type}
                                 placeholder={placeholder.to_string()}
                                 value={value}
-                                oninput=oninput />
+                                oninput={oninput} />
                             <span class="icon is-small is-left">
                               <i class={icon_left.to_string()}></i>
                             </span>
@@ -334,13 +334,13 @@ impl CreateCompany {
                 </div>
                 <div class="column">
                     <fieldset class="field">
-                        <label class="label">{ get_value_field(&51) }</label> // Company type
+                        <label class="label">{get_value_field(&51)}</label> // Company type
                         <div class="control">
                             <div class="select">
                               <select
                                   id="company_type"
                                   select={self.request_company.company_type_id.to_string()}
-                                  onchange=onchange_company_type_id
+                                  onchange={onchange_company_type_id}
                                   >
                                 { for self.company_types.iter().map(|x|
                                     html!{
@@ -379,13 +379,13 @@ impl CreateCompany {
             <div class="columns">
                 <div class="column">
                     <fieldset class="field">
-                        <label class="label">{ get_value_field(&27) }</label> // Region
+                        <label class="label">{get_value_field(&27)}</label> // Region
                         <div class="control">
                             <div class="select">
                               <select
                                   id="region"
                                   select={self.request_company.region_id.to_string()}
-                                  onchange=onchange_region_id
+                                  onchange={onchange_region_id}
                                   >
                                 { for self.regions.iter().map(|x|
                                     html!{
@@ -421,13 +421,13 @@ impl CreateCompany {
                 </div>
                 <div class="column">
                     <fieldset class="field">
-                        <label class="label">{ get_value_field(&58) }</label> // Type access
+                        <label class="label">{get_value_field(&58)}</label> // Type access
                         <div class="control">
                             <div class="select">
                               <select
                                   id="types-access"
                                   select={self.request_company.type_access_id.to_string()}
-                                  onchange=onchange_type_access_id
+                                  onchange={onchange_type_access_id}
                                   >
                                 { for self.types_access.iter().map(|x|
                                     html!{
@@ -445,14 +445,14 @@ impl CreateCompany {
             </div>
 
             <fieldset class="field">
-                <label class="label">{ get_value_field(&61) }</label>
+                <label class="label">{get_value_field(&61)}</label>
                 <textarea
                     id="description"
                     class="textarea"
                     type="text"
-                    placeholder={ get_value_field(&61) }
+                    placeholder={get_value_field(&61)}
                     value={self.request_company.description.clone()}
-                    oninput=oninput_description />
+                    oninput={oninput_description} />
             </fieldset>
         </>}
     }

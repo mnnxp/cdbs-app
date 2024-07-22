@@ -63,7 +63,7 @@ impl ListItem {
                   <p>
                   <div style="margin-bottom:0" >
                       <span class="title is-5">{name.to_string()}</span>
-                      { get_value_field(&231) }
+                      {get_value_field(&231)}
                       <span class="id-box has-text-weight-bold">{region.region.to_string()}</span>
                     </div>
                     {format!("{}: {}", get_value_field(&232), address)}
@@ -97,7 +97,7 @@ impl ListItem {
             <div class="innerBox" >
               <div style="margin-bottom:0" >
                   <span class="title is-5">{name.to_string()}</span>
-                  { get_value_field(&231) }
+                  {get_value_field(&231)}
                   <span class="id-box has-text-weight-bold">{region.region.to_string()}</span>
               </div>
               <div class="overflow-title">{

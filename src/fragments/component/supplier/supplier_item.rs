@@ -142,7 +142,7 @@ impl Component for ComponentSupplierItem {
         let onclick_delete_supplier = self.link.callback(|_| Msg::RequestDeleteSupplier);
 
         html!{<>
-            <ListErrors error=self.error.clone() clear_error=onclick_clear_error />
+            <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
             {self.show_modal_company_info()}
             <tr>
                 <td>{self.props.supplier_data.supplier.shortname.clone()}</td>
@@ -174,17 +174,17 @@ impl ComponentSupplierItem {
         };
 
         match &self.company_data {
-            Some(data) => html!{<div class=class_modal>
-              <div class="modal-background" onclick=onclick_company_data_info.clone() />
+            Some(data) => html!{<div class={class_modal}>
+              <div class="modal-background" onclick={onclick_company_data_info.clone()} />
               // <div class="modal-content">
                   <div class="card">
                     <ListItemCompany
-                        data = data.clone()
-                        show_list = true
+                        data={data.clone()}
+                        show_list={true}
                       />
                   </div>
               // </div>
-              <button class="modal-close is-large" aria-label="close" onclick=onclick_company_data_info />
+              <button class="modal-close is-large" aria-label="close" onclick={onclick_company_data_info} />
             </div>},
             None => html!{},
         }

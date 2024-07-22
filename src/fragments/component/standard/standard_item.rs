@@ -107,7 +107,7 @@ impl Component for ComponentStandardItem {
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         html!{<>
-            <ListErrors error=self.error.clone() clear_error=onclick_clear_error />
+            <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
             {match self.get_result_delete {
                 true => html!{},
                 false => self.show_standard(),
@@ -149,17 +149,17 @@ impl ComponentStandardItem {
             false => "modal",
         };
 
-        html!{<div class=class_modal>
-          <div class="modal-background" onclick=onclick_standard_data_info.clone() />
+        html!{<div class={class_modal}>
+          <div class="modal-background" onclick={onclick_standard_data_info.clone()} />
             // <div class="modal-content">
               <div class="card">
                 <ListItemStandard
-                    data = self.props.standard_data.clone()
-                    show_list = true
+                    data={self.props.standard_data.clone()}
+                    show_list={true}
                   />
               </div>
             // </div>
-          <button class="modal-close is-large" aria-label="close" onclick=onclick_standard_data_info />
+          <button class="modal-close is-large" aria-label="close" onclick={onclick_standard_data_info} />
         </div>}
     }
 }

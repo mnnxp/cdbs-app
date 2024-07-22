@@ -104,7 +104,7 @@ impl Component for RegisterParamnameBlock {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
 
         html!{<>
-            <ListErrors error=self.error.clone() clear_error=onclick_clear_error.clone()/>
+            <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
             {self.add_paramname()}
         </>}
     }
@@ -118,25 +118,25 @@ impl RegisterParamnameBlock {
 
         html!{<>
             <div class="column">
-                <label class="label">{ get_value_field(&205) }</label> // Set a paramname (letter case has matter)
+                <label class="label">{get_value_field(&205)}</label> // Set a paramname (letter case has matter)
                 <input
                     id="paramname"
                     class="input is-fullwidth"
                     type="text"
-                    placeholder=get_value_field(&205)
+                    placeholder={get_value_field(&205)}
                     value={self.request_new_paramname.clone()}
-                    oninput=oninput_set_paramname
+                    oninput={oninput_set_paramname}
                     />
             </div>
             <div class="column">
-                <label class="label">{ get_value_field(&133) }</label> // Set a value
+                <label class="label">{get_value_field(&133)}</label> // Set a value
                 <input
                     id="param-value"
                     class="input is-fullwidth"
                     type="text"
-                    placeholder=get_value_field(&133)
+                    placeholder={get_value_field(&133)}
                     value={self.set_param_value.clone()}
-                    oninput=oninput_set_param_value
+                    oninput={oninput_set_param_value}
                     />
             </div>
             <div class="column">

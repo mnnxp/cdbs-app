@@ -109,7 +109,7 @@ impl ListItem {
                         {self.show_owner()}
                     </div>
                     <div class="column">
-                        { get_value_field(&159) } // actual status
+                        {get_value_field(&159)} // actual status
                         <span class="id-box has-text-weight-bold">
                             {self.props.data.actual_status.name.clone()}
                         </span>
@@ -174,7 +174,7 @@ impl ListItem {
                 <div class="btnBox">
                   <button class="button is-light is-fullwidth has-text-weight-bold"
                         onclick={onclick_open_component} >
-                    { get_value_field(&161) }
+                    {get_value_field(&161)}
                   </button>
                   <div style="margin-left: 8px;">
                     {ft_follow_btn(
@@ -192,13 +192,13 @@ impl ListItem {
     fn show_owner(&self) -> Html {
         match &self.props.data.component_suppliers.first() {
             Some(x) => html!{<>
-                { get_value_field(&158) } // supplier / manufactured by
+                {get_value_field(&158)} // supplier / manufactured by
                 <span class="id-box has-text-weight-bold">
                   {x.supplier.shortname.clone()}
                 </span>
             </>},
             None => html!{<>
-                { get_value_field(&118) } // user uploaded
+                {get_value_field(&118)} // user uploaded
                 <span class="id-box has-text-weight-bold">
                   {format!("@{}",&self.props.data.owner_user.username)}
                 </span>

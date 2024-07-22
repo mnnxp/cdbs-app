@@ -177,10 +177,10 @@ impl Component for Notifications {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         html!{
             <div class="settings-page">
-            <ListErrors error=self.error.clone() clear_error=onclick_clear_error />
+            <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
                 <div class="container page">
                     <div class="row">
-                        <h4 id="show-notifications" class="title is-4">{ get_value_field(&284) }</h4>
+                        <h4 id="show-notifications" class="title is-4">{get_value_field(&284)}</h4>
                         <div class="card">
                             <div class="column">
                                 <>{for self.notifications.iter().rev().map(|notif_data|
@@ -241,7 +241,7 @@ impl Notifications {
         html!{<>
             <div class="card">
                 <div class={class_degree}>
-                    <button class="delete" onclick=onclick_delete_notif />
+                    <button class="delete" onclick={onclick_delete_notif} />
                     <span class="icon">
                       <i class={class_icon}> </i>
                     </span>
@@ -261,7 +261,7 @@ impl Notifications {
                             {match is_read {
                                 true => html!{
                                     <button class="button is-light is-info"
-                                        disabled=true >
+                                        disabled={true} >
                                         <span class="icon">
                                             <i class="fas fa-envelope-open"></i>
                                         </span>
@@ -269,7 +269,7 @@ impl Notifications {
                                 },
                                 false => html!{
                                     <button class="button is-ghost is-info"
-                                        onclick=onclick_set_read >
+                                        onclick={onclick_set_read} >
                                         <span class="icon">
                                             <i class="fas fa-envelope"></i>
                                         </span>

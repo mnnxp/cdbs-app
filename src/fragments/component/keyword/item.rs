@@ -92,7 +92,7 @@ impl Component for KeywordTagItem {
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         html!{<>
-            <ListErrors error=self.error.clone() clear_error=onclick_clear_error />
+            <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
             {match self.get_result_delete {
                 true => html!{},
                 false => self.show_keyword(),
@@ -102,13 +102,8 @@ impl Component for KeywordTagItem {
 }
 
 impl KeywordTagItem {
-    fn show_keyword(
-        &self,
-    ) -> Html {
-        let onclick_delete_keyword = self
-            .link
-            .callback(|_| Msg::RequestDeleteKeyword);
-
+    fn show_keyword(&self) -> Html {
+        let onclick_delete_keyword = self.link.callback(|_| Msg::RequestDeleteKeyword);
         let style_tag = match &self.props.style_tag {
             Some(style) => format!("tag is-light {}", style),
             None => "tag is-light".to_string(),

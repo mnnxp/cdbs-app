@@ -60,22 +60,22 @@ impl ContactDisplay for CompanyInfo {
         html!{<>
             <div id="company-email" hidden={self.email.is_empty()}>
                 <span class="icon is-small"><i class="fas fa-envelope" /></span>
-                <span>{ get_value_field(&278) }</span> // Email
+                <span>{get_value_field(&278)}</span> // Email
                 <span class="has-text-weight-bold">{self.email.clone()}</span>
             </div>
             <div id="company-phone" hidden={self.phone.is_empty()}>
                 <span class="icon is-small"><i class="fas fa-phone" /></span>
-                <span>{ get_value_field(&279) }</span> // Phone
+                <span>{get_value_field(&279)}</span> // Phone
                 <span class="has-text-weight-bold">{self.phone.clone()}</span>
             </div>
             <div id="company-inn" hidden={self.inn.is_empty()}>
                 <span class="icon is-small"><i class="fas fa-building" /></span>
-                <span>{ get_value_field(&280) }</span> // Reg.№
+                <span>{get_value_field(&280)}</span> // Reg.№
                 <span class="has-text-weight-bold">{self.inn.clone()}</span>
             </div>
             <div id="company-region">
                 <span class="icon is-small"><i class="fas fa-map-marker-alt" /></span>
-                <span>{ get_value_field(&281) }</span> // Location
+                <span>{get_value_field(&281)}</span> // Location
                 <span class="has-text-weight-bold">{self.region.region.clone()}</span>
                 <span id="company-address" class="has-text-weight-bold" hidden={self.address.is_empty()}>
                     {format!(", {}", self.address.clone())}
@@ -83,7 +83,7 @@ impl ContactDisplay for CompanyInfo {
             </div>
             <div id="company-site_url" hidden={self.site_url.is_empty()}>
                 <span class="icon is-small"><i class="fas fa-globe" /></span>
-                <span>{ get_value_field(&282) }</span> // Site
+                <span>{get_value_field(&282)}</span> // Site
                 <span class="has-text-weight-bold">{self.site_url.clone()}</span>
             </div>
         </>}
@@ -98,13 +98,13 @@ impl SpecDisplay for CompanyInfo {
             false => html!{
                 <div class="columns">
                     <div>
-                        <span>{ get_value_field(&283) }</span> // Sphere of activity
+                        <span>{get_value_field(&283)}</span> // Sphere of activity
                     </div>
                     <div class="px-1 mb-4">
                         <SpecsTags
-                            show_manage_btn = false
-                            company_uuid = self.uuid.clone()
-                            specs = self.company_specs.clone()
+                            show_manage_btn={false}
+                            company_uuid={self.uuid.clone()}
+                            specs={self.company_specs.clone()}
                         />
                     </div>
                 </div>

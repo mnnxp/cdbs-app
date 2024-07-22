@@ -47,12 +47,12 @@ impl Component for SpecsTags {
             <div id="specs" class="field is-grouped is-grouped-multiline">
                 {for self.props.specs.iter().map(|spec| {
                     html!{<SpecTagItem
-                        show_manage_btn = self.props.show_manage_btn
-                        active_info_btn = true
-                        standard_uuid = self.props.standard_uuid.clone()
-                        spec = spec.clone()
-                        is_added = true
-                        delete_spec = self.props.delete_spec.clone()
+                        show_manage_btn={self.props.show_manage_btn}
+                        active_info_btn={true}
+                        standard_uuid={self.props.standard_uuid.clone()}
+                        spec={spec.clone()}
+                        is_added={true}
+                        delete_spec={self.props.delete_spec.clone()}
                         />}
                 })}
             </div>

@@ -181,20 +181,20 @@ impl Component for ChangeItem {
         html!{<>
             <br/>
             <div class="card">
-                <ListErrors error=self.error.clone() clear_error=onclick_clear_error />
+                <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
                 {match &self.get_result_delete {
                     true => html!{
                         <article class="message is-success">
                           <div class="message-header">
-                            <p>{ get_value_field(&89) }</p>
+                            <p>{get_value_field(&89)}</p>
                           </div>
                           <div class="message-body">
-                            { get_value_field(&292) }
+                            {get_value_field(&292)}
                           </div>
                         </article>
                     },
                     false => html!{<div class="column">
-                        <label class="label">{ get_value_field(&215) }</label> // Change represent
+                        <label class="label">{get_value_field(&215)}</label> // Change represent
                         {if self.get_result_update > 0 {
                             html!{
                                 <span id="tag-info-update-represent" class="tag is-info is-light">
@@ -232,7 +232,7 @@ impl ChangeItem {
                     type={"text"}
                     placeholder={placeholder.to_string()}
                     value={value}
-                    oninput=oninput ></@>
+                    oninput={oninput} ></@>
             </fieldset>
         }
     }
@@ -268,13 +268,13 @@ impl ChangeItem {
                 </div>
                 <div class="column">
                     <fieldset class="field">
-                        <label class="label">{ get_value_field(&216) }</label> // Representation type
+                        <label class="label">{get_value_field(&216)}</label> // Representation type
                         <div class="control">
                             <div class="select">
                               <select
                                   id="representation_type_id"
                                   select={self.props.data.representation_type.representation_type_id.to_string()}
-                                  onchange=oninput_representation_type_id
+                                  onchange={oninput_representation_type_id}
                                   >
                                 { for self.represent_types.iter().map(|x|
                                     html!{
@@ -293,13 +293,13 @@ impl ChangeItem {
             <div class="columns">
                 <div class="column">
                 <fieldset class="field">
-                    <label class="label">{ get_value_field(&27) }</label> // Region
+                    <label class="label">{get_value_field(&27)}</label> // Region
                     <div class="control">
                         <div class="select">
                           <select
                               id="region_id"
                               select={self.props.data.region.region_id.to_string()}
-                              onchange=oninput_region_id
+                              onchange={oninput_region_id}
                               >
                             { for self.regions.iter().map(|x|
                                 html!{

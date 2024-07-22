@@ -139,7 +139,7 @@ impl Component for ComponentFileItem {
         };
 
         html!{<>
-            <ListErrors error=self.error.clone() clear_error=onclick_clear_error.clone()/>
+            <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
             {match self.get_result_delete {
                 true => html!{},
                 false => html!{<>

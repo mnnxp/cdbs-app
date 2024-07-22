@@ -108,7 +108,7 @@ impl Component for AddUserCertificateCard {
         let callback_upload_confirm =
             self.link.callback(|confirmations| Msg::UploadConfirm(confirmations));
         html!{<div class="card">
-          <ListErrors error=self.error.clone() clear_error=onclick_clear_error.clone()/>
+          <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
           <div class="block">
             {match self.get_result_up_completed {
                 true => html!{<div class="column">{self.show_success_upload()}</div>},
@@ -142,9 +142,9 @@ impl AddUserCertificateCard {
                 id={"new-cert-description"}
                 class="input"
                 type="text"
-                placeholder=get_value_field(&61)
+                placeholder={get_value_field(&61)}
                 value={self.description.to_string()}
-                oninput=oninput_cert_description />
+                oninput={oninput_cert_description} />
         </div>}
     }
 
@@ -154,7 +154,7 @@ impl AddUserCertificateCard {
             <article class="message is-success">
               <div class="message-header">
                 <p>{get_value_field(&89)}</p>
-                <button class="delete" aria-label="close" onclick=onclick_hide_notification.clone() />
+                <button class="delete" aria-label="close" onclick={onclick_hide_notification.clone()} />
               </div>
               <div class="message-body">
                 {get_value_field(&90)}

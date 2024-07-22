@@ -116,8 +116,8 @@ impl Component for ModificationFilesTableCard {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
 
         html!{<>
-            <ListErrors error=self.error.clone() clear_error=onclick_clear_error.clone()/>
-            <h2 class="has-text-weight-bold">{ get_value_field(&119) }</h2> // Modification files
+            <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
+            <h2 class="has-text-weight-bold">{get_value_field(&119)}</h2> // Modification files
             {self.show_files_card()}
         </>}
     }
@@ -134,9 +134,9 @@ impl ModificationFilesTableCard {
               <tfoot>
                 {for self.files_list.iter().map(|file| html!{
                     <ModificationFileListItem
-                        modification_uuid = self.props.modification_uuid.clone()
-                        show_download_tag = self.props.show_download_btn
-                        file = file.clone()
+                        modification_uuid={self.props.modification_uuid.clone()}
+                        show_download_tag={self.props.show_download_btn}
+                        file={file.clone()}
                     />
                 })}
               </tfoot>

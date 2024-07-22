@@ -223,19 +223,19 @@ impl SearchSpecsTags {
             self.link.callback(|value: usize| Msg::DeleteNewSpec(value));
         let onclick_del_old_spec =
             self.link.callback(|value: usize| Msg::DeleteCurrentSpec(value));
+        let onclick_set_ipt_timer =
+            self.link.callback(|ev: InputData| Msg::SetIptTimer(ev.value));
+        let mut class_p_control = classes!("control", "has-icons-left");
+        if self.specs_search_loading { class_p_control.push("is-loading"); }
 
         html!{<>
             <div class="panel-block">
-              <p class=classes!(String::from("control has-icons-left"),if self.specs_search_loading {
-                String::from("is-loading")
-              } else {
-                String::new()
-              }) >
-                <input ref=ipt_ref
-                    oninput=self.link.callback(|ev: InputData| Msg::SetIptTimer(ev.value))
+              <p class={class_p_control} >
+                <input ref={ipt_ref}
+                    oninput={onclick_set_ipt_timer}
                     class="input"
                     type="text"
-                    placeholder=get_value_field(&192) // Enter data for specifications search
+                    placeholder={get_value_field(&192)} // Enter data for specifications search
                   />
                 <span class="icon is-left">
                   <i class="fas fa-search" aria-hidden="true"></i>
@@ -249,14 +249,14 @@ impl SearchSpecsTags {
                             html!{}
                         } else {
                             html!{<SpecTagItem
-                                show_manage_btn = true
-                                active_info_btn = false
-                                standard_uuid = self.props.standard_uuid.clone()
-                                spec = spec.clone()
-                                is_added = false
-                                style_tag = "is-success".to_string()
-                                added_spec = Some(onclick_added_spec.clone())
-                                // delete_spec = None
+                                show_manage_btn={true}
+                                active_info_btn={false}
+                                standard_uuid={self.props.standard_uuid.clone()}
+                                spec={spec.clone()}
+                                is_added={false}
+                                style_tag={"is-success".to_string()}
+                                added_spec={Some(onclick_added_spec.clone())}
+                                // delete_spec={None}
                                 />
                     }}})}
                 </div>
@@ -265,24 +265,24 @@ impl SearchSpecsTags {
                 <div id="add-specs" class="field is-grouped is-grouped-multiline">
                     {for self.added_specs.iter().map(|st_spec| {
                         html!{<SpecTagItem
-                            show_manage_btn = true
-                            active_info_btn = false
-                            standard_uuid = self.props.standard_uuid.clone()
-                            spec = st_spec.clone()
-                            is_added = true
-                            style_tag = "is-info".to_string()
-                            // added_spec = None
-                            delete_spec = Some(onclick_del_new_spec.clone())
+                            show_manage_btn={true}
+                            active_info_btn={false}
+                            standard_uuid={self.props.standard_uuid.clone()}
+                            spec={st_spec.clone()}
+                            is_added={true}
+                            style_tag={"is-info".to_string()}
+                            // added_spec={None}
+                            delete_spec={Some(onclick_del_new_spec.clone())}
                             />}
                     })}
                 </div>
             </div>
             <div class="panel-block">
                 <SpecsTags
-                    show_manage_btn = true
-                    standard_uuid = self.props.standard_uuid.clone()
-                    specs = self.props.standard_specs.clone()
-                    delete_spec = Some(onclick_del_old_spec.clone())
+                    show_manage_btn={true}
+                    standard_uuid={self.props.standard_uuid.clone()}
+                    specs={self.props.standard_specs.clone()}
+                    delete_spec={Some(onclick_del_old_spec.clone())}
                     />
             </div>
         </>}

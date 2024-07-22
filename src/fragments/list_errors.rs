@@ -62,8 +62,8 @@ impl Component for ListErrors {
         if let Some(error) = &self.props.error {
             match error {
                 Error::UnprocessableEntity(error_info) => {
-                    html!{<div class=vec!("notification", "is-danger")>
-                        <button class="delete" onclick=onclick_close_error/>
+                    html!{<div class={vec!("notification", "is-danger")}>
+                        <button class="delete" onclick={onclick_close_error}/>
                         <table class="table is-fullwidth">
                             <tbody>
                                 {for error_info.errors.iter().map(|(key, value)| {
@@ -80,12 +80,12 @@ impl Component for ListErrors {
                 },
                 Error::Unauthorized => {
                     html!{
-                        <div class=vec!("notification", "is-warning")>
-                            <button class="delete" onclick=onclick_close_error/>
+                        <div class={vec!("notification", "is-warning")}>
+                            <button class="delete" onclick={onclick_close_error}/>
                             <div class="media">
                                 <div class="media-content">{error}</div>
                                 <div class="media-right">
-                                    <button class="button is-ghost" onclick=onclick_route_to_login>
+                                    <button class="button is-ghost" onclick={onclick_route_to_login}>
                                         <span>{"Open sign in page"}</span>
                                     </button>
                                 </div>
@@ -95,8 +95,8 @@ impl Component for ListErrors {
                 },
                 _ => {
                     html!{
-                        <div class=vec!("notification", "is-danger")>
-                            <button class="delete" onclick=onclick_close_error/>
+                        <div class={vec!("notification", "is-danger")}>
+                            <button class="delete" onclick={onclick_close_error}/>
                             {error}
                         </div>
                     }

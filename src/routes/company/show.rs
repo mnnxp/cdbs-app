@@ -245,7 +245,7 @@ impl Component for ShowCompany {
         match &self.company {
             Some(company_data) => html!{
                 <div class="company-page">
-                    <ListErrors error=self.error.clone() clear_error=onclick_clear_error />
+                    <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
                     <div class="container page">
                         <div class="row">
                             <div class="card">
@@ -261,7 +261,7 @@ impl Component for ShowCompany {
                     </div>
                 </div>
             },
-            None => html!{<ListErrors error=self.error.clone() clear_error=onclick_clear_error />},
+            None => html!{<ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />},
         }
     }
 }
@@ -279,15 +279,15 @@ impl ShowCompany {
             Some(company_data) => html!{
               <div class="columns">
                 <div class="box">
-                  <figure class=classes!("container", "image", size_favicon)>
+                  <figure class={classes!("container", "image", size_favicon)}>
                     <img
                         src={company_data.image_file.download_url.to_string()} alt="Favicon company"
                         loading="lazy"
                     />
                   </figure>
                 </div>
-                <div id="company-region" class=classes!("column", "is-three-fifths")>
-                  <abbr title={ get_value_field(&275) } hidden={!company_data.is_supplier}>
+                <div id="company-region" class={classes!("column", "is-three-fifths")}>
+                  <abbr title={get_value_field(&275)} hidden={!company_data.is_supplier}>
                       {diamond_svg(company_data.is_supplier, "25")}
                   </abbr>
                   {match self.show_full_company_info {
@@ -355,12 +355,12 @@ impl ShowCompany {
                 </div>
                 {company_data.spec_block()}
                 <button class="button is-ghost" onclick={onclick_change_full_show}>
-                    <span>{ get_value_field(&42) }</span>
+                    <span>{get_value_field(&42)}</span>
                 </button>
             </>},
             false => html!{
                 <button class="button is-ghost" onclick={onclick_change_full_show}>
-                    <span>{ get_value_field(&43) }</span>
+                    <span>{get_value_field(&43)}</span>
                 </button>
             },
         }
@@ -462,10 +462,10 @@ impl ShowCompany {
         } else {
             html!{<div class="profileBox" >
                 <CompanyCertificatesCard
-                    certificates = company_data.company_certificates.clone()
-                    show_cert_btn = false
-                    download_btn = false
-                    manage_btn = false
+                    certificates={company_data.company_certificates.clone()}
+                    show_cert_btn={false}
+                    download_btn={false}
+                    manage_btn={false}
                  />
             </div>}
         }
@@ -477,8 +477,8 @@ impl ShowCompany {
     ) -> Html {
         html!{
             <CompanyRepresents
-                show_manage_btn = false
-                list = company_data.company_represents.clone()
+                show_manage_btn={false}
+                list={company_data.company_represents.clone()}
             />
         }
     }
@@ -489,8 +489,8 @@ impl ShowCompany {
     ) -> Html {
         html!{
             <CatalogComponents
-                show_create_btn = false
-                arguments = ComponentsQueryArg::set_company_uuid(company_uuid)
+                show_create_btn={false}
+                arguments={ComponentsQueryArg::set_company_uuid(company_uuid)}
             />
         }
     }
@@ -501,8 +501,8 @@ impl ShowCompany {
     ) -> Html {
         html!{
             <CatalogStandards
-                show_create_btn = true
-                arguments = StandardsQueryArg::set_company_uuid(company_uuid)
+                show_create_btn={true}
+                arguments={StandardsQueryArg::set_company_uuid(company_uuid)}
             />
         }
     }

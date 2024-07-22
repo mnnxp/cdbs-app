@@ -132,7 +132,7 @@ impl Component for ListItemStandard {
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         html!{<>
-            <ListErrors error=self.error.clone() clear_error=onclick_clear_error />
+            <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
             {match self.props.show_list {
                 true => { self.showing_in_list() },
                 false => { self.showing_in_box() },
@@ -176,11 +176,11 @@ impl ListItemStandard {
                   <div class="media-content">
                     <div class="columns is-gapless" style="margin-bottom:0">
                       <div class="column">
-                          { get_value_field(&142) } // classifier
+                          {get_value_field(&142)} // classifier
                           <span class="id-box has-text-weight-bold">{classifier}</span>
                       </div>
                       <div class="column">
-                          { get_value_field(&144) } // specified tolerance
+                          {get_value_field(&144)} // specified tolerance
                           <span class="id-box has-text-weight-bold">{specified_tolerance}</span>
                       </div>
                     </div>
@@ -194,7 +194,7 @@ impl ListItemStandard {
                                 }}
                             </div>
                             <div class="overflow-title">
-                                { get_value_field(&141) } // owner
+                                {get_value_field(&141)} // owner
                                 <span class="has-text-weight-bold">
                                     {format!("{} {}",
                                             &owner_company.shortname,
@@ -261,13 +261,13 @@ impl ListItemStandard {
                 />
               </div>
               <div>
-                { get_value_field(&142) } // classifier
+                {get_value_field(&142)} // classifier
                 <span class="id-box has-text-weight-bold">{classifier}</span>
                 <br/>
               </div>
               <div class="has-text-weight-bold is-size-4">{name}</div>
               <div class="overflow-title">
-                { get_value_field(&141) } // owner
+                {get_value_field(&141)} // owner
                   <span class="has-text-weight-bold">
                     {format!("{} {}",
                       &owner_company.shortname,
@@ -277,8 +277,8 @@ impl ListItemStandard {
                 </div>
               <div class="btnBox">
                 <button class="button is-light is-fullwidth has-text-weight-bold"
-                    onclick=show_standard_btn>
-                    { get_value_field(&143) } // Show standard
+                    onclick={show_standard_btn}>
+                    {get_value_field(&143)} // Show standard
                 </button>
                 <div style="margin-left: 8px;">
                 {ft_follow_btn(

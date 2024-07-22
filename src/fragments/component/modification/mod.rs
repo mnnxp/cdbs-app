@@ -143,22 +143,22 @@ impl Component for ModificationsTable {
             <div class="table-container">
               <table class="table is-fullwidth is-striped">
                 <ModificationTableHeads
-                  show_new_column = false
-                  component_uuid = self.component_uuid.clone()
-                  params = self.collect_heads.clone()
+                  show_new_column={false}
+                  component_uuid={self.component_uuid.clone()}
+                  params={self.collect_heads.clone()}
                 />
 
                 {for self.collect_items.iter().map(|(modification_uuid, item)| {
                   html!{<ModificationTableItem
-                      show_manage_btn = false
-                      modification_uuid = modification_uuid.clone()
-                      collect_heads = self.collect_heads.clone()
-                      collect_item = item.clone()
-                      select_item = &self.props.select_modification == modification_uuid
-                      open_modification_files = self.props.open_modification_files
-                      callback_new_modification_param = None
-                      callback_select_modification = self.props.callback_select_modification.clone()
-                      callback_open_modification_files = self.props.callback_open_modification_files.clone()
+                      show_manage_btn={false}
+                      modification_uuid={modification_uuid.clone()}
+                      collect_heads={self.collect_heads.clone()}
+                      collect_item={item.clone()}
+                      select_item={&self.props.select_modification == modification_uuid}
+                      open_modification_files={self.props.open_modification_files}
+                      callback_new_modification_param={None}
+                      callback_select_modification={self.props.callback_select_modification.clone()}
+                      callback_open_modification_files={self.props.callback_open_modification_files.clone()}
                       />}
                  })}
               </table>

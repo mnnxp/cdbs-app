@@ -132,7 +132,7 @@ impl CertificateItem {
                   </div>
                   <div class="media-content" style="margin-right: 1rem;">
                     <div class="block" style="overflow-wrap: anywhere">
-                        <span class="overflow-title has-text-weight-bold">{ get_value_field(&262) }</span>
+                        <span class="overflow-title has-text-weight-bold">{get_value_field(&262)}</span>
                         <span class="overflow-title">{self.props.certificate.file.filename.clone()}</span>
                     </div>
                     {self.show_update_block()}
@@ -174,8 +174,8 @@ impl CertificateItem {
     fn show_delete_certificate(&self) -> Html {
         html!{<div class="card">
             <div class="message is-success">
-              <div class="message-header">{ get_value_field(&89) }</div>
-              <div class="message-body">{ get_value_field(&139) }</div>
+              <div class="message-header">{get_value_field(&89)}</div>
+              <div class="message-body">{get_value_field(&139)}</div>
             </div>
         </div>}
     }
@@ -184,7 +184,7 @@ impl CertificateItem {
         match self.props.get_result_update {
             true => html!{<div class="column">
                 <span id="remove-profile" class="tag is-info is-light">
-                    { get_value_field(&140) }
+                    {get_value_field(&140)}
                 </span>
             </div>},
             false => html!{},
@@ -202,7 +202,7 @@ impl CertificateItem {
             true => html!{
                 <button id={"show-cert"}
                     class="button is-light is-fullwidth has-text-weight-bold"
-                    onclick=onclick_show_cert>
+                    onclick={onclick_show_cert}>
                     { text_btn }
                 </button>
             },
@@ -217,7 +217,7 @@ impl CertificateItem {
         html!{<div class="block">
             <div class="columns" style="margin-bottom: 0px">
                 <div class="column">
-                    <label class="label">{ get_value_field(&61) }</label>
+                    <label class="label">{get_value_field(&61)}</label>
                 </div>
                 {self.show_update_description()}
             </div>
@@ -227,9 +227,9 @@ impl CertificateItem {
                         id={"cert-description"}
                         class="input"
                         type="text"
-                        placeholder=get_value_field(&61)
+                        placeholder={get_value_field(&61)}
                         value={self.cert_description.clone()}
-                        oninput=oninput_cert_description />
+                        oninput={oninput_cert_description} />
                 </div>
                 <div class="column">
                     {ft_save_btn(
@@ -249,7 +249,7 @@ impl CertificateItem {
                 class="button is-light is-fullwidth has-text-weight-bold"
                 href={self.props.certificate.file.download_url.clone()}
                 download={self.props.certificate.file.filename.clone()}>
-                { get_value_field(&126) }
+                {get_value_field(&126)}
             </button>},
             false => html!{},
         }
@@ -263,8 +263,8 @@ impl CertificateItem {
         };
 
         html!{
-            <div class=class_modal>
-              <div class="modal-background" onclick=onclick_show_cert.clone() />
+            <div class={class_modal}>
+              <div class="modal-background" onclick={onclick_show_cert.clone()} />
               <div class="modal-content box">
                 <p class="image is-4by3">
                   <img
@@ -273,7 +273,7 @@ impl CertificateItem {
                   />
                 </p>
               </div>
-              <button class="modal-close is-large" aria-label="close" onclick=onclick_show_cert />
+              <button class="modal-close is-large" aria-label="close" onclick={onclick_show_cert} />
             </div>
         }
     }

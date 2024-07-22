@@ -149,7 +149,7 @@ impl Component for ManageFilesOfFilesetBlock {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
 
         html!{<>
-            <ListErrors error=self.error.clone() clear_error=onclick_clear_error.clone()/>
+            <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
             {self.modal_download_files()}
             {self.show_download_block()}
         </>}
@@ -220,13 +220,13 @@ impl ManageFilesOfFilesetBlock {
             false => "modal",
         };
 
-        html!{<div class=class_modal>
-          <div class="modal-background" onclick=onclick_modal_download_btn.clone() />
+        html!{<div class={class_modal}>
+          <div class="modal-background" onclick={onclick_modal_download_btn.clone()} />
             <div class="card">
               <div class="modal-content">
                 <header class="modal-card-head">
                     <p class="modal-card-title">{get_value_field(&138)}</p> // Temp solution for download files
-                    <button class="delete" aria-label="close" onclick=onclick_modal_download_btn.clone() />
+                    <button class="delete" aria-label="close" onclick={onclick_modal_download_btn.clone()} />
                 </header>
                 <div class="box itemBox">
                   <article class="media center-media">

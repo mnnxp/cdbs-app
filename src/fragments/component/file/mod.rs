@@ -80,7 +80,7 @@ impl Component for ComponentFilesBlock {
             })}
             </div>
             {match self.props.files.len() {
-                0 => html!{<span>{ get_value_field(&204) }</span>},
+                0 => html!{<span>{get_value_field(&204)}</span>},
                 0..=3 => html!{},
                 _ => self.show_see_btn(),
             }}
@@ -99,11 +99,11 @@ impl ComponentFilesBlock {
             Some(_) => html!{}, // removed file
             None => html!{
                 <ComponentFileItem
-                  show_download_btn = self.props.show_download_btn
-                  show_delete_btn = self.props.show_delete_btn
-                  component_uuid = self.props.component_uuid.clone()
-                  file = file_info.clone()
-                  callback_delete_file = callback_delete_file.clone()
+                  show_download_btn={self.props.show_download_btn}
+                  show_delete_btn={self.props.show_delete_btn}
+                  component_uuid={self.props.component_uuid.clone()}
+                  file={file_info.clone()}
+                  callback_delete_file={callback_delete_file.clone()}
                 />
             },
         }

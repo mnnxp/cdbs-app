@@ -279,9 +279,8 @@ impl Component for CompanySettings {
                         debug!("Delete company: {:?}", delete_company_uuid);
                         self.get_result_remove_company = true;
                         match &self.props.current_user {
-                            Some(user) => self
-                                .router_agent
-                                .send(ChangeRoute(AppRoute::Profile(user.username.clone()).into())),
+                            Some(user) =>
+                                self.router_agent.send(ChangeRoute(AppRoute::Profile(user.username.clone()).into())),
                             None => self.router_agent.send(ChangeRoute(AppRoute::Home.into())),
                         }
                     },
@@ -336,7 +335,7 @@ impl Component for CompanySettings {
 
         html!{
             <div class="settings-page">
-                <ListErrors error=self.error.clone() clear_error=onclick_clear_error />
+                <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
                 <div class="container page">
                     <div class="row">
                         <div class="columns">
@@ -386,7 +385,7 @@ impl CompanySettings {
                     type={input_type}
                     placeholder={placeholder.to_string()}
                     value={value}
-                    oninput=oninput ></@>
+                    oninput={oninput} ></@>
             </fieldset>
         }
     }
@@ -487,67 +486,67 @@ impl CompanySettings {
         match self.select_menu {
             // Show interface for change company data
             Menu::Company => html!{<>
-                <h4 id="updated-company" class="title is-4">{ get_value_field(&109) }</h4> // Company
+                <h4 id="updated-company" class="title is-4">{get_value_field(&109)}</h4> // Company
                 <div class="columns">
                     <div class="column">
-                        <span class=classes!("overflow-title", "has-text-weight-bold")>{ get_value_field(&72) }</span>
+                        <span class={classes!("overflow-title", "has-text-weight-bold")}>{get_value_field(&72)}</span>
                         <span class="overflow-title">{self.get_result_update.clone()}</span>
                     </div>
                     <div class="column">
-                        <span class=classes!("overflow-title", "has-text-weight-bold")>{ get_value_field(&73) }</span>
+                        <span class={classes!("overflow-title", "has-text-weight-bold")}>{get_value_field(&73)}</span>
                         {match &self.current_data {
                             Some(data) => html!{
                                 <span class="overflow-title">
                                     {data.updated_at.date_to_display()}
                                 </span>
                             },
-                            None => html!{<span>{ get_value_field(&75) }</span>},
+                            None => html!{<span>{get_value_field(&75)}</span>},
                         }}
                     </div>
                 </div>
-                <form onsubmit=onsubmit_update_company >
+                <form onsubmit={onsubmit_update_company} >
                     { self.fieldset_company() }
                     <button
                         id="update-settings"
                         class="button"
                         type="submit"
-                        disabled=false>
-                        { get_value_field(&264) }
+                        disabled={false}>
+                        {get_value_field(&264)}
                     </button>
                 </form>
             </>},
             // Show interface for change favicon company
             Menu::UpdateFavicon => html!{<>
-                <h4 id="updated-favicon-company" class="title is-4">{ get_value_field(&78) }</h4> // Favicon
+                <h4 id="updated-favicon-company" class="title is-4">{get_value_field(&78)}</h4> // Favicon
                 { self.update_favicon_block() }
             </>},
             // Show interface for add and update Certificates
             Menu::Certificates => html!{<>
-                <h4 id="updated-certificates" class="title is-4">{ get_value_field(&64) }</h4> // Certificates
+                <h4 id="updated-certificates" class="title is-4">{get_value_field(&64)}</h4> // Certificates
                 { self.add_certificate_block() }
                 <br/>
                 { self.certificates_block() }
             </>},
             // Show interface for add and update Represents
             Menu::Represent => html!{<>
-                <h4 id="updated-represents" class="title is-4">{ get_value_field(&266) }</h4> // Represents
-                <AddCompanyRepresentCard company_uuid = self.company_uuid.clone() />
+                <h4 id="updated-represents" class="title is-4">{get_value_field(&266)}</h4> // Represents
+                <AddCompanyRepresentCard company_uuid={self.company_uuid.clone()} />
                 <br/>
                 { self.represents_block() }
             </>},
             // Show interface for add and update company catalogs
             Menu::Spec => html!{<>
-                <h4 id="updated-specs" class="title is-4">{ get_value_field(&104) }</h4>
+                <h4 id="updated-specs" class="title is-4">{get_value_field(&104)}</h4>
                 {self.manage_specs_block()}
             </>},
             // Show interface for manage Access
             Menu::Access => html!{<>
-                <h4 id="updated-represents" class="title is-4">{ get_value_field(&65) }</h4> // Access
+                <h4 id="updated-represents" class="title is-4">{get_value_field(&65)}</h4> // Access
                 { self.manage_access_block() }
             </>},
             // Show interface for remove company
             Menu::RemoveCompany => html!{<>
-                <h4 id="remove-company" class="title is-4">{ get_value_field(&268) }</h4>
+                <h4 id="remove-company" class="title is-4">{get_value_field(&268)}</h4>
                 {self.remove_company_block()}
             </>},
         }
@@ -608,13 +607,13 @@ impl CompanySettings {
             <div class="columns">
                 <div class="column">
                     <fieldset class="field">
-                        <label class="label">{ get_value_field(&51) }</label>
+                        <label class="label">{get_value_field(&51)}</label>
                         <div class="control">
                             <div class="select">
                               <select
                                   id="company_type"
                                   select={self.request_company.company_type_id.unwrap_or_default().to_string()}
-                                  onchange=onchange_company_type_id
+                                  onchange={onchange_company_type_id}
                                   >
                                 { for self.company_types.iter().map(|x|
                                     html!{
@@ -660,13 +659,13 @@ impl CompanySettings {
             <div class="columns">
                 <div class="column">
                     <fieldset class="field">
-                        <label class="label">{ get_value_field(&27) }</label>
+                        <label class="label">{get_value_field(&27)}</label>
                         <div class="control">
                             <div class="select">
                               <select
                                   id="region"
                                   select={self.request_company.region_id.unwrap_or_default().to_string()}
-                                  onchange=onchange_region_id
+                                  onchange={onchange_region_id}
                                   >
                                 { for self.regions.iter().map(|x|
                                     html!{
@@ -704,8 +703,8 @@ impl CompanySettings {
 
         html!{
             <UpdateFaviconBlock
-                company_uuid = self.company_uuid.clone()
-                callback=callback_update_favicon
+                company_uuid={self.company_uuid.clone()}
+                callback={callback_update_favicon}
             />
         }
     }
@@ -714,15 +713,15 @@ impl CompanySettings {
         match &self.current_data {
             Some(current_data) => html!{
                 <CompanyCertificatesCard
-                    certificates = current_data.company_certificates.clone()
-                    show_cert_btn = true
-                    download_btn = false
-                    manage_btn = true
+                    certificates={current_data.company_certificates.clone()}
+                    show_cert_btn={true}
+                    download_btn={false}
+                    manage_btn={true}
                 />
             },
             None => html!{
                 <div class="notification is-info">
-                    <span>{ get_value_field(&74) }</span>
+                    <span>{get_value_field(&74)}</span>
                 </div>
             },
         }
@@ -732,13 +731,13 @@ impl CompanySettings {
         match &self.current_data {
             Some(current_data) => html!{
                 <SearchSpecsTags
-                    company_specs = current_data.company_specs.clone()
-                    company_uuid = current_data.uuid.clone()
+                    company_specs={current_data.company_specs.clone()}
+                    company_uuid={current_data.uuid.clone()}
                  />
             },
             None => html!{
                 <div class="notification is-info">
-                    <span>{ get_value_field(&269) }</span>
+                    <span>{get_value_field(&269)}</span>
                 </div>
             },
         }
@@ -755,8 +754,8 @@ impl CompanySettings {
 
         html!{
             <AddCompanyCertificateCard
-                company_uuid = company_uuid
-                callback=callback_upload_cert
+                company_uuid={company_uuid}
+                callback={callback_upload_cert}
             />
         }
     }
@@ -765,13 +764,13 @@ impl CompanySettings {
         match self.current_data {
             Some(ref data) => html!{
                 <CompanyRepresents
-                    show_manage_btn = true
-                    list = data.company_represents.clone()
+                    show_manage_btn={true}
+                    list={data.company_represents.clone()}
                 />
             },
             None => html!{
                 <div class="notification is-info">
-                    <span>{ get_value_field(&270) }</span>
+                    <span>{get_value_field(&270)}</span>
                 </div>
             },
         }
@@ -784,14 +783,14 @@ impl CompanySettings {
         });
 
         html!{
-            <form onsubmit=onsubmit_update_access>
+            <form onsubmit={onsubmit_update_access}>
                 { self.fieldset_access() }
                 <button
                     id="update-access"
                     class="button"
                     type="submit"
-                    disabled=false>
-                    { get_value_field(&271) }
+                    disabled={false}>
+                    {get_value_field(&271)}
                 </button>
             </form>
         }
@@ -810,13 +809,13 @@ impl CompanySettings {
                 // first column
                 <fieldset class="column">
                     <fieldset class="field">
-                        <label class="label">{ get_value_field(&58) }</label>
+                        <label class="label">{get_value_field(&58)}</label>
                         <div class="control">
                             <div class="select">
                               <select
                                   id="types-access"
                                   select={self.request_access.to_string()}
-                                  onchange=onchange_type_access_id
+                                  onchange={onchange_type_access_id}
                                   >
                                 { for self.types_access.iter().map(|x|
                                     html!{
@@ -845,16 +844,16 @@ impl CompanySettings {
             <br/>
             <div class="notification is-danger">
                 <span>
-                    <strong>{ get_value_field(&272) }</strong>
-                    { get_value_field(&273) }
+                    <strong>{get_value_field(&272)}</strong>
+                    {get_value_field(&273)}
                 </span>
             </div>
             <br/>
             <button
                 id="button-delete-company"
                 class="button is-danger"
-                onclick=onclick_delete_company>
-                { get_value_field(&135) }
+                onclick={onclick_delete_company}>
+                {get_value_field(&135)}
             </button>
         </>}
     }

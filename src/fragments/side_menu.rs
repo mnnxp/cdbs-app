@@ -112,14 +112,14 @@ impl SideMenu {
         }
 
         html!(
-          <li class=item_class onclick=action>
+          <li class={item_class} onclick={action}>
             <a>
               <span>{title}</span>
-              <div hidden=hide_tag >
+              <div hidden={hide_tag} >
                 <span class="tag is-info is-small" >{count}</span>
               </div>
               {for item.icon_classes.iter().map(|icon_class|
-                  html!{<i class=classes!(icon_class.clone()) style="margin-right: 0.1rem"></i>}
+                  html!{<i class={classes!(icon_class.clone())} style="margin-right: 0.1rem"></i>}
               )}
             </a>
           </li>

@@ -183,8 +183,8 @@ impl Component for FileShowcase {
       };
 
       html!{
-        <div class=class_modal>
-          <div class="modal-background" onclick=onclick_file_info.clone() />
+        <div class={class_modal}>
+          <div class="modal-background" onclick={onclick_file_info.clone()} />
           <div class="modal-content box">
             <ListErrors error={self.error.clone()} clear_error={onclick_clear_error}/>
             {match self.props.show_revisions {
@@ -192,7 +192,7 @@ impl Component for FileShowcase {
               false => self.show_info_card(self.props.file_info.uuid.clone()),
             }}
           </div>
-          <button class="modal-close is-large" aria-label="close" onclick=onclick_file_info />
+          <button class="modal-close is-large" aria-label="close" onclick={onclick_file_info} />
         </div>
       }
     }
@@ -322,7 +322,7 @@ impl FileShowcase {
 
     match &self.props.file_delete_callback.is_some() {
       true => html!{
-        <button class="button is-white is-responsive" onclick=onclick_set_active_btn >
+        <button class="button is-white is-responsive" onclick={onclick_set_active_btn} >
           <span class="icon">
             <i class="fas fa-angle-double-left" style="color: #1872f0;" aria-hidden="true"></i>
           </span>
@@ -340,7 +340,7 @@ impl FileShowcase {
     match (&self.props.file_delete_callback.is_some(), self.get_confirm == file_uuid_cl) {
       (true, true) => self.show_delete_full_btn(file_uuid_cl),
       (true, false) => html!{
-        <button class="button is-white is-danger is-inverted is-responsive" onclick=onclick_delete_btn >
+        <button class="button is-white is-danger is-inverted is-responsive" onclick={onclick_delete_btn} >
           <span class="icon">
             <i class="fa fa-trash" aria-hidden="true"></i>
           </span>
@@ -356,7 +356,7 @@ impl FileShowcase {
 
     match &self.props.file_delete_callback.is_some() {
       true => html!{
-        <button class="button is-white is-danger is-fullwidth" onclick=onclick_delete_btn >
+        <button class="button is-white is-danger is-fullwidth" onclick={onclick_delete_btn} >
           <span class="icon">
             <i class="fa fa-trash" aria-hidden="true"></i>
           </span>
