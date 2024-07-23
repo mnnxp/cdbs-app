@@ -583,14 +583,15 @@ impl ComponentSettings {
         &self,
         component_data: &ComponentInfo,
     ) -> Html {
-        html!{<div class="column">
-              <h2 class="has-text-weight-bold">{get_value_field(&185)}</h2> // Manage component characteristics
+        html!{
+            <div class="column">
               <ComponentParamsTags
                   show_manage_btn={true}
                   component_uuid={self.current_component_uuid.clone()}
                   component_params={component_data.component_params.clone()}
               />
-        </div>}
+            </div>
+        }
     }
 
     fn update_component_favicon(&self) -> Html {

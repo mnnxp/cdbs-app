@@ -17,7 +17,7 @@ use crate::fragments::{
     list_errors::ListErrors,
     user::ModalCardUser,
     component::{
-        ComponentStandardItem, ComponentSupplierItem, ComponentLicenseTag, ComponentParamTag,
+        ComponentStandardItem, ComponentSupplierItem, ComponentLicenseTag, ComponentParamsTags,
         ModificationsTable, FilesOfFilesetCard, ManageFilesOfFilesetBlock,
         ComponentFilesBlock, ModificationFilesTableCard, SpecsTags, KeywordsTags,
     },
@@ -27,7 +27,7 @@ use crate::fragments::{
 };
 use crate::services::content_adapter::{DateDisplay, Markdownable};
 use crate::services::{Counter, get_logged_user, get_value_field, resp_parsing, title_changer};
-use crate::types::{UUID, ComponentInfo, SlimUser, ComponentParam, ComponentModificationInfo, DownloadFile};
+use crate::types::{UUID, ComponentInfo, SlimUser, ComponentModificationInfo, DownloadFile};
 use crate::gqls::make_query;
 use crate::gqls::component::{
     ComponentFiles, component_files,
@@ -52,7 +52,6 @@ pub struct ShowComponent {
     select_fileset_uuid: UUID,
     current_filesets_program: Vec<(UUID, String)>,
     show_full_description: bool,
-    show_full_characteristics: bool,
     open_modification_card: bool,
     open_modification_files_card: bool,
     open_fileset_files_card: bool,
@@ -84,7 +83,6 @@ pub enum Msg {
     ResponseError(Error),
     GetComponentData(String),
     ShowDescription,
-    ShowFullCharacteristics,
     ShowStandardsList,
     ShowModificationCard,
     ShowModificationFilesList,
@@ -116,7 +114,6 @@ impl Component for ShowComponent {
             select_fileset_uuid: String::new(),
             current_filesets_program: Vec::new(),
             show_full_description: false,
-            show_full_characteristics: false,
             open_modification_card: false,
             open_modification_files_card: false,
             open_fileset_files_card: false,
@@ -271,7 +268,6 @@ impl Component for ShowComponent {
                         self.show_full_description = component_data.description.len() < 250;
                         // add main image
                         self.file_arr.push(component_data.image_file.clone());
-                        self.show_full_characteristics = component_data.component_params.len() < 4;
                         self.select_modification_uuid = component_data.component_modifications
                             .first()
                             .map(|m| m.uuid.clone())
@@ -320,7 +316,6 @@ impl Component for ShowComponent {
                 }
             },
             Msg::ShowDescription => self.show_full_description = !self.show_full_description,
-            Msg::ShowFullCharacteristics => self.show_full_characteristics = !self.show_full_characteristics,
             Msg::ShowStandardsList => self.show_related_standards = !self.show_related_standards,
             Msg::ShowModificationCard => self.open_modification_card = !self.open_modification_card,
             Msg::ShowModificationFilesList => self.open_modification_files_card = !self.open_modification_files_card,
@@ -528,46 +523,13 @@ impl ShowComponent {
     fn show_additional_params(&self, component_data: &ComponentInfo) -> Html {
         html!{
             <div class="column">
-              <h2 class="has-text-weight-bold">{get_value_field(&101)}</h2> // Сharacteristics of the component
-              <div class="card column">
-                <table class="table is-fullwidth">
-                    <tbody>
-                      {for component_data.component_params.iter().enumerate().map(|(index, data)| {
-                          match (index >= 3, self.show_full_characteristics) {
-                              // show full list
-                              (_, true) => self.show_param_item(data),
-                              // show full list or first 3 items
-                              (false, false) => self.show_param_item(data),
-                              _ => html!{},
-                          }
-                      })}
-                    </tbody>
-                </table>
-                {match component_data.component_params.len() {
-                    0 => html!{<span>{get_value_field(&136)}</span>},
-                    0..=3 => html!{},
-                    _ => self.show_see_characteristic_btn(),
-                }}
-              </div>
+                <ComponentParamsTags
+                    show_manage_btn={false}
+                    component_uuid={self.current_component_uuid.clone()}
+                    component_params={component_data.component_params.clone()}
+                />
             </div>
         }
-    }
-
-    fn show_param_item(
-        &self,
-        data: &ComponentParam,
-    ) -> Html {
-        html!{<ComponentParamTag
-            show_manage_btn={false}
-            component_uuid={self.props.component_uuid.clone()}
-            param_data={data.clone()}
-            delete_param={None}
-          />}
-    }
-
-    fn show_see_characteristic_btn(&self) -> Html {
-        let show_full_characteristics_btn = self.link.callback(|_| Msg::ShowFullCharacteristics);
-        ft_see_btn(show_full_characteristics_btn, self.show_full_characteristics)
     }
 
     fn show_cards(&self, component_data: &ComponentInfo) -> Html {

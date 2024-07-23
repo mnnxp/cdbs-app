@@ -23,6 +23,7 @@ pub struct ComponentParamTag {
     request_set_param_value: String,
     hide_edit_param_value: bool,
     get_result_delete: bool,
+    get_confirm: usize,
 }
 
 #[derive(Properties, Clone)]
@@ -59,6 +60,7 @@ impl Component for ComponentParamTag {
             request_set_param_value,
             hide_edit_param_value: true,
             get_result_delete: false,
+            get_confirm: 0,
         }
     }
 
@@ -84,18 +86,22 @@ impl Component for ComponentParamTag {
                 })
             },
             Msg::RequestDeleteParam => {
-                let component_uuid = self.props.component_uuid.clone();
-                let param_id = self.props.param_data.param.param_id as i64;
-                spawn_local(async move {
-                    let del_component_param_data = delete_component_params::DelComponentParamData{
-                        componentUuid: component_uuid,
-                        paramIds: vec![param_id],
-                    };
-                    let res = make_query(DeleteComponentParams::build_query(
-                        delete_component_params::Variables { del_component_param_data }
-                    )).await.unwrap();
-                    link.send_message(Msg::GetDeleteParamResult(res));
-                })
+                if self.get_confirm == self.props.param_data.param.param_id {
+                    let component_uuid = self.props.component_uuid.clone();
+                    let param_id = self.props.param_data.param.param_id as i64;
+                    spawn_local(async move {
+                        let del_component_param_data = delete_component_params::DelComponentParamData{
+                            componentUuid: component_uuid,
+                            paramIds: vec![param_id],
+                        };
+                        let res = make_query(DeleteComponentParams::build_query(
+                            delete_component_params::Variables { del_component_param_data }
+                        )).await.unwrap();
+                        link.send_message(Msg::GetDeleteParamResult(res));
+                    })
+                } else {
+                    self.get_confirm = self.props.param_data.param.param_id;
+                }
             },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetDeleteParamResult(res) => {
@@ -136,6 +142,7 @@ impl Component for ComponentParamTag {
             false
         } else {
             self.hide_edit_param_value = true;
+            self.get_confirm = 0;
             self.current_param_value = props.param_data.value.clone();
             self.request_set_param_value = props.param_data.value.clone();
             self.props = props;
@@ -159,23 +166,32 @@ impl Component for ComponentParamTag {
 impl ComponentParamTag {
     fn show_param(&self) -> Html {
         let onclick_change_param = self.link.callback(|_| Msg::ChangeParamValue);
-        let onclick_delete_param = self.link.callback(|_| Msg::RequestDeleteParam);
+        let onclick_delete_btn = self.link.callback(|_| Msg::RequestDeleteParam);
+        let text_btn = match self.get_confirm == self.props.param_data.param.param_id {
+          true => get_value_field(&220),
+          false => "",
+        };
 
         html!{<tr>
             <td>{self.props.param_data.param.paramname.clone()}</td>
             <td>{self.current_param_value.clone()}</td>
             {match self.props.show_manage_btn {
                 true => html!{<>
-                    <td><a onclick={onclick_change_param.clone()} title={get_value_field(&59)}>
-                        <span class="icon" >
-                            <i class="fas fa-pencil-alt" aria-hidden="true"></i>
-                        </span>
-                    </a></td>
-                    <td><a onclick={onclick_delete_param.clone()} title={get_value_field(&135)}>
-                        <span class="icon" >
-                          <i class="fa fa-trash" aria-hidden="true"></i>
-                        </span>
-                    </a></td>
+                    <td>
+                        <a onclick={onclick_change_param.clone()} title={get_value_field(&59)}>
+                            <span class="icon" >
+                                <i class="fas fa-pencil-alt" aria-hidden="true"></i>
+                            </span>
+                        </a>
+                    </td>
+                    <td>
+                        <a onclick={onclick_delete_btn} title={get_value_field(&135)}>
+                            <span class="icon" >
+                                <i class="fa fa-trash" aria-hidden="true" style="color: #f14668;"></i>
+                            </span>
+                            <span style="color: #f14668;">{text_btn}</span>
+                        </a>
+                    </td>
                 </>},
                 false => html!{},
             }}
