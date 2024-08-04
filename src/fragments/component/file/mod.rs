@@ -69,21 +69,23 @@ impl Component for ComponentFilesBlock {
     fn view(&self) -> Html {
         html!{<>
             <div class={"buttons"}>
-            {for self.props.files.iter().enumerate().map(|(index, file)| {
-                match (index >= 3, self.show_full_files) {
-                    // show full list
-                    (_, true) => self.show_file_info(&file),
-                    // show full list or first 3 items
-                    (false, false) => self.show_file_info(&file),
-                    _ => html!{},
-                }
-            })}
+                {for self.props.files.iter().enumerate().map(|(index, file)| {
+                    match (index >= 3, self.show_full_files) {
+                        // show full list
+                        (_, true) => self.show_file_info(&file),
+                        // show full list or first 3 items
+                        (false, false) => self.show_file_info(&file),
+                        _ => html!{},
+                    }
+                })}
             </div>
-            {match self.props.files.len() {
-                0 => html!{<span>{get_value_field(&204)}</span>},
-                0..=3 => html!{},
-                _ => self.show_see_btn(),
-            }}
+            <footer class="card-footer">
+                {match self.props.files.len() {
+                    0 => html!{<span>{get_value_field(&204)}</span>},
+                    0..=3 => html!{},
+                    _ => self.show_see_btn(),
+                }}
+            </footer>
         </>}
     }
 }

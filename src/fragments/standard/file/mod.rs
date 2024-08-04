@@ -68,12 +68,8 @@ impl Component for StandardFilesCard {
     }
 
     fn view(&self) -> Html {
-        let class_card = match self.props.show_delete_btn {
-            true => "",
-            false => "card",
-        };
-        html!{
-            <div id="files" class={class_card}>
+        html!{<>
+            <div id="standard-files" class={"buttons"}>
                 {for self.props.files.iter().enumerate().map(|(index, file)| {
                     match (index >= 3, self.show_full_files) {
                         // show full list
@@ -83,13 +79,15 @@ impl Component for StandardFilesCard {
                         _ => html!{},
                     }
                 })}
+            </div>
+            <footer class="card-footer">
                 {match self.props.files.len() {
-                    0 => html!{<span>{ get_value_field(&204) }</span>},
+                    0 => html!{<span>{get_value_field(&204)}</span>},
                     0..=3 => html!{},
                     _ => self.show_see_btn(),
                 }}
-            </div>
-        }
+            </footer>
+        </>}
     }
 }
 

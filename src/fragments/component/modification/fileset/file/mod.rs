@@ -70,20 +70,24 @@ impl Component for FilesetFilesBlock {
 
     fn view(&self) -> Html {
         html!{<>
-            {for self.props.files.iter().enumerate().map(|(index, file)| {
-                match (index >= 3, self.show_full_files) {
-                    // show full list
-                    (_, true) => self.show_file_info(&file),
-                    // show full list or first 3 items
-                    (false, false) => self.show_file_info(&file),
-                    _ => html!{},
-                }
-            })}
-            {match self.props.files.len() {
-                0 => html!{<span>{get_value_field(&204)}</span>},
-                0..=3 => html!{},
-                _ => self.show_see_btn(),
-            }}
+            <div class={"buttons"}>
+                {for self.props.files.iter().enumerate().map(|(index, file)| {
+                    match (index >= 3, self.show_full_files) {
+                        // show full list
+                        (_, true) => self.show_file_info(&file),
+                        // show full list or first 3 items
+                        (false, false) => self.show_file_info(&file),
+                        _ => html!{},
+                    }
+                })}
+            </div>
+            <footer class="card-footer">
+                {match self.props.files.len() {
+                    0 => html!{<span>{get_value_field(&204)}</span>},
+                    0..=3 => html!{},
+                    _ => self.show_see_btn(),
+                }}
+            </footer>
         </>}
     }
 }
