@@ -188,11 +188,34 @@ impl Component for ComponentSuppliersCard {
 
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+        let onclick_action_btn = self.link.callback(|_| Msg::ChangeHideSetSupplier);
 
-        html!{<>
-            <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
-            {self.show_suppliers()}
-        </>}
+        html!{
+            <div class="card">
+                <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
+                <header class="card-header">
+                    <p class="card-header-title">{get_value_field(&190)}</p> // Manage component supplier
+                </header>
+                <div class="card-content">
+                    <div class="content">
+                        {self.show_suppliers()}
+                    </div>
+                    <footer class="card-footer">
+                        {ft_add_btn(
+                            "set-supplier-component",
+                            get_value_field(&166),
+                            onclick_action_btn,
+                            true,
+                            false
+                        )}
+                    </footer>
+                </div>
+                {match self.props.is_base {
+                    true => self.modal_add_supplier(),
+                    false => self.modal_set_owner_supplier(),
+                }}
+            </div>
+        }
     }
 }
 
@@ -200,18 +223,21 @@ impl ComponentSuppliersCard {
     fn show_suppliers(&self) -> Html {
         let onclick_delete_supplier =
             self.link.callback(|value: UUID| Msg::DeleteComponentCompany(value));
-        let onclick_action_btn = self.link.callback(|_| Msg::ChangeHideSetSupplier);
 
-        html!{<div class="card column">
+        html!{
           <table class="table is-fullwidth">
+            <thead>
+            <tr>
+                <th>{get_value_field(&109)}</th> // Company
+                <th>{get_value_field(&61)}</th> // Description
+                <th>{get_value_field(&111)}</th> // Action
+                {match self.props.show_delete_btn {
+                    true => html!{<th>{get_value_field(&135)}</th>}, // Delete
+                    false => html!{},
+                }}
+            </tr>
+            </thead>
             <tbody>
-               <th>{get_value_field(&109)}</th> // Company
-               <th>{get_value_field(&61)}</th> // Description
-               <th>{get_value_field(&111)}</th> // Action
-               {match self.props.show_delete_btn {
-                   true => html!{<th>{get_value_field(&135)}</th>}, // Delete
-                   false => html!{},
-               }}
                {for self.component_suppliers.iter().map(|data| {
                    match self.company_uuids.get(&data.supplier.uuid) {
                        Some(_) => html!{<ComponentSupplierItem
@@ -225,18 +251,7 @@ impl ComponentSuppliersCard {
                })}
             </tbody>
           </table>
-          {match self.props.is_base {
-              true => self.modal_add_supplier(),
-              false => self.modal_set_owner_supplier(),
-          }}
-          {ft_add_btn(
-            "set-supplier-component",
-            get_value_field(&166),
-            onclick_action_btn,
-            true,
-            false
-          )}
-        </div>}
+        }
     }
 
     fn modal_set_owner_supplier(&self) -> Html {

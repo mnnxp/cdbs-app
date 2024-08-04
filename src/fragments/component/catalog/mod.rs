@@ -141,13 +141,11 @@ impl Component for CatalogComponents {
         debug!("self_arg == arg: {}", flag_change);
 
         if self.props.show_create_btn == props.show_create_btn && flag_change {
-            // debug!("if change");
             false
         } else {
             self.props.show_create_btn = props.show_create_btn;
             self.props.arguments = props.arguments;
             self.link.send_message(Msg::GetList);
-            // debug!("else change");
             true
         }
     }
@@ -176,12 +174,6 @@ impl Component for CatalogComponents {
                           },
                           false => html!{},
                         }}
-                        // <div class="select">
-                        //   <select>
-                        //     <option>{"Select dropdown"}</option>
-                        //     <option>{"With options"}</option>
-                        //   </select>
-                        // </div>
                         <button class="button" onclick={onclick_change_view} >
                             <span class={"icon is-small"}>
                                 <i class={class_for_icon}></i>

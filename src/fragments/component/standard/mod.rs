@@ -190,11 +190,31 @@ impl Component for ComponentStandardsCard {
 
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+        let onclick_action_btn = self.link.callback(|_| Msg::ChangeHideAddStandard);
 
-        html!{<>
-            <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
-            {self.show_standards()}
-        </>}
+        html!{
+            <div class="card">
+                <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
+                <header class="card-header">
+                    <p class="card-header-title">{get_value_field(&189)}</p> // Manage component standards
+                </header>
+                <div class="card-content">
+                    <div class="content">
+                        {self.show_standards()}
+                    </div>
+                    <footer class="card-footer">
+                        {ft_add_btn(
+                            "add-standard-for-component",
+                            get_value_field(&191),
+                            onclick_action_btn,
+                            true,
+                            false
+                        )}
+                    </footer>
+                </div>
+                {self.modal_add_standard()}
+            </div>
+        }
     }
 }
 
@@ -202,18 +222,21 @@ impl ComponentStandardsCard {
     fn show_standards(&self) -> Html {
         let onclick_delete_standard =
             self.link.callback(|value: UUID| Msg::DeleteComponentStandard(value));
-        let onclick_action_btn = self.link.callback(|_| Msg::ChangeHideAddStandard);
 
-        html!{<div class="card column">
+        html!{
           <table class="table is-fullwidth">
+            <thead>
+            <tr>
+                <th>{get_value_field(&112)}</th> // Classifier
+                <th>{get_value_field(&113)}</th> // Specified tolerance
+                <th>{get_value_field(&111)}</th> // Action
+                {match self.props.show_delete_btn {
+                    true => html!{<th>{get_value_field(&135)}</th>},
+                    false => html!{},
+                }}
+            </tr>
+            </thead>
             <tbody>
-               <th>{get_value_field(&112)}</th> // Classifier
-               <th>{get_value_field(&113)}</th> // Specified tolerance
-               <th>{get_value_field(&111)}</th> // Action
-               {match self.props.show_delete_btn {
-                   true => html!{<th>{get_value_field(&135)}</th>},
-                   false => html!{},
-               }}
                {for self.component_standards.iter().map(|data| {
                    match self.standard_uuids.get(&data.uuid) {
                        Some(_) => html!{<ComponentStandardItem
@@ -227,15 +250,7 @@ impl ComponentStandardsCard {
                })}
             </tbody>
           </table>
-          {self.modal_add_standard()}
-          {ft_add_btn(
-            "add-standard-for-component",
-            get_value_field(&191),
-            onclick_action_btn,
-            true,
-            false
-          )}
-        </div>}
+        }
     }
 
     fn modal_add_standard(&self) -> Html {
