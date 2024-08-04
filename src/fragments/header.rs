@@ -20,6 +20,8 @@ pub struct Header {
     link: ComponentLink<Self>,
     current_path: String,
     current_user: Option<SlimUser>,
+    open_register_page: bool,
+    open_login_page: bool,
     open_notifications_page: bool,
     open_home_page: bool,
     is_active: bool,
@@ -51,6 +53,8 @@ impl Component for Header {
             link,
             current_path: String::new(),
             current_user: None,
+            open_register_page: false,
+            open_login_page: false,
             open_notifications_page: false,
             open_home_page: false,
             is_active: false,
@@ -87,22 +91,25 @@ impl Component for Header {
               // Redirect to home page
               self.router_agent.send(ChangeRoute(AppRoute::Home.into()));
           },
-          Msg::TriggerMenu => {
-              self.is_active = !self.is_active;
-          },
-          Msg::SetActive(active) => {
-              self.is_active = active;
-          },
+          Msg::TriggerMenu => self.is_active = !self.is_active,
+          Msg::SetActive(active) => self.is_active = active,
           Msg::CheckPath => {
               // debug!("route_service: {:?}", route_service.get_fragment().as_str());
+              // clear flags
+              self.open_register_page = false;
+              self.open_login_page = false;
+              self.open_notifications_page = false;
+              self.open_home_page = false;
+
               // get current url
               let route_service: RouteService<()> = RouteService::new();
-
-              // check open home page
-              self.open_home_page = route_service.get_fragment().len() < 3;
-
-              // check open notifications page
-              self.open_notifications_page = "#/notifications" == route_service.get_fragment().as_str();
+              match route_service.get_fragment().as_str() {
+                path if path.len() < 3 => self.open_home_page = true,
+                "#/register" => self.open_register_page = true,
+                "#/login" => self.open_login_page = true,
+                "#/notifications" => self.open_notifications_page = true,
+                _ => (),
+              }
           }
           Msg::Ignore => {}
         }
@@ -119,16 +126,12 @@ impl Component for Header {
             if self.is_active {
               self.link.send_message(Msg::TriggerMenu)
             }
-
             // update current path
             self.current_path = current_path;
-
             // get current user data from storage
             self.current_user = get_logged_user();
-
             // get current path and setting navbar
             self.link.send_message(Msg::CheckPath);
-
             true
         }
     }
@@ -136,13 +139,11 @@ impl Component for Header {
     fn view(&self) -> Html {
         let onclick : Callback<MouseEvent> = self.link.callback(|_| Msg::Logout);
         let triggrt_menu : Callback<MouseEvent> = self.link.callback(|_| Msg::TriggerMenu);
-
         let mut logo_classes = classes!("navbar-item", "is-size-3", "header-logo");
         match self.open_home_page {
             true => logo_classes.push("logo-bookmark"),
             false => logo_classes.push("logo-full"),
         }
-
         let active_menu = if self.is_active { "is-active" } else { "" };
 
         html!{
@@ -221,13 +222,26 @@ impl Header {
     }
 
     fn logged_out_view(&self) -> Html {
+        let style_color = "color: #1872f0;";
+        let (class_login_btn, class_register_btn) = match (self.open_register_page, self.open_login_page) {
+            (true, false) => ("button", "button is-info is-light"),
+            (false, true) => ("button is-info is-light", "button"),
+            _ => ("button", "button"),
+        };
+
         html!{
           <div class="navbar-item">
-            <RouterAnchor<AppRoute> route={AppRoute::Login} classes="button">
-              {get_value_field(&13)}
+            <RouterAnchor<AppRoute> route={AppRoute::Login} classes={class_login_btn}>
+                <span class={"icon"}>
+                    <i class={"fa fa-user"} aria-hidden={"true"} style={style_color}></i>
+                </span>
+                <span>{get_value_field(&13)}</span>
             </RouterAnchor<AppRoute>>
-            <RouterAnchor<AppRoute> route={AppRoute::Register} classes="button">
-              {get_value_field(&14)}
+            <RouterAnchor<AppRoute> route={AppRoute::Register} classes={class_register_btn}>
+                <span class={"icon"}>
+                    <i class={"fa fa-user-plus"} aria-hidden={"true"} style={style_color}></i>
+                </span>
+                <span>{get_value_field(&14)}</span>
             </RouterAnchor<AppRoute>>
           </div>
         }
