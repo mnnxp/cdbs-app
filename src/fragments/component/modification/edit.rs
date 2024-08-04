@@ -497,52 +497,67 @@ impl ModificationsTableEdit {
 
         html!{<div class="card">
             <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
-            {self.modal_add_modification_card()}
-            {self.modal_edit_modification_card()}
-            <div class="table-container">
-              <table class="table is-fullwidth is-striped">
-                <ModificationTableHeads
-                  show_new_column={true}
-                  component_uuid={self.component_uuid.clone()}
-                  params={self.collect_heads.clone()}
-                  />
-                {for self.collect_items.iter().map(|(modification_uuid, item)|
-                    match self.valid_modification_uuids.get(modification_uuid) {
-                        Some(_) => html!{<ModificationTableItem
-                            show_manage_btn={true}
-                            modification_uuid={modification_uuid.clone()}
-                            collect_heads={self.collect_heads.clone()}
-                            collect_item={item.clone()}
-                            select_item={&self.select_modification_uuid == modification_uuid}
-                            open_modification_files={false}
-                            callback_new_modification_param={Some(onclick_new_modification_param.clone())}
-                            callback_select_modification={Some(onclick_select_modification.clone())}
-                        />},
-                        None => html!{},
-                    }
-                 )}
-              </table>
+            <header class="card-header">
+                <p class="card-header-title">{get_value_field(&60)}</p> // Manage component modifications
+            </header>
+            <div class="card-content">
+                <div class="content">
+                    {self.modal_add_modification_card()}
+                    {self.modal_edit_modification_card()}
+                    <div class="table-container">
+                        <table class="table is-fullwidth">
+                            <ModificationTableHeads
+                            show_new_column={true}
+                            component_uuid={self.component_uuid.clone()}
+                            params={self.collect_heads.clone()}
+                            />
+                            {for self.collect_items.iter().map(|(modification_uuid, item)|
+                                match self.valid_modification_uuids.get(modification_uuid) {
+                                    Some(_) => html!{<ModificationTableItem
+                                        show_manage_btn={true}
+                                        modification_uuid={modification_uuid.clone()}
+                                        collect_heads={self.collect_heads.clone()}
+                                        collect_item={item.clone()}
+                                        select_item={&self.select_modification_uuid == modification_uuid}
+                                        open_modification_files={false}
+                                        callback_new_modification_param={Some(onclick_new_modification_param.clone())}
+                                        callback_select_modification={Some(onclick_select_modification.clone())}
+                                    />},
+                                    None => html!{},
+                                }
+                            )}
+                        </table>
+                    </div>
+                </div>
+                <footer class="card-footer">
+                    {ft_add_btn(
+                        "add-component-modification",
+                        get_value_field(&174),
+                        onclick_add_modification_card,
+                        true,
+                        false
+                    )}
+                </footer>
             </div>
-            {ft_add_btn(
-                "add-component-modification",
-                get_value_field(&174),
-                onclick_add_modification_card,
-                true,
-                false
-            )}
         </div>}
     }
 
     fn show_modification_files(&self) -> Html {
-        html!{<>
-            <h2 class="has-text-weight-bold">{get_value_field(&172)}</h2> // Manage modification files
-            <div class="card column">
-                <ManageModificationFilesCard
-                    show_download_btn={false}
-                    modification_uuid={self.select_modification_uuid.clone()}
-                  />
+        html!{
+            <div class="card">
+                <header class="card-header">
+                    <p class="card-header-title">{get_value_field(&172)}</p> // Manage modification files
+                </header>
+                <div class="card-content">
+                    <div class="content">
+                        <ManageModificationFilesCard
+                            show_download_btn={false}
+                            modification_uuid={self.select_modification_uuid.clone()}
+                        />
+                    </div>
+                </div>
             </div>
-        </>}
+        }
     }
 
     fn modal_add_modification_card(&self) -> Html {
@@ -740,17 +755,23 @@ impl ModificationsTableEdit {
     }
 
     fn show_fileset_files_card(&self) -> Html {
-        html!{<>
-            <h2 class="has-text-weight-bold">{get_value_field(&173)}</h2> // Manage modification filesets
-            <div class="card column">
-                <ManageModificationFilesets
-                    select_modification_uuid={self.select_modification_uuid.clone()}
-                    filesets_program = {self.modification_filesets
-                        .get(&self.select_modification_uuid)
-                        .map(|f| f.clone())
-                        .unwrap_or_default()}
-                />
+        html!{
+            <div class="card">
+                <header class="card-header">
+                    <p class="card-header-title">{get_value_field(&173)}</p> // Manage modification filesets
+                </header>
+                <div class="card-content">
+                    <div class="content">
+                        <ManageModificationFilesets
+                            select_modification_uuid={self.select_modification_uuid.clone()}
+                            filesets_program = {self.modification_filesets
+                                .get(&self.select_modification_uuid)
+                                .map(|f| f.clone())
+                                .unwrap_or_default()}
+                        />
+                    </div>
+                </div>
             </div>
-        </>}
+        }
     }
 }

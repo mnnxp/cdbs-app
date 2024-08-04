@@ -106,18 +106,10 @@ impl Component for ModificationFileListItem {
 
         html!{<>
             <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
-            {self.show_full_info_file()}
-        </>}
-    }
-}
-
-impl ModificationFileListItem {
-    fn show_full_info_file(&self) -> Html {
-        html!{
             <FileInfoItemShow
                 file_info={self.props.file.clone()}
                 download_url={self.download_url.clone()}
                 />
-        }
+        </>}
     }
 }
