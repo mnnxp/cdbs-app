@@ -176,11 +176,11 @@ impl Component for ManageModificationFilesCard {
             <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
             <div class="columns">
                 <div class="column">
-                  <h2>{get_value_field(&203)}</h2> // Files for modification
+                  <h3>{get_value_field(&203)}</h3> // Files for modification
                   {self.show_files_list()}
                 </div>
                 <div class="column">
-                  <h2>{get_value_field(&202)}</h2> // Upload modification files
+                  <h3>{get_value_field(&202)}</h3> // Upload modification files
                   <UploaderFiles
                     text_choose_files={201} // Choose modification files…
                     callback_upload_filenames={callback_upload_filenames}

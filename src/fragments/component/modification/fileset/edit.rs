@@ -381,11 +381,11 @@ impl ManageModificationFilesets {
         html!{<>
             <div class="columns">
                 <div class="column">
-                    <h2>{get_value_field(&198)}</h2> // Files of fileset
+                    <h3>{get_value_field(&198)}</h3> // Files of fileset
                     {self.show_fileset_files()}
                 </div>
                 <div class="column">
-                    <h2>{get_value_field(&197)}</h2> // Upload files for fileset
+                    <h3>{get_value_field(&197)}</h3> // Upload files for fileset
                     <UploaderFiles
                         text_choose_files={195} // Choose fileset files…
                         callback_upload_filenames={callback_upload_filenames}
