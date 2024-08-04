@@ -1,6 +1,7 @@
 use yew::{agent::Bridged, html, Bridge, Callback, Component, ComponentLink, Html, Properties, ShouldRender};
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
 use crate::routes::AppRoute;
+use crate::services::get_value_field;
 use crate::error::Error;
 
 pub struct ListErrors {
@@ -58,52 +59,46 @@ impl Component for ListErrors {
     fn view(&self) -> Html {
         let onclick_close_error = self.link.callback(|_| Msg::CloseError);
         let onclick_route_to_login = self.link.callback(|_| Msg::RedirectToLogin);
-
-        if let Some(error) = &self.props.error {
-            match error {
-                Error::UnprocessableEntity(error_info) => {
-                    html!{<div class={vec!("notification", "is-danger")}>
-                        <button class="delete" onclick={onclick_close_error}/>
-                        <table class="table is-fullwidth">
-                            <tbody>
-                                {for error_info.errors.iter().map(|(key, value)| {
-                                    html!{<tr>
-                                        { key }
-                                        {for value.iter().map(|e| {
-                                            html!{<>{" "} {e}</>}
-                                        })}
-                                    </tr>}
-                                })}
-                            </tbody>
-                        </table>
-                    </div>}
-                },
-                Error::Unauthorized => {
-                    html!{
-                        <div class={vec!("notification", "is-warning")}>
-                            <button class="delete" onclick={onclick_close_error}/>
-                            <div class="media">
-                                <div class="media-content">{error}</div>
-                                <div class="media-right">
-                                    <button class="button is-ghost" onclick={onclick_route_to_login}>
-                                        <span>{"Open sign in page"}</span>
-                                    </button>
-                                </div>
-                            </div>
+        match &self.props.error {
+            Some(Error::UnprocessableEntity(error_info)) => html!{
+                <div class={vec!("notification", "custom-notif", "is-danger")}>
+                    <button class="delete" onclick={onclick_close_error}/>
+                    <table class="table is-fullwidth">
+                        <tbody>
+                            {for error_info.errors.iter().map(|(key, value)| {
+                                html!{<tr>
+                                    { key }
+                                    {for value.iter().map(|e| {
+                                        html!{<>{" "} {e}</>}
+                                    })}
+                                </tr>}
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+            },
+            Some(Error::Unauthorized) => html!{
+                <div class={vec!("notification", "custom-notif", "is-warning")}>
+                    <button class="delete" onclick={onclick_close_error}/>
+                    <div class="columns">
+                        <div class="column">
+                            <p>{get_value_field(&332)}</p>
                         </div>
-                    }
-                },
-                _ => {
-                    html!{
-                        <div class={vec!("notification", "is-danger")}>
-                            <button class="delete" onclick={onclick_close_error}/>
-                            {error}
+                        <div class="column">
+                            <a class="is-ghost" onclick={onclick_route_to_login}>
+                                <span>{get_value_field(&333)}</span>
+                            </a>
                         </div>
-                    }
-                }
-            }
-        } else {
-            html!{}
+                    </div>
+                </div>
+            },
+            Some(error) => html!{
+                <div class={vec!("notification", "custom-notif", "is-danger")}>
+                    <button class="delete" onclick={onclick_close_error}/>
+                    {error}
+                </div>
+            },
+            None => html!{},
         }
     }
 }
