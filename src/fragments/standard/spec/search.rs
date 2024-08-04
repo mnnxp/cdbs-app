@@ -209,7 +209,16 @@ impl Component for SearchSpecsTags {
 
     fn view(&self) -> Html {
         html!{
-            {self.fieldset_manage_specs()}
+            <div class="card">
+                <header class="card-header">
+                    <p class="card-header-title">{get_value_field(&104)}</p> // Catalogs
+                </header>
+                <div class="card-content">
+                    <div class="content">
+                        {self.fieldset_manage_specs()}
+                    </div>
+                </div>
+            </div>
         }
     }
 }

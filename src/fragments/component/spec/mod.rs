@@ -5,7 +5,7 @@ pub use item::SpecTagItem;
 pub use search::SearchSpecsTags;
 
 use yew::{Callback, Component, ComponentLink, Html, Properties, ShouldRender, html};
-// use log::debug;
+use crate::services::get_value_field;
 use crate::types::{UUID, Spec};
 
 #[derive(Clone, Debug, Properties)]
@@ -46,6 +46,26 @@ impl Component for SpecsTags {
     }
 
     fn view(&self) -> Html {
+        match self.props.show_manage_btn {
+            true => self.specs(),
+            false => html!{
+                <div class="card">
+                    <header class="card-header">
+                        <p class="card-header-title">{get_value_field(&104)}</p> // Catalogs
+                    </header>
+                    <div class="card-content">
+                        <div class="content">
+                            {self.specs()}
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    }
+}
+
+impl SpecsTags {
+    fn specs(&self) -> Html {
         html!{
             <div id="specs" class="field is-grouped is-grouped-multiline">
                 {for self.props.specs.iter().map(|spec| {

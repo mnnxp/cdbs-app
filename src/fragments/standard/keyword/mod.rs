@@ -4,7 +4,7 @@ pub use item::KeywordTagItem;
 pub use add::AddKeywordsTags;
 
 use yew::{Callback, Component, ComponentLink, Html, Properties, ShouldRender, html};
-// use log::debug;
+use crate::services::get_value_field;
 use crate::types::{UUID, Keyword};
 
 #[derive(Clone, Debug, Properties)]
@@ -44,6 +44,26 @@ impl Component for KeywordsTags {
     }
 
     fn view(&self) -> Html {
+        match self.props.show_delete_btn {
+            true => self.keywords(),
+            false => html!{
+                <div class="card">
+                    <header class="card-header">
+                        <p class="card-header-title">{get_value_field(&105)}</p> // Keywords
+                    </header>
+                    <div class="card-content">
+                        <div class="content">
+                            {self.keywords()}
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    }
+}
+
+impl KeywordsTags {
+    fn keywords(&self) -> Html {
         html!{
             <div id="keywords" class="field is-grouped is-grouped-multiline">
                 {for self.props.keywords.iter().map(|keyword| {

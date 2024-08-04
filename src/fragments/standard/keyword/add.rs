@@ -242,11 +242,19 @@ impl Component for AddKeywordsTags {
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
 
-        html!{<>
+        html!{
+            <div class="card">
             <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
-            <br/>
-            {self.add_standard_keyword()}
-        </>}
+                <header class="card-header">
+                    <p class="card-header-title">{get_value_field(&105)}</p> // Keywords
+                </header>
+                <div class="card-content">
+                    <div class="content">
+                        {self.add_standard_keyword()}
+                    </div>
+                </div>
+            </div>
+        }
     }
 }
 
