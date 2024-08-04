@@ -14,12 +14,12 @@ use wasm_bindgen_futures::spawn_local;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{
+    buttons::{ft_save_btn, ft_back_btn},
     file::UploaderFiles,
     list_errors::ListErrors,
-    buttons::ft_save_btn,
+    notification::show_notification,
     component::{
-        ComponentStandardsCard, ComponentSuppliersCard,
-        ComponentLicensesTags, ComponentParamsTags, UpdateComponentFaviconCard,
+        ComponentStandardsCard, ComponentSuppliersCard, ComponentParamsTags, UpdateComponentFaviconCard,
         ModificationsTableEdit, ComponentFilesBlock, SearchSpecsTags, AddKeywordsTags
     },
 };
@@ -432,30 +432,56 @@ impl Component for ComponentSettings {
                 <div class="container page">
                     <div class="row">
                         <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
-                        // <br/>
-                        {self.show_manage_btn()}
+                        {show_notification(
+                            get_value_field(&214),
+                            "is-success",
+                            self.get_result_component_data > 0 || self.get_result_access
+                        )}
+                        {self.show_top_btn()}
                         <br/>
                         {self.show_main_card()}
                         {match &self.current_component {
                             Some(component_data) => html!{<>
                                 <br/>
-                                {self.show_modifications_table()}
+                                <ModificationsTableEdit
+                                    current_component_uuid={self.current_component_uuid.clone()}
+                                    component_modifications={self.current_modifications.clone()}
+                                    />
                                 <br/>
                                 <div class="columns">
                                     {self.update_component_favicon()}
                                     {self.show_additional_params(component_data)}
                                 </div>
-                                // <br/>
                                 {self.show_component_files()}
                                 <br/>
                                 <div class="columns">
-                                  {self.show_component_standards(component_data)}
-                                  {self.show_component_suppliers(component_data)}
+                                    <div class="column">
+                                        <ComponentStandardsCard
+                                            show_delete_btn={true}
+                                            component_uuid={component_data.uuid.clone()}
+                                            component_standards={component_data.component_standards.clone()}
+                                            // delete_standard={Some(onclick_delete_standard.clone())}
+                                        />
+                                    </div>
+                                    <div class="column">
+                                        <ComponentSuppliersCard
+                                            show_delete_btn={true}
+                                            component_uuid={component_data.uuid.clone()}
+                                            component_suppliers={component_data.component_suppliers.clone()}
+                                            supplier_list={self.supplier_list.clone()}
+                                            is_base={self.current_component_is_base}
+                                        />
+                                    </div>
                                 </div>
-                                // <br/>
-                                {self.show_component_specs(component_data)}
+                                <SearchSpecsTags
+                                    component_specs={component_data.component_specs.clone()}
+                                    component_uuid={component_data.uuid.clone()}
+                                />
                                 <br/>
-                                {self.show_component_keywords(component_data)}
+                                <AddKeywordsTags
+                                    component_keywords={component_data.component_keywords.clone()}
+                                    component_uuid={component_data.uuid.clone()}
+                                />
                                 <br/>
                             </>},
                             None => html!{},
@@ -470,50 +496,65 @@ impl Component for ComponentSettings {
 impl ComponentSettings {
     fn show_main_card(&self) -> Html {
         let oninput_name = self.link.callback(|ev: InputData| Msg::UpdateName(ev.value));
-
         let oninput_description = self.link.callback(|ev: InputData| Msg::UpdateDescription(ev.value));
+        let onclick_save_changes = self.link.callback(|_| Msg::RequestManager);
 
-        html!{<div class="card">
-            <div class="column">
-                <div class="column" style="margin-right: 1rem">
-                    <label class="label">{get_value_field(&110)}</label>
-                    <input
-                        id="update-name"
-                        class="input"
-                        type="text"
-                        placeholder={get_value_field(&110)}
-                        value={self.request_component.name.clone()}
-                        oninput={oninput_name} />
-                    <label class="label">{get_value_field(&61)}</label>
-                    <textarea
-                        id="update-description"
-                        class="textarea"
-                        // rows="10"
-                        type="text"
-                        placeholder={get_value_field(&61)}
-                        value={self.request_component.description.clone()}
-                        oninput={oninput_description} />
-                    <br/>
-                    {match &self.current_component {
-                        Some(component_data) => self.show_component_licenses(component_data),
-                        None => html!{},
-                    }}
-                    {self.show_component_params()}
+        html!{
+            <div class="card">
+                <header class="card-header">
+                    <p class="card-header-title">{get_value_field(&116)}</p>
+                </header>
+                <div class="card-content">
+                    <div class="content">
+                        <div class="field">
+                            <label class="label">{get_value_field(&110)}</label>
+                            <input
+                                id="update-name"
+                                class="input"
+                                type="text"
+                                placeholder={get_value_field(&110)}
+                                value={self.request_component.name.clone()}
+                                oninput={oninput_name} />
+                        </div>
+                        <div class="field">
+                            <label class="label">{get_value_field(&61)}</label>
+                            <textarea
+                                id="update-description"
+                                class="textarea"
+                                // rows="10"
+                                type="text"
+                                placeholder={get_value_field(&61)}
+                                value={self.request_component.description.clone()}
+                                oninput={oninput_description} />
+                        </div>
+                        {self.show_component_params()}
+                    </div>
+                    <footer class="card-footer">
+                        {ft_save_btn(
+                            "update-component-data",
+                            onclick_save_changes,
+                            true,
+                            self.disable_save_changes_btn
+                        )}
+                    </footer>
                 </div>
             </div>
-        </div>}
+        }
     }
 
-    fn show_component_licenses(
-        &self,
-        component_data: &ComponentInfo,
-    ) -> Html {
-        html!{<ComponentLicensesTags
-            show_delete_btn={true}
-            component_uuid={self.current_component_uuid.clone()}
-            component_licenses={component_data.licenses.clone()}
-        />}
-    }
+    // todo!(show the block for license management)
+    // fn show_component_licenses(&self) -> Html {
+    //     match &self.current_component {
+    //         Some(component_data) => html!{
+    //             <ComponentLicensesTags
+    //                 show_delete_btn={true}
+    //                 component_uuid={self.current_component_uuid.clone()}
+    //                 component_licenses={component_data.licenses.clone()}
+    //             />
+    //         },
+    //         None => html!{},
+    //     }
+    // }
 
     fn show_component_params(&self) -> Html {
         let onchange_actual_status_id = self.link.callback(|ev: ChangeData| Msg::UpdateActualStatusId(match ev {
@@ -569,16 +610,6 @@ impl ComponentSettings {
         }
     }
 
-    fn show_modifications_table(&self) -> Html {
-        html!{<>
-            <h2 class="has-text-weight-bold">{get_value_field(&60)}</h2> // Manage component modifications
-            <ModificationsTableEdit
-                current_component_uuid={self.current_component_uuid.clone()}
-                component_modifications={self.current_modifications.clone()}
-              />
-        </>}
-    }
-
     fn show_additional_params(
         &self,
         component_data: &ComponentInfo,
@@ -597,15 +628,23 @@ impl ComponentSettings {
     fn update_component_favicon(&self) -> Html {
         let callback_update_favicon = self.link.callback(|_| Msg::Ignore);
 
-        html!{<div class="column">
-            <h2 class="has-text-weight-bold">{get_value_field(&184)}</h2> // Update image for preview
-            <div class="card column">
-                <UpdateComponentFaviconCard
-                    component_uuid={self.current_component_uuid.clone()}
-                    callback={callback_update_favicon.clone()}
-                />
+        html!{
+            <div class="column">
+                <div class="card">
+                    <header class="card-header">
+                        <p class="card-header-title">{get_value_field(&184)}</p> // Update image for preview
+                    </header>
+                    <div class="card-content">
+                        <div class="content">
+                            <UpdateComponentFaviconCard
+                                component_uuid={self.current_component_uuid.clone()}
+                                callback={callback_update_favicon.clone()}
+                            />
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>}
+        }
     }
 
     fn show_component_files(&self) -> Html {
@@ -617,117 +656,53 @@ impl ComponentSettings {
         };
         let callback_upload_confirm =
             self.link.callback(|confirmations| Msg::UploadConfirm(confirmations));
-        html!{<>
-            <h2 class="has-text-weight-bold">{get_value_field(&187)}</h2> // Manage component files
-            <div class="card column">
-                <div class="columns">
-                    <div class="column">
-                      <h2 class="has-text-weight-bold">{get_value_field(&188)}</h2> // Files for component
-                      <ComponentFilesBlock
-                          show_download_btn={false}
-                          show_delete_btn={true}
-                          component_uuid={self.current_component_uuid.clone()}
-                          files={self.files_list.clone()}
-                        />
-                    </div>
-                    <div class="column">
-                      <h2 class="has-text-weight-bold">{get_value_field(&186)}</h2> // Upload component files
-                      <UploaderFiles
-                        text_choose_files={200} // Choose component files…
-                        callback_upload_filenames={callback_upload_filenames}
-                        request_upload_files={request_upload_files}
-                        callback_upload_confirm={callback_upload_confirm}
-                        />
+        html!{
+            <div class="card">
+                <header class="card-header">
+                    <p class="card-header-title">{get_value_field(&187)}</p> // Manage component files
+                </header>
+                <div class="card-content">
+                    <div class="content">
+                        <div class="columns">
+                            <div class="column">
+                                <h3 class="has-text-weight-bold">{get_value_field(&188)}</h3> // Files for component
+                                <ComponentFilesBlock
+                                    show_download_btn={false}
+                                    show_delete_btn={true}
+                                    component_uuid={self.current_component_uuid.clone()}
+                                    files={self.files_list.clone()}
+                                />
+                            </div>
+                            <div class="column">
+                                <h3 class="has-text-weight-bold">{get_value_field(&186)}</h3> // Upload component files
+                                <UploaderFiles
+                                    text_choose_files={200} // Choose component files…
+                                    callback_upload_filenames={callback_upload_filenames}
+                                    request_upload_files={request_upload_files}
+                                    callback_upload_confirm={callback_upload_confirm}
+                                />
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </>}
+        }
     }
 
-    fn show_component_standards(
-        &self,
-        component_data: &ComponentInfo,
-    ) -> Html {
-        html!{<div class="column">
-          <h2 class="has-text-weight-bold">{get_value_field(&189)}</h2> // Manage component standards
-          <ComponentStandardsCard
-              show_delete_btn={true}
-              component_uuid={component_data.uuid.clone()}
-              component_standards={component_data.component_standards.clone()}
-              // delete_standard={Some(onclick_delete_standard.clone())}
-            />
-        </div>}
-    }
-
-    fn show_component_suppliers(
-        &self,
-        component_data: &ComponentInfo,
-    ) -> Html {
-        html!{<div class="column">
-          <h2 class="has-text-weight-bold">{get_value_field(&190)}</h2> // Manage component suppliers
-          <ComponentSuppliersCard
-              show_delete_btn={true}
-              component_uuid={component_data.uuid.clone()}
-              component_suppliers={component_data.component_suppliers.clone()}
-              supplier_list={self.supplier_list.clone()}
-              is_base={self.current_component_is_base}
-            />
-        </div>}
-    }
-
-    fn show_component_specs(
-        &self,
-        component_data: &ComponentInfo,
-    ) -> Html {
-        html!{<>
-            <h2 class="has-text-weight-bold">{get_value_field(&104)}</h2>
-            <div class="card">
-              <SearchSpecsTags
-                  component_specs={component_data.component_specs.clone()}
-                  component_uuid={component_data.uuid.clone()}
-                />
-            </div>
-        </>}
-    }
-
-    fn show_component_keywords(
-        &self,
-        component_data: &ComponentInfo,
-    ) -> Html {
-        // debug!("Keywords: {:?}", &component_data.uuid);
-        html!{<>
-              <h2 class="has-text-weight-bold">{get_value_field(&105)}</h2>
-              <div class="card">
-                <AddKeywordsTags
-                    component_keywords={component_data.component_keywords.clone()}
-                    component_uuid={component_data.uuid.clone()}
-                  />
-              </div>
-        </>}
-    }
-
-    fn show_manage_btn(&self) -> Html {
+    fn show_top_btn(&self) -> Html {
         let onclick_open_component = self.link.callback(|_| Msg::OpenComponent);
         let onclick_show_delete_modal = self.link.callback(|_| Msg::ChangeHideDeleteComponent);
-        let onclick_save_changes = self.link.callback(|_| Msg::RequestManager);
 
         html!{
             <div class="media">
                 <div class="media-left">
-                    <button
-                        id="open-component"
-                        class="button"
-                        onclick={onclick_open_component} >
-                        {get_value_field(&199)} // Show component
-                    </button>
+                    {ft_back_btn(
+                        "open-standard",
+                        onclick_open_component,
+                        get_value_field(&199), // Open component
+                    )}
                 </div>
-                <div class="media-content">
-                    {if self.get_result_component_data > 0 || self.get_result_access {
-                        html!{get_value_field(&214) } // Data updated
-                    } else {
-                        html!{}
-                    }}
-                </div>
+                <div class="media-content"></div>
                 <div class="media-right">
                     {self.modal_delete_component()}
                     <div class="buttons">
@@ -737,12 +712,6 @@ impl ComponentSettings {
                             onclick={onclick_show_delete_modal} >
                             {get_value_field(&135)}
                         </button>
-                        {ft_save_btn(
-                            "update-component-data",
-                            onclick_save_changes,
-                            false,
-                            self.disable_save_changes_btn
-                        )}
                     </div>
                 </div>
             </div>

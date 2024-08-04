@@ -98,7 +98,7 @@ impl SpecDisplay for CompanyInfo {
             false => html!{
                 <div class="columns">
                     <div>
-                        <span>{get_value_field(&283)}</span> // Sphere of activity
+                        <h5>{get_value_field(&283)}</h5> // Sphere of activity
                     </div>
                     <div class="px-1 mb-4">
                         <SpecsTags

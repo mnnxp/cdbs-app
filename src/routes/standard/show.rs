@@ -271,19 +271,32 @@ impl Component for ShowStandard {
                             <div class="card column">
                               {self.show_main_card(standard_data)}
                             </div>
+                            <br/>
                             {match &self.show_related_components {
-                                true => {self.show_related_components(&standard_data.uuid)},
+                                true => self.show_related_components_card(&standard_data.uuid),
                                 false => html!{<>
-                                    <br/>
                                     <div class="columns">
-                                      {self.show_standard_params(standard_data)}
-                                      {self.show_standard_files(standard_data)}
+                                        <div class="column">
+                                            {self.show_standard_params(standard_data)}
+                                        </div>
+                                        <div class="column">
+                                            {self.show_standard_files(standard_data)}
+                                        </div>
                                     </div>
-                                    {self.show_standard_specs(standard_data)}
+                                    <SpecsTags
+                                        show_manage_btn={false}
+                                        standard_uuid={standard_data.uuid.clone()}
+                                        specs={standard_data.standard_specs.clone()}
+                                    />
                                     <br/>
-                                    {self.show_standard_keywords(standard_data)}
+                                    <KeywordsTags
+                                        show_delete_btn={false}
+                                        standard_uuid={standard_data.uuid.clone()}
+                                        keywords={standard_data.standard_keywords.clone()}
+                                    />
                                 </>},
                             }}
+                            <br/>
                         </div>
                     </div>
                 </div>
@@ -296,10 +309,7 @@ impl Component for ShowStandard {
 }
 
 impl ShowStandard {
-    fn show_main_card(
-        &self,
-        standard_data: &StandardInfo,
-    ) -> Html {
+    fn show_main_card(&self, standard_data: &StandardInfo) -> Html {
         let show_description_btn = self.link.callback(|_| Msg::ShowDescription);
 
         html!{
@@ -348,93 +358,65 @@ impl ShowStandard {
         }
     }
 
-    fn show_standard_params(
-        &self,
-        standard_data: &StandardInfo,
-    ) -> Html {
+    fn show_standard_params(&self, standard_data: &StandardInfo) -> Html {
         html!{
-            <div class="column">
-              <h2 class="has-text-weight-bold">{get_value_field(&152)}</h2> // Сharacteristics of the standard
-              <div class="card column">
-                <table class="table is-fullwidth">
-                    <tbody>
-                      <tr>
-                        <td>{get_value_field(&146)}</td> // classifier
-                        <td>{standard_data.classifier.clone()}</td>
-                      </tr>
-                      <tr>
-                        <td>{get_value_field(&147)}</td> // specified_tolerance
-                        <td>{standard_data.specified_tolerance.clone()}</td>
-                      </tr>
-                      <tr>
-                        <td>{get_value_field(&148)}</td> // technical_committee
-                        <td>{standard_data.technical_committee.clone()}</td>
-                      </tr>
-                      <tr>
-                        <td>{get_value_field(&149)}</td> // publication_at
-                        <td>{standard_data.publication_at.date_to_display()}</td>
-                      </tr>
-                      <tr>
-                        <td>{get_value_field(&150)}</td> // standard_status
-                        <td>{standard_data.standard_status.name.clone()}</td>
-                      </tr>
-                      <tr>
-                        <td>{get_value_field(&151)}</td> // region
-                        <td>{standard_data.region.region.clone()}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-              </div>
+            <div class="card">
+                <header class="card-header">
+                    <p class="card-header-title">{get_value_field(&152)}</p> // Сharacteristics of the standard
+                </header>
+                <div class="card-content">
+                    <div class="content">
+                        <table class="table is-fullwidth">
+                            <tbody>
+                            <tr>
+                                <td>{get_value_field(&146)}</td> // classifier
+                                <td>{standard_data.classifier.clone()}</td>
+                            </tr>
+                            <tr>
+                                <td>{get_value_field(&147)}</td> // specified_tolerance
+                                <td>{standard_data.specified_tolerance.clone()}</td>
+                            </tr>
+                            <tr>
+                                <td>{get_value_field(&148)}</td> // technical_committee
+                                <td>{standard_data.technical_committee.clone()}</td>
+                            </tr>
+                            <tr>
+                                <td>{get_value_field(&149)}</td> // publication_at
+                                <td>{standard_data.publication_at.date_to_display()}</td>
+                            </tr>
+                            <tr>
+                                <td>{get_value_field(&150)}</td> // standard_status
+                                <td>{standard_data.standard_status.name.clone()}</td>
+                            </tr>
+                            <tr>
+                                <td>{get_value_field(&151)}</td> // region
+                                <td>{standard_data.region.region.clone()}</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         }
     }
 
-    fn show_standard_files(
-        &self,
-        standard_data: &StandardInfo,
-    ) -> Html {
+    fn show_standard_files(&self, standard_data: &StandardInfo) -> Html {
         html!{
-            <div class="column">
-              <h2 class="has-text-weight-bold">{get_value_field(&153)}</h2> // Files
-              <StandardFilesCard
-                  show_delete_btn={false}
-                  standard_uuid={standard_data.uuid.clone()}
-                  files={standard_data.standard_files.clone()}
-                />
+            <div class="card">
+                <header class="card-header">
+                    <p class="card-header-title">{get_value_field(&153)}</p> // Files
+                </header>
+                <div class="card-content">
+                    <div class="content">
+                        <StandardFilesCard
+                            show_delete_btn={false}
+                            standard_uuid={standard_data.uuid.clone()}
+                            files={standard_data.standard_files.clone()}
+                        />
+                    </div>
+                </div>
             </div>
         }
-    }
-
-    fn show_standard_specs(
-        &self,
-        standard_data: &StandardInfo,
-    ) -> Html {
-        html!{<>
-              <h2 class="has-text-weight-bold">{get_value_field(&104)}</h2> // Catalogs
-              <div class="card column">
-                <SpecsTags
-                    show_manage_btn={false}
-                    standard_uuid={standard_data.uuid.clone()}
-                    specs={standard_data.standard_specs.clone()}
-                  />
-              </div>
-        </>}
-    }
-
-    fn show_standard_keywords(
-        &self,
-        standard_data: &StandardInfo,
-    ) -> Html {
-        html!{<>
-              <h2 class="has-text-weight-bold">{get_value_field(&105)}</h2> // Keywords
-              <div class="card column">
-                <KeywordsTags
-                    show_delete_btn={false}
-                    standard_uuid={standard_data.uuid.clone()}
-                    keywords={standard_data.standard_keywords.clone()}
-                  />
-              </div>
-        </>}
     }
 
     fn show_followers_btn(&self) -> Html {
@@ -465,20 +447,22 @@ impl ShowStandard {
         }
     }
 
-    fn show_related_components(
-        &self,
-        standard_uuid: &UUID,
-    ) -> Html {
-        html!{<>
-            <br/>
-            <h2 class="has-text-weight-bold">{get_value_field(&154)}</h2> // Components
+    fn show_related_components_card(&self, standard_uuid: &UUID) -> Html {
+        html!{
             <div class="card">
-              <CatalogComponents
-                  show_create_btn={false}
-                  arguments={ComponentsQueryArg::set_standard_uuid(standard_uuid)}
-                />
+                <header class="card-header">
+                    <p class="card-header-title">{get_value_field(&154)}</p> // Components
+                </header>
+                <div class="card-content">
+                    <div class="content">
+                        <CatalogComponents
+                            show_create_btn={false}
+                            arguments={ComponentsQueryArg::set_standard_uuid(standard_uuid)}
+                            />
+                    </div>
+                </div>
             </div>
-        </>}
+        }
     }
 
     fn show_setting_btn(&self) -> Html {

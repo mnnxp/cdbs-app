@@ -32,6 +32,7 @@ pub struct CreateCompany {
     regions: Vec<Region>,
     company_types: Vec<CompanyType>,
     types_access: Vec<TypeAccessInfo>,
+    disable_create_btn: bool,
 }
 
 #[derive(Properties, Clone)]
@@ -74,6 +75,7 @@ impl Component for CreateCompany {
             regions: Vec::new(),
             company_types: Vec::new(),
             types_access: Vec::new(),
+            disable_create_btn: false,
         }
     }
 
@@ -100,6 +102,7 @@ impl Component for CreateCompany {
 
         match msg {
             Msg::RequestCreateCompany => {
+                self.disable_create_btn = true;
                 let request_company = self.request_company.clone();
                 spawn_local(async move {
                     let CompanyCreateInfo {
@@ -205,14 +208,14 @@ impl Component for CreateCompany {
                     <div class="row">
                         <h1 class="title">{get_value_field(&289)}</h1>
                         <div class="card column">
-                            { self.fieldset_company() }
+                            {self.fieldset_company()}
                         </div>
                         <br/>
                         {ft_create_btn(
                             "create-company",
                             "is-medium".into(),
                             onclick_create_company,
-                            false,
+                            self.disable_create_btn,
                         )}
                     </div>
                 </div>
@@ -322,7 +325,6 @@ impl CreateCompany {
                     )}
                 </div>
             </div>
-
             <div class="columns">
                 <div class="column">
                     {self.fileset_generator(
@@ -342,7 +344,7 @@ impl CreateCompany {
                                   select={self.request_company.company_type_id.to_string()}
                                   onchange={onchange_company_type_id}
                                   >
-                                { for self.company_types.iter().map(|x|
+                                {for self.company_types.iter().map(|x|
                                     html!{
                                         <option value={x.company_type_id.to_string()}
                                               selected={x.company_type_id as i64 == self.request_company.company_type_id} >
@@ -356,7 +358,6 @@ impl CreateCompany {
                     </fieldset>
                 </div>
             </div>
-
             <div class="columns">
                 <div class="column">
                     {self.fileset_generator(
@@ -375,7 +376,6 @@ impl CreateCompany {
                     )}
                 </div>
             </div>
-
             <div class="columns">
                 <div class="column">
                     <fieldset class="field">
@@ -387,7 +387,7 @@ impl CreateCompany {
                                   select={self.request_company.region_id.to_string()}
                                   onchange={onchange_region_id}
                                   >
-                                { for self.regions.iter().map(|x|
+                                {for self.regions.iter().map(|x|
                                     html!{
                                         <option value={x.region_id.to_string()}
                                               selected={x.region_id as i64 == self.request_company.region_id} >
@@ -409,7 +409,6 @@ impl CreateCompany {
                     )}
                 </div>
             </div>
-
             <div class="columns">
                 <div class="column">
                     {self.fileset_generator(
@@ -429,7 +428,7 @@ impl CreateCompany {
                                   select={self.request_company.type_access_id.to_string()}
                                   onchange={onchange_type_access_id}
                                   >
-                                { for self.types_access.iter().map(|x|
+                                {for self.types_access.iter().map(|x|
                                     html!{
                                         <option value={x.type_access_id.to_string()}
                                               selected={x.type_access_id as i64 == self.request_company.type_access_id} >
@@ -443,7 +442,6 @@ impl CreateCompany {
                     </fieldset>
                 </div>
             </div>
-
             <fieldset class="field">
                 <label class="label">{get_value_field(&61)}</label>
                 <textarea

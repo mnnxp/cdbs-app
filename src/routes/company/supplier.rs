@@ -8,6 +8,7 @@ use wasm_bindgen_futures::spawn_local;
 use crate::error::Error;
 use crate::fragments::{
     buttons::ft_follow_btn,
+    clipboard::ShareLinkBtn,
     user::ModalCardUser,
     list_errors::ListErrors,
     list_empty::ListEmpty,
@@ -259,6 +260,7 @@ impl ShowSupplierCompany {
                   </p>
                   <div class="buttons flexBox" >
                     {self.show_favorite_btn()}
+                    <ShareLinkBtn />
                   </div>
                 </div>
               </div>
