@@ -61,9 +61,9 @@ impl Component for Footer {
         let onclick_show_terms = self.link.callback(|_| Msg::ShowTerms);
         let onclick_show_about = self.link.callback(|_| Msg::ShowAbout);
 
-        let (button_en, button_ru) = match self.current_lang {
-            2 => (classes!("button"), classes!("button", "is-info")),
-            _ => (classes!("button", "is-info"), classes!("button")),
+        let (button_en, button_ru, privacy_notice_url) = match self.current_lang {
+            2 => (classes!("button"), classes!("button", "is-info"), "https://cadbase.rs/ru/privacy_notice_url.html"),
+            _ => (classes!("button", "is-info"), classes!("button"), "https://cadbase.rs/privacy_notice_url.html"),
         };
 
         html!{
@@ -110,6 +110,10 @@ impl Component for Footer {
                         <br/>
                         <a onclick={onclick_show_terms} >
                             {get_value_field(&10)}
+                        </a>
+                        <br/>
+                        <a href={privacy_notice_url} >
+                            {get_value_field(&269)}
                         </a>
                         <br/>
                         <a href="https://docs.cadbase.rs/" >
