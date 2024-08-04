@@ -5,7 +5,7 @@ use wasm_bindgen_futures::spawn_local;
 
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
-use crate::fragments::buttons::ft_save_btn;
+use crate::fragments::buttons::{ft_save_btn, ft_delete_small_btn};
 use crate::types::{UUID, ComponentParam};
 use crate::services::{get_value_field, resp_parsing};
 use crate::gqls::make_query;
@@ -167,10 +167,6 @@ impl ComponentParamTag {
     fn show_param(&self) -> Html {
         let onclick_change_param = self.link.callback(|_| Msg::ChangeParamValue);
         let onclick_delete_btn = self.link.callback(|_| Msg::RequestDeleteParam);
-        let text_btn = match self.get_confirm == self.props.param_data.param.param_id {
-          true => get_value_field(&220),
-          false => "",
-        };
 
         html!{<tr>
             <td>{self.props.param_data.param.paramname.clone()}</td>
@@ -178,19 +174,18 @@ impl ComponentParamTag {
             {match self.props.show_manage_btn {
                 true => html!{<>
                     <td>
-                        <a onclick={onclick_change_param.clone()} title={get_value_field(&59)}>
+                        <a onclick={onclick_change_param} title={get_value_field(&59)}>
                             <span class="icon" >
                                 <i class="fas fa-pencil-alt" aria-hidden="true"></i>
                             </span>
                         </a>
                     </td>
                     <td>
-                        <a onclick={onclick_delete_btn} title={get_value_field(&135)}>
-                            <span class="icon" >
-                                <i class="fa fa-trash" aria-hidden="true" style="color: #f14668;"></i>
-                            </span>
-                            <span style="color: #f14668;">{text_btn}</span>
-                        </a>
+                        {ft_delete_small_btn(
+                            "component-param-delete",
+                            onclick_delete_btn,
+                            self.get_confirm == self.props.param_data.param.param_id,
+                        )}
                     </td>
                 </>},
                 false => html!{},

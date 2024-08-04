@@ -216,11 +216,12 @@ impl Component for ComponentParamsTags {
 
 impl ComponentParamsTags {
     fn show_params(&self) -> Html {
-        let mut classes_table = classes!("table", "is-hoverable", "is-fullwidth");
-        if self.component_params.len() > 15 {
+        let classes_table = match self.component_params.len() > 15 {
             // narrow table, if there are many elements
-            classes_table.push("is-narrow");
-        }
+            true => classes!("table", "is-fullwidth", "is-narrow"),
+            false => classes!("table", "is-fullwidth"),
+        };
+
         html!{
             <div class="card">
                 <header class="card-header">
