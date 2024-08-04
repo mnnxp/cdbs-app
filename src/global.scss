@@ -278,12 +278,42 @@ body {
   }
 }
 
-.notification {
+.notification.custom-notif {
   position: fixed;
   z-index: 70;
-  top: 3.25rem;
-  right: 1rem;
-  left: 1rem;
+  top: 1.5rem;
+  right: 1.5rem;
+  left: 1.5rem;
+}
+
+.hide-after {
+  -moz-animation: cssAnimation 0s ease-in 3s forwards;
+  /* Firefox */
+  -webkit-animation: cssAnimation 0s ease-in 3s forwards;
+  /* Safari and Chrome */
+  -o-animation: cssAnimation 0s ease-in 3s forwards;
+  /* Opera */
+  animation: cssAnimation 0s ease-in 3s forwards;
+  -webkit-animation-fill-mode: forwards;
+  animation-fill-mode: forwards;
+}
+
+@keyframes cssAnimation {
+  to {
+    width:0;
+    height:0;
+    z-index: -1;
+    overflow:hidden;
+  }
+}
+
+@-webkit-keyframes cssAnimation {
+  to {
+    width:0;
+    height:0;
+    z-index: -1;
+    visibility:hidden;
+  }
 }
 
 .footer {
@@ -318,7 +348,7 @@ scene-hull {
 
   @media screen and (max-width: 420px) {
     flex-direction: column;
-    .inputBox{ 
+    .inputBox{
       width: 100%;
       margin-bottom: 12px;
     }
