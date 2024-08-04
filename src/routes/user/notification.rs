@@ -208,44 +208,37 @@ impl Notifications {
             created_at,
             is_read,
         } = notification_data;
-
         let DegreeImportanceTranslateList {
             degree_importance_id,
             degree,
             ..
         } = degree_importance;
-
         let notif_id: i64 = *id as i64;
-
         debug!("onclick_set_read: {}", notif_id);
-
         let onclick_set_read =
             self.link.callback(move |_| Msg::ReadOneNotificationIds(notif_id.clone()));
-
         let onclick_delete_notif =
             self.link.callback(move |_| Msg::RemoveOneNotificationIds(notif_id.clone()));
-
         let (class_degree, class_icon) = match degree_importance_id {
-            1..=2 => ("notification is-danger", "fas fa-ban"),
-            3 =>  ("notification is-warning", "fas fa-exclamation-triangle"),
-            4 => ("notification is-success", "fas fa-check"),
-            5 => ("notification is-info", "fas fa-info-circle"),
+            1..=2 => ("is-danger", "fas fa-ban"),
+            3 =>  ("is-warning", "fas fa-exclamation-triangle"),
+            4 => ("is-success", "fas fa-check"),
+            5 => ("is-info", "fas fa-info-circle"),
             _ => ("", ""),
         };
-
-        let class_degree = match is_read {
-            true => format!("{} is-light", class_degree),
-            false => class_degree.to_string(),
+        let class_notification = match is_read {
+            true => vec!("notification", "is-light", class_degree),
+            false => vec!("notification", class_degree),
         };
 
         html!{<>
             <div class="card">
-                <div class={class_degree}>
+                <div class={class_notification}>
                     <button class="delete" onclick={onclick_delete_notif} />
                     <span class="icon">
                       <i class={class_icon}> </i>
                     </span>
-                    { notification }
+                    {notification}
                     <br/>
                     <div class="media">
                         <div class="media-left">
@@ -263,15 +256,15 @@ impl Notifications {
                                     <button class="button is-light is-info"
                                         disabled={true} >
                                         <span class="icon">
-                                            <i class="fas fa-envelope-open"></i>
+                                            <i class="fas fa-envelope-open" aria-hidden="true"></i>
                                         </span>
                                     </button>
                                 },
                                 false => html!{
-                                    <button class="button is-ghost is-info"
+                                    <button class={vec!["button", class_degree]}
                                         onclick={onclick_set_read} >
                                         <span class="icon">
-                                            <i class="fas fa-envelope"></i>
+                                            <i class="fas fa-envelope" aria-hidden="true"></i>
                                         </span>
                                     </button>
                                 },
