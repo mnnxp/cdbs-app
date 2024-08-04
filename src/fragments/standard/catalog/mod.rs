@@ -123,7 +123,7 @@ impl Component for CatalogStandards {
                         {match &self.props.show_create_btn {
                             true => html!{
                                 <RouterAnchor<AppRoute> route={AppRoute::CreateStandard} classes="button is-info">
-                                    {get_value_field(&45)} // Create
+                                    {get_value_field(&291)} // Create standard
                                 </RouterAnchor<AppRoute>>
                             },
                             false => html!{},

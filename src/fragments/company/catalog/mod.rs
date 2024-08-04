@@ -139,7 +139,7 @@ impl Component for CatalogCompanies {
                         {match &self.props.show_create_btn {
                             true => html!{
                                 <RouterAnchor<AppRoute> route={AppRoute::CreateCompany} classes="button is-info">
-                                    {get_value_field(&45)} // Create
+                                    {get_value_field(&289)} // Create company
                                 </RouterAnchor<AppRoute>>
                             },
                             false => html!{},

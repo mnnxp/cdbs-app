@@ -171,7 +171,7 @@ impl Component for CatalogComponents {
                         {match &self.props.show_create_btn {
                           true => html!{
                               <RouterAnchor<AppRoute> route={AppRoute::CreateComponent} classes="button is-info">
-                                  {get_value_field(&45)} // Create
+                                  {get_value_field(&290)} // Create component
                               </RouterAnchor<AppRoute>>
                           },
                           false => html!{},
