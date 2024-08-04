@@ -98,7 +98,7 @@ impl ShareLinkBtn {
               <div class="modal-background" onclick={onclick_share_btn.clone()} />
               <div class="modal-content">
                 <div class="card column">
-                  <div class="clipboardBox" > 
+                  <div class="clipboardBox">
                         <input id={self.input_id.clone()} type="text" class="input is-link inputBox" readonly={true} value={self.share_link.clone()} />
                         <button class={format!("btn button is-info {}", self.input_id.clone())} onclick={oncopyed} data-clipboard-target={format!("#{}", self.input_id)} style="margin-bottom: 0;">
                           {if self.copyed { html!{
