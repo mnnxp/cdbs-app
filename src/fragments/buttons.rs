@@ -118,6 +118,27 @@ pub fn ft_delete_btn(
     }
 }
 
+/// Returns a VNode with Html code of a small delete button with confirmation
+pub fn ft_delete_small_btn(
+    id_btn: &str,
+    trigger_btn: Callback<MouseEvent>,
+    confirm: bool,
+) -> Html {
+    let title_text = match confirm {
+        true => get_value_field(&220),
+        false => "",
+    };
+
+    html!{
+        <a id={id_btn.to_string()} onclick={trigger_btn} title={get_value_field(&135)}>
+            <span class="icon" >
+                <i class="fa fa-trash" aria-hidden="true" style="color: #f14668;"></i>
+            </span>
+            <span style="color: #f14668;">{title_text}</span>
+        </a>
+    }
+}
+
 /// Returns a VNode with Html code of a save button
 pub fn ft_save_btn(
     id_btn: &str,
@@ -143,6 +164,25 @@ pub fn ft_save_btn(
             title={title_text}>
             <span class="icon">
                 <i class="far fa-save" aria-hidden="true"></i>
+            </span>
+            <span>{title_text}</span>
+        </button>
+    }
+}
+
+/// Returns a VNode with Html code are rendered as a submit button
+pub fn ft_submit_btn(id_btn: &str) -> Html {
+    let title_text = get_value_field(&46);
+
+    html!{
+        <button
+            id={id_btn.to_string()}
+            class={classes!("button", "is-link", "is-fullwidth")}
+            type={"submit"}
+            disabled={false}
+            title={title_text}>
+            <span class={"icon"}>
+                <i class={"far fa-save"} aria-hidden={"true"}></i>
             </span>
             <span>{title_text}</span>
         </button>
@@ -214,6 +254,26 @@ pub fn ft_cancel_btn(
             title={title_text.to_string()}>
             <span class="icon">
                 <i class="fas fa-undo" aria-hidden="true"></i>
+            </span>
+            <span>{title_text.to_string()}</span>
+        </button>
+    }
+}
+
+/// Returns a VNode with Html code of a return back button
+pub fn ft_back_btn(
+    id_btn: &str,
+    trigger_btn: Callback<MouseEvent>,
+    title_text: &str,
+) -> Html {
+    html!{
+        <button
+            id={id_btn.to_string()}
+            class={"button"}
+            onclick={trigger_btn}
+            title={title_text.to_string()}>
+            <span class="icon is-small">
+                <i class="fas fa-arrow-left" style={"color: #1872f0;"}></i>
             </span>
             <span>{title_text.to_string()}</span>
         </button>
