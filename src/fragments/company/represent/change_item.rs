@@ -6,6 +6,7 @@ use log::debug;
 use crate::services::{is_authenticated, get_value_field, resp_parsing, get_value_response, get_from_value};
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::buttons::{ft_delete_btn, ft_save_btn};
+use crate::fragments::notification::show_notification;
 use crate::error::Error;
 use crate::types::{UUID, Region, RepresentationType, CompanyRepresentInfo, CompanyRepresentUpdateInfo};
 use crate::gqls::make_query;
@@ -195,14 +196,11 @@ impl Component for ChangeItem {
                     },
                     false => html!{<div class="column">
                         <label class="label">{get_value_field(&215)}</label> // Change represent
-                        {if self.get_result_update > 0 {
-                            html!{
-                                <span id="tag-info-update-represent" class="tag is-info is-light">
-                                    // Data updated! Change rows:
-                                    {format!("{} {}", get_value_field(&213), self.get_result_update)}
-                                </span>
-                            }
-                        } else { html!{} }}
+                        {show_notification(
+                            &format!("{} {}", get_value_field(&213), self.get_result_update),
+                            "is-success",
+                            self.get_result_update > 0,
+                        )}
                         {self.change_represent_block()}
                         {self.show_manage_buttons()}
                     </div>}
