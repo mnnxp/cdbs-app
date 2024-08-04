@@ -135,7 +135,6 @@ impl Component for Login {
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
                 <form onsubmit={onsubmit}>
                     <fieldset class="box">
-                        <p class="help">{get_value_field(&321)}</p>
                         <fieldset class="field">
                             <label class="label">{get_value_field(&19)}</label>
                             <div class="control has-icons-left has-icons-right">
@@ -167,6 +166,7 @@ impl Component for Login {
                                   <i class="fas fa-lock"></i>
                                 </span>
                             </div>
+                            <p class="help">{get_value_field(&321)}</p>
                         </fieldset>
                         <button
                             id="submit-button"
