@@ -13,6 +13,7 @@ use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{
     buttons::ft_follow_btn,
+    clipboard::ShareLinkBtn,
     user::ModalCardUser,
     switch_icon::res_btn,
     list_errors::ListErrors,
@@ -101,7 +102,7 @@ impl Component for ShowCompany {
             link,
             subscribers: 0,
             is_followed: false,
-            company_tab: CompanyTab::Certificates,
+            company_tab: CompanyTab::Components,
             extend_tab: None,
             show_full_company_info: false,
         }
@@ -315,6 +316,7 @@ impl ShowCompany {
                         false => html!{},
                       }}
                       {self.show_favorite_btn()}
+                      <ShareLinkBtn />
                     </div>
                 </div>
             </div>},
