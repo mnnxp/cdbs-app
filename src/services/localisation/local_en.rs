@@ -141,7 +141,7 @@ lazy_static! {
             (135, "Delete"),
             (136, "No additional parameters"),
             (137, "Get link"),
-            (138, "Temp solution for download files"),
+            (138, "Files from the file set for "),
             (139, "This certificate removed!"),
             (140, "Description updated!"),
             (141, "Owner: "),

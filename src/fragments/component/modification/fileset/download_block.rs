@@ -219,19 +219,29 @@ impl ManageFilesOfFilesetBlock {
             true => "modal is-active",
             false => "modal",
         };
+        let mut fileset_name = "";
+        for (fileset_uuid, program_name) in self.props.current_filesets_program.iter() {
+            if fileset_uuid == &self.select_fileset_uuid {
+                fileset_name = program_name;
+                break;
+            }
+        }
 
         html!{<div class={class_modal}>
           <div class="modal-background" onclick={onclick_modal_download_btn.clone()} />
             <div class="card">
               <div class="modal-content">
                 <header class="modal-card-head">
-                    <p class="modal-card-title">{get_value_field(&138)}</p> // Temp solution for download files
+                    <p class="modal-card-title">
+                        {get_value_field(&138)}
+                        {fileset_name}
+                    </p>
                     <button class="delete" aria-label="close" onclick={onclick_modal_download_btn.clone()} />
                 </header>
                 <div class="box itemBox">
                   <article class="media center-media">
                       <div class="media-content">
-                        <table class="table is-fullwidth">
+                        <table class="table is-fullwidth is-striped">
                           <FileHeadersShow show_long={false} />
                           <tbody>
                             {for self.file_arr.iter().map(|file| html!{
