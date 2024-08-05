@@ -62,8 +62,8 @@ impl Component for Footer {
         let onclick_show_about = self.link.callback(|_| Msg::ShowAbout);
 
         let (button_en, button_ru, privacy_notice_url) = match self.current_lang {
-            2 => (classes!("button"), classes!("button", "is-info"), "https://cadbase.rs/ru/privacy_notice_url.html"),
-            _ => (classes!("button", "is-info"), classes!("button"), "https://cadbase.rs/privacy_notice_url.html"),
+            2 => (classes!("button"), classes!("button", "is-info"), "https://cadbase.rs/ru/privacy-notice.html"),
+            _ => (classes!("button", "is-info"), classes!("button"), "https://cadbase.rs/privacy-notice.html"),
         };
 
         html!{
