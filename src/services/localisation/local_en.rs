@@ -47,7 +47,7 @@ lazy_static! {
             (41, " Working software: "),
             (42, "Hide info"),
             (43, "Show info"),
-            (44, "Enter"),
+            (44, "Login"),
             (45, "Create"),
             (46, "Save"),
             (47, "Delete profile data"),
