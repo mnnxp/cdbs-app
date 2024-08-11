@@ -59,7 +59,6 @@ AAAAAElFTkSuQmCC`;
         console.log(`this.sizeFlag: ${this.sizeFlag}`);
         if (this.sizeFlag) {
             container_tag = 'b-container';
-            backgroundColor = '#a1b5d2'
         }
         console.log(`container_tag: ${container_tag}`);
         const container = sceneHull.querySelector(container_tag);
