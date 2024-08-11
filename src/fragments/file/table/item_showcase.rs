@@ -1,6 +1,8 @@
 use yew::{html, Component, ComponentLink, Html, Properties, ShouldRender};
 
+use crate::fragments::buttons::ft_download_btn;
 use crate::types::ShowFileInfo;
+use crate::services::content_adapter::{ContentDisplay, DateDisplay};
 use crate::services::Size;
 
 pub struct FileInfoItemShow {
@@ -11,7 +13,6 @@ pub struct FileInfoItemShow {
 #[derive(Properties, Clone)]
 pub struct Props {
   pub file_info: ShowFileInfo,
-  // pub file_download_callback: Option<Callback<UUID>>,
   pub download_url: String,
 }
 
@@ -41,43 +42,22 @@ impl Component for FileInfoItemShow {
     }
 
     fn view(&self) -> Html {
-      self.show_item_data()
+      html!{
+        <tr>
+          <td>{self.props.file_info.filename.clone()}</td>
+          // <td>{self.props.file_info.content_type.clone()}</td>
+          <td>{self.props.file_info.revision}</td>
+          <td>{self.props.file_info.show_size()}</td>
+          // <td>{self.props.file_info.program.name.clone()}</td>
+          <td>{self.props.file_info.owner_user.to_display()}</td>
+          <td>{self.props.file_info.created_at.date_to_display()}</td>
+          {match self.props.download_url.is_empty() {
+            true => html!{},
+            false => html!{
+              <td>{ft_download_btn(self.props.download_url.clone(), false)}</td>
+            },
+          }}
+        </tr>
+      }
     }
-}
-
-impl FileInfoItemShow {
-  fn show_item_data(&self) -> Html {
-    html!{<tr>
-      <td>{self.props.file_info.filename.clone()}</td>
-      // <td>{self.props.file_info.content_type.clone()}</td>
-      <td>{self.props.file_info.revision}</td>
-      <td>{self.props.file_info.show_size()}</td>
-      // <td>{self.props.file_info.program.name.clone()}</td>
-      <td>{format!("{} {} (@{})",
-        self.props.file_info.owner_user.firstname.clone(),
-        self.props.file_info.owner_user.lastname.clone(),
-        self.props.file_info.owner_user.username.clone(),
-      )}</td>
-      <td>{format!("{:.*}", 19, self.props.file_info.created_at.to_string())}</td>
-      // {match self.props.file_download_callback {
-      {match self.props.download_url.is_empty() {
-        true => html!{},
-        false => html!{self.show_download_btn()},
-      }}
-    </tr>}
-  }
-
-  fn show_download_btn(&self) -> Html {
-    html!{<td>
-      <a class="button is-white"
-          href={self.props.download_url.clone()}
-          disabled={self.props.download_url.is_empty()}
-          target="_blank"
-          >
-        <span class="icon" >
-          <i class="fas fa-file-download" style="color: #1872f0;" aria-hidden="true"></i>
-        </span>
-      </a>
-    </td>}
-  }
 }

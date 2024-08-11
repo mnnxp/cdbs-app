@@ -9,6 +9,7 @@ use crate::services::{get_value_field, resp_parsing};
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::file::UploaderFiles;
+use crate::fragments::buttons::ft_see_btn;
 use crate::types::{UUID, ShowFileInfo, UploadFile};
 use crate::gqls::make_query;
 use crate::gqls::component::{
@@ -172,14 +173,14 @@ impl Component for ManageModificationFilesCard {
             self.link.callback(|confirmations| Msg::UploadConfirm(confirmations));
 
         html!{<>
-            <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
+            <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
             <div class="columns">
                 <div class="column">
-                  <h2>{get_value_field(&203)}</h2> // Files for modification
+                  <h3>{get_value_field(&203)}</h3> // Files for modification
                   {self.show_files_list()}
                 </div>
                 <div class="column">
-                  <h2>{get_value_field(&202)}</h2> // Upload modification files
+                  <h3>{get_value_field(&202)}</h3> // Upload modification files
                   <UploaderFiles
                     text_choose_files={201} // Choose modification files…
                     callback_upload_filenames={callback_upload_filenames}
@@ -195,20 +196,24 @@ impl Component for ManageModificationFilesCard {
 impl ManageModificationFilesCard {
     fn show_files_list(&self) -> Html {
         html!{<>
-            {for self.files_list.iter().enumerate().map(|(index, file)| {
-                match (index >= 3, self.show_full_files) {
-                    // show full list
-                    (_, true) => self.show_file_info(&file),
-                    // show full list or first 3 items
-                    (false, false) => self.show_file_info(&file),
-                    _ => html!{},
-                }
-            })}
-            {match self.files_list.len() {
-                0 => html!{<span>{get_value_field(&204)}</span>},
-                0..=3 => html!{},
-                _ => self.show_see_btn(),
-            }}
+            <div class={"buttons"}>
+                {for self.files_list.iter().enumerate().map(|(index, file)| {
+                    match (index >= 3, self.show_full_files) {
+                        // show full list
+                        (_, true) => self.show_file_info(&file),
+                        // show full list or first 3 items
+                        (false, false) => self.show_file_info(&file),
+                        _ => html!{},
+                    }
+                })}
+            </div>
+            <footer class="card-footer">
+                {match self.files_list.len() {
+                    0 => html!{<span>{get_value_field(&204)}</span>},
+                    0..=3 => html!{},
+                    _ => self.show_see_btn(),
+                }}
+            </footer>
         </>}
     }
 
@@ -220,31 +225,18 @@ impl ManageModificationFilesCard {
             Some(_) => html!{}, // removed file
             None => html!{
                 <ModificationFileItem
-                  show_download_btn = self.props.show_download_btn
-                  show_delete_btn = true
-                  modification_uuid = self.props.modification_uuid.clone()
-                  file = file_info.clone()
-                  callback_delete_file = callback_delete_file.clone()
+                  show_download_btn={self.props.show_download_btn}
+                  show_delete_btn={true}
+                  modification_uuid={self.props.modification_uuid.clone()}
+                  file={file_info.clone()}
+                  callback_delete_file={callback_delete_file.clone()}
                 />
             },
         }
     }
 
     fn show_see_btn(&self) -> Html {
-        let show_full_files_btn =
-            self.link.callback(|_| Msg::ShowFullList);
-
-        match self.show_full_files {
-            true => html!{<>
-              <button class="button is-white"
-                  onclick=show_full_files_btn
-                >{get_value_field(&99)}</button>
-            </>},
-            false => html!{<>
-              <button class="button is-white"
-                  onclick=show_full_files_btn
-                >{get_value_field(&98)}</button>
-            </>},
-        }
+        let show_full_files_btn = self.link.callback(|_| Msg::ShowFullList);
+        ft_see_btn(show_full_files_btn, self.show_full_files)
     }
 }

@@ -9,7 +9,7 @@ public_url = "/"
 
 [serve]
 # The address to serve on.
-addr = "0.0.0.0"
+addr = "127.0.0.1"
 # The port to serve on.
 port = 3080
 # Open a browser tab once the initial build is complete.

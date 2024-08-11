@@ -38,9 +38,10 @@ pub struct Login {
 pub enum Msg {
     Request,
     Response(Result<UserToken, Error>),
-    Ignore,
     UpdateUsername(String),
     UpdatePassword(String),
+    ClearError,
+    Ignore,
 }
 
 impl Component for Login {
@@ -102,6 +103,7 @@ impl Component for Login {
             },
             Msg::UpdateUsername(username) => self.request.username = username,
             Msg::UpdatePassword(password) => self.request.password = password,
+            Msg::ClearError => self.error = None,
             Msg::Ignore => {},
         }
         true
@@ -112,39 +114,37 @@ impl Component for Login {
     }
 
     fn view(&self) -> Html {
+        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         let onsubmit = self.link.callback(|ev: FocusEvent| {
             ev.prevent_default(); /* Prevent event propagation */
             Msg::Request
         });
-        let oninput_username = self
-            .link
-            .callback(|ev: InputData| Msg::UpdateUsername(ev.value));
-        let oninput_password = self
-            .link
-            .callback(|ev: InputData| Msg::UpdatePassword(ev.value));
+        let oninput_username =
+            self.link.callback(|ev: InputData| Msg::UpdateUsername(ev.value));
+        let oninput_password =
+            self.link.callback(|ev: InputData| Msg::UpdatePassword(ev.value));
 
         html!{<div class="container page">
             <div class="auth-page">
-                <h1 class="title">{ get_value_field(&13) }</h1>
+                <h1 class="title">{get_value_field(&13)}</h1>
                 <h2 class="subtitle">
-                    <RouterAnchor<AppRoute> route=AppRoute::Register>
-                        { get_value_field(&18) }
+                    <RouterAnchor<AppRoute> route={AppRoute::Register}>
+                        {get_value_field(&18)}
                     </RouterAnchor<AppRoute>>
                 </h2>
-                <ListErrors error=self.error.clone() />
-                <form onsubmit=onsubmit>
+                <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
+                <form onsubmit={onsubmit}>
                     <fieldset class="box">
-                        <p class="help">{get_value_field(&321)}</p>
                         <fieldset class="field">
-                            <label class="label">{ get_value_field(&19) }</label>
+                            <label class="label">{get_value_field(&19)}</label>
                             <div class="control has-icons-left has-icons-right">
                                 <input
                                     id="username"
                                     class="input"
                                     type="text"
-                                    placeholder={ get_value_field(&19) }
-                                    value=self.request.username.clone()
-                                    oninput=oninput_username
+                                    placeholder={get_value_field(&19)}
+                                    value={self.request.username.clone()}
+                                    oninput={oninput_username}
                                     />
                                 <span class="icon is-small is-left">
                                   <i class="fas fa-user"></i>
@@ -152,27 +152,28 @@ impl Component for Login {
                             </div>
                         </fieldset>
                         <fieldset class="field">
-                            <label class="label">{ get_value_field(&20) }</label>
+                            <label class="label">{get_value_field(&20)}</label>
                             <div class="control has-icons-left">
                                 <input
                                     id="password"
                                     class="input"
                                     type="password"
-                                    placeholder={ get_value_field(&20) }
-                                    value=self.request.password.clone()
-                                    oninput=oninput_password
+                                    placeholder={get_value_field(&20)}
+                                    value={self.request.password.clone()}
+                                    oninput={oninput_password}
                                     />
                                 <span class="icon is-small is-left">
                                   <i class="fas fa-lock"></i>
                                 </span>
                             </div>
+                            <p class="help">{get_value_field(&321)}</p>
                         </fieldset>
                         <button
                             id="submit-button"
-                            class=classes!("button", "is-fullwidth", "is-large")
+                            class={classes!("button", "is-info", "is-fullwidth", "is-large")}
                             type="submit"
-                            disabled=false>
-                            { get_value_field(&44) }
+                            disabled={false}>
+                            {get_value_field(&44)}
                         </button>
                     </fieldset>
                 </form>

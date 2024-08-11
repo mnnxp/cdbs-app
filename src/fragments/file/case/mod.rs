@@ -6,7 +6,9 @@ use log::debug;
 
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
+use crate::fragments::buttons::{ft_download_btn, ft_download_full_btn};
 use crate::types::{ShowFileInfo, UUID};
+use crate::services::content_adapter::{ContentDisplay, DateDisplay};
 use crate::services::{Size, get_value_field, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::relate::{
@@ -22,6 +24,7 @@ pub struct FileShowcase {
   file_arr: Vec<ShowFileInfo>,
   active_revision: UUID,
   files_deleted_list: BTreeSet<UUID>,
+  get_confirm: UUID,
 }
 
 #[derive(Properties, Clone)]
@@ -63,6 +66,7 @@ impl Component for FileShowcase {
         file_arr: Vec::new(),
         active_revision,
         files_deleted_list: BTreeSet::new(),
+        get_confirm: String::new(),
       }
     }
 
@@ -128,7 +132,8 @@ impl Component for FileShowcase {
         },
         Msg::ClickFileInfo => {
           self.props.open_modal_frame = !self.props.open_modal_frame;
-          self.props.file_info_callback.emit(())
+          self.props.file_info_callback.emit(());
+          self.get_confirm.clear();
         },
         Msg::ClickDownloadFile => {
           if let Some(fd_callback) = &self.props.file_download_callback {
@@ -137,9 +142,13 @@ impl Component for FileShowcase {
           }
         },
         Msg::ClickDeleteFile(file_uuid) => {
-          if let Some(fd_callback) = &self.props.file_delete_callback {
-            fd_callback.emit(file_uuid.clone());
-            self.files_deleted_list.insert(file_uuid);
+          if self.get_confirm == file_uuid {
+            if let Some(fd_callback) = &self.props.file_delete_callback {
+              fd_callback.emit(file_uuid.clone());
+              self.files_deleted_list.insert(file_uuid);
+              }
+          } else {
+            self.get_confirm = file_uuid;
           }
         },
         Msg::ResponseError(err) => self.error = Some(err),
@@ -174,18 +183,16 @@ impl Component for FileShowcase {
       };
 
       html!{
-        <div class=class_modal>
-          <div class="modal-background" onclick=onclick_file_info.clone() />
+        <div class={class_modal}>
+          <div class="modal-background" onclick={onclick_file_info.clone()} />
           <div class="modal-content box">
             <ListErrors error={self.error.clone()} clear_error={onclick_clear_error}/>
-            // <div class="card column">
-              {match self.props.show_revisions {
-                true => self.show_revisions(),
-                false => self.show_info_card(self.props.file_info.uuid.clone()),
-              }}
-            // </div>
+            {match self.props.show_revisions {
+              true => self.show_revisions(),
+              false => self.show_info_card(self.props.file_info.uuid.clone()),
+            }}
           </div>
-          <button class="modal-close is-large" aria-label="close" onclick=onclick_file_info />
+          <button class="modal-close is-large" aria-label="close" onclick={onclick_file_info} />
         </div>
       }
     }
@@ -241,20 +248,10 @@ impl FileShowcase {
     };
     html!{
       <tr class={select_str}>
-        // <td>{file_info.revision.clone()}</td>
         <td><abbr title={file_info.uuid.clone()}>{file_info.revision.clone()}</abbr></td>
-        // <td>{file_info.filename.clone()}</td>
-        // <td>{file_info.content_type.clone()}</td>
         <td>{file_info.show_size()}</td>
-        // <td>{file_info.program.name.clone()}</td>
-        // <td>{file_info.parent_file_uuid.clone()}</td>
-        <td>{format!("{} {} (@{})",
-          file_info.owner_user.firstname.clone(),
-          file_info.owner_user.lastname.clone(),
-          file_info.owner_user.username.clone(),
-        )}</td>
-        <td>{format!("{:.*}", 19, file_info.created_at.to_string())}</td>
-        // <td>{format!("{:.*}", 19, file_info.updated_at.to_string())}</td>
+        <td>{file_info.owner_user.to_display()}</td>
+        <td>{file_info.updated_at.date_to_display()}</td>
         <td>{match select_str.is_empty() {
           true => html!{
             <div class="buttons">
@@ -264,8 +261,7 @@ impl FileShowcase {
           },
           false => html!{
             <div class="buttons">
-              // {self.show_set_active_btn(file_info.uuid.clone())}
-              {self.show_download_btn()}
+              {ft_download_btn(self.download_url.clone(), true)}
               {self.show_delete_btn(file_info.uuid.clone())}
             </div>
           },
@@ -275,23 +271,16 @@ impl FileShowcase {
   }
 
   fn show_info_card(&self, file_uuid: UUID) -> Html {
-    let onclick_delete_btn =
-      self.link.callback(move |_| Msg::ClickDeleteFile(file_uuid.clone()));
     html!{<>
       {self.show_full_info_file()}
       {match &self.props.file_delete_callback.is_some() {
         true => html!{
           <div class="buttons">
-            {self.show_download_full_btn()}
-            <button class="button is-white is-danger is-fullwidth" onclick=onclick_delete_btn >
-              <span class="icon" >
-                <i class="fa fa-trash" aria-hidden="true"></i>
-              </span>
-              <span>{get_value_field(&135)}</span>
-            </button>
+            {ft_download_full_btn(self.download_url.clone())}
+            {self.show_delete_full_btn(file_uuid)}
           </div>
         },
-        false => {self.show_download_full_btn()},
+        false => {ft_download_full_btn(self.download_url.clone())},
       }}
     </>}
   }
@@ -310,66 +299,21 @@ impl FileShowcase {
               <td>{get_value_field(&308)}</td> // Revision
               <td>{self.props.file_info.revision}</td>
             </tr>
-            // <tr>
-            //   <td>{get_value_field(&237)}</td> // Content type
-            //   <td>{self.props.file_info.content_type.clone()}</td>
-            // </tr>
             <tr>
               <td>{get_value_field(&238)}</td> // Filesize
               <td>{self.props.file_info.show_size()}</td>
             </tr>
-            // <tr>
-            //   <td>{get_value_field(&239)}</td> // Program
-            //   <td>{self.props.file_info.program.name.clone()}</td>
-            // </tr>
             <tr>
               <td>{get_value_field(&240)}</td> // Upload by
-              <td>{format!("{} {} (@{})",
-                self.props.file_info.owner_user.firstname.clone(),
-                self.props.file_info.owner_user.lastname.clone(),
-                self.props.file_info.owner_user.username.clone(),
-              )}</td>
+              <td>{self.props.file_info.owner_user.to_display()}</td>
             </tr>
             <tr>
               <td>{get_value_field(&242)}</td> // Created at
-              <td>{format!("{:.*}", 19, self.props.file_info.created_at.to_string())}</td>
+              <td>{self.props.file_info.created_at.date_to_display()}</td>
             </tr>
-            // <tr>
-            //   <td>{get_value_field(&241)}</td> // Upload at
-            //   <td>{format!("{:.*}", 19, self.props.file_info.updated_at.to_string())}</td>
-            // </tr>
           </tbody>
         </table>
       </div>
-    }
-  }
-
-  fn show_download_btn(&self) -> Html {
-    html!{
-      <a class="button is-white"
-          href={self.download_url.clone()}
-          disabled={self.download_url.is_empty()}
-          target="_blank"
-          >
-        <span class="icon" >
-          <i class="fas fa-file-download" style="color: #1872f0;" aria-hidden="true"></i>
-        </span>
-      </a>
-    }
-  }
-
-  fn show_download_full_btn(&self) -> Html {
-    html!{
-      <a class="button is-info is-fullwidth"
-          href={self.download_url.clone()}
-          disabled={self.download_url.is_empty()}
-          target="_blank"
-          >
-        <span class="icon" >
-          <i class="fas fa-file-download" aria-hidden="true"></i>
-        </span>
-        <span>{get_value_field(&126)}</span>
-      </a>
     }
   }
 
@@ -378,8 +322,8 @@ impl FileShowcase {
 
     match &self.props.file_delete_callback.is_some() {
       true => html!{
-        <button class="button is-white is-responsive" onclick=onclick_set_active_btn >
-          <span class="icon" >
+        <button class="button is-white" onclick={onclick_set_active_btn} >
+          <span class="icon">
             <i class="fas fa-angle-double-left" style="color: #1872f0;" aria-hidden="true"></i>
           </span>
         </button>
@@ -389,15 +333,34 @@ impl FileShowcase {
   }
 
   fn show_delete_btn(&self, file_uuid: UUID) -> Html {
+    let file_uuid_cl = file_uuid.clone();
+    let onclick_delete_btn =
+      self.link.callback(move |_| Msg::ClickDeleteFile(file_uuid.clone()));
+
+    match (&self.props.file_delete_callback.is_some(), self.get_confirm == file_uuid_cl) {
+      (true, true) => self.show_delete_full_btn(file_uuid_cl),
+      (true, false) => html!{
+        <button class="button is-danger is-inverted" onclick={onclick_delete_btn} >
+          <span class="icon">
+            <i class="fa fa-trash" aria-hidden="true"></i>
+          </span>
+        </button>
+      },
+      _ => html!{},
+    }
+  }
+
+  fn show_delete_full_btn(&self, file_uuid: UUID) -> Html {
     let onclick_delete_btn =
       self.link.callback(move |_| Msg::ClickDeleteFile(file_uuid.clone()));
 
     match &self.props.file_delete_callback.is_some() {
       true => html!{
-        <button class="button is-white is-danger is-inverted is-responsive" onclick=onclick_delete_btn >
-          <span class="icon" >
+        <button class="button is-danger is-fullwidth" onclick={onclick_delete_btn} >
+          <span class="icon">
             <i class="fa fa-trash" aria-hidden="true"></i>
           </span>
+          <span>{get_value_field(&220)}</span>
         </button>
       },
       false => html!{},

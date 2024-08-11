@@ -5,6 +5,7 @@ use wasm_bindgen_futures::spawn_local;
 
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
+use crate::fragments::buttons::ft_save_btn;
 use crate::services::{get_value_field, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::relate::{RegisterParam, register_param};
@@ -103,7 +104,7 @@ impl Component for RegisterParamnameBlock {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
 
         html!{<>
-            <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
+            <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
             {self.add_paramname()}
         </>}
     }
@@ -112,48 +113,41 @@ impl Component for RegisterParamnameBlock {
 impl RegisterParamnameBlock {
     fn add_paramname(&self) -> Html {
         let onclick_register_paramname = self.link.callback(|_| Msg::RequestRegisterParamname);
-
         let oninput_set_paramname = self.link.callback(|ev: InputData| Msg::UpdateParamname(ev.value));
-
         let oninput_set_param_value = self.link.callback(|ev: InputData| Msg::UpdateParamValue(ev.value));
-
-        let class_btn = match self.active_loading_btn {
-            true => "button is-loading is-fullwidth",
-            false => "button is-fullwidth",
-        };
 
         html!{<>
             <div class="column">
-                <label class="label">{ get_value_field(&205) }</label> // Set a paramname (letter case has matter)
+                <label class="label">{get_value_field(&205)}</label> // Set a paramname (letter case has matter)
                 <input
                     id="paramname"
                     class="input is-fullwidth"
                     type="text"
-                    placeholder=get_value_field(&205)
+                    placeholder={get_value_field(&205)}
                     value={self.request_new_paramname.clone()}
-                    oninput=oninput_set_paramname
+                    oninput={oninput_set_paramname}
                     />
             </div>
             <div class="column">
-                <label class="label">{ get_value_field(&133) }</label> // Set a value
+                <label class="label">{get_value_field(&133)}</label> // Set a value
                 <input
                     id="param-value"
                     class="input is-fullwidth"
                     type="text"
-                    placeholder=get_value_field(&133)
+                    placeholder={get_value_field(&133)}
                     value={self.set_param_value.clone()}
-                    oninput=oninput_set_param_value
+                    oninput={oninput_set_param_value}
                     />
             </div>
             <div class="column">
-                <button
-                    id="add-paramname"
-                    class=class_btn
-                    disabled={self.disable_btn || self.request_new_paramname.is_empty() ||
-                        self.set_param_value.is_empty()}
-                    onclick={onclick_register_paramname} >
-                    { get_value_field(&117) }
-                </button>
+                {ft_save_btn(
+                    "add-paramname",
+                    onclick_register_paramname,
+                    true,
+                    self.disable_btn ||
+                        self.request_new_paramname.is_empty() ||
+                        self.set_param_value.is_empty()
+                )}
             </div>
         </>}
     }

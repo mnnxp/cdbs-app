@@ -5,6 +5,7 @@ use wasm_bindgen_futures::spawn_local;
 
 use crate::error::Error;
 use crate::fragments::{
+    buttons::ft_delete_small_btn,
     list_errors::ListErrors,
     standard::ListItemStandard,
 };
@@ -20,6 +21,7 @@ pub struct ComponentStandardItem {
     link: ComponentLink<Self>,
     open_standard_info: bool,
     get_result_delete: bool,
+    get_confirm: UUID,
 }
 
 #[derive(Properties, Clone)]
@@ -36,6 +38,7 @@ pub enum Msg {
     RequestDeleteStandard,
     ResponseError(Error),
     GetDeleteStandardResult(String),
+    ClearError,
 }
 
 impl Component for ComponentStandardItem {
@@ -49,6 +52,7 @@ impl Component for ComponentStandardItem {
             link,
             open_standard_info: false,
             get_result_delete: false,
+            get_confirm: String::new(),
         }
     }
 
@@ -58,20 +62,24 @@ impl Component for ComponentStandardItem {
         match msg {
             Msg::ShowStandardCard => self.open_standard_info = !self.open_standard_info,
             Msg::RequestDeleteStandard => {
-                let component_uuid = self.props.component_uuid.clone();
                 let standard_uuid = self.props.standard_data.uuid.clone();
-                spawn_local(async move {
-                    let del_standard_to_component_data = delete_standards_component::DelStandardToComponentData{
-                        componentUuid: component_uuid,
-                        standardsUuids: vec![standard_uuid],
-                    };
-                    let res = make_query(DeleteStandardsComponent::build_query(
-                        delete_standards_component::Variables {
-                            del_standard_to_component_data,
-                        }
-                    )).await.unwrap();
-                    link.send_message(Msg::GetDeleteStandardResult(res));
-                })
+                if self.get_confirm == standard_uuid {
+                    let component_uuid = self.props.component_uuid.clone();
+                    spawn_local(async move {
+                        let del_standard_to_component_data = delete_standards_component::DelStandardToComponentData{
+                            componentUuid: component_uuid,
+                            standardsUuids: vec![standard_uuid],
+                        };
+                        let res = make_query(DeleteStandardsComponent::build_query(
+                            delete_standards_component::Variables {
+                                del_standard_to_component_data,
+                            }
+                        )).await.unwrap();
+                        link.send_message(Msg::GetDeleteStandardResult(res));
+                    })
+                } else {
+                    self.get_confirm = standard_uuid;
+                }
             },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetDeleteStandardResult(res) => {
@@ -88,6 +96,7 @@ impl Component for ComponentStandardItem {
                     Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
+            Msg::ClearError => self.error = None,
         }
         true
     }
@@ -103,8 +112,9 @@ impl Component for ComponentStandardItem {
     }
 
     fn view(&self) -> Html {
+        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         html!{<>
-            <ListErrors error=self.error.clone()/>
+            <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
             {match self.get_result_delete {
                 true => html!{},
                 false => self.show_standard(),
@@ -123,17 +133,19 @@ impl ComponentStandardItem {
             <tr>
                 <td>{self.props.standard_data.classifier.clone()}</td>
                 <td>{self.props.standard_data.specified_tolerance.clone()}</td>
-                <td><a onclick={onclick_standard_data_info.clone()}>
+                <td><a onclick={onclick_standard_data_info}>
                     <span class="icon" >
                         <i class="fas fa-info" aria-hidden="true"></i>
                     </span>
                 </a></td>
                 {match self.props.show_delete_btn {
-                    true => html!{<td><a onclick={onclick_delete_standard.clone()}>
-                        <span class="icon" >
-                          <i class="fa fa-trash" aria-hidden="true"></i>
-                        </span>
-                    </a></td>},
+                    true => html!{<td>
+                        {ft_delete_small_btn(
+                            "component-standard-delete",
+                            onclick_delete_standard,
+                            self.get_confirm == self.props.standard_data.uuid,
+                        )}
+                    </td>},
                     false => html!{},
                 }}
             </tr>
@@ -146,17 +158,17 @@ impl ComponentStandardItem {
             false => "modal",
         };
 
-        html!{<div class=class_modal>
-          <div class="modal-background" onclick=onclick_standard_data_info.clone() />
+        html!{<div class={class_modal}>
+          <div class="modal-background" onclick={onclick_standard_data_info.clone()} />
             // <div class="modal-content">
               <div class="card">
                 <ListItemStandard
-                    data = self.props.standard_data.clone()
-                    show_list = true
+                    data={self.props.standard_data.clone()}
+                    show_list={true}
                   />
               </div>
             // </div>
-          <button class="modal-close is-large" aria-label="close" onclick=onclick_standard_data_info />
+          <button class="modal-close is-large" aria-label="close" onclick={onclick_standard_data_info} />
         </div>}
     }
 }

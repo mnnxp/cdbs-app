@@ -1,4 +1,4 @@
-use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html, ChangeData};
+use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html, ChangeData, classes};
 use log::debug;
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
@@ -7,6 +7,7 @@ use super::FilesetFilesBlock;
 use crate::services::{get_value_field, resp_parsing};
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
+use crate::fragments::buttons::{ft_delete_btn, ft_cancel_btn, ft_save_btn, ft_add_btn};
 use crate::fragments::file::UploaderFiles;
 use crate::types::{UUID, ShowFileInfo, Program, UploadFile};
 use crate::gqls::make_query;
@@ -37,6 +38,7 @@ pub struct ManageModificationFilesets {
     files_list: Vec<ShowFileInfo>,
     programs: Vec<Program>,
     open_add_fileset_card: bool,
+    get_confirm: UUID,
 }
 
 pub enum Msg {
@@ -54,7 +56,7 @@ pub enum Msg {
     UploadConfirm(usize),
     FinishUploadFiles,
     SelectFileset(UUID),
-    UpdateSelectProgramId(String),
+    UpdateSelectProgramId(usize),
     ShowAddFilesetCard,
     ClearError,
 }
@@ -85,6 +87,7 @@ impl Component for ManageModificationFilesets {
             files_list: Vec::new(),
             programs: Vec::new(),
             open_add_fileset_card: false,
+            get_confirm: String::new(),
         }
     }
 
@@ -121,17 +124,20 @@ impl Component for ManageModificationFilesets {
                 })
             },
             Msg::RequestDeleteFileset => {
-                let del_fileset_program_data = delete_modification_fileset::DelFilesetProgramData{
-                    modificationUuid: self.props.select_modification_uuid.clone(),
-                    filesetUuid: self.select_fileset_uuid.clone(),
-                };
-                spawn_local(async move {
-                    let res = make_query(DeleteModificationFileset::build_query(
-                        delete_modification_fileset::Variables { del_fileset_program_data }
-                    )).await.unwrap();
-
-                    link.send_message(Msg::GetDeleteFilesetResult(res));
-                })
+                if self.get_confirm == self.select_fileset_uuid {
+                    let del_fileset_program_data = delete_modification_fileset::DelFilesetProgramData{
+                        modificationUuid: self.props.select_modification_uuid.clone(),
+                        filesetUuid: self.select_fileset_uuid.clone(),
+                    };
+                    spawn_local(async move {
+                        let res = make_query(DeleteModificationFileset::build_query(
+                            delete_modification_fileset::Variables { del_fileset_program_data }
+                        )).await.unwrap();
+                        link.send_message(Msg::GetDeleteFilesetResult(res));
+                    })
+                } else {
+                    self.get_confirm = self.select_fileset_uuid.clone();
+                }
             },
             Msg::RequestFilesOfFileset => {
                 if self.select_fileset_uuid.len() == 36 {
@@ -272,10 +278,11 @@ impl Component for ManageModificationFilesets {
                 debug!("SelectFileset: {:?}", fileset_uuid);
                 self.select_fileset_uuid = fileset_uuid;
                 self.files_list.clear();
+                self.get_confirm.clear(); // clear the check flag
                 self.link.send_message(Msg::RequestFilesOfFileset);
             },
-            Msg::UpdateSelectProgramId(data) =>
-                self.request_fileset_program_id = data.parse::<usize>().unwrap_or_default(),
+            Msg::UpdateSelectProgramId(program_id) =>
+                self.request_fileset_program_id = program_id,
             Msg::ShowAddFilesetCard => {
                 self.open_add_fileset_card = !self.open_add_fileset_card;
 
@@ -315,49 +322,26 @@ impl Component for ManageModificationFilesets {
 
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
-        let callback_upload_filenames =
-            self.link.callback(move |filenames| Msg::RequestUploadFilesOfFileset(filenames));
-        let request_upload_files = match self.request_upload_data.is_empty() {
-            true => None,
-            false => Some(self.request_upload_data.clone()),
-        };
-        let callback_upload_confirm =
-            self.link.callback(|confirmations| Msg::UploadConfirm(confirmations));
         html!{<>
-            <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
-            {self.modal_add_fileset()}
-            {self.show_manage()}
-            // <br/>
-            <div class="columns">
-                <div class="column">
-                    <h2>{get_value_field(&198)}</h2> // Files of fileset
-                    {self.show_fileset_files()}
-                </div>
-                <div class="column">
-                    <h2>{get_value_field(&197)}</h2> // Upload files for fileset
-                    <UploaderFiles
-                        text_choose_files={195} // Choose fileset files…
-                        callback_upload_filenames={callback_upload_filenames}
-                        request_upload_files={request_upload_files}
-                        callback_upload_confirm={callback_upload_confirm}
-                        />
-                </div>
-            </div>
+            <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
+            {match &self.open_add_fileset_card {
+                true => self.add_fileset_block(),
+                false => html!{<>
+                    {self.show_manage()}
+                    {self.fileset_block()}
+                </>},
+            }}
         </>}
     }
 }
 
 impl ManageModificationFilesets {
     fn show_manage(&self) -> Html {
-        let onchange_select_fileset_btn = self.link
-            .callback(|ev: ChangeData| Msg::SelectFileset(match ev {
+        let onchange_select_fileset_btn =
+            self.link.callback(|ev: ChangeData| Msg::SelectFileset(match ev {
               ChangeData::Select(el) => el.value(),
               _ => String::new(),
-          }));
-
-        let onclick_new_fileset_card = self.link.callback(|_| Msg::ShowAddFilesetCard);
-
-        let onclick_delete_fileset_btn = self.link.callback(|_| Msg::RequestDeleteFileset);
+            }));
 
         html!{<div class="columns">
             <div class="column">
@@ -365,7 +349,7 @@ impl ManageModificationFilesets {
                   <select
                         id="select-fileset-program"
                         select={self.select_fileset_uuid.clone()}
-                        onchange=onchange_select_fileset_btn >
+                        onchange={onchange_select_fileset_btn} >
                       {for self.filesets_program.iter().map(|(fileset_uuid, program_name)|
                           html!{
                               <option value={fileset_uuid.to_string()}
@@ -378,97 +362,115 @@ impl ManageModificationFilesets {
                 </div>
             </div>
             <div class="column">
-                <div class="buttons">
-                    <button
-                      id="delete-fileset-program"
-                      class="button is-danger"
-                      disabled={self.select_fileset_uuid.is_empty()}
-                      onclick={onclick_delete_fileset_btn} >
-                        <span class="icon" >
-                            <i class="fa fa-trash" aria-hidden="true"></i>
-                        </span>
-                        <span>{get_value_field(&135)}</span>
-                    </button>
-                    <button
-                      id="add-modification-fileset"
-                      class="button is-success"
-                      disabled={self.props.select_modification_uuid.is_empty()}
-                      onclick={onclick_new_fileset_card} >
-                        <span class="icon" >
-                            <i class="fas fa-plus" aria-hidden="true"></i>
-                        </span>
-                        <span>{get_value_field(&196)}</span> // Add fileset
-                    </button>
-                </div>
+                {self.show_delete_btn()}
             </div>
         </div>}
     }
 
-    fn modal_add_fileset(&self) -> Html {
-        let onclick_new_fileset_card = self.link.callback(|_| Msg::ShowAddFilesetCard);
-        let onclick_add_fileset_btn = self.link.callback(|_| Msg::RequestNewFileset);
-        let onchange_select_program_id =
-            self.link.callback(|ev: ChangeData| Msg::UpdateSelectProgramId(match ev {
-              ChangeData::Select(el) => el.value(),
-              _ => String::new(),
-            }));
-        let class_modal = match &self.open_add_fileset_card {
-            true => "modal is-active",
-            false => "modal",
+    fn fileset_block(&self) -> Html {
+        let callback_upload_filenames =
+            self.link.callback(move |filenames| Msg::RequestUploadFilesOfFileset(filenames));
+        let request_upload_files = match self.request_upload_data.is_empty() {
+            true => None,
+            false => Some(self.request_upload_data.clone()),
         };
+        let callback_upload_confirm =
+            self.link.callback(|confirmations| Msg::UploadConfirm(confirmations));
+        let onclick_new_fileset_card = self.link.callback(|_| Msg::ShowAddFilesetCard);
 
-        html!{<div class=class_modal>
-          <div class="modal-background" onclick=onclick_new_fileset_card.clone() />
-            <div class="card">
-              <div class="modal-content">
-                <header class="modal-card-head">
-                    <p class="modal-card-title">{get_value_field(&206)}</p> // Create new fileset
-                    <button class="delete" aria-label="close" onclick=onclick_new_fileset_card.clone() />
-                </header>
-                <div class="box itemBox">
-                  <article class="media center-media">
-                      <div class="media-content">
-                      <label class="label">{get_value_field(&207)}</label> // Program for fileset
-                      <div class="select">
-                          <select
-                              id="set-fileset-program"
-                              select={self.request_fileset_program_id.to_string()}
-                              onchange=onchange_select_program_id
-                              >
-                            {for self.programs.iter().map(|x|
-                                html!{
-                                    <option value={x.id.to_string()}
-                                          selected={x.id == self.request_fileset_program_id} >
-                                        {&x.name}
-                                    </option>
-                                }
-                            )}
-                          </select>
-                      </div>
-                      <br/>
-                      <button
-                          id="add-fileset-program"
-                          class="button"
-                          disabled={self.props.select_modification_uuid.is_empty()}
-                          onclick={onclick_add_fileset_btn} >
-                          {get_value_field(&117)}
-                      </button>
-                    </div>
-                  </article>
+        html!{<>
+            <div class="columns">
+                <div class="column">
+                    <h3>{get_value_field(&198)}</h3> // Files of fileset
+                    {self.show_fileset_files()}
                 </div>
-              </div>
-          </div>
-        </div>}
+                <div class="column">
+                    <h3>{get_value_field(&197)}</h3> // Upload files for fileset
+                    <UploaderFiles
+                        text_choose_files={195} // Choose fileset files…
+                        callback_upload_filenames={callback_upload_filenames}
+                        request_upload_files={request_upload_files}
+                        callback_upload_confirm={callback_upload_confirm}
+                        />
+                </div>
+            </div>
+            {ft_add_btn(
+                "create-new-fileset",
+                get_value_field(&196),
+                onclick_new_fileset_card,
+                true,
+                self.props.select_modification_uuid.is_empty()
+            )}
+        </>}
+    }
+
+    fn add_fileset_block(&self) -> Html {
+        let close_add_fileset_block = self.link.callback(|_| Msg::ShowAddFilesetCard);
+        let onclick_add_fileset_btn = self.link.callback(|_| Msg::RequestNewFileset);
+        html!{
+            <div class="column">
+                <span class="has-text-weight-bold is-size-4">{get_value_field(&206)}</span>
+                <div class="block">
+                    <label class="label">{get_value_field(&207)}</label> // Program for fileset
+                    <div class="buttons">
+                        {for self.programs.iter().map(|x|
+                            self.fileset_items(x.id, &x.name)
+                        )}
+                    </div>
+                </div>
+                <hr/>
+                <div class="buttons">
+                    {ft_cancel_btn(
+                        "close-add-fileset-program",
+                        close_add_fileset_block
+                    )}
+                    {ft_save_btn(
+                        "add-modification-fileset",
+                        onclick_add_fileset_btn,
+                        true,
+                        self.props.select_modification_uuid.is_empty()
+                    )}
+                </div>
+            </div>
+        }
     }
 
     fn show_fileset_files(&self) -> Html {
         html!{
             <FilesetFilesBlock
-                show_download_btn = false
-                show_delete_btn = true
-                select_fileset_uuid = self.select_fileset_uuid.clone()
-                files = self.files_list.clone()
+                show_download_btn={false}
+                show_delete_btn={true}
+                select_fileset_uuid={self.select_fileset_uuid.clone()}
+                files={self.files_list.clone()}
             />
+        }
+    }
+
+    fn show_delete_btn(&self) -> Html {
+        let onclick_delete_fileset_btn = self.link.callback(|_| Msg::RequestDeleteFileset);
+        ft_delete_btn(
+            "delete-fileset-program",
+            onclick_delete_fileset_btn,
+            self.get_confirm == self.select_fileset_uuid,
+            self.select_fileset_uuid.is_empty()
+        )
+    }
+
+    fn fileset_items(&self, program_id: usize, program_name: &str) -> Html {
+        let onchange_select_program_id = self.link.callback(move |_| Msg::UpdateSelectProgramId(program_id));
+        let class_item = match program_id == self.request_fileset_program_id {
+            true => classes!("button", "is-info", "is-focused"),
+            false => classes!("button", "is-info", "is-outlined"),
+        };
+
+        html!{
+            <button
+                id={"set-fileset-program"}
+                class={class_item}
+                disabled={program_id == self.request_fileset_program_id}
+                onclick={onchange_select_program_id} >
+                <span>{program_name}</span>
+            </button>
         }
     }
 }

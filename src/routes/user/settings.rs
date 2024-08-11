@@ -7,12 +7,15 @@ use wasm_bindgen_futures::spawn_local;
 
 use crate::error::Error;
 use crate::fragments::{
+    buttons::{ft_delete_btn, ft_submit_btn},
+    notification::show_notification,
     list_errors::ListErrors,
     side_menu::{MenuItem, SideMenu},
     upload_favicon::UpdateFaviconBlock,
     user::{AddUserCertificateCard, UserCertificatesCard},
 };
 use crate::routes::AppRoute;
+use crate::services::content_adapter::DateDisplay;
 use crate::services::{get_current_user, set_token, set_logged_user, get_logged_user, get_value_field, resp_parsing, get_value_response, get_from_value};
 use crate::types::{Program, Region, SelfUserInfo, TypeAccessInfo, UpdatePasswordInfo, UserUpdateInfo};
 use crate::gqls::make_query;
@@ -54,6 +57,7 @@ pub struct Settings {
     get_result_access: bool,
     get_result_pwd: bool,
     get_result_remove_profile: bool,
+    get_confirm: String,
     select_menu: Menu,
 }
 
@@ -116,6 +120,7 @@ impl Component for Settings {
             get_result_access: false,
             get_result_pwd: false,
             get_result_remove_profile: false,
+            get_confirm: String::new(),
             select_menu: Menu::Profile,
         }
     }
@@ -185,7 +190,7 @@ impl Component for Settings {
                 };
                 spawn_local(async move {
                     let res = make_query(UserUpdate::build_query(
-                        user_update::Variables { ipt_update_user_data }
+                        user_update::Variables{ipt_update_user_data}
                     )).await.unwrap();
                     link.send_message(Msg::GetUpdateProfileResult(res));
                 })
@@ -194,7 +199,7 @@ impl Component for Settings {
                 let new_type_access = self.request_access.clone();
                 spawn_local(async move {
                     let res = make_query(ChangeTypeAccessUser::build_query(
-                        change_type_access_user::Variables{ new_type_access }
+                        change_type_access_user::Variables{new_type_access}
                     )).await.unwrap();
                     link.send_message(Msg::GetUpdateAccessResult(res));
                 })
@@ -212,13 +217,17 @@ impl Component for Settings {
                 })
             },
             Msg::RequestRemoveProfile => {
-                let user_password = self.request_user_password.clone();
-                spawn_local(async move {
-                    let res = make_query(DeleteUserData::build_query(delete_user_data::Variables{
-                        user_password
-                    })).await.unwrap();
-                    link.send_message(Msg::GetRemoveProfileResult(res));
-                })
+                if self.get_confirm == self.current_username {
+                    let user_password = self.request_user_password.clone();
+                    spawn_local(async move {
+                        let res = make_query(DeleteUserData::build_query(delete_user_data::Variables{
+                            user_password
+                        })).await.unwrap();
+                        link.send_message(Msg::GetRemoveProfileResult(res));
+                    })
+                } else {
+                    self.get_confirm = self.current_username.clone();
+                }
             },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetUpdateAccessResult(res) => {
@@ -323,76 +332,58 @@ impl Component for Settings {
 
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
-
         let onsubmit_update_profile = self.link.callback(|ev: FocusEvent| {
             ev.prevent_default();
             Msg::RequestUpdateProfile
         });
-
         let onsubmit_update_access = self.link.callback(|ev: FocusEvent| {
             ev.prevent_default();
             Msg::RequestChangeAccess
         });
-
         let onsubmit_update_password = self.link.callback(|ev: FocusEvent| {
             ev.prevent_default();
             Msg::RequestUpdatePassword
         });
 
-        let onsubmit_remove_profile = self.link.callback(|ev: FocusEvent| {
-            ev.prevent_default();
-            Msg::RequestRemoveProfile
-        });
-
         html!{
             <div class="settings-page">
-                <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
+                <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
                 <div class="container page">
                     <div class="row">
                         <div class="columns">
                             <div class="column is-flex">
-                                { self.view_menu() }
+                                {self.view_menu()}
                                 <div class="card is-flex-grow-1" >
                                   <div class="card-content">
                                     {match self.select_menu {
                                         // Show interface for change profile data
                                         Menu::Profile => html!{<>
-                                            <h4 id="change-profile" class="title is-4">{ get_value_field(&63) }</h4> // "Profile"
+                                            <h4 id="change-profile" class="title is-4">{get_value_field(&63)}</h4> // "Profile"
                                             {self.show_update_profile_info()}
-                                            <form onsubmit=onsubmit_update_profile>
-                                                { self.change_profile_card() }
-                                                <button
-                                                    id="update-settings"
-                                                    class=classes!("button", "is-fullwidth")
-                                                    type="submit"
-                                                    disabled=false>
-                                                    { get_value_field(&46) }
-                                                </button>
+                                            <form onsubmit={onsubmit_update_profile}>
+                                                {self.change_profile_card()}
+                                                {ft_submit_btn("update-settings")}
                                             </form>
                                         </>},
                                         // Show interface for change favicon user
                                         Menu::UpdateFavicon => {self.update_favicon_card()},
                                         // Show interface for add and update Certificates
                                         Menu::Certificates => html!{<>
-                                            <h4 id="change-certificates" class="title is-4">{ get_value_field(&64) }</h4> // "Certificates"
-                                            { self.add_certificate_card() }
-                                            { self.change_certificates_card() }
+                                            <h4 id="change-certificates" class="title is-4">{get_value_field(&64)}</h4> // "Certificates"
+                                            {self.add_certificate_card()}
+                                            {self.change_certificates_card()}
                                         </>},
                                         // Show interface for change access
                                         Menu::Access => html!{<>
-                                            <h4 id="change-access" class="title is-4">{ get_value_field(&65) }</h4> // "Access"
-                                            <span id="tag-info-updated-access" class=classes!("tag", "is-info", "is-light")>
-                                                { format!("{}: {}", get_value_field(&68), self.get_result_access.clone()) } // Updated access
-                                            </span>
-                                            <form onsubmit=onsubmit_update_access>
-                                                { self.change_access_card() }
-                                                <button
-                                                    id="update-access"
-                                                    class=classes!("button", "is-fullwidth")
-                                                    type="submit"
-                                                    disabled=false>
-                                                    { get_value_field(&46) }
-                                                </button>
+                                            <h4 id="change-access" class="title is-4">{get_value_field(&65)}</h4> // "Access"
+                                            {show_notification(
+                                                &format!("{}: {}", get_value_field(&68), self.get_result_access),
+                                                "is-success",
+                                                self.get_result_access,
+                                            )}
+                                            <form onsubmit={onsubmit_update_access}>
+                                                {self.change_access_card()}
+                                                {ft_submit_btn("update-access")}
                                             </form>
                                             // todo!(tasks:)
                                             // show Tokens
@@ -403,38 +394,19 @@ impl Component for Settings {
                                         </>},
                                         // Show interface for change password
                                         Menu::Password => html!{<>
-                                            <h4 id="change-password" class="title is-4">{ get_value_field(&20) }</h4> // "Password"
-                                            <span id="tag-info-updated-pwd" class=classes!("tag", "is-info", "is-light")>
-                                              { format!("{}: {}", get_value_field(&69), self.get_result_pwd.clone()) } // Updated password
-                                            </span>
-                                            <form onsubmit=onsubmit_update_password>
-                                                { self.update_password_card() }
-                                                <button
-                                                    id="update-password"
-                                                    class=classes!("button", "is-fullwidth")
-                                                    type="submit"
-                                                    disabled=false>
-                                                    { get_value_field(&46) }
-                                                </button>
+                                            <h4 id="change-password" class="title is-4">{get_value_field(&20)}</h4> // "Password"
+                                            {show_notification(
+                                                get_value_field(&69),
+                                                "is-success",
+                                                self.get_result_pwd,
+                                            )}
+                                            <form onsubmit={onsubmit_update_password}>
+                                                {self.update_password_card()}
+                                                {ft_submit_btn("update-password")}
                                             </form>
                                         </>},
                                         // Show interface for remove profile
-                                        Menu::RemoveProfile => html!{<>
-                                            <h4 id="remove-profile" class="title is-4">{ get_value_field(&67) }</h4> // "Remove profile"
-                                            <div id="tag-danger-remove-profile" class=classes!("notification", "is-danger", "is-light")>
-                                              { get_value_field(&71) }
-                                            </div>
-                                            <form onsubmit=onsubmit_remove_profile>
-                                                { self.remove_profile_card() }
-                                                <button
-                                                    id="button-remove-profile"
-                                                    class=classes!("button", "is-fullwidth", "is-danger")
-                                                    type="submit"
-                                                    disabled=false>
-                                                    { get_value_field(&47) }
-                                                </button>
-                                            </form>
-                                        </>},
+                                        Menu::RemoveProfile => self.remove_profile_card(),
                                     }}
                                 </div>
                             </div>
@@ -477,7 +449,7 @@ impl Settings {
                     type={input_type}
                     placeholder={placeholder.to_string()}
                     value={value}
-                    oninput=oninput ></@>
+                    oninput={oninput} ></@>
             </fieldset>
         }
     }
@@ -485,19 +457,20 @@ impl Settings {
     fn show_update_profile_info(&self) -> Html {
         html!{
             <div class="columns">
-                <div id="updated-rows" class="column">
-                    <span class=classes!("overflow-title", "has-text-weight-bold")>{ get_value_field(&72) }</span> // "Updated rows: "
-                    <span class="overflow-title">{self.get_result_profile.clone()}</span>
-                </div>
+                {show_notification(
+                    &format!("{} {}", get_value_field(&72), self.get_result_profile),
+                    "is-success",
+                    self.get_result_profile > 0,
+                )}
                 <div id="updated-date" class="column">
-                    <span class=classes!("overflow-title", "has-text-weight-bold")>{ get_value_field(&73) }</span> // "Last updated: "
+                    <span class={classes!("overflow-title", "has-text-weight-bold")}>{get_value_field(&73)}</span> // "Last updated: "
                     {match &self.current_data {
                         Some(data) => html!{
                             <span class="overflow-title">
-                                {format!("{:.*}", 19, data.updated_at.to_string())}
+                                {data.updated_at.date_to_display()}
                             </span>
                         },
-                        None => html!{<span>{ get_value_field(&75) }</span>},
+                        None => html!{<span>{get_value_field(&75)}</span>},
                     }}
                 </div>
             </div>
@@ -587,8 +560,8 @@ impl Settings {
 
         html! {
             <UpdateFaviconBlock
-                company_uuid = None
-                callback=callback_update_favicon
+                company_uuid={None}
+                callback={callback_update_favicon}
                 />
         }
     }
@@ -597,14 +570,14 @@ impl Settings {
         match &self.current_data {
             Some(current_data) => html! {
                 <UserCertificatesCard
-                    user_uuid = self.current_data.as_ref().map(|x| x.uuid.clone()).unwrap_or_default()
-                    certificates = current_data.certificates.clone()
-                    show_cert_btn = true
-                    download_btn = false
-                    manage_btn = true
+                    user_uuid={self.current_data.as_ref().map(|x| x.uuid.clone()).unwrap_or_default()}
+                    certificates={current_data.certificates.clone()}
+                    show_cert_btn={true}
+                    download_btn={false}
+                    manage_btn={true}
                 />
             },
-            None => html! {<span class=classes!("tag", "is-info", "is-light")>{ get_value_field(&74) }</span>}, // "Not fount certificates"
+            None => html! {<span class={classes!("tag", "is-info", "is-light")}>{get_value_field(&74)}</span>}, // "Not fount certificates"
         }
     }
 
@@ -619,8 +592,8 @@ impl Settings {
 
         html! {
             <AddUserCertificateCard
-                user_uuid = user_uuid
-                callback=callback_upload_cert
+                user_uuid={user_uuid}
+                callback={callback_upload_cert}
             />
         }
     }
@@ -636,7 +609,7 @@ impl Settings {
         html! {
             <div class="columns">
                 <div class="column">
-                    <label class="label">{ get_value_field(&58) }</label> // "Type Access"
+                    <label class="label">{get_value_field(&58)}</label> // "Type Access"
                 </div>
                 <div class="column">
                     <fieldset class="field">
@@ -645,9 +618,9 @@ impl Settings {
                               <select
                                   id="types-access"
                                   select={self.request_access.to_string()}
-                                  onchange=onchange_type_access_id
+                                  onchange={onchange_type_access_id}
                                   >
-                                { for self.types_access.iter().map(|x|
+                                {for self.types_access.iter().map(|x|
                                     html!{
                                         <option value={x.type_access_id.to_string()}
                                           selected={x.type_access_id == self.current_data.as_ref().map(|x| x.type_access.type_access_id).unwrap_or_default()} >
@@ -782,15 +755,15 @@ impl Settings {
             // fourth columns (program, region)
             <div class="columns">
                 <div class="column">
-                    <label class="label">{ get_value_field(&26) }</label> // "Program"
+                    <label class="label">{get_value_field(&26)}</label> // "Program"
                     <div class="control">
                         <div class="select">
                           <select
                               id="program"
                               select={self.request_profile.program_id.unwrap_or_default().to_string()}
-                              onchange=oninput_program_id
+                              onchange={oninput_program_id}
                               >
-                            { for self.programs.iter().map(|x|
+                            {for self.programs.iter().map(|x|
                                 html!{
                                     <option value={x.id.to_string()}
                                         selected={x.id as i64 == self.request_profile.program_id.unwrap_or_default()} >
@@ -803,15 +776,15 @@ impl Settings {
                     </div>
                 </div>
                 <div class="column">
-                    <label class="label">{ get_value_field(&27) }</label> // "Region"
+                    <label class="label">{get_value_field(&27)}</label> // "Region"
                     <div class="control">
                         <div class="select">
                           <select
                               id="region"
                               select={self.request_profile.region_id.unwrap_or_default().to_string()}
-                              onchange=onchange_region_id
+                              onchange={onchange_region_id}
                               >
-                            { for self.regions.iter().map(|x|
+                            {for self.regions.iter().map(|x|
                                 html!{
                                     <option value={x.region_id.to_string()}
                                           selected={x.region_id as i64 == self.request_profile.region_id.unwrap_or_default()} >
@@ -836,12 +809,25 @@ impl Settings {
     }
 
     fn remove_profile_card(&self) -> Html {
+        let onclick_remove_profile = self.link.callback(|_| Msg::RequestRemoveProfile);
         let oninput_user_password = self.link.callback(|ev: InputData| Msg::UpdateUserPassword(ev.value));
 
-        self.fileset_generator(
-            "password", get_value_field(&62), // "your password"
-            self.request_user_password.to_string(),
-            oninput_user_password,
-        )
+        html!{<>
+            <h4 id="remove-profile" class="title is-4">{get_value_field(&67)}</h4> // "Remove profile"
+            <div class="content is-medium">
+                <p><strong>{get_value_field(&272)}</strong> {get_value_field(&71)}</p>
+            </div>
+            {self.fileset_generator(
+                "password", get_value_field(&62), // "your password"
+                self.request_user_password.to_string(),
+                oninput_user_password,
+            )}
+            {ft_delete_btn(
+                "button-remove-profile",
+                onclick_remove_profile,
+                self.get_confirm == self.current_username,
+                false
+            )}
+        </>}
     }
 }

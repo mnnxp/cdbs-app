@@ -85,7 +85,7 @@ impl ModificationTableItemModule {
                     Some(value) => html!{<>
                         <span>{value.clone()}</span>
                         <span class="icon is-small" >
-                          <i class="fas fa-pen" aria-hidden="true"></i>
+                          <i class="fas fa-pencil-alt" aria-hidden="true"></i>
                         </span>
                     </>},
                     None => html!{<span class="icon" >

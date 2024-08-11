@@ -46,9 +46,9 @@ impl Component for Home {
 
     fn view(&self) -> Html {
         html!{
-            <div class=classes!("tile", "is-ancestor", "is-vertical")>
+            <div class={classes!("tile", "is-ancestor", "is-vertical")}>
                 <div class="tile is-child hero">
-                    <div class=classes!("hero-body", "container", "pb-0")>
+                    <div class={classes!("hero-body", "container", "pb-0")}>
                         <h1 class="title is-1" title="CADBase" style="margin-bottom: 0; position: initial;">
                             <svg position="initial" viewBox="0 0 145 35" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
@@ -73,13 +73,13 @@ impl Component for Home {
                         </h1>
                         <div class="media">
                             <div class="media-left">
-                                <h2 class="subtitle"> { get_value_field(&1) } </h2>
+                                <h2 class="subtitle"> {get_value_field(&1)} </h2>
                             </div>
                             <div class="media-content">
-                                <h2 class="subtitle" style="text-align: center"> { get_value_field(&2) } </h2>
+                                <h2 class="subtitle" style="text-align: center"> {get_value_field(&2)} </h2>
                             </div>
                             <div class="media-right">
-                                <h2 class="subtitle"> { get_value_field(&3) } </h2>
+                                <h2 class="subtitle"> {get_value_field(&3)} </h2>
                             </div>
                         </div>
                     </div>

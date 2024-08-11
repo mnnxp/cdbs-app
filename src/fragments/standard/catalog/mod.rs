@@ -21,6 +21,7 @@ pub enum Msg {
     UpdateList(String),
     GetList,
     ResponseError(Error),
+    ClearError,
 }
 
 pub struct CatalogStandards {
@@ -91,6 +92,7 @@ impl Component for CatalogStandards {
               }
           },
           Msg::ResponseError(err) => self.error = Some(err),
+          Msg::ClearError => self.error = None,
         }
         true
     }
@@ -103,6 +105,7 @@ impl Component for CatalogStandards {
     }
 
     fn view(&self) -> Html {
+        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         let onclick_change_view = self.link.callback(|_|Msg::SwitchShowType);
         let (class_for_icon, class_for_list) = match self.show_type {
             ListState::Box => ("fas fa-bars", "flex-box"),
@@ -111,7 +114,7 @@ impl Component for CatalogStandards {
 
         html!{
             <div class="standardsBox" >
-              <ListErrors error=self.error.clone()/>
+              <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
               <div class="level" >
                 <div class="level-left">
                 </div>
@@ -119,8 +122,8 @@ impl Component for CatalogStandards {
                     <div class="buttons">
                         {match &self.props.show_create_btn {
                             true => html!{
-                                <RouterAnchor<AppRoute> route=AppRoute::CreateStandard classes="button is-info">
-                                    { get_value_field(&45) } // Create
+                                <RouterAnchor<AppRoute> route={AppRoute::CreateStandard} classes="button is-info">
+                                    {get_value_field(&291)} // Create standard
                                 </RouterAnchor<AppRoute>>
                             },
                             false => html!{},

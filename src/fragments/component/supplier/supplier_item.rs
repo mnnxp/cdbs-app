@@ -4,6 +4,7 @@ use graphql_client::GraphQLQuery;
 use log::debug;
 use crate::error::Error;
 use crate::fragments::{
+    buttons::ft_delete_small_btn,
     list_errors::ListErrors,
     company::ListItemCompany,
 };
@@ -23,6 +24,7 @@ pub struct ComponentSupplierItem {
     company_data: Option<ShowCompanyShort>,
     open_company_info: bool,
     get_result_delete: bool,
+    get_confirm: UUID,
 }
 
 #[derive(Properties, Clone)]
@@ -41,6 +43,7 @@ pub enum Msg {
     ResponseError(Error),
     GetCompanyDataResult(String),
     GetDeleteSupplierResult(String),
+    ClearError,
 }
 
 impl Component for ComponentSupplierItem {
@@ -55,6 +58,7 @@ impl Component for ComponentSupplierItem {
             company_data: None,
             open_company_info: false,
             get_result_delete: false,
+            get_confirm: String::new(),
         }
     }
 
@@ -85,18 +89,23 @@ impl Component for ComponentSupplierItem {
                 });
             },
             Msg::RequestDeleteSupplier => {
-                let del_suppliers_component_data = delete_suppliers_component::DelSuppliersComponentData{
-                    componentUuid: self.props.component_uuid.clone(),
-                    companiesUuids: vec![self.props.supplier_data.supplier.uuid.clone()],
-                };
-                spawn_local(async move {
-                    let res = make_query(DeleteSuppliersComponent::build_query(
-                        delete_suppliers_component::Variables {
-                            del_suppliers_component_data,
-                        }
-                    )).await.unwrap();
-                    link.send_message(Msg::GetDeleteSupplierResult(res));
-                })
+                let supplier_uuid = self.props.supplier_data.supplier.uuid.clone();
+                if self.get_confirm == supplier_uuid {
+                    let del_suppliers_component_data = delete_suppliers_component::DelSuppliersComponentData{
+                        componentUuid: self.props.component_uuid.clone(),
+                        companiesUuids: vec![supplier_uuid],
+                    };
+                    spawn_local(async move {
+                        let res = make_query(DeleteSuppliersComponent::build_query(
+                            delete_suppliers_component::Variables {
+                                del_suppliers_component_data,
+                            }
+                        )).await.unwrap();
+                        link.send_message(Msg::GetDeleteSupplierResult(res));
+                    })
+                } else {
+                    self.get_confirm = supplier_uuid;
+                }
             },
             Msg::ResponseError(error) => self.error = Some(error),
             Msg::GetCompanyDataResult(res) => {
@@ -119,6 +128,7 @@ impl Component for ComponentSupplierItem {
                     Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
+            Msg::ClearError => self.error = None,
         }
         true
     }
@@ -135,26 +145,29 @@ impl Component for ComponentSupplierItem {
     }
 
     fn view(&self) -> Html {
+        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         let onclick_supplier_data_info = self.link.callback(|_| Msg::ShowCompanyCard);
         let onclick_delete_supplier = self.link.callback(|_| Msg::RequestDeleteSupplier);
 
         html!{<>
-            <ListErrors error=self.error.clone()/>
+            <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
             {self.show_modal_company_info()}
             <tr>
                 <td>{self.props.supplier_data.supplier.shortname.clone()}</td>
                 <td>{self.props.supplier_data.description.clone()}</td>
-                <td><a onclick={onclick_supplier_data_info.clone()}>
+                <td><a onclick={onclick_supplier_data_info}>
                     <span class="icon" >
                         <i class="fas fa-info" aria-hidden="true"></i>
                     </span>
                 </a></td>
                 {match self.props.show_delete_btn {
-                    true => html!{<td><a onclick={onclick_delete_supplier.clone()}>
-                        <span class="icon" >
-                          <i class="fa fa-trash" aria-hidden="true"></i>
-                        </span>
-                    </a></td>},
+                    true => html!{<td>
+                        {ft_delete_small_btn(
+                            "component-supplier-delete",
+                            onclick_delete_supplier,
+                            self.get_confirm == self.props.supplier_data.supplier.uuid,
+                        )}
+                    </td>},
                     false => html!{},
                 }}
             </tr>
@@ -171,17 +184,17 @@ impl ComponentSupplierItem {
         };
 
         match &self.company_data {
-            Some(data) => html!{<div class=class_modal>
-              <div class="modal-background" onclick=onclick_company_data_info.clone() />
+            Some(data) => html!{<div class={class_modal}>
+              <div class="modal-background" onclick={onclick_company_data_info.clone()} />
               // <div class="modal-content">
                   <div class="card">
                     <ListItemCompany
-                        data = data.clone()
-                        show_list = true
+                        data={data.clone()}
+                        show_list={true}
                       />
                   </div>
               // </div>
-              <button class="modal-close is-large" aria-label="close" onclick=onclick_company_data_info />
+              <button class="modal-close is-large" aria-label="close" onclick={onclick_company_data_info} />
             </div>},
             None => html!{},
         }

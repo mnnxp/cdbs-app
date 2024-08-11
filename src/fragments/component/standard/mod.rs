@@ -8,9 +8,10 @@ use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::error::Error;
+use crate::fragments::buttons::{ft_add_btn, ft_save_btn};
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, ShowStandardShort};
-use crate::services::{get_value_field, resp_parsing};
+use crate::services::{get_value_field, resp_parsing, resp_parsing_two_level};
 use crate::gqls::{
     make_query,
     component::{
@@ -136,12 +137,12 @@ impl Component for ComponentStandardsCard {
                 }
             },
             Msg::GetComponentStandardsResult(res) => {
-                match resp_parsing(res, "component") {
+                match resp_parsing_two_level(res, "component", "componentStandards") {
                     Ok(result) => {
                         debug!("componentStandards: {:?}", result);
                         self.component_standards = result;
                         self.standard_uuids = BTreeSet::new();
-                        for standard in self.component_standards.clone() {
+                        for standard in &self.component_standards {
                             self.standard_uuids.insert(standard.uuid.clone());
                         };
                         link.send_message(Msg::SetSelectStandard);
@@ -189,11 +190,31 @@ impl Component for ComponentStandardsCard {
 
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+        let onclick_action_btn = self.link.callback(|_| Msg::ChangeHideAddStandard);
 
-        html!{<>
-            <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
-            {self.show_standards()}
-        </>}
+        html!{
+            <div class="card">
+                <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
+                <header class="card-header">
+                    <p class="card-header-title">{get_value_field(&189)}</p> // Manage component standards
+                </header>
+                <div class="card-content">
+                    <div class="content">
+                        {self.show_standards()}
+                    </div>
+                    <footer class="card-footer">
+                        {ft_add_btn(
+                            "add-standard-for-component",
+                            get_value_field(&191),
+                            onclick_action_btn,
+                            true,
+                            false
+                        )}
+                    </footer>
+                </div>
+                {self.modal_add_standard()}
+            </div>
+        }
     }
 }
 
@@ -201,42 +222,35 @@ impl ComponentStandardsCard {
     fn show_standards(&self) -> Html {
         let onclick_delete_standard =
             self.link.callback(|value: UUID| Msg::DeleteComponentStandard(value));
-        let onclick_action_btn = self.link.callback(|_| Msg::ChangeHideAddStandard);
 
-        html!{<div class="card column">
+        html!{
           <table class="table is-fullwidth">
+            <thead>
+            <tr>
+                <th>{get_value_field(&112)}</th> // Classifier
+                <th>{get_value_field(&113)}</th> // Specified tolerance
+                <th>{get_value_field(&111)}</th> // Action
+                {match self.props.show_delete_btn {
+                    true => html!{<th>{get_value_field(&135)}</th>},
+                    false => html!{},
+                }}
+            </tr>
+            </thead>
             <tbody>
-               <th>{ get_value_field(&112) }</th> // Classifier
-               <th>{ get_value_field(&113) }</th> // Specified tolerance
-               <th>{ get_value_field(&111) }</th> // Action
-               {match self.props.show_delete_btn {
-                   true => html!{<th>{ get_value_field(&135) }</th>},
-                   false => html!{},
-               }}
                {for self.component_standards.iter().map(|data| {
                    match self.standard_uuids.get(&data.uuid) {
                        Some(_) => html!{<ComponentStandardItem
-                           show_delete_btn = self.props.show_delete_btn
-                           component_uuid = self.props.component_uuid.clone()
-                           standard_data = data.clone()
-                           delete_standard = Some(onclick_delete_standard.clone())
+                           show_delete_btn={self.props.show_delete_btn}
+                           component_uuid={self.props.component_uuid.clone()}
+                           standard_data={data.clone()}
+                           delete_standard={Some(onclick_delete_standard.clone())}
                          />},
                        None => html!{},
                    }
                })}
             </tbody>
           </table>
-          {self.modal_add_standard()}
-          <button
-                id="add-standard-component"
-                class="button is-fullwidth"
-                onclick={onclick_action_btn} >
-              <span class="icon" >
-                  <i class="fas fa-plus" aria-hidden="true"></i>
-              </span>
-              <span>{ get_value_field(&191) }</span> // Add a standard to a component
-          </button>
-        </div>}
+        }
     }
 
     fn modal_add_standard(&self) -> Html {
@@ -253,45 +267,44 @@ impl ComponentStandardsCard {
         };
 
         html!{
-            <div class=class_modal>
-              <div class="modal-background" onclick=onclick_hide_modal.clone() />
+            <div class={class_modal}>
+              <div class="modal-background" onclick={onclick_hide_modal.clone()} />
                 <div class="modal-content">
                   <div class="card">
                     <header class="modal-card-head">
-                      <p class="modal-card-title">{ get_value_field(&191) }</p> // Add a standard to a component
-                      <button class="delete" aria-label="close" onclick=onclick_hide_modal.clone() />
+                      <p class="modal-card-title">{get_value_field(&263)}</p> // Add a standard to the component
+                      <button class="delete" aria-label="close" onclick={onclick_hide_modal.clone()} />
                     </header>
                     <section class="modal-card-body">
-                        <label class="label">{ get_value_field(&212) }</label> // Select standard
-                        // <div class="columns">
-                            <div class="column">
-                                <div class="select">
-                                  <select
-                                      id="add-standard"
-                                      select={self.request_add_standard_uuid.clone()}
-                                      onchange=onchange_select_add_standard
-                                    >
-                                  { for self.standard_list.iter().map(|x|
-                                      match self.standard_uuids.get(&x.uuid) {
-                                          Some(_) => html!{}, // this standard already has
-                                          None => html!{ <option value={x.uuid.to_string()}>{
-                                              format!("{} ({})", &x.classifier, &x.name)
-                                          }</option> },
-                                      }
-                                  )}
-                                  </select>
-                                </div>
+                        <div class="column">
+                            <label class="label">{get_value_field(&212)}</label> // Select standard
+                        </div>
+                        <div class="column">
+                            <div class="select">
+                                <select
+                                    id="add-standard"
+                                    select={self.request_add_standard_uuid.clone()}
+                                    onchange={onchange_select_add_standard}
+                                >
+                                { for self.standard_list.iter().map(|x|
+                                    match self.standard_uuids.get(&x.uuid) {
+                                        Some(_) => html!{}, // this standard already has
+                                        None => html!{ <option value={x.uuid.to_string()}>{
+                                            format!("{} ({})", &x.classifier, &x.name)
+                                        }</option> },
+                                    }
+                                )}
+                                </select>
                             </div>
-                            <div class="column">
-                                <button
-                                    id="standard-component"
-                                    class="button is-fullwidth"
-                                    disabled={self.request_add_standard_uuid.is_empty()}
-                                    onclick={onclick_add_standard} >
-                                    { get_value_field(&117) }
-                                </button>
-                            </div>
-                        // </div>
+                        </div>
+                        <div class="column">
+                            {ft_save_btn(
+                                "standard-component",
+                                onclick_add_standard,
+                                true,
+                                self.request_add_standard_uuid.is_empty()
+                            )}
+                        </div>
                     </section>
                   </div>
                 </div>

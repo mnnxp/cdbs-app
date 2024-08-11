@@ -33,6 +33,7 @@ pub enum Msg {
     RequestDeleteLicense,
     ResponseError(Error),
     GetDeleteLicenseResult(String),
+    ClearError,
 }
 
 impl Component for ComponentLicenseTag {
@@ -85,6 +86,7 @@ impl Component for ComponentLicenseTag {
                     Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
+            Msg::ClearError => self.error = None,
         }
         true
     }
@@ -99,8 +101,9 @@ impl Component for ComponentLicenseTag {
     }
 
     fn view(&self) -> Html {
+        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         html!{<>
-            <ListErrors error=self.error.clone()/>
+            <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
             {match self.get_result_delete {
                 true => html!{},
                 false => self.show_license(),
@@ -132,23 +135,4 @@ impl ComponentLicenseTag {
             }}
         </>}
     }
-    // fn show_modal_license_info(&self) -> Html {
-    //     let onclick_license_data_info = self.link
-    //         .callback(|_| Msg::ShowLicenseCard);
-    //
-    //     let class_modal = match &self.open_license_info {
-    //         true => "modal is-active",
-    //         false => "modal",
-    //     };
-    //
-    //     html!{<div class=class_modal>
-    //       <div class="modal-background" onclick=onclick_license_data_info.clone() />
-    //       <div class="modal-content">
-    //           <div class="card">
-    //
-    //           </div>
-    //       </div>
-    //       <button class="modal-close is-large" aria-label="close" onclick=onclick_license_data_info />
-    //     </div>}
-    // }
 }

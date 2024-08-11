@@ -12,6 +12,7 @@ use wasm_bindgen_futures::spawn_local;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{
+    buttons::ft_follow_btn,
     company::CatalogCompanies,
     component::CatalogComponents,
     list_errors::ListErrors,
@@ -21,7 +22,7 @@ use crate::fragments::{
     user::CatalogUsers,
     user::UserCertificatesCard,
 };
-use crate::services::{Counter, get_logged_user, get_value_field, resp_parsing};
+use crate::services::{Counter, get_logged_user, get_value_field, resp_parsing, title_changer};
 use crate::types::{
     UserDataCard, CompaniesQueryArg, ComponentsQueryArg, SelfUserInfo, SlimUser,
     StandardsQueryArg, UserCertificate, UserInfo, UsersQueryArg, UUID,
@@ -134,6 +135,8 @@ impl Component for Profile {
         // check get self data
         let get_self = logged_username == target_username;
         // debug!("get_self {:?}", get_self);
+
+        title_changer::set_title(self.current_username.as_str());
 
         if first_render || not_matches_username {
             // clear old data
@@ -277,11 +280,14 @@ impl Component for Profile {
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
 
-        match (&self.self_profile, &self.profile) {
-            (Some(self_data), _) => self.self_user_card(self_data),
-            (_, Some(user_data)) => self.other_user_card(user_data),
-            _ => html!{<ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error) />},
-        }
+        html!{<>
+            <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
+            {match (&self.self_profile, &self.profile) {
+                (Some(self_data), _) => self.self_user_card(self_data),
+                (_, Some(user_data)) => self.other_user_card(user_data),
+                _ => html!{},
+            }}
+        </>}
     }
 }
 
@@ -292,7 +298,6 @@ impl Profile {
     ) -> Html {
         html! {
             <div class="profile-page">
-                <ListErrors error=self.error.clone()/>
                 <div class="container page">
                     <div class="row">
                         <div class="card">
@@ -331,7 +336,7 @@ impl Profile {
                             ProfileTab::FavoriteComponents => self.view_favorite_components(None),
                             ProfileTab::FavoriteCompanies => self.view_favorite_companies(None),
                             ProfileTab::FavoriteStandards => self.view_favorite_standards(),
-                            ProfileTab::FavoriteUsers => html!{<CatalogUsers arguments = UsersQueryArg::set_favorite() />},
+                            ProfileTab::FavoriteUsers => html!{<CatalogUsers arguments={UsersQueryArg::set_favorite()} />},
                         }}
                     </div>
                 </div>
@@ -345,7 +350,6 @@ impl Profile {
     ) -> Html {
         html! {
             <div class="profile-page">
-                <ListErrors error=self.error.clone()/>
                 <div class="container page">
                     <div class="row">
                         <div class="card">
@@ -405,71 +409,63 @@ impl Profile {
             (None, None) => UserDataCard::default(),
         };
 
-        html!{<div class="media">
-            <div class="media-left">
-              <figure class="image is-48x48">
-                // <img src="https://bulma.io/images/placeholders/96x96.png" alt="Placeholder image"/>
-                <img
-                    src={image_file.clone()} alt="Favicon profile"
-                    loading="lazy"
-                />
-              </figure>
+        html!{
+            <div class="columns">
+                <div class="box">
+                    <figure class={classes!("container", "image", "is-48x48")}>
+                        <img
+                            src={image_file.clone()} alt="Favicon profile"
+                            loading="lazy"
+                        />
+                    </figure>
+                </div>
+                <div id="profile-region" class={classes!("column", "is-three-fifths")}>
+                <p id="title-fl" class="title is-4">
+                    {format!("{} {}", firstname, lastname)}
+                </p>
+                <p id="subtitle-username" class="subtitle is-6">
+                    {format!("@{}", username)}
+                </p>
+                </div>
+                <div class="column">
+                    // for self user data not show button "following"
+                    {match &self.profile {
+                        Some(_) => html!{<>
+                            <p class="subtitle is-6 has-text-right">
+                                {get_value_field(&30)}
+                                {" "}
+                                {updated_at}
+                            </p>
+                            {self.show_favorite_btn()}
+                        </>},
+                        None => html!{
+                            <div class="subtitle is-6 has-text-right">
+                                {get_value_field(&30)}
+                                {" "}
+                                {updated_at}
+                                <p>
+                                    <span>{get_value_field(&31)}</span>
+                                    <span>{self.abbr_number()}</span>
+                                </p>
+                            </div>
+                        },
+                    }}
+                </div>
             </div>
-            <div class="media-content">
-              <p id="title-fl" class="title is-4">{
-                  format!("{} {}", firstname, lastname)
-              }</p>
-              <p id="subtitle-username" class="subtitle is-6">{
-                  format!("@{}", username)
-              }</p>
-            </div>
-            <div class="media-right">
-                {match self.show_full_user_info {
-                    true => html!{
-                        <div>
-                            <span>{ get_value_field(&30) }</span>
-                            <span>{updated_at}</span>
-                        </div>
-                    },
-                    false => html!{},
-                }}
-                { self.show_profile_followers() }
-            </div>
-        </div>}
-    }
-
-    fn show_profile_followers(&self) -> Html {
-        html! {<>
-            // for self user data not show button "following"
-            {match &self.profile {
-                Some(_) => self.show_favorite_btn(),
-                None => html!{
-                    <div>
-                        <span>{ get_value_field(&31) }</span>
-                        <span>{self.abbr_number()}</span>
-                    </div>
-                },
-            }}
-        </>}
+        }
     }
 
     fn show_favorite_btn(&self) -> Html {
-        let (class_fav, onclick_following) = match self.is_followed {
-            true => ("fas fa-bookmark", self.link.callback(|_| Msg::UnFollow)),
-            false => ("far fa-bookmark", self.link.callback(|_| Msg::Follow)),
+        let onclick_following = match self.is_followed {
+            true => self.link.callback(|_| Msg::UnFollow),
+            false => self.link.callback(|_| Msg::Follow),
         };
 
-        html!{
-            <button
-                id="following-button"
-                class="button"
-                onclick=onclick_following >
-              <span class="icon is-small">
-                <i class={class_fav}></i>
-              </span>
-              <span>{self.abbr_number()}</span>
-            </button>
-        }
+        ft_follow_btn(
+            onclick_following,
+            self.is_followed,
+            self.abbr_number(),
+        )
     }
 
     fn cb_generator(&self, cb: ProfileTab) -> Callback<MouseEvent> {
@@ -575,38 +571,36 @@ impl Profile {
         match self.show_full_user_info {
             true => html! {<>
                 <div class="columns">
-                    <div class="column">
+                    <div class="column is-two-thirds">
                         <div id="description" class="content">
                           {description}
                         </div>
                     </div>
                     <div class="column">
-                        <div id="position">
+                        <div id="position" hidden={position.is_empty()}>
                             <span class="icon is-small"><i class="fas fa-briefcase" /></span>
-                            <span>{ get_value_field(&39) }</span>
+                            <span>{get_value_field(&39)}</span>
                             <span class="overflow-title has-text-weight-bold">{position}</span>
                         </div>
-                        // <br/>
                         <div id="region">
                             <span class="icon is-small"><i class="fas fa-map-marker-alt" /></span>
-                            <span>{ get_value_field(&40) }</span>
+                            <span>{get_value_field(&40)}</span>
                             <span class="overflow-title has-text-weight-bold">{region}</span>
                         </div>
-                        // <br/>
-                        <div id="program">
+                        <div id="program" hidden={program == "Unknown"}>
                             <span class="icon is-small"><i class="fas fa-drafting-compass" /></span>
-                            <span>{ get_value_field(&41) }</span>
+                            <span>{get_value_field(&41)}</span>
                             <span class="overflow-title has-text-weight-bold">{program}</span>
                         </div>
                     </div>
                 </div>
                 <button class="button is-ghost" onclick={onclick_change_full_show}>
-                    <span>{ get_value_field(&42) }</span>
+                    <span>{get_value_field(&42)}</span>
                 </button>
             </>},
             false => html!{
                 <button class="button is-ghost" onclick={onclick_change_full_show}>
-                    <span>{ get_value_field(&43) }</span>
+                    <span>{get_value_field(&43)}</span>
                 </button>
             },
         }
@@ -622,11 +616,11 @@ impl Profile {
             html!{
                 <div class="profileBox" >
                     <UserCertificatesCard
-                        user_uuid = self.current_user_uuid.clone()
-                        certificates = certificates
-                        show_cert_btn = false
-                        download_btn = false
-                        manage_btn = false
+                        user_uuid={self.current_user_uuid.clone()}
+                        certificates={certificates}
+                        show_cert_btn={false}
+                        download_btn={false}
+                        manage_btn={false}
                     />
                 </div>
             }
@@ -636,8 +630,8 @@ impl Profile {
     fn view_favorite_components(&self, user_uuid: Option<UUID>) -> Html {
         html! {
             <CatalogComponents
-                show_create_btn = self.self_profile.is_some()
-                arguments = ComponentsQueryArg::set_favorite(user_uuid)
+                show_create_btn={self.self_profile.is_some()}
+                arguments={ComponentsQueryArg::set_favorite(user_uuid)}
             />
         }
     }
@@ -645,8 +639,8 @@ impl Profile {
     fn view_components(&self, user_uuid: &UUID) -> Html {
         html! {
             <CatalogComponents
-                show_create_btn = self.self_profile.is_some()
-                arguments = ComponentsQueryArg::set_user_uuid(user_uuid)
+                show_create_btn={self.self_profile.is_some()}
+                arguments={ComponentsQueryArg::set_user_uuid(user_uuid)}
             />
         }
     }
@@ -654,8 +648,8 @@ impl Profile {
     fn view_favorite_companies(&self, user_uuid: Option<UUID>) -> Html {
         html! {
             <CatalogCompanies
-                show_create_btn = self.self_profile.is_some()
-                arguments = CompaniesQueryArg::set_favorite(user_uuid)
+                show_create_btn={self.self_profile.is_some()}
+                arguments={CompaniesQueryArg::set_favorite(user_uuid)}
             />
         }
     }
@@ -663,8 +657,8 @@ impl Profile {
     fn view_companies(&self, user_uuid: &UUID) -> Html {
         html! {
             <CatalogCompanies
-                show_create_btn = self.self_profile.is_some()
-                arguments = CompaniesQueryArg::set_user_uuid(user_uuid)
+                show_create_btn={self.self_profile.is_some()}
+                arguments={CompaniesQueryArg::set_user_uuid(user_uuid)}
             />
         }
     }
@@ -672,8 +666,8 @@ impl Profile {
     fn view_favorite_standards(&self) -> Html {
         html! {
             <CatalogStandards
-                show_create_btn = false
-                arguments = StandardsQueryArg::set_favorite()
+                show_create_btn={false}
+                arguments={StandardsQueryArg::set_favorite()}
             />
         }
     }

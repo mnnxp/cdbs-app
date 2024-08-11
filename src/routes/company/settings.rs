@@ -15,6 +15,8 @@ use crate::gqls::make_query;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{
+    buttons::{ft_save_btn, ft_submit_btn, ft_delete_btn},
+    notification::show_notification,
     company::{
         CompanyCertificatesCard, AddCompanyCertificateCard,
         AddCompanyRepresentCard, CompanyRepresents, SearchSpecsTags
@@ -23,6 +25,7 @@ use crate::fragments::{
     side_menu::{MenuItem, SideMenu},
     upload_favicon::UpdateFaviconBlock,
 };
+use crate::services::content_adapter::DateDisplay;
 use crate::services::{get_logged_user, get_value_field, resp_parsing, get_value_response, get_from_value};
 use crate::types::{
     UUID, SlimUser, CompanyUpdateInfo, CompanyInfo, Region,
@@ -82,6 +85,7 @@ pub struct CompanySettings {
     get_result_update: usize,
     get_result_access: bool,
     get_result_remove_company: bool,
+    get_confirm: UUID,
     select_menu: Menu,
 }
 
@@ -140,6 +144,7 @@ impl Component for CompanySettings {
             get_result_update: 0,
             get_result_access: false,
             get_result_remove_company: false,
+            get_confirm: String::new(),
             select_menu: Menu::Company,
         }
     }
@@ -220,25 +225,29 @@ impl Component for CompanySettings {
                     };
 
                     let res = make_query(ChangeCompanyAccess::build_query(
-                        change_company_access::Variables{ change_type_access_company }
+                        change_company_access::Variables{change_type_access_company}
                     )).await.unwrap();
                     link.send_message(Msg::GetUpdateAccessResult(res));
                 })
             },
             Msg::RequestRemoveCompany => {
                 let delete_company_uuid = self.company_uuid.clone();
-                spawn_local(async move {
-                    let res = make_query(DeleteCompany::build_query(
-                        delete_company::Variables { delete_company_uuid }
-                    )).await.unwrap();
-                    link.send_message(Msg::GetRemoveCompanyResult(res));
-                })
+                if self.get_confirm == delete_company_uuid {
+                    spawn_local(async move {
+                        let res = make_query(DeleteCompany::build_query(
+                            delete_company::Variables{delete_company_uuid}
+                        )).await.unwrap();
+                        link.send_message(Msg::GetRemoveCompanyResult(res));
+                    })
+                } else {
+                    self.get_confirm = delete_company_uuid;
+                }
             },
             Msg::ReguestCompanyData => {
                 let company_uuid = self.company_uuid.clone();
                 spawn_local(async move {
                     let res = make_query(GetCompanyData::build_query(
-                        get_company_data::Variables { company_uuid }
+                        get_company_data::Variables{company_uuid}
                     )).await.unwrap();
                     link.send_message(Msg::GetCompanyDataResult(res));
                 })
@@ -278,9 +287,8 @@ impl Component for CompanySettings {
                         debug!("Delete company: {:?}", delete_company_uuid);
                         self.get_result_remove_company = true;
                         match &self.props.current_user {
-                            Some(user) => self
-                                .router_agent
-                                .send(ChangeRoute(AppRoute::Profile(user.username.clone()).into())),
+                            Some(user) =>
+                                self.router_agent.send(ChangeRoute(AppRoute::Profile(user.username.clone()).into())),
                             None => self.router_agent.send(ChangeRoute(AppRoute::Home.into())),
                         }
                     },
@@ -314,6 +322,10 @@ impl Component for CompanySettings {
             Msg::SelectMenu(value) => {
                 self.select_menu = value;
                 self.rendered(false);
+                // clear flags
+                self.get_result_update = 0;
+                self.get_result_access = false;
+                self.get_result_remove_company = false;
             },
             Msg::ClearError => self.error = None,
             Msg::Ignore => {},
@@ -335,12 +347,12 @@ impl Component for CompanySettings {
 
         html!{
             <div class="settings-page">
-                <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error) />
+                <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
                 <div class="container page">
                     <div class="row">
                         <div class="columns">
                             <div class="column is-flex">
-                                { self.view_menu() }
+                                {self.view_menu()}
                                 <div class="card is-flex-grow-1" >
                                     <div class="card-content">
                                         {self.select_content()}
@@ -385,7 +397,7 @@ impl CompanySettings {
                     type={input_type}
                     placeholder={placeholder.to_string()}
                     value={value}
-                    oninput=oninput ></@>
+                    oninput={oninput} ></@>
             </fieldset>
         }
     }
@@ -443,7 +455,7 @@ impl CompanySettings {
             },
             // Spec MenuItem
             MenuItem {
-                title: get_value_field(&104).to_string(), // Spec
+                title: get_value_field(&283).to_string(), // Sphere of activity
                 action: self.cb_generator(Menu::Spec),
                 item_class: classes!("has-background-white"),
                 icon_classes: vec![classes!("fas", "fa-paperclip")],
@@ -478,78 +490,65 @@ impl CompanySettings {
     }
 
     fn select_content(&self) -> Html {
+        match self.select_menu {
+            // Show interface for change company data
+            Menu::Company => self.manage_master_data(),
+            // Show interface for change favicon company
+            Menu::UpdateFavicon => self.update_favicon_block(),
+            // Show interface for add and update Certificates
+            Menu::Certificates => html!{<>
+                <h4 id="updated-certificates" class="title is-4">{get_value_field(&64)}</h4> // Certificates
+                {self.add_certificate_block()}
+                <br/>
+                {self.certificates_block()}
+            </>},
+            // Show interface for add and update Represents
+            Menu::Represent => html!{<>
+                <h4 id="updated-represents" class="title is-4">{get_value_field(&266)}</h4> // Represents
+                <AddCompanyRepresentCard company_uuid={self.company_uuid.clone()} />
+                <br/>
+                {self.represents_block()}
+            </>},
+            // Show interface for add and update company catalogs
+            Menu::Spec => self.manage_specs_block(),
+            // Show interface for manage Access
+            Menu::Access => self.manage_access_block(),
+            // Show interface for remove company
+            Menu::RemoveCompany => self.remove_company_block(),
+        }
+    }
+
+    fn manage_master_data(&self) -> Html {
         let onsubmit_update_company = self.link.callback(|ev: FocusEvent| {
             ev.prevent_default();
             Msg::RequestUpdateCompany
         });
 
-        match self.select_menu {
-            // Show interface for change company data
-            Menu::Company => html!{<>
-                <h4 id="updated-company" class="title is-4">{ get_value_field(&109) }</h4> // Company
-                <div class="columns">
-                    <div class="column">
-                        <span class=classes!("overflow-title", "has-text-weight-bold")>{ get_value_field(&72) }</span>
-                        <span class="overflow-title">{self.get_result_update.clone()}</span>
-                    </div>
-                    <div class="column">
-                        <span class=classes!("overflow-title", "has-text-weight-bold")>{ get_value_field(&73) }</span>
-                        {match &self.current_data {
-                            Some(data) => html!{
-                                <span class="overflow-title">
-                                    {format!("{:.*}", 19, data.updated_at.to_string())}
-                                </span>
-                            },
-                            None => html!{<span>{ get_value_field(&75) }</span>},
-                        }}
-                    </div>
+        html!{<>
+            <h4 id="updated-company" class="title is-4">{get_value_field(&109)}</h4> // Company
+            <div class="columns">
+                {show_notification(
+                    &format!("{} {}", get_value_field(&72), self.get_result_update),
+                    "is-success",
+                    self.get_result_update > 0,
+                )}
+                <div class="column">
+                    <span class={classes!("overflow-title", "has-text-weight-bold")}>{get_value_field(&73)}</span>
+                    {match &self.current_data {
+                        Some(data) => html!{
+                            <span class="overflow-title">
+                                {data.updated_at.date_to_display()}
+                            </span>
+                        },
+                        None => html!{<span>{get_value_field(&75)}</span>},
+                    }}
                 </div>
-                <form onsubmit=onsubmit_update_company >
-                    { self.fieldset_company() }
-                    <button
-                        id="update-settings"
-                        class="button"
-                        type="submit"
-                        disabled=false>
-                        { get_value_field(&264) }
-                    </button>
-                </form>
-            </>},
-            // Show interface for change favicon company
-            Menu::UpdateFavicon => html!{<>
-                <h4 id="updated-favicon-company" class="title is-4">{ get_value_field(&78) }</h4> // Favicon
-                { self.update_favicon_block() }
-            </>},
-            // Show interface for add and update Certificates
-            Menu::Certificates => html!{<>
-                <h4 id="updated-certificates" class="title is-4">{ get_value_field(&64) }</h4> // Certificates
-                { self.add_certificate_block() }
-                <br/>
-                { self.certificates_block() }
-            </>},
-            // Show interface for add and update Represents
-            Menu::Represent => html!{<>
-                <h4 id="updated-represents" class="title is-4">{ get_value_field(&266) }</h4> // Represents
-                <AddCompanyRepresentCard company_uuid = self.company_uuid.clone() />
-                <br/>
-                { self.represents_block() }
-            </>},
-            // Show interface for add and update company Specs
-            Menu::Spec => html!{<>
-                <h4 id="updated-specs" class="title is-4">{ get_value_field(&104) }</h4>
-                {self.manage_specs_block()}
-            </>},
-            // Show interface for manage Access
-            Menu::Access => html!{<>
-                <h4 id="updated-represents" class="title is-4">{ get_value_field(&65) }</h4> // Access
-                { self.manage_access_block() }
-            </>},
-            // Show interface for remove company
-            Menu::RemoveCompany => html!{<>
-                <h4 id="remove-company" class="title is-4">{ get_value_field(&268) }</h4>
-                {self.remove_company_block()}
-            </>},
-        }
+            </div>
+            <form onsubmit={onsubmit_update_company} >
+                {self.fieldset_company()}
+                {ft_submit_btn("update-settings")}
+            </form>
+        </>}
     }
 
     fn fieldset_company(&self) -> Html {
@@ -607,15 +606,15 @@ impl CompanySettings {
             <div class="columns">
                 <div class="column">
                     <fieldset class="field">
-                        <label class="label">{ get_value_field(&51) }</label>
+                        <label class="label">{get_value_field(&51)}</label>
                         <div class="control">
                             <div class="select">
                               <select
                                   id="company_type"
                                   select={self.request_company.company_type_id.unwrap_or_default().to_string()}
-                                  onchange=onchange_company_type_id
+                                  onchange={onchange_company_type_id}
                                   >
-                                { for self.company_types.iter().map(|x|
+                                {for self.company_types.iter().map(|x|
                                     html!{
                                         <option value={x.company_type_id.to_string()}
                                               selected={x.company_type_id as i64 == self.request_company.company_type_id.unwrap_or_default()} >
@@ -659,15 +658,15 @@ impl CompanySettings {
             <div class="columns">
                 <div class="column">
                     <fieldset class="field">
-                        <label class="label">{ get_value_field(&27) }</label>
+                        <label class="label">{get_value_field(&27)}</label>
                         <div class="control">
                             <div class="select">
                               <select
                                   id="region"
                                   select={self.request_company.region_id.unwrap_or_default().to_string()}
-                                  onchange=onchange_region_id
+                                  onchange={onchange_region_id}
                                   >
-                                { for self.regions.iter().map(|x|
+                                {for self.regions.iter().map(|x|
                                     html!{
                                         <option value={x.region_id.to_string()}
                                               selected={x.region_id as i64 == self.request_company.region_id.unwrap_or_default()} >
@@ -701,46 +700,46 @@ impl CompanySettings {
     fn update_favicon_block(&self) -> Html {
         let callback_update_favicon = self.link.callback(|_| Msg::ReguestCompanyData);
 
-        html!{
+        html!{<>
+            <h4 id="updated-favicon-company" class="title is-4">{get_value_field(&78)}</h4> // Favicon
             <UpdateFaviconBlock
-                company_uuid = self.company_uuid.clone()
-                callback=callback_update_favicon
+                company_uuid={self.company_uuid.clone()}
+                callback={callback_update_favicon}
             />
-        }
+        </>}
     }
 
     fn certificates_block(&self) -> Html {
         match &self.current_data {
             Some(current_data) => html!{
                 <CompanyCertificatesCard
-                    certificates = current_data.company_certificates.clone()
-                    show_cert_btn = true
-                    download_btn = false
-                    manage_btn = true
+                    certificates={current_data.company_certificates.clone()}
+                    show_cert_btn={true}
+                    download_btn={false}
+                    manage_btn={true}
                 />
             },
             None => html!{
                 <div class="notification is-info">
-                    <span>{ get_value_field(&74) }</span>
+                    <span>{get_value_field(&74)}</span>
                 </div>
             },
         }
     }
 
     fn manage_specs_block(&self) -> Html {
-        match &self.current_data {
-            Some(current_data) => html!{
-                <SearchSpecsTags
-                    company_specs = current_data.company_specs.clone()
-                    company_uuid = current_data.uuid.clone()
-                 />
-            },
-            None => html!{
-                <div class="notification is-info">
-                    <span>{ get_value_field(&269) }</span>
-                </div>
-            },
-        }
+        html!{<>
+            <h4 id="updated-company-specs" class="title is-4">{get_value_field(&283)}</h4> // Sphere of activity
+            {match &self.current_data {
+                Some(current_data) => html!{
+                    <SearchSpecsTags
+                        company_specs={current_data.company_specs.clone()}
+                        company_uuid={current_data.uuid.clone()}
+                     />
+                },
+                None => html!{},
+            }}
+        </>}
     }
 
     fn add_certificate_block(&self) -> Html {
@@ -754,8 +753,8 @@ impl CompanySettings {
 
         html!{
             <AddCompanyCertificateCard
-                company_uuid = company_uuid
-                callback=callback_upload_cert
+                company_uuid={company_uuid}
+                callback={callback_upload_cert}
             />
         }
     }
@@ -764,97 +763,83 @@ impl CompanySettings {
         match self.current_data {
             Some(ref data) => html!{
                 <CompanyRepresents
-                    show_manage_btn = true
-                    list = data.company_represents.clone()
+                    show_manage_btn={true}
+                    list={data.company_represents.clone()}
                 />
             },
             None => html!{
                 <div class="notification is-info">
-                    <span>{ get_value_field(&270) }</span>
+                    <span>{get_value_field(&270)}</span>
                 </div>
             },
         }
     }
 
     fn manage_access_block(&self) -> Html {
-        let onsubmit_update_access = self.link.callback(|ev: FocusEvent| {
-            ev.prevent_default();
-            Msg::RequestChangeAccess
-        });
-
-        html!{
-            <form onsubmit=onsubmit_update_access>
-                { self.fieldset_access() }
-                <button
-                    id="update-access"
-                    class="button"
-                    type="submit"
-                    disabled=false>
-                    { get_value_field(&271) }
-                </button>
-            </form>
-        }
-    }
-
-    fn fieldset_access(&self) -> Html {
         let onchange_type_access_id = self.link.callback(|ev: ChangeData| {
             Msg::UpdateTypeAccessId(match ev {
                 ChangeData::Select(el) => el.value(),
                 _ => "1".to_string(),
             })
         });
+        let onsubmit_update_access = self.link.callback(|_| Msg::RequestChangeAccess);
 
-        html!{
-            <fieldset class="columns">
-                // first column
-                <fieldset class="column">
-                    <fieldset class="field">
-                        <label class="label">{ get_value_field(&58) }</label>
-                        <div class="control">
-                            <div class="select">
-                              <select
-                                  id="types-access"
-                                  select={self.request_access.to_string()}
-                                  onchange=onchange_type_access_id
-                                  >
-                                { for self.types_access.iter().map(|x|
-                                    html!{
-                                        <option value={x.type_access_id.to_string()}
-                                              selected={x.type_access_id as i64 == self.request_access} >
-                                            {&x.name}
-                                        </option>
-                                    }
-                                )}
-                              </select>
-                            </div>
-                        </div>
-                    </fieldset>
-                </fieldset>
-            </fieldset>
-        }
+        html!{<>
+            {show_notification(
+                get_value_field(&68), // Updated access
+                "is-success",
+                self.get_result_access,
+            )}
+            <h4 id="updated-access" class="title is-4">{get_value_field(&65)}</h4> // Access
+            <div class="field">
+                <label class="label">{get_value_field(&58)}</label>
+                <div class="control">
+                    <div class="select is-fullwidth">
+                    <select
+                        id="types-access"
+                        select={self.request_access.to_string()}
+                        onchange={onchange_type_access_id}
+                        >
+                        {for self.types_access.iter().map(|x|
+                            html!{
+                                <option value={x.type_access_id.to_string()}
+                                    selected={x.type_access_id as i64 == self.request_access} >
+                                    {&x.name}
+                                </option>
+                            }
+                        )}
+                    </select>
+                    </div>
+                </div>
+            </div>
+            {ft_save_btn(
+                "update-access-btn",
+                onsubmit_update_access,
+                true,
+                false,
+            )}
+        </>}
     }
 
     fn remove_company_block(&self) -> Html {
         let onclick_delete_company = self.link.callback(|_| Msg::RequestRemoveCompany);
 
         html!{<>
-            <span id="remove-company" class="tag is-info is-light">
-              {format!("{}: {}", get_value_field(&274), self.get_result_remove_company)}
-            </span>
-            <br/>
-            <div class="notification is-danger">
-                <span>
-                    <strong>{ get_value_field(&272) }</strong>
-                    { get_value_field(&273) }
-                </span>
+            <h4 id="remove-company" class="title is-4">{get_value_field(&268)}</h4>
+            {show_notification(
+                &format!("{}: {}", get_value_field(&274), self.get_result_remove_company),
+                "is-success",
+                self.get_result_remove_company,
+            )}
+            <div class="content is-medium">
+                <p><strong>{get_value_field(&272)}</strong> {get_value_field(&273)}</p>
             </div>
-            <br/>
-            <button
-                id="button-delete-company"
-                class="button is-danger"
-                onclick=onclick_delete_company>
-                { get_value_field(&135) }
-            </button>
+            {ft_delete_btn(
+                "button-delete-company",
+                onclick_delete_company,
+                self.get_confirm == self.company_uuid,
+                false
+            )}
         </>}
     }
 }

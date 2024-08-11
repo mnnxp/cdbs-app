@@ -9,10 +9,12 @@ use log::debug;
 use crate::error::Error;
 use crate::routes::AppRoute;
 use crate::fragments::{
+    buttons::ft_follow_btn,
     list_errors::ListErrors,
     switch_icon::res_btn,
 };
 use crate::types::ShowStandardShort;
+use crate::services::content_adapter::DateDisplay;
 use crate::services::{get_value_field, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::standard::{
@@ -27,6 +29,7 @@ pub enum Msg {
     DelFav,
     GetFavResult(String),
     ResponseError(Error),
+    ClearError,
     Ignore,
 }
 
@@ -109,6 +112,7 @@ impl Component for ListItemStandard {
                 }
             },
             Msg::ResponseError(err) => self.error = Some(err),
+            Msg::ClearError => self.error = None,
             Msg::Ignore => {},
         }
         true
@@ -126,13 +130,14 @@ impl Component for ListItemStandard {
     }
 
     fn view(&self) -> Html {
-      html!{<>
-        <ListErrors error=self.error.clone()/>
-        {match self.props.show_list {
-            true => { self.showing_in_list() },
-            false => { self.showing_in_box() },
-        }}
-      </>}
+        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+        html!{<>
+            <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
+            {match self.props.show_list {
+                true => { self.showing_in_list() },
+                false => { self.showing_in_box() },
+            }}
+        </>}
     }
 }
 
@@ -153,17 +158,7 @@ impl ListItemStandard {
         } = &self.props.data;
 
         let show_standard_btn = self.link.callback(|_| Msg::OpenStandard);
-        let trigger_fab_btn = self.link.callback(|_| Msg::TriggerFav);
-
-        let mut class_res_btn = vec!["fa-bookmark"];
-        let mut class_color_btn = "";
-        match &self.is_followed {
-            true => {
-                class_res_btn.push("fas");
-                class_color_btn = "color: #1872F0;";
-            },
-            false => class_res_btn.push("far"),
-        }
+        let trigger_fav_btn = self.link.callback(|_| Msg::TriggerFav);
 
         html!{
           <div class="box itemBox">
@@ -181,12 +176,12 @@ impl ListItemStandard {
                   <div class="media-content">
                     <div class="columns is-gapless" style="margin-bottom:0">
                       <div class="column">
-                          { get_value_field(&142) } // classifier
-                          <span class="id-box has-text-grey-light has-text-weight-bold">{classifier}</span>
+                          {get_value_field(&142)} // classifier
+                          <span class="id-box has-text-weight-bold">{classifier}</span>
                       </div>
                       <div class="column">
-                          { get_value_field(&144) } // specified tolerance
-                          <span class="id-box has-text-grey-light has-text-weight-bold">{specified_tolerance}</span>
+                          {get_value_field(&144)} // specified tolerance
+                          <span class="id-box has-text-weight-bold">{specified_tolerance}</span>
                       </div>
                     </div>
                     <div class="columns" style="margin-bottom:0">
@@ -199,7 +194,7 @@ impl ListItemStandard {
                                 }}
                             </div>
                             <div class="overflow-title">
-                                { get_value_field(&141) } // owner
+                                {get_value_field(&141)} // owner
                                 <span class="has-text-weight-bold">
                                     {format!("{} {}",
                                             &owner_company.shortname,
@@ -210,23 +205,26 @@ impl ListItemStandard {
                         </div>
                         <div class="column buttons is-one-quarter flexBox" >
                           {res_btn(
-                            classes!("fas", "fa-eye"),
+                            classes!("far", "fa-folder"),
                             show_standard_btn,
-                            String::new()
+                            String::new(),
+                            get_value_field(&315)
                           )}
-                          {res_btn(
-                            classes!(class_res_btn),
-                            trigger_fab_btn,
-                            class_color_btn.to_string()
+                          {ft_follow_btn(
+                            trigger_fav_btn,
+                            self.is_followed,
+                            String::new(),
                           )}
                         </div>
                     </div>
                     <div class="columns is-gapless" style="margin-bottom:0">
                         <div class="column">
-                          {format!("{}: {:.*}", get_value_field(&155), 10, publication_at.to_string())}
+                            {format!("{}: ", get_value_field(&155))}
+                            {publication_at.date_to_display()}
                         </div>
                         <div class="column">
-                          {format!("{}: {:.*}", get_value_field(&156), 10, updated_at.to_string())}
+                            {format!("{}: ", get_value_field(&156))}
+                            {updated_at.date_to_display()}
                         </div>
                     </div>
                   </div>
@@ -249,18 +247,7 @@ impl ListItemStandard {
         } = self.props.data.clone();
 
         let show_standard_btn = self.link.callback(|_| Msg::OpenStandard);
-        let trigger_fab_btn = self.link.callback(|_| Msg::TriggerFav);
-
-        let mut class_res_btn = vec![];
-        let mut class_color_btn = "";
-        match &self.is_followed {
-            true => {
-                class_res_btn.push("fas");
-                class_color_btn = "color: #1872F0;";
-            },
-            false => class_res_btn.push("far"),
-        }
-        class_res_btn.push("fa-bookmark");
+        let trigger_fav_btn = self.link.callback(|_| Msg::TriggerFav);
 
         html!{
           <div class="boxItem" >
@@ -274,13 +261,13 @@ impl ListItemStandard {
                 />
               </div>
               <div>
-                { get_value_field(&142) } // classifier
-                <span class="id-box has-text-grey-light has-text-weight-bold">{classifier}</span>
+                {get_value_field(&142)} // classifier
+                <span class="id-box has-text-weight-bold">{classifier}</span>
                 <br/>
               </div>
               <div class="has-text-weight-bold is-size-4">{name}</div>
               <div class="overflow-title">
-                { get_value_field(&141) } // owner
+                {get_value_field(&141)} // owner
                   <span class="has-text-weight-bold">
                     {format!("{} {}",
                       &owner_company.shortname,
@@ -290,14 +277,14 @@ impl ListItemStandard {
                 </div>
               <div class="btnBox">
                 <button class="button is-light is-fullwidth has-text-weight-bold"
-                    onclick=show_standard_btn>
-                    { get_value_field(&143) } // Show standard
+                    onclick={show_standard_btn}>
+                    {get_value_field(&143)} // Show standard
                 </button>
                 <div style="margin-left: 8px;">
-                {res_btn(
-                    classes!(class_res_btn),
-                    trigger_fab_btn,
-                    class_color_btn.to_string()
+                {ft_follow_btn(
+                    trigger_fav_btn,
+                    self.is_followed,
+                    String::new(),
                 )}
                 </div>
               </div>

@@ -76,8 +76,8 @@ impl Component for ShareLinkBtn {
         });
         html!{<>
             {self.share_window()}
-            <button id="share-btn" class="button" onclick={onclick_share_btn} >
-              <span class="icon is-small"><i class="fas fa-share" /></span>
+            <button id="share-btn" class="button" onclick={onclick_share_btn} title={get_value_field(&328)}>
+              <span class="icon is-small" style="color: #1872f0;"><i class="fas fa-share" /></span>
             </button>
         </>}
     }
@@ -98,7 +98,7 @@ impl ShareLinkBtn {
               <div class="modal-background" onclick={onclick_share_btn.clone()} />
               <div class="modal-content">
                 <div class="card column">
-                  <div class="clipboardBox" > 
+                  <div class="clipboardBox">
                         <input id={self.input_id.clone()} type="text" class="input is-link inputBox" readonly={true} value={self.share_link.clone()} />
                         <button class={format!("btn button is-info {}", self.input_id.clone())} onclick={oncopyed} data-clipboard-target={format!("#{}", self.input_id)} style="margin-bottom: 0;">
                           {if self.copyed { html!{

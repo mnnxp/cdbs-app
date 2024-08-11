@@ -1,32 +1,13 @@
 use yew::callback::Callback;
 use yew::services::fetch::FetchTask;
-
 use graphql_client::GraphQLQuery;
 use log::debug;
-
-use super::{Requests, resp_parsing};
 use crate::error::Error;
-use crate::types::*;
+use crate::types::{LoginInfoWrapper, UserToken, SlimUser};
 use crate::services::{get_logged_user, set_logged_user};
 use crate::gqls::make_query;
-
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/user.graphql",
-    response_derives = "Debug"
-)]
-struct GetMySelf;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "./graphql/schema.graphql",
-    query_path = "./graphql/user.graphql",
-    response_derives = "Debug"
-)]
-struct Logout;
-
+use crate::gqls::user::{GetMySelf, get_my_self, Logout, logout};
+use super::{Requests, resp_parsing};
 
 /// Apis for authentication
 #[derive(Default, Debug)]

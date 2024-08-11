@@ -5,6 +5,7 @@ use wasm_bindgen_futures::spawn_local;
 
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
+use crate::fragments::buttons::{ft_save_btn, ft_delete_small_btn};
 use crate::types::{UUID, ComponentParam};
 use crate::services::{get_value_field, resp_parsing};
 use crate::gqls::make_query;
@@ -22,6 +23,7 @@ pub struct ComponentParamTag {
     request_set_param_value: String,
     hide_edit_param_value: bool,
     get_result_delete: bool,
+    get_confirm: usize,
 }
 
 #[derive(Properties, Clone)]
@@ -41,6 +43,7 @@ pub enum Msg {
     GetDeleteParamResult(String),
     GetChangeValueResult(String),
     UpdateParamValue(String),
+    ClearError,
 }
 
 impl Component for ComponentParamTag {
@@ -57,6 +60,7 @@ impl Component for ComponentParamTag {
             request_set_param_value,
             hide_edit_param_value: true,
             get_result_delete: false,
+            get_confirm: 0,
         }
     }
 
@@ -82,18 +86,22 @@ impl Component for ComponentParamTag {
                 })
             },
             Msg::RequestDeleteParam => {
-                let component_uuid = self.props.component_uuid.clone();
-                let param_id = self.props.param_data.param.param_id as i64;
-                spawn_local(async move {
-                    let del_component_param_data = delete_component_params::DelComponentParamData{
-                        componentUuid: component_uuid,
-                        paramIds: vec![param_id],
-                    };
-                    let res = make_query(DeleteComponentParams::build_query(
-                        delete_component_params::Variables { del_component_param_data }
-                    )).await.unwrap();
-                    link.send_message(Msg::GetDeleteParamResult(res));
-                })
+                if self.get_confirm == self.props.param_data.param.param_id {
+                    let component_uuid = self.props.component_uuid.clone();
+                    let param_id = self.props.param_data.param.param_id as i64;
+                    spawn_local(async move {
+                        let del_component_param_data = delete_component_params::DelComponentParamData{
+                            componentUuid: component_uuid,
+                            paramIds: vec![param_id],
+                        };
+                        let res = make_query(DeleteComponentParams::build_query(
+                            delete_component_params::Variables { del_component_param_data }
+                        )).await.unwrap();
+                        link.send_message(Msg::GetDeleteParamResult(res));
+                    })
+                } else {
+                    self.get_confirm = self.props.param_data.param.param_id;
+                }
             },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetDeleteParamResult(res) => {
@@ -123,6 +131,7 @@ impl Component for ComponentParamTag {
                 }
             },
             Msg::UpdateParamValue(data) => self.request_set_param_value = data,
+            Msg::ClearError => self.error = None,
         }
         true
     }
@@ -133,6 +142,7 @@ impl Component for ComponentParamTag {
             false
         } else {
             self.hide_edit_param_value = true;
+            self.get_confirm = 0;
             self.current_param_value = props.param_data.value.clone();
             self.request_set_param_value = props.param_data.value.clone();
             self.props = props;
@@ -141,8 +151,9 @@ impl Component for ComponentParamTag {
     }
 
     fn view(&self) -> Html {
+        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         html!{<>
-            <ListErrors error=self.error.clone()/>
+            <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
             {self.modal_change_param_value()}
             {match self.get_result_delete {
                 true => html!{},
@@ -155,23 +166,27 @@ impl Component for ComponentParamTag {
 impl ComponentParamTag {
     fn show_param(&self) -> Html {
         let onclick_change_param = self.link.callback(|_| Msg::ChangeParamValue);
-        let onclick_delete_param = self.link.callback(|_| Msg::RequestDeleteParam);
+        let onclick_delete_btn = self.link.callback(|_| Msg::RequestDeleteParam);
 
         html!{<tr>
             <td>{self.props.param_data.param.paramname.clone()}</td>
             <td>{self.current_param_value.clone()}</td>
             {match self.props.show_manage_btn {
                 true => html!{<>
-                    <td><a onclick={onclick_change_param.clone()}>
-                        <span class="icon" >
-                            <i class="fas fa-pen" aria-hidden="true"></i>
-                        </span>
-                    </a></td>
-                    <td><a onclick={onclick_delete_param.clone()}>
-                        <span class="icon" >
-                          <i class="fa fa-trash" aria-hidden="true"></i>
-                        </span>
-                    </a></td>
+                    <td>
+                        <a onclick={onclick_change_param} title={get_value_field(&59)}>
+                            <span class="icon" >
+                                <i class="fas fa-pencil-alt" aria-hidden="true"></i>
+                            </span>
+                        </a>
+                    </td>
+                    <td>
+                        {ft_delete_small_btn(
+                            "component-param-delete",
+                            onclick_delete_btn,
+                            self.get_confirm == self.props.param_data.param.param_id,
+                        )}
+                    </td>
                 </>},
                 false => html!{},
             }}
@@ -188,35 +203,34 @@ impl ComponentParamTag {
         };
 
         html!{
-            <div class=class_modal>
-              <div class="modal-background" onclick=onclick_hide_modal.clone() />
+            <div class={class_modal}>
+              <div class="modal-background" onclick={onclick_hide_modal.clone()} />
                 <div class="modal-content">
                   <div class="card">
                     <header class="modal-card-head">
-                      <p class="modal-card-title">{ get_value_field(&211) }</p> // Changing the parameter value
-                      <button class="delete" aria-label="close" onclick=onclick_hide_modal.clone() />
+                      <p class="modal-card-title">{get_value_field(&211)}</p> // Changing the parameter value
+                      <button class="delete" aria-label="close" onclick={onclick_hide_modal.clone()} />
                     </header>
                     <section class="modal-card-body">
                         <div class="column">
-                            <label class="label">{ get_value_field(&133) }</label> // Set a value
+                            <label class="label">{get_value_field(&133)}</label> // Set a value
                             <input
                                 id="param-value"
                                 class="input is-fullwidth"
                                 type="text"
-                                placeholder=get_value_field(&133)
+                                placeholder={get_value_field(&133)}
                                 value={self.request_set_param_value.clone()}
-                                oninput=oninput_set_param_value
+                                oninput={oninput_set_param_value}
                                 />
                         </div>
                         <div class="column">
-                            <button
-                                id="change-param-value"
-                                class="button is-fullwidth"
-                                disabled={self.request_set_param_value.is_empty() ||
-                                    self.current_param_value == self.request_set_param_value}
-                                onclick={onclick_change_param_value} >
-                                { get_value_field(&59) } // Change
-                            </button>
+                            {ft_save_btn(
+                                "save-param-value",
+                                onclick_change_param_value,
+                                true,
+                                self.request_set_param_value.is_empty() ||
+                                    self.current_param_value == self.request_set_param_value
+                            )}
                         </div>
                       </section>
                   </div>

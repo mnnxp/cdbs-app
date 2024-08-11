@@ -13,6 +13,7 @@ use log::debug;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
+use crate::fragments::buttons::ft_create_btn;
 use crate::services::{get_logged_user, get_value_field, resp_parsing, get_value_response, get_from_value};
 use crate::types::{UUID, SlimUser, CompanyCreateInfo, Region, CompanyType, TypeAccessInfo};
 use crate::gqls::make_query;
@@ -31,6 +32,7 @@ pub struct CreateCompany {
     regions: Vec<Region>,
     company_types: Vec<CompanyType>,
     types_access: Vec<TypeAccessInfo>,
+    disable_create_btn: bool,
 }
 
 #[derive(Properties, Clone)]
@@ -55,6 +57,7 @@ pub enum Msg {
     UpdateCompanyTypeId(String),
     UpdateRegionId(String),
     UpdateList(String),
+    ClearError,
     Ignore,
 }
 
@@ -72,6 +75,7 @@ impl Component for CreateCompany {
             regions: Vec::new(),
             company_types: Vec::new(),
             types_access: Vec::new(),
+            disable_create_btn: false,
         }
     }
 
@@ -98,6 +102,7 @@ impl Component for CreateCompany {
 
         match msg {
             Msg::RequestCreateCompany => {
+                self.disable_create_btn = true;
                 let request_company = self.request_company.clone();
                 spawn_local(async move {
                     let CompanyCreateInfo {
@@ -177,6 +182,7 @@ impl Component for CreateCompany {
                     Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
+            Msg::ClearError => self.error = None,
             Msg::Ignore => {},
         }
         true
@@ -192,28 +198,25 @@ impl Component for CreateCompany {
     }
 
     fn view(&self) -> Html {
+        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         let onclick_create_company =
             self.link.callback(|_| Msg::RequestCreateCompany);
-
         html!{
             <div class="settings-page">
-                <ListErrors error=self.error.clone()/>
+                <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
                 <div class="container page">
                     <div class="row">
-                        <h1 class="title">{ get_value_field(&289) }</h1>
+                        <h1 class="title">{get_value_field(&289)}</h1>
                         <div class="card column">
-                            { self.fieldset_company() }
+                            {self.fieldset_company()}
                         </div>
                         <br/>
-                        <button
-                            id="create-company"
-                            class="button is-success is-medium is-fullwidth"
-                            type="submit"
-                            disabled=false
-                            onclick=onclick_create_company
-                            >
-                            { get_value_field(&45) } // Create
-                        </button>
+                        {ft_create_btn(
+                            "create-company",
+                            "is-medium".into(),
+                            onclick_create_company,
+                            self.disable_create_btn,
+                        )}
                     </div>
                 </div>
             </div>
@@ -249,7 +252,7 @@ impl CreateCompany {
                             type={input_type}
                             placeholder={placeholder.to_string()}
                             value={value}
-                            oninput=oninput />
+                            oninput={oninput} />
                     },
                     false => html!{
                         <div class="control has-icons-left">
@@ -259,7 +262,7 @@ impl CreateCompany {
                                 type={input_type}
                                 placeholder={placeholder.to_string()}
                                 value={value}
-                                oninput=oninput />
+                                oninput={oninput} />
                             <span class="icon is-small is-left">
                               <i class={icon_left.to_string()}></i>
                             </span>
@@ -270,39 +273,35 @@ impl CreateCompany {
         }
     }
 
-    fn fieldset_company(
-        &self
-    ) -> Html {
-        let oninput_orgname = self.link
-            .callback(|ev: InputData| Msg::UpdateOrgname(ev.value));
-        let oninput_shortname = self.link
-            .callback(|ev: InputData| Msg::UpdateShortname(ev.value));
-        let oninput_inn = self.link
-            .callback(|ev: InputData| Msg::UpdateInn(ev.value));
-        let oninput_email = self.link
-            .callback(|ev: InputData| Msg::UpdateEmail(ev.value));
-        let oninput_description = self.link
-            .callback(|ev: InputData| Msg::UpdateDescription(ev.value));
-        let oninput_phone = self.link
-            .callback(|ev: InputData| Msg::UpdatePhone(ev.value));
-        let oninput_address = self.link
-            .callback(|ev: InputData| Msg::UpdateAddress(ev.value));
-        let oninput_site_url = self.link
-            .callback(|ev: InputData| Msg::UpdateSiteUrl(ev.value));
-        // let oninput_time_zone = self.link
-        //     .callback(|ev: InputData| Msg::UpdateTimeZone(ev.value));
-        let onchange_region_id = self.link
-            .callback(|ev: ChangeData| Msg::UpdateRegionId(match ev {
-              ChangeData::Select(el) => el.value(),
-              _ => "1".to_string(),
-          }));
-        let onchange_company_type_id = self.link
-            .callback(|ev: ChangeData| Msg::UpdateCompanyTypeId(match ev {
+    fn fieldset_company(&self) -> Html {
+        let oninput_orgname =
+            self.link.callback(|ev: InputData| Msg::UpdateOrgname(ev.value));
+        let oninput_shortname =
+            self.link.callback(|ev: InputData| Msg::UpdateShortname(ev.value));
+        let oninput_inn =
+            self.link.callback(|ev: InputData| Msg::UpdateInn(ev.value));
+        let oninput_email =
+            self.link.callback(|ev: InputData| Msg::UpdateEmail(ev.value));
+        let oninput_description =
+            self.link.callback(|ev: InputData| Msg::UpdateDescription(ev.value));
+        let oninput_phone =
+            self.link.callback(|ev: InputData| Msg::UpdatePhone(ev.value));
+        let oninput_address =
+            self.link.callback(|ev: InputData| Msg::UpdateAddress(ev.value));
+        let oninput_site_url =
+            self.link.callback(|ev: InputData| Msg::UpdateSiteUrl(ev.value));
+        let onchange_region_id =
+            self.link.callback(|ev: ChangeData| Msg::UpdateRegionId(match ev {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
             }));
-        let onchange_type_access_id = self.link
-              .callback(|ev: ChangeData| Msg::UpdateTypeAccessId(match ev {
+        let onchange_company_type_id =
+            self.link.callback(|ev: ChangeData| Msg::UpdateCompanyTypeId(match ev {
+              ChangeData::Select(el) => el.value(),
+              _ => "1".to_string(),
+            }));
+        let onchange_type_access_id =
+            self.link.callback(|ev: ChangeData| Msg::UpdateTypeAccessId(match ev {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
             }));
@@ -326,7 +325,6 @@ impl CreateCompany {
                     )}
                 </div>
             </div>
-
             <div class="columns">
                 <div class="column">
                     {self.fileset_generator(
@@ -338,15 +336,15 @@ impl CreateCompany {
                 </div>
                 <div class="column">
                     <fieldset class="field">
-                        <label class="label">{ get_value_field(&51) }</label> // Company type
+                        <label class="label">{get_value_field(&51)}</label> // Company type
                         <div class="control">
                             <div class="select">
                               <select
                                   id="company_type"
                                   select={self.request_company.company_type_id.to_string()}
-                                  onchange=onchange_company_type_id
+                                  onchange={onchange_company_type_id}
                                   >
-                                { for self.company_types.iter().map(|x|
+                                {for self.company_types.iter().map(|x|
                                     html!{
                                         <option value={x.company_type_id.to_string()}
                                               selected={x.company_type_id as i64 == self.request_company.company_type_id} >
@@ -360,7 +358,6 @@ impl CreateCompany {
                     </fieldset>
                 </div>
             </div>
-
             <div class="columns">
                 <div class="column">
                     {self.fileset_generator(
@@ -379,19 +376,18 @@ impl CreateCompany {
                     )}
                 </div>
             </div>
-
             <div class="columns">
                 <div class="column">
                     <fieldset class="field">
-                        <label class="label">{ get_value_field(&27) }</label> // Region
+                        <label class="label">{get_value_field(&27)}</label> // Region
                         <div class="control">
                             <div class="select">
                               <select
                                   id="region"
                                   select={self.request_company.region_id.to_string()}
-                                  onchange=onchange_region_id
+                                  onchange={onchange_region_id}
                                   >
-                                { for self.regions.iter().map(|x|
+                                {for self.regions.iter().map(|x|
                                     html!{
                                         <option value={x.region_id.to_string()}
                                               selected={x.region_id as i64 == self.request_company.region_id} >
@@ -413,7 +409,6 @@ impl CreateCompany {
                     )}
                 </div>
             </div>
-
             <div class="columns">
                 <div class="column">
                     {self.fileset_generator(
@@ -425,15 +420,15 @@ impl CreateCompany {
                 </div>
                 <div class="column">
                     <fieldset class="field">
-                        <label class="label">{ get_value_field(&58) }</label> // Type access
+                        <label class="label">{get_value_field(&58)}</label> // Type access
                         <div class="control">
                             <div class="select">
                               <select
                                   id="types-access"
                                   select={self.request_company.type_access_id.to_string()}
-                                  onchange=onchange_type_access_id
+                                  onchange={onchange_type_access_id}
                                   >
-                                { for self.types_access.iter().map(|x|
+                                {for self.types_access.iter().map(|x|
                                     html!{
                                         <option value={x.type_access_id.to_string()}
                                               selected={x.type_access_id as i64 == self.request_company.type_access_id} >
@@ -447,16 +442,15 @@ impl CreateCompany {
                     </fieldset>
                 </div>
             </div>
-
             <fieldset class="field">
-                <label class="label">{ get_value_field(&61) }</label>
+                <label class="label">{get_value_field(&61)}</label>
                 <textarea
                     id="description"
                     class="textarea"
                     type="text"
-                    placeholder={ get_value_field(&61) }
+                    placeholder={get_value_field(&61)}
                     value={self.request_company.description.clone()}
-                    oninput=oninput_description />
+                    oninput={oninput_description} />
             </fieldset>
         </>}
     }

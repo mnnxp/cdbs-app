@@ -1,5 +1,6 @@
 use yew::{html, Component, ComponentLink, Html, Properties, ShouldRender};
 
+use crate::fragments::buttons::ft_download_btn;
 use crate::types::DownloadFile;
 use crate::services::Size;
 
@@ -48,22 +49,8 @@ impl FileDownItemShow {
       <tr>
         <td>{self.props.file_down.filename.clone()}</td>
         <td>{self.props.file_down.show_size()}</td>
-        {self.show_download_btn()}
+        <td>{ft_download_btn(self.props.file_down.download_url.clone(), false)}</td>
       </tr>
     }
-  }
-
-  fn show_download_btn(&self) -> Html {
-    html!{<td>
-      <a class="button is-white"
-          href={self.props.file_down.download_url.clone()}
-          disabled={self.props.file_down.download_url.is_empty()}
-          target="_blank"
-          >
-        <span class="icon" >
-          <i class="fas fa-file-download" style="color: #1872f0;" aria-hidden="true"></i>
-        </span>
-      </a>
-    </td>}
   }
 }

@@ -15,8 +15,10 @@ use wasm_bindgen_futures::spawn_local;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{
+    buttons::{ft_save_btn, ft_back_btn},
     file::UploaderFiles,
     list_errors::ListErrors,
+    notification::show_notification,
     standard::{
         StandardFilesCard, SearchSpecsTags,
         AddKeywordsTags, UpdateStandardFaviconCard
@@ -453,25 +455,37 @@ impl Component for StandardSettings {
             <div class="standard-page">
                 <div class="container page">
                     <div class="row">
-                        <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
-                        // <br/>
-                        {self.show_manage_btn()}
+                        <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
+                        {show_notification(
+                            get_value_field(&214),
+                            "is-success",
+                            self.get_result_standard_data > 0 || self.get_result_access
+                        )}
+                        {self.show_top_btn()}
                         <br/>
                         {self.show_main_card()}
+                        <br/>
+                        <div class="columns">
+                            <div class="column">
+                                {self.update_standard_favicon()}
+                            </div>
+                            <div class="column">
+                                {self.show_standard_params()}
+                            </div>
+                        </div>
                         {match &self.current_standard {
                             Some(standard_data) => html!{<>
+                                {self.show_standard_files(standard_data)}
                                 <br/>
-                                <div class="columns">
-                                  <div class="column">
-                                    {self.update_standard_favicon()}
-                                    <br/>
-                                    {self.show_standard_params()}
-                                  </div>
-                                  {self.show_standard_files(standard_data)}
-                                </div>
-                                {self.show_standard_specs(standard_data)}
+                                <SearchSpecsTags
+                                    standard_specs={standard_data.standard_specs.clone()}
+                                    standard_uuid={standard_data.uuid.clone()}
+                                />
                                 <br/>
-                                {self.show_standard_keywords(standard_data)}
+                                <AddKeywordsTags
+                                    standard_keywords={standard_data.standard_keywords.clone()}
+                                    standard_uuid={standard_data.uuid.clone()}
+                                />
                                 <br/>
                             </>},
                             None => html!{},
@@ -485,7 +499,6 @@ impl Component for StandardSettings {
 
 impl StandardSettings {
     fn show_main_card(&self) -> Html {
-        // let default_company_uuid = self.current_standard.as_ref().map(|x| x.owner_company.uuid.clone()).unwrap_or_default();
         let onchange_change_owner_company =
             self.link.callback(|ev: ChangeData| Msg::UpdateCompanyUuid(match ev {
               ChangeData::Select(el) => el.value(),
@@ -498,84 +511,108 @@ impl StandardSettings {
             }));
         let oninput_name = self.link.callback(|ev: InputData| Msg::UpdateName(ev.value));
         let oninput_description = self.link.callback(|ev: InputData| Msg::UpdateDescription(ev.value));
+        let onclick_save_changes = self.link.callback(|_| Msg::RequestManager);
 
-        html!{<div class="card">
-            <div class="column">
-                <div class="control">
-                    <div class="media">
-                        <div class="media-content">
-                            <label class="label">{get_value_field(&223)}</label> // Owner company
-                            <div class="select">
-                              <select
-                                  id="set-owner-company"
-                                  select={self.request_standard.company_uuid.clone()}
-                                  onchange=onchange_change_owner_company
-                                >
-                              { for self.supplier_list.iter().map(|x|
-                                  html!{
-                                      <option value={x.uuid.to_string()}
-                                            selected={x.uuid == self.request_standard.company_uuid} >
-                                          {&x.shortname}
-                                      </option>
-                                  }
-                              )}
-                              </select>
+        html!{
+            <div class="card">
+                <header class="card-header">
+                    <p class="card-header-title">{get_value_field(&157)}</p>
+                </header>
+                <div class="card-content">
+                    <div class="content">
+                        <div class="columns">
+                            <div class="column">
+                                <label class="label">{get_value_field(&223)}</label> // Owner company
+                                <div class="select is-fullwidth">
+                                <select
+                                    id="set-owner-company"
+                                    select={self.request_standard.company_uuid.clone()}
+                                    onchange={onchange_change_owner_company}
+                                    >
+                                {for self.supplier_list.iter().map(|x|
+                                    html!{
+                                        <option value={x.uuid.to_string()}
+                                                selected={x.uuid == self.request_standard.company_uuid} >
+                                            {&x.shortname}
+                                        </option>
+                                    }
+                                )}
+                                </select>
+                                </div>
+                            </div>
+                            <div class="column">
+                                <label class="label">{get_value_field(&114)}</label>
+                                <div class="select is-fullwidth">
+                                <select
+                                    id="set-type-access"
+                                    select={self.request_access.to_string()}
+                                    onchange={onchange_change_type_access}
+                                    >
+                                {for self.types_access.iter().map(|x|
+                                    html!{
+                                        <option value={x.type_access_id.to_string()}
+                                                selected={x.type_access_id as i64 == self.request_access} >
+                                            {&x.name}
+                                        </option>
+                                    }
+                                )}
+                                </select>
+                                </div>
                             </div>
                         </div>
-                        <div class="media-right" style="margin-right: 1rem">
-                            <label class="label">{get_value_field(&114)}</label>
-                            <div class="select">
-                              <select
-                                  id="set-type-access"
-                                  select={self.request_access.to_string()}
-                                  onchange=onchange_change_type_access
-                                >
-                              { for self.types_access.iter().map(|x|
-                                  html!{
-                                      <option value={x.type_access_id.to_string()}
-                                            selected={x.type_access_id as i64 == self.request_access} >
-                                          {&x.name}
-                                      </option>
-                                  }
-                              )}
-                              </select>
-                            </div>
+                        <div class="field">
+                            <label class="label">{get_value_field(&110)}</label>
+                            <input
+                                id="update-name"
+                                class="input"
+                                type="text"
+                                placeholder={get_value_field(&110)}
+                                value={self.request_standard.name.clone()}
+                                oninput={oninput_name} />
+                        </div>
+                        <div class="field">
+                            <label class="label">{get_value_field(&61)}</label>
+                            <textarea
+                                id="update-description"
+                                class="textarea"
+                                // rows="10"
+                                type="text"
+                                placeholder={get_value_field(&61)}
+                                value={self.request_standard.description.clone()}
+                                oninput={oninput_description} />
                         </div>
                     </div>
+                    <footer class="card-footer">
+                        {ft_save_btn(
+                            "update-standard-data",
+                            onclick_save_changes,
+                            true,
+                            self.disable_save_changes_btn
+                        )}
+                    </footer>
                 </div>
-                <label class="label">{get_value_field(&110)}</label>
-                <input
-                    id="update-name"
-                    class="input"
-                    type="text"
-                    placeholder=get_value_field(&110)
-                    value={self.request_standard.name.clone()}
-                    oninput=oninput_name />
-                <label class="label">{get_value_field(&61)}</label>
-                <textarea
-                    id="update-description"
-                    class="textarea"
-                    // rows="10"
-                    type="text"
-                    placeholder=get_value_field(&61)
-                    value={self.request_standard.description.clone()}
-                    oninput=oninput_description />
             </div>
-        </div>}
+        }
     }
 
     fn update_standard_favicon(&self) -> Html {
         let callback_update_favicon = self.link.callback(|_| Msg::Ignore);
 
-        html!{<>
-            <h2 class="has-text-weight-bold">{get_value_field(&184)}</h2> // Update image for preview
-            <div class="card column">
-                <UpdateStandardFaviconCard
-                    standard_uuid=self.current_standard_uuid.clone()
-                    callback=callback_update_favicon.clone()
-                />
+        html!{
+            <div class="card">
+                <header class="card-header">
+                    <p class="card-header-title">{get_value_field(&184)}</p> // Update image for preview
+                </header>
+                <div class="card-content">
+                    <div class="content">
+                        <UpdateStandardFaviconCard
+                            standard_uuid={self.current_standard_uuid.clone()}
+                            callback={callback_update_favicon.clone()}
+                        />
+                    </div>
+                </div>
             </div>
-        </>}
+        }
     }
 
     fn show_standard_params(&self) -> Html {
@@ -593,102 +630,107 @@ impl StandardSettings {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
             }));
+
         html!{
-            <>
-              <h2 class="has-text-weight-bold">{get_value_field(&224)}</h2> // Manage standard characteristics
-              <div class="card column">
-                <table class="table is-fullwidth">
-                    <tbody>
-                      <tr>
-                        <td>{get_value_field(&146)}</td> // classifier
-                        <td><input
-                            id="update-classifier"
-                            class="input"
-                            type="text"
-                            placeholder=get_value_field(&146)
-                            value={self.request_standard.classifier.clone()}
-                            oninput=oninput_classifier /></td>
-                      </tr>
-                      <tr>
-                        <td>{get_value_field(&147)}</td>
-                        // <td>{self.request_standard.specified_tolerance.as_ref().map(|x| x.clone()).unwrap_or_default()}</td>
-                        <td><input
-                            id="update-specified-tolerance"
-                            class="input"
-                            type="text"
-                            placeholder=get_value_field(&147)
-                            value={self.request_standard.specified_tolerance.clone()}
-                            oninput=oninput_specified_tolerance /></td>
-                      </tr>
-                      <tr>
-                        <td>{get_value_field(&148)}</td>
-                        <td><input
-                            id="update-technical-committee"
-                            class="input"
-                            type="text"
-                            placeholder=get_value_field(&148)
-                            value={self.request_standard.technical_committee.clone()}
-                            oninput=oninput_technical_committee /></td>
-                      </tr>
-                      <tr>
-                        <td>{get_value_field(&149)}</td>
-                        <td><input
-                            id="update-publication-at"
-                            class="input"
-                            type="date"
-                            placeholder=get_value_field(&149)
-                            value={self.request_standard.publication_at
-                                .as_ref()
-                                .map(|x| format!("{:.*}", 10, x.to_string()))
-                                .unwrap_or_default()}
-                            oninput=oninput_publication_at
-                            /></td>
-                      </tr>
-                      <tr>
-                        <td>{get_value_field(&150)}</td>
-                        <td><div class="control">
-                            <div class="select">
-                              <select
-                                  id="standard-status-id"
-                                  select={self.request_standard.standard_status_id.to_string()}
-                                  onchange=onchange_standard_status_id
-                                  >
-                                { for self.standard_statuses.iter().map(|x|
-                                    html!{
-                                        <option value={x.standard_status_id.to_string()}
-                                              selected={x.standard_status_id == self.request_standard.standard_status_id} >
-                                            {&x.name}
-                                        </option>
-                                    }
-                                )}
-                              </select>
-                            </div>
-                        </div></td>
-                      </tr>
-                      <tr>
-                        <td>{get_value_field(&151)}</td>
-                        <td><div class="select">
-                              <select
-                                  id="region"
-                                  select={self.request_standard.region_id.to_string()}
-                                  onchange=onchange_region_id
-                                  >
-                                { for self.regions.iter().map(|x|
-                                    html!{
-                                        <option value={x.region_id.to_string()}
-                                              selected={x.region_id == self.request_standard.region_id} >
-                                            {&x.region}
-                                        </option>
-                                    }
-                                )}
-                              </select>
-                            </div>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-              </div>
-            </>
+            <div class="card">
+                <header class="card-header">
+                    <p class="card-header-title">{get_value_field(&224)}</p> // Manage standard characteristics
+                </header>
+                <div class="card-content">
+                    <div class="content">
+                        <table class="table is-fullwidth">
+                            <tbody>
+                            <tr>
+                                <td>{get_value_field(&146)}</td> // classifier
+                                <td><input
+                                    id="update-classifier"
+                                    class="input"
+                                    type="text"
+                                    placeholder={get_value_field(&146)}
+                                    value={self.request_standard.classifier.clone()}
+                                    oninput={oninput_classifier} /></td>
+                            </tr>
+                            <tr>
+                                <td>{get_value_field(&147)}</td>
+                                // <td>{self.request_standard.specified_tolerance.as_ref().map(|x| x.clone()).unwrap_or_default()}</td>
+                                <td><input
+                                    id="update-specified-tolerance"
+                                    class="input"
+                                    type="text"
+                                    placeholder={get_value_field(&147)}
+                                    value={self.request_standard.specified_tolerance.clone()}
+                                    oninput={oninput_specified_tolerance} /></td>
+                            </tr>
+                            <tr>
+                                <td>{get_value_field(&148)}</td>
+                                <td><input
+                                    id="update-technical-committee"
+                                    class="input"
+                                    type="text"
+                                    placeholder={get_value_field(&148)}
+                                    value={self.request_standard.technical_committee.clone()}
+                                    oninput={oninput_technical_committee} /></td>
+                            </tr>
+                            <tr>
+                                <td>{get_value_field(&149)}</td>
+                                <td><input
+                                    id="update-publication-at"
+                                    class="input"
+                                    type="date"
+                                    placeholder={get_value_field(&149)}
+                                    value={self.request_standard.publication_at
+                                        .as_ref()
+                                        .map(|x| format!("{:.*}", 10, x.to_string()))
+                                        .unwrap_or_default()}
+                                    oninput={oninput_publication_at}
+                                    /></td>
+                            </tr>
+                            <tr>
+                                <td>{get_value_field(&150)}</td>
+                                <td><div class="control">
+                                    <div class="select">
+                                    <select
+                                        id="standard-status-id"
+                                        select={self.request_standard.standard_status_id.to_string()}
+                                        onchange={onchange_standard_status_id}
+                                        >
+                                        { for self.standard_statuses.iter().map(|x|
+                                            html!{
+                                                <option value={x.standard_status_id.to_string()}
+                                                    selected={x.standard_status_id == self.request_standard.standard_status_id} >
+                                                    {&x.name}
+                                                </option>
+                                            }
+                                        )}
+                                    </select>
+                                    </div>
+                                </div></td>
+                            </tr>
+                            <tr>
+                                <td>{get_value_field(&151)}</td>
+                                <td><div class="select">
+                                    <select
+                                        id="region"
+                                        select={self.request_standard.region_id.to_string()}
+                                        onchange={onchange_region_id}
+                                        >
+                                        { for self.regions.iter().map(|x|
+                                            html!{
+                                                <option value={x.region_id.to_string()}
+                                                    selected={x.region_id == self.request_standard.region_id} >
+                                                    {&x.region}
+                                                </option>
+                                            }
+                                        )}
+                                    </select>
+                                    </div>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         }
     }
 
@@ -701,91 +743,62 @@ impl StandardSettings {
         };
         let callback_upload_confirm =
             self.link.callback(|confirmations| Msg::UploadConfirm(confirmations));
+
         html!{
-            <div class="column">
-              <h2 class="has-text-weight-bold">{get_value_field(&225)}</h2> // Files stadndard
-              <div class="card column">
-                <UploaderFiles
-                    text_choose_files={222} // Choose standard files…
-                    callback_upload_filenames={callback_upload_filenames}
-                    request_upload_files={request_upload_files}
-                    callback_upload_confirm={callback_upload_confirm}
-                    />
-                <StandardFilesCard
-                    show_download_btn = false
-                    show_delete_btn = true
-                    standard_uuid = standard_data.uuid.clone()
-                    files = self.files_list.clone()
-                    />
-              </div>
+            <div class="card">
+                <header class="card-header">
+                    <p class="card-header-title">{get_value_field(&330)}</p>
+                </header>
+                <div class="card-content">
+                    <div class="content">
+                        <div class="columns">
+                            <div class="column">
+                                <h3 class="has-text-weight-bold">{get_value_field(&225)}</h3> // Files stadndard
+                                <StandardFilesCard
+                                    show_delete_btn={true}
+                                    standard_uuid={standard_data.uuid.clone()}
+                                    files={self.files_list.clone()}
+                                />
+                            </div>
+                            <div class="column">
+                                <h3 class="has-text-weight-bold">{get_value_field(&331)}</h3>
+                                <UploaderFiles
+                                    text_choose_files={222} // Choose standard files…
+                                    callback_upload_filenames={callback_upload_filenames}
+                                    request_upload_files={request_upload_files}
+                                    callback_upload_confirm={callback_upload_confirm}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         }
     }
 
-    fn show_standard_specs(&self, standard_data: &StandardInfo) -> Html {
-        html!{<>
-            <h2 class="has-text-weight-bold">{get_value_field(&104)}</h2>
-            <div class="card">
-              <SearchSpecsTags
-                  standard_specs = standard_data.standard_specs.clone()
-                  standard_uuid = standard_data.uuid.clone()
-                />
-            </div>
-        </>}
-    }
-
-    fn show_standard_keywords(&self, standard_data: &StandardInfo) -> Html {
-        // debug!("Keywords: {:?}", &standard_data.uuid);
-        html!{<>
-              <h2 class="has-text-weight-bold">{get_value_field(&105)}</h2>
-              <div class="card">
-                <AddKeywordsTags
-                    standard_keywords = standard_data.standard_keywords.clone()
-                    standard_uuid = standard_data.uuid.clone()
-                  />
-              </div>
-        </>}
-    }
-
-    fn show_manage_btn(&self) -> Html {
+    fn show_top_btn(&self) -> Html {
         let onclick_open_standard = self.link.callback(|_| Msg::OpenStandard);
         let onclick_show_delete_modal = self.link.callback(|_| Msg::ChangeHideDeleteStandard);
-        let onclick_save_changes = self.link.callback(|_| Msg::RequestManager);
 
         html!{
             <div class="media">
                 <div class="media-left">
-                    <button
-                        id="open-standard"
-                        class="button"
-                        onclick={onclick_open_standard} >
-                        {get_value_field(&226)} // Open standard
-                    </button>
+                    {ft_back_btn(
+                        "open-standard",
+                        onclick_open_standard,
+                        get_value_field(&226), // Open standard
+                    )}
                 </div>
                 <div class="media-content">
-                    {if self.get_result_standard_data > 0 || self.get_result_access {
-                        html!{get_value_field(&214)} // Data updated
-                    } else {
-                        html!{}
-                    }}
                 </div>
                 <div class="media-right">
                     {self.modal_delete_standard()}
-                    <div class="buttons">
-                        <button
-                            id="delete-standard"
-                            class="button is-danger"
-                            onclick={onclick_show_delete_modal} >
-                            {get_value_field(&135)}
-                        </button>
-                        <button
-                            id="update-data"
-                            class="button"
-                            onclick={onclick_save_changes}
-                            disabled={self.disable_save_changes_btn} >
-                            {get_value_field(&46)}
-                        </button>
-                    </div>
+                    <button
+                        id="delete-standard"
+                        class="button is-danger"
+                        onclick={onclick_show_delete_modal} >
+                        {get_value_field(&135)}
+                    </button>
                 </div>
             </div>
         }
@@ -803,13 +816,13 @@ impl StandardSettings {
         };
 
         html!{
-            <div class=class_modal>
-              <div class="modal-background" onclick=onclick_hide_modal.clone() />
+            <div class={class_modal}>
+              <div class="modal-background" onclick={onclick_hide_modal.clone()} />
                 <div class="modal-content">
                   <div class="card">
                     <header class="modal-card-head">
                       <p class="modal-card-title">{get_value_field(&227)}</p> // Delete standard
-                      <button class="delete" aria-label="close" onclick=onclick_hide_modal.clone() />
+                      <button class="delete" aria-label="close" onclick={onclick_hide_modal.clone()} />
                     </header>
                     <section class="modal-card-body">
                         <p class="is-size-6">
@@ -826,7 +839,7 @@ impl StandardSettings {
                            type="text"
                            placeholder="uuid"
                            value={self.confirm_delete_standard.clone()}
-                           oninput=oninput_delete_standard />
+                           oninput={oninput_delete_standard} />
                     </section>
                     <footer class="modal-card-foot">
                         <button
@@ -834,7 +847,7 @@ impl StandardSettings {
                             class="button is-danger"
                             disabled={self.disable_delete_standard_btn}
                             onclick={onclick_delete_standard} >{get_value_field(&220)}</button> // Yes, delete
-                        <button class="button" onclick=onclick_hide_modal.clone()>{get_value_field(&221)}</button> // Cancel
+                        <button class="button" onclick={onclick_hide_modal.clone()}>{get_value_field(&221)}</button> // Cancel
                     </footer>
                 </div>
               </div>

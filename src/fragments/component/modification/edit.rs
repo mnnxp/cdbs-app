@@ -9,6 +9,7 @@ use super::heads::ModificationTableHeads;
 use super::item::ModificationTableItem;
 use super::fileset::ManageModificationFilesets;
 use crate::error::Error;
+use crate::fragments::buttons::{ft_delete_btn, ft_save_btn, ft_add_btn};
 use crate::fragments::list_errors::ListErrors;
 use crate::services::{get_value_field, resp_parsing};
 use crate::types::{
@@ -51,6 +52,7 @@ pub struct ModificationsTableEdit {
     open_add_modification_card: bool,
     open_edit_modification_card: bool,
     finish_parsing_heads: bool,
+    get_confirm: UUID,
 }
 
 pub enum Msg {
@@ -127,6 +129,7 @@ impl Component for ModificationsTableEdit {
             open_add_modification_card: false,
             open_edit_modification_card: false,
             finish_parsing_heads: false,
+            get_confirm: String::new(),
         }
     }
 
@@ -150,11 +153,8 @@ impl Component for ModificationsTableEdit {
 
                 for modification in &self.current_modifications {
                     self.valid_modification_uuids.insert(modification.uuid.clone());
-
                     self.collect_columns.clear();
-                    self.collect_columns.insert(
-                        0, modification.modification_name.clone(),
-                    );
+                    self.collect_columns.insert(0, modification.modification_name.clone());
                     for modification_param in &modification.modification_params {
                         let mut flag = true;
                         // debug!("modification_param: {:?}", modification_param.param);
@@ -242,18 +242,22 @@ impl Component for ModificationsTableEdit {
                 })
             },
             Msg::RequestDeleteModificationData => {
-                let del_component_modification_data = delete_component_modification::DelComponentModificationData{
-                    componentUuid: self.props.current_component_uuid.clone(),
-                    modificationUuid: self.select_modification_uuid.clone(),
-                };
-                spawn_local(async move {
-                    let res = make_query(DeleteComponentModification::build_query(
-                        delete_component_modification::Variables {
-                            del_component_modification_data
-                        }
-                    )).await.unwrap();
-                    link.send_message(Msg::GetDeleteModificationResult(res));
-                })
+                if self.get_confirm == self.select_modification_uuid {
+                    let del_component_modification_data = delete_component_modification::DelComponentModificationData{
+                        componentUuid: self.props.current_component_uuid.clone(),
+                        modificationUuid: self.select_modification_uuid.clone(),
+                    };
+                    spawn_local(async move {
+                        let res = make_query(DeleteComponentModification::build_query(
+                            delete_component_modification::Variables {
+                                del_component_modification_data
+                            }
+                        )).await.unwrap();
+                        link.send_message(Msg::GetDeleteModificationResult(res));
+                    })
+                } else {
+                    self.get_confirm = self.select_modification_uuid.clone();
+                }
             },
             Msg::RequestComponentModificationsData => {
                 let ipt_component_modification_arg = get_component_modifications::IptComponentModificationArg{
@@ -400,6 +404,9 @@ impl Component for ModificationsTableEdit {
                     link.send_message(Msg::RequestListOptData);
                 }
                 if self.open_edit_modification_card {
+                    // clear the check flags
+                    self.get_confirm.clear();
+                    self.update_edit_modification = false;
                     link.send_message(Msg::UpdateSelectModification);
                 }
             },
@@ -489,55 +496,68 @@ impl ModificationsTableEdit {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
 
         html!{<div class="card">
-            <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
-            {self.modal_add_modification_card()}
-            {self.modal_edit_modification_card()}
-            <div class="table-container">
-              <table class="table is-fullwidth is-striped">
-                <ModificationTableHeads
-                  show_new_column = true
-                  component_uuid = self.component_uuid.clone()
-                  params = self.collect_heads.clone()
-                  />
-                {for self.collect_items.iter().map(|(modification_uuid, item)|
-                    match self.valid_modification_uuids.get(modification_uuid) {
-                        Some(_) => html!{<ModificationTableItem
-                            show_manage_btn = true
-                            modification_uuid = modification_uuid.clone()
-                            collect_heads = self.collect_heads.clone()
-                            collect_item = item.clone()
-                            select_item = &self.select_modification_uuid == modification_uuid
-                            open_modification_files = false
-                            callback_new_modification_param = Some(onclick_new_modification_param.clone())
-                            callback_select_modification = Some(onclick_select_modification.clone())
-                        />},
-                        None => html!{},
-                    }
-                 )}
-              </table>
+            <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
+            <header class="card-header">
+                <p class="card-header-title">{get_value_field(&60)}</p> // Manage component modifications
+            </header>
+            <div class="card-content">
+                <div class="content">
+                    {self.modal_add_modification_card()}
+                    {self.modal_edit_modification_card()}
+                    <div class="table-container">
+                        <table class="table is-fullwidth">
+                            <ModificationTableHeads
+                            show_new_column={true}
+                            component_uuid={self.component_uuid.clone()}
+                            params={self.collect_heads.clone()}
+                            />
+                            {for self.collect_items.iter().map(|(modification_uuid, item)|
+                                match self.valid_modification_uuids.get(modification_uuid) {
+                                    Some(_) => html!{<ModificationTableItem
+                                        show_manage_btn={true}
+                                        modification_uuid={modification_uuid.clone()}
+                                        collect_heads={self.collect_heads.clone()}
+                                        collect_item={item.clone()}
+                                        select_item={&self.select_modification_uuid == modification_uuid}
+                                        open_modification_files={false}
+                                        callback_new_modification_param={Some(onclick_new_modification_param.clone())}
+                                        callback_select_modification={Some(onclick_select_modification.clone())}
+                                    />},
+                                    None => html!{},
+                                }
+                            )}
+                        </table>
+                    </div>
+                </div>
+                <footer class="card-footer">
+                    {ft_add_btn(
+                        "add-component-modification",
+                        get_value_field(&174),
+                        onclick_add_modification_card,
+                        true,
+                        false
+                    )}
+                </footer>
             </div>
-            <button
-                  id="add-component-modification"
-                  class="button is-fullwidth"
-                  onclick={onclick_add_modification_card} >
-                <span class="icon" >
-                    <i class="fas fa-plus" aria-hidden="true"></i>
-                </span>
-                <span>{ get_value_field(&174) }</span> // Add new modification
-            </button>
         </div>}
     }
 
     fn show_modification_files(&self) -> Html {
-        html!{<>
-            <h2 class="has-text-weight-bold">{ get_value_field(&172) }</h2> // Manage modification files
-            <div class="card column">
-                <ManageModificationFilesCard
-                    show_download_btn = false
-                    modification_uuid = self.select_modification_uuid.clone()
-                  />
+        html!{
+            <div class="card">
+                <header class="card-header">
+                    <p class="card-header-title">{get_value_field(&172)}</p> // Manage modification files
+                </header>
+                <div class="card-content">
+                    <div class="content">
+                        <ManageModificationFilesCard
+                            show_download_btn={false}
+                            modification_uuid={self.select_modification_uuid.clone()}
+                        />
+                    </div>
+                </div>
             </div>
-        </>}
+        }
     }
 
     fn modal_add_modification_card(&self) -> Html {
@@ -555,45 +575,45 @@ impl ModificationsTableEdit {
             false => "modal",
         };
 
-        html!{<div class=class_modal>
-          <div class="modal-background" onclick=onclick_add_modification_card.clone() />
+        html!{<div class={class_modal}>
+          <div class="modal-background" onclick={onclick_add_modification_card.clone()} />
             <div class="card">
               <div class="modal-content">
                 <header class="modal-card-head">
-                    <p class="modal-card-title">{ get_value_field(&175) }</p> // Create new modification
-                    <button class="delete" aria-label="close" onclick=onclick_add_modification_card.clone() />
+                    <p class="modal-card-title">{get_value_field(&175)}</p> // Create new modification
+                    <button class="delete" aria-label="close" onclick={onclick_add_modification_card.clone()} />
                 </header>
                 <div class="box itemBox">
                   <article class="media center-media">
                       <div class="media-content">
                           <div class="column">
-                              <label class="label">{ get_value_field(&176) }</label> // Modification name
+                              <label class="label">{get_value_field(&176)}</label> // Modification name
                               <input
                                   id="add-modification-name"
                                   class="input is-fullwidth"
                                   type="text"
-                                  placeholder=get_value_field(&176)
+                                  placeholder={get_value_field(&176)}
                                   value={self.request_add_modification.modification_name.clone()}
-                                  oninput=oninput_name />
+                                  oninput={oninput_name} />
                           </div>
                           <div class="column">
-                              <label class="label">{ get_value_field(&61) }</label>
+                              <label class="label">{get_value_field(&61)}</label>
                               <textarea
                                   id="add-modification-description"
                                   class="textarea is-fullwidth"
                                   // rows="10"
                                   type="text"
-                                  placeholder=get_value_field(&61)
+                                  placeholder={get_value_field(&61)}
                                   value={self.request_add_modification.description.clone()}
-                                  oninput=oninput_description />
+                                  oninput={oninput_description} />
                           </div>
                           <div class="column">
-                              <label class="label">{ get_value_field(&96) }</label>
+                              <label class="label">{get_value_field(&96)}</label>
                               <div class="select">
                                   <select
                                       id="add-modification-actual-status"
                                       select={self.request_add_modification.actual_status_id.to_string()}
-                                      onchange=onchange_actual_status_id
+                                      onchange={onchange_actual_status_id}
                                       >
                                     { for self.actual_statuses.iter().map(|x|
                                         html!{
@@ -607,13 +627,12 @@ impl ModificationsTableEdit {
                               </div>
                           </div>
                           <div class="column">
-                              <button
-                                  id="add-component-modification"
-                                  class="button is-fullwidth"
-                                  disabled={self.request_add_modification.modification_name.is_empty()}
-                                  onclick={onclick_add_component_modification} >
-                                  { get_value_field(&117) } // Add
-                              </button>
+                              {ft_save_btn(
+                                "add-component-modification",
+                                onclick_add_component_modification,
+                                true,
+                                self.request_add_modification.modification_name.is_empty()
+                              )}
                           </div>
                     </div>
                   </article>
@@ -642,40 +661,45 @@ impl ModificationsTableEdit {
             self.current_modifications.iter().find(|x| x.uuid == self.select_modification_uuid);
 
         match modification_data {
-            Some(modification_data) => html!{<div class=class_modal>
-              <div class="modal-background" onclick=onclick_modification_card.clone() />
+            Some(modification_data) => html!{<div class={class_modal}>
+              <div class="modal-background" onclick={onclick_modification_card.clone()} />
                 <div class="card">
                   <div class="modal-content">
                     <header class="modal-card-head">
-                        <p class="modal-card-title">{ get_value_field(&177) }</p> // Change modification data
-                        <button class="delete" aria-label="close" onclick=onclick_modification_card />
+                        <p class="modal-card-title">{get_value_field(&177)}</p> // Change modification data
+                        <button class="delete" aria-label="close" onclick={onclick_modification_card} />
                     </header>
                     <div class="box itemBox">
                       <article class="media center-media">
-                          <div class="media-content">
-                              <label class="label">{ get_value_field(&176) }</label> // Modification name
-                              <input
+                        <div class="media-content">
+                          <div class="column">
+                            <label class="label">{get_value_field(&176)}</label> // Modification name
+                            <input
                                   id="add-modification-name"
                                   class="input is-fullwidth"
                                   type="text"
                                   placeholder={modification_data.modification_name.clone()}
                                   value={self.request_edit_modification.modification_name.clone()}
-                                  oninput=oninput_modification_name />
-                              <label class="label">{ get_value_field(&61) }</label>
-                              <textarea
+                                  oninput={oninput_modification_name} />
+                          </div>
+                          <div class="column">
+                            <label class="label">{get_value_field(&61)}</label>
+                            <textarea
                                   id="update-modification-description"
                                   class="textarea is-fullwidth"
                                   // rows="10"
                                   type="text"
                                   placeholder={modification_data.description.clone()}
                                   value={self.request_edit_modification.description.clone()}
-                                  oninput=oninput_modification_description />
-                          <label class="label">{ get_value_field(&96) }</label>
-                          <div class="select">
+                                  oninput={oninput_modification_description} />
+                          </div>
+                          <div class="column">
+                            <label class="label">{get_value_field(&96)}</label>
+                            <div class="select">
                               <select
                                   id="update-modification-actual-status"
                                   select={modification_data.actual_status.actual_status_id.to_string()}
-                                  onchange=onchange_modification_actual_status_id
+                                  onchange={onchange_modification_actual_status_id}
                                   >
                                 { for self.actual_statuses.iter().map(|x|
                                     html!{
@@ -686,25 +710,25 @@ impl ModificationsTableEdit {
                                     }
                                 )}
                               </select>
+                            </div>
                           </div>
                           <br/>
                           <div class="columns">
                               <div class="column">
-                                  <button
-                                      id="delete-component-modification"
-                                      class="button is-danger"
-                                      onclick={onclick_delete_component_modification} >
-                                      { get_value_field(&135) } // Delete
-                                  </button>
+                                  {ft_delete_btn(
+                                    "delete-component-modification",
+                                    onclick_delete_component_modification,
+                                    self.get_confirm == self.select_modification_uuid,
+                                    false
+                                )}
                               </div>
                               <div class="column">
-                                  <button
-                                      id="update-component-modification"
-                                      class="button"
-                                      disabled={!self.update_edit_modification}
-                                      onclick={onclick_component_modification_update} >
-                                      { get_value_field(&46) } // Update
-                                  </button>
+                                  {ft_save_btn(
+                                    "update-component-modification",
+                                    onclick_component_modification_update,
+                                    true,
+                                    !self.update_edit_modification
+                                  )}
                               </div>
                           </div>
                         </div>
@@ -731,17 +755,23 @@ impl ModificationsTableEdit {
     }
 
     fn show_fileset_files_card(&self) -> Html {
-        html!{<>
-            <h2 class="has-text-weight-bold">{ get_value_field(&173) }</h2> // Manage modification filesets
-            <div class="card column">
-                <ManageModificationFilesets
-                    select_modification_uuid = self.select_modification_uuid.clone()
-                    filesets_program = self.modification_filesets
-                        .get(&self.select_modification_uuid)
-                        .map(|f| f.clone())
-                        .unwrap_or_default()
-                />
+        html!{
+            <div class="card">
+                <header class="card-header">
+                    <p class="card-header-title">{get_value_field(&173)}</p> // Manage modification filesets
+                </header>
+                <div class="card-content">
+                    <div class="content">
+                        <ManageModificationFilesets
+                            select_modification_uuid={self.select_modification_uuid.clone()}
+                            filesets_program = {self.modification_filesets
+                                .get(&self.select_modification_uuid)
+                                .map(|f| f.clone())
+                                .unwrap_or_default()}
+                        />
+                    </div>
+                </div>
             </div>
-        </>}
+        }
     }
 }

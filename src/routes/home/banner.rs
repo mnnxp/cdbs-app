@@ -34,7 +34,7 @@ impl Component for Banner {
                         </svg>
 
                         <div class="content">
-                            { get_value_field(&4) }
+                            {get_value_field(&4)}
                         </div>
                     </div>
                 </div>
@@ -50,7 +50,7 @@ impl Component for Banner {
                         </svg>
 
                         <div class="content">
-                            { get_value_field(&5) }
+                            {get_value_field(&5)}
                         </div>
                     </div>
                 </div>
@@ -66,7 +66,7 @@ impl Component for Banner {
                         </svg>
 
                         <div class="content">
-                            { get_value_field(&6) }
+                            {get_value_field(&6)}
                         </div>
                     </div>
                 </div>
@@ -82,7 +82,7 @@ impl Component for Banner {
                         </svg>
 
                         <div class="content">
-                            { get_value_field(&7) }
+                            {get_value_field(&7)}
                         </div>
                     </div>
                 </div>

@@ -79,23 +79,20 @@ impl ListItemUser {
         &self,
         small_button: bool,
     ) -> Html {
-        let onclick_open_profile = self
-            .link
-            .callback(|_| Msg::ShowProfile);
+        let onclick_open_profile = self.link.callback(|_| Msg::ShowProfile);
 
         match small_button {
-            true => html!{
-                {res_btn(
-                    classes!(String::from("fas  fa-user-o")),
-                    onclick_open_profile,
-                    String::new()
-                )}
-            },
+            true => {res_btn(
+                classes!("fas", "fa-user-o"),
+                onclick_open_profile,
+                String::new(),
+                get_value_field(&261)
+            )},
             false => html!{
                 <button
-                      class="button is-light is-fullwidth has-text-weight-bold"
-                      onclick=onclick_open_profile >
-                    { get_value_field(&261) }
+                class="button is-light is-fullwidth has-text-weight-bold"
+                onclick={onclick_open_profile}>
+                    {get_value_field(&261)}
                 </button>
             },
         }
@@ -115,7 +112,6 @@ impl ListItemUser {
             <article class="media center-media">
               <div class="media-left">
                 <figure class="image is-96x96">
-                  // <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
                   <img
                     src={image_file.download_url.to_string()} alt="Favicon profile"
                     loading="lazy"
@@ -131,7 +127,6 @@ impl ListItemUser {
                       </div>
                       <span class="overflow-title">{format!("@{}", username)}</span>
                     </div>
-                    // <div class="overflow-title has-text-weight-bold	is-size-4" >{username}</div>
                   </p>
                 </div>
               </div>
@@ -156,7 +151,6 @@ impl ListItemUser {
           <div class="boxItem" >
             <div class="innerBox" >
               <div class="imgBox" >
-                // <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
                 <img
                     src={image_file.download_url.to_string()} alt="Favicon profile"
                     loading="lazy"
@@ -166,9 +160,7 @@ impl ListItemUser {
                 {format!("{} {}", firstname, lastname)}
               </div>
               <span class="overflow-title">{format!("@{}", username)}</span>
-              // <div class="overflow-title has-text-weight-bold	is-size-4" >{username}</div>
             </div>
-            // <div class="overflow-title has-text-weight-bold	is-size-4" >{username}</div>
             <div class="btnBox">
                 {self.open_profile_page(false)}
             </div>

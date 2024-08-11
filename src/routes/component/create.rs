@@ -10,8 +10,9 @@ use wasm_bindgen_futures::spawn_local;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
+use crate::fragments::buttons::ft_create_btn;
 use crate::services::{get_logged_user, get_value_field, get_value_response, get_from_value, resp_parsing};
-use crate::types::{UUID, ComponentCreateData, TypeAccessInfo, ActualStatus, ComponentType};
+use crate::types::{UUID, ComponentCreateData, TypeAccessInfo, ActualStatus};
 use crate::gqls::make_query;
 use crate::gqls::component::{
     GetComponentDataOpt, get_component_data_opt,
@@ -24,10 +25,10 @@ pub struct CreateComponent {
     request_component: ComponentCreateData,
     router_agent: Box<dyn Bridge<RouteAgent>>,
     link: ComponentLink<Self>,
-    component_types: Vec<ComponentType>,
     actual_statuses: Vec<ActualStatus>,
     types_access: Vec<TypeAccessInfo>,
     disable_create_btn: bool,
+    name_empty: bool,
 }
 
 #[derive(Clone)]
@@ -40,7 +41,6 @@ pub enum Msg {
     UpdateName(String),
     UpdateDescription(String),
     UpdateTypeAccessId(String),
-    UpdateComponentTypeId(String),
     UpdateActualStatusId(String),
     ClearError,
     Ignore,
@@ -56,10 +56,10 @@ impl Component for CreateComponent {
             request_component: ComponentCreateData::new(),
             router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             link,
-            component_types: Vec::new(),
             actual_statuses: Vec::new(),
             types_access: Vec::new(),
             disable_create_btn: false,
+            name_empty: false,
         }
     }
 
@@ -87,14 +87,15 @@ impl Component for CreateComponent {
 
         match msg {
             Msg::RequestManager => {
-                let mut flag = true;
+                self.disable_create_btn = true;
                 // checking have data
                 if self.request_component.name.is_empty() {
                     debug!("name is empty: {:?}", self.request_component.name);
-                    flag = false;
+                    self.name_empty = true;
+                    self.disable_create_btn = false;
                 }
 
-                if flag {
+                if self.disable_create_btn {
                     link.send_message(Msg::RequestCreateComponentData);
                 }
             },
@@ -130,7 +131,6 @@ impl Component for CreateComponent {
             Msg::GetListOpt(res) => {
                 match get_value_response(res) {
                     Ok(ref value) => {
-                        self.component_types = get_from_value(value, "componentTypes").unwrap_or_default();
                         self.actual_statuses = get_from_value(value, "componentActualStatuses").unwrap_or_default();
                         self.types_access = get_from_value(value, "typesAccess").unwrap_or_default();
                     },
@@ -152,12 +152,13 @@ impl Component for CreateComponent {
                 }
             },
             // items request create main component data
-            Msg::UpdateName(data) => self.request_component.name = data,
+            Msg::UpdateName(data) => {
+                self.request_component.name = data;
+                self.name_empty = false;
+            },
             Msg::UpdateDescription(data) => self.request_component.description = data,
             Msg::UpdateTypeAccessId(data) =>
                 self.request_component.type_access_id = data.parse::<usize>().unwrap_or_default(),
-            Msg::UpdateComponentTypeId(data) =>
-                self.request_component.component_type_id = data.parse::<usize>().unwrap_or_default(),
             Msg::UpdateActualStatusId(data) =>
                 self.request_component.actual_status_id = data.parse::<usize>().unwrap_or_default(),
             Msg::ClearError => self.error = None,
@@ -171,18 +172,23 @@ impl Component for CreateComponent {
     }
 
     fn view(&self) -> Html {
-        let onclick_clear_error = self.link
-            .callback(|_| Msg::ClearError);
+        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+        let onclick_create_component = self.link.callback(|_| Msg::RequestManager);
 
         html!{
             <div class="component-page">
                 <div class="container page">
                     <div class="row">
-                        <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
-                        <h1 class="title">{ get_value_field(&290) }</h1>
+                        <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
+                        <h1 class="title">{get_value_field(&290)}</h1>
                         {self.show_main_card()}
                         <br/>
-                        {self.show_manage_btn()}
+                        {ft_create_btn(
+                            "create-component",
+                            "is-medium".into(),
+                            onclick_create_component,
+                            self.disable_create_btn,
+                        )}
                     </div>
                 </div>
             </div>
@@ -192,41 +198,55 @@ impl Component for CreateComponent {
 
 impl CreateComponent {
     fn show_main_card(&self) -> Html {
-        let onchange_actual_status_id = self.link
-            .callback(|ev: ChangeData| Msg::UpdateActualStatusId(match ev {
+        let onchange_actual_status_id =
+            self.link.callback(|ev: ChangeData| Msg::UpdateActualStatusId(match ev {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
-          }));
-
-        let onchange_change_component_type = self.link
-            .callback(|ev: ChangeData| Msg::UpdateComponentTypeId(match ev {
+            }));
+        let onchange_change_type_access =
+            self.link.callback(|ev: ChangeData| Msg::UpdateTypeAccessId(match ev {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
-          }));
-
-        let onchange_change_type_access = self.link
-            .callback(|ev: ChangeData| Msg::UpdateTypeAccessId(match ev {
-              ChangeData::Select(el) => el.value(),
-              _ => "1".to_string(),
-          }));
-
-        let oninput_name = self.link
-            .callback(|ev: InputData| Msg::UpdateName(ev.value));
-
-        let oninput_description = self.link
-            .callback(|ev: InputData| Msg::UpdateDescription(ev.value));
+            }));
+        let oninput_name =
+            self.link.callback(|ev: InputData| Msg::UpdateName(ev.value));
+        let oninput_description =
+            self.link.callback(|ev: InputData| Msg::UpdateDescription(ev.value));
+        let class_name = match self.name_empty {
+            true => "input is-danger",
+            false => "input",
+        };
 
         html!{
             <div class="card">
                 <div class="column">
+                  <label class="label">{get_value_field(&110)}</label>
+                  <input
+                      id="update-name"
+                      class={class_name}
+                      type="text"
+                      placeholder={get_value_field(&110)}
+                      value={self.request_component.name.clone()}
+                      oninput={oninput_name} />
+                  <label class="label">{get_value_field(&61)}</label>
+                  <textarea
+                      id="update-description"
+                      class="textarea"
+                      // rows="10"
+                      type="text"
+                      placeholder={get_value_field(&61)}
+                      value={self.request_component.description.clone()}
+                      oninput={oninput_description} />
+                </div>
+                <div class="column">
                     <div class="columns">
                         <div class="column" style="margin-right: 1rem">
-                            <label class="label">{ get_value_field(&96) }</label>
+                            <label class="label">{get_value_field(&96)}</label>
                             <div class="select">
                               <select
                                   id="component-status-id"
                                   select={self.request_component.actual_status_id.to_string()}
-                                  onchange=onchange_actual_status_id
+                                  onchange={onchange_actual_status_id}
                                   >
                                 { for self.actual_statuses.iter().map(|x|
                                     html!{
@@ -240,31 +260,12 @@ impl CreateComponent {
                             </div>
                         </div>
                         <div class="column" style="margin-right: 1rem">
-                            <label class="label">{ get_value_field(&97) }</label>
-                            <div class="select">
-                              <select
-                                  id="set-component-type"
-                                  select={self.request_component.component_type_id.to_string()}
-                                  onchange=onchange_change_component_type
-                                >
-                              { for self.component_types.iter().map(|x|
-                                  html!{
-                                      <option value={x.component_type_id.to_string()}
-                                            selected={x.component_type_id == self.request_component.component_type_id} >
-                                          {&x.component_type}
-                                      </option>
-                                  }
-                              )}
-                              </select>
-                            </div>
-                        </div>
-                        <div class="column" style="margin-right: 1rem">
-                            <label class="label">{ get_value_field(&114) }</label>
+                            <label class="label">{get_value_field(&114)}</label>
                             <div class="select">
                               <select
                                   id="set-type-access"
                                   select={self.request_component.type_access_id.to_string()}
-                                  onchange=onchange_change_type_access
+                                  onchange={onchange_change_type_access}
                                 >
                               { for self.types_access.iter().map(|x|
                                   html!{
@@ -279,41 +280,7 @@ impl CreateComponent {
                         </div>
                     </div>
                 </div>
-                <div class="column">
-                  <label class="label">{ get_value_field(&110) }</label>
-                  <input
-                      id="update-name"
-                      class="input"
-                      type="text"
-                      placeholder=get_value_field(&110)
-                      value={self.request_component.name.clone()}
-                      oninput=oninput_name />
-                  <label class="label">{ get_value_field(&61) }</label>
-                  <textarea
-                      id="update-description"
-                      class="textarea"
-                      // rows="10"
-                      type="text"
-                      placeholder=get_value_field(&61)
-                      value={self.request_component.description.clone()}
-                      oninput=oninput_description />
-                </div>
             </div>
-        }
-    }
-
-    fn show_manage_btn(&self) -> Html {
-        let onclick_create_changes = self.link
-            .callback(|_| Msg::RequestManager);
-
-        html!{
-            <button
-                id="create-data"
-                class="button is-success is-medium is-fullwidth"
-                onclick={onclick_create_changes}
-                disabled={self.disable_create_btn} >
-                { get_value_field(&45) } // Create
-            </button>
         }
     }
 }

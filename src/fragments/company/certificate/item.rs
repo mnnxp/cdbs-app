@@ -144,7 +144,7 @@ impl Component for CompanyCertificateItem {
             false => (None, None),
         };
         html!{<>
-            <ListErrors error=self.error.clone() clear_error=onclick_clear_error.clone()/>
+            <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
             <CertificateItem
                 certificate={Certificate::from(self.props.certificate.clone())}
                 show_cert_btn={self.props.show_cert_btn}

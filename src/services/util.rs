@@ -1,16 +1,19 @@
 use regex::Regex;
 
+/// Returns extension derived from filename
+/// Extension with dot in ascii and lower case
+pub(crate) fn ext_str(filename: &str) -> String {
+    Regex::new(r"\.\w+$")
+        .unwrap()
+        .find(filename)
+        .map(|m| m.as_str().to_ascii_lowercase())
+        .unwrap_or_default()
+}
+
 /// Checkign files for get images when can display in browser
 pub(crate) fn image_detector(filename: &str) -> bool {
-    let ext_str =
-        Regex::new(r"\.\w+$")
-            .unwrap()
-            .find(filename)
-            .map(|m| m.as_str().to_ascii_lowercase())
-            .unwrap_or_default();
-
     matches!(
-        ext_str.as_str(),
+        ext_str(filename).as_str(),
         ".apng" | ".avif" | ".gif" |
         ".jpg" | ".jpeg" | ".jpe" |
         ".jif" | ".jfif" | ".png" |
@@ -20,17 +23,7 @@ pub(crate) fn image_detector(filename: &str) -> bool {
 
 /// Search for a file to display a 3D object
 pub(crate) fn three_detector(filename: &str) -> bool {
-    let ext_str =
-        Regex::new(r"\.\w+$")
-            .unwrap()
-            .find(filename)
-            .map(|m| m.as_str().to_ascii_lowercase())
-            .unwrap_or_default();
-
-    matches!(
-        ext_str.as_str(),
-        ".stl"
-    )
+    matches!(ext_str(filename).as_str(), ".stl")
 }
 
 fn append_frag(text: &mut String, frag: &mut String) {

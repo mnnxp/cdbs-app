@@ -1,6 +1,7 @@
 use yew::{html, Component, Callback, ComponentLink, Html, Properties, ShouldRender, InputData};
 // use log::debug;
 
+use crate::fragments::buttons::{ft_delete_btn, ft_save_btn};
 use crate::services::{image_detector, get_value_field};
 use crate::types::{UUID, Certificate};
 
@@ -11,6 +12,7 @@ pub struct CertificateItem {
     cert_url: String,
     cert_description: String,
     show_cert: bool,
+    get_confirm: UUID,
 }
 
 #[derive(Clone, Debug, Properties)]
@@ -39,7 +41,7 @@ impl Component for CertificateItem {
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
         let cert_url = match image_detector(&props.certificate.file.filename) {
             true => props.certificate.file.download_url.clone(),
-            false => String::from("https://bulma.io/images/placeholders/128x128.png"),
+            false => String::new(),
         };
         let cert_description = props.certificate.description.clone();
         Self {
@@ -48,23 +50,29 @@ impl Component for CertificateItem {
             cert_url,
             cert_description,
             show_cert: false,
+            get_confirm: String::new(),
         }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        // let link = self.link.clone();
         match msg {
             Msg::UpdateDescription(description) => self.cert_description = description,
             Msg::SetNewDescription => {
                 if let Some(callback_update_descript) = &self.props.callback_update_descript {
-                    let (file_uuid, description) = (self.props.certificate.file.uuid.clone(), self.cert_description.clone());
-                    callback_update_descript.emit((file_uuid, description));
+                    callback_update_descript.emit((
+                        self.props.certificate.file.uuid.clone(),
+                        self.cert_description.clone()
+                    ));
                 }
             },
             Msg::DeleteCert => {
-                if let Some(callback_delete_cert) = &self.props.callback_delete_cert {
-                    let file_uuid = self.props.certificate.file.uuid.clone();
-                    callback_delete_cert.emit(file_uuid);
+                if self.get_confirm == self.props.certificate.file.uuid {
+                    if let Some(callback_delete_cert) = &self.props.callback_delete_cert {
+                        let file_uuid = self.props.certificate.file.uuid.clone();
+                        callback_delete_cert.emit(file_uuid);
+                    }
+                } else {
+                    self.get_confirm = self.props.certificate.file.uuid.clone();
                 }
             },
             Msg::ShowCert => self.show_cert = !self.show_cert,
@@ -124,17 +132,18 @@ impl CertificateItem {
                   </div>
                   <div class="media-content" style="margin-right: 1rem;">
                     <div class="block" style="overflow-wrap: anywhere">
-                        <span class="overflow-title has-text-weight-bold">{ get_value_field(&262) }</span>
+                        <span class="overflow-title has-text-weight-bold">{get_value_field(&262)}</span>
                         <span class="overflow-title">{self.props.certificate.file.filename.clone()}</span>
                     </div>
                     {self.show_update_block()}
                     <div class="buttons">
                       {self.show_certificate_btn()}
-                      <button id={"delete-cert"}
-                          class="button is-danger is-fullwidth has-text-weight-bold"
-                          onclick=onclick_delete_cert>
-                          { get_value_field(&135) }
-                      </button>
+                      {ft_delete_btn(
+                        "delete-cert",
+                        onclick_delete_cert,
+                        self.get_confirm == self.props.certificate.file.uuid,
+                        false
+                      )}
                       {self.show_download_btn()}
                     </div>
                   </div>
@@ -150,12 +159,8 @@ impl CertificateItem {
         html!{<div class="boxItem" >
           <div class="innerBox" >
             <div class="imgBox" >
-                <figure class="image is-256x256" onclick=onclick_show_cert >
-                    <img
-                        // src="https://bulma.io/images/placeholders/128x128.png" alt="Image"
-                        src={self.cert_url.clone()}
-                        loading="lazy"
-                    />
+                <figure class="image is-256x256" onclick={onclick_show_cert}>
+                    <img src={self.cert_url.clone()} loading="lazy" />
                 </figure>
             </div>
             <div class="overflow-title has-text-weight-bold">{self.props.certificate.description.clone()}</div>
@@ -169,8 +174,8 @@ impl CertificateItem {
     fn show_delete_certificate(&self) -> Html {
         html!{<div class="card">
             <div class="message is-success">
-              <div class="message-header">{ get_value_field(&89) }</div>
-              <div class="message-body">{ get_value_field(&139) }</div>
+              <div class="message-header">{get_value_field(&89)}</div>
+              <div class="message-body">{get_value_field(&139)}</div>
             </div>
         </div>}
     }
@@ -179,7 +184,7 @@ impl CertificateItem {
         match self.props.get_result_update {
             true => html!{<div class="column">
                 <span id="remove-profile" class="tag is-info is-light">
-                    { get_value_field(&140) }
+                    {get_value_field(&140)}
                 </span>
             </div>},
             false => html!{},
@@ -197,7 +202,7 @@ impl CertificateItem {
             true => html!{
                 <button id={"show-cert"}
                     class="button is-light is-fullwidth has-text-weight-bold"
-                    onclick=onclick_show_cert>
+                    onclick={onclick_show_cert}>
                     { text_btn }
                 </button>
             },
@@ -207,13 +212,12 @@ impl CertificateItem {
 
     fn show_update_block(&self) -> Html {
         let oninput_cert_description = self.link.callback(|ev: InputData| Msg::UpdateDescription(ev.value));
-        let onclick_change_cert =
-            self.link.callback(|_| Msg::SetNewDescription);
+        let onclick_change_cert = self.link.callback(|_| Msg::SetNewDescription);
 
         html!{<div class="block">
             <div class="columns" style="margin-bottom: 0px">
                 <div class="column">
-                    <label class="label">{ get_value_field(&61) }</label>
+                    <label class="label">{get_value_field(&61)}</label>
                 </div>
                 {self.show_update_description()}
             </div>
@@ -223,16 +227,17 @@ impl CertificateItem {
                         id={"cert-description"}
                         class="input"
                         type="text"
-                        placeholder=get_value_field(&61)
+                        placeholder={get_value_field(&61)}
                         value={self.cert_description.clone()}
-                        oninput=oninput_cert_description />
+                        oninput={oninput_cert_description} />
                 </div>
                 <div class="column">
-                    <button id={"change-cert"}
-                        class="button is-light is-fullwidth has-text-weight-bold"
-                        onclick=onclick_change_cert>
-                        { get_value_field(&46) }
-                    </button>
+                    {ft_save_btn(
+                        "change-cert",
+                        onclick_change_cert,
+                        true,
+                        false,
+                    )}
                 </div>
             </div>
         </div>}
@@ -244,7 +249,7 @@ impl CertificateItem {
                 class="button is-light is-fullwidth has-text-weight-bold"
                 href={self.props.certificate.file.download_url.clone()}
                 download={self.props.certificate.file.filename.clone()}>
-                { get_value_field(&126) }
+                {get_value_field(&126)}
             </button>},
             false => html!{},
         }
@@ -258,8 +263,8 @@ impl CertificateItem {
         };
 
         html!{
-            <div class=class_modal>
-              <div class="modal-background" onclick=onclick_show_cert.clone() />
+            <div class={class_modal}>
+              <div class="modal-background" onclick={onclick_show_cert.clone()} />
               <div class="modal-content box">
                 <p class="image is-4by3">
                   <img
@@ -268,7 +273,7 @@ impl CertificateItem {
                   />
                 </p>
               </div>
-              <button class="modal-close is-large" aria-label="close" onclick=onclick_show_cert />
+              <button class="modal-close is-large" aria-label="close" onclick={onclick_show_cert} />
             </div>
         }
     }

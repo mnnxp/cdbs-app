@@ -12,13 +12,16 @@ use crate::fragments::clipboard::ShareLinkBtn;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{
+    buttons::{ft_see_btn, ft_follow_btn},
+    user::ModalCardUser,
     switch_icon::res_btn,
     list_errors::ListErrors,
     component::CatalogComponents,
     standard::{StandardFilesCard, SpecsTags, KeywordsTags},
     img_showcase::ImgShowcase,
 };
-use crate::services::{Counter, get_logged_user, get_value_field, resp_parsing};
+use crate::services::content_adapter::{DateDisplay, Markdownable};
+use crate::services::{Counter, get_logged_user, get_value_field, resp_parsing, title_changer};
 use crate::types::{UUID, StandardInfo, SlimUser, DownloadFile, ComponentsQueryArg};
 use crate::gqls::make_query;
 use crate::gqls::standard::{
@@ -67,9 +70,9 @@ pub enum Msg {
     GetStandardData(String),
     ShowDescription,
     ShowComponentsList,
-    OpenStandardOwner,
     OpenStandardSetting,
     ResponseError(Error),
+    ClearError,
     Ignore,
 }
 
@@ -111,6 +114,10 @@ impl Component for ShowStandard {
         // get flag changing current standard in route
         let not_matches_standard_uuid = target_standard_uuid != self.current_standard_uuid;
         // debug!("self.current_standard_uuid {:#?}", self.current_standard_uuid);
+
+        if let Some(standard) = &self.standard {
+            title_changer::set_title(standard.name.as_str());
+        }
 
         if first_render || not_matches_standard_uuid {
             let link = self.link.clone();
@@ -228,14 +235,6 @@ impl Component for ShowStandard {
             },
             Msg::ShowDescription => self.show_full_description = !self.show_full_description,
             Msg::ShowComponentsList => self.show_related_components = !self.show_related_components,
-            Msg::OpenStandardOwner => {
-                if let Some(standard_data) = &self.standard {
-                    // Redirect to owner standard page
-                    self.router_agent.send(ChangeRoute(AppRoute::ShowCompany(
-                        standard_data.owner_company.uuid.to_string()
-                    ).into()));
-                }
-            },
             Msg::OpenStandardSetting => {
                 if let Some(standard_data) = &self.standard {
                     // Redirect to page for change and update standard
@@ -245,6 +244,7 @@ impl Component for ShowStandard {
                 }
             },
             Msg::ResponseError(err) => self.error = Some(err),
+            Msg::ClearError => self.error = None,
             Msg::Ignore => {}
         }
         true
@@ -260,71 +260,73 @@ impl Component for ShowStandard {
     }
 
     fn view(&self) -> Html {
+        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+
         match &self.standard {
             Some(standard_data) => html!{
                 <div class="standard-page">
-                    <ListErrors error=self.error.clone()/>
+                    <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
                     <div class="container page">
                         <div class="row">
                             <div class="card column">
                               {self.show_main_card(standard_data)}
                             </div>
+                            <br/>
                             {match &self.show_related_components {
-                                true => {self.show_related_components(&standard_data.uuid)},
+                                true => self.show_related_components_card(&standard_data.uuid),
                                 false => html!{<>
-                                    <br/>
                                     <div class="columns">
-                                      {self.show_standard_params(standard_data)}
-                                      {self.show_standard_files(standard_data)}
+                                        <div class="column">
+                                            {self.show_standard_params(standard_data)}
+                                        </div>
+                                        <div class="column">
+                                            {self.show_standard_files(standard_data)}
+                                        </div>
                                     </div>
-                                    {self.show_standard_specs(standard_data)}
+                                    <SpecsTags
+                                        show_manage_btn={false}
+                                        standard_uuid={standard_data.uuid.clone()}
+                                        specs={standard_data.standard_specs.clone()}
+                                    />
                                     <br/>
-                                    {self.show_standard_keywords(standard_data)}
+                                    <KeywordsTags
+                                        show_delete_btn={false}
+                                        standard_uuid={standard_data.uuid.clone()}
+                                        keywords={standard_data.standard_keywords.clone()}
+                                    />
                                 </>},
                             }}
+                            <br/>
                         </div>
                     </div>
                 </div>
             },
-            None => html!{<div>
-                <ListErrors error=self.error.clone()/>
-                // <h1>{"Not data"}</h1>
-            </div>},
+            None => html!{
+                <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
+            },
         }
     }
 }
 
 impl ShowStandard {
-    fn show_main_card(
-        &self,
-        standard_data: &StandardInfo,
-    ) -> Html {
-        let onclick_open_owner_company = self.link.callback(|_| Msg::OpenStandardOwner);
+    fn show_main_card(&self, standard_data: &StandardInfo) -> Html {
         let show_description_btn = self.link.callback(|_| Msg::ShowDescription);
 
         html!{
             <div class="columns">
               <ImgShowcase
-                object_uuid=self.current_standard_uuid.clone()
-                file_arr=self.file_arr.clone()
+                object_uuid={self.current_standard_uuid.clone()}
+                file_arr={self.file_arr.clone()}
               />
-              // <div class="column is-one-quarter">
-              //   <img class="imgBox" src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
-              // </div>
               <div class="column">
                 <div class="media">
                     <div class="media-content">
-                        { get_value_field(&94) }
-                        <a class="id-box has-text-grey-light has-text-weight-bold"
-                              onclick={onclick_open_owner_company}
-                            >{format!("{} {}",
-                            &standard_data.owner_company.shortname,
-                            &standard_data.owner_company.company_type.shortname
-                        )}</a>
+                        {get_value_field(&94)}
+                        <ModalCardUser data = {standard_data.owner_user.clone()} />
                     </div>
                     <div class="media-right" style="margin-right: 1rem">
-                        { get_value_field(&145) } // type access
-                        <span class="id-box has-text-grey-light has-text-weight-bold">
+                        {get_value_field(&145)} // type access
+                        <span class="id-box has-text-weight-bold">
                             {standard_data.type_access.name.clone()}
                         </span>
                     </div>
@@ -339,141 +341,95 @@ impl ShowStandard {
                     {self.show_followers_btn()}
                     <ShareLinkBtn />
                 </div>
-                <div class="standard-description">{
-                    match self.show_full_description {
-                        true => html!{<>
-                          {standard_data.description.clone()}
-                          {match standard_data.description.len() {
-                              250.. => html!{<>
-                                <br/>
-                                <button class="button is-white" onclick=show_description_btn>
-                                    { get_value_field(&99) }
-                                </button>
-                              </>},
-                              _ => html!{},
-                          }}
+                <div class="standard-description">
+                    {match standard_data.description.len() {
+                        250.. => html!{<>
+                            {match self.show_full_description {
+                                true => standard_data.description.to_markdown(),
+                                false => format!("{:.*}", 200, standard_data.description).to_markdown(),
+                            }}
+                            {ft_see_btn(show_description_btn, self.show_full_description)}
                         </>},
-                        false => html!{<>
-                          {format!("{:.*}", 200, standard_data.description)}
-                          <br/>
-                          <button class="button is-white" onclick=show_description_btn>
-                            { get_value_field(&98) }
-                          </button>
-                        </>},
-                    }
-                }</div>
+                        _ => standard_data.description.to_markdown(),
+                    }}
+                </div>
               </div>
             </div>
         }
     }
 
-    fn show_standard_params(
-        &self,
-        standard_data: &StandardInfo,
-    ) -> Html {
+    fn show_standard_params(&self, standard_data: &StandardInfo) -> Html {
         html!{
-            <div class="column">
-              <h2 class="has-text-weight-bold">{ get_value_field(&152) }</h2> // Сharacteristics of the standard
-              <div class="card column">
-                <table class="table is-fullwidth">
-                    <tbody>
-                      <tr>
-                        <td>{ get_value_field(&146) }</td> // classifier
-                        <td>{standard_data.classifier.clone()}</td>
-                      </tr>
-                      <tr>
-                        <td>{ get_value_field(&147) }</td> // specified_tolerance
-                        <td>{standard_data.specified_tolerance.clone()}</td>
-                      </tr>
-                      <tr>
-                        <td>{ get_value_field(&148) }</td> // technical_committee
-                        <td>{standard_data.technical_committee.clone()}</td>
-                      </tr>
-                      <tr>
-                        <td>{ get_value_field(&149) }</td> // publication_at
-                        <td>{format!("{:.*}", 10, standard_data.publication_at.to_string())}</td>
-                      </tr>
-                      <tr>
-                        <td>{ get_value_field(&150) }</td> // standard_status
-                        <td>{standard_data.standard_status.name.clone()}</td>
-                      </tr>
-                      <tr>
-                        <td>{ get_value_field(&151) }</td> // region
-                        <td>{standard_data.region.region.clone()}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-              </div>
+            <div class="card">
+                <header class="card-header">
+                    <p class="card-header-title">{get_value_field(&152)}</p> // Сharacteristics of the standard
+                </header>
+                <div class="card-content">
+                    <div class="content">
+                        <table class="table is-fullwidth">
+                            <tbody>
+                            <tr>
+                                <td>{get_value_field(&146)}</td> // classifier
+                                <td>{standard_data.classifier.clone()}</td>
+                            </tr>
+                            <tr>
+                                <td>{get_value_field(&147)}</td> // specified_tolerance
+                                <td>{standard_data.specified_tolerance.clone()}</td>
+                            </tr>
+                            <tr>
+                                <td>{get_value_field(&148)}</td> // technical_committee
+                                <td>{standard_data.technical_committee.clone()}</td>
+                            </tr>
+                            <tr>
+                                <td>{get_value_field(&149)}</td> // publication_at
+                                <td>{standard_data.publication_at.date_to_display()}</td>
+                            </tr>
+                            <tr>
+                                <td>{get_value_field(&150)}</td> // standard_status
+                                <td>{standard_data.standard_status.name.clone()}</td>
+                            </tr>
+                            <tr>
+                                <td>{get_value_field(&151)}</td> // region
+                                <td>{standard_data.region.region.clone()}</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         }
     }
 
-    fn show_standard_files(
-        &self,
-        standard_data: &StandardInfo,
-    ) -> Html {
+    fn show_standard_files(&self, standard_data: &StandardInfo) -> Html {
         html!{
-            <div class="column">
-              <h2 class="has-text-weight-bold">{ get_value_field(&153) }</h2> // Files
-              <StandardFilesCard
-                  show_download_btn = true
-                  show_delete_btn = false
-                  standard_uuid = standard_data.uuid.clone()
-                  files = standard_data.standard_files.clone()
-                />
+            <div class="card">
+                <header class="card-header">
+                    <p class="card-header-title">{get_value_field(&153)}</p> // Files
+                </header>
+                <div class="card-content">
+                    <div class="content">
+                        <StandardFilesCard
+                            show_delete_btn={false}
+                            standard_uuid={standard_data.uuid.clone()}
+                            files={standard_data.standard_files.clone()}
+                        />
+                    </div>
+                </div>
             </div>
         }
-    }
-
-    fn show_standard_specs(
-        &self,
-        standard_data: &StandardInfo,
-    ) -> Html {
-        html!{<>
-              <h2 class="has-text-weight-bold">{ get_value_field(&104) }</h2> // Specs
-              <div class="card column">
-                <SpecsTags
-                    show_manage_btn = false
-                    standard_uuid = standard_data.uuid.clone()
-                    specs = standard_data.standard_specs.clone()
-                  />
-              </div>
-        </>}
-    }
-
-    fn show_standard_keywords(
-        &self,
-        standard_data: &StandardInfo,
-    ) -> Html {
-        html!{<>
-              <h2 class="has-text-weight-bold">{ get_value_field(&105) }</h2> // Keywords
-              <div class="card column">
-                <KeywordsTags
-                    show_delete_btn = false
-                    standard_uuid = standard_data.uuid.clone()
-                    keywords = standard_data.standard_keywords.clone()
-                  />
-              </div>
-        </>}
     }
 
     fn show_followers_btn(&self) -> Html {
-        let (class_fav, onclick_following) = match self.is_followed {
-            true => ("fas fa-bookmark", self.link.callback(|_| Msg::UnFollow)),
-            false => ("far fa-bookmark", self.link.callback(|_| Msg::Follow)),
+        let onclick_following = match self.is_followed {
+            true => self.link.callback(|_| Msg::UnFollow),
+            false => self.link.callback(|_| Msg::Follow),
         };
 
-        html!{<>
-            <button
-                id="following-button"
-                class="button"
-                onclick=onclick_following >
-              <span class="icon is-small">
-                <i class={class_fav}></i>
-              </span>
-              <span>{self.abbr_number()}</span>
-            </button>
-        </>}
+        ft_follow_btn(
+            onclick_following,
+            self.is_followed,
+            self.abbr_number(),
+        )
     }
 
     fn show_related_components_btn(&self) -> Html {
@@ -484,27 +440,29 @@ impl ShowStandard {
         };
 
         html!{
-            <button class=classes_btn
-                onclick=onclick_related_components_btn >
+            <button class={classes_btn}
+                onclick={onclick_related_components_btn} >
               <span class="has-text-black">{text_btn}</span>
             </button>
         }
     }
 
-    fn show_related_components(
-        &self,
-        standard_uuid: &UUID,
-    ) -> Html {
-        html!{<>
-            <br/>
-            <h2 class="has-text-weight-bold">{ get_value_field(&154) }</h2> // Components
+    fn show_related_components_card(&self, standard_uuid: &UUID) -> Html {
+        html!{
             <div class="card">
-              <CatalogComponents
-                  show_create_btn = false
-                  arguments = ComponentsQueryArg::set_standard_uuid(standard_uuid)
-                />
+                <header class="card-header">
+                    <p class="card-header-title">{get_value_field(&154)}</p> // Components
+                </header>
+                <div class="card-content">
+                    <div class="content">
+                        <CatalogComponents
+                            show_create_btn={false}
+                            arguments={ComponentsQueryArg::set_standard_uuid(standard_uuid)}
+                            />
+                    </div>
+                </div>
             </div>
-        </>}
+        }
     }
 
     fn show_setting_btn(&self) -> Html {
@@ -513,7 +471,9 @@ impl ShowStandard {
             true => {res_btn(
                 classes!("fa", "fa-tools"),
                 onclick_setting_standard_btn,
-                String::new())},
+                String::new(),
+                get_value_field(&16)
+            )},
             false => html!{},
         }
     }

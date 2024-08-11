@@ -1,5 +1,3 @@
-//! Api requests via yew FetchService
-
 mod auth;
 mod localisation;
 mod filesize;
@@ -12,6 +10,8 @@ mod util;
 mod response_parsing;
 mod subscribers;
 mod clipboard;
+pub(crate) mod content_adapter;
+pub(crate) mod title_changer;
 
 pub use auth::{Auth, get_current_user, logout};
 pub use localisation::get_value_field;
@@ -24,7 +24,7 @@ pub(crate) use preview_model::preview_model;
 pub use requests::Requests;
 pub use tags::Tags;
 pub use upload_file::{PutUploadFile, UploadData};
-pub(crate) use util::{image_detector, three_detector, url_decode};
+pub(crate) use util::{ext_str, image_detector, three_detector, url_decode};
 pub(crate) use response_parsing::{
     resp_parsing, resp_parsing_two_level, get_value_response, get_from_value
 };

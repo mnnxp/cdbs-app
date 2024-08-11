@@ -5,12 +5,12 @@ pub use item::FileItem;
 use std::collections::BTreeSet;
 use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
 // use log::debug;
+use crate::fragments::buttons::ft_see_btn;
 use crate::types::{UUID, ShowFileInfo};
 use crate::services::get_value_field;
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
-    pub show_download_btn: bool,
     pub show_delete_btn: bool,
     pub standard_uuid: UUID,
     pub files: Vec<ShowFileInfo>,
@@ -57,7 +57,6 @@ impl Component for StandardFilesCard {
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
         if self.props.standard_uuid == props.standard_uuid &&
-            self.props.show_download_btn == props.show_download_btn &&
                 self.props.show_delete_btn == props.show_delete_btn &&
                     self.props.files.len() == props.files.len() {
             false
@@ -69,8 +68,8 @@ impl Component for StandardFilesCard {
     }
 
     fn view(&self) -> Html {
-        html!{
-            <div id="files" class="card">
+        html!{<>
+            <div id="standard-files" class={"buttons"}>
                 {for self.props.files.iter().enumerate().map(|(index, file)| {
                     match (index >= 3, self.show_full_files) {
                         // show full list
@@ -80,21 +79,20 @@ impl Component for StandardFilesCard {
                         _ => html!{},
                     }
                 })}
+            </div>
+            <footer class="card-footer">
                 {match self.props.files.len() {
-                    0 => html!{<span>{ get_value_field(&204) }</span>},
+                    0 => html!{<span>{get_value_field(&204)}</span>},
                     0..=3 => html!{},
                     _ => self.show_see_btn(),
                 }}
-            </div>
-        }
+            </footer>
+        </>}
     }
 }
 
 impl StandardFilesCard {
-    fn show_file_info(
-        &self,
-        file: &ShowFileInfo
-    ) -> Html {
+    fn show_file_info(&self, file: &ShowFileInfo) -> Html {
         let callback_delete_file =
             self.link.callback(|value: UUID| Msg::RemoveFile(value));
 
@@ -102,11 +100,10 @@ impl StandardFilesCard {
             Some(_) => html!{}, // removed file
             None => html!{
                 <FileItem
-                  show_download_btn = self.props.show_download_btn
-                  show_delete_btn = self.props.show_delete_btn
-                  standard_uuid = self.props.standard_uuid.clone()
-                  file = file.clone()
-                  callback_delete_file = Some(callback_delete_file.clone())
+                  show_delete_btn={self.props.show_delete_btn}
+                  standard_uuid={self.props.standard_uuid.clone()}
+                  file={file.clone()}
+                  callback_delete_file={Some(callback_delete_file.clone())}
                 />
             },
         }
@@ -114,18 +111,6 @@ impl StandardFilesCard {
 
     fn show_see_btn(&self) -> Html {
         let show_full_files_btn = self.link.callback(|_| Msg::ShowFullList);
-
-        match self.show_full_files {
-            true => html!{<>
-              <button class="button is-white"
-                  onclick=show_full_files_btn
-                >{ get_value_field(&99) }</button>
-            </>},
-            false => html!{<>
-              <button class="button is-white"
-                  onclick=show_full_files_btn
-                >{ get_value_field(&98) }</button>
-            </>},
-        }
+        ft_see_btn(show_full_files_btn, self.show_full_files)
     }
 }

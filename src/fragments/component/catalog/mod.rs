@@ -27,6 +27,7 @@ pub enum Msg {
     DelFav(UUID),
     GetList,
     ResponseError(Error),
+    ClearError,
 }
 
 pub struct CatalogComponents {
@@ -125,6 +126,7 @@ impl Component for CatalogComponents {
                 });
             },
             Msg::ResponseError(err) => self.error = Some(err),
+            Msg::ClearError => self.error = None,
         }
         true
     }
@@ -139,18 +141,17 @@ impl Component for CatalogComponents {
         debug!("self_arg == arg: {}", flag_change);
 
         if self.props.show_create_btn == props.show_create_btn && flag_change {
-            // debug!("if change");
             false
         } else {
             self.props.show_create_btn = props.show_create_btn;
             self.props.arguments = props.arguments;
             self.link.send_message(Msg::GetList);
-            // debug!("else change");
             true
         }
     }
 
     fn view(&self) -> Html {
+        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         let onclick_change_view = self.link.callback(|_| Msg::SwitchShowType);
         let (class_for_icon, class_for_list) = match self.show_type {
             ListState::Box => ("fas fa-bars", "flex-box"),
@@ -159,7 +160,7 @@ impl Component for CatalogComponents {
 
         html! {
             <div class="componentsBox" >
-              <ListErrors error=self.error.clone()/>
+              <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
               <div class="level" >
                 <div class="level-left ">
                 </div>
@@ -167,18 +168,12 @@ impl Component for CatalogComponents {
                     <div class="buttons">
                         {match &self.props.show_create_btn {
                           true => html!{
-                              <RouterAnchor<AppRoute> route=AppRoute::CreateComponent classes="button is-info">
-                                  { get_value_field(&45) } // Create
+                              <RouterAnchor<AppRoute> route={AppRoute::CreateComponent} classes="button is-info">
+                                  {get_value_field(&290)} // Create component
                               </RouterAnchor<AppRoute>>
                           },
                           false => html!{},
                         }}
-                        // <div class="select">
-                        //   <select>
-                        //     <option>{"Select dropdown"}</option>
-                        //     <option>{"With options"}</option>
-                        //   </select>
-                        // </div>
                         <button class="button" onclick={onclick_change_view} >
                             <span class={"icon is-small"}>
                                 <i class={class_for_icon}></i>

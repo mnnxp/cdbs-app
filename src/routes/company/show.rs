@@ -12,15 +12,21 @@ use wasm_bindgen_futures::spawn_local;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{
+    buttons::ft_follow_btn,
+    clipboard::ShareLinkBtn,
+    user::ModalCardUser,
     switch_icon::res_btn,
     list_errors::ListErrors,
     list_empty::ListEmpty,
     side_menu::{MenuItem, SideMenu},
-    company::{CompanyCertificatesCard, CompanyRepresents, SpecsTags},
+    company::{CompanyCertificatesCard, CompanyRepresents, diamond_svg},
     component::CatalogComponents,
     standard::CatalogStandards,
 };
-use crate::services::{Counter, get_logged_user, get_value_field, resp_parsing};
+use crate::services::content_adapter::{
+    ContentDisplay, Markdownable, DateDisplay, ContactDisplay, SpecDisplay
+};
+use crate::services::{Counter, get_logged_user, get_value_field, resp_parsing, title_changer};
 use crate::types::{UUID, CompanyInfo, SlimUser, ComponentsQueryArg, StandardsQueryArg};
 use crate::gqls::make_query;
 use crate::gqls::company::{
@@ -65,7 +71,6 @@ pub enum Msg {
     DelFollow(String),
     GetCompanyResult(String),
     ChangeTab(CompanyTab),
-    OpenOwnerCompany,
     OpenSettingCompany,
     ShowFullCompanyInfo,
     ResponseError(Error),
@@ -97,7 +102,7 @@ impl Component for ShowCompany {
             link,
             subscribers: 0,
             is_followed: false,
-            company_tab: CompanyTab::Certificates,
+            company_tab: CompanyTab::Components,
             extend_tab: None,
             show_full_company_info: false,
         }
@@ -119,6 +124,10 @@ impl Component for ShowCompany {
         // get flag changing current company in route
         let not_matches_company_uuid = target_company_uuid != self.current_company_uuid;
         // debug!("self.current_company_uuid {:#?}", self.current_company_uuid);
+
+        if let Some(company) = &self.company {
+            title_changer::set_title(company.shortname.as_str());
+        }
 
         if first_render || not_matches_company_uuid {
             let link = self.link.clone();
@@ -206,14 +215,6 @@ impl Component for ShowCompany {
                 }
             },
             Msg::ChangeTab(set_tab) => self.company_tab = set_tab,
-            Msg::OpenOwnerCompany => {
-                if let Some(company_data) = &self.company {
-                    // Redirect to owner company page
-                    self.router_agent.send(ChangeRoute(AppRoute::Profile(
-                        company_data.owner_user.username.to_string()
-                    ).into()));
-                }
-            },
             Msg::OpenSettingCompany => {
                 if let Some(company_data) = &self.company {
                     // Redirect to owner company page
@@ -245,7 +246,7 @@ impl Component for ShowCompany {
         match &self.company {
             Some(company_data) => html!{
                 <div class="company-page">
-                    <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error) />
+                    <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
                     <div class="container page">
                         <div class="row">
                             <div class="card">
@@ -261,81 +262,61 @@ impl Component for ShowCompany {
                     </div>
                 </div>
             },
-            None => html!{<ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error) />},
+            None => html!{<ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />},
         }
     }
 }
 
 impl ShowCompany {
     fn view_card(&self) -> Html {
-        let onclick_owner_company_btn = self.link.callback(|_| Msg::OpenOwnerCompany);
         let onclick_setting_company_btn = self.link.callback(|_| Msg::OpenSettingCompany);
 
         let size_favicon = match self.show_full_company_info {
             true => "is-128x128",
-            false => "is-48x48",
+            false => "is-64x64",
         };
 
         match &self.company {
-            Some(company_data) => html!{<div class="media">
-                <div class="media-left">
-                  <figure class=classes!("image", size_favicon)>
-                    // <div hidden={!company_data.is_supplier} class="top-tag" >{ get_value_field(&3) }</div>
-                    // <img src="https://bulma.io/images/placeholders/96x96.png" alt="Placeholder image"/>
+            Some(company_data) => html!{
+              <div class="columns">
+                <div class="box">
+                  <figure class={classes!("container", "image", size_favicon)}>
                     <img
                         src={company_data.image_file.download_url.to_string()} alt="Favicon company"
                         loading="lazy"
                     />
                   </figure>
                 </div>
-                <div class="media-content">
-                  <span>{ get_value_field(&109) }</span>
-                  <span hidden={!company_data.is_supplier} id="company-region">
-                    { get_value_field(&275) }
-                    // <i class="fa fa-diamond" aria-hidden="true"></i>
-                    // <svg width="25" height="25" viewBox="0 0 197.249 197.25" xmlns="http://www.w3.org/2000/svg">
-                    // <g transform="translate(-11.136 -18.506)">
-                    // <path style="fill:none;stroke:#000;stroke-width:.434;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" d="m44.396 115.725 25.955-33.866h77.2l26.287 33.346-63.596 68.922z"/>
-                    // <path style="fill:none;stroke:#000;stroke-width:.434204px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" d="m43.338 116.783 129.441-.52M122.778 81.857l17.736 33.672-30.272 68.598-31.858-68.419 17.978-33.843z"/>
-                    // <path d="M208.167 130.384v-26.505c-13.539-4.814-22.092-6.167-26.398-16.557v-.008c-4.321-10.423.82-17.5 6.946-30.4l-18.738-18.739c-12.801 6.085-19.952 11.276-30.4 6.946h-.008c-10.406-4.313-11.768-12.924-16.557-26.398H96.508C91.735 32.131 90.365 40.8 79.95 45.121h-.007c-10.423 4.33-17.483-.804-30.4-6.946L30.805 56.914c6.11 12.858 11.276 19.96 6.946 30.4-4.322 10.423-12.99 11.792-26.398 16.565v26.505c13.383 4.756 22.076 6.142 26.398 16.557 4.346 10.513-.935 17.762-6.946 30.4l18.738 18.746c12.81-6.093 19.96-11.276 30.4-6.946h.008c10.415 4.314 11.776 12.95 16.557 26.398h26.504c4.773-13.416 6.151-22.06 16.623-26.422h.008c10.35-4.297 17.386.828 30.326 6.979l18.739-18.747c-6.101-12.818-11.276-19.952-6.954-30.392 4.321-10.423 13.022-11.809 26.414-16.573z" style="fill:none;stroke:#000;stroke-width:.434;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"/>
-                    // <ellipse style="fill:none;stroke:#000;stroke-width:.433999;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" cx="109.449" cy="115.983" rx="69.586" ry="69.587"/></g></svg>
-                  </span>
+                <div id="company-region" class={classes!("column", "is-three-fifths")}>
+                  <abbr title={get_value_field(&275)} hidden={!company_data.is_supplier}>
+                      {diamond_svg(company_data.is_supplier, "25")}
+                  </abbr>
                   {match self.show_full_company_info {
-                      true => html!{<>
-                          <p id="title-orgname" class="title is-4">{format!("{} ", &company_data.orgname)}</p>
-                          <p id="title-type" class="subtitle is-4">{company_data.company_type.name.clone()}</p>
-                      </>},
+                      true => {company_data.to_display()},
                       false => html!{
                           <p id="subtitle-shortname">
-                            <strong>{format!("{} ", &company_data.shortname)}</strong>
-                            {company_data.company_type.shortname.clone()}
+                            <strong>{company_data.shortname.clone()}</strong>
                           </p>
                       },
                   }}
+                  <ModalCardUser data = {company_data.owner_user.clone()} />
                 </div>
-                <div class="media-right">
-                    {match self.show_full_company_info {
-                        true => html!{<p class="subtitle is-6 left">
-                            // date formatting for show on page
-                            {format!("{} {:.*}", get_value_field(&276), 19, company_data.created_at.to_string())}
-                            <br/>
-                            {format!("{} {:.*}", get_value_field(&277), 19, company_data.updated_at.to_string())}
-                        </p>},
-                        false => html!{},
-                    }}
+                <div class="column">
+                    <p class="subtitle is-6 has-text-right">
+                        {company_data.date_to_display()}
+                    </p>
                     <div class="buttons flexBox" >
-                      {res_btn(classes!(
-                          String::from("fas fa-user")),
-                          onclick_owner_company_btn,
-                          String::new())}
                       {match &self.current_user_owner {
-                          true => {res_btn(
-                              classes!("fa", "fa-tools"),
-                              onclick_setting_company_btn,
-                              String::new())},
-                          false => html!{},
+                        true => {res_btn(
+                            classes!("fa", "fa-tools"),
+                            onclick_setting_company_btn,
+                            String::new(),
+                            get_value_field(&16)
+                        )},
+                        false => html!{},
                       }}
-                      {self.show_company_followers()}
+                      {self.show_favorite_btn()}
+                      <ShareLinkBtn />
                     </div>
                 </div>
             </div>},
@@ -343,32 +324,17 @@ impl ShowCompany {
         }
     }
 
-    fn show_company_followers(&self) -> Html {
-        html!{<>
-            {match &self.company {
-                Some(_) => self.show_favorite_btn(),
-                None => html!{<span>{self.abbr_number()}</span>},
-            }}
-        </>}
-    }
-
     fn show_favorite_btn(&self) -> Html {
-        let (class_fav, onclick_following) = match self.is_followed {
-            true => ("fas fa-bookmark", self.link.callback(|_| Msg::UnFollow)),
-            false => ("far fa-bookmark", self.link.callback(|_| Msg::Follow)),
+        let onclick_following = match self.is_followed {
+            true => self.link.callback(|_| Msg::UnFollow),
+            false => self.link.callback(|_| Msg::Follow),
         };
 
-        html!{
-            <button
-                id="following-button"
-                class="button"
-                onclick=onclick_following >
-              <span class="icon is-small">
-                <i class={class_fav}></i>
-              </span>
-              <span>{self.abbr_number()}</span>
-            </button>
-        }
+        ft_follow_btn(
+            onclick_following,
+            self.is_followed,
+            self.abbr_number(),
+        )
     }
 
     fn view_content(
@@ -380,69 +346,23 @@ impl ShowCompany {
         match self.show_full_company_info {
             true => html! {<>
                 <div class="columns">
-                    <div class="column">
+                    <div class="column is-two-thirds">
                         <div id="description" class="content">
-                          {company_data.description.clone()}
+                          {company_data.description.to_markdown()}
                         </div>
                     </div>
                     <div class="column">
-                        <div id="company-email">
-                            <span class="icon is-small"><i class="fas fa-envelope" /></span>
-                            <span>{ get_value_field(&278) }</span> // Email
-                            <span class="has-text-weight-bold">{company_data.email.clone()}</span>
-                        </div>
-                        // <br/>
-                        <div id="company-phone">
-                            <span class="icon is-small"><i class="fas fa-phone" /></span>
-                            <span>{ get_value_field(&279) }</span> // Phone
-                            <span class="has-text-weight-bold">{company_data.phone.clone()}</span>
-                        </div>
-                        // <br/>
-                        <div id="company-inn">
-                            <span class="icon is-small"><i class="fas fa-building" /></span>
-                            <span>{ get_value_field(&280) }</span> // Reg.№
-                            <span class="has-text-weight-bold">{company_data.inn.clone()}</span>
-                        </div>
-                        // <br/>
-                        <div id="company-region">
-                            <span class="icon is-small"><i class="fas fa-map-marker-alt" /></span>
-                            <span>{ get_value_field(&281) }</span> // Location
-                            <span class="has-text-weight-bold">{company_data.region.region.clone()}</span>
-                            <span class="has-text-weight-bold">{", "}</span>
-                            <span id="company-address" class="has-text-weight-bold">
-                                {company_data.address.clone()}
-                            </span>
-                        </div>
-                        // <br/>
-                        <div id="company-site_url">
-                            <span class="icon is-small"><i class="fas fa-globe" /></span>
-                            <span>{ get_value_field(&282) }</span> // Site
-                            <span class="has-text-weight-bold">{company_data.site_url.clone()}</span>
-                        </div>
+                        {company_data.contact_block()}
                     </div>
                 </div>
-                {match company_data.company_specs.is_empty() {
-                    true => html!{},
-                    false => html!{<div class="media">
-                        <div class="media-left">
-                            <span>{ get_value_field(&283) }</span> // Sphere of activity
-                        </div>
-                        <div class="media-content">
-                            <SpecsTags
-                                show_manage_btn = false
-                                company_uuid = company_data.uuid.clone()
-                                specs = company_data.company_specs.clone()
-                            />
-                        </div>
-                    </div>}
-                }}
+                {company_data.spec_block()}
                 <button class="button is-ghost" onclick={onclick_change_full_show}>
-                    <span>{ get_value_field(&42) }</span>
+                    <span>{get_value_field(&42)}</span>
                 </button>
             </>},
             false => html!{
                 <button class="button is-ghost" onclick={onclick_change_full_show}>
-                    <span>{ get_value_field(&43) }</span>
+                    <span>{get_value_field(&43)}</span>
                 </button>
             },
         }
@@ -465,7 +385,7 @@ impl ShowCompany {
                             CompanyTab::Components =>
                                 self.view_components(&company_data.uuid),
                             CompanyTab::Standards =>
-                                self.view_standards(&company_data.uuid, &company_data.is_supplier),
+                                self.view_standards(&company_data.uuid),
                             // CompanyTab::Members => {},
                         }}
                     </div>
@@ -544,10 +464,10 @@ impl ShowCompany {
         } else {
             html!{<div class="profileBox" >
                 <CompanyCertificatesCard
-                    certificates = company_data.company_certificates.clone()
-                    show_cert_btn = false
-                    download_btn = false
-                    manage_btn = false
+                    certificates={company_data.company_certificates.clone()}
+                    show_cert_btn={false}
+                    download_btn={false}
+                    manage_btn={false}
                  />
             </div>}
         }
@@ -559,8 +479,8 @@ impl ShowCompany {
     ) -> Html {
         html!{
             <CompanyRepresents
-                show_manage_btn = false
-                list = company_data.company_represents.clone()
+                show_manage_btn={false}
+                list={company_data.company_represents.clone()}
             />
         }
     }
@@ -571,8 +491,8 @@ impl ShowCompany {
     ) -> Html {
         html!{
             <CatalogComponents
-                show_create_btn = false
-                arguments = ComponentsQueryArg::set_company_uuid(company_uuid)
+                show_create_btn={false}
+                arguments={ComponentsQueryArg::set_company_uuid(company_uuid)}
             />
         }
     }
@@ -580,12 +500,11 @@ impl ShowCompany {
     fn view_standards(
         &self,
         company_uuid: &UUID,
-        is_supplier: &bool,
     ) -> Html {
         html!{
             <CatalogStandards
-                show_create_btn = is_supplier.clone()
-                arguments = StandardsQueryArg::set_company_uuid(company_uuid)
+                show_create_btn={true}
+                arguments={StandardsQueryArg::set_company_uuid(company_uuid)}
             />
         }
     }

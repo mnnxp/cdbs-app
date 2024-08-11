@@ -14,7 +14,7 @@ use wasm_bindgen_futures::spawn_local;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::file::{FileHeadersShow, FileInfoItemShow};
-use crate::services::resp_parsing;
+use crate::services::{resp_parsing, get_value_field};
 use crate::types::{UUID, ShowFileInfo};
 use crate::gqls::make_query;
 use crate::gqls::component::{ComModFilesOfFileset, com_mod_files_of_fileset};
@@ -111,27 +111,28 @@ impl Component for FilesOfFilesetCard {
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
 
-        html!{<>
-            <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
-            {self.show_files_card()}
-        </>}
-    }
-}
-
-impl FilesOfFilesetCard {
-    fn show_files_card(&self) -> Html {
-        html!{<div class="card">
-            <table class="table is-fullwidth is-striped">
-              <FileHeadersShow show_long={true} />
-              <tfoot>
-                {for self.files_list.iter().map(|file| html!{
-                    <FileInfoItemShow
-                        file_info={file.clone()}
-                        download_url={String::new()}
-                        />
-                })}
-              </tfoot>
-            </table>
-        </div>}
+        html!{
+            <div class="card">
+                <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
+                <header class="card-header has-background-primary-light">
+                    <p class="card-header-title">{get_value_field(&106)}</p> // Files of select fileset
+                </header>
+                <div class="card-content">
+                    <div class="content">
+                        <table class="table is-fullwidth is-striped">
+                            <FileHeadersShow show_long={true} />
+                            <tbody>
+                                {for self.files_list.iter().map(|file| html!{
+                                    <FileInfoItemShow
+                                        file_info={file.clone()}
+                                        download_url={String::new()}
+                                        />
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
     }
 }

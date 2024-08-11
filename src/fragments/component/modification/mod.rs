@@ -15,6 +15,7 @@ pub use item_module::ModificationTableItemModule;
 use std::collections::HashMap;
 use yew::{Callback, Component, ComponentLink, Html, Properties, ShouldRender, html};
 use log::debug;
+use crate::services::get_value_field;
 use crate::types::{UUID, ComponentModificationInfo, Param};
 
 #[derive(Clone, Debug, Properties)]
@@ -140,28 +141,34 @@ impl Component for ModificationsTable {
 
     fn view(&self) -> Html {
         html!{<div class="card">
-            <div class="table-container">
-              <table class="table is-fullwidth is-striped">
-                <ModificationTableHeads
-                  show_new_column = false
-                  component_uuid = self.component_uuid.clone()
-                  params = self.collect_heads.clone()
-                />
-
-                {for self.collect_items.iter().map(|(modification_uuid, item)| {
-                  html!{<ModificationTableItem
-                      show_manage_btn = false
-                      modification_uuid = modification_uuid.clone()
-                      collect_heads = self.collect_heads.clone()
-                      collect_item = item.clone()
-                      select_item = &self.props.select_modification == modification_uuid
-                      open_modification_files = self.props.open_modification_files
-                      callback_new_modification_param = None
-                      callback_select_modification = self.props.callback_select_modification.clone()
-                      callback_open_modification_files = self.props.callback_open_modification_files.clone()
-                      />}
-                 })}
-              </table>
+            <header class="card-header">
+                <p class="card-header-title">{get_value_field(&100)}</p> // Modifications
+            </header>
+            <div class="card-content">
+                <div class="content">
+                    <div class="table-container">
+                        <table class="table is-fullwidth">
+                            <ModificationTableHeads
+                            show_new_column={false}
+                            component_uuid={self.component_uuid.clone()}
+                            params={self.collect_heads.clone()}
+                            />
+                            {for self.collect_items.iter().map(|(modification_uuid, item)| {
+                                html!{<ModificationTableItem
+                                    show_manage_btn={false}
+                                    modification_uuid={modification_uuid.clone()}
+                                    collect_heads={self.collect_heads.clone()}
+                                    collect_item={item.clone()}
+                                    select_item={&self.props.select_modification == modification_uuid}
+                                    open_modification_files={self.props.open_modification_files}
+                                    callback_new_modification_param={None}
+                                    callback_select_modification={self.props.callback_select_modification.clone()}
+                                    callback_open_modification_files={self.props.callback_open_modification_files.clone()}
+                                    />}
+                            })}
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>}
     }

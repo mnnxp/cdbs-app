@@ -159,10 +159,6 @@ query GetUpdateComponentDataOpt($componentUuid: UUID!, $iptCompaniesArg: IptComp
     ...companyShortFields
   }
 
-  componentTypes {
-    ...componentTypeFields
-  }
-
   componentActualStatuses {
     ...actualStatusFields
   }
@@ -173,10 +169,6 @@ query GetUpdateComponentDataOpt($componentUuid: UUID!, $iptCompaniesArg: IptComp
 }
 
 query GetComponentDataOpt {
-  componentTypes {
-    ...componentTypeFields
-  }
-
   componentActualStatuses {
     ...actualStatusFields
   }
@@ -319,9 +311,6 @@ fragment componentFields on ComponentAndRelatedData {
   typeAccess {
     ...typeAccessFields
   }
-  componentType {
-    ...componentTypeFields
-  }
   actualStatus {
     ...actualStatusFields
   }
@@ -377,12 +366,6 @@ fragment downloadFileFields on DownloadFile {
   filename
   filesize
   downloadUrl
-}
-
-fragment componentTypeFields on ComponentTypeTranslateList {
-  componentTypeId
-  langId
-  componentType
 }
 
 fragment actualStatusFields on ActualStatusTranslateList {
@@ -564,9 +547,6 @@ fragment showComponentShortFields on ShowComponentShort {
   }
   typeAccess {
     ...typeAccessFields
-  }
-  componentType {
-    ...componentTypeFields
   }
   actualStatus {
     ...actualStatusFields

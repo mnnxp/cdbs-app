@@ -12,11 +12,12 @@ use wasm_bindgen_futures::spawn_local;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{
+    buttons::{ft_see_btn, ft_follow_btn},
     switch_icon::res_btn,
     list_errors::ListErrors,
-    user::ListItemUser,
+    user::ModalCardUser,
     component::{
-        ComponentStandardItem, ComponentSupplierItem, ComponentLicenseTag, ComponentParamTag,
+        ComponentStandardItem, ComponentSupplierItem, ComponentLicenseTag, ComponentParamsTags,
         ModificationsTable, FilesOfFilesetCard, ManageFilesOfFilesetBlock,
         ComponentFilesBlock, ModificationFilesTableCard, SpecsTags, KeywordsTags,
     },
@@ -24,8 +25,9 @@ use crate::fragments::{
     three_showcase::ThreeShowcase,
     clipboard::ShareLinkBtn,
 };
-use crate::services::{Counter, get_logged_user, get_value_field, resp_parsing};
-use crate::types::{UUID, ComponentInfo, SlimUser, ComponentParam, ComponentModificationInfo, DownloadFile};
+use crate::services::content_adapter::{DateDisplay, Markdownable};
+use crate::services::{Counter, get_logged_user, get_value_field, resp_parsing, title_changer};
+use crate::types::{UUID, ComponentInfo, SlimUser, ComponentModificationInfo, DownloadFile};
 use crate::gqls::make_query;
 use crate::gqls::component::{
     ComponentFiles, component_files,
@@ -50,8 +52,6 @@ pub struct ShowComponent {
     select_fileset_uuid: UUID,
     current_filesets_program: Vec<(UUID, String)>,
     show_full_description: bool,
-    show_full_characteristics: bool,
-    open_owner_user_info: bool,
     open_modification_card: bool,
     open_modification_files_card: bool,
     open_fileset_files_card: bool,
@@ -83,9 +83,7 @@ pub enum Msg {
     ResponseError(Error),
     GetComponentData(String),
     ShowDescription,
-    ShowFullCharacteristics,
     ShowStandardsList,
-    ShowOwnerUserCard,
     ShowModificationCard,
     ShowModificationFilesList,
     ShowFilesetFilesBlock(bool),
@@ -116,8 +114,6 @@ impl Component for ShowComponent {
             select_fileset_uuid: String::new(),
             current_filesets_program: Vec::new(),
             show_full_description: false,
-            show_full_characteristics: false,
-            open_owner_user_info: false,
             open_modification_card: false,
             open_modification_files_card: false,
             open_fileset_files_card: false,
@@ -146,7 +142,9 @@ impl Component for ShowComponent {
 
         let link = self.link.clone();
 
-        // debug!("get_self {:?}", get_self);
+        if let Some(component) = &self.component {
+            title_changer::set_title(component.name.as_str());
+        }
 
         if first_render || not_matches_component_uuid {
             self.error = None;
@@ -270,7 +268,6 @@ impl Component for ShowComponent {
                         self.show_full_description = component_data.description.len() < 250;
                         // add main image
                         self.file_arr.push(component_data.image_file.clone());
-                        self.show_full_characteristics = component_data.component_params.len() < 4;
                         self.select_modification_uuid = component_data.component_modifications
                             .first()
                             .map(|m| m.uuid.clone())
@@ -319,9 +316,7 @@ impl Component for ShowComponent {
                 }
             },
             Msg::ShowDescription => self.show_full_description = !self.show_full_description,
-            Msg::ShowFullCharacteristics => self.show_full_characteristics = !self.show_full_characteristics,
             Msg::ShowStandardsList => self.show_related_standards = !self.show_related_standards,
-            Msg::ShowOwnerUserCard => self.open_owner_user_info = !self.open_owner_user_info,
             Msg::ShowModificationCard => self.open_modification_card = !self.open_modification_card,
             Msg::ShowModificationFilesList => self.open_modification_files_card = !self.open_modification_files_card,
             Msg::ShowFilesetFilesBlock(value) => self.open_fileset_files_card = value,
@@ -358,16 +353,13 @@ impl Component for ShowComponent {
         match &self.component {
             Some(component_data) => html!{
                 <div class="component-page">
-                    <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
+                    <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
                     <div class="container page">
                         <div class="row">
-                            // modals cards
-                            {self.show_modal_owner_user(component_data)}
                             {match self.open_modification_card {
                                 true => self.show_modal_modification_card(component_data),
                                 false => html!{},
                             }}
-
                             <div class="card column">
                               {self.show_main_card(component_data)}
                             </div>
@@ -377,59 +369,56 @@ impl Component for ShowComponent {
                             {self.show_modification_files()}
                             <br/>
                             {self.show_cards(component_data)}
-                            {self.show_component_specs(component_data)}
+                            <SpecsTags
+                                show_manage_btn={false}
+                                component_uuid={component_data.uuid.clone()}
+                                specs={component_data.component_specs.clone()}
+                            />
                             <br/>
-                            {self.show_component_keywords(component_data)}
+                            <KeywordsTags
+                                show_delete_btn={false}
+                                component_uuid={component_data.uuid.clone()}
+                                keywords={component_data.component_keywords.clone()}
+                            />
+                            <br/>
                         </div>
                     </div>
                 </div>
             },
-            None => html!{<div>
-                <ListErrors error=self.error.clone() clear_error=Some(onclick_clear_error.clone())/>
-                // <h1>{"Not data"}</h1>
-            </div>},
+            None => html!{<ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>},
         }
     }
 }
 
 impl ShowComponent {
-    fn show_main_card(
-        &self,
-        component_data: &ComponentInfo,
-    ) -> Html {
-        let onclick_open_owner_company =
-            self.link.callback(|_| Msg::ShowOwnerUserCard);
+    fn show_main_card(&self, component_data: &ComponentInfo) -> Html {
         let show_description_btn =
             self.link.callback(|_| Msg::ShowDescription);
 
         html!{
             <div class="columns">
                 {match self.show_three_view {
-                    true => html!{<>
+                    true => html!{
                         <ThreeShowcase
-                            fileset_uuid=self.select_fileset_uuid.clone()
+                            fileset_uuid={self.select_fileset_uuid.clone()}
                         />
-                    </>},
-                    false => html!{<>
+                    },
+                    false => html!{
                         <ImgShowcase
-                            object_uuid=self.current_component_uuid.clone()
-                            file_arr=self.file_arr.clone()
+                            object_uuid={self.current_component_uuid.clone()}
+                            file_arr={self.file_arr.clone()}
                         />
-                    </>},
+                    },
                 }}
-
               <div class="column">
                 <div class="media">
                     <div class="media-content">
-                        { get_value_field(&94) }
-                        <a class="id-box has-text-grey-light has-text-weight-bold"
-                            onclick={onclick_open_owner_company} >
-                          {format!("@{}",&component_data.owner_user.username)}
-                        </a>
+                        {get_value_field(&94)}
+                        <ModalCardUser data = {component_data.owner_user.clone()} />
                     </div>
                     <div class="media-right" style="margin-right: 1rem">
-                        { get_value_field(&95) }<span class="id-box has-text-grey-light has-text-weight-bold">
-                            {format!("{:.*}", 10, component_data.updated_at.to_string())}
+                        {get_value_field(&95)}<span class="id-box">
+                            {component_data.updated_at.date_to_display()}
                         </span>
                     </div>
                 </div>
@@ -449,40 +438,24 @@ impl ShowComponent {
                     }}
                 </div>
                 {self.show_component_params(component_data)}
-                <div class="component-description">{
-                    match self.show_full_description {
-                        true => html!{<>
-                          {component_data.description.clone()}
-                          {match component_data.description.len() {
-                              250.. => html!{<>
-                                <br/>
-                                <button class="button is-white"
-                                    onclick=show_description_btn >
-                                  { get_value_field(&99) }
-                                </button>
-                              </>},
-                              _ => html!{},
-                          }}
+                <div class="component-description">
+                    {match component_data.description.len() {
+                        250.. => html!{<>
+                            {match self.show_full_description {
+                                true => component_data.description.to_markdown(),
+                                false => format!("{:.*}", 200, component_data.description).to_markdown(),
+                            }}
+                            {ft_see_btn(show_description_btn, self.show_full_description)}
                         </>},
-                        false => html!{<>
-                          {format!("{:.*}", 200, component_data.description)}
-                          <br/>
-                          <button class="button is-white"
-                              onclick=show_description_btn >
-                            { get_value_field(&98) }
-                          </button>
-                        </>},
-                    }
-                }</div>
+                        _ => component_data.description.to_markdown(),
+                    }}
+                </div>
               </div>
             </div>
         }
     }
 
-    fn show_component_licenses(
-        &self,
-        component_data: &ComponentInfo,
-    ) -> Html {
+    fn show_component_licenses(&self, component_data: &ComponentInfo) -> Html {
         html!{<div class="media">
             <div class="media-right">
                 <span style="" class="icon is-small">
@@ -494,10 +467,10 @@ impl ShowComponent {
                     {for component_data.licenses.iter().map(|data| html!{
                         // format!("{}; ", data.name)
                         <ComponentLicenseTag
-                            show_delete_btn = false
-                            component_uuid = self.current_component_uuid.clone()
-                            license_data = data.clone()
-                            delete_license = None
+                            show_delete_btn={false}
+                            component_uuid={self.current_component_uuid.clone()}
+                            license_data={data.clone()}
+                            delete_license={None}
                           />
                     })}
                 </div>
@@ -505,26 +478,21 @@ impl ShowComponent {
         </div>}
     }
 
-    fn show_modifications_table(
-        &self,
-        component_data: &ComponentInfo,
-    ) -> Html {
-        let onclick_select_modification = self.link
-            .callback(|value: UUID| Msg::SelectModification(value));
+    fn show_modifications_table(&self, component_data: &ComponentInfo) -> Html {
+        let onclick_select_modification =
+            self.link.callback(|value: UUID| Msg::SelectModification(value));
+        let callback_open_modification_uuid =
+            self.link.callback(|_| Msg::ShowModificationFilesList);
 
-        let callback_open_modification_uuid = self.link
-            .callback(|_| Msg::ShowModificationFilesList);
-
-        html!{<>
-            <h2 class="has-text-weight-bold">{ get_value_field(&100) }</h2> // Modifications
+        html!{
             <ModificationsTable
-                modifications = component_data.component_modifications.clone()
-                select_modification = self.select_modification_uuid.clone()
-                open_modification_files = self.open_modification_files_card
-                callback_select_modification = onclick_select_modification.clone()
-                callback_open_modification_files = callback_open_modification_uuid.clone()
+                modifications={component_data.component_modifications.clone()}
+                select_modification={self.select_modification_uuid.clone()}
+                open_modification_files={self.open_modification_files_card}
+                callback_select_modification={onclick_select_modification.clone()}
+                callback_open_modification_files={callback_open_modification_uuid.clone()}
               />
-        </>}
+        }
     }
 
     fn show_modification_files(&self) -> Html {
@@ -532,112 +500,51 @@ impl ShowComponent {
             true => html!{<>
                 <br/>
                 <ModificationFilesTableCard
-                    show_download_btn = true
-                    modification_uuid = self.select_modification_uuid.clone()
+                    show_download_btn={true}
+                    modification_uuid={self.select_modification_uuid.clone()}
                   />
             </>},
             false => html!{},
         }
     }
 
-    fn show_component_params(
-        &self,
-        component_data: &ComponentInfo,
-    ) -> Html {
+    fn show_component_params(&self, component_data: &ComponentInfo) -> Html {
         html!{
             <div class="columns">
                 <div class="column">
-                    <label class="label">{ get_value_field(&96) }</label>
+                    <label class="label">{get_value_field(&96)}</label>
                     {component_data.actual_status.name.clone()}
                 </div>
                 <div class="column">
-                    <label class="label">{ get_value_field(&97) }</label>
-                    {component_data.component_type.component_type.clone()}
-                </div>
-                <div class="column">
-                    <label class="label">{ get_value_field(&114) }</label>
+                    <label class="label">{get_value_field(&114)}</label>
                     {component_data.type_access.name.clone()}
                 </div>
             </div>
         }
     }
 
-    fn show_additional_params(
-        &self,
-        component_data: &ComponentInfo,
-    ) -> Html {
+    fn show_additional_params(&self, component_data: &ComponentInfo) -> Html {
         html!{
-            <div class="column">
-              <h2 class="has-text-weight-bold">{ get_value_field(&101) }</h2> // Сharacteristics of the component
-              <div class="card column">
-                <table class="table is-fullwidth">
-                    <tbody>
-                      {for component_data.component_params.iter().enumerate().map(|(index, data)| {
-                          match (index >= 3, self.show_full_characteristics) {
-                              // show full list
-                              (_, true) => self.show_param_item(data),
-                              // show full list or first 3 items
-                              (false, false) => self.show_param_item(data),
-                              _ => html!{},
-                          }
-                      })}
-                      {match component_data.component_params.len() {
-                          0 => html!{<span>{ get_value_field(&136) }</span>},
-                          0..=3 => html!{},
-                          _ => self.show_see_characteristic_btn(),
-                      }}
-                    </tbody>
-                  </table>
-              </div>
-            </div>
+            <ComponentParamsTags
+                show_manage_btn={false}
+                component_uuid={self.current_component_uuid.clone()}
+                component_params={component_data.component_params.clone()}
+            />
         }
     }
 
-    fn show_param_item(
-        &self,
-        data: &ComponentParam,
-    ) -> Html {
-        html!{<ComponentParamTag
-            show_manage_btn = false
-            component_uuid = self.props.component_uuid.clone()
-            param_data = data.clone()
-            delete_param = None
-          />}
-    }
-
-    fn show_see_characteristic_btn(&self) -> Html {
-        let show_full_characteristics_btn = self.link
-            .callback(|_| Msg::ShowFullCharacteristics);
-
-        match self.show_full_characteristics {
-            true => html!{<>
-              <button class="button is-white"
-                  onclick=show_full_characteristics_btn
-                >{ get_value_field(&99) }</button>
-            </>},
-            false => html!{<>
-              <button class="button is-white"
-                  onclick=show_full_characteristics_btn
-                >{ get_value_field(&98) }</button>
-            </>},
-        }
-    }
-
-    fn show_cards(
-        &self,
-        component_data: &ComponentInfo,
-    ) -> Html {
+    fn show_cards(&self, component_data: &ComponentInfo) -> Html {
         html!{<>
             <div class="columns">
-                {self.show_additional_params(component_data)}
                 <div class="column">
-                    <h2 class="has-text-weight-bold">{ get_value_field(&102) }</h2> // Component files
+                    {self.show_additional_params(component_data)}
+                </div>
+                <div class="column">
                     {self.show_component_files(component_data)}
                 </div>
             </div>
             <div class="columns">
                 <div class="column">
-                    <h2 class="has-text-weight-bold">{ get_value_field(&103) }</h2> // Standards
                     {self.show_component_standards(component_data)}
                 </div>
                 <div class="column">
@@ -647,194 +554,154 @@ impl ShowComponent {
         </>}
     }
 
-    fn show_component_files(
-        &self,
-        component_data: &ComponentInfo,
-    ) -> Html {
-        html!{<div id="files" class="card">
-            <ComponentFilesBlock
-                  show_download_btn = true
-                  show_delete_btn = false
-                  component_uuid = component_data.uuid.clone()
-                  files = component_data.files.clone()
-                />
-        </div>}
+    fn show_component_files(&self, component_data: &ComponentInfo) -> Html {
+        html!{
+            <div id="files" class="card">
+                <header class="card-header">
+                    <p class="card-header-title">{get_value_field(&102)}</p> // Component files
+                </header>
+                <div class="card-content">
+                    <div class="content">
+                        <ComponentFilesBlock
+                            show_download_btn={true}
+                            show_delete_btn={false}
+                            component_uuid={component_data.uuid.clone()}
+                            files={component_data.files.clone()}
+                        />
+                    </div>
+                </div>
+            </div>
+        }
     }
 
-    fn show_component_specs(
-        &self,
-        component_data: &ComponentInfo,
-    ) -> Html {
-        html!{<>
-              <h2 class="has-text-weight-bold">{ get_value_field(&104) }</h2> // Specs
-              <div class="card column">
-                <SpecsTags
-                    show_manage_btn = false
-                    component_uuid = component_data.uuid.clone()
-                    specs = component_data.component_specs.clone()
-                  />
-              </div>
-        </>}
-    }
-
-    fn show_component_keywords(
-        &self,
-        component_data: &ComponentInfo,
-    ) -> Html {
-        html!{<>
-              <h2 class="has-text-weight-bold">{ get_value_field(&105) }</h2> // Keywords
-              <div class="card column">
-                <KeywordsTags
-                    show_delete_btn = false
-                    component_uuid = component_data.uuid.clone()
-                    keywords = component_data.component_keywords.clone()
-                  />
-              </div>
-        </>}
-    }
-
-    fn show_component_suppliers(
-        &self,
-        component_data: &ComponentInfo,
-    ) -> Html {
+    fn show_component_suppliers(&self, component_data: &ComponentInfo) -> Html {
         let table_label = match component_data.is_base {
             true => get_value_field(&107).to_string(),
             false => get_value_field(&108).to_string(),
         };
 
-        html!{<>
-            <h2 class="has-text-weight-bold">{table_label}</h2>
-            <div class="card column">
-              <table class="table is-fullwidth">
-                <tbody>
-                   <th>{ get_value_field(&109) }</th> // Company
-                   <th>{ get_value_field(&61) }</th> // Description
-                   <th>{ get_value_field(&111) }</th> // Action
-                   {match component_data.is_base {
-                       true => html!{<>
-                           {for component_data.component_suppliers.iter().map(|data| {
-                             match &data.supplier.is_supplier {
-                                true => html!{<ComponentSupplierItem
-                                    show_delete_btn = false
-                                    component_uuid = component_data.uuid.clone()
-                                    supplier_data = data.clone()
-                                    delete_supplier = None
-                                />},
-                                false => html!{},
-                            }})}
-                       </>},
-                       false => match component_data.component_suppliers.first() {
-                           Some(data) => html!{<ComponentSupplierItem
-                               show_delete_btn = false
-                               component_uuid = component_data.uuid.clone()
-                               supplier_data = data.clone()
-                               delete_supplier = None
-                           />},
-                           None => html!{},
-                       },
-                   }}
-                </tbody>
-              </table>
+        html!{
+            <div class="card">
+                <header class="card-header">
+                    <p class="card-header-title">{table_label}</p>
+                </header>
+                <div class="card-content">
+                    <div class="content">
+                        <table class="table is-fullwidth">
+                            <thead>
+                            <tr>
+                                <th>{get_value_field(&109)}</th> // Company
+                                <th>{get_value_field(&61)}</th> // Description
+                                <th>{get_value_field(&111)}</th> // Action
+                            </tr>
+                            </thead>
+                            <tbody>
+                                {match component_data.is_base {
+                                    true => html!{<>
+                                        {for component_data.component_suppliers.iter().map(|data| {
+                                            match &data.supplier.is_supplier {
+                                                true => html!{<ComponentSupplierItem
+                                                    show_delete_btn={false}
+                                                    component_uuid={component_data.uuid.clone()}
+                                                    supplier_data={data.clone()}
+                                                    delete_supplier={None}
+                                                />},
+                                                false => html!{},
+                                            }})}
+                                    </>},
+                                    false => match component_data.component_suppliers.first() {
+                                        Some(data) => html!{<ComponentSupplierItem
+                                            show_delete_btn={false}
+                                            component_uuid={component_data.uuid.clone()}
+                                            supplier_data={data.clone()}
+                                            delete_supplier={None}
+                                        />},
+                                        None => html!{},
+                                    },
+                                }}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-        </>}
+        }
     }
 
-    fn show_component_standards(
-        &self,
-        component_data: &ComponentInfo,
-    ) -> Html {
-        html!{<div class="card column">
-          <table class="table is-fullwidth">
-            <tbody>
-               <th>{ get_value_field(&112) }</th> // Classifier
-               <th>{ get_value_field(&113) }</th> // Specified tolerance
-               <th>{ get_value_field(&111) }</th> // Action
-               {for component_data.component_standards.iter().map(|data| {
-                   html!{<ComponentStandardItem
-                       show_delete_btn = false
-                       component_uuid = self.current_component_uuid.clone()
-                       standard_data = data.clone()
-                       delete_standard = None
-                     />}
-               })}
-            </tbody>
-          </table>
-        </div>}
+    fn show_component_standards(&self, component_data: &ComponentInfo) -> Html {
+        html!{
+            <div class="card">
+                <header class="card-header">
+                    <p class="card-header-title">{get_value_field(&103)}</p> // Standards
+                </header>
+                <div class="card-content">
+                    <div class="content">
+                        <table class="table is-fullwidth">
+                            <thead>
+                            <tr>
+                                <th>{get_value_field(&112)}</th> // Classifier
+                                <th>{get_value_field(&113)}</th> // Specified tolerance
+                                <th>{get_value_field(&111)}</th> // Action
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {for component_data.component_standards.iter().map(|data| {
+                                html!{<ComponentStandardItem
+                                    show_delete_btn={false}
+                                    component_uuid={self.current_component_uuid.clone()}
+                                    standard_data={data.clone()}
+                                    delete_standard={None}
+                                    />}
+                            })}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
     }
 
-    fn show_modal_owner_user(
-        &self,
-        component_data: &ComponentInfo,
-    ) -> Html {
-        let onclick_owner_user_info = self.link
-            .callback(|_| Msg::ShowOwnerUserCard);
-
-        let class_modal = match &self.open_owner_user_info {
-            true => "modal is-active",
-            false => "modal",
-        };
-
-        html!{<div class=class_modal>
-          <div class="modal-background" onclick=onclick_owner_user_info.clone() />
-          <div class="modal-content">
-              <div class="card">
-                <ListItemUser
-                    data = component_data.owner_user.clone()
-                    show_list = true
-                  />
-              </div>
-          </div>
-          <button class="modal-close is-large" aria-label="close" onclick=onclick_owner_user_info />
-        </div>}
-    }
-
-    fn show_modal_modification_card(
-        &self,
-        component_data: &ComponentInfo,
-    ) -> Html {
-        let onclick_modification_card = self.link
-            .callback(|_| Msg::ShowModificationCard);
-
+    fn show_modal_modification_card(&self, component_data: &ComponentInfo) -> Html {
+        let onclick_modification_card =
+            self.link.callback(|_| Msg::ShowModificationCard);
         let class_modal = match &self.open_modification_card {
             true => "modal is-active",
             false => "modal",
         };
-
-        let modification_data: Option<&ComponentModificationInfo> = component_data.component_modifications.iter()
-            .find(|x| x.uuid == self.select_modification_uuid);
+        let modification_data: Option<&ComponentModificationInfo> =
+            component_data.component_modifications.iter()
+                .find(|x| x.uuid == self.select_modification_uuid);
 
         match modification_data {
-            Some(mod_data) => html!{<div class=class_modal>
-              <div class="modal-background" onclick=onclick_modification_card.clone() />
+            Some(mod_data) => html!{<div class={class_modal}>
+              <div class="modal-background" onclick={onclick_modification_card.clone()} />
               <div class="modal-content">
                   <div class="card">
                     <div class="box itemBox">
                       <article class="media center-media">
                           <div class="media-content">
-                            <div class="columns" style="margin-bottom:0">
-                                <div class="column">
-                                    <p class="overflow-title">{ get_value_field(&116) }</p> // Modification
-                                    <div class="has-text-weight-bold">
-                                        {mod_data.modification_name.clone()}
-                                    </div>
-                                    <p class="overflow-title">{ get_value_field(&61) }</p> // Description
-                                    <p>{mod_data.description.clone()}</p>
+                            <div class="columns">
+                                <div class="column" title={get_value_field(&96)}>
+                                    {&mod_data.actual_status.name}
+                                </div>
+                                <div class="column is-4">
+                                    {get_value_field(&30)}
+                                    {mod_data.updated_at.date_to_display()}
                                 </div>
                             </div>
-                            <div class="columns" style="margin-bottom:0">
-                                <div class="column">
-                                  {format!("{}: {}", get_value_field(&96), &mod_data.actual_status.name)}
-                                </div>
-                                <div class="column">
-                                  {format!("{} {:.*}", get_value_field(&30), 10, mod_data.updated_at.to_string())}
-                                </div>
+                            <div class="column" title={get_value_field(&176)}>
+                                <p class="overflow-title has-text-weight-bold">
+                                    {mod_data.modification_name.clone()}
+                                </p>
+                            </div>
+                            <div class="column" title={{get_value_field(&61)}}> // Description
+                                <p>{mod_data.description.to_markdown()}</p>
                             </div>
                           </div>
                       </article>
                     </div>
                   </div>
               </div>
-              <button class="modal-close is-large" aria-label="close" onclick=onclick_modification_card />
+              <button class="modal-close is-large" aria-label="close" onclick={onclick_modification_card} />
             </div>},
             None => html!{},
         }
@@ -844,11 +711,10 @@ impl ShowComponent {
         match &self.open_fileset_files_card {
             true => html!{<>
                 <br/>
-                <h2 class="has-text-weight-bold">{ get_value_field(&106) }</h2> // Files of select fileset
                 <FilesOfFilesetCard
-                    show_download_btn = false
-                    select_fileset_uuid = self.select_fileset_uuid.clone()
-                />
+                    show_download_btn={false}
+                    select_fileset_uuid={self.select_fileset_uuid.clone()}
+                    />
             </>},
             false => html!{},
         }
@@ -857,16 +723,15 @@ impl ShowComponent {
     fn show_download_block(&self) -> Html {
         let callback_select_fileset_uuid =
             self.link.callback(|value: UUID| Msg::SelectFileset(value));
-
         let callback_open_fileset_uuid =
             self.link.callback(|value: bool| Msg::ShowFilesetFilesBlock(value));
 
         html!{
             <ManageFilesOfFilesetBlock
-                select_modification_uuid = self.select_modification_uuid.clone()
-                current_filesets_program = self.current_filesets_program.clone()
-                callback_select_fileset_uuid = callback_select_fileset_uuid.clone()
-                callback_open_fileset_uuid = callback_open_fileset_uuid.clone()
+                select_modification_uuid={self.select_modification_uuid.clone()}
+                current_filesets_program={self.current_filesets_program.clone()}
+                callback_select_fileset_uuid={callback_select_fileset_uuid.clone()}
+                callback_open_fileset_uuid={callback_open_fileset_uuid.clone()}
             />
         }
     }
@@ -879,34 +744,28 @@ impl ShowComponent {
             true => {res_btn(
                 classes!("fa", "fa-tools"),
                 onclick_setting_standard_btn,
-                String::new())},
+                String::new(),
+                get_value_field(&16)
+            )},
             false => html!{},
         }
     }
 
     fn show_followers_btn(&self) -> Html {
-        let (class_fav, onclick_following) = match self.is_followed {
-            true => ("fas fa-bookmark", self.link.callback(|_| Msg::UnFollow)),
-            false => ("far fa-bookmark", self.link.callback(|_| Msg::Follow)),
+        let onclick_following = match self.is_followed {
+            true => self.link.callback(|_| Msg::UnFollow),
+            false => self.link.callback(|_| Msg::Follow),
         };
 
-        html!{<>
-            <button
-                id="following-button"
-                class="button"
-                onclick=onclick_following >
-              <span class="icon is-small">
-                <i class={class_fav}></i>
-              </span>
-              <span>{self.abbr_number()}</span>
-            </button>
-        </>}
+        ft_follow_btn(
+            onclick_following,
+            self.is_followed,
+            self.abbr_number(),
+        )
     }
 
     fn show_three_btn(&self) -> Html {
-        let onclick_three_viewer =
-            self.link.callback(|_| Msg::Show3D);
-
+        let onclick_three_viewer = self.link.callback(|_| Msg::Show3D);
         let mut class_btn = classes!("button");
         let show_btn = match self.show_three_view {
             true => {
@@ -915,13 +774,13 @@ impl ShowComponent {
             },
             false => get_value_field(&300),
         };
-        // <button onclick={onclick_three_viewer} class={class_three_btn}>{show_btn}</button>
 
         html!{<>
             <button
-                id="three-button"
-                class={class_btn}
-                onclick={onclick_three_viewer} >
+            id="three-button"
+            class={class_btn}
+            onclick={onclick_three_viewer}
+            title={get_value_field(&325)}>
               <span class="icon is-small">
                 <i class={classes!("fa", "fa-cube")} style="color: #1872f0;"></i>
               </span>
