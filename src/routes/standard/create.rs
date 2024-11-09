@@ -105,8 +105,6 @@ impl Component for CreateStandard {
                     userUuid: Some(logged_user_uuid),
                     favorite: None,
                     supplier: None,
-                    limit: None,
-                    offset: None,
                 };
                 let res = make_query(GetStandardDataOpt::build_query(get_standard_data_opt::Variables {
                     ipt_companies_arg

@@ -78,8 +78,6 @@ impl Component for SpecTagItem {
                         specIds: Some(vec![spec_id]),
                         splitChar: None,
                         depthLevel: None,
-                        limit: None,
-                        offset: None,
                     };
                     let res = make_query(GetSpecsPaths::build_query(get_specs_paths::Variables {
                         ipt_spec_path_arg: Some(arguments)

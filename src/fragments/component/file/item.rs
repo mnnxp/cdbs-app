@@ -68,8 +68,6 @@ impl Component for ComponentFileItem {
                     let ipt_component_files_arg = component_files::IptComponentFilesArg{
                         filesUuids: Some(vec![file_uuid.clone()]),
                         componentUuid: component_uuid,
-                        limit: None,
-                        offset: None,
                     };
                     let res = make_query(ComponentFiles::build_query(
                         component_files::Variables {

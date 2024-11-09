@@ -174,8 +174,6 @@ impl Component for StandardSettings {
                     userUuid: Some(logged_user_uuid),
                     favorite: None,
                     supplier: Some(true),
-                    limit: None,
-                    offset: None,
                 };
                 let res = make_query(GetUpdateStandardDataOpt::build_query(get_update_standard_data_opt::Variables {
                     standard_uuid: target_standard_uuid,
@@ -287,6 +285,7 @@ impl Component for StandardSettings {
                     let ipt_standard_files_data = upload_standard_files::IptStandardFilesData{
                         filenames,
                         standardUuid: standard_uuid,
+                        commitMsg: String::new(),
                     };
                     let res = make_query(UploadStandardFiles::build_query(upload_standard_files::Variables{
                         ipt_standard_files_data

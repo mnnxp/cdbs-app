@@ -182,8 +182,6 @@ impl Component for ComponentSettings {
                     userUuid: Some(logged_user_uuid),
                     favorite: None,
                     supplier: Some(true),
-                    limit: None,
-                    offset: None,
                 };
                 let res = make_query(GetUpdateComponentDataOpt::build_query(get_update_component_data_opt::Variables {
                     component_uuid: target_component_uuid,
@@ -226,8 +224,6 @@ impl Component for ComponentSettings {
                     let ipt_component_files_arg = component_files_list::IptComponentFilesArg{
                         filesUuids: None,
                         componentUuid: component_uuid,
-                        limit: None,
-                        offset: None,
                     };
                     let res = make_query(ComponentFilesList::build_query(
                         component_files_list::Variables { ipt_component_files_arg }
@@ -294,6 +290,7 @@ impl Component for ComponentSettings {
                     let ipt_component_files_data = upload_component_files::IptComponentFilesData{
                         filenames,
                         componentUuid: component_uuid,
+                        commitMsg: String::new()
                     };
                     let res = make_query(UploadComponentFiles::build_query(upload_component_files::Variables{
                         ipt_component_files_data

@@ -136,13 +136,19 @@ type ComponentAndRelatedData {
   createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!
   licenses: [License!]!
-  componentParams: [ComponentParamWithTranslation!]!
-  files: [ShowFileRelatedData!]!
-  componentSpecs: [SpecTranslateList!]!
-  componentKeywords: [Keyword!]!
-  componentModifications: [ComponentModificationAndRelatedData!]!
-  componentSuppliers: [ComponentSupplierRelatedData!]!
-  componentStandards: [ShowStandardShort!]!
+  componentParams(
+    sort: IptSort
+    paginate: IptPaginate
+  ): [ComponentParamWithTranslation!]!
+  files(sort: IptSort, paginate: IptPaginate): [ShowFileRelatedData!]!
+  componentSpecs(paginate: IptPaginate): [SpecTranslateList!]!
+  componentKeywords(paginate: IptPaginate): [Keyword!]!
+  componentModifications(
+    sort: IptSort
+    paginate: IptPaginate
+  ): [ComponentModificationAndRelatedData!]!
+  componentSuppliers(paginate: IptPaginate): [ComponentSupplierRelatedData!]!
+  componentStandards(paginate: IptPaginate): [ShowStandardShort!]!
 }
 
 type ComponentModificationAndRelatedData {
@@ -155,7 +161,11 @@ type ComponentModificationAndRelatedData {
   createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!
   filesetsForProgram: [FilesetProgramRelatedData!]!
-  modificationParams: [ModificationParamWithTranslation!]!
+  modificationParams(
+    sort: IptSort
+    paginate: IptPaginate
+  ): [ModificationParamWithTranslation!]!
+  files(sort: IptSort, paginate: IptPaginate): [ShowFileRelatedData!]!
 }
 
 type ComponentParamWithTranslation {
@@ -299,6 +309,7 @@ type FilesetProgramRelatedData {
   uuid: UUID!
   modificationUuid: UUID!
   program: Program!
+  files(sort: IptSort, paginate: IptPaginate): [ShowFileRelatedData!]!
 }
 
 input IptCompaniesArg {
@@ -306,8 +317,6 @@ input IptCompaniesArg {
   userUuid: UUID
   favorite: Boolean
   supplier: Boolean
-  limit: Int
-  offset: Int
 }
 
 input IptCompanyAccessComponentData {
@@ -361,14 +370,6 @@ input IptCompanyRepresentData {
 input IptCompanyRepresentsArg {
   companyUuid: UUID
   representsUuids: [UUID!]
-  limit: Int
-  offset: Int
-}
-
-input IptCompanySpecsArg {
-  companyUuid: UUID!
-  limit: Int
-  offset: Int
 }
 
 input IptCompanySpecsData {
@@ -394,19 +395,12 @@ input IptComponentFaviconData {
 input IptComponentFilesArg {
   componentUuid: UUID!
   filesUuids: [UUID!]
-  limit: Int
-  offset: Int
 }
 
 input IptComponentFilesData {
   filenames: [String!]!
   componentUuid: UUID!
-}
-
-input IptComponentKeywordsArg {
-  componentUuid: UUID!
-  limit: Int
-  offset: Int
+  commitMsg: String! = ""
 }
 
 input IptComponentKeywordsData {
@@ -424,12 +418,6 @@ input IptComponentLicenseData {
   licenseId: Int!
 }
 
-input IptComponentModificationArg {
-  componentUuid: UUID!
-  limit: Int
-  offset: Int
-}
-
 input IptComponentModificationData {
   componentUuid: UUID!
   parentModificationUuid: UUID
@@ -443,12 +431,6 @@ input IptComponentParamsData {
   params: [IptParamData!]!
 }
 
-input IptComponentSpecsArg {
-  componentUuid: UUID!
-  limit: Int
-  offset: Int
-}
-
 input IptComponentSpecsData {
   componentUuid: UUID!
   specIds: [Int!]!
@@ -460,8 +442,6 @@ input IptComponentsArg {
   standardUuid: UUID
   userUuid: UUID
   favorite: Boolean
-  limit: Int
-  offset: Int
 }
 
 input IptExtensionData {
@@ -472,15 +452,11 @@ input IptExtensionData {
 input IptFileOfFilesetArg {
   filesetUuid: UUID!
   fileUuids: [UUID!]
-  limit: Int
-  offset: Int
 }
 
 input IptFilesetProgramArg {
   modificationUuid: UUID!
   programIds: [Int!]
-  limit: Int
-  offset: Int
 }
 
 input IptFilesetProgramData {
@@ -493,43 +469,25 @@ input IptGetUserArg {
   username: String
 }
 
-input IptKeywordArg {
-  keywordIds: [Int!]
-  limit: Int
-  offset: Int
-}
-
 input IptKeywordData {
   keyword: String!
-}
-
-input IptLanguageArg {
-  langIds: [Int!]
-  limit: Int
-  offset: Int
-}
-
-input IptLicenseArg {
-  licenseIds: [Int!]
-  limit: Int
-  offset: Int
 }
 
 input IptModificationFileFromFilesetData {
   filesetUuid: UUID!
   filenames: [String!]!
+  commitMsg: String! = ""
 }
 
 input IptModificationFilesArg {
   modificationUuid: UUID!
   filesUuids: [UUID!]
-  limit: Int
-  offset: Int
 }
 
 input IptModificationFilesData {
   filenames: [String!]!
   modificationUuid: UUID!
+  commitMsg: String! = ""
 }
 
 input IptModificationParamData {
@@ -537,16 +495,20 @@ input IptModificationParamData {
   params: [IptParamData!]!
 }
 
-input IptNotificationArg {
-  notificationIds: [Int!]
-  limit: Int
-  offset: Int
+input IptModificationsData {
+  modificationName: String!
+  description: String!
+  actualStatusId: Int!
 }
 
-input IptParamArg {
-  paramIds: [Int!]
-  limit: Int
-  offset: Int
+input IptMultipleModificationsData {
+  componentUuid: UUID!
+  modificationsData: [IptModificationsData!]!
+}
+
+input IptPaginate {
+  currentPage: Int! = 1
+  perPage: Int! = 5
 }
 
 input IptParamData {
@@ -559,20 +521,8 @@ input IptParamTranslateListData {
   paramname: String!
 }
 
-input IptProgramArg {
-  programIds: [Int!]
-  limit: Int
-  offset: Int
-}
-
 input IptProgramData {
   name: String!
-}
-
-input IptRegionArg {
-  regionIds: [Int!]
-  limit: Int
-  offset: Int
 }
 
 input IptRegionTranslateListData {
@@ -591,27 +541,37 @@ input IptRoleMemberData {
   name: String!
 }
 
+input IptSearchArg {
+  search: String!
+  byParams: Boolean! = false
+  bySpecs: Boolean! = false
+  byKeywords: Boolean! = false
+  companyUuid: UUID
+  standardUuid: UUID
+  userUuid: UUID
+  favorite: Boolean! = false
+}
+
 input IptSearchSpecArg {
   text: String!
   splitChar: String
   depthLevel: Int
-  limit: Int
-  offset: Int
+}
+
+input IptSort {
+  byField: String!
+  asDesc: Boolean! = false
 }
 
 input IptSpecArg {
   specIds: [Int!]
   specsLevels: [Int!]
-  limit: Int
-  offset: Int
 }
 
 input IptSpecPathArg {
   specIds: [Int!]
   splitChar: String
   depthLevel: Int
-  limit: Int
-  offset: Int
 }
 
 input IptStandardData {
@@ -636,19 +596,12 @@ input IptStandardFaviconData {
 input IptStandardFilesArg {
   standardUuid: UUID!
   filesUuids: [UUID!]
-  limit: Int
-  offset: Int
 }
 
 input IptStandardFilesData {
   filenames: [String!]!
   standardUuid: UUID!
-}
-
-input IptStandardKeywordsArg {
-  standardUuid: UUID!
-  limit: Int
-  offset: Int
+  commitMsg: String! = ""
 }
 
 input IptStandardKeywordsData {
@@ -659,12 +612,6 @@ input IptStandardKeywordsData {
 input IptStandardKeywordsNames {
   standardUuid: UUID!
   keywords: [String!]!
-}
-
-input IptStandardSpecsArg {
-  standardUuid: UUID!
-  limit: Int
-  offset: Int
 }
 
 input IptStandardSpecsData {
@@ -681,20 +628,12 @@ input IptStandardsArg {
   standardsUuids: [UUID!]
   companyUuid: UUID
   favorite: Boolean
-  limit: Int
-  offset: Int
 }
 
 input IptSupplierComponentData {
   componentUuid: UUID!
   companyUuid: UUID!
   description: String!
-}
-
-input IptTypeAccessArg {
-  typeAccessIds: [Int!]
-  limit: Int
-  offset: Int
 }
 
 input IptUpdateCompanyCertificateData {
@@ -821,8 +760,6 @@ input IptUsersArg {
   usersUuids: [UUID!]
   subscribers: Boolean
   favorite: Boolean
-  limit: Int
-  offset: Int
 }
 
 type Keyword {
@@ -901,6 +838,7 @@ type MutationRoot {
   addStandardToComponent(args: IptStandardToComponentData!): Boolean!
   deleteStandardsComponent(args: DelStandardToComponentData!): Int!
   registerComponentModification(args: IptComponentModificationData!): UUID!
+  registerComponentModifications(args: IptMultipleModificationsData!): [UUID!]!
   putComponentModificationUpdate(
     componentModificationUuid: UUID!
     args: IptUpdateComponentModificationData!
@@ -989,7 +927,7 @@ type Program {
 }
 
 type QueryRoot {
-  users(args: IptUsersArg): [ShowUserShort!]!
+  users(args: IptUsersArg, paginate: IptPaginate): [ShowUserShort!]!
   user(args: IptGetUserArg!): ShowUserAndRelatedData!
   myself: SlimUser!
   selfData: UserAndRelatedData!
@@ -999,51 +937,84 @@ type QueryRoot {
   decodeToken: Claims!
   deleteToken(token: String!): Boolean!
   deleteAllTokens: Int!
-  notifications(args: IptNotificationArg): [ShowNotification!]!
-  components(args: IptComponentsArg): [ShowComponentShort!]!
-  component(
-    componentUuid: UUID!
-    limit: Int
-    offset: Int
-  ): ComponentAndRelatedData!
+  notifications(
+    notificationIds: [Int!]
+    paginate: IptPaginate
+  ): [ShowNotification!]!
+  searchByComponents(
+    args: IptSearchArg!
+    sort: IptSort
+    paginate: IptPaginate
+  ): [ShowComponentShort!]!
+  components(
+    args: IptComponentsArg
+    sort: IptSort
+    paginate: IptPaginate
+  ): [ShowComponentShort!]!
+  component(componentUuid: UUID!): ComponentAndRelatedData!
   componentModifications(
-    args: IptComponentModificationArg!
+    componentUuid: UUID!
+    sort: IptSort
+    paginate: IptPaginate
   ): [ComponentModificationAndRelatedData!]!
-  componentSuppliers(componentUuid: UUID!): [ComponentSupplierRelatedData!]!
-  componentKeywords(args: IptComponentKeywordsArg!): [Keyword!]!
+  componentSuppliers(
+    componentUuid: UUID!
+    paginate: IptPaginate
+  ): [ComponentSupplierRelatedData!]!
+  componentKeywords(componentUuid: UUID!, paginate: IptPaginate): [Keyword!]!
   getCompaniesListAccessComponent(
     componentUuid: UUID!
   ): [CompanyAccessComponentAndRelatedData!]!
   getUsersListAccessComponent(
     componentUuid: UUID!
   ): [UserAccessComponentAndRelatedData!]!
-  componentFiles(args: IptComponentFilesArg!): [DownloadFile!]!
-  componentFilesList(args: IptComponentFilesArg!): [ShowFileRelatedData!]!
-  componentSpecs(args: IptComponentSpecsArg!): [SpecTranslateList!]!
-  componentModificationFiles(args: IptModificationFilesArg!): [DownloadFile!]!
+  componentFiles(
+    args: IptComponentFilesArg!
+    paginate: IptPaginate
+  ): [DownloadFile!]!
+  componentFilesList(
+    args: IptComponentFilesArg!
+    sort: IptSort
+    paginate: IptPaginate
+  ): [ShowFileRelatedData!]!
+  componentSpecs(
+    componentUuid: UUID!
+    paginate: IptPaginate
+  ): [SpecTranslateList!]!
+  componentModificationFiles(
+    args: IptModificationFilesArg!
+    paginate: IptPaginate
+  ): [DownloadFile!]!
   componentModificationFilesList(
     args: IptModificationFilesArg!
+    sort: IptSort
+    paginate: IptPaginate
   ): [ShowFileRelatedData!]!
   componentModificationFilesets(
     args: IptFilesetProgramArg!
   ): [FilesetProgramRelatedData!]!
   componentModificationFilesOfFileset(
     args: IptFileOfFilesetArg!
+    sort: IptSort
+    paginate: IptPaginate
   ): [ShowFileRelatedData!]!
   componentModificationFilesetFiles(
     args: IptFileOfFilesetArg!
+    paginate: IptPaginate
   ): [DownloadFile!]!
   componentTypes(filter: [Int!]): [ComponentTypeTranslateList!]!
   componentActualStatuses(filter: [Int!]): [ActualStatusTranslateList!]!
-  standards(args: IptStandardsArg): [ShowStandardShort!]!
-  standard(
+  standards(args: IptStandardsArg, paginate: IptPaginate): [ShowStandardShort!]!
+  standard(standardUuid: UUID!, paginate: IptPaginate): StandardAndRelatedData!
+  standardFiles(
+    args: IptStandardFilesArg!
+    paginate: IptPaginate
+  ): [DownloadFile!]!
+  standardSpecs(
     standardUuid: UUID!
-    limit: Int
-    offset: Int
-  ): StandardAndRelatedData!
-  standardFiles(args: IptStandardFilesArg!): [DownloadFile!]!
-  standardSpecs(args: IptStandardSpecsArg!): [SpecTranslateList!]!
-  standardKeywords(args: IptStandardKeywordsArg!): [Keyword!]!
+    paginate: IptPaginate
+  ): [SpecTranslateList!]!
+  standardKeywords(standardUuid: UUID!, paginate: IptPaginate): [Keyword!]!
   getCompaniesListAccessStandard(
     standardUuid: UUID!
   ): [CompanyAccessStandardAndRelatedData!]!
@@ -1051,33 +1022,36 @@ type QueryRoot {
     standardUuid: UUID!
   ): [UserAccessStandardAndRelatedData!]!
   standardStatuses(filter: [Int!]): [StandardStatusTranslateList!]!
-  companies(args: IptCompaniesArg): [ShowCompanyShort!]!
+  companies(args: IptCompaniesArg, paginate: IptPaginate): [ShowCompanyShort!]!
   company(companyUuid: UUID!): CompanyAndRelatedData!
   supplierCompany(companyUuid: UUID!): CompanyAndRelatedData!
   companyRepresents(
     args: IptCompanyRepresentsArg!
+    paginate: IptPaginate
   ): [CompanyRepresentAndRelatedData!]!
   companyMembers(companyUuid: UUID!): [CompanyMemberAndRelatedData!]!
   companyRoles(companyUuid: UUID!): [RoleMemberAndRelatedData!]!
   companyTypes: [CompanyTypeTranslateList!]!
-  companySpecs(args: IptCompanySpecsArg!): [SpecTranslateList!]!
+  companySpecs(companyUuid: UUID!, paginate: IptPaginate): [SpecTranslateList!]!
   companyRepresentTypes: [RepresentationTypeTranslateList!]!
-  keywords(args: IptKeywordArg): [Keyword!]!
-  languages(args: IptLanguageArg): [Language!]!
-  licenses(args: IptLicenseArg): [License!]!
-  params(args: IptParamArg): [ParamTranslateList!]!
-  programs(args: IptProgramArg): [Program!]!
-  regions(args: IptRegionArg): [RegionTranslateList!]!
-  specs(args: IptSpecArg): [SpecTranslateList!]!
-  specsPaths(args: IptSpecPathArg): [SpecPath!]!
-  searchSpecs(args: IptSearchSpecArg!): [SpecPath!]!
+  keywords(keywordIds: [Int!]!, paginate: IptPaginate): [Keyword!]!
+  languages(langIds: [Int!], paginate: IptPaginate): [Language!]!
+  licenses(licenseIds: [Int!], paginate: IptPaginate): [License!]!
+  params(paramIds: [Int!], paginate: IptPaginate): [ParamTranslateList!]!
+  programs(programIds: [Int!], paginate: IptPaginate): [Program!]!
+  regions(regionIds: [Int!], paginate: IptPaginate): [RegionTranslateList!]!
+  specs(args: IptSpecArg, paginate: IptPaginate): [SpecTranslateList!]!
+  specsPaths(args: IptSpecPathArg, paginate: IptPaginate): [SpecPath!]!
+  searchSpecs(args: IptSearchSpecArg!, paginate: IptPaginate): [SpecPath!]!
   presignedUrl(fileUuid: UUID!): DownloadFile!
   showFileRevisions(
     fileUuid: UUID!
-    limit: Int
-    offset: Int
+    paginate: IptPaginate
   ): [ShowFileRelatedData!]!
-  typesAccess(args: IptTypeAccessArg): [TypeAccessTranslateList!]!
+  typesAccess(
+    typeAccessIds: [Int!]
+    paginate: IptPaginate
+  ): [TypeAccessTranslateList!]!
 }
 
 type RegionTranslateList {
@@ -1129,14 +1103,15 @@ type ShowComponentShort {
   isFollowed: Boolean!
   updatedAt: NaiveDateTime!
   licenses: [License!]!
-  files: [DownloadFile!]!
-  componentSuppliers: [ComponentSupplierRelatedData!]!
+  files(paginate: IptPaginate, images: Boolean): [DownloadFile!]!
+  componentSuppliers(paginate: IptPaginate): [ComponentSupplierRelatedData!]!
 }
 
 type ShowFileRelatedData {
   uuid: UUID!
   filename: String!
   revision: Int!
+  commitMsg: String!
   parentFileUuid: UUID!
   ownerUser: ShowUserShort!
   contentType: String!
@@ -1258,8 +1233,6 @@ type TypeAccessTranslateList {
   name: String!
 }
 
-#
-#
 scalar UUID
 
 type UploadFile {

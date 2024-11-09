@@ -70,8 +70,6 @@ impl Component for CatalogUsers {
                         usersUuids: arg.users_uuids.clone(),
                         subscribers: arg.subscribers,
                         favorite: arg.favorite,
-                        limit: arg.limit,
-                        offset: arg.offset,
                     }),
                     None => None,
                 };

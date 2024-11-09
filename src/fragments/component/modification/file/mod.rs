@@ -73,8 +73,6 @@ impl Component for ModificationFilesTableCard {
                     let ipt_modification_files_arg = component_modification_files_list::IptModificationFilesArg{
                         filesUuids: None,
                         modificationUuid: modification_uuid,
-                        limit: None,
-                        offset: None,
                     };
                     let res = make_query(ComponentModificationFilesList::build_query(
                         component_modification_files_list::Variables { ipt_modification_files_arg }

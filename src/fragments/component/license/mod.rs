@@ -91,7 +91,7 @@ impl Component for ComponentLicensesTags {
             Msg::RequestLicensesList => {
                 spawn_local(async move {
                     let res = make_query(GetLicenses::build_query(
-                        get_licenses::Variables { ipt_license_arg: None }
+                        get_licenses::Variables { license_ids: None }
                     )).await.unwrap();
                     link.send_message(Msg::GetLicensesListResult(res));
                 })

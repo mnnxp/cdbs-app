@@ -85,9 +85,7 @@ impl Component for Notifications {
         if first_render {
             spawn_local(async move {
                 let res = make_query(GetNotifications::build_query(
-                    get_notifications::Variables {
-                        ipt_notification_arg: None
-                    }
+                    get_notifications::Variables { notification_ids: None }
                 )).await.unwrap();
                 link.send_message(Msg::GetAllNotification(res));
             })

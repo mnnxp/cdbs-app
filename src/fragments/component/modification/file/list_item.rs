@@ -68,8 +68,6 @@ impl Component for ModificationFileItem {
                     let ipt_modification_files_arg = component_modification_files::IptModificationFilesArg{
                         filesUuids: Some(vec![file_uuid.clone()]),
                         modificationUuid: modification_uuid,
-                        limit: None,
-                        offset: None,
                     };
                     let res = make_query(ComponentModificationFiles::build_query(
                         component_modification_files::Variables {

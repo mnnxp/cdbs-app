@@ -121,13 +121,8 @@ impl Component for AddKeywordsTags {
             Msg::RequestGetStandardKeywords => {
                 let standard_uuid = self.props.standard_uuid.clone();
                 spawn_local(async move {
-                    let ipt_standard_keywords_arg = get_standard_keywords::IptStandardKeywordsArg{
-                        standardUuid: standard_uuid,
-                        limit: None,
-                        offset: None,
-                    };
                     let res = make_query(GetStandardKeywords::build_query(get_standard_keywords::Variables {
-                        ipt_standard_keywords_arg
+                        standard_uuid
                     })).await.unwrap();
                     link.send_message(Msg::GetStandardKeywordsResult(res));
                 })

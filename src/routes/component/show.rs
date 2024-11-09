@@ -176,8 +176,6 @@ impl Component for ShowComponent {
               let ipt_component_files_arg = component_files::IptComponentFilesArg{
                   componentUuid: target_component_uuid.clone(),
                   filesUuids: None,
-                  limit: None,
-                  offset: None,
               };
               let res = make_query(ComponentFiles::build_query(
                   component_files::Variables {

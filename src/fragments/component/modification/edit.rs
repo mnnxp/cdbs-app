@@ -260,15 +260,12 @@ impl Component for ModificationsTableEdit {
                 }
             },
             Msg::RequestComponentModificationsData => {
-                let ipt_component_modification_arg = get_component_modifications::IptComponentModificationArg{
-                    componentUuid: self.props.current_component_uuid.clone(),
-                    limit: None,
-                    offset: None,
-                };
-
+                let component_uuid = self.props.current_component_uuid.clone();
                 spawn_local(async move {
                     let res = make_query(GetComponentModifications::build_query(
-                        get_component_modifications::Variables { ipt_component_modification_arg }
+                        get_component_modifications::Variables {
+                            component_uuid
+                        }
                     )).await.unwrap();
 
                     link.send_message(Msg::GetComponentModificationsResult(res));
@@ -278,8 +275,6 @@ impl Component for ModificationsTableEdit {
                 let ipt_fileset_program_arg = component_modification_filesets::IptFilesetProgramArg{
                     modificationUuid: self.select_modification_uuid.clone(),
                     programIds: None,
-                    limit: None,
-                    offset: None,
                 };
 
                 spawn_local(async move {

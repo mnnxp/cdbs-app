@@ -77,8 +77,6 @@ impl Component for ThreeShowcase {
                     let ipt_file_of_fileset_arg = com_mod_fileset_files::IptFileOfFilesetArg{
                         filesetUuid: self.props.fileset_uuid.clone(),
                         fileUuids: None,
-                        limit: None,
-                        offset: None,
                     };
                     spawn_local(async move {
                         let res = make_query(ComModFilesetFiles::build_query(com_mod_fileset_files::Variables {

@@ -82,8 +82,6 @@ impl Component for ManageModificationFilesCard {
                     let ipt_modification_files_arg = component_modification_files_list::IptModificationFilesArg{
                         filesUuids: None,
                         modificationUuid: modification_uuid,
-                        limit: None,
-                        offset: None,
                     };
                     let res = make_query(ComponentModificationFilesList::build_query(
                         component_modification_files_list::Variables { ipt_modification_files_arg }
@@ -101,6 +99,7 @@ impl Component for ManageModificationFilesCard {
                     let ipt_modification_files_data = upload_modification_files::IptModificationFilesData{
                         modificationUuid: modification_uuid,
                         filenames,
+                        commitMsg: String::new(),
                     };
                     let res = make_query(UploadModificationFiles::build_query(
                         upload_modification_files::Variables{ ipt_modification_files_data }

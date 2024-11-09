@@ -215,8 +215,6 @@ pub struct ComponentsQueryArg {
     pub standard_uuid: Option<UUID>,
     pub user_uuid: Option<UUID>,
     pub favorite: Option<bool>,
-    pub limit: Option<i64>,
-    pub offset: Option<i64>,
 }
 
 impl ComponentsQueryArg {

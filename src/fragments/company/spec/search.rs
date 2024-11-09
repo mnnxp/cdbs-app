@@ -130,8 +130,6 @@ impl Component for SearchSpecsTags {
                                 text: ipt_val.clone(),
                                 splitChar: None,
                                 depthLevel: None,
-                                limit: None,
-                                offset: None,
                             };
                             let res = make_query(SearchSpecs::build_query(search_specs::Variables {
                                 ipt_search_spec_arg

@@ -112,7 +112,7 @@ impl Component for ModificationTableItem {
                 debug!("RequestParamsListData: {:?}", self.params_list);
                 spawn_local(async move {
                     let res = make_query(GetParams::build_query(
-                        get_params::Variables { ipt_param_arg: None }
+                        get_params::Variables { param_ids: None }
                     )).await.unwrap();
                     link.send_message(Msg::GetParamsListResult(res));
                 })

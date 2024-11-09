@@ -68,8 +68,6 @@ impl Component for FilesetFileItem {
                     let ipt_file_of_fileset_arg = com_mod_fileset_files::IptFileOfFilesetArg{
                         filesetUuid: select_fileset_uuid,
                         fileUuids: Some(vec![file_uuid.clone()]),
-                        limit: None,
-                        offset: None,
                     };
                     let res = make_query(ComModFilesetFiles::build_query(
                         com_mod_fileset_files::Variables { ipt_file_of_fileset_arg }

@@ -69,8 +69,6 @@ impl Component for FilesOfFilesetCard {
                 let ipt_file_of_fileset_arg = com_mod_files_of_fileset::IptFileOfFilesetArg{
                     filesetUuid: self.select_fileset_uuid.clone(),
                     fileUuids: None,
-                    limit: None,
-                    offset: None,
                 };
                 spawn_local(async move {
                     let res = make_query(ComModFilesOfFileset::build_query(com_mod_files_of_fileset::Variables {

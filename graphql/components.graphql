@@ -4,8 +4,8 @@ query GetComponentData($componentUuid: UUID!) {
   }
 }
 
-query GetComponentModifications($iptComponentModificationArg: IptComponentModificationArg!) {
-  componentModifications(args: $iptComponentModificationArg) {
+query GetComponentModifications($componentUuid: UUID!) {
+  componentModifications(componentUuid: $componentUuid) {
     ...componentModificationFields
   }
 }
@@ -178,8 +178,8 @@ query GetComponentDataOpt {
   }
 }
 
-query GetComponentKeywords($iptComponentKeywordsArg: IptComponentKeywordsArg!) {
-  componentKeywords(args: $iptComponentKeywordsArg) {
+query GetComponentKeywords($componentUuid: UUID!) {
+  componentKeywords(componentUuid: $componentUuid) {
     id
     keyword
   }

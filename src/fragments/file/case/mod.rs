@@ -93,11 +93,9 @@ impl Component for FileShowcase {
       match msg {
         Msg::RequestRevisionsFile(file_uuid) => {
           spawn_local(async move {
-              let res = make_query(ShowFileRevisions::build_query(show_file_revisions::Variables{
-                file_uuid,
-                limit: None,
-                offset: None,
-              })).await.unwrap();
+              let res = make_query(ShowFileRevisions::build_query(
+                show_file_revisions::Variables{file_uuid}
+              )).await.unwrap();
               link.send_message(Msg::ParsingFiles(res));
           })
         },

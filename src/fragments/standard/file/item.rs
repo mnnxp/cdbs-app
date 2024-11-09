@@ -67,8 +67,6 @@ impl Component for FileItem {
                     let ipt_standard_files_arg = standard_files::IptStandardFilesArg{
                         filesUuids: Some(vec![file_uuid.clone()]),
                         standardUuid: standard_uuid,
-                        limit: None,
-                        offset: None,
                     };
                     let res = make_query(StandardFiles::build_query(standard_files::Variables {
                         ipt_standard_files_arg

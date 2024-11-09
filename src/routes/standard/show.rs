@@ -145,8 +145,6 @@ impl Component for ShowStandard {
                     let ipt_standard_files_arg = standard_files::IptStandardFilesArg{
                         filesUuids: None,
                         standardUuid: standard_uuid,
-                        limit: None,
-                        offset: None,
                     };
                     let res = make_query(StandardFiles::build_query(standard_files::Variables{
                         ipt_standard_files_arg

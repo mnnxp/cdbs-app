@@ -74,8 +74,6 @@ impl Component for CatalogStandards {
                         standardsUuids: arg.standards_uuids.clone(),
                         companyUuid: arg.company_uuid.to_owned(),
                         favorite: arg.favorite,
-                        limit: arg.limit,
-                        offset: arg.offset,
                     }
                 });
                 spawn_local(async move {

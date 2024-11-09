@@ -104,7 +104,7 @@ impl Component for ManageModificationFilesets {
             Msg::RequestProgramsList => {
                 spawn_local(async move {
                     let res = make_query(GetPrograms::build_query(
-                        get_programs::Variables { ipt_program_arg: None }
+                        get_programs::Variables { program_ids: None }
                     )).await.unwrap();
 
                     link.send_message(Msg::GetProgramsListResult(res));
@@ -144,8 +144,6 @@ impl Component for ManageModificationFilesets {
                     let ipt_file_of_fileset_arg = com_mod_files_of_fileset::IptFileOfFilesetArg{
                         filesetUuid: self.select_fileset_uuid.clone(),
                         fileUuids: None,
-                        limit: None,
-                        offset: None,
                     };
                     spawn_local(async move {
                         let res = make_query(ComModFilesOfFileset::build_query(com_mod_files_of_fileset::Variables {
@@ -166,6 +164,7 @@ impl Component for ManageModificationFilesets {
                     let ipt_modification_file_from_fileset_data = upload_files_to_fileset::IptModificationFileFromFilesetData{
                         filesetUuid: fileset_uuid,
                         filenames,
+                        commitMsg: String::new(),
                     };
                     let res = make_query(UploadFilesToFileset::build_query(
                         upload_files_to_fileset::Variables{ ipt_modification_file_from_fileset_data }
