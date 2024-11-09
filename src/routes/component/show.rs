@@ -393,7 +393,7 @@ impl ShowComponent {
         let show_description_btn =
             self.link.callback(|_| Msg::ShowDescription);
 
-        html!{
+        html!{<>
             <div class="columns">
                 {match self.show_three_view {
                     true => html!{
@@ -438,19 +438,28 @@ impl ShowComponent {
                 {self.show_component_params(component_data)}
                 <div class="component-description">
                     {match component_data.description.len() {
-                        250.. => html!{<>
-                            {match self.show_full_description {
-                                true => component_data.description.to_markdown(),
-                                false => format!("{:.*}", 200, component_data.description).to_markdown(),
-                            }}
-                            {ft_see_btn(show_description_btn, self.show_full_description)}
-                        </>},
+                        250.. => match self.show_full_description {
+                            true => html!{},
+                            false => html!{<>
+                                {format!("{:.*}", 200, component_data.description).to_markdown()}
+                                {ft_see_btn(show_description_btn.clone(), self.show_full_description)}
+                            </>},
+                        },
                         _ => component_data.description.to_markdown(),
                     }}
                 </div>
               </div>
             </div>
-        }
+            {match self.show_full_description && component_data.description.len() > 249 {
+                true => html!{
+                    <div class="column">
+                        {component_data.description.to_markdown()}
+                        {ft_see_btn(show_description_btn, self.show_full_description)}
+                    </div>
+                },
+                false => html!{},
+            }}
+        </>}
     }
 
     fn show_component_licenses(&self, component_data: &ComponentInfo) -> Html {
