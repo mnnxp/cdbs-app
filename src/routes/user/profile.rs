@@ -328,7 +328,7 @@ impl Profile {
             <div class="columns is-mobile">
                 <div class="column is-flex">
                     { self.show_profile_action() }
-                    <div class="card-relate-data" style="flex:1;" >
+                    <div class="card-relate-data">
                         {match self.profile_tab {
                             ProfileTab::Certificates => self.view_certificates(self_data.certificates.clone()),
                             ProfileTab::Components => self.view_components(&self_data.uuid),
@@ -380,7 +380,7 @@ impl Profile {
             <div class="columns is-mobile">
                 <div class="column is-flex">
                   { self.show_profile_action() }
-                  <div class="card-relate-data" style="flex:1;">
+                  <div class="card-relate-data">
                       {match self.profile_tab {
                           ProfileTab::Certificates => self.view_certificates(user_data.certificates.clone()),
                           ProfileTab::Components => self.view_components(&user_data.uuid),

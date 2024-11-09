@@ -98,34 +98,39 @@ impl ListItem {
         html!{
           <div class="box itemBox componentListItem">
             <article class="media center-media">
-              <div class="media-left">
+              <div class="media-left" onclick={onclick_open_component.clone()}>
                 <figure class="image is-96x96">
                   <img src={self.props.data.image_file.download_url.clone()} alt="Image" />
                 </figure>
               </div>
               <div class="media-content">
-                <div class="columns is-gapless" style="margin-bottom:0">
+                  <div class="columns is-gapless" style="margin-bottom:0" onclick={onclick_open_component.clone()}>
                     <div class="column">
-                        {self.show_owner()}
+                      {self.show_owner()}
                     </div>
-                    <div class="column">
-                        {get_value_field(&159)} // actual status
-                        <span class="id-box has-text-weight-bold">
-                            {self.props.data.actual_status.name.clone()}
-                        </span>
+                    <div class="column is-2">
+                      <span class={"icon"} title={get_value_field(&156)}>
+                        <i class="fas fa-edit"></i>
+                      </span>
+                      {updated_at.date_to_display()}
+                    </div>
+                    <div class="column is-4">
+                      <span class="id-box has-text-weight-bold" title={get_value_field(&159)}>
+                        {self.props.data.actual_status.name.clone()}
+                      </span>
                     </div>
                   </div>
                   <div class="columns" style="margin-bottom:0">
-                      <div class="column">
+                      <div class="column" onclick={onclick_open_component.clone()}>
                           <div class="overflow-title has-text-weight-bold is-size-4">{name}</div>
                           <div class="overflow-title">
                             {match &description.len() {
                                 0..=50 => description.clone(),
-                                _ => format!("{:.*}...", 50, description),
+                                _ => format!("{:.*}...", 70, description),
                             }}
                           </div>
                       </div>
-                      <div class="column buttons is-one-quarter flexBox" >
+                      <div class="column buttons is-one-fifth flexBox" >
                           {res_btn(
                             classes!("far", "fa-folder"),
                             onclick_open_component,
@@ -137,18 +142,6 @@ impl ListItem {
                             self.props.data.is_followed,
                             String::new(),
                           )}
-                      </div>
-                  </div>
-                  <div class="columns" style="margin-bottom:0">
-                      <div class="column">
-                        {match self.props.data.licenses.first() {
-                            Some(l) => html!{l.name.clone()},
-                            None => html!{},
-                        }}
-                      </div>
-                      <div class="column">
-                        {get_value_field(&30)}
-                        {updated_at.date_to_display()}
                       </div>
                   </div>
                 </div>
@@ -164,7 +157,7 @@ impl ListItem {
         html!{
           <div class="boxItem" >
             <div class="innerBox" >
-              <div class="imgBox" >
+              <div class="imgBox" onclick={onclick_open_component.clone()}>
                 <img src={self.props.data.image_file.download_url.clone()} alt="Image" />
               </div>
               <div>
@@ -192,14 +185,14 @@ impl ListItem {
     fn show_owner(&self) -> Html {
         match &self.props.data.component_suppliers.first() {
             Some(x) => html!{<>
-                {get_value_field(&158)} // supplier / manufactured by
-                <span class="id-box has-text-weight-bold">
+                // supplier / manufactured by
+                <span class="id-box has-text-weight-bold" title={get_value_field(&158)}>
                   {x.supplier.shortname.clone()}
                 </span>
             </>},
             None => html!{<>
-                {get_value_field(&118)} // user uploaded
-                <span class="id-box has-text-weight-bold">
+                // user uploaded
+                <span class="id-box has-text-weight-bold" title={get_value_field(&118)}>
                   {format!("@{}",&self.props.data.owner_user.username)}
                 </span>
             </>},

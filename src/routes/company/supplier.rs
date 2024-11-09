@@ -309,7 +309,7 @@ impl ShowSupplierCompany {
             <div class="columns is-mobile">
                 <div class="column is-flex">
                     { self.show_company_action() }
-                    <div class="card-relate-data" style="flex:1;" >
+                    <div class="card-relate-data">
                         {match self.company_tab {
                             CompanyTab::Certificates =>
                                 self.view_certificates(&company_data),
