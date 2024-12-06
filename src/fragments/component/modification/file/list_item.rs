@@ -8,7 +8,7 @@ use crate::fragments::switch_icon::res_file_btn;
 use crate::fragments::file::FileShowcase;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, ShowFileInfo, DownloadFile};
-use crate::services::{resp_parsing};
+use crate::services::resp_parsing;
 use crate::gqls::make_query;
 use crate::gqls::component::{
     ComponentModificationFiles, component_modification_files,

@@ -264,7 +264,9 @@ impl Component for ModificationsTableEdit {
                 spawn_local(async move {
                     let res = make_query(GetComponentModifications::build_query(
                         get_component_modifications::Variables {
-                            component_uuid
+                            component_uuid,
+                            ipt_sort: None,
+                            ipt_paginate: None
                         }
                     )).await.unwrap();
 
@@ -514,7 +516,7 @@ impl ModificationsTableEdit {
                                         collect_heads={self.collect_heads.clone()}
                                         collect_item={item.clone()}
                                         select_item={&self.select_modification_uuid == modification_uuid}
-                                        open_modification_files={false}
+                                        // open_modification_files={false}
                                         callback_new_modification_param={Some(onclick_new_modification_param.clone())}
                                         callback_select_modification={Some(onclick_select_modification.clone())}
                                     />},

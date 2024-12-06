@@ -140,15 +140,20 @@ type ComponentAndRelatedData {
     sort: IptSort
     paginate: IptPaginate
   ): [ComponentParamWithTranslation!]!
+  paramsCount: Int!
   files(sort: IptSort, paginate: IptPaginate): [ShowFileRelatedData!]!
+  filesCount: Int!
   componentSpecs(paginate: IptPaginate): [SpecTranslateList!]!
   componentKeywords(paginate: IptPaginate): [Keyword!]!
   componentModifications(
     sort: IptSort
     paginate: IptPaginate
   ): [ComponentModificationAndRelatedData!]!
+  modificationsCount: Int!
   componentSuppliers(paginate: IptPaginate): [ComponentSupplierRelatedData!]!
+  suppliersCount: Int!
   componentStandards(paginate: IptPaginate): [ShowStandardShort!]!
+  standardsCount: Int!
 }
 
 type ComponentModificationAndRelatedData {
@@ -161,11 +166,14 @@ type ComponentModificationAndRelatedData {
   createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!
   filesetsForProgram: [FilesetProgramRelatedData!]!
+  filesetsCount: Int!
   modificationParams(
     sort: IptSort
     paginate: IptPaginate
   ): [ModificationParamWithTranslation!]!
+  paramsCount: Int!
   files(sort: IptSort, paginate: IptPaginate): [ShowFileRelatedData!]!
+  filesCount: Int!
 }
 
 type ComponentParamWithTranslation {
@@ -310,6 +318,7 @@ type FilesetProgramRelatedData {
   modificationUuid: UUID!
   program: Program!
   files(sort: IptSort, paginate: IptPaginate): [ShowFileRelatedData!]!
+  filesCount: Int!
 }
 
 input IptCompaniesArg {

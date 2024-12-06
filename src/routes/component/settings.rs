@@ -322,7 +322,8 @@ impl Component for ComponentSettings {
                         // if let Some(user) = &self.props.current_user {
                         //     self.current_user_owner = component_data.owner_user.uuid == user.uuid;
                         // }
-                        self.current_modifications = component_data.component_modifications.clone();
+                        // self.current_modifications = component_data.component_modifications.clone();
+                        self.current_modifications = Vec::new();
                         self.files_list = component_data.files.clone();
                         self.request_component = component_data.into();
                     },

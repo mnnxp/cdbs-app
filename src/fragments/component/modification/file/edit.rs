@@ -84,7 +84,7 @@ impl Component for ManageModificationFilesCard {
                         modificationUuid: modification_uuid,
                     };
                     let res = make_query(ComponentModificationFilesList::build_query(
-                        component_modification_files_list::Variables { ipt_modification_files_arg }
+                        component_modification_files_list::Variables { ipt_modification_files_arg, ipt_paginate: None }
                     )).await.unwrap();
                     link.send_message(Msg::GetModificationFilesListResult(res));
                 })

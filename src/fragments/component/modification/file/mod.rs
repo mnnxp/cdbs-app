@@ -12,10 +12,11 @@ use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::error::Error;
+use crate::fragments::paginate::Paginate;
 use crate::fragments::file::FileHeadersShow;
 use crate::fragments::list_errors::ListErrors;
-use crate::types::{UUID, ShowFileInfo};
-use crate::services::{get_value_field, resp_parsing};
+use crate::types::{UUID, ShowFileInfo, PaginateSet};
+use crate::services::resp_parsing;
 use crate::gqls::make_query;
 use crate::gqls::component::{ComponentModificationFilesList, component_modification_files_list};
 
@@ -30,7 +31,8 @@ pub struct ModificationFilesTableCard {
     link: ComponentLink<Self>,
     props: Props,
     files_list: Vec<ShowFileInfo>,
-    // show_full_files: bool,
+    page_set: PaginateSet,
+    current_items: i64,
 }
 
 #[derive(Clone)]
@@ -38,6 +40,7 @@ pub enum Msg {
     RequestModificationFilesList,
     ResponseError(Error),
     GetModificationFilesListResult(String),
+    ChangePaginate(PaginateSet),
     ClearError,
 }
 
@@ -51,7 +54,8 @@ impl Component for ModificationFilesTableCard {
             link,
             props,
             files_list: Vec::new(),
-            // show_full_files: false,
+            page_set: PaginateSet::new(),
+            current_items: 0,
         }
     }
 
@@ -69,13 +73,17 @@ impl Component for ModificationFilesTableCard {
         match msg {
             Msg::RequestModificationFilesList => {
                 let modification_uuid = self.props.modification_uuid.clone();
+                let ipt_modification_files_arg = component_modification_files_list::IptModificationFilesArg{
+                    filesUuids: None,
+                    modificationUuid: modification_uuid,
+                };
+                let ipt_paginate = Some(component_modification_files_list::IptPaginate {
+                    currentPage: self.page_set.current_page,
+                    perPage: self.page_set.per_page,
+                });
                 spawn_local(async move {
-                    let ipt_modification_files_arg = component_modification_files_list::IptModificationFilesArg{
-                        filesUuids: None,
-                        modificationUuid: modification_uuid,
-                    };
                     let res = make_query(ComponentModificationFilesList::build_query(
-                        component_modification_files_list::Variables { ipt_modification_files_arg }
+                        component_modification_files_list::Variables { ipt_modification_files_arg, ipt_paginate }
                     )).await.unwrap();
                     link.send_message(Msg::GetModificationFilesListResult(res));
                 })
@@ -86,7 +94,14 @@ impl Component for ModificationFilesTableCard {
                     Ok(result) => self.files_list = result,
                     Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
+                self.current_items = self.files_list.len() as i64;
                 debug!("componentModificationFilesList {:?}", self.files_list.len());
+            },
+            Msg::ChangePaginate(page_set) => {
+                self.page_set = page_set;
+                if self.props.modification_uuid.len() == 36 {
+                    self.link.send_message(Msg::RequestModificationFilesList);
+                }
             },
             Msg::ClearError => self.error = None,
         }
@@ -112,32 +127,27 @@ impl Component for ModificationFilesTableCard {
 
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+        let onclick_paginate = self.link.callback(|page_set| Msg::ChangePaginate(page_set));
 
         html!{
-            <div class="card">
+            <div class="content">
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
-                <header class="card-header has-background-primary-light">
-                    <p class="card-header-title">{get_value_field(&119)}</p> // Modification files
-                </header>
-                <div class="card-content">
-                    <div class="content">
-                        <table class="table is-fullwidth is-striped">
-                            <FileHeadersShow
-                                show_long={true}
-                                show_download_btn={self.props.show_download_btn}
-                                />
-                            <tbody>
-                                {for self.files_list.iter().map(|file| html!{
-                                    <ModificationFileListItem
-                                        modification_uuid={self.props.modification_uuid.clone()}
-                                        show_download_tag={self.props.show_download_btn}
-                                        file={file.clone()}
-                                    />
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                <table class="table is-fullwidth is-striped">
+                    <FileHeadersShow
+                        show_long={true}
+                        show_download_btn={self.props.show_download_btn}
+                        />
+                    <tbody>
+                        {for self.files_list.iter().map(|file| html!{
+                            <ModificationFileListItem
+                                modification_uuid={self.props.modification_uuid.clone()}
+                                show_download_tag={self.props.show_download_btn}
+                                file={file.clone()}
+                            />
+                        })}
+                    </tbody>
+                </table>
+                <Paginate callback_change={onclick_paginate} current_items={self.current_items} />
             </div>
         }
     }

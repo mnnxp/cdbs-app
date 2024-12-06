@@ -26,11 +26,10 @@ impl Component for ModificationTableHeads {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.component_uuid == props.component_uuid {
-            debug!("no change self.props.params: {:?}", self.props.params);
+        debug!("change self.props.params, old: {:?}, new: {:?}", self.props.params, props.params);
+        if self.props.component_uuid == props.component_uuid && self.props.params == props.params {
             false
         } else {
-            debug!("change self.props.params: {:?}", self.props.params);
             self.props = props;
             true
         }
@@ -44,10 +43,7 @@ impl Component for ModificationTableHeads {
 impl ModificationTableHeads {
     fn show_modification_head(&self) -> Html {
         html!{<>
-            {match self.props.show_new_column {
-                true => html!{<th>{get_value_field(&111)}</th>}, // Action
-                false => html!{<th>{get_value_field(&115)}</th>}, // Action | files
-            }}
+            <th>{get_value_field(&111)}</th>
             <th>{get_value_field(&176)}</th> // Modification name
             {for self.props.params.iter().map(|head| {
                 html!{<th title={get_value_field(&210)}>{head.paramname.clone()}</th>}

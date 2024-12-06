@@ -29,10 +29,8 @@ pub struct Props {
     pub collect_heads: Vec<Param>,
     pub collect_item: HashMap<usize, String>,
     pub select_item: bool,
-    pub open_modification_files: bool,
     pub callback_new_modification_param: Option<Callback<UUID>>,
     pub callback_select_modification: Option<Callback<UUID>>,
-    pub callback_open_modification_files: Option<Callback<()>>,
 }
 
 pub struct ModificationTableItem {
@@ -66,7 +64,6 @@ pub enum Msg {
     GetUpdateParamResult(String),
     GetDeleteParamResult(String),
     SelectModification,
-    ShowModificationFilesList,
     UpdateValue(String),
     ShowNewParamCard,
     ShowAddParamCard(usize),
@@ -184,7 +181,6 @@ impl Component for ModificationTableItem {
                         }
                         debug!("params: {:?}", self.params_list);
                         if let Some((_, param)) = self.params_list.iter().next() {
-                            // debug!("get first of params_list: {:?}", param);
                             self.request_add_param.param_id = param.param_id;
                         };
                     },
@@ -252,13 +248,12 @@ impl Component for ModificationTableItem {
                 }
             },
             Msg::SelectModification => {
+                debug!("Callback ITEM, modification uuid: {:?}, self.props.m...uuid: {:?} (Show modifications)",
+                    self.modification_uuid,
+                    self.props.modification_uuid
+                );
                 if let Some(select_modification) = &self.props.callback_select_modification {
-                    select_modification.emit(self.props.modification_uuid.clone());
-                }
-            },
-            Msg::ShowModificationFilesList => {
-                if let Some(open_files) = &self.props.callback_open_modification_files {
-                    open_files.emit(());
+                    select_modification.emit(self.modification_uuid.clone());
                 }
             },
             Msg::UpdateValue(data) => {
@@ -323,12 +318,9 @@ impl Component for ModificationTableItem {
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
         if self.modification_uuid == props.modification_uuid &&
-              self.select_item == props.select_item &&
-                self.props.open_modification_files == props.open_modification_files {
-            debug!("no change open_modification_files {:?}", props.open_modification_files);
+              self.select_item == props.select_item {
             false
         } else {
-            debug!("change open_modification_files {:?}", props.open_modification_files);
             self.modification_uuid = props.modification_uuid.clone();
             self.collect_item = props.collect_item.clone();
             self.select_item = props.select_item;
@@ -350,14 +342,9 @@ impl Component for ModificationTableItem {
 impl ModificationTableItem {
     fn show_modification_row(&self) -> Html {
         let onclick_select_modification = self.link.callback(|_| Msg::SelectModification);
-        let onclick_show_modification_files = self.link.callback(|_| Msg::ShowModificationFilesList);
         let class_style = match &self.props.select_item {
             true => "is-selected",
             false => "",
-        };
-        let files_click_icon = match &self.props.open_modification_files {
-            true => "far fa-folder-open",
-            false => "far fa-folder",
         };
         let (title_text, click_icon) =
         match (&self.props.show_manage_btn, &self.props.select_item) {
@@ -374,17 +361,6 @@ impl ModificationTableItem {
                         <i class={click_icon} aria-hidden="true"></i>
                     </span>
                 </a>
-                {match self.props.select_item && !self.props.show_manage_btn {
-                    true => html!{<>
-                        <span>{" | "}</span>
-                        <a onclick={onclick_show_modification_files} title={get_value_field(&329)}>
-                            <span class="icon">
-                                <i class={files_click_icon} aria-hidden="true"></i>
-                            </span>
-                        </a>
-                    </>},
-                    false => html!{},
-                }}
             </td>
             {match self.collect_item.get(&0) {
                 Some(value) => html!{<td>{value.clone()}</td>},

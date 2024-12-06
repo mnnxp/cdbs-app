@@ -118,7 +118,7 @@ lazy_static! {
             (112, "Classifier"),
             (113, "Specified tolerance"),
             (114, "Type access "),
-            (115, "Action | Files"),
+            (115, "Back"),
             (116, "Managing master data of the component"),
             (117, "Add"),
             (118, "User uploaded: "),

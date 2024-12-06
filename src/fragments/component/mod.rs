@@ -14,7 +14,7 @@ pub use file::{ComponentFileItem, ComponentFilesBlock};
 pub use keyword::{KeywordsTags, KeywordTagItem, AddKeywordsTags};
 pub use license::{ComponentLicenseTag, ComponentLicensesTags};
 pub use modification::{
-    ModificationsTable, ModificationsTableEdit, ModificationTableItemModule,
+    ModificationsTableCard, ModificationsTable, ModificationsTableEdit, ModificationTableItemModule,
     ModificationTableItem, ModificationTableHeads, ModificationFilesTableCard,
     ManageModificationFilesCard, ManageFilesOfFilesetBlock, FilesOfFilesetCard,
 };

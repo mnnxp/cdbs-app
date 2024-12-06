@@ -14,6 +14,7 @@ pub mod list_empty;
 pub mod list_errors;
 pub mod list_item;
 pub mod notification;
+pub mod paginate;
 pub mod switch_icon;
 pub mod side_menu;
 pub mod upload_favicon;

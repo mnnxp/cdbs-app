@@ -4,8 +4,16 @@ query GetComponentData($componentUuid: UUID!) {
   }
 }
 
-query GetComponentModifications($componentUuid: UUID!) {
-  componentModifications(componentUuid: $componentUuid) {
+query GetComponentModifications(
+    $componentUuid: UUID!,
+    $IptSort: IptSort,
+    $IptPaginate: IptPaginate
+) {
+  componentModifications(
+    componentUuid: $componentUuid,
+    sort: $IptSort,
+    paginate: $IptPaginate
+  ) {
     ...componentModificationFields
   }
 }
@@ -78,8 +86,8 @@ query ComponentModificationFiles($iptModificationFilesArg: IptModificationFilesA
   }
 }
 
-query ComponentModificationFilesList($iptModificationFilesArg: IptModificationFilesArg!) {
-  componentModificationFilesList(args: $iptModificationFilesArg){
+query ComponentModificationFilesList($iptModificationFilesArg: IptModificationFilesArg!, $IptPaginate: IptPaginate) {
+  componentModificationFilesList(args: $iptModificationFilesArg, paginate: $IptPaginate){
     ...showFileRelatedDataFields
   }
 }
@@ -325,24 +333,26 @@ fragment componentFields on ComponentAndRelatedData {
   componentParams {
     ...componentParamFields
   }
+  paramsCount
   files {
     ...showFileRelatedDataFields
   }
+  filesCount
   componentSpecs {
     ...specFields
   }
   componentKeywords {
     ...keywordFields
   }
-  componentModifications {
-    ...componentModificationFields
-  }
+  modificationsCount
   componentSuppliers {
     ...componentSupplierFields
   }
+  suppliersCount
   componentStandards {
     ...showStandardShortFields
   }
+  standardsCount
 }
 
 fragment showUserShortFields on ShowUserShort {
@@ -439,12 +449,15 @@ fragment componentModificationFields on ComponentModificationAndRelatedData {
   }
   createdAt
   updatedAt
+  # filesCount
   filesetsForProgram {
     ...filesetProgramRelatedDataFields
   }
+  # filesetsCount
   modificationParams {
     ...modificationParamFields
   }
+  # paramsCount
 }
 
 fragment filesetProgramRelatedDataFields on FilesetProgramRelatedData {
@@ -453,6 +466,7 @@ fragment filesetProgramRelatedDataFields on FilesetProgramRelatedData {
   program {
     ...programFields
   }
+  # filesCount
 }
 
 fragment componentSupplierFields on ComponentSupplierRelatedData {

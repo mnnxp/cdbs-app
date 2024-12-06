@@ -96,3 +96,47 @@ pub struct LicenseInfo {
     pub keyword: String,
     pub publication_at: NaiveDateTime,
 }
+
+#[derive(Clone, Debug)]
+pub struct PaginateSet {
+    pub current_page: i64,
+    pub per_page: i64,
+}
+
+impl PaginateSet {
+    /// Returns with current_page 1 and per_page 5 values
+    pub fn new() -> Self {
+        Self {
+            current_page: 1,
+            per_page: 5,
+        }
+    }
+
+    /// Returns with current_page 1 and per_page 5 values or with provided current_page
+    pub fn set(current_page: Option<i64>, per_page: Option<i64>) -> Self {
+        Self {
+            current_page: current_page.unwrap_or(1),
+            per_page: per_page.unwrap_or(5),
+        }
+    }
+
+    /// Reduces current page by 1
+    pub fn previous(&mut self) {
+        self.current_page -= 1;
+    }
+
+    /// Increases current page by 1
+    pub fn next(&mut self) {
+        self.current_page += 1;
+    }
+
+    /// Sets provided number as current page
+    pub fn to(&mut self, number: i64) {
+        self.current_page = number;
+    }
+
+    /// Sets the given value as max number of elements on page
+    pub fn max_on_page(&mut self, per_page: i64) {
+        self.per_page = per_page;
+    }
+}
