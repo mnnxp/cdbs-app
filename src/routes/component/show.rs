@@ -18,7 +18,7 @@ use crate::fragments::{
     user::ModalCardUser,
     component::{
         ComponentStandardItem, ComponentSupplierItem, ComponentLicenseTag, ComponentParamsTags,
-        ModificationsTableCard, FilesOfFilesetCard, ManageFilesOfFilesetBlock,
+        ModificationsTableCard, FilesOfFilesetCard, ModificationFilesetsCard,
         ComponentFilesBlock, SpecsTags, KeywordsTags,
     },
     img_showcase::ImgShowcase,
@@ -187,16 +187,7 @@ impl Component for ShowComponent {
 
         match msg {
             Msg::SelectFileset(fileset_uuid) => self.select_fileset_uuid = fileset_uuid,
-            Msg::SelectModification(modification_uuid) => {
-                if self.select_modification_uuid != modification_uuid {
-                    self.select_modification_uuid = modification_uuid;
-                    // self.current_filesets_program.clear();
-                    self.current_filesets_program = self.modification_filesets
-                        .get(&self.select_modification_uuid)
-                        .map(|f| f.clone())
-                        .unwrap_or_default();
-                }
-            },
+            Msg::SelectModification(modification_uuid) => self.select_modification_uuid = modification_uuid,
             Msg::Follow => {
                 let component_uuid = self.component.as_ref().unwrap().uuid.clone();
                 spawn_local(async move {
@@ -253,29 +244,6 @@ impl Component for ShowComponent {
                         self.show_full_description = component_data.description.len() < 250;
                         // add main image
                         self.file_arr.push(component_data.image_file.clone());
-                        // self.select_modification_uuid = component_data.component_modifications
-                        //     .first()
-                        //     .map(|m| m.uuid.clone())
-                        //     .unwrap_or_default();
-                        // self.select_fileset_uuid = component_data.component_modifications
-                        //         .first()
-                        //         .map(|m| m.filesets_for_program.first().map(|f| f.uuid.clone())
-                        //         .unwrap_or_default()
-                        //     ).unwrap_or_default();
-                        // for component_modification in &component_data.component_modifications {
-                        //     let mut fileset_data: Vec<(UUID, String)> = Vec::new();
-                        //     for fileset in &component_modification.filesets_for_program {
-                        //         fileset_data.push((fileset.uuid.clone(), fileset.program.name.clone()));
-                        //     }
-                        //     self.modification_filesets.insert(
-                        //         component_modification.uuid.clone(),
-                        //         fileset_data.clone()
-                        //     );
-                        // }
-                        // self.current_filesets_program = self.modification_filesets
-                        //     .get(&self.select_modification_uuid)
-                        //     .map(|f| f.clone())
-                        //     .unwrap_or_default();
                         self.component = Some(component_data);
                     },
                     Err(err) => link.send_message(Msg::ResponseError(err)),
@@ -336,7 +304,11 @@ impl Component for ShowComponent {
                             <div class="card column">
                               {self.show_main_card(component_data)}
                             </div>
-                            {self.show_fileset_files_card()}
+                            <FilesOfFilesetCard
+                                show_card={self.open_fileset_files_card}
+                                show_download_btn={true}
+                                select_fileset_uuid={self.select_fileset_uuid.clone()}
+                                />
                             <br/>
                             {self.show_modifications_table(component_data.modifications_count)}
                             <br/>
@@ -364,8 +336,9 @@ impl Component for ShowComponent {
 
 impl ShowComponent {
     fn show_main_card(&self, component_data: &ComponentInfo) -> Html {
-        let show_description_btn =
-            self.link.callback(|_| Msg::ShowDescription);
+        let show_description_btn = self.link.callback(|_| Msg::ShowDescription);
+        let callback_select_fileset_uuid = self.link.callback(|value: UUID| Msg::SelectFileset(value));
+        let callback_open_fileset = self.link.callback(|value: bool| Msg::ShowFilesetFilesBlock(value));
 
         html!{<>
             <div class="columns">
@@ -400,7 +373,10 @@ impl ShowComponent {
                 }</div>
                 <div class="buttons flexBox">
                     {self.show_three_btn()}
-                    {self.show_download_block()}
+                    <ModificationFilesetsCard
+                        modification_uuid={self.select_modification_uuid.clone()}
+                        callback_select_fileset_uuid={callback_select_fileset_uuid}
+                        callback_open_fileset={callback_open_fileset} />
                     {self.show_setting_btn()}
                     {self.show_followers_btn()}
                     <ShareLinkBtn />
@@ -619,35 +595,6 @@ impl ShowComponent {
                     </div>
                 </div>
             </div>
-        }
-    }
-
-    fn show_fileset_files_card(&self) -> Html {
-        match &self.open_fileset_files_card {
-            true => html!{<>
-                <br/>
-                <FilesOfFilesetCard
-                    show_download_btn={false}
-                    select_fileset_uuid={self.select_fileset_uuid.clone()}
-                    />
-            </>},
-            false => html!{},
-        }
-    }
-
-    fn show_download_block(&self) -> Html {
-        let callback_select_fileset_uuid =
-            self.link.callback(|value: UUID| Msg::SelectFileset(value));
-        let callback_open_fileset_uuid =
-            self.link.callback(|value: bool| Msg::ShowFilesetFilesBlock(value));
-
-        html!{
-            <ManageFilesOfFilesetBlock
-                select_modification_uuid={self.select_modification_uuid.clone()}
-                current_filesets_program={self.current_filesets_program.clone()}
-                callback_select_fileset_uuid={callback_select_fileset_uuid.clone()}
-                callback_open_fileset_uuid={callback_open_fileset_uuid.clone()}
-            />
         }
     }
 

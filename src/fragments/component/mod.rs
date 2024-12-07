@@ -16,7 +16,7 @@ pub use license::{ComponentLicenseTag, ComponentLicensesTags};
 pub use modification::{
     ModificationsTableCard, ModificationsTable, ModificationsTableEdit, ModificationTableItemModule,
     ModificationTableItem, ModificationTableHeads, ModificationFilesTableCard,
-    ManageModificationFilesCard, ManageFilesOfFilesetBlock, FilesOfFilesetCard,
+    ManageModificationFilesCard, ModificationFilesetsCard, FilesOfFilesetCard,
 };
 pub use param::{ComponentParamTag, ComponentParamsTags, RegisterParamnameBlock};
 pub use spec::{SpecsTags, SpecTagItem, SearchSpecsTags};

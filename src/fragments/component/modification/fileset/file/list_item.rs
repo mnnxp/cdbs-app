@@ -17,7 +17,6 @@ use crate::gqls::component::{
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
-    pub show_download_btn: bool,
     pub show_delete_btn: bool,
     pub select_fileset_uuid: UUID,
     pub file: ShowFileInfo,
@@ -57,23 +56,30 @@ impl Component for FilesetFileItem {
         }
     }
 
+    fn rendered(&mut self, first_render: bool) {
+        if first_render {
+            self.link.send_message(Msg::RequestDownloadFile(self.props.file.uuid.clone()));
+        }
+    }
+
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         let link = self.link.clone();
 
         match msg {
             Msg::RequestDownloadFile(file_uuid) => {
-                let select_fileset_uuid = self.props.select_fileset_uuid.clone();
-                // let file_uuid = self.props.file.uuid.clone();
-                spawn_local(async move {
-                    let ipt_file_of_fileset_arg = com_mod_fileset_files::IptFileOfFilesetArg{
-                        filesetUuid: select_fileset_uuid,
-                        fileUuids: Some(vec![file_uuid.clone()]),
-                    };
-                    let res = make_query(ComModFilesetFiles::build_query(
-                        com_mod_fileset_files::Variables { ipt_file_of_fileset_arg }
-                    )).await.unwrap();
-                    link.send_message(Msg::GetDownloadFileResult(res, file_uuid));
-                })
+                if file_uuid.len() == 36 {
+                    let select_fileset_uuid = self.props.select_fileset_uuid.clone();
+                    spawn_local(async move {
+                        let ipt_file_of_fileset_arg = com_mod_fileset_files::IptFileOfFilesetArg{
+                            filesetUuid: select_fileset_uuid,
+                            fileUuids: Some(vec![file_uuid.clone()]),
+                        };
+                        let res = make_query(ComModFilesetFiles::build_query(
+                            com_mod_fileset_files::Variables { ipt_file_of_fileset_arg }
+                        )).await.unwrap();
+                        link.send_message(Msg::GetDownloadFileResult(res, file_uuid));
+                    })
+                }
             },
             Msg::RequestDeleteFile(file_uuid) => {
                 let select_fileset_uuid = self.props.select_fileset_uuid.clone();

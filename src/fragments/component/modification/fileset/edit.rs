@@ -13,7 +13,6 @@ use crate::types::{UUID, ShowFileInfo, Program, UploadFile};
 use crate::gqls::make_query;
 use crate::gqls::relate::{GetPrograms, get_programs};
 use crate::gqls::component::{
-    ComModFilesOfFileset, com_mod_files_of_fileset,
     RegisterModificationFileset, register_modification_fileset,
     DeleteModificationFileset, delete_modification_fileset,
     UploadFilesToFileset, upload_files_to_fileset,
@@ -45,13 +44,11 @@ pub enum Msg {
     RequestProgramsList,
     RequestNewFileset,
     RequestDeleteFileset,
-    RequestFilesOfFileset,
     RequestUploadFilesOfFileset(Vec<FileName>),
     ResponseError(Error),
     GetProgramsListResult(String),
     GetNewFilesetResult(String),
     GetDeleteFilesetResult(String),
-    GetFilesOfFilesetResult(String),
     GetUploadData(String),
     UploadConfirm(usize),
     FinishUploadFiles,
@@ -93,7 +90,7 @@ impl Component for ManageModificationFilesets {
 
     fn rendered(&mut self, first_render: bool) {
         if first_render {
-            self.link.send_message(Msg::RequestFilesOfFileset);
+            // self.link.send_message(Msg::RequestFilesOfFileset);
         }
     }
 
@@ -137,21 +134,6 @@ impl Component for ManageModificationFilesets {
                     })
                 } else {
                     self.get_confirm = self.select_fileset_uuid.clone();
-                }
-            },
-            Msg::RequestFilesOfFileset => {
-                if self.select_fileset_uuid.len() == 36 {
-                    let ipt_file_of_fileset_arg = com_mod_files_of_fileset::IptFileOfFilesetArg{
-                        filesetUuid: self.select_fileset_uuid.clone(),
-                        fileUuids: None,
-                    };
-                    spawn_local(async move {
-                        let res = make_query(ComModFilesOfFileset::build_query(com_mod_files_of_fileset::Variables {
-                            ipt_file_of_fileset_arg
-                        })).await.unwrap();
-
-                        link.send_message(Msg::GetFilesOfFilesetResult(res));
-                    })
                 }
             },
             Msg::RequestUploadFilesOfFileset(filenames) => {
@@ -241,16 +223,7 @@ impl Component for ManageModificationFilesets {
                                 .unwrap_or_default();
                         }
                         self.filesets_program = update_filesets;
-                        self.link.send_message(Msg::RequestFilesOfFileset);
-                    },
-                    Err(err) => link.send_message(Msg::ResponseError(err)),
-                }
-            },
-            Msg::GetFilesOfFilesetResult(res) => {
-                match resp_parsing(res, "componentModificationFilesOfFileset") {
-                    Ok(result) => {
-                        self.files_list = result;
-                        debug!("componentModificationFilesOfFileset: {:?}", self.files_list.len());
+                        // self.link.send_message(Msg::RequestFilesOfFileset);
                     },
                     Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
@@ -271,14 +244,14 @@ impl Component for ManageModificationFilesets {
             Msg::FinishUploadFiles => {
                 self.request_upload_data.clear();
                 self.files_list.clear();
-                link.send_message(Msg::RequestFilesOfFileset);
+                // link.send_message(Msg::RequestFilesOfFileset);
             },
             Msg::SelectFileset(fileset_uuid) => {
                 debug!("SelectFileset: {:?}", fileset_uuid);
                 self.select_fileset_uuid = fileset_uuid;
                 self.files_list.clear();
                 self.get_confirm.clear(); // clear the check flag
-                self.link.send_message(Msg::RequestFilesOfFileset);
+                // self.link.send_message(Msg::RequestFilesOfFileset);
             },
             Msg::UpdateSelectProgramId(program_id) =>
                 self.request_fileset_program_id = program_id,
@@ -312,7 +285,7 @@ impl Component for ManageModificationFilesets {
                 .unwrap_or_default();
 
             self.files_list.clear();
-            self.link.send_message(Msg::RequestFilesOfFileset);
+            // self.link.send_message(Msg::RequestFilesOfFileset);
 
             self.props = props;
             true
@@ -346,7 +319,7 @@ impl ManageModificationFilesets {
             <div class="column">
                 <div class="select is-fullwidth" style="margin-right: .5rem">
                   <select
-                        id="select-fileset-program"
+                        id="select-fileset-program-edit"
                         select={self.select_fileset_uuid.clone()}
                         onchange={onchange_select_fileset_btn} >
                       {for self.filesets_program.iter().map(|(fileset_uuid, program_name)|
@@ -437,10 +410,10 @@ impl ManageModificationFilesets {
     fn show_fileset_files(&self) -> Html {
         html!{
             <FilesetFilesBlock
-                show_download_btn={false}
+                // show_download_btn={false}
                 show_delete_btn={true}
                 select_fileset_uuid={self.select_fileset_uuid.clone()}
-                files={self.files_list.clone()}
+                // files={self.files_list.clone()}
             />
         }
     }

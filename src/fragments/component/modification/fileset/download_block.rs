@@ -6,7 +6,7 @@ use wasm_bindgen_futures::spawn_local;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::file::{FileHeadersShow, FileDownItemShow};
-use crate::types::{UUID, DownloadFile};
+use crate::types::{UUID, DownloadFile, FilesetProgramInfo};
 use crate::services::{get_value_field, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::component::{ComModFilesetFiles, com_mod_fileset_files};
@@ -14,9 +14,9 @@ use crate::gqls::component::{ComModFilesetFiles, com_mod_fileset_files};
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
     pub select_modification_uuid: UUID,
-    pub current_filesets_program: Vec<(UUID, String)>,
+    pub current_filesets_program: Vec<FilesetProgramInfo>,
     pub callback_select_fileset_uuid: Callback<UUID>,
-    pub callback_open_fileset_uuid: Callback<bool>,
+    pub callback_open_fileset: Callback<bool>,
 }
 
 pub struct ManageFilesOfFilesetBlock {
@@ -47,20 +47,11 @@ impl Component for ManageFilesOfFilesetBlock {
     type Properties = Props;
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        let select_fileset_uuid = props.current_filesets_program
-            .first()
-            .map(|(fileset_uuid, program_name)| {
-                debug!("create block mod fileset_uuid: {:?}", fileset_uuid);
-                debug!("create block mod program_name: {:?}", program_name);
-                fileset_uuid.clone()
-            })
-            .unwrap_or_default();
-
         Self {
             error: None,
             props,
             link,
-            select_fileset_uuid,
+            select_fileset_uuid: String::new(),
             open_fileset_files_card: false,
             open_modal_download_files: false,
             file_arr: Vec::new(),
@@ -107,10 +98,10 @@ impl Component for ManageFilesOfFilesetBlock {
             Msg::ParseFirstFilesetUuid => {
                 self.select_fileset_uuid = self.props.current_filesets_program
                     .first()
-                    .map(|(fileset_uuid, program_name)| {
-                        debug!("mod fileset_uuid: {:?}", fileset_uuid);
-                        debug!("mod program_name: {:?}", program_name);
-                        fileset_uuid.clone()
+                    .map(|fd| {
+                        debug!("mod fileset_uuid: {:?}", fd.uuid);
+                        debug!("mod program_name: {:?}", fd.program.name);
+                        fd.uuid.clone()
                     })
                     .unwrap_or_default();
                 self.props.callback_select_fileset_uuid.emit(self.select_fileset_uuid.clone());
@@ -124,7 +115,7 @@ impl Component for ManageFilesOfFilesetBlock {
             Msg::ShowModalDownloadFiles => self.open_modal_download_files = !self.open_modal_download_files,
             Msg::OpenFilesetFilesBlock => {
                 self.open_fileset_files_card = !self.open_fileset_files_card;
-                self.props.callback_open_fileset_uuid.emit(self.open_fileset_files_card);
+                self.props.callback_open_fileset.emit(self.open_fileset_files_card);
             },
             Msg::ClearError => self.error = None,
         }
@@ -132,7 +123,8 @@ impl Component for ManageFilesOfFilesetBlock {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.select_modification_uuid == props.select_modification_uuid {
+        if self.props.select_modification_uuid == props.select_modification_uuid &&
+            self.props.current_filesets_program.len() == props.current_filesets_program.len() {
             debug!("no change download block: {:?}", props.select_modification_uuid);
             false
         } else {
@@ -179,15 +171,15 @@ impl ManageFilesOfFilesetBlock {
         html!{<div style="margin-right: .5rem">
             <div class="select" style="margin-right: .5rem">
                 <select
-                id={"select-fileset-program"}
+                id={"select-fileset-program-download"}
                 select={self.select_fileset_uuid.clone()}
                 onchange={onchange_select_fileset_btn}
                 title={get_value_field(&207)}>
-                  {for self.props.current_filesets_program.iter().map(|(fileset_uuid, program_name)|
+                  {for self.props.current_filesets_program.iter().map(|fd|
                       html!{
-                          <option value={fileset_uuid.to_string()}
-                                selected={fileset_uuid == &self.select_fileset_uuid} >
-                              {program_name}
+                          <option value={fd.uuid.to_string()}
+                                selected={fd.uuid == self.select_fileset_uuid} >
+                              {fd.program.name.clone()}
                           </option>
                       }
                   )}
@@ -218,9 +210,9 @@ impl ManageFilesOfFilesetBlock {
             false => "modal",
         };
         let mut fileset_name = "";
-        for (fileset_uuid, program_name) in self.props.current_filesets_program.iter() {
-            if fileset_uuid == &self.select_fileset_uuid {
-                fileset_name = program_name;
+        for fd in self.props.current_filesets_program.iter() {
+            if fd.uuid == self.select_fileset_uuid {
+                fileset_name = &fd.program.name;
                 break;
             }
         }

@@ -11,7 +11,7 @@ pub use file::{ModificationFilesTableCard, ManageModificationFilesCard};
 pub use edit::ModificationsTableEdit;
 pub use heads::ModificationTableHeads;
 pub use item::ModificationTableItem;
-pub use fileset::{FilesOfFilesetCard, ManageFilesOfFilesetBlock};
+pub use fileset::{FilesOfFilesetCard, ModificationFilesetsCard};
 pub use item_module::ModificationTableItemModule;
 pub use table::ModificationsTable;
 pub use show::ModificationsTableCard;
