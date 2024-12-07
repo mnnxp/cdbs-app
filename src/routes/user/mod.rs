@@ -12,9 +12,9 @@ impl ContentDisplay for ShowUserShort {
     /// Returns a username and firstname with lastname in p tag
     fn to_display(&self) -> Html {
         html!{
-            <p title = {{format!("{} {}", self.firstname, self.lastname)}}>
+            <span title = {{format!("{} {}", self.firstname, self.lastname)}}>
                 {format!("@{}", self.username)}
-            </p>
+            </span>
         }
     }
 }
