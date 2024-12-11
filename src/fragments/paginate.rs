@@ -38,7 +38,6 @@ impl Component for Paginate {
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
         let page_set = PaginateSet::set(props.current_page, props.per_page);
-        let total_page = props.total_items.unwrap_or(1) / page_set.per_page;
         Self {
             link,
             props,
@@ -46,12 +45,13 @@ impl Component for Paginate {
             page_set,
             show_options: [3,5,10,20,30,40,50,75,100,500],
             is_manual_page: false,
-            total_page,
+            total_page: 0,
         }
     }
 
     fn rendered(&mut self, first_render: bool) {
         if first_render {
+            self.update_total_page();
             self.props.callback_change.emit(self.page_set.clone());
         }
     }
@@ -67,7 +67,7 @@ impl Component for Paginate {
                 if let Ok(per_page) = value.parse::<i64>() {
                     self.page_set.max_on_page(per_page)
                 }
-                self.total_page = self.props.total_items.unwrap_or(1) / self.page_set.per_page;
+                self.update_total_page();
             },
             Msg::SetPage => {
                 self.is_manual_page = !self.is_manual_page;
@@ -228,6 +228,22 @@ impl Paginate {
                     )}
                 </select>
             </div>
+        }
+    }
+
+    fn update_total_page(&mut self) {
+        debug!("Update total page: {:?}, {}", self.props.total_items, self.page_set.per_page);
+        // is set to 1 if there are fewer items than shown on page 1 or they are not specified
+        self.total_page = match self.props.total_items {
+            Some(ti) if ti > self.page_set.per_page => {
+                debug!("Update total page %={:?}", ti%self.page_set.per_page);
+                if ti%self.page_set.per_page > 0 {
+                    ti/self.page_set.per_page+1
+                } else {
+                    ti/self.page_set.per_page
+                }
+            },
+            _ => 1,
         }
     }
 }
