@@ -121,7 +121,7 @@ lazy_static! {
             (115, "Back"),
             (116, "Managing master data of the component"),
             (117, "Add"),
-            (118, "User uploaded: "),
+            (118, "Created by user"),
             (119, "Files of the selected modification"),
             (120, "Filename"),
             (121, "Content"),

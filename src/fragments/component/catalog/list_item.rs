@@ -160,23 +160,25 @@ impl ListItem {
               <div class="imgBox" onclick={onclick_open_component.clone()}>
                 <img src={self.props.data.image_file.download_url.clone()} alt="Image" />
               </div>
-              <div>
+              <div onclick={onclick_open_component.clone()}>
                 {self.show_owner()}
               </div>
-              <div class="overflow-title has-text-weight-bold is-size-4" >{self.props.data.name.clone()}</div>
-                <div class="btnBox">
-                  <button class="button is-light is-fullwidth has-text-weight-bold"
-                        onclick={onclick_open_component} >
-                    {get_value_field(&161)}
-                  </button>
-                  <div style="margin-left: 8px;">
-                    {ft_follow_btn(
-                        trigger_fav_btn,
-                        self.props.data.is_followed,
-                        String::new(),
-                    )}
-                  </div>
+              <div class="overflow-title has-text-weight-bold is-size-4" onclick={onclick_open_component.clone()}>
+                {self.props.data.name.clone()}
+              </div>
+              <div class="btnBox">
+                <button class="button is-light is-fullwidth has-text-weight-bold"
+                      onclick={onclick_open_component} >
+                  {get_value_field(&161)}
+                </button>
+                <div style="margin-left: 8px;">
+                  {ft_follow_btn(
+                      trigger_fav_btn,
+                      self.props.data.is_followed,
+                      String::new(),
+                  )}
                 </div>
+              </div>
             </div>
           </div>
         }
