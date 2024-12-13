@@ -157,14 +157,14 @@ impl ListItem {
         html!{
           <div class="boxItem" >
             <div class="innerBox" >
-              <div class="imgBox" onclick={onclick_open_component.clone()}>
-                <img src={self.props.data.image_file.download_url.clone()} alt="Image" />
-              </div>
               <div onclick={onclick_open_component.clone()}>
-                {self.show_owner()}
-              </div>
-              <div class="overflow-title has-text-weight-bold is-size-4" onclick={onclick_open_component.clone()}>
-                {self.props.data.name.clone()}
+                <div class="imgBox">
+                  <img src={self.props.data.image_file.download_url.clone()} alt="Image" />
+                </div>
+                <p>{self.show_owner()}</p>
+                <p class="overflow-title has-text-weight-bold is-size-4">
+                  {self.props.data.name.clone()}
+                </p>
               </div>
               <div class="btnBox">
                 <button class="button is-light is-fullwidth has-text-weight-bold"
