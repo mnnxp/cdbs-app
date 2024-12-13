@@ -119,18 +119,23 @@ impl Component for FilesOfFilesetCard {
                         <p class="card-header-title">{get_value_field(&106)}</p> // Files of select fileset
                     </header>
                     <div class="card-content">
-                        <div class="content">
-                            <table class="table is-fullwidth is-striped">
-                                <FileHeadersShow show_long={true} />
-                                <tbody>
-                                    {for self.files_list.iter().map(|file| html!{
-                                        <FileInfoItemShow
-                                            file_info={file.clone()}
-                                            download_url={String::new()}
-                                            />
-                                    })}
-                                </tbody>
-                            </table>
+                        <div class="table-container">
+                            <div class="content">
+                                <table class="table is-fullwidth is-striped">
+                                    <FileHeadersShow
+                                        show_long={true}
+                                        show_download_btn={self.props.show_download_btn}
+                                        />
+                                    <tbody>
+                                        {for self.files_list.iter().map(|file| html!{
+                                            <FileInfoItemShow
+                                                file_info={file.clone()}
+                                                show_download_btn={self.props.show_download_btn}
+                                                />
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>

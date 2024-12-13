@@ -5,9 +5,10 @@ use wasm_bindgen_futures::spawn_local;
 
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
-use crate::fragments::file::{FileHeadersShow, FileDownItemShow};
+use crate::fragments::file::FileHeadersShow;
+use crate::fragments::buttons::ft_download_btn;
 use crate::types::{UUID, DownloadFile, FilesetProgramInfo};
-use crate::services::{get_value_field, resp_parsing};
+use crate::services::{Size, get_value_field, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::component::{ComModFilesetFiles, com_mod_fileset_files};
 
@@ -234,9 +235,7 @@ impl ManageFilesOfFilesetBlock {
                         <table class="table is-fullwidth is-striped">
                           <FileHeadersShow show_long={false} />
                           <tbody>
-                            {for self.file_arr.iter().map(|file| html!{
-                              <FileDownItemShow file_down={file.clone()} />
-                            })}
+                            {for self.file_arr.iter().map(|file| self.show_item_data(&file))}
                           </tbody>
                         </table>
                       </div>
@@ -245,5 +244,15 @@ impl ManageFilesOfFilesetBlock {
               </div>
           </div>
         </div>}
+    }
+
+    fn show_item_data(&self, file_down: &DownloadFile) -> Html {
+      html!{
+        <tr>
+          <td>{file_down.filename.clone()}</td>
+          <td>{file_down.show_size()}</td>
+          <td>{ft_download_btn(file_down.download_url.clone(), false)}</td>
+        </tr>
+      }
     }
 }

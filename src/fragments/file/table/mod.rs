@@ -1,5 +1,4 @@
 pub mod item_showcase;
-pub mod down_item_show;
 
 use yew::{html, Component, ComponentLink, Html, Properties, ShouldRender};
 

@@ -1,10 +1,8 @@
 mod edit;
 mod list_item;
-mod table_item;
 
 pub use edit::ManageModificationFilesCard;
 pub use list_item::ModificationFileItem;
-pub use table_item::ModificationFileListItem;
 
 use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
 use log::debug;
@@ -13,7 +11,7 @@ use wasm_bindgen_futures::spawn_local;
 
 use crate::error::Error;
 use crate::fragments::paginate::Paginate;
-use crate::fragments::file::FileHeadersShow;
+use crate::fragments::file::{FileHeadersShow, FileInfoItemShow};
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, ShowFileInfo, PaginateSet};
 use crate::services::resp_parsing;
@@ -24,6 +22,7 @@ use crate::gqls::component::{ComponentModificationFilesList, component_modificat
 pub struct Props {
     pub show_download_btn: bool,
     pub modification_uuid: UUID,
+    pub files_count: i64,
 }
 
 pub struct ModificationFilesTableCard {
@@ -62,7 +61,6 @@ impl Component for ModificationFilesTableCard {
     fn rendered(&mut self, first_render: bool) {
         if first_render && self.props.modification_uuid.len() == 36 {
             debug!("First render modification files list");
-            // self.clear_current_data();
             self.link.send_message(Msg::RequestModificationFilesList);
         }
     }
@@ -115,12 +113,10 @@ impl Component for ModificationFilesTableCard {
         } else {
             debug!("update modification files {:?}", props.modification_uuid);
             self.props = props;
-
             self.files_list.clear();
             if self.props.modification_uuid.len() == 36 {
                 self.link.send_message(Msg::RequestModificationFilesList);
             }
-
             true
         }
     }
@@ -132,22 +128,27 @@ impl Component for ModificationFilesTableCard {
         html!{
             <div class="content">
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
-                <table class="table is-fullwidth is-striped">
-                    <FileHeadersShow
-                        show_long={true}
-                        show_download_btn={self.props.show_download_btn}
-                        />
-                    <tbody>
-                        {for self.files_list.iter().map(|file| html!{
-                            <ModificationFileListItem
-                                modification_uuid={self.props.modification_uuid.clone()}
-                                show_download_tag={self.props.show_download_btn}
-                                file={file.clone()}
+                <div class="table-container">
+                    <table class="table is-fullwidth is-striped">
+                        <FileHeadersShow
+                            show_long={true}
+                            show_download_btn={self.props.show_download_btn}
                             />
-                        })}
-                    </tbody>
-                </table>
-                <Paginate callback_change={onclick_paginate} current_items={self.current_items} />
+                        <tbody>
+                            {for self.files_list.iter().map(|file| html!{
+                                <FileInfoItemShow
+                                    file_info={file.clone()}
+                                    show_download_btn={self.props.show_download_btn}
+                                    />
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+                <Paginate
+                    callback_change={onclick_paginate}
+                    current_items={self.current_items}
+                    total_items={Some(self.props.files_count)}
+                    />
             </div>
         }
     }

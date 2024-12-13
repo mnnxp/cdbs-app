@@ -16,7 +16,7 @@ use crate::gqls::component::{ComModFilesOfFileset, com_mod_files_of_fileset};
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
-    // pub show_download_btn: bool,
+    pub upload_files: usize,
     pub show_delete_btn: bool,
     pub select_fileset_uuid: UUID,
 }
@@ -64,6 +64,7 @@ impl Component for FilesetFilesBlock {
         let link = self.link.clone();
         match msg {
             Msg::RequestFilesOfFileset => {
+                self.files.clear();
                 if self.props.select_fileset_uuid.len() == 36 {
                     let ipt_file_of_fileset_arg = com_mod_files_of_fileset::IptFileOfFilesetArg{
                         filesetUuid: self.props.select_fileset_uuid.clone(),
@@ -89,15 +90,15 @@ impl Component for FilesetFilesBlock {
                 }
             },
             Msg::ShowFullList => self.show_full_files = !self.show_full_files,
-            Msg::RemoveFile(file_uuid) => {
-                self.files_deleted_list.insert(file_uuid);
-            },
+            Msg::RemoveFile(file_uuid) => {self.files_deleted_list.insert(file_uuid);},
         }
         true
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.select_fileset_uuid == props.select_fileset_uuid {
+        if self.props.select_fileset_uuid == props.select_fileset_uuid &&
+        self.props.upload_files == props.upload_files &&
+        self.props.show_delete_btn == props.show_delete_btn {
             debug!("no change fileset uuid: {:?}", props.select_fileset_uuid);
             false
         } else {
@@ -146,7 +147,6 @@ impl FilesetFilesBlock {
             Some(_) => html!{}, // removed file
             None => html!{
                 <FilesetFileItem
-                //   show_download_btn={self.props.show_download_btn}
                   show_delete_btn={self.props.show_delete_btn}
                   select_fileset_uuid={self.props.select_fileset_uuid.clone()}
                   file={file_info.clone()}

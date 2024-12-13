@@ -1126,6 +1126,8 @@ type ShowFileRelatedData {
   contentType: String!
   filesize: Int!
   program: Program!
+  hash: String!
+  downloadUrl: String!
   createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!
 }

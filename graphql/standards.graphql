@@ -249,6 +249,8 @@ fragment showFileRelatedDataFields on ShowFileRelatedData {
     id
     name
   }
+  hash
+  downloadUrl
   createdAt
   updatedAt
 }

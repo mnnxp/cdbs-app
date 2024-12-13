@@ -81,6 +81,8 @@ fragment showFileRelatedDataFields on ShowFileRelatedData {
   program {
     ...programFields
   }
+  hash
+  downloadUrl
   createdAt
   updatedAt
 }

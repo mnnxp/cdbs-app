@@ -18,7 +18,6 @@ use crate::gqls::relate::{
 
 pub struct FileShowcase {
   error: Option<Error>,
-  download_url: String,
   props: Props,
   link: ComponentLink<Self>,
   file_arr: Vec<ShowFileInfo>,
@@ -31,11 +30,9 @@ pub struct FileShowcase {
 pub struct Props {
   pub file_info: ShowFileInfo,
   pub file_info_callback: Callback<()>,
-  pub file_download_callback: Option<Callback<UUID>>,
   pub file_delete_callback: Option<Callback<UUID>>,
   pub open_modal_frame: bool,
   pub show_revisions: bool,
-  pub download_url: String,
 }
 
 #[derive(Clone)]
@@ -45,7 +42,6 @@ pub enum Msg {
   SetActiveRev(UUID),
   GetActiveRevResult(String, String),
   ClickFileInfo,
-  ClickDownloadFile,
   ClickDeleteFile(UUID),
   ResponseError(Error),
   ClearError,
@@ -60,7 +56,6 @@ impl Component for FileShowcase {
       let active_revision = props.file_info.uuid.clone();
       FileShowcase {
         error: None,
-        download_url: props.download_url.clone(),
         props,
         link,
         file_arr: Vec::new(),
@@ -79,10 +74,6 @@ impl Component for FileShowcase {
           self.active_revision = self.props.file_info.uuid.clone();
           self.files_deleted_list.clear();
           self.link.send_message(Msg::RequestRevisionsFile(self.active_revision.clone()));
-        }
-
-        if self.download_url.is_empty() {
-          self.link.send_message(Msg::ClickDownloadFile);
         }
       }
     }
@@ -122,7 +113,6 @@ impl Component for FileShowcase {
               debug!("changeActiveFileRevision {:?}: {:?}", file_uuid, res);
               if res {
                 self.active_revision = file_uuid;
-                self.link.send_message(Msg::ClickDownloadFile);
               }
             },
             Err(err) => link.send_message(Msg::ResponseError(err)),
@@ -132,12 +122,6 @@ impl Component for FileShowcase {
           self.props.open_modal_frame = !self.props.open_modal_frame;
           self.props.file_info_callback.emit(());
           self.get_confirm.clear();
-        },
-        Msg::ClickDownloadFile => {
-          if let Some(fd_callback) = &self.props.file_download_callback {
-            fd_callback.emit(self.active_revision.clone());
-            // self.download_url.clear()
-          }
         },
         Msg::ClickDeleteFile(file_uuid) => {
           if self.get_confirm == file_uuid {
@@ -160,10 +144,6 @@ impl Component for FileShowcase {
       if self.props.open_modal_frame == props.open_modal_frame &&
           self.props.show_revisions == props.show_revisions {
         debug!("show revisions: {:?}", self.props.show_revisions);
-        if &self.download_url != &props.download_url {
-          self.download_url = props.download_url.clone();
-          return true
-        }
         false
       } else {
         self.props = props;
@@ -259,7 +239,7 @@ impl FileShowcase {
           },
           false => html!{
             <div class="buttons">
-              {ft_download_btn(self.download_url.clone(), true)}
+              {ft_download_btn(self.props.file_info.download_url.clone(), true)}
               {self.show_delete_btn(file_info.uuid.clone())}
             </div>
           },
@@ -274,11 +254,11 @@ impl FileShowcase {
       {match &self.props.file_delete_callback.is_some() {
         true => html!{
           <div class="buttons">
-            {ft_download_full_btn(self.download_url.clone())}
+            {ft_download_full_btn(self.props.file_info.download_url.clone())}
             {self.show_delete_full_btn(file_uuid)}
           </div>
         },
-        false => {ft_download_full_btn(self.download_url.clone())},
+        false => {ft_download_full_btn(self.props.file_info.download_url.clone())},
       }}
     </>}
   }

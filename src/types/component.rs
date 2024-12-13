@@ -26,7 +26,6 @@ pub struct ComponentInfo {
   pub files: Vec<ShowFileInfo>,
   pub component_specs: Vec<Spec>,
   pub component_keywords: Vec<Keyword>,
-//   pub component_modifications: Vec<ComponentModificationInfo>,
   pub component_suppliers: Vec<Supplier>,
   pub component_standards: Vec<ShowStandardShort>,
   pub params_count: i64,
@@ -173,8 +172,8 @@ pub struct ComponentModificationInfo{
   pub description: String,
   pub actual_status: ActualStatus,
   pub updated_at: NaiveDateTime,
-  pub filesets_for_program: Vec<FilesetProgramInfo>,
   pub modification_params: Vec<ModificationParam>,
+  pub files_count: i64,
 }
 
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]

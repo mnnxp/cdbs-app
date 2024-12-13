@@ -59,6 +59,7 @@ impl Component for ModificationFilesetsCard {
 
         match msg {
             Msg::RequestComponentModificationFilesetsData => {
+                self.filesets_program.clear(); // fix for bug with displaying old files
                 if self.props.modification_uuid.len() == 36 {
                     let ipt_fileset_program_arg = component_modification_filesets::IptFilesetProgramArg{
                         modificationUuid: self.props.modification_uuid.clone(),

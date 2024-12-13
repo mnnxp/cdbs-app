@@ -12,24 +12,19 @@ use crate::error::Error;
 use crate::fragments::buttons::{ft_delete_btn, ft_save_btn, ft_add_btn};
 use crate::fragments::list_errors::ListErrors;
 use crate::services::{get_value_field, resp_parsing};
-use crate::types::{
-    UUID, ComponentModificationInfo, Param, ActualStatus,
-    ModificationUpdatePreData, FilesetProgramInfo,
-};
+use crate::types::{UUID, ComponentModificationInfo, Param, ActualStatus, ModificationUpdatePreData};
 use crate::gqls::make_query;
 use crate::gqls::component::{
     RegisterComponentModification, register_component_modification,
     PutComponentModificationUpdate, put_component_modification_update,
     DeleteComponentModification, delete_component_modification,
     GetComponentModifications, get_component_modifications,
-    ComponentModificationFilesets, component_modification_filesets,
     ComponentActualStatuses, component_actual_statuses,
 };
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
     pub current_component_uuid: UUID,
-    pub component_modifications: Vec<ComponentModificationInfo>,
 }
 
 pub struct ModificationsTableEdit {
@@ -39,7 +34,6 @@ pub struct ModificationsTableEdit {
     component_uuid: UUID,
     current_modifications: Vec<ComponentModificationInfo>,
     select_modification_uuid: UUID,
-    modification_filesets: HashMap<UUID, Vec<(UUID, String)>>,
     actual_statuses: Vec<ActualStatus>,
     collect_heads: Vec<Param>,
     collect_items: Vec<(UUID, HashMap<usize, String>)>,
@@ -57,18 +51,15 @@ pub struct ModificationsTableEdit {
 
 pub enum Msg {
     ParseParams,
-    ParseFilesets,
     RequestAddModificationData,
     RequestUpdateModificationData,
     RequestDeleteModificationData,
     RequestComponentModificationsData,
-    RequestComponentModificationFilesetsData,
     RequestListOptData,
     GetAddModificationResult(String),
     GetUpdateModificationResult(String),
     GetDeleteModificationResult(String),
     GetComponentModificationsResult(String),
-    GetComponentModificationFilesetResult(String),
     GetListOptResult(String),
     ResponseError(Error),
     UpdateAddName(String),
@@ -91,32 +82,13 @@ impl Component for ModificationsTableEdit {
     type Properties = Props;
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        let component_uuid = props.current_component_uuid.clone();
-        let current_modifications = props.component_modifications.clone();
-        let select_modification_uuid = props.component_modifications
-            .first()
-            .map(|m| m.uuid.clone())
-            .unwrap_or_default();
-        let mut modification_filesets: HashMap<UUID, Vec<(UUID, String)>> = HashMap::new();
-        for component_modification in &props.component_modifications {
-            let mut fileset_data: Vec<(UUID, String)> = Vec::new();
-            for fileset in &component_modification.filesets_for_program {
-                fileset_data.push((fileset.uuid.clone(), fileset.program.name.clone()));
-            }
-            modification_filesets.insert(
-                component_modification.uuid.clone(),
-                fileset_data.clone()
-            );
-        }
-
         Self {
             error: None,
             props,
             link,
-            component_uuid,
-            current_modifications,
-            select_modification_uuid,
-            modification_filesets,
+            component_uuid: String::new(),
+            current_modifications: Vec::new(),
+            select_modification_uuid: String::new(),
             actual_statuses: Vec::new(),
             collect_heads: Vec::new(),
             collect_items: Vec::new(),
@@ -134,12 +106,9 @@ impl Component for ModificationsTableEdit {
     }
 
     fn rendered(&mut self, first_render: bool) {
-        if first_render || self.component_uuid != self.props.current_component_uuid {
+        if first_render {
             self.component_uuid = self.props.current_component_uuid.clone();
-            debug!("Clear modification data");
-            self.clear_current_data();
-            self.link.send_message(Msg::ParseParams);
-            self.link.send_message(Msg::ParseFilesets);
+            self.link.send_message(Msg::RequestComponentModificationsData);
         }
     }
 
@@ -184,20 +153,6 @@ impl Component for ModificationsTableEdit {
                 debug!("collect_heads: {:?}", collect_heads);
                 self.collect_heads = collect_heads;
                 self.finish_parsing_heads = true;
-            },
-            Msg::ParseFilesets => {
-                let mut modification_filesets: HashMap<UUID, Vec<(UUID, String)>> = HashMap::new();
-                for component_modification in &self.current_modifications {
-                    let mut fileset_data: Vec<(UUID, String)> = Vec::new();
-                    for fileset in &component_modification.filesets_for_program {
-                        fileset_data.push((fileset.uuid.clone(), fileset.program.name.clone()));
-                    }
-                    modification_filesets.insert(
-                        component_modification.uuid.clone(),
-                        fileset_data.clone()
-                    );
-                }
-                self.modification_filesets = modification_filesets;
             },
             Msg::RequestAddModificationData => {
                 let ipt_component_modification_data = register_component_modification::IptComponentModificationData{
@@ -273,20 +228,6 @@ impl Component for ModificationsTableEdit {
                     link.send_message(Msg::GetComponentModificationsResult(res));
                 })
             },
-            Msg::RequestComponentModificationFilesetsData => {
-                let ipt_fileset_program_arg = component_modification_filesets::IptFilesetProgramArg{
-                    modificationUuid: self.select_modification_uuid.clone(),
-                    programIds: None,
-                };
-
-                spawn_local(async move {
-                    let res = make_query(ComponentModificationFilesets::build_query(
-                        component_modification_filesets::Variables { ipt_fileset_program_arg }
-                    )).await.unwrap();
-
-                    link.send_message(Msg::GetComponentModificationFilesetResult(res));
-                })
-            },
             Msg::RequestListOptData => {
                 spawn_local(async move {
                     let res = make_query(ComponentActualStatuses::build_query(
@@ -323,7 +264,7 @@ impl Component for ModificationsTableEdit {
                     Ok(result) => {
                         debug!("deleteComponentModification: {:?}", result);
                         self.valid_modification_uuids.remove(&result);
-                        self.select_modification_uuid = String::new();
+                        self.select_modification_uuid.clear();
                     },
                     Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
@@ -335,26 +276,11 @@ impl Component for ModificationsTableEdit {
                         self.clear_current_data();
                         self.current_modifications = result;
                         debug!("Update modifications list");
+                        self.select_modification_uuid = self.current_modifications
+                            .first()
+                            .map(|m| m.uuid.clone())
+                            .unwrap_or_default();
                         link.send_message(Msg::ParseParams);
-                        link.send_message(Msg::ParseFilesets);
-                    },
-                    Err(err) => link.send_message(Msg::ResponseError(err)),
-                }
-            },
-            Msg::GetComponentModificationFilesetResult(res) => {
-                match resp_parsing::<Vec<FilesetProgramInfo>>(res, "componentModificationFilesets") {
-                    Ok(filesets) => {
-                        debug!("Update modification filesets list");
-                        let component_modification_uuid = filesets.first().map(|x| x.modification_uuid.clone()).unwrap_or_default();
-                        let mut fileset_data: Vec<(UUID, String)> = Vec::new();
-                        for fileset in &filesets {
-                            fileset_data.push((fileset.uuid.clone(), fileset.program.name.clone()));
-                        }
-                        self.modification_filesets.remove(&component_modification_uuid);
-                        self.modification_filesets.insert(
-                            component_modification_uuid,
-                            fileset_data.clone()
-                        );
                     },
                     Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
@@ -415,10 +341,7 @@ impl Component for ModificationsTableEdit {
             Msg::ChangeSelectModification(modification_uuid) => {
                 match self.select_modification_uuid == modification_uuid {
                     true => link.send_message(Msg::ShowEditModificationCard),
-                    false => {
-                        self.select_modification_uuid = modification_uuid;
-                        link.send_message(Msg::RequestComponentModificationFilesetsData);
-                    },
+                    false => self.select_modification_uuid = modification_uuid,
                 }
             },
             Msg::UpdateSelectModification => {
@@ -459,11 +382,8 @@ impl Component for ModificationsTableEdit {
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
         if self.props.current_component_uuid == props.current_component_uuid {
-            debug!("not update modifications {:?}", props.component_modifications.len());
             false
         } else {
-            debug!("update modifications {:?}", props.component_modifications.len());
-            self.current_modifications = props.component_modifications.clone();
             self.props = props;
             true
         }
@@ -516,7 +436,6 @@ impl ModificationsTableEdit {
                                         collect_heads={self.collect_heads.clone()}
                                         collect_item={item.clone()}
                                         select_item={&self.select_modification_uuid == modification_uuid}
-                                        // open_modification_files={false}
                                         callback_new_modification_param={Some(onclick_new_modification_param.clone())}
                                         callback_select_modification={Some(onclick_select_modification.clone())}
                                     />},
@@ -739,7 +658,6 @@ impl ModificationsTableEdit {
     }
 
     fn clear_current_data(&mut self) {
-        self.modification_filesets = HashMap::new();
         self.collect_heads.clear();
         self.collect_items.clear();
         self.collect_columns.clear();
@@ -759,13 +677,7 @@ impl ModificationsTableEdit {
                 </header>
                 <div class="card-content">
                     <div class="content">
-                        <ManageModificationFilesets
-                            select_modification_uuid={self.select_modification_uuid.clone()}
-                            filesets_program = {self.modification_filesets
-                                .get(&self.select_modification_uuid)
-                                .map(|f| f.clone())
-                                .unwrap_or_default()}
-                        />
+                        <ManageModificationFilesets select_modification_uuid={self.select_modification_uuid.clone()} />
                     </div>
                 </div>
             </div>

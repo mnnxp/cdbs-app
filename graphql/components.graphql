@@ -412,6 +412,8 @@ fragment showFileRelatedDataFields on ShowFileRelatedData {
   program {
     ...programFields
   }
+  hash
+  downloadUrl
   createdAt
   updatedAt
 }
@@ -449,10 +451,10 @@ fragment componentModificationFields on ComponentModificationAndRelatedData {
   }
   createdAt
   updatedAt
-  # filesCount
-  filesetsForProgram {
-    ...filesetProgramRelatedDataFields
-  }
+  filesCount
+  # filesetsForProgram {
+  #   ...filesetProgramRelatedDataFields
+  # }
   # filesetsCount
   modificationParams {
     ...modificationParamFields

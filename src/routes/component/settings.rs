@@ -441,10 +441,7 @@ impl Component for ComponentSettings {
                         {match &self.current_component {
                             Some(component_data) => html!{<>
                                 <br/>
-                                <ModificationsTableEdit
-                                    current_component_uuid={self.current_component_uuid.clone()}
-                                    component_modifications={self.current_modifications.clone()}
-                                    />
+                                <ModificationsTableEdit current_component_uuid={self.current_component_uuid.clone()} />
                                 <br/>
                                 <div class="columns">
                                     {self.update_component_favicon()}

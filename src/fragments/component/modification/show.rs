@@ -238,6 +238,7 @@ impl ModificationsTableCard {
                     <ModificationFilesTableCard
                         show_download_btn={true}
                         modification_uuid={self.select_modification_uuid.clone()}
+                        files_count={mod_data.files_count}
                     />
                 </div>
             },

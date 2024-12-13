@@ -9,10 +9,11 @@ use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::buttons::{ft_delete_btn, ft_cancel_btn, ft_save_btn, ft_add_btn};
 use crate::fragments::file::UploaderFiles;
-use crate::types::{UUID, ShowFileInfo, Program, UploadFile};
+use crate::types::{UUID, Program, UploadFile, FilesetProgramInfo};
 use crate::gqls::make_query;
 use crate::gqls::relate::{GetPrograms, get_programs};
 use crate::gqls::component::{
+    ComponentModificationFilesets, component_modification_filesets,
     RegisterModificationFileset, register_modification_fileset,
     DeleteModificationFileset, delete_modification_fileset,
     UploadFilesToFileset, upload_files_to_fileset,
@@ -23,7 +24,6 @@ type FileName = String;
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
     pub select_modification_uuid: UUID,
-    pub filesets_program: Vec<(UUID, String)>,
 }
 
 pub struct ManageModificationFilesets {
@@ -34,24 +34,25 @@ pub struct ManageModificationFilesets {
     link: ComponentLink<Self>,
     filesets_program: Vec<(UUID, String)>,
     select_fileset_uuid: UUID,
-    files_list: Vec<ShowFileInfo>,
+    upload_files: usize,
     programs: Vec<Program>,
     open_add_fileset_card: bool,
     get_confirm: UUID,
 }
 
 pub enum Msg {
+    RequestComponentModificationFilesetsData,
     RequestProgramsList,
     RequestNewFileset,
     RequestDeleteFileset,
     RequestUploadFilesOfFileset(Vec<FileName>),
     ResponseError(Error),
+    GetComponentModificationFilesetResult(String),
     GetProgramsListResult(String),
     GetNewFilesetResult(String),
     GetDeleteFilesetResult(String),
     GetUploadData(String),
     UploadConfirm(usize),
-    FinishUploadFiles,
     SelectFileset(UUID),
     UpdateSelectProgramId(usize),
     ShowAddFilesetCard,
@@ -63,25 +64,15 @@ impl Component for ManageModificationFilesets {
     type Properties = Props;
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        let filesets_program = props.filesets_program.clone();
-        let select_fileset_uuid = props.filesets_program
-            .first()
-            .map(|(fileset_uuid, program_name)| {
-                debug!("mod fileset_uuid: {:?}", fileset_uuid);
-                debug!("mod program_name: {:?}", program_name);
-                fileset_uuid.clone()
-            })
-            .unwrap_or_default();
-
         Self {
             error: None,
             request_upload_data: Vec::new(),
             request_fileset_program_id: 1,
             props,
             link,
-            filesets_program,
-            select_fileset_uuid,
-            files_list: Vec::new(),
+            filesets_program: Vec::new(),
+            select_fileset_uuid: String::new(),
+            upload_files: 0,
             programs: Vec::new(),
             open_add_fileset_card: false,
             get_confirm: String::new(),
@@ -90,7 +81,8 @@ impl Component for ManageModificationFilesets {
 
     fn rendered(&mut self, first_render: bool) {
         if first_render {
-            // self.link.send_message(Msg::RequestFilesOfFileset);
+            self.link.send_message(Msg::RequestComponentModificationFilesetsData);
+            self.link.send_message(Msg::RequestProgramsList);
         }
     }
 
@@ -98,6 +90,22 @@ impl Component for ManageModificationFilesets {
         let link = self.link.clone();
 
         match msg {
+            Msg::RequestComponentModificationFilesetsData => {
+                debug!("Request filesets for modification uuid: {:?}", self.props.select_modification_uuid);
+                self.filesets_program.clear(); // fix for bug with displaying old files
+                if self.props.select_modification_uuid.len() == 36 {
+                    let ipt_fileset_program_arg = component_modification_filesets::IptFilesetProgramArg{
+                        modificationUuid: self.props.select_modification_uuid.clone(),
+                        programIds: None,
+                    };
+                    spawn_local(async move {
+                        let res = make_query(ComponentModificationFilesets::build_query(
+                            component_modification_filesets::Variables { ipt_fileset_program_arg }
+                        )).await.unwrap();
+                        link.send_message(Msg::GetComponentModificationFilesetResult(res));
+                    })
+                }
+            },
             Msg::RequestProgramsList => {
                 spawn_local(async move {
                     let res = make_query(GetPrograms::build_query(
@@ -141,6 +149,7 @@ impl Component for ManageModificationFilesets {
                 if self.select_fileset_uuid.len() != 36 || filenames.is_empty() {
                     return false
                 }
+                self.upload_files = 0;
                 let fileset_uuid = self.select_fileset_uuid.clone();
                 spawn_local(async move {
                     let ipt_modification_file_from_fileset_data = upload_files_to_fileset::IptModificationFileFromFilesetData{
@@ -155,6 +164,23 @@ impl Component for ManageModificationFilesets {
                 })
             },
             Msg::ResponseError(err) => self.error = Some(err),
+            Msg::GetComponentModificationFilesetResult(res) => {
+                match resp_parsing::<Vec<FilesetProgramInfo>>(res, "componentModificationFilesets") {
+                    Ok(filesets) => {
+                        debug!("Update modification filesets list");
+                        for fileset in &filesets {
+                            self.filesets_program.push((fileset.uuid.clone(), fileset.program.name.clone()));
+                        }
+                        if let Some((ft_uuid, _)) = self.filesets_program.first() {
+                            self.select_fileset_uuid = match ft_uuid.len() == 36 {
+                                true => ft_uuid.clone(),
+                                false => String::new(),
+                            }
+                        }
+                    },
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
+                }
+            },
             Msg::GetProgramsListResult(res) => {
                 match resp_parsing::<Vec<Program>>(res, "programs") {
                     Ok(result) => {
@@ -178,8 +204,7 @@ impl Component for ManageModificationFilesets {
                     Ok(result) => {
                         self.select_fileset_uuid = result;
                         debug!("registerModificationFileset: {:?}", self.select_fileset_uuid);
-                        // clear shown files (new fileset always empty)
-                        self.files_list.clear();
+                        self.upload_files = 0;
                         if let Some(program) = self.programs.iter().find(|x| x.id == self.request_fileset_program_id) {
                             if let None = self.filesets_program.iter().find(|(_, p_name)| p_name == &program.name) {
                                 self.filesets_program.push((
@@ -239,25 +264,19 @@ impl Component for ManageModificationFilesets {
             },
             Msg::UploadConfirm(confirmations) => {
                 debug!("Confirmation upload of files: {:?}", confirmations);
-                link.send_message(Msg::FinishUploadFiles);
-            },
-            Msg::FinishUploadFiles => {
                 self.request_upload_data.clear();
-                self.files_list.clear();
-                // link.send_message(Msg::RequestFilesOfFileset);
+                self.upload_files = confirmations;
             },
             Msg::SelectFileset(fileset_uuid) => {
                 debug!("SelectFileset: {:?}", fileset_uuid);
                 self.select_fileset_uuid = fileset_uuid;
-                self.files_list.clear();
+                self.upload_files = 0;
                 self.get_confirm.clear(); // clear the check flag
-                // self.link.send_message(Msg::RequestFilesOfFileset);
             },
             Msg::UpdateSelectProgramId(program_id) =>
                 self.request_fileset_program_id = program_id,
             Msg::ShowAddFilesetCard => {
                 self.open_add_fileset_card = !self.open_add_fileset_card;
-
                 if self.programs.is_empty() {
                     link.send_message(Msg::RequestProgramsList);
                 }
@@ -268,26 +287,13 @@ impl Component for ManageModificationFilesets {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.select_modification_uuid == props.select_modification_uuid &&
-              self.props.filesets_program.len() == props.filesets_program.len() {
-            debug!("no change filesets: {:?}", props.filesets_program.len());
+        if self.props.select_modification_uuid == props.select_modification_uuid {
             false
         } else {
-            debug!("change filesets: {:?}", props.filesets_program.len());
-            self.filesets_program = props.filesets_program.clone();
-            self.select_fileset_uuid = props.filesets_program
-                .first()
-                .map(|(fileset_uuid, program_name)| {
-                    debug!("mod fileset_uuid: {:?}", fileset_uuid);
-                    debug!("mod program_name: {:?}", program_name);
-                    fileset_uuid.clone()
-                })
-                .unwrap_or_default();
-
-            self.files_list.clear();
-            // self.link.send_message(Msg::RequestFilesOfFileset);
-
             self.props = props;
+            self.upload_files = 0;
+            self.select_fileset_uuid.clear();
+            self.link.send_message(Msg::RequestComponentModificationFilesetsData);
             true
         }
     }
@@ -346,15 +352,18 @@ impl ManageModificationFilesets {
             true => None,
             false => Some(self.request_upload_data.clone()),
         };
-        let callback_upload_confirm =
-            self.link.callback(|confirmations| Msg::UploadConfirm(confirmations));
+        let callback_upload_confirm = self.link.callback(|confirmations| Msg::UploadConfirm(confirmations));
         let onclick_new_fileset_card = self.link.callback(|_| Msg::ShowAddFilesetCard);
 
         html!{<>
             <div class="columns">
                 <div class="column">
                     <h3>{get_value_field(&198)}</h3> // Files of fileset
-                    {self.show_fileset_files()}
+                    <FilesetFilesBlock
+                        upload_files={self.upload_files}
+                        show_delete_btn={true}
+                        select_fileset_uuid={self.select_fileset_uuid.clone()}
+                    />
                 </div>
                 <div class="column">
                     <h3>{get_value_field(&197)}</h3> // Upload files for fileset
@@ -404,17 +413,6 @@ impl ManageModificationFilesets {
                     )}
                 </div>
             </div>
-        }
-    }
-
-    fn show_fileset_files(&self) -> Html {
-        html!{
-            <FilesetFilesBlock
-                // show_download_btn={false}
-                show_delete_btn={true}
-                select_fileset_uuid={self.select_fileset_uuid.clone()}
-                // files={self.files_list.clone()}
-            />
         }
     }
 
