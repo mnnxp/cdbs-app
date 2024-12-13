@@ -23,6 +23,7 @@ pub struct Paginate {
 
 #[derive(Clone)]
 pub enum Msg {
+    CalcPages,
     ToFirst,
     Previous,
     Next,
@@ -51,13 +52,13 @@ impl Component for Paginate {
 
     fn rendered(&mut self, first_render: bool) {
         if first_render {
-            self.update_total_page();
-            self.props.callback_change.emit(self.page_set.clone());
+            self.link.send_message(Msg::CalcPages);
         }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
+            Msg::CalcPages => self.update_total_page(),
             Msg::ToFirst => self.page_set.to(1),
             Msg::Previous => self.page_set.previous(),
             Msg::Next => self.page_set.next(),
@@ -88,8 +89,9 @@ impl Component for Paginate {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.current_items == props.current_items &&
-        self.props.per_page == props.per_page {
+        if  self.props.current_items == props.current_items &&
+        self.props.per_page == props.per_page &&
+        self.props.total_items == props.total_items {
             false
         } else {
             self.props = props;
@@ -116,6 +118,10 @@ impl Component for Paginate {
 impl Paginate {
     fn ft_total_items(&self) -> Html {
         let onclick_set_page = self.link.callback(|_| Msg::SetPage);
+        let total_page = match self.total_page > 0 {
+            true => format!("/{}", self.total_page),
+            false => String::from("/?"),
+        };
         html!{
             <div class="button pagination-link"
                     aria-label={self.page_set.current_page.to_string()}
@@ -123,8 +129,7 @@ impl Paginate {
                     onclick={onclick_set_page}
                     >
                 {self.page_set.current_page.to_string()}
-                {"/"}
-                {self.total_page.to_string()}
+                {total_page}
             </div>
         }
     }
@@ -183,7 +188,10 @@ impl Paginate {
     fn ft_next_btn(&self, color: &str) -> Html {
         let onclick_next = self.link.callback(|_| Msg::Next);
         let onclick_last = self.link.callback(|_| Msg::ToLast);
-        let disabled = self.page_set.current_page >= self.total_page || self.is_manual_page;
+        let disabled = match self.total_page == 0 {
+            true => self.props.current_items < self.page_set.per_page,
+            false => self.page_set.current_page >= self.total_page || self.is_manual_page,
+        };
         let color = color.to_string();
         html!{<>
             <button
@@ -199,7 +207,7 @@ impl Paginate {
                 id={"to_last"}
                 class={"button pagination-next"}
                 onclick={onclick_last}
-                disabled={disabled}>
+                disabled={disabled || self.total_page == 0}>
                 <span class="icon">
                     <i class="fas fa-step-forward" aria-hidden="true" style={color}></i>
                 </span>
@@ -235,6 +243,7 @@ impl Paginate {
         debug!("Update total page: {:?}, {}", self.props.total_items, self.page_set.per_page);
         // is set to 1 if there are fewer items than shown on page 1 or they are not specified
         self.total_page = match self.props.total_items {
+            None => 0,
             Some(ti) if ti > self.page_set.per_page => {
                 debug!("Update total page %={:?}", ti%self.page_set.per_page);
                 if ti%self.page_set.per_page > 0 {
