@@ -36,7 +36,7 @@ pub struct ModificationsTableCard {
 }
 
 pub enum Msg {
-    RequestUpdateModificationData,
+    RequestComponentModificationsData,
     GetComponentModificationsResult(String),
     ResponseError(Error),
     SelectModification(UUID),
@@ -79,7 +79,7 @@ impl Component for ModificationsTableCard {
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         let link = self.link.clone();
         match msg {
-            Msg::RequestUpdateModificationData => {
+            Msg::RequestComponentModificationsData => {
                 let component_uuid = self.component_uuid.clone();
                 let ipt_sort = Some(get_component_modifications::IptSort {
                     byField: "name".to_string(),
@@ -146,7 +146,7 @@ impl Component for ModificationsTableCard {
                 self.page_set = page_set;
                 if self.props.component_uuid.len() == 36 {
                     self.change_page = true;
-                    self.link.send_message(Msg::RequestUpdateModificationData);
+                    self.link.send_message(Msg::RequestComponentModificationsData);
                 }
             },
             Msg::ClearError => self.error = None,
@@ -180,7 +180,7 @@ impl Component for ModificationsTableCard {
                     </p>
                 </header>
                 {match self.open_modification_card {
-                    true => self.show_modal_modification_card(),
+                    true => self.show_modification_card(),
                     false => self.show_modifications_table(),
                 }}
             </div>
@@ -210,10 +210,9 @@ impl ModificationsTableCard {
         }
     }
 
-    fn show_modal_modification_card(&self) -> Html {
-        let modification_uuid =
-            self.modifications.iter().find(|x| x.uuid == self.select_modification_uuid);
-        match modification_uuid {
+    fn show_modification_card(&self) -> Html {
+        let modification_data = self.modifications.iter().find(|x| x.uuid == self.select_modification_uuid);
+        match modification_data {
             Some(mod_data) => html!{
                 <div class="card-content">
                     <div class="content">
