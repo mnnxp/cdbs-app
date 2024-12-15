@@ -44,7 +44,7 @@ impl Component for Paginate {
             props,
             new_page: page_set.current_page,
             page_set,
-            show_options: [3,5,10,20,30,40,50,75,100,500],
+            show_options: [1,3,5,10,20,30,40,50,75,100],
             is_manual_page: false,
             total_page: 0,
         }
