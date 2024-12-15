@@ -66,7 +66,8 @@ impl Component for Paginate {
             Msg::To(number) => self.new_page = number.parse::<i64>().unwrap_or_default(),
             Msg::ChangePerPage(value) => {
                 if let Ok(per_page) = value.parse::<i64>() {
-                    self.page_set.max_on_page(per_page)
+                    self.page_set.max_on_page(per_page);
+                    self.page_set.to(1);
                 }
                 self.update_total_page();
             },
@@ -95,6 +96,7 @@ impl Component for Paginate {
             false
         } else {
             self.props = props;
+            self.link.send_message(Msg::CalcPages);
             true
         }
     }
