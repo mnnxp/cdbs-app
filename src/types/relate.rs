@@ -139,4 +139,9 @@ impl PaginateSet {
     pub fn max_on_page(&mut self, per_page: i64) {
         self.per_page = per_page;
     }
+
+    /// Returns the result of comparing self and the provided PaginateSet
+    pub fn compare(&mut self, page_set: &PaginateSet) -> bool {
+        self.per_page == page_set.per_page && self.current_page == page_set.current_page
+    }
 }
