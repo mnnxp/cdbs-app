@@ -1,18 +1,19 @@
-use std::collections::{HashMap, BTreeSet};
+use std::collections::BTreeSet;
 use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html, InputData, ChangeData};
 use log::debug;
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
 use super::file::ManageModificationFilesCard;
-use super::heads::ModificationTableHeads;
-use super::item::ModificationTableItem;
+use super::table::ModificationsTable;
 use super::fileset::ManageModificationFilesets;
 use crate::error::Error;
-use crate::fragments::buttons::{ft_delete_btn, ft_save_btn, ft_add_btn};
+use crate::fragments::paginate::Paginate;
+use crate::fragments::buttons::{ft_delete_btn, ft_save_btn, ft_add_btn, ft_back_btn};
 use crate::fragments::list_errors::ListErrors;
 use crate::services::{get_value_field, resp_parsing};
-use crate::types::{UUID, ComponentModificationInfo, Param, ActualStatus, ModificationUpdatePreData};
+use crate::services::content_adapter::DateDisplay;
+use crate::types::{UUID, ComponentModificationInfo, ActualStatus, ModificationUpdatePreData, PaginateSet};
 use crate::gqls::make_query;
 use crate::gqls::component::{
     RegisterComponentModification, register_component_modification,
@@ -25,32 +26,39 @@ use crate::gqls::component::{
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
     pub current_component_uuid: UUID,
+    pub modifications_count: i64,
+}
+
+pub enum ActiveTab {
+    Data,
+    ModificationFiles,
+    Fileset
 }
 
 pub struct ModificationsTableEdit {
     error: Option<Error>,
     props: Props,
     link: ComponentLink<Self>,
-    component_uuid: UUID,
     current_modifications: Vec<ComponentModificationInfo>,
     select_modification_uuid: UUID,
     actual_statuses: Vec<ActualStatus>,
-    collect_heads: Vec<Param>,
-    collect_items: Vec<(UUID, HashMap<usize, String>)>,
-    collect_columns: HashMap<usize, String>,
-    valid_modification_uuids: BTreeSet<UUID>,
+    invalid_modification_uuids: BTreeSet<UUID>,
     request_add_modification: ModificationUpdatePreData,
     request_edit_modification: ModificationUpdatePreData,
     update_add_modification: bool,
-    update_edit_modification: bool,
+    modification_changed: bool,
     open_add_modification_card: bool,
     open_edit_modification_card: bool,
-    finish_parsing_heads: bool,
     get_confirm: UUID,
+    change_page: bool,
+    skip_change_page: bool,
+    page_set: PaginateSet,
+    current_items: i64,
+    total_items: i64,
+    active_tab: ActiveTab,
 }
 
 pub enum Msg {
-    ParseParams,
     RequestAddModificationData,
     RequestUpdateModificationData,
     RequestDeleteModificationData,
@@ -72,8 +80,10 @@ pub enum Msg {
     ShowEditModificationCard,
     ChangeNewModificationParam(UUID),
     ChangeSelectModification(UUID),
+    ChangeActiveTab(ActiveTab),
     UpdateSelectModification,
     ChangeModificationData,
+    ChangePaginate(PaginateSet),
     ClearError,
 }
 
@@ -82,32 +92,33 @@ impl Component for ModificationsTableEdit {
     type Properties = Props;
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+        let total_items = props.modifications_count;
         Self {
             error: None,
             props,
             link,
-            component_uuid: String::new(),
             current_modifications: Vec::new(),
             select_modification_uuid: String::new(),
             actual_statuses: Vec::new(),
-            collect_heads: Vec::new(),
-            collect_items: Vec::new(),
-            collect_columns: HashMap::new(),
-            valid_modification_uuids: BTreeSet::new(),
+            invalid_modification_uuids: BTreeSet::new(),
             request_add_modification: ModificationUpdatePreData::new(),
             request_edit_modification: ModificationUpdatePreData::default(),
             update_add_modification: false,
-            update_edit_modification: false,
+            modification_changed: false,
             open_add_modification_card: false,
             open_edit_modification_card: false,
-            finish_parsing_heads: false,
             get_confirm: String::new(),
+            change_page: false,
+            skip_change_page: false,
+            page_set: PaginateSet::new(),
+            current_items: 0,
+            total_items,
+            active_tab: ActiveTab::Data,
         }
     }
 
     fn rendered(&mut self, first_render: bool) {
         if first_render {
-            self.component_uuid = self.props.current_component_uuid.clone();
             self.link.send_message(Msg::RequestComponentModificationsData);
         }
     }
@@ -116,44 +127,6 @@ impl Component for ModificationsTableEdit {
         let link = self.link.clone();
 
         match msg {
-            Msg::ParseParams => {
-                let mut set_heads: Vec<usize> = vec![0];
-                let mut collect_heads: Vec<Param> = Vec::new();
-
-                for modification in &self.current_modifications {
-                    self.valid_modification_uuids.insert(modification.uuid.clone());
-                    self.collect_columns.clear();
-                    self.collect_columns.insert(0, modification.modification_name.clone());
-                    for modification_param in &modification.modification_params {
-                        let mut flag = true;
-                        // debug!("modification_param: {:?}", modification_param.param);
-                        for head_id in &set_heads {
-                            if head_id == &modification_param.param.param_id {
-                                // debug!("head: {:?}", modification_param.param.param_id);
-                                flag = false;
-                                break;
-                            }
-                        }
-                        if flag {
-                            set_heads.push(modification_param.param.param_id);
-                            collect_heads.push(modification_param.param.clone());
-                        }
-                        self.collect_columns.insert(
-                            modification_param.param.param_id,
-                            modification_param.value.clone(),
-                        );
-                        // debug!("collect_heads: {:?}", collect_heads);
-                    }
-                    // debug!("collect_columns: {:?}", self.collect_columns);
-                    self.collect_items.push((
-                        modification.uuid.clone(),
-                        self.collect_columns.clone()
-                    ));
-                }
-                debug!("collect_heads: {:?}", collect_heads);
-                self.collect_heads = collect_heads;
-                self.finish_parsing_heads = true;
-            },
             Msg::RequestAddModificationData => {
                 let ipt_component_modification_data = register_component_modification::IptComponentModificationData{
                     componentUuid: self.props.current_component_uuid.clone(),
@@ -170,7 +143,7 @@ impl Component for ModificationsTableEdit {
                 })
             },
             Msg::RequestUpdateModificationData => {
-                self.update_edit_modification = false;
+                self.modification_changed = false;
                 let modification_uuid = self.select_modification_uuid.clone();
                 let ipt_update_component_modification_data = put_component_modification_update::IptUpdateComponentModificationData{
                     modificationName: match self.request_edit_modification.modification_name.is_empty() {
@@ -216,12 +189,20 @@ impl Component for ModificationsTableEdit {
             },
             Msg::RequestComponentModificationsData => {
                 let component_uuid = self.props.current_component_uuid.clone();
+                let ipt_sort = Some(get_component_modifications::IptSort {
+                    byField: "name".to_string(),
+                    asDesc: false,
+                });
+                let ipt_paginate = Some(get_component_modifications::IptPaginate {
+                    currentPage: self.page_set.current_page,
+                    perPage: self.page_set.per_page,
+                });
                 spawn_local(async move {
                     let res = make_query(GetComponentModifications::build_query(
                         get_component_modifications::Variables {
                             component_uuid,
-                            ipt_sort: None,
-                            ipt_paginate: None
+                            ipt_sort,
+                            ipt_paginate
                         }
                     )).await.unwrap();
 
@@ -242,6 +223,7 @@ impl Component for ModificationsTableEdit {
                     Ok(result) => {
                         self.select_modification_uuid = result;
                         self.open_add_modification_card = false;
+                        self.total_items += 1;
                         link.send_message(Msg::RequestComponentModificationsData);
                     },
                     Err(err) => link.send_message(Msg::ResponseError(err)),
@@ -249,22 +231,27 @@ impl Component for ModificationsTableEdit {
             },
             Msg::GetUpdateModificationResult(res) => {
                 match resp_parsing::<usize>(res, "putComponentModificationUpdate") {
-                    Ok(result) => {
-                        debug!("putComponentModificationUpdate: {:?}", result);
-                        if result > 0 {
-                            link.send_message(Msg::RequestComponentModificationsData);
-                        }
-                    },
+                    Ok(result) => debug!("putComponentModificationUpdate: {:?}", result),
                     Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
-                self.open_edit_modification_card = false;
+                // clear the check flags
+                self.get_confirm.clear();
+                self.modification_changed = false;
             },
             Msg::GetDeleteModificationResult(res) => {
                 match resp_parsing::<UUID>(res, "deleteComponentModification") {
                     Ok(result) => {
                         debug!("deleteComponentModification: {:?}", result);
-                        self.valid_modification_uuids.remove(&result);
+                        self.invalid_modification_uuids.insert(result);
+                        self.total_items -= 1;
+                        self.current_items -= 1;
                         self.select_modification_uuid.clear();
+                        for m in &self.current_modifications {
+                            if let None = self.invalid_modification_uuids.get(&m.uuid) {
+                                self.select_modification_uuid = m.uuid.clone();
+                                break;
+                            }
+                        }
                     },
                     Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
@@ -275,12 +262,20 @@ impl Component for ModificationsTableEdit {
                     Ok(result) => {
                         self.clear_current_data();
                         self.current_modifications = result;
+                        self.current_items = self.current_modifications.len() as i64;
+                        self.change_page = false;
+                        // do not change the selected modification if the old one is in the list
+                        let mut change_select = true;
+                        for cm in &self.current_modifications {
+                            if self.select_modification_uuid == cm.uuid {
+                                change_select = false;
+                                break;
+                            }
+                        }
+                        if change_select {
+                            self.select_modification_uuid = self.current_modifications.first().map(|m| m.uuid.clone()).unwrap_or_default();
+                        }
                         debug!("Update modifications list");
-                        self.select_modification_uuid = self.current_modifications
-                            .first()
-                            .map(|m| m.uuid.clone())
-                            .unwrap_or_default();
-                        link.send_message(Msg::ParseParams);
                     },
                     Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
@@ -304,15 +299,15 @@ impl Component for ModificationsTableEdit {
                 self.request_add_modification.actual_status_id = data.parse::<usize>().unwrap_or_default(),
             Msg::UpdateEditName(data) => {
                 self.request_edit_modification.modification_name = data;
-                self.update_edit_modification = true;
+                self.modification_changed = true;
             },
             Msg::UpdateEditDescription(data) => {
                 self.request_edit_modification.description = data;
-                self.update_edit_modification = true;
+                self.modification_changed = true;
             },
             Msg::UpdateEditActualStatusId(data) => {
                 self.request_edit_modification.actual_status_id = data.parse::<usize>().unwrap_or_default();
-                self.update_edit_modification = true;
+                self.modification_changed = true;
             },
             Msg::ShowAddModificationCard => {
                 self.open_add_modification_card = !self.open_add_modification_card;
@@ -327,10 +322,9 @@ impl Component for ModificationsTableEdit {
                     link.send_message(Msg::RequestListOptData);
                 }
                 if self.open_edit_modification_card {
-                    // clear the check flags
-                    self.get_confirm.clear();
-                    self.update_edit_modification = false;
                     link.send_message(Msg::UpdateSelectModification);
+                } else {
+                    link.send_message(Msg::RequestComponentModificationsData);
                 }
             },
             Msg::ChangeNewModificationParam(modification_uuid) => {
@@ -339,12 +333,26 @@ impl Component for ModificationsTableEdit {
                 self.select_modification_uuid = modification_uuid;
             },
             Msg::ChangeSelectModification(modification_uuid) => {
+                debug!("Callback EDIT CARD, modification uuid set: {:?}, old: {:?} (Show modifications)",
+                    modification_uuid,
+                    self.select_modification_uuid,
+                );
                 match self.select_modification_uuid == modification_uuid {
-                    true => link.send_message(Msg::ShowEditModificationCard),
-                    false => self.select_modification_uuid = modification_uuid,
+                    true => {
+                        self.skip_change_page = true;
+                        link.send_message(Msg::ShowEditModificationCard);
+                    },
+                    false => {
+                        self.select_modification_uuid = modification_uuid;
+                        link.send_message(Msg::ChangeActiveTab(ActiveTab::Data));
+                    },
                 }
             },
+            Msg::ChangeActiveTab(set_tab) => self.active_tab = set_tab,
             Msg::UpdateSelectModification => {
+                // clear the check flags
+                self.get_confirm.clear();
+                self.modification_changed = false;
                 for current_modification in self.current_modifications.iter() {
                     if current_modification.uuid == self.select_modification_uuid {
                         self.request_edit_modification.modification_name = current_modification.modification_name.clone();
@@ -374,7 +382,20 @@ impl Component for ModificationsTableEdit {
                         break;
                     }
                 }
-            }
+            },
+            Msg::ChangePaginate(page_set) => {
+                debug!("Change page_set, old: {:?}, new: {:?} (Show modifications)", self.page_set, page_set);
+                if self.skip_change_page {
+                    debug!("Skip change page after return from modification card");
+                    self.skip_change_page = false;
+                    return true
+                }
+                self.page_set = page_set;
+                if self.props.current_component_uuid.len() == 36 {
+                    self.change_page = true;
+                    self.link.send_message(Msg::RequestComponentModificationsData);
+                }
+            },
             Msg::ClearError => self.error = None,
         }
         true
@@ -384,67 +405,63 @@ impl Component for ModificationsTableEdit {
         if self.props.current_component_uuid == props.current_component_uuid {
             false
         } else {
+            self.total_items = props.modifications_count;
             self.props = props;
             true
         }
     }
 
     fn view(&self) -> Html {
-        match self.finish_parsing_heads {
-            true => html!{<>
-                {self.show_modifications_table()}
-                <br/>
-                {self.show_modification_files()}
-                <br/>
-                {self.show_fileset_files_card()}
-            </>},
-            false => html!{},
+        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+        let onclick_modification_card = self.link.callback(|_| Msg::ShowEditModificationCard);
+        html!{
+            <div class="card">
+                <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
+                <header class="card-header">
+                    <p class="card-header-title">
+                        {match &self.open_edit_modification_card {
+                            true => ft_back_btn("open-modifications", onclick_modification_card, get_value_field(&115)),
+                            false => html!{get_value_field(&100)} // Modifications,
+                        }}
+                    </p>
+                </header>
+                {match self.open_edit_modification_card {
+                    true => self.show_modification_tabs(),
+                    false => self.show_modifications_table(),
+                }}
+            </div>
         }
     }
 }
 
 impl ModificationsTableEdit {
     fn show_modifications_table(&self) -> Html {
-        let onclick_new_modification_param =
-            self.link.callback(|value: UUID| Msg::ChangeNewModificationParam(value));
-        let onclick_select_modification =
-            self.link.callback(|value: UUID| Msg::ChangeSelectModification(value));
+        let onclick_new_modification_param = self.link.callback(|value: UUID| Msg::ChangeNewModificationParam(value));
         let onclick_add_modification_card = self.link.callback(|_| Msg::ShowAddModificationCard);
-        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
-
-        html!{<div class="card">
-            <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
-            <header class="card-header">
-                <p class="card-header-title">{get_value_field(&60)}</p> // Manage component modifications
-            </header>
+        let onclick_paginate = self.link.callback(|page_set| Msg::ChangePaginate(page_set));
+        let onclick_select_modification = self.link.callback(|value: UUID| Msg::ChangeSelectModification(value));
+        let mut modifications = Vec::new();
+        for m in &self.current_modifications {
+            if let None = self.invalid_modification_uuids.get(&m.uuid) {
+                modifications.push(m.clone());
+            }
+        }
+        html!{
             <div class="card-content">
-                <div class="content">
-                    {self.modal_add_modification_card()}
-                    {self.modal_edit_modification_card()}
-                    <div class="table-container">
-                        <table class="table is-fullwidth">
-                            <ModificationTableHeads
-                            show_new_column={true}
-                            component_uuid={self.component_uuid.clone()}
-                            params={self.collect_heads.clone()}
-                            />
-                            {for self.collect_items.iter().map(|(modification_uuid, item)|
-                                match self.valid_modification_uuids.get(modification_uuid) {
-                                    Some(_) => html!{<ModificationTableItem
-                                        show_manage_btn={true}
-                                        modification_uuid={modification_uuid.clone()}
-                                        collect_heads={self.collect_heads.clone()}
-                                        collect_item={item.clone()}
-                                        select_item={&self.select_modification_uuid == modification_uuid}
-                                        callback_new_modification_param={Some(onclick_new_modification_param.clone())}
-                                        callback_select_modification={Some(onclick_select_modification.clone())}
-                                    />},
-                                    None => html!{},
-                                }
-                            )}
-                        </table>
-                    </div>
-                </div>
+                {self.modal_add_modification_card()}
+                <ModificationsTable
+                    modifications={modifications}
+                    select_modification_uuid={self.select_modification_uuid.clone()}
+                    callback_select_modification={onclick_select_modification}
+                    callback_new_modification_param={Some(onclick_new_modification_param)}
+                />
+                <Paginate
+                    callback_change={onclick_paginate}
+                    current_items={self.current_items}
+                    current_page={Some(self.page_set.current_page)}
+                    per_page={Some(self.page_set.per_page)}
+                    total_items={self.total_items}
+                />
                 <footer class="card-footer">
                     {ft_add_btn(
                         "add-component-modification",
@@ -454,24 +471,6 @@ impl ModificationsTableEdit {
                         false
                     )}
                 </footer>
-            </div>
-        </div>}
-    }
-
-    fn show_modification_files(&self) -> Html {
-        html!{
-            <div class="card">
-                <header class="card-header">
-                    <p class="card-header-title">{get_value_field(&172)}</p> // Manage modification files
-                </header>
-                <div class="card-content">
-                    <div class="content">
-                        <ManageModificationFilesCard
-                            show_download_btn={false}
-                            modification_uuid={self.select_modification_uuid.clone()}
-                        />
-                    </div>
-                </div>
             </div>
         }
     }
@@ -558,7 +557,45 @@ impl ModificationsTableEdit {
         </div>}
     }
 
-    fn modal_edit_modification_card(&self) -> Html {
+    fn show_modification_tabs(&self) -> Html {
+        let onclick_tab_data = self.link.callback(|_| Msg::ChangeActiveTab(ActiveTab::Data));
+        let onclick_tab_files = self.link.callback(|_| Msg::ChangeActiveTab(ActiveTab::ModificationFiles));
+        let onclick_tab_fileset = self.link.callback(|_| Msg::ChangeActiveTab(ActiveTab::Fileset));
+        let at = match self.active_tab {
+            ActiveTab::Data => ("is-active","",""),
+            ActiveTab::ModificationFiles => ("","is-active",""),
+            ActiveTab::Fileset => ("","","is-active"),
+        };
+        html!{<>
+            <div class="tabs is-centered">
+                <ul>
+                    <li class={at.0} onclick={onclick_tab_data}><a>{get_value_field(&177)}</a></li>
+                    <li class={at.1} onclick={onclick_tab_files}><a>{get_value_field(&172)}</a></li>
+                    <li class={at.2} onclick={onclick_tab_fileset}><a>{get_value_field(&173)}</a></li>
+                </ul>
+            </div>
+            <div class="card-content">
+                {match self.active_tab {
+                    ActiveTab::Data => self.show_modification_card(),
+                    ActiveTab::ModificationFiles => html!{
+                        <div class="content">
+                            <ManageModificationFilesCard
+                                show_download_btn={false}
+                                modification_uuid={self.select_modification_uuid.clone()}
+                                />
+                        </div>
+                    },
+                    ActiveTab::Fileset => html!{
+                        <div class="content">
+                            <ManageModificationFilesets select_modification_uuid={self.select_modification_uuid.clone()} />
+                        </div>
+                    },
+                }}
+            </div>
+        </>}
+    }
+
+    fn show_modification_card(&self) -> Html {
         let oninput_modification_name = self.link.callback(|ev: InputData| Msg::UpdateEditName(ev.value));
         let oninput_modification_description = self.link.callback(|ev: InputData| Msg::UpdateEditDescription(ev.value));
         let onchange_modification_actual_status_id =
@@ -566,121 +603,87 @@ impl ModificationsTableEdit {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
-        let onclick_modification_card = self.link.callback(|_| Msg::ShowEditModificationCard);
         let onclick_delete_component_modification = self.link.callback(|_| Msg::RequestDeleteModificationData);
         let onclick_component_modification_update = self.link.callback(|_| Msg::RequestUpdateModificationData);
-        let class_modal = match &self.open_edit_modification_card {
-            true => "modal is-active",
-            false => "modal",
-        };
-        let modification_data: Option<&ComponentModificationInfo> =
-            self.current_modifications.iter().find(|x| x.uuid == self.select_modification_uuid);
-
+        let modification_data = self.current_modifications.iter().find(|x| x.uuid == self.select_modification_uuid);
         match modification_data {
-            Some(modification_data) => html!{<div class={class_modal}>
-              <div class="modal-background" onclick={onclick_modification_card.clone()} />
-                <div class="card">
-                  <div class="modal-content">
-                    <header class="modal-card-head">
-                        <p class="modal-card-title">{get_value_field(&177)}</p> // Change modification data
-                        <button class="delete" aria-label="close" onclick={onclick_modification_card} />
-                    </header>
-                    <div class="box itemBox">
-                      <article class="media center-media">
-                        <div class="media-content">
-                          <div class="column">
-                            <label class="label">{get_value_field(&176)}</label> // Modification name
-                            <input
-                                  id="add-modification-name"
-                                  class="input is-fullwidth"
-                                  type="text"
-                                  placeholder={modification_data.modification_name.clone()}
-                                  value={self.request_edit_modification.modification_name.clone()}
-                                  oninput={oninput_modification_name} />
-                          </div>
-                          <div class="column">
-                            <label class="label">{get_value_field(&61)}</label>
-                            <textarea
-                                  id="update-modification-description"
-                                  class="textarea is-fullwidth"
-                                  // rows="10"
-                                  type="text"
-                                  placeholder={modification_data.description.clone()}
-                                  value={self.request_edit_modification.description.clone()}
-                                  oninput={oninput_modification_description} />
-                          </div>
-                          <div class="column">
+            Some(mod_data) => html!{<>
+                <div class="content">
+                    <div class="columns">
+                        <div class="column" title={get_value_field(&96)}>
                             <label class="label">{get_value_field(&96)}</label>
                             <div class="select">
-                              <select
-                                  id="update-modification-actual-status"
-                                  select={modification_data.actual_status.actual_status_id.to_string()}
-                                  onchange={onchange_modification_actual_status_id}
-                                  >
-                                { for self.actual_statuses.iter().map(|x|
+                            <select
+                                id={"update-modification-actual-status"}
+                                select={mod_data.actual_status.actual_status_id.to_string()}
+                                onchange={onchange_modification_actual_status_id}
+                                >
+                                {for self.actual_statuses.iter().map(|x|
                                     html!{
                                         <option value={x.actual_status_id.to_string()}
-                                              selected={x.actual_status_id == self.request_add_modification.actual_status_id} >
+                                            selected={x.actual_status_id == self.request_add_modification.actual_status_id} >
                                             {&x.name}
                                         </option>
                                     }
                                 )}
-                              </select>
+                            </select>
                             </div>
-                          </div>
-                          <br/>
-                          <div class="columns">
-                              <div class="column">
-                                  {ft_delete_btn(
-                                    "delete-component-modification",
-                                    onclick_delete_component_modification,
-                                    self.get_confirm == self.select_modification_uuid,
-                                    false
-                                )}
-                              </div>
-                              <div class="column">
-                                  {ft_save_btn(
-                                    "update-component-modification",
-                                    onclick_component_modification_update,
-                                    true,
-                                    !self.update_edit_modification
-                                  )}
-                              </div>
-                          </div>
                         </div>
-                      </article>
+                        <div class="column is-4">
+                            {get_value_field(&30)}
+                            {mod_data.updated_at.date_to_display()}
+                        </div>
                     </div>
-                  </div>
-              </div>
-            </div>},
+                    <div class="column" title={get_value_field(&176)}>
+                        <label class="label">{get_value_field(&176)}</label> // Modification name
+                        <input
+                                id="add-modification-name"
+                                class="input is-fullwidth"
+                                type="text"
+                                placeholder={mod_data.modification_name.clone()}
+                                value={self.request_edit_modification.modification_name.clone()}
+                                oninput={oninput_modification_name} />
+                    </div>
+                    <div class="column" title={{get_value_field(&61)}}> // Description
+                        <label class="label">{get_value_field(&61)}</label>
+                        <textarea
+                                id="update-modification-description"
+                                class="textarea is-fullwidth"
+                                // rows="10"
+                                type="text"
+                                placeholder={mod_data.description.clone()}
+                                value={self.request_edit_modification.description.clone()}
+                                oninput={oninput_modification_description} />
+                    </div>
+                </div>
+                <div class="columns">
+                    <div class="column">
+                        {ft_delete_btn(
+                            "delete-component-modification",
+                            onclick_delete_component_modification,
+                            self.get_confirm == self.select_modification_uuid,
+                            false
+                        )}
+                    </div>
+                    <div class="column">
+                        {ft_save_btn(
+                            "update-component-modification",
+                            onclick_component_modification_update,
+                            true,
+                            !self.modification_changed
+                        )}
+                    </div>
+                </div>
+            </>},
             None => html!{},
         }
     }
 
     fn clear_current_data(&mut self) {
-        self.collect_heads.clear();
-        self.collect_items.clear();
-        self.collect_columns.clear();
-        self.valid_modification_uuids.clear();
+        self.invalid_modification_uuids.clear();
         self.request_add_modification = ModificationUpdatePreData::new();
         self.request_edit_modification = ModificationUpdatePreData::default();
         self.update_add_modification = false;
-        self.update_edit_modification = false;
-        self.finish_parsing_heads = false;
-    }
-
-    fn show_fileset_files_card(&self) -> Html {
-        html!{
-            <div class="card">
-                <header class="card-header">
-                    <p class="card-header-title">{get_value_field(&173)}</p> // Manage modification filesets
-                </header>
-                <div class="card-content">
-                    <div class="content">
-                        <ManageModificationFilesets select_modification_uuid={self.select_modification_uuid.clone()} />
-                    </div>
-                </div>
-            </div>
-        }
+        self.modification_changed = false;
     }
 }

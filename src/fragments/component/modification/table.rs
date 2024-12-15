@@ -9,6 +9,7 @@ pub struct Props {
     pub modifications: Vec<ComponentModificationInfo>,
     pub select_modification_uuid: UUID,
     pub callback_select_modification: Option<Callback<UUID>>,
+    pub callback_new_modification_param: Option<Callback<UUID>>,
 }
 
 pub struct ModificationsTable {
@@ -133,18 +134,18 @@ impl Component for ModificationsTable {
                 <div class="table-container">
                     <table class="table is-fullwidth">
                         <ModificationTableHeads
-                        show_new_column={false}
+                        show_new_column={self.props.callback_new_modification_param.is_some()}
                         component_uuid={self.component_uuid.clone()}
                         params={self.collect_heads.clone()}
                         />
                         {for self.collect_items.iter().map(|(modification_uuid, item)| {
                             html!{<ModificationTableItem
-                                show_manage_btn={false}
+                                show_manage_btn={self.props.callback_new_modification_param.is_some()}
                                 modification_uuid={modification_uuid.clone()}
                                 collect_heads={self.collect_heads.clone()}
                                 collect_item={item.clone()}
                                 select_item={&self.props.select_modification_uuid == modification_uuid}
-                                callback_new_modification_param={None}
+                                callback_new_modification_param={self.props.callback_new_modification_param.clone()}
                                 callback_select_modification={onclick_select_modification.clone()}
                             />}
                         })}
