@@ -199,6 +199,7 @@ impl ModificationsTableCard {
                     modifications={self.modifications.clone()}
                     select_modification_uuid={self.select_modification_uuid.clone()}
                     callback_select_modification={onclick_select_modification}
+                    numero_offset={self.page_set.numero_offset()}
                 />
                 <Paginate
                     callback_change={onclick_paginate}

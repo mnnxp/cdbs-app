@@ -43,6 +43,7 @@ impl Component for ModificationTableHeads {
 impl ModificationTableHeads {
     fn show_modification_head(&self) -> Html {
         html!{<>
+            <th>{"\u{2116}"}</th> // Numero sign
             <th>{get_value_field(&111)}</th>
             <th>{get_value_field(&176)}</th> // Modification name
             {for self.props.params.iter().map(|head| {

@@ -49,6 +49,7 @@ impl FileHeadersShow {
       html!{
         <thead>
           <tr>
+            <th>{"\u{2116}"}</th> // Numero sign
             <th>{get_value_field(&120)}</th> // Filename
             <th><abbr title={get_value_field(&308)}>{get_value_field(&309)}</abbr></th> // Revision
             // <th>{get_value_field(&121)}</th> // Content
@@ -69,6 +70,7 @@ impl FileHeadersShow {
       html!{
         <thead>
           <tr>
+            <th>{"\u{2116}"}</th> // Numero sign
             <th>{get_value_field(&120)}</th> // Filename
             <th>{get_value_field(&122)}</th> // Filesize
             <th>{get_value_field(&126)}</th> // Download

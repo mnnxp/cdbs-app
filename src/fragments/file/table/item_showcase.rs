@@ -7,13 +7,13 @@ use crate::services::Size;
 
 pub struct FileInfoItemShow {
   props: Props,
-  // link: ComponentLink<Self>,
 }
 
 #[derive(Properties, Clone)]
 pub struct Props {
   pub file_info: ShowFileInfo,
   pub show_download_btn: bool,
+  pub ordinal_indicator: usize,
 }
 
 impl Component for FileInfoItemShow {
@@ -40,6 +40,7 @@ impl Component for FileInfoItemShow {
     fn view(&self) -> Html {
       html!{
         <tr>
+          <th>{self.props.ordinal_indicator}</th>
           <td>{self.props.file_info.filename.clone()}</td>
           // <td>{self.props.file_info.content_type.clone()}</td>
           <td>{self.props.file_info.revision}</td>

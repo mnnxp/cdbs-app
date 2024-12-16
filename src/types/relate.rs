@@ -144,4 +144,9 @@ impl PaginateSet {
     pub fn compare(&mut self, page_set: &PaginateSet) -> bool {
         self.per_page == page_set.per_page && self.current_page == page_set.current_page
     }
+
+    /// Returns number of items skipped on previous pages (converting to usize)
+    pub fn numero_offset(&self) -> usize {
+        ((self.per_page * self.current_page) - self.per_page + 1) as usize
+    }
 }

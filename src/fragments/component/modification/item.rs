@@ -31,6 +31,7 @@ pub struct Props {
     pub select_item: bool,
     pub callback_new_modification_param: Option<Callback<UUID>>,
     pub callback_select_modification: Option<Callback<UUID>>,
+    pub ordinal_indicator: usize,
 }
 
 pub struct ModificationTableItem {
@@ -354,9 +355,9 @@ impl ModificationTableItem {
         };
 
         html!{<tr class={class_style}>
-            <td>
-                <a onclick={onclick_select_modification} title={title_text}>
-                    // <span>{title_text}</span>
+            <th onclick={onclick_select_modification.clone()}>{self.props.ordinal_indicator}</th>
+            <td onclick={onclick_select_modification}>
+                <a title={title_text}>
                     <span class="icon">
                         <i class={click_icon} aria-hidden="true"></i>
                     </span>

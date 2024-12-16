@@ -10,6 +10,7 @@ pub struct Props {
     pub select_modification_uuid: UUID,
     pub callback_select_modification: Option<Callback<UUID>>,
     pub callback_new_modification_param: Option<Callback<UUID>>,
+    pub numero_offset: usize,
 }
 
 pub struct ModificationsTable {
@@ -118,7 +119,8 @@ impl Component for ModificationsTable {
             props.select_modification_uuid
         );
         if self.props.select_modification_uuid == props.select_modification_uuid &&
-        self.props.modifications.len() == props.modifications.len() {
+        self.props.modifications.len() == props.modifications.len() &&
+        self.props.numero_offset == props.numero_offset {
             if self.props.callback_new_modification_param.is_some() {
                 // need further verification of the change
                 let mut modification_name = &String::new();
@@ -158,11 +160,11 @@ impl Component for ModificationsTable {
                 <div class="table-container">
                     <table class="table is-fullwidth">
                         <ModificationTableHeads
-                        show_new_column={self.props.callback_new_modification_param.is_some()}
-                        component_uuid={self.component_uuid.clone()}
-                        params={self.collect_heads.clone()}
-                        />
-                        {for self.collect_items.iter().map(|(modification_uuid, item)| {
+                            show_new_column={self.props.callback_new_modification_param.is_some()}
+                            component_uuid={self.component_uuid.clone()}
+                            params={self.collect_heads.clone()}
+                            />
+                        {for self.collect_items.iter().enumerate().map(|(numer, (modification_uuid, item))| {
                             html!{<ModificationTableItem
                                 show_manage_btn={self.props.callback_new_modification_param.is_some()}
                                 modification_uuid={modification_uuid.clone()}
@@ -171,6 +173,7 @@ impl Component for ModificationsTable {
                                 select_item={&self.props.select_modification_uuid == modification_uuid}
                                 callback_new_modification_param={self.props.callback_new_modification_param.clone()}
                                 callback_select_modification={onclick_select_modification.clone()}
+                                ordinal_indicator={self.props.numero_offset+numer}
                             />}
                         })}
                     </table>

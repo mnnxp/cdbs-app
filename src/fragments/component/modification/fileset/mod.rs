@@ -127,10 +127,11 @@ impl Component for FilesOfFilesetCard {
                                         show_download_btn={self.props.show_download_btn}
                                         />
                                     <tbody>
-                                        {for self.files_list.iter().map(|file| html!{
+                                        {for self.files_list.iter().enumerate().map(|(numer, file)| html!{
                                             <FileInfoItemShow
                                                 file_info={file.clone()}
                                                 show_download_btn={self.props.show_download_btn}
+                                                ordinal_indicator={numer+1}
                                                 />
                                         })}
                                     </tbody>
