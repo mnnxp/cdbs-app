@@ -121,21 +121,25 @@ impl Component for ModificationsTable {
         self.props.modifications.len() == props.modifications.len() {
             if self.props.callback_new_modification_param.is_some() {
                 // need further verification of the change
+                let mut modification_name = &String::new();
                 let mut old_params = &Vec::new();
                 for old_m in &self.props.modifications {
                     if old_m.uuid == self.props.select_modification_uuid {
+                        modification_name = &old_m.modification_name;
                         old_params = &old_m.modification_params;
                         break;
                     }
                 }
                 for new_m in &props.modifications {
                     if new_m.uuid == props.select_modification_uuid {
-                        if old_params.len() != new_m.modification_params.len() {
-                            self.props = props;
-                            self.link.send_message(Msg::RebuildTable);
-                            return true
+                        if modification_name == &new_m.modification_name &&
+                           old_params.len() == new_m.modification_params.len() {
+                            break;
                         }
-                        break;
+                        // name or parameters have changed - update is required
+                        self.props = props;
+                        self.link.send_message(Msg::RebuildTable);
+                        return true
                     }
                 }
             }
