@@ -176,8 +176,7 @@ pub struct ComponentModificationInfo{
   pub files_count: i64,
 }
 
-#[derive(Serialize, Deserialize, Clone, Default, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug)]
 pub struct ModificationUpdatePreData{
   pub modification_name: String,
   pub description: String,
