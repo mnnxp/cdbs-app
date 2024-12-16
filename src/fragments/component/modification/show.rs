@@ -93,6 +93,7 @@ impl Component for ModificationsTableCard {
                     let res = make_query(GetComponentModifications::build_query(
                         get_component_modifications::Variables {
                             component_uuid,
+                            filter: None,
                             ipt_sort,
                             ipt_paginate,
                         }
