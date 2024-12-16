@@ -146,6 +146,7 @@ type ComponentAndRelatedData {
   componentSpecs(paginate: IptPaginate): [SpecTranslateList!]!
   componentKeywords(paginate: IptPaginate): [Keyword!]!
   componentModifications(
+    filter: [UUID!]
     sort: IptSort
     paginate: IptPaginate
   ): [ComponentModificationAndRelatedData!]!
@@ -963,6 +964,7 @@ type QueryRoot {
   component(componentUuid: UUID!): ComponentAndRelatedData!
   componentModifications(
     componentUuid: UUID!
+    filter: [UUID!]
     sort: IptSort
     paginate: IptPaginate
   ): [ComponentModificationAndRelatedData!]!

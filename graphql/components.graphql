@@ -6,11 +6,13 @@ query GetComponentData($componentUuid: UUID!) {
 
 query GetComponentModifications(
     $componentUuid: UUID!,
+    $filter: [UUID!],
     $IptSort: IptSort,
     $IptPaginate: IptPaginate
 ) {
   componentModifications(
     componentUuid: $componentUuid,
+    filter: $filter,
     sort: $IptSort,
     paginate: $IptPaginate
   ) {
