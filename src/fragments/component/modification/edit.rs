@@ -199,7 +199,7 @@ impl ModificationEdit {
             ActiveTab::Fileset => ("","","is-active"),
         };
         html!{<>
-            <div class="tabs is-centered">
+            <div class="tabs is-centered is-medium">
                 <ul>
                     <li class={at.0} onclick={onclick_tab_data}><a>{get_value_field(&177)}</a></li>
                     <li class={at.1} onclick={onclick_tab_files}><a>{get_value_field(&172)}</a></li>
