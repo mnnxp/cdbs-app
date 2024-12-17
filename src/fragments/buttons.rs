@@ -4,6 +4,7 @@ use crate::services::get_value_field;
 /// Returns a VNode with Html code of button to download url in the <a> tag
 /// (the button is not active if the link is empty)
 pub fn ft_download_btn(download_url: String, as_button: bool) -> Html {
+    let title = get_value_field(&126);
     let class_btn = match as_button {
         true => classes!("button", "is-white"),
         false => classes!("is-white"),
@@ -12,11 +13,15 @@ pub fn ft_download_btn(download_url: String, as_button: bool) -> Html {
         <a class={class_btn}
         href={download_url.clone()}
         disabled={download_url.is_empty()}
-        title={get_value_field(&126)}
+        title={title}
         target={"_blank"}>
             <span class={"icon"}>
                 <i class={"fas fa-file-download"} style={"color: #1872f0;"} aria-hidden={"true"}></i>
             </span>
+            {match as_button {
+                true => html!{},
+                false => html!{<span>{title}</span>},
+            }}
         </a>
     }
 }
