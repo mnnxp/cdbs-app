@@ -9,7 +9,7 @@ use crate::error::Error;
 use crate::fragments::buttons::{ft_delete_btn, ft_save_btn};
 use crate::fragments::list_errors::ListErrors;
 use crate::services::{get_value_field, resp_parsing};
-use crate::services::content_adapter::DateDisplay;
+use crate::services::content_adapter::Markdownable;
 use crate::types::{UUID, ComponentModificationInfo, ActualStatus, ModificationUpdatePreData};
 use crate::gqls::make_query;
 use crate::gqls::component::{
@@ -38,6 +38,7 @@ pub struct ModificationEdit {
     modification_changed: bool,
     get_confirm: UUID,
     active_tab: ActiveTab,
+    preview_description: bool,
 }
 
 pub enum Msg {
@@ -51,6 +52,7 @@ pub enum Msg {
     UpdateEditActualStatusId(String),
     ResetSelectModification,
     ChangeActiveTab(ActiveTab),
+    PreviewDescription,
     ClearError,
 }
 
@@ -72,6 +74,7 @@ impl Component for ModificationEdit {
             modification_changed: false,
             get_confirm: String::new(),
             active_tab: ActiveTab::Data,
+            preview_description: false,
         }
     }
 
@@ -164,6 +167,7 @@ impl Component for ModificationEdit {
                 self.request_edit_modification.actual_status_id = self.props.modification.actual_status.actual_status_id;
             },
             Msg::ChangeActiveTab(set_tab) => self.active_tab = set_tab,
+            Msg::PreviewDescription => self.preview_description = !self.preview_description,
             Msg::ClearError => self.error = None,
         }
         true
@@ -237,12 +241,16 @@ impl ModificationEdit {
           }));
         let onclick_delete_component_modification = self.link.callback(|_| Msg::RequestDeleteModificationData);
         let onclick_component_modification_update = self.link.callback(|_| Msg::RequestUpdateModificationData);
+        let onclick_show_preview_description = self.link.callback(|_| Msg::PreviewDescription);
         html!{<>
-                <div class="content">
-                    <div class="columns">
-                        <div class="column" title={get_value_field(&96)}>
-                            <label class="label">{get_value_field(&96)}</label>
-                            <div class="select">
+                <div class={"content"}>
+                    <div class={"column"}>
+                    <div class={"columns"}>
+                        <div class={"column is-narrow"}>
+                            <p class={"title is-5 select-title"}>{get_value_field(&96)}</p>
+                        </div>
+                        <div class={"column"}>
+                            <div class={"select"}>
                             <select
                                 id={"update-modification-actual-status"}
                                 select={self.props.modification.actual_status.actual_status_id.to_string()}
@@ -259,31 +267,46 @@ impl ModificationEdit {
                             </select>
                             </div>
                         </div>
-                        <div class="column is-4">
-                            {get_value_field(&30)}
-                            {self.props.modification.updated_at.date_to_display()}
-                        </div>
                     </div>
-                    <div class="column" title={get_value_field(&176)}>
-                        <label class="label">{get_value_field(&176)}</label> // Modification name
+                    </div>
+                    <div class={"column"} title={get_value_field(&176)}>
+                        <p class={"title is-5"}>{get_value_field(&176)}</p>
                         <input
-                                id="add-modification-name"
-                                class="input is-fullwidth"
-                                type="text"
-                                placeholder={self.props.modification.modification_name.clone()}
-                                value={self.request_edit_modification.modification_name.clone()}
-                                oninput={oninput_modification_name} />
+                            id={"add-modification-name"}
+                            class={"input is-fullwidth"}
+                            type={"text"}
+                            placeholder={self.props.modification.modification_name.clone()}
+                            value={self.request_edit_modification.modification_name.clone()}
+                            oninput={oninput_modification_name} />
                     </div>
-                    <div class="column" title={{get_value_field(&61)}}> // Description
-                        <label class="label">{get_value_field(&61)}</label>
-                        <textarea
-                                id="update-modification-description"
-                                class="textarea is-fullwidth"
-                                // rows="10"
-                                type="text"
-                                placeholder={self.props.modification.description.clone()}
-                                value={self.request_edit_modification.description.clone()}
-                                oninput={oninput_modification_description} />
+                    <div class={"column"} title={{get_value_field(&61)}}> // Description
+                        <div class={"columns"}>
+                            <div class={"column is-narrow"}>
+                                <p class={"title is-5"}>{get_value_field(&61)}</p>
+                            </div>
+                            <div class={"column is-narrow"} onclick={onclick_show_preview_description} title={{get_value_field(&336)}}>
+                                <a>{match self.preview_description {
+                                    true => {get_value_field(&334)},
+                                    false => {get_value_field(&335)},
+                                }}</a>
+                            </div>
+                        </div>
+                        {match self.preview_description {
+                            true => html!{
+                                <div id={"update-modification-preview-description"} class={"box"}>
+                                    {self.request_edit_modification.description.to_markdown()}
+                                </div>
+                            },
+                            false => html!{
+                                <textarea
+                                    id={"update-modification-description"}
+                                    class={"textarea is-fullwidth"}
+                                    type={"text"}
+                                    placeholder={self.props.modification.description.clone()}
+                                    value={self.request_edit_modification.description.clone()}
+                                    oninput={oninput_modification_description} />
+                            },
+                        }}
                     </div>
                 </div>
                 <div class="columns">

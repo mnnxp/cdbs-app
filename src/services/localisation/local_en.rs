@@ -337,5 +337,8 @@ lazy_static! {
             (331, "Upload files for the standard"),
             (332, "Unauthorized"),
             (333, "Go to page authorization"),
+            (334, "Edit"),
+            (335, "Preview"),
+            (336, "Markdown markup language is supported for creating formatted text"),
         ]);
 }
