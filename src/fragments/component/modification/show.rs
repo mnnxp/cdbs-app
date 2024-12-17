@@ -218,6 +218,7 @@ impl ModificationsTableCard {
             Some(mod_data) => html!{
                 <div class="card-content">
                     <div class="content">
+                        <div class="column">
                         <div class="columns">
                             <div class="column" title={get_value_field(&96)}>
                                 {&mod_data.actual_status.name}
@@ -226,6 +227,7 @@ impl ModificationsTableCard {
                                 {get_value_field(&30)}
                                 {mod_data.updated_at.date_to_display()}
                             </div>
+                        </div>
                         </div>
                         <div class="column" title={get_value_field(&176)}>
                             <p class="overflow-title has-text-weight-bold">
