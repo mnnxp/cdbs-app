@@ -115,26 +115,26 @@ impl RegisterParamnameBlock {
         let onclick_register_paramname = self.link.callback(|_| Msg::RequestRegisterParamname);
         let oninput_set_paramname = self.link.callback(|ev: InputData| Msg::UpdateParamname(ev.value));
         let oninput_set_param_value = self.link.callback(|ev: InputData| Msg::UpdateParamValue(ev.value));
-
         html!{<>
             <div class="column">
-                <label class="label">{get_value_field(&205)}</label> // Set a paramname (letter case has matter)
+                <label class="label">{get_value_field(&178)}</label>
+                <p class="help">{get_value_field(&336)}<span>{" "}</span>{get_value_field(&337)}</p>
                 <input
                     id="paramname"
                     class="input is-fullwidth"
                     type="text"
-                    placeholder={get_value_field(&205)}
+                    placeholder={get_value_field(&205)} // Set a paramname (letter case has matter)
                     value={self.request_new_paramname.clone()}
                     oninput={oninput_set_paramname}
                     />
             </div>
             <div class="column">
-                <label class="label">{get_value_field(&133)}</label> // Set a value
+                <label class="label">{get_value_field(&179)}</label>
                 <input
                     id="param-value"
                     class="input is-fullwidth"
                     type="text"
-                    placeholder={get_value_field(&133)}
+                    placeholder={get_value_field(&133)} // Set a value
                     value={self.set_param_value.clone()}
                     oninput={oninput_set_param_value}
                     />

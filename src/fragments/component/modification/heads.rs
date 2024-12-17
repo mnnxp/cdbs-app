@@ -2,6 +2,7 @@ use yew::{html, Component, ComponentLink, Html, Properties, ShouldRender};
 use log::debug;
 use crate::types::{UUID, Param};
 use crate::services::get_value_field;
+use crate::services::content_adapter::Markdownable;
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
@@ -47,7 +48,7 @@ impl ModificationTableHeads {
             <th>{get_value_field(&111)}</th>
             <th>{get_value_field(&176)}</th> // Modification name
             {for self.props.params.iter().map(|head| {
-                html!{<th title={get_value_field(&210)}>{head.paramname.clone()}</th>}
+                html!{<th title={get_value_field(&210)}>{head.paramname.to_markdown()}</th>}
             })}
             {match self.props.show_new_column {
                 true => html!{<th title={get_value_field(&130)}>{get_value_field(&117)}</th>}, // add

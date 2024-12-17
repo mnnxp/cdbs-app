@@ -339,6 +339,7 @@ lazy_static! {
             (333, "Go to page authorization"),
             (334, "Edit"),
             (335, "Preview"),
-            (336, "Markdown markup language is supported for creating formatted text"),
+            (336, "Markdown markup language is supported for creating formatted text."),
+            (337, "For example, the <sup></sup> tag is used to specify superscript characters, and «m<sup>2</sup>» is used to spell square meter."),
         ]);
 }
