@@ -7,6 +7,7 @@ use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::buttons::ft_save_btn;
 use crate::services::{get_value_field, resp_parsing};
+use crate::services::content_adapter::Markdownable;
 use crate::gqls::make_query;
 use crate::gqls::relate::{RegisterParam, register_param};
 
@@ -127,6 +128,14 @@ impl RegisterParamnameBlock {
                     value={self.request_new_paramname.clone()}
                     oninput={oninput_set_paramname}
                     />
+                    <div class={"columns"}>
+                        <div class={"column is-narrow pr-0"}>
+                           <p class="help">{get_value_field(&335)}<span>{":"}</span></p>
+                        </div>
+                        <div class={"column is-narrow"}>
+                            <p class="help">{self.request_new_paramname.to_markdown()}</p>
+                        </div>
+                    </div>
             </div>
             <div class="column">
                 <label class="label">{get_value_field(&179)}</label>
