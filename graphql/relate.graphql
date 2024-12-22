@@ -71,8 +71,9 @@ mutation ChangeActiveFileRevision($fileUuid: UUID!){
 fragment showFileRelatedDataFields on ShowFileRelatedData {
   uuid
   filename
-  parentFileUuid
   revision
+  commitMsg
+  parentFileUuid
   ownerUser {
     ...showUserShortFields
   }

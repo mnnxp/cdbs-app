@@ -404,8 +404,9 @@ fragment componentParamFields on ComponentParamWithTranslation {
 fragment showFileRelatedDataFields on ShowFileRelatedData {
   uuid
   filename
-  parentFileUuid
   revision
+  commitMsg
+  parentFileUuid
   ownerUser {
     ...showUserShortFields
   }

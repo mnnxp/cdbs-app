@@ -239,6 +239,7 @@ fragment showFileRelatedDataFields on ShowFileRelatedData {
   uuid
   filename
   revision
+  commitMsg
   parentFileUuid
   ownerUser {
     ...showUserShortFields
