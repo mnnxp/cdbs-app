@@ -9,6 +9,7 @@ pub struct ShowFileInfo {
     pub uuid: String,
     pub filename: String,
     pub revision: usize,
+    pub commit_msg: String,
     pub parent_file_uuid: String,
     pub owner_user: ShowUserShort,
     pub content_type: String,
