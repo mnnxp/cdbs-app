@@ -84,8 +84,8 @@ impl Component for ManageFilesOfFilesetBlock {
         let onclick_open_fileset_files_list_btn =
             self.link.callback(|_| Msg::OpenFilesetFilesBlock);
         let class_fileset_btn = match self.open_fileset_files_card {
-            true => "button is-light is-active",
-            false => "button",
+            true => "button is-info is-light is-active",
+            false => "button is-info",
         };
         html!{
             <div style="margin-right: .5rem">
@@ -109,7 +109,7 @@ impl Component for ManageFilesOfFilesetBlock {
                 class={class_fileset_btn}
                 onclick={onclick_open_fileset_files_list_btn}
                 title={get_value_field(&106)}>
-                    <span class="icon is-small"><i class="fa fa-list"></i></span>
+                    <span class={"icon is-small"}><i class={"fa fa-list"}></i></span>
                     <span>{get_value_field(&198)}</span>
                 </button>
             </div>
