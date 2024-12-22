@@ -10,7 +10,6 @@ pub struct FileHeadersShow {
 
 #[derive(Properties, Clone)]
 pub struct Props {
-  pub show_long: bool,
   #[prop_or_default]
   pub show_download_btn: bool,
 }
@@ -28,7 +27,7 @@ impl Component for FileHeadersShow {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-      if self.props.show_long == props.show_long {
+      if self.props.show_download_btn == props.show_download_btn {
         false
       } else {
         self.props = props;
@@ -37,15 +36,6 @@ impl Component for FileHeadersShow {
     }
 
     fn view(&self) -> Html {
-      match self.props.show_long {
-        true => {self.head_long()},
-        false => {self.head_short()},
-      }
-    }
-}
-
-impl FileHeadersShow {
-    fn head_long(&self) -> Html {
       html!{
         <thead>
           <tr>
@@ -54,6 +44,7 @@ impl FileHeadersShow {
             <th><abbr title={get_value_field(&308)}>{get_value_field(&309)}</abbr></th> // Revision
             // <th>{get_value_field(&121)}</th> // Content
             <th>{get_value_field(&122)}</th> // Filesize
+            <th><abbr title={get_value_field(&338)}>{get_value_field(&341)}</abbr></th> // Message
             // <th>{get_value_field(&26) </th> // Program
             <th>{get_value_field(&124)}</th> // Upload by
             <th>{get_value_field(&125)}</th> // Upload at
@@ -61,19 +52,6 @@ impl FileHeadersShow {
                 true => html!{<th>{get_value_field(&126)}</th>}, // Download
                 false => html!{},
             }}
-          </tr>
-        </thead>
-      }
-    }
-
-    fn head_short(&self) -> Html {
-      html!{
-        <thead>
-          <tr>
-            <th>{"\u{2116}"}</th> // Numero sign
-            <th>{get_value_field(&120)}</th> // Filename
-            <th>{get_value_field(&122)}</th> // Filesize
-            <th>{get_value_field(&126)}</th> // Download
           </tr>
         </thead>
       }

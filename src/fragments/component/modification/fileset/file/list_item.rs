@@ -96,7 +96,7 @@ impl Component for FilesetFileItem {
         let onclick_file_info = self.link.callback(|_| Msg::ClickFileInfo);
         let onclick_delete_btn =
             self.link.callback(|delete_file_uuid| Msg::RequestDeleteFile(delete_file_uuid));
-
+        let onclick_file_info_btn = self.link.callback(|_| Msg::ClickFileInfo);
         html!{<>
             <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
             {match self.get_result_delete {
@@ -109,16 +109,9 @@ impl Component for FilesetFileItem {
                         open_modal_frame={self.open_full_info_file}
                         show_revisions={self.props.show_delete_btn}
                         />
-                    {self.show_file()}
+                    {res_file_btn(onclick_file_info_btn, self.props.file.filename.clone())}
                 </>},
             }}
         </>}
-    }
-}
-
-impl FilesetFileItem {
-    fn show_file(&self) -> Html {
-        let onclick_file_info = self.link.callback(|_| Msg::ClickFileInfo);
-        res_file_btn(onclick_file_info, self.props.file.filename.clone())
     }
 }

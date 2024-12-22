@@ -207,6 +207,7 @@ impl FileShowcase {
         // <th>{get_value_field(&237)}</th> // Content type
         <th><abbr title={get_value_field(&238)}>{get_value_field(&310)}</abbr></th> // Filesize
         // <th>{get_value_field(&239)}</th> // Program
+        <th><abbr title={get_value_field(&338)}>{get_value_field(&341)}</abbr></th> // Message to change
         <th><abbr title={get_value_field(&240)}>{get_value_field(&311)}</abbr></th> // Upload by
         <th><abbr title={get_value_field(&242)}>{get_value_field(&312)}</abbr></th> // Created at
         // <th><abbr title={get_value_field(&241)}>{get_value_field(&313)}</abbr></th> // Upload at
@@ -228,6 +229,7 @@ impl FileShowcase {
       <tr class={select_str}>
         <td><abbr title={file_info.uuid.clone()}>{file_info.revision.clone()}</abbr></td>
         <td>{file_info.show_size()}</td>
+        <td>{file_info.commit_msg.clone()}</td>
         <td>{file_info.owner_user.to_display()}</td>
         <td>{file_info.updated_at.date_to_display()}</td>
         <td>{match select_str.is_empty() {
@@ -280,6 +282,10 @@ impl FileShowcase {
             <tr>
               <td>{get_value_field(&238)}</td> // Filesize
               <td>{self.props.file_info.show_size()}</td>
+            </tr>
+            <tr>
+              <td>{get_value_field(&341)}</td> // Message
+              <td>{self.props.file_info.commit_msg.clone()}</td>
             </tr>
             <tr>
               <td>{get_value_field(&240)}</td> // Upload by

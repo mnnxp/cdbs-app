@@ -15,7 +15,7 @@ use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{
     buttons::{ft_save_btn, ft_back_btn},
-    file::UploaderFiles,
+    file::{UploaderFiles, commit_msg_field},
     list_errors::ListErrors,
     notification::show_notification,
     component::{
@@ -66,6 +66,7 @@ pub struct ComponentSettings {
     select_component_modification: UUID,
     get_result_component_data: usize,
     get_result_access: bool,
+    commit_msg: String,
 }
 
 #[derive(Properties, Clone)]
@@ -90,7 +91,7 @@ pub enum Msg {
     GetComponentFilesListResult(String),
     GetUploadData(String),
     UploadConfirm(usize),
-    FinishUploadFiles,
+    UpdateCommitMsg(String),
     GetDeleteComponentResult(String),
     UpdateTypeAccessId(String),
     UpdateActualStatusId(String),
@@ -136,6 +137,7 @@ impl Component for ComponentSettings {
             select_component_modification: String::new(),
             get_result_component_data: 0,
             get_result_access: false,
+            commit_msg: String::new(),
         }
     }
 
@@ -286,11 +288,12 @@ impl Component for ComponentSettings {
                     return false
                 }
                 let component_uuid = self.current_component_uuid.clone();
+                let commit_msg = self.commit_msg.clone();
                 spawn_local(async move {
                     let ipt_component_files_data = upload_component_files::IptComponentFilesData{
                         filenames,
                         componentUuid: component_uuid,
-                        commitMsg: String::new()
+                        commitMsg: commit_msg
                     };
                     let res = make_query(UploadComponentFiles::build_query(upload_component_files::Variables{
                         ipt_component_files_data
@@ -355,13 +358,12 @@ impl Component for ComponentSettings {
             },
             Msg::UploadConfirm(confirmations) => {
                 debug!("Confirmation upload of files: {:?}", confirmations);
-                link.send_message(Msg::FinishUploadFiles);
-            },
-            Msg::FinishUploadFiles => {
                 self.request_upload_data.clear();
                 self.files_list.clear();
+                self.commit_msg.clear();
                 link.send_message(Msg::RequestComponentFilesList);
             },
+            Msg::UpdateCommitMsg(data) => self.commit_msg = data,
             Msg::GetDeleteComponentResult(res) => {
                 match resp_parsing::<UUID>(res, "deleteComponent") {
                     Ok(result) => {
@@ -646,6 +648,7 @@ impl ComponentSettings {
     }
 
     fn show_component_files(&self) -> Html {
+        let oninput_commit_msg = self.link.callback(|ev: InputData| Msg::UpdateCommitMsg(ev.value));
         let callback_upload_filenames =
             self.link.callback(move |filenames| Msg::RequestUploadComponentFiles(filenames));
         let request_upload_files = match self.request_upload_data.is_empty() {
@@ -660,26 +663,27 @@ impl ComponentSettings {
                     <p class="card-header-title">{get_value_field(&187)}</p> // Manage component files
                 </header>
                 <div class="card-content">
-                    <div class="content">
-                        <div class="columns">
-                            <div class="column">
-                                <h3 class="has-text-weight-bold">{get_value_field(&188)}</h3> // Files for component
-                                <ComponentFilesBlock
-                                    show_download_btn={false}
-                                    show_delete_btn={true}
-                                    component_uuid={self.current_component_uuid.clone()}
-                                    files={self.files_list.clone()}
+                    <div class="column">
+                        <div class="column">
+                            <p class={"title is-4"}>{get_value_field(&186)}</p> // Upload component files
+                        </div>
+                        {commit_msg_field(self.commit_msg.clone(), oninput_commit_msg.clone())}
+                        <div class="column">
+                            <UploaderFiles
+                                text_choose_files={200} // Choose component files…
+                                callback_upload_filenames={callback_upload_filenames}
+                                request_upload_files={request_upload_files}
+                                callback_upload_confirm={callback_upload_confirm}
                                 />
-                            </div>
-                            <div class="column">
-                                <h3 class="has-text-weight-bold">{get_value_field(&186)}</h3> // Upload component files
-                                <UploaderFiles
-                                    text_choose_files={200} // Choose component files…
-                                    callback_upload_filenames={callback_upload_filenames}
-                                    request_upload_files={request_upload_files}
-                                    callback_upload_confirm={callback_upload_confirm}
+                        </div>
+                        <div class="column">
+                            <p class={"title is-4"}>{get_value_field(&188)}</p> // Files for component
+                            <ComponentFilesBlock
+                                show_download_btn={false}
+                                show_delete_btn={true}
+                                component_uuid={self.current_component_uuid.clone()}
+                                files={self.files_list.clone()}
                                 />
-                            </div>
                         </div>
                     </div>
                 </div>

@@ -45,6 +45,7 @@ impl Component for FileInfoItemShow {
           // <td>{self.props.file_info.content_type.clone()}</td>
           <td>{self.props.file_info.revision}</td>
           <td>{self.props.file_info.show_size()}</td>
+          <td>{self.props.file_info.commit_msg.clone()}</td>
           // <td>{self.props.file_info.program.name.clone()}</td>
           <td>{self.props.file_info.owner_user.to_display()}</td>
           <td>{self.props.file_info.created_at.date_to_display()}</td>

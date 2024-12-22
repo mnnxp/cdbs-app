@@ -112,6 +112,7 @@ impl Component for FilesetFilesBlock {
     }
 
     fn view(&self) -> Html {
+        let show_full_files_btn = self.link.callback(|_| Msg::ShowFullList);
         html!{<>
             <div class={"buttons"}>
                 {for self.files.iter().enumerate().map(|(index, file)| {
@@ -128,7 +129,7 @@ impl Component for FilesetFilesBlock {
                 {match self.files.len() {
                     0 => html!{<span>{get_value_field(&204)}</span>},
                     0..=3 => html!{},
-                    _ => self.show_see_btn(),
+                    _ => ft_see_btn(show_full_files_btn, self.show_full_files),
                 }}
             </footer>
         </>}
@@ -154,10 +155,5 @@ impl FilesetFilesBlock {
                 />
             },
         }
-    }
-
-    fn show_see_btn(&self) -> Html {
-        let show_full_files_btn = self.link.callback(|_| Msg::ShowFullList);
-        ft_see_btn(show_full_files_btn, self.show_full_files)
     }
 }

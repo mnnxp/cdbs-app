@@ -1,4 +1,4 @@
-use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html, ChangeData, classes};
+use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html, ChangeData, classes, InputData};
 use log::debug;
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
@@ -8,7 +8,7 @@ use crate::services::{get_value_field, resp_parsing};
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::buttons::{ft_delete_btn, ft_cancel_btn, ft_save_btn, ft_add_btn};
-use crate::fragments::file::UploaderFiles;
+use crate::fragments::file::{UploaderFiles, commit_msg_field};
 use crate::types::{UUID, Program, UploadFile, FilesetProgramInfo};
 use crate::gqls::make_query;
 use crate::gqls::relate::{GetPrograms, get_programs};
@@ -38,6 +38,7 @@ pub struct ManageModificationFilesets {
     programs: Vec<Program>,
     open_add_fileset_card: bool,
     get_confirm: UUID,
+    commit_msg: String,
 }
 
 pub enum Msg {
@@ -53,6 +54,7 @@ pub enum Msg {
     GetDeleteFilesetResult(String),
     GetUploadData(String),
     UploadConfirm(usize),
+    UpdateCommitMsg(String),
     SelectFileset(UUID),
     UpdateSelectProgramId(usize),
     ShowAddFilesetCard,
@@ -76,6 +78,7 @@ impl Component for ManageModificationFilesets {
             programs: Vec::new(),
             open_add_fileset_card: false,
             get_confirm: String::new(),
+            commit_msg: String::new(),
         }
     }
 
@@ -151,11 +154,12 @@ impl Component for ManageModificationFilesets {
                 }
                 self.upload_files = 0;
                 let fileset_uuid = self.select_fileset_uuid.clone();
+                let commit_msg = self.commit_msg.clone();
                 spawn_local(async move {
                     let ipt_modification_file_from_fileset_data = upload_files_to_fileset::IptModificationFileFromFilesetData{
                         filesetUuid: fileset_uuid,
                         filenames,
-                        commitMsg: String::new(),
+                        commitMsg: commit_msg,
                     };
                     let res = make_query(UploadFilesToFileset::build_query(
                         upload_files_to_fileset::Variables{ ipt_modification_file_from_fileset_data }
@@ -265,16 +269,17 @@ impl Component for ManageModificationFilesets {
             Msg::UploadConfirm(confirmations) => {
                 debug!("Confirmation upload of files: {:?}", confirmations);
                 self.request_upload_data.clear();
+                self.commit_msg.clear();
                 self.upload_files = confirmations;
             },
+            Msg::UpdateCommitMsg(data) => self.commit_msg = data,
             Msg::SelectFileset(fileset_uuid) => {
                 debug!("SelectFileset: {:?}", fileset_uuid);
                 self.select_fileset_uuid = fileset_uuid;
                 self.upload_files = 0;
                 self.get_confirm.clear(); // clear the check flag
             },
-            Msg::UpdateSelectProgramId(program_id) =>
-                self.request_fileset_program_id = program_id,
+            Msg::UpdateSelectProgramId(program_id) => self.request_fileset_program_id = program_id,
             Msg::ShowAddFilesetCard => {
                 self.open_add_fileset_card = !self.open_add_fileset_card;
                 if self.programs.is_empty() {
@@ -346,6 +351,7 @@ impl ManageModificationFilesets {
     }
 
     fn fileset_block(&self) -> Html {
+        let oninput_commit_msg = self.link.callback(|ev: InputData| Msg::UpdateCommitMsg(ev.value));
         let callback_upload_filenames =
             self.link.callback(move |filenames| Msg::RequestUploadFilesOfFileset(filenames));
         let request_upload_files = match self.request_upload_data.is_empty() {
@@ -354,26 +360,26 @@ impl ManageModificationFilesets {
         };
         let callback_upload_confirm = self.link.callback(|confirmations| Msg::UploadConfirm(confirmations));
         let onclick_new_fileset_card = self.link.callback(|_| Msg::ShowAddFilesetCard);
-
         html!{<>
-            <div class="columns">
-                <div class="column">
-                    <h3>{get_value_field(&198)}</h3> // Files of fileset
-                    <FilesetFilesBlock
-                        upload_files={self.upload_files}
-                        show_delete_btn={true}
-                        select_fileset_uuid={self.select_fileset_uuid.clone()}
+            <div class="column">
+                <p class={"title is-4"}>{get_value_field(&197)}</p> // Upload files for fileset
+            </div>
+            {commit_msg_field(self.commit_msg.clone(), oninput_commit_msg.clone())}
+            <div class="column">
+                <UploaderFiles
+                    text_choose_files={195} // Choose fileset files…
+                    callback_upload_filenames={callback_upload_filenames}
+                    request_upload_files={request_upload_files}
+                    callback_upload_confirm={callback_upload_confirm}
                     />
-                </div>
-                <div class="column">
-                    <h3>{get_value_field(&197)}</h3> // Upload files for fileset
-                    <UploaderFiles
-                        text_choose_files={195} // Choose fileset files…
-                        callback_upload_filenames={callback_upload_filenames}
-                        request_upload_files={request_upload_files}
-                        callback_upload_confirm={callback_upload_confirm}
-                        />
-                </div>
+            </div>
+            <div class="column">
+                <p class={"title is-4"}>{get_value_field(&198)}</p> // Files of fileset
+                <FilesetFilesBlock
+                    upload_files={self.upload_files}
+                    show_delete_btn={true}
+                    select_fileset_uuid={self.select_fileset_uuid.clone()}
+                />
             </div>
             {ft_add_btn(
                 "create-new-fileset",

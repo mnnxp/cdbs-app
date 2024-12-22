@@ -130,10 +130,7 @@ impl Component for ModificationFilesTableCard {
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
                 <div class="table-container">
                     <table class="table is-fullwidth is-striped">
-                        <FileHeadersShow
-                            show_long={true}
-                            show_download_btn={self.props.show_download_btn}
-                            />
+                        <FileHeadersShow show_download_btn={self.props.show_download_btn} />
                         <tbody>
                             {for self.files_list.iter().enumerate().map(|(numer, file)| html!{
                                 <FileInfoItemShow

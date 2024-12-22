@@ -1,5 +1,5 @@
 use std::collections::BTreeSet;
-use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
+use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html, InputData};
 use log::debug;
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
@@ -8,7 +8,7 @@ use super::ModificationFileItem;
 use crate::services::{get_value_field, resp_parsing};
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
-use crate::fragments::file::UploaderFiles;
+use crate::fragments::file::{UploaderFiles, commit_msg_field};
 use crate::fragments::buttons::ft_see_btn;
 use crate::types::{UUID, ShowFileInfo, UploadFile};
 use crate::gqls::make_query;
@@ -33,6 +33,7 @@ pub struct ManageModificationFilesCard {
     files_list: Vec<ShowFileInfo>,
     files_deleted_list: BTreeSet<UUID>,
     show_full_files: bool,
+    commit_msg: String,
 }
 
 #[derive(Clone)]
@@ -43,7 +44,7 @@ pub enum Msg {
     GetModificationFilesListResult(String),
     GetUploadData(String),
     UploadConfirm(usize),
-    FinishUploadFiles,
+    UpdateCommitMsg(String),
     ShowFullList,
     RemoveFile(UUID),
     ClearError,
@@ -62,6 +63,7 @@ impl Component for ManageModificationFilesCard {
             files_list: Vec::new(),
             files_deleted_list: BTreeSet::new(),
             show_full_files: false,
+            commit_msg: String::new(),
         }
     }
 
@@ -95,11 +97,12 @@ impl Component for ManageModificationFilesCard {
                     return false
                 }
                 let modification_uuid = self.props.modification_uuid.clone();
+                let commit_msg = self.commit_msg.clone();
                 spawn_local(async move {
                     let ipt_modification_files_data = upload_modification_files::IptModificationFilesData{
                         modificationUuid: modification_uuid,
                         filenames,
-                        commitMsg: String::new(),
+                        commitMsg: commit_msg,
                     };
                     let res = make_query(UploadModificationFiles::build_query(
                         upload_modification_files::Variables{ ipt_modification_files_data }
@@ -109,8 +112,12 @@ impl Component for ManageModificationFilesCard {
             },
             Msg::UploadConfirm(confirmations) => {
                 debug!("Confirmation upload of files: {:?}", confirmations);
-                link.send_message(Msg::FinishUploadFiles);
+                self.request_upload_data.clear();
+                self.files_list.clear();
+                self.commit_msg.clear();
+                link.send_message(Msg::RequestModificationFilesList);
             },
+            Msg::UpdateCommitMsg(data) => self.commit_msg = data,
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetModificationFilesListResult(res) => {
                 match resp_parsing(res, "componentModificationFilesList") {
@@ -129,11 +136,6 @@ impl Component for ManageModificationFilesCard {
                     },
                     Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
-            },
-            Msg::FinishUploadFiles => {
-                self.request_upload_data.clear();
-                self.files_list.clear();
-                link.send_message(Msg::RequestModificationFilesList);
             },
             Msg::ShowFullList => self.show_full_files = !self.show_full_files,
             Msg::RemoveFile(file_uuid) => {
@@ -161,6 +163,7 @@ impl Component for ManageModificationFilesCard {
     }
 
     fn view(&self) -> Html {
+        let oninput_commit_msg = self.link.callback(|ev: InputData| Msg::UpdateCommitMsg(ev.value));
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         let callback_upload_filenames =
             self.link.callback(move |filenames| Msg::RequestUploadModificationFiles(filenames));
@@ -168,25 +171,24 @@ impl Component for ManageModificationFilesCard {
             true => None,
             false => Some(self.request_upload_data.clone()),
         };
-        let callback_upload_confirm =
-            self.link.callback(|confirmations| Msg::UploadConfirm(confirmations));
-
+        let callback_upload_confirm = self.link.callback(|confirmations| Msg::UploadConfirm(confirmations));
         html!{<>
             <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
-            <div class="columns">
-                <div class="column">
-                  <h3>{get_value_field(&203)}</h3> // Files for modification
-                  {self.show_files_list()}
-                </div>
-                <div class="column">
-                  <h3>{get_value_field(&202)}</h3> // Upload modification files
-                  <UploaderFiles
-                    text_choose_files={201} // Choose modification files…
-                    callback_upload_filenames={callback_upload_filenames}
-                    request_upload_files={request_upload_files}
-                    callback_upload_confirm={callback_upload_confirm}
-                    />
-                </div>
+            <div class="column">
+                <p class={"title is-4"}>{get_value_field(&202)}</p> // Upload modification files
+            </div>
+            {commit_msg_field(self.commit_msg.clone(), oninput_commit_msg.clone())}
+            <div class="column">
+              <UploaderFiles
+                text_choose_files={201} // Choose modification files…
+                callback_upload_filenames={callback_upload_filenames}
+                request_upload_files={request_upload_files}
+                callback_upload_confirm={callback_upload_confirm}
+                />
+            </div>
+            <div class="column">
+                <p class={"title is-4"}>{get_value_field(&203)}</p> // Files for modification
+                {self.show_files_list()}
             </div>
         </>}
     }
