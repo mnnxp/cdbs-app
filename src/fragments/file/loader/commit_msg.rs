@@ -1,6 +1,7 @@
 use yew::{html, Html, InputData, Callback};
 use crate::services::get_value_field;
 
+/// Returns a VNode (html code) with an input field to enter a comment on upload files
 pub fn commit_msg_field(commit_msg: String, oninput_commit_msg: Callback<InputData>) -> Html {
     let label_commit_msg = get_value_field(&340);
     html!{
