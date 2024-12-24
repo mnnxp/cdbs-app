@@ -25,7 +25,7 @@ pub struct Paginate {
 pub enum Msg {
     CalcPages,
     ToFirst,
-    Previous,
+    Prev,
     Next,
     ToLast,
     To(String),
@@ -60,7 +60,7 @@ impl Component for Paginate {
         match msg {
             Msg::CalcPages => self.update_total_page(),
             Msg::ToFirst => self.page_set.to(1),
-            Msg::Previous => self.page_set.previous(),
+            Msg::Prev => self.page_set.previous(),
             Msg::Next => self.page_set.next(),
             Msg::ToLast => self.page_set.to(self.total_page),
             Msg::To(number) => self.new_page = number.parse::<i64>().unwrap_or_default(),
@@ -102,16 +102,18 @@ impl Component for Paginate {
     }
 
     fn view(&self) -> Html {
-        let color = "color: #1872f0;";
+        let color = "#1872f0";
         html!{
-            <nav class="pagination" role="navigation" aria-label="pagination">
-                {self.ft_previous_btn(color)}
-                {self.ft_next_btn(color)}
-                {self.ft_per_page()}
-                {match self.is_manual_page {
-                    true => self.ft_current_page(),
-                    false => self.ft_total_items(),
-                }}
+            <nav class={"pagination-smart"} role={"navigation"} aria-label={"pagination-smart"}>
+                <div class={"buttons"}>
+                    {self.ft_per_page()}
+                    {self.ft_prev_btn(color)}
+                    {match self.is_manual_page {
+                        true => self.ft_current_page(),
+                        false => self.ft_total_items(),
+                    }}
+                    {self.ft_next_btn(color)}
+                </div>
             </nav>
         }
     }
@@ -125,7 +127,7 @@ impl Paginate {
             false => String::from("/?"),
         };
         html!{
-            <div class="button pagination-link"
+            <div class={"button pagination-smart"}
                     aria-label={self.page_set.current_page.to_string()}
                     aria-current={self.page_set.current_page.to_string()}
                     onclick={onclick_set_page}
@@ -142,16 +144,16 @@ impl Paginate {
         html!{<>
             <input
                 id={"current_page"}
-                class={"pagination-link"}
+                class={"input pagination-smart"}
                 type={"number"}
-                min="1"
+                min={"1"}
                 max={self.total_page.to_string()}
                 placeholder={self.page_set.current_page.to_string()}
                 value={self.new_page.to_string()}
                 oninput={oninput_change_page} />
             <button
                 id={"to"}
-                class={"button is-link pagination-link"}
+                class={"button is-link pagination-smart"}
                 onclick={onclick_set_page}>
                 <span class="icon">
                     <i class="fas fa-space-shuttle" aria-hidden="true"></i>
@@ -160,28 +162,33 @@ impl Paginate {
         </>}
     }
 
-    fn ft_previous_btn(&self, color: &str) -> Html {
-        let onclick_previous = self.link.callback(|_| Msg::Previous);
+    fn ft_prev_btn(&self, color: &str) -> Html {
+        let onclick_prev = self.link.callback(|_| Msg::Prev);
         let onclick_first = self.link.callback(|_| Msg::ToFirst);
         let disabled = self.page_set.current_page == 1 || self.is_manual_page;
         let color = color.to_string();
         html!{<>
             <button
                 id={"to_first"}
-                class={"button pagination-previous"}
+                class={"button pagination-smart ps-first"}
                 onclick={onclick_first}
                 disabled={disabled}>
                 <span class="icon">
-                    <i class="fas fa-step-backward" aria-hidden="true" style={color.clone()}></i>
+                    <svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path fill={color.clone()} d={"M7.08,6.52a1.68,1.68,0,0,0,0,2.4L16.51,18,7.12,27.08a1.7,1.7,0,0,0,2.36,2.44h0L21.4,18,9.48,6.47A1.69,1.69,0,0,0,7.08,6.52Z"}></path>
+                        <path fill={color.clone()} d={"M26.49,5a1.7,1.7,0,0,0-1.7,1.7V29.3a1.7,1.7,0,0,0,3.4,0V6.7A1.7,1.7,0,0,0,26.49,5Z"}></path>
+                    </svg>
                 </span>
             </button>
             <button
-                id={"to_previous"}
-                class={"button pagination-previous"}
-                onclick={onclick_previous}
+                id={"to_prev"}
+                class={"button pagination-smart ps-prev"}
+                onclick={onclick_prev}
                 disabled={disabled}>
                 <span class="icon">
-                    <i class="fas fa-caret-left" aria-hidden="true" style={color}></i>
+                    <svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path fill={color} d={"M29.52,22.52,18,10.6,6.48,22.52a1.7,1.7,0,0,0,2.45,2.36L18,15.49l9.08,9.39a1.7,1.7,0,0,0,2.45-2.36Z"}></path>
+                    </svg>
                 </span>
             </button>
         </>}
@@ -198,20 +205,25 @@ impl Paginate {
         html!{<>
             <button
                 id={"to_next"}
-                class={"button pagination-next"}
+                class={"button pagination-smart ps-next"}
                 onclick={onclick_next}
                 disabled={disabled}>
                 <span class="icon">
-                    <i class="fas fa-caret-right" aria-hidden="true" style={color.clone()}></i>
+                    <svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path fill={color.clone()} d={"M29.52,22.52,18,10.6,6.48,22.52a1.7,1.7,0,0,0,2.45,2.36L18,15.49l9.08,9.39a1.7,1.7,0,0,0,2.45-2.36Z"}></path>
+                    </svg>
                 </span>
             </button>
             <button
                 id={"to_last"}
-                class={"button pagination-next"}
+                class={"button pagination-smart"}
                 onclick={onclick_last}
                 disabled={disabled || self.total_page == 0}>
                 <span class="icon">
-                    <i class="fas fa-step-forward" aria-hidden="true" style={color}></i>
+                    <svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path fill={color.clone()} d={"M7.08,6.52a1.68,1.68,0,0,0,0,2.4L16.51,18,7.12,27.08a1.7,1.7,0,0,0,2.36,2.44h0L21.4,18,9.48,6.47A1.69,1.69,0,0,0,7.08,6.52Z"}></path>
+                        <path fill={color} d={"M26.49,5a1.7,1.7,0,0,0-1.7,1.7V29.3a1.7,1.7,0,0,0,3.4,0V6.7A1.7,1.7,0,0,0,26.49,5Z"}></path>
+                    </svg>
                 </span>
             </button>
         </>}
@@ -224,7 +236,7 @@ impl Paginate {
         }));
 
         html!{
-            <div class={"select"}>
+            <div class={"select pagination-smart"}>
                 <select
                     id={"per_page"}
                     select={self.page_set.per_page.to_string()}

@@ -371,3 +371,29 @@ scene-hull {
 .modal-content.box {
   width: auto;
 }
+
+.pagination-smart{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+  margin-bottom: 0.5em;
+  .input {
+    width: max-content;
+    margin-bottom: 0.5em;
+    margin-right: 0.5em;
+  }
+  .select {
+    margin-bottom: 0.5em;
+    margin-right: 0.5em;
+  }
+  .ps-next {
+    transform: rotate(90deg);
+  }
+  .ps-prev {
+    transform: rotate(270deg);
+  }
+  .ps-first {
+    transform: rotate(180deg);
+  }
+}
