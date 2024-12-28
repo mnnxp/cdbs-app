@@ -15,7 +15,7 @@ use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::buttons::ft_create_btn;
-use crate::services::{get_logged_user, get_value_field, get_value_response, get_from_value, resp_parsing};
+use crate::services::{get_from_value, get_logged_user, get_value_field, get_value_response, resp_parsing, set_history_back};
 use crate::types::{
     UUID, StandardCreateData, SlimUser, Region, TypeAccessInfo,
     ShowCompanyShort, StandardStatus,
@@ -90,6 +90,7 @@ impl Component for CreateStandard {
         let logged_user_uuid = match get_logged_user() {
             Some(cu) => cu.uuid,
             None => {
+                set_history_back(Some(String::new()));
                 // route to login page if not found token
                 self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
                 String::new()

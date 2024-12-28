@@ -26,7 +26,7 @@ use crate::fragments::{
     clipboard::ShareLinkBtn,
 };
 use crate::services::content_adapter::{DateDisplay, Markdownable};
-use crate::services::{Counter, get_logged_user, get_value_field, resp_parsing, title_changer};
+use crate::services::{get_logged_user, get_value_field, resp_parsing, set_history_back, title_changer, Counter};
 use crate::types::{UUID, ComponentInfo, SlimUser, DownloadFile};
 use crate::gqls::make_query;
 use crate::gqls::component::{
@@ -119,6 +119,7 @@ impl Component for ShowComponent {
 
     fn rendered(&mut self, first_render: bool) {
         if let None = get_logged_user() {
+            set_history_back(Some(String::new()));
             // route to login page if not found token
             self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
         };

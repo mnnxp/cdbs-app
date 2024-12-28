@@ -26,7 +26,7 @@ use crate::fragments::{
 use crate::services::content_adapter::{
     ContentDisplay, Markdownable, DateDisplay, ContactDisplay, SpecDisplay
 };
-use crate::services::{Counter, get_logged_user, get_value_field, resp_parsing, title_changer};
+use crate::services::{get_logged_user, get_value_field, resp_parsing, set_history_back, title_changer, Counter};
 use crate::types::{UUID, CompanyInfo, SlimUser, ComponentsQueryArg, StandardsQueryArg};
 use crate::gqls::make_query;
 use crate::gqls::company::{
@@ -110,6 +110,7 @@ impl Component for ShowCompany {
 
     fn rendered(&mut self, first_render: bool) {
         if let None = get_logged_user() {
+            set_history_back(Some(String::new()));
             // route to login page if not found token
             self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
         };

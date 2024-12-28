@@ -11,7 +11,7 @@ use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::buttons::ft_create_btn;
-use crate::services::{get_logged_user, get_value_field, get_value_response, get_from_value, resp_parsing};
+use crate::services::{get_from_value, get_logged_user, get_value_field, get_value_response, resp_parsing, set_history_back};
 use crate::types::{UUID, ComponentCreateData, TypeAccessInfo, ActualStatus};
 use crate::gqls::make_query;
 use crate::gqls::component::{
@@ -65,6 +65,7 @@ impl Component for CreateComponent {
 
     fn rendered(&mut self, first_render: bool) {
         if let None = get_logged_user() {
+            set_history_back(Some(String::new()));
             // route to login page if not found token
             self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
         };

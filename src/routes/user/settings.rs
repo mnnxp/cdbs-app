@@ -16,7 +16,7 @@ use crate::fragments::{
 };
 use crate::routes::AppRoute;
 use crate::services::content_adapter::DateDisplay;
-use crate::services::{get_current_user, set_token, set_logged_user, get_logged_user, get_value_field, resp_parsing, get_value_response, get_from_value};
+use crate::services::{get_current_user, get_from_value, get_logged_user, get_value_field, get_value_response, resp_parsing, set_history_back, set_logged_user, set_token};
 use crate::types::{Program, Region, SelfUserInfo, TypeAccessInfo, UpdatePasswordInfo, UserUpdateInfo};
 use crate::gqls::make_query;
 use crate::gqls::user::{
@@ -128,6 +128,7 @@ impl Component for Settings {
     fn rendered(&mut self, first_render: bool) {
         if first_render {
             if let None = get_logged_user() {
+                set_history_back(Some(String::new()));
                 // route to login page if not found token
                 self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
             };

@@ -23,7 +23,7 @@ use crate::fragments::{
         ModificationsTableEdit, ComponentFilesBlock, SearchSpecsTags, AddKeywordsTags
     },
 };
-use crate::services::{get_logged_user, get_value_field, resp_parsing, get_value_response, get_from_value};
+use crate::services::{get_from_value, get_logged_user, get_value_field, get_value_response, resp_parsing, set_history_back};
 use crate::types::{
     UUID, ComponentInfo, SlimUser, TypeAccessInfo, UploadFile, ActualStatus, ComponentUpdatePreData,
     ComponentUpdateData, ShowCompanyShort, ComponentModificationInfo, ShowFileInfo,
@@ -145,6 +145,7 @@ impl Component for ComponentSettings {
         let logged_user_uuid = match get_logged_user() {
             Some(cu) => cu.uuid,
             None => {
+                set_history_back(Some(String::new()));
                 // route to login page if not found token
                 self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
                 String::new()

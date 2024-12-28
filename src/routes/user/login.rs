@@ -8,11 +8,15 @@ use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
 use graphql_client::GraphQLQuery;
 use log::debug;
 use wasm_bindgen_futures::spawn_local;
+use web_sys;
 
 use crate::fragments::list_errors::ListErrors;
 use crate::error::Error;
 use crate::routes::AppRoute;
-use crate::services::{set_token, Auth, set_logged_user, get_logged_user, get_value_field};
+use crate::services::{
+    set_token, Auth, set_logged_user, get_logged_user, get_value_field,
+    set_history_back, get_history_back
+};
 use crate::types::{LoginInfo, LoginInfoWrapper, SlimUser, UserToken};
 use crate::gqls::make_query;
 use crate::gqls::user::{GetMySelf, get_my_self};
@@ -89,11 +93,21 @@ impl Component for Login {
                     let res = data.as_object().unwrap().get("data").unwrap();
                     let user_json = res.get("myself").unwrap().clone();
                     set_logged_user(Some(user_json.to_string()));
-                    let user : SlimUser = serde_json::from_value(user_json).unwrap();
+                    let user: SlimUser = serde_json::from_value(user_json).unwrap();
                     debug!("user.username: {}", user.username);
                     let username = user.username.clone();
                     props.callback.emit(user);
-                    router_agent.lock().unwrap().send(ChangeRoute(AppRoute::Profile(username).into()));
+                    // return to the previous page if the user was redirected to the authorization page
+                    let to_profile = match (get_history_back(), web_sys::window().map(|w| w.history())) {
+                        (Some(_), Some(Ok(history))) => {
+                            set_history_back(None);
+                            history.back().is_err()
+                        },
+                        _ => true,
+                    };
+                    if to_profile {
+                        router_agent.lock().unwrap().send(ChangeRoute(AppRoute::Profile(username).into()));
+                    }
                 });
                 // debug!("get_token().unwrap(): {:?}", get_token().unwrap());
             },
