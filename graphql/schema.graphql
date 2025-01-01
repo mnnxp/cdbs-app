@@ -915,7 +915,8 @@ type MutationRoot {
   registerExtension(args: IptExtensionData!): Extension!
   registerKeyword(args: IptKeywordData!): Keyword!
   registerLicense(args: LicenseData!): License!
-  registerParam(args: IptParamTranslateListData!): Int!
+  registerParam(args: IptParamTranslateListData!): ParamTranslateList!
+  registerParams(args: [IptParamTranslateListData!]): [ParamTranslateList!]
   registerProgram(args: IptProgramData!): Program!
   registerRegion(args: IptRegionTranslateListData!): RegionTranslateList!
   uploadCompleted(fileUuids: [UUID!]!): Int!

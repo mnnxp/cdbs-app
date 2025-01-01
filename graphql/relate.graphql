@@ -51,7 +51,15 @@ mutation DeleteFile($fileUuid: UUID!) {
 }
 
 mutation RegisterParam($iptParamTranslateListData: IptParamTranslateListData!) {
-  registerParam(args: $iptParamTranslateListData)
+  registerParam(args: $iptParamTranslateListData) {
+    ...paramFields
+  }
+}
+
+mutation RegisterParams($iptParamsTranslateListData: [IptParamTranslateListData!]) {
+  registerParam(args: $iptParamsTranslateListData) {
+    ...paramFields
+  }
 }
 
 query ShowFileRevisions(
