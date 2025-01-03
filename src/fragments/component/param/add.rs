@@ -76,7 +76,7 @@ impl Component for RegisterParamnameBlock {
                 match resp_parsing::<Param>(res, "registerParam") {
                     Ok(result) => {
                         debug!("registerParam: {:?}", result);
-                        self.props.callback_add_param.emit((result.param_id, result.paramname));
+                        self.props.callback_add_param.emit((result.param_id, self.set_param_value.clone()));
                         self.active_loading_btn = false;
                         // clear old data
                         self.request_new_paramname.clear();
