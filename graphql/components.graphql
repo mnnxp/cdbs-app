@@ -225,6 +225,10 @@ mutation RegisterComponentModification($iptComponentModificationData: IptCompone
   registerComponentModification(args: $iptComponentModificationData)
 }
 
+mutation RegisterComponentModificationsBulk($iptMultipleModificationsData: IptMultipleModificationsData!) {
+  registerComponentModificationsBulk(args: $iptMultipleModificationsData)
+}
+
 mutation DeleteComponentModification($delComponentModificationData: DelComponentModificationData!) {
   deleteComponentModification(args: $delComponentModificationData)
 }

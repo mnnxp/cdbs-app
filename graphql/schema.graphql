@@ -509,6 +509,7 @@ input IptModificationsData {
   modificationName: String!
   description: String!
   actualStatusId: Int!
+  parameters: [IptParamData!]!
 }
 
 input IptMultipleModificationsData {
@@ -848,7 +849,7 @@ type MutationRoot {
   addStandardToComponent(args: IptStandardToComponentData!): Boolean!
   deleteStandardsComponent(args: DelStandardToComponentData!): Int!
   registerComponentModification(args: IptComponentModificationData!): UUID!
-  registerComponentModifications(args: IptMultipleModificationsData!): [UUID!]!
+  registerComponentModificationsBulk(args: IptMultipleModificationsData!): [UUID!]!
   putComponentModificationUpdate(
     componentModificationUuid: UUID!
     args: IptUpdateComponentModificationData!
@@ -916,7 +917,7 @@ type MutationRoot {
   registerKeyword(args: IptKeywordData!): Keyword!
   registerLicense(args: LicenseData!): License!
   registerParam(args: IptParamTranslateListData!): ParamTranslateList!
-  registerParams(args: [IptParamTranslateListData!]): [ParamTranslateList!]
+  registerParamsBulk(args: [IptParamTranslateListData!]!): [ParamTranslateList!]!
   registerProgram(args: IptProgramData!): Program!
   registerRegion(args: IptRegionTranslateListData!): RegionTranslateList!
   uploadCompleted(fileUuids: [UUID!]!): Int!

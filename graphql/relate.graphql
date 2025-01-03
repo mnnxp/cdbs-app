@@ -56,8 +56,8 @@ mutation RegisterParam($iptParamTranslateListData: IptParamTranslateListData!) {
   }
 }
 
-mutation RegisterParams($iptParamsTranslateListData: [IptParamTranslateListData!]) {
-  registerParam(args: $iptParamsTranslateListData) {
+mutation RegisterParamsBulk($iptParamsTranslateListData: [IptParamTranslateListData!]!) {
+  registerParamsBulk(args: $iptParamsTranslateListData) {
     ...paramFields
   }
 }
