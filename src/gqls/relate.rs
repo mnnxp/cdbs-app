@@ -65,6 +65,15 @@ pub(crate) struct GetParams;
 )]
 pub(crate) struct RegisterParam;
 
+/// Добавление новых наименований для параметров
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/relate.graphql",
+    response_derives = "Debug"
+)]
+pub(crate) struct RegisterParamsBulk;
+
 /// Получение списка ревизий для активного файла
 #[derive(GraphQLQuery)]
 #[graphql(

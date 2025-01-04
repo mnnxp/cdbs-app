@@ -277,10 +277,46 @@ pub fn ft_back_btn(
             class={"button"}
             onclick={trigger_btn}
             title={title_text.to_string()}>
-            <span class="icon is-small">
-                <i class="fas fa-arrow-left" style={"color: #1872f0;"}></i>
+            <span class={"icon is-small"}>
+                <i class={"fas fa-arrow-left"} style={"color: #1872f0;"}></i>
             </span>
             <span>{title_text.to_string()}</span>
+        </button>
+    }
+}
+
+/// Returns a VNode with Html code of a return import button
+pub fn ft_import_btn(
+    id_btn: &str,
+    trigger_btn: Callback<MouseEvent>,
+    title_text: &str,
+    is_fullwidth: bool,
+    disabled: bool,
+) -> Html {
+    let class_btn = match is_fullwidth {
+        true => classes!("button", "is-link", "is-fullwidth"),
+        false => classes!("button"),
+    };
+    html!{
+        <button
+            id={id_btn.to_string()}
+            class={class_btn}
+            disabled={disabled}
+            onclick={trigger_btn}
+            title={title_text.to_string()}>
+            {match is_fullwidth {
+                true => html!{
+                    <span class={"icon is-small"}>
+                        <i class={"far fa-save"} aria-hidden="true"></i>
+                    </span>
+                },
+                false => html!{
+                    <span class={"icon is-small"}>
+                        <i class={"fas fa-upload"} style={"color: #1872f0;"}></i>
+                    </span>
+                },
+            }}
+            <span>{get_value_field(&347)}</span>
         </button>
     }
 }

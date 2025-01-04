@@ -7,6 +7,7 @@ use wasm_bindgen_futures::spawn_local;
 use super::ModificationEdit;
 use super::table::ModificationsTable;
 use crate::error::Error;
+use crate::fragments::component::modification::ImportModificationsData;
 use crate::fragments::paginate::Paginate;
 use crate::fragments::buttons::{ft_add_btn, ft_back_btn};
 use crate::fragments::list_errors::ListErrors;
@@ -270,6 +271,7 @@ impl Component for ModificationsTableEdit {
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         let onclick_modification_card = self.link.callback(|_| Msg::ShowEditModificationCard);
+        let callback_finish_import = self.link.callback(|_| Msg::RequestComponentModificationsData);
         html!{
             <div class="card">
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
@@ -280,6 +282,12 @@ impl Component for ModificationsTableEdit {
                             false => html!{get_value_field(&100)} // Modifications,
                         }}
                     </p>
+                    <div class="card-header-title">
+                        <ImportModificationsData
+                            component_uuid={self.props.current_component_uuid.clone()}
+                            callback_finish_import={callback_finish_import}
+                            />
+                    </div>
                 </header>
                 {match self.open_edit_modification_card {
                     true => self.show_modification_edit(),

@@ -345,5 +345,12 @@ lazy_static! {
             (339, "Messages will help understand: Why was this change made? What effect did the change have? Why was this change necessary?"),
             (340, "The maximum message length is 225 English characters (bytes)"),
             (341, "Message"),
+            (342, "Import modifications and parameters"),
+            (343, "To upload data, simply copy the data from a spreadsheet (Excel, LibreOffice, etc.) and paste it into the field below.<br/>The first row of the table is used to specify parameter names.<br/>Keywords are used to specify modifications data:<br/><b>[ModificationName]</b> - column with modification names (required),<br/><b>[ModificationDescription]</b> - column with descriptions,<br/><b>[ModificationActualStatusId]</b> - column for state IDs."),
+            (344, "Paste the copied table data here. Example:\n[ModificationName]\tparameter 1\tparameter 2\nmodification name 1\tvalue 1\tvalue 2\nmodification name 2\tvalue 3\tvalue 4"),
+            (345, "headers"),
+            (346, "rows"),
+            (347, "Import"),
+            (348, "Export"),
         ]);
 }

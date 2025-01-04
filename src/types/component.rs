@@ -176,6 +176,25 @@ pub struct ComponentModificationInfo{
   pub files_count: i64,
 }
 
+#[derive(Clone, Debug, Default)]
+pub struct NewModificationsPreData{
+    pub modification_name: String,
+    pub description: String,
+    pub actual_status_id: usize,
+    pub params: Vec<ParamValue>,
+}
+
+impl NewModificationsPreData {
+    pub(crate) fn new() -> Self {
+        Self {
+            modification_name: String::new(),
+            description: String::new(),
+            actual_status_id: 1,
+            params: Vec::new(),
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct ModificationUpdatePreData{
   pub modification_name: String,
@@ -199,6 +218,13 @@ pub struct ModificationParam{
   pub modification_uuid: UUID,
   pub param: Param,
   pub value: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Default, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct ModificationParams{
+  pub modification_uuid: UUID,
+  pub params: Vec<ParamValue>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

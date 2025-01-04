@@ -24,6 +24,13 @@ impl Markdownable for String {
     }
 }
 
+impl Markdownable for &str {
+    /// Returns a VNode (Html) with the result of converting text to markdown style
+    fn to_markdown(&self) -> Html {
+        inner_markdown(self)
+    }
+}
+
 pub(crate) trait DateDisplay {
     /// Returns VNode (Html) with convert dates to display.
     fn date_to_display(&self) -> Html;
