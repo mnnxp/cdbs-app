@@ -14,7 +14,7 @@ use crate::error::Error;
 use crate::fragments::{
     buttons::ft_follow_btn,
     clipboard::ShareLinkBtn,
-    user::ModalCardUser,
+    user::GoToUser,
     switch_icon::res_btn,
     list_errors::ListErrors,
     list_empty::ListEmpty,
@@ -300,7 +300,7 @@ impl ShowCompany {
                           </p>
                       },
                   }}
-                  <ModalCardUser data = {company_data.owner_user.clone()} />
+                  <GoToUser data = {company_data.owner_user.clone()} />
                 </div>
                 <div class="column">
                     <p class="subtitle is-6 has-text-right">

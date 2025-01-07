@@ -13,7 +13,7 @@ use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{
     buttons::{ft_see_btn, ft_follow_btn},
-    user::ModalCardUser,
+    user::GoToUser,
     switch_icon::res_btn,
     list_errors::ListErrors,
     component::CatalogComponents,
@@ -321,7 +321,7 @@ impl ShowStandard {
                 <div class="media">
                     <div class="media-content">
                         {get_value_field(&94)}
-                        <ModalCardUser data = {standard_data.owner_user.clone()} />
+                        <GoToUser data = {standard_data.owner_user.clone()} />
                     </div>
                     <div class="media-right" style="margin-right: 1rem">
                         {get_value_field(&145)} // type access
