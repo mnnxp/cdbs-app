@@ -7,6 +7,7 @@ use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use log::debug;
 use crate::error::Error;
+use crate::fragments::switch_icon::res_fullwidth_btn;
 use crate::routes::AppRoute;
 use crate::fragments::{
     buttons::ft_follow_btn,
@@ -277,10 +278,7 @@ impl ListItemStandard {
                   </span>
                 </div>
               <div class="btnBox">
-                <button class="button is-light is-fullwidth has-text-weight-bold"
-                    onclick={show_standard_btn}>
-                    {get_value_field(&143)} // Show standard
-                </button>
+                {res_fullwidth_btn(show_standard_btn, get_value_field(&143), Pathname::Standard(self.props.data.uuid.clone()))}
                 <div style="margin-left: 8px;">
                 {ft_follow_btn(
                     trigger_fav_btn,

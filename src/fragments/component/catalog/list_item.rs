@@ -3,6 +3,7 @@ use yew_router::{
     agent::RouteRequest::ChangeRoute,
     prelude::RouteAgent,
 };
+use crate::fragments::switch_icon::res_fullwidth_btn;
 use crate::services::content_adapter::DateDisplay;
 use crate::services::get_value_field;
 use crate::routes::AppRoute;
@@ -168,10 +169,7 @@ impl ListItem {
                 </p>
               </div>
               <div class="btnBox">
-                <button class="button is-light is-fullwidth has-text-weight-bold"
-                      onclick={onclick_open_component} >
-                  {get_value_field(&161)}
-                </button>
+                {res_fullwidth_btn(onclick_open_component, get_value_field(&161), Pathname::Component(self.props.data.uuid.clone()))}
                 <div style="margin-left: 8px;">
                   {ft_follow_btn(
                       trigger_fav_btn,

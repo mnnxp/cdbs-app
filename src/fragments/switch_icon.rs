@@ -17,6 +17,18 @@ pub fn res_btn(
   }
 }
 
+pub fn res_fullwidth_btn(
+  onclick: Callback<MouseEvent>,
+  label: &str,
+  pathname: Pathname,
+) -> Html {
+  html!{
+    <a class={"button is-info is-light is-fullwidth has-text-weight-bold"} onclick={onclick} href={pathname.get_pathname()}>
+      {label.to_string()}
+    </a>
+  }
+}
+
 pub fn res_file_btn(onclick: Callback<MouseEvent>, filename: String) -> Html {
   let mut style_color = "color: #767676;";
   let classes_icon = match ext_str(&filename).as_str() {

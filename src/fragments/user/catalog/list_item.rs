@@ -1,13 +1,7 @@
-use yew::{
-  prelude::*, agent::Bridged, html, Bridge, Component, ComponentLink,
-  Html, Properties, ShouldRender,
-};
-use yew_router::{
-    agent::RouteRequest::ChangeRoute,
-    prelude::RouteAgent,
-};
+use yew::{agent::Bridged, html, Bridge, Component, ComponentLink, Html, Properties, ShouldRender};
+use yew_router::{agent::RouteRequest::ChangeRoute, prelude::RouteAgent};
 use crate::routes::AppRoute;
-use crate::fragments::switch_icon::res_btn;
+use crate::fragments::switch_icon::res_fullwidth_btn;
 use crate::services::get_value_field;
 use crate::types::Pathname;
 use super::ShowUserShort;
@@ -47,9 +41,7 @@ impl Component for ListItemUser {
         match msg {
             Msg::ShowProfile => {
                 // Redirect to profile page
-                self.router_agent.send(ChangeRoute(AppRoute::Profile(
-                    self.username.to_string()
-                ).into()));
+                self.router_agent.send(ChangeRoute(AppRoute::Profile(self.username.to_string()).into()));
             },
             Msg::Ignore => {},
         }
@@ -76,30 +68,6 @@ impl Component for ListItemUser {
 }
 
 impl ListItemUser {
-    fn open_profile_page(
-        &self,
-        small_button: bool,
-    ) -> Html {
-        let onclick_open_profile = self.link.callback(|_| Msg::ShowProfile);
-
-        match small_button {
-            true => {res_btn(
-                classes!("fas", "fa-user-o"),
-                onclick_open_profile,
-                String::new(),
-                get_value_field(&261),
-                Pathname::User(self.props.data.username.clone())
-            )},
-            false => html!{
-                <button
-                class="button is-light is-fullwidth has-text-weight-bold"
-                onclick={onclick_open_profile}>
-                    {get_value_field(&261)}
-                </button>
-            },
-        }
-    }
-
     fn showing_in_list(&self) -> Html {
         let ShowUserShort {
             firstname,
@@ -108,9 +76,9 @@ impl ListItemUser {
             image_file,
             ..
         } = &self.props.data;
-
+        let onclick_open_profile = self.link.callback(|_| Msg::ShowProfile);
         html!{
-          <div class="box itemBox">
+          <div class="box itemBox" onclick={onclick_open_profile.clone()}>
             <article class="media center-media">
               <div class="media-left">
                 <figure class="image is-96x96">
@@ -133,7 +101,7 @@ impl ListItemUser {
                 </div>
               </div>
               <div class="media-right flexBox " >
-                {self.open_profile_page(false)}
+                {res_fullwidth_btn(onclick_open_profile, get_value_field(&261), Pathname::User(self.props.data.username.clone()))}
               </div>
             </article>
           </div>
@@ -148,9 +116,9 @@ impl ListItemUser {
             image_file,
             ..
         } = self.props.data.clone();
-
+        let onclick_open_profile = self.link.callback(|_| Msg::ShowProfile);
         html!{
-          <div class="boxItem" >
+          <div class="boxItem"  onclick={onclick_open_profile.clone()}>
             <div class="innerBox" >
               <div class="imgBox" >
                 <img
@@ -164,7 +132,7 @@ impl ListItemUser {
               <span class="overflow-title">{format!("@{}", username)}</span>
             </div>
             <div class="btnBox">
-                {self.open_profile_page(false)}
+              {res_fullwidth_btn(onclick_open_profile, get_value_field(&261), Pathname::User(self.props.data.username.clone()))}
             </div>
           </div>
         }

@@ -11,7 +11,7 @@ use crate::routes::AppRoute;
 use crate::fragments::{
     buttons::ft_follow_btn,
     list_errors::ListErrors,
-    switch_icon::res_btn,
+    switch_icon::{res_btn, res_fullwidth_btn},
 };
 use crate::types::{Pathname, ShowCompanyShort, UUID};
 use crate::services::content_adapter::DateDisplay;
@@ -226,6 +226,7 @@ impl ListItemCompany {
 
     fn showing_in_box(&self) -> Html {
         let ShowCompanyShort {
+            uuid,
             shortname,
             image_file,
             region,
@@ -251,9 +252,7 @@ impl ListItemCompany {
                 <p class="has-text-weight-bold">{company_type.shortname.to_string()}</p>
               </div>
               <div class="btnBox">
-                <button class="button is-light is-fullwidth has-text-weight-bold" onclick={onclick_open_company}>
-                    {get_value_field(&165)} // Show company
-                </button>
+                {res_fullwidth_btn(onclick_open_company, get_value_field(&165), Pathname::Company(uuid))}
                 <div style="margin-left: 8px;">
                 {ft_follow_btn(
                     trigger_fav_btn,
