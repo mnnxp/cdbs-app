@@ -27,7 +27,7 @@ use crate::services::content_adapter::{
     ContentDisplay, Markdownable, DateDisplay, ContactDisplay, SpecDisplay
 };
 use crate::services::{get_logged_user, get_value_field, resp_parsing, set_history_back, title_changer, Counter};
-use crate::types::{UUID, CompanyInfo, SlimUser, ComponentsQueryArg, StandardsQueryArg};
+use crate::types::{CompanyInfo, ComponentsQueryArg, Pathname, SlimUser, StandardsQueryArg, UUID};
 use crate::gqls::make_query;
 use crate::gqls::company::{
     GetCompanyData, get_company_data,
@@ -207,7 +207,7 @@ impl Component for ShowCompany {
                         self.subscribers = company_data.subscribers.to_owned();
                         self.is_followed = company_data.is_followed.to_owned();
                         self.current_company_uuid = company_data.uuid.to_owned();
-                        if let Some(user) = &self.props.current_user {
+                        if let Some(user) = get_logged_user() {
                             self.current_user_owner = company_data.owner_user.uuid == user.uuid;
                         }
                         self.company = Some(company_data);
@@ -312,7 +312,8 @@ impl ShowCompany {
                             classes!("fa", "fa-tools"),
                             onclick_setting_company_btn,
                             String::new(),
-                            get_value_field(&16)
+                            get_value_field(&16),
+                            Pathname::CompanySetting(self.current_company_uuid.clone())
                         )},
                         false => html!{},
                       }}

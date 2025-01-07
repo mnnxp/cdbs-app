@@ -34,3 +34,30 @@ pub type DeleteWrapper = HashMap<(), ()>;
 /// For GraphQLQuery
 pub type UUID = String;
 // pub type NaiveDateTime = NaiveDateTime;
+
+pub enum Pathname {
+    Component(UUID),
+    ComponentSetting(UUID),
+    Company(UUID),
+    CompanySetting(UUID),
+    Standard(UUID),
+    StandardSetting(UUID),
+    User(UUID),
+    UserSetting,
+}
+
+impl Pathname {
+    /// Returns pathname to specified object
+    pub fn get_pathname(&self) -> String {
+        match self {
+            Self::Component(uuid) => format!("#/component/{}", uuid),
+            Self::ComponentSetting(uuid) => format!("#/component/settings/{}", uuid),
+            Self::Company(uuid) => format!("#/company/{}", uuid),
+            Self::CompanySetting(uuid) => format!("#/company/settings/{}", uuid),
+            Self::Standard(uuid) => format!("#/standard/{}", uuid),
+            Self::StandardSetting(uuid) => format!("#/standard/settings/{}", uuid),
+            Self::User(username) => format!("#/@{}", username),
+            Self::UserSetting => format!("#/settings"),
+        }
+    }
+}

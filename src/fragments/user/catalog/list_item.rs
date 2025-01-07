@@ -9,6 +9,7 @@ use yew_router::{
 use crate::routes::AppRoute;
 use crate::fragments::switch_icon::res_btn;
 use crate::services::get_value_field;
+use crate::types::Pathname;
 use super::ShowUserShort;
 
 pub enum Msg {
@@ -86,7 +87,8 @@ impl ListItemUser {
                 classes!("fas", "fa-user-o"),
                 onclick_open_profile,
                 String::new(),
-                get_value_field(&261)
+                get_value_field(&261),
+                Pathname::User(self.props.data.username.clone())
             )},
             false => html!{
                 <button

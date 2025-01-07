@@ -22,7 +22,7 @@ use crate::fragments::{
 };
 use crate::services::content_adapter::{DateDisplay, Markdownable};
 use crate::services::{get_logged_user, get_value_field, resp_parsing, set_history_back, title_changer, Counter};
-use crate::types::{UUID, StandardInfo, SlimUser, DownloadFile, ComponentsQueryArg};
+use crate::types::{ComponentsQueryArg, DownloadFile, Pathname, SlimUser, StandardInfo, UUID};
 use crate::gqls::make_query;
 use crate::gqls::standard::{
     GetStandardData, get_standard_data,
@@ -471,7 +471,8 @@ impl ShowStandard {
                 classes!("fa", "fa-tools"),
                 onclick_setting_standard_btn,
                 String::new(),
-                get_value_field(&16)
+                get_value_field(&16),
+                Pathname::StandardSetting(self.current_standard_uuid.clone())
             )},
             false => html!{},
         }

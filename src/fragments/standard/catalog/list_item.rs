@@ -13,7 +13,7 @@ use crate::fragments::{
     list_errors::ListErrors,
     switch_icon::res_btn,
 };
-use crate::types::ShowStandardShort;
+use crate::types::{Pathname, ShowStandardShort};
 use crate::services::content_adapter::DateDisplay;
 use crate::services::{get_value_field, resp_parsing};
 use crate::gqls::make_query;
@@ -208,7 +208,8 @@ impl ListItemStandard {
                             classes!("far", "fa-folder"),
                             show_standard_btn,
                             String::new(),
-                            get_value_field(&315)
+                            get_value_field(&315),
+                            Pathname::Standard(self.props.data.uuid.clone())
                           )}
                           {ft_follow_btn(
                             trigger_fav_btn,

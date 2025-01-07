@@ -27,7 +27,7 @@ use crate::fragments::{
 };
 use crate::services::content_adapter::{DateDisplay, Markdownable};
 use crate::services::{get_logged_user, get_value_field, resp_parsing, set_history_back, title_changer, Counter};
-use crate::types::{UUID, ComponentInfo, SlimUser, DownloadFile};
+use crate::types::{ComponentInfo, DownloadFile, Pathname, SlimUser, UUID};
 use crate::gqls::make_query;
 use crate::gqls::component::{
     ComponentFiles, component_files,
@@ -600,15 +600,14 @@ impl ShowComponent {
     }
 
     fn show_setting_btn(&self) -> Html {
-        let onclick_setting_standard_btn =
-            self.link.callback(|_| Msg::OpenComponentSetting);
-
+        let onclick_setting_component_btn = self.link.callback(|_| Msg::OpenComponentSetting);
         match &self.current_user_owner {
             true => {res_btn(
                 classes!("fa", "fa-tools"),
-                onclick_setting_standard_btn,
+                onclick_setting_component_btn,
                 String::new(),
-                get_value_field(&16)
+                get_value_field(&16),
+                Pathname::ComponentSetting(self.current_component_uuid.clone())
             )},
             false => html!{},
         }

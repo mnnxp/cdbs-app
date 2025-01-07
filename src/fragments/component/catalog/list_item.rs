@@ -10,7 +10,7 @@ use crate::fragments::{
     buttons::ft_follow_btn,
     switch_icon::res_btn,
 };
-use crate::types::ShowComponentShort;
+use crate::types::{Pathname, ShowComponentShort};
 
 pub enum Msg {
     OpenComponent,
@@ -135,7 +135,8 @@ impl ListItem {
                             classes!("far", "fa-folder"),
                             onclick_open_component,
                             String::new(),
-                            get_value_field(&315)
+                            get_value_field(&315),
+                            Pathname::Component(self.props.data.uuid.clone())
                           )}
                           {ft_follow_btn(
                             trigger_fav_btn,

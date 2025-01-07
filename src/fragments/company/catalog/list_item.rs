@@ -13,7 +13,7 @@ use crate::fragments::{
     list_errors::ListErrors,
     switch_icon::res_btn,
 };
-use crate::types::{UUID, ShowCompanyShort};
+use crate::types::{Pathname, ShowCompanyShort, UUID};
 use crate::services::content_adapter::DateDisplay;
 use crate::services::{get_value_field, resp_parsing};
 use crate::gqls::make_query;
@@ -198,7 +198,8 @@ impl ListItemCompany {
                                 classes!("far", "fa-folder"),
                                 onclick_open_company.clone(),
                                 String::new(),
-                                get_value_field(&315)
+                                get_value_field(&315),
+                                Pathname::Company(self.props.data.uuid.clone())
                             )}
                             {ft_follow_btn(
                                 trigger_fav_btn,
