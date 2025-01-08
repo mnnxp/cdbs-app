@@ -6,6 +6,7 @@ use wasm_bindgen_futures::spawn_local;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::buttons::{ft_save_btn, ft_delete_small_btn};
+use crate::services::content_adapter::Markdownable;
 use crate::types::{UUID, ComponentParam};
 use crate::services::{get_value_field, resp_parsing};
 use crate::gqls::make_query;
@@ -171,7 +172,7 @@ impl ComponentParamTag {
 
         html!{<tr>
             <th>{self.props.ordinal_indicator}</th>
-            <td>{self.props.param_data.param.paramname.clone()}</td>
+            <td>{self.props.param_data.param.paramname.to_markdown()}</td>
             <td>{self.current_param_value.clone()}</td>
             {match self.props.show_manage_btn {
                 true => html!{<>
