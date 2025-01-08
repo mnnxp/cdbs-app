@@ -4,7 +4,7 @@ mod filesize;
 mod local_storage;
 mod preview_model;
 mod requests;
-mod tags;
+mod set_classes;
 mod upload_file;
 mod util;
 mod response_parsing;
@@ -22,7 +22,7 @@ pub use local_storage::{
 };
 pub(crate) use preview_model::preview_model;
 pub use requests::Requests;
-pub use tags::Tags;
+pub use set_classes::get_classes_table;
 pub use upload_file::{PutUploadFile, UploadData};
 pub(crate) use util::{ext_str, image_detector, three_detector, url_decode};
 pub(crate) use response_parsing::{

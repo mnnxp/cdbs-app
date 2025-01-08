@@ -14,7 +14,7 @@ use crate::fragments::paginate::Paginate;
 use crate::fragments::file::{FileHeadersShow, FileInfoItemShow};
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, ShowFileInfo, PaginateSet};
-use crate::services::resp_parsing;
+use crate::services::{get_classes_table, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::component::{ComponentModificationFilesList, component_modification_files_list};
 
@@ -124,12 +124,13 @@ impl Component for ModificationFilesTableCard {
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         let onclick_paginate = self.link.callback(|page_set| Msg::ChangePaginate(page_set));
-
+        let mut classes_table = get_classes_table(self.files_list.len());
+        classes_table.push("is-striped");
         html!{
-            <div class="content">
+            <div class={"content"}>
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
-                <div class="table-container">
-                    <table class="table is-fullwidth is-striped">
+                <div class={"table-container"}>
+                    <table class={classes_table}>
                         <FileHeadersShow show_download_btn={self.props.show_download_btn} />
                         <tbody>
                             {for self.files_list.iter().enumerate().map(|(numer, file)| html!{

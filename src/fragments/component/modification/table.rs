@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use yew::{Callback, Component, ComponentLink, Html, Properties, ShouldRender, html};
 use log::debug;
-use crate::types::{UUID, ComponentModificationInfo, Param};
+use crate::{services::get_classes_table, types::{ComponentModificationInfo, Param, UUID}};
 use super::{heads::ModificationTableHeads, item::ModificationTableItem};
 
 #[derive(Clone, Debug, Properties)]
@@ -155,10 +155,11 @@ impl Component for ModificationsTable {
 
     fn view(&self) -> Html {
         let onclick_select_modification = self.link.callback(|value: UUID| Msg::SelectModification(value));
+        let classes_table = get_classes_table(self.collect_items.len());
         html!{
-            <div class="content">
-                <div class="table-container">
-                    <table class="table is-fullwidth">
+            <div class={"content"}>
+                <div class={"table-container"}>
+                    <table class={classes_table}>
                         <ModificationTableHeads
                             show_new_column={self.props.callback_new_modification_param.is_some()}
                             component_uuid={self.component_uuid.clone()}

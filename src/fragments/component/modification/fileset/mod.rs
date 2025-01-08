@@ -16,7 +16,7 @@ use wasm_bindgen_futures::spawn_local;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::file::{FileHeadersShow, FileInfoItemShow};
-use crate::services::{resp_parsing, get_value_field};
+use crate::services::{get_classes_table, get_value_field, resp_parsing};
 use crate::types::{UUID, ShowFileInfo};
 use crate::gqls::make_query;
 use crate::gqls::component::{ComModFilesOfFileset, com_mod_files_of_fileset};
@@ -109,19 +109,20 @@ impl Component for FilesOfFilesetCard {
 
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
-
+        let mut classes_table = get_classes_table(self.files_list.len());
+        classes_table.push("is-striped");
         match self.props.show_card {
             true => html!{<>
                 <br/>
                 <div class="card">
                     <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
                     <header class={"card-header has-background-info-light"}>
-                        <p class="card-header-title">{get_value_field(&106)}</p> // Files of select fileset
+                        <p class={"card-header-title"}>{get_value_field(&106)}</p> // Files of select fileset
                     </header>
-                    <div class="card-content">
-                        <div class="table-container">
-                            <div class="content">
-                                <table class="table is-fullwidth is-striped">
+                    <div class={"card-content"}>
+                        <div class={"table-container"}>
+                            <div class={"content"}>
+                                <table class={classes_table}>
                                     <FileHeadersShow show_download_btn={self.props.show_download_btn} />
                                     <tbody>
                                         {for self.files_list.iter().enumerate().map(|(numer, file)| html!{

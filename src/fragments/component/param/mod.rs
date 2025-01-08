@@ -5,7 +5,7 @@ pub use item::ComponentParamTag;
 pub use add::RegisterParamnameBlock;
 
 use std::collections::BTreeSet;
-use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html, classes};
+use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
 use log::debug;
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
@@ -15,7 +15,7 @@ use crate::fragments::buttons::ft_add_btn;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::paginate::Paginate;
 use crate::types::{ComponentParam, PaginateSet, Param, UUID};
-use crate::services::{get_value_field, resp_parsing_two_level, resp_parsing};
+use crate::services::{get_classes_table, get_value_field, resp_parsing, resp_parsing_two_level};
 use crate::gqls::{
     make_query,
     relate::{GetParams, get_params},
@@ -267,16 +267,12 @@ impl ComponentParamsTags {
             true => Some(self.link.callback(|value: usize| Msg::DeleteComponentParam(value))),
             false => None,
         };
-        let classes_table = match self.component_params.len() > 10 {
-            // narrow table, if there are many elements
-            true => classes!("table", "is-fullwidth", "is-narrow"),
-            false => classes!("table", "is-fullwidth"),
-        };
+        let classes_table = get_classes_table(self.component_params.len());
         let numero_offset = self.page_set.numero_offset();
 
         html!{
-            <div class="content">
-            <div class="table-container">
+            <div class={"content"}>
+            <div class={"table-container"}>
                 <table class={classes_table}>
                     <thead>
                         <tr>

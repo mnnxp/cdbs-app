@@ -26,7 +26,7 @@ use crate::fragments::{
     clipboard::ShareLinkBtn,
 };
 use crate::services::content_adapter::{DateDisplay, Markdownable};
-use crate::services::{get_logged_user, get_value_field, resp_parsing, set_history_back, title_changer, Counter};
+use crate::services::{get_classes_table, get_logged_user, get_value_field, resp_parsing, set_history_back, title_changer, Counter};
 use crate::types::{ComponentInfo, DownloadFile, Pathname, SlimUser, UUID};
 use crate::gqls::make_query;
 use crate::gqls::component::{
@@ -512,15 +512,15 @@ impl ShowComponent {
             true => get_value_field(&107).to_string(),
             false => get_value_field(&108).to_string(),
         };
-
+        let classes_table = get_classes_table(component_data.component_suppliers.len());
         html!{
-            <div class="card">
-                <header class="card-header">
-                    <p class="card-header-title">{table_label}</p>
+            <div class={"card"}>
+                <header class={"card-header"}>
+                    <p class={"card-header-title"}>{table_label}</p>
                 </header>
-                <div class="card-content">
-                    <div class="content">
-                        <table class="table is-fullwidth">
+                <div class={"card-content"}>
+                    <div class={"content"}>
+                        <table class={classes_table}>
                             <thead>
                             <tr>
                                 <th>{get_value_field(&109)}</th> // Company
@@ -561,14 +561,15 @@ impl ShowComponent {
     }
 
     fn show_component_standards(&self, component_data: &ComponentInfo) -> Html {
+        let classes_table = get_classes_table(component_data.component_standards.len());
         html!{
-            <div class="card">
-                <header class="card-header">
-                    <p class="card-header-title">{get_value_field(&103)}</p> // Standards
+            <div class={"card"}>
+                <header class={"card-header"}>
+                    <p class={"card-header-title"}>{get_value_field(&103)}</p> // Standards
                 </header>
-                <div class="card-content">
-                    <div class="content">
-                        <table class="table is-fullwidth">
+                <div class={"card-content"}>
+                    <div class={"content"}>
+                        <table class={classes_table}>
                             <thead>
                             <tr>
                                 <th>{get_value_field(&112)}</th> // Classifier
