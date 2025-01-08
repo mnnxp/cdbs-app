@@ -42,9 +42,13 @@ query GetComponentLicenses($componentUuid: UUID!) {
   }
 }
 
-query GetComponentParams($componentUuid: UUID!) {
+query GetComponentParams(
+  $componentUuid: UUID!,
+  $IptSort: IptSort,
+  $IptPaginate: IptPaginate
+) {
   component(componentUuid: $componentUuid) {
-    componentParams {
+    componentParams(sort: $IptSort, paginate: $IptPaginate) {
       ...componentParamFields
     }
   }
@@ -335,9 +339,6 @@ fragment componentFields on ComponentAndRelatedData {
   updatedAt
   licenses {
     ...licenseFields
-  }
-  componentParams {
-    ...componentParamFields
   }
   paramsCount
   files {

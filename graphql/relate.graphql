@@ -4,8 +4,8 @@ query GetTypesAccess($typeAccessIds: [Int!]) {
   }
 }
 
-query GetParams($paramIds: [Int!]) {
-  params(paramIds: $paramIds) {
+query GetParams($paramIds: [Int!], $IptPaginate: IptPaginate) {
+  params(paramIds: $paramIds, paginate: $IptPaginate) {
     ...paramFields
   }
 }

@@ -31,6 +31,7 @@ pub struct Props {
     pub show_manage_btn: bool,
     pub component_uuid: UUID,
     pub param_data: ComponentParam,
+    pub ordinal_indicator: usize,
     pub delete_param: Option<Callback<usize>>,
 }
 
@@ -169,6 +170,7 @@ impl ComponentParamTag {
         let onclick_delete_btn = self.link.callback(|_| Msg::RequestDeleteParam);
 
         html!{<tr>
+            <th>{self.props.ordinal_indicator}</th>
             <td>{self.props.param_data.param.paramname.clone()}</td>
             <td>{self.current_param_value.clone()}</td>
             {match self.props.show_manage_btn {

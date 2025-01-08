@@ -22,7 +22,6 @@ pub struct ComponentInfo {
   pub created_at: NaiveDateTime,
   pub updated_at: NaiveDateTime,
   pub licenses: Vec<LicenseInfo>,
-  pub component_params: Vec<ComponentParam>,
   pub files: Vec<ShowFileInfo>,
   pub component_specs: Vec<Spec>,
   pub component_keywords: Vec<Keyword>,

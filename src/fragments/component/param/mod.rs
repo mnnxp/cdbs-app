@@ -11,9 +11,10 @@ use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::error::Error;
-use crate::fragments::buttons::{ft_add_btn, ft_see_btn};
+use crate::fragments::buttons::ft_add_btn;
 use crate::fragments::list_errors::ListErrors;
-use crate::types::{UUID, ComponentParam, Param};
+use crate::fragments::paginate::Paginate;
+use crate::types::{ComponentParam, PaginateSet, Param, UUID};
 use crate::services::{get_value_field, resp_parsing_two_level, resp_parsing};
 use crate::gqls::{
     make_query,
@@ -28,7 +29,7 @@ use crate::gqls::{
 pub struct Props {
     pub show_manage_btn: bool,
     pub component_uuid: UUID,
-    pub component_params: Vec<ComponentParam>,
+    pub params_count: i64,
 }
 
 pub struct ComponentParamsTags {
@@ -41,7 +42,9 @@ pub struct ComponentParamsTags {
     request_add_param_id: usize,
     request_set_param_value: String,
     hide_add_param_modal: bool,
-    show_full_characteristics: bool,
+    page_set: PaginateSet,
+    current_items: i64,
+    total_items: i64,
 }
 
 #[derive(Clone)]
@@ -57,7 +60,7 @@ pub enum Msg {
     ChangeHideAddParam,
     SetSelectParam,
     ResponseError(Error),
-    ShowFullCharacteristics,
+    ChangePaginate(PaginateSet),
     ClearError,
 }
 
@@ -66,25 +69,27 @@ impl Component for ComponentParamsTags {
     type Properties = Props;
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        let mut param_ids: BTreeSet<usize> = BTreeSet::new();
-
-        for param in props.component_params.clone() {
-            param_ids.insert(param.param.param_id);
-        };
-
-        let component_params = props.component_params.clone();
-
+        let total_items = props.params_count;
         Self {
             error: None,
             props,
             link,
-            param_ids,
-            component_params,
+            param_ids: BTreeSet::new(),
+            component_params: Vec::new(),
             param_list: Vec::new(),
             request_add_param_id: 0,
             request_set_param_value: String::new(),
             hide_add_param_modal: true,
-            show_full_characteristics: false,
+            page_set: PaginateSet::new(),
+            current_items: 0,
+            total_items,
+        }
+    }
+
+    fn rendered(&mut self, first_render: bool) {
+        if first_render {
+            debug!("First bulild params table");
+            self.link.send_message(Msg::RequestComponentParams);
         }
     }
 
@@ -94,12 +99,14 @@ impl Component for ComponentParamsTags {
         match msg {
             Msg::DeleteComponentParam(param_id) => {
                 self.param_ids.remove(&param_id);
+                self.total_items -= 1;
+                self.current_items -= 1;
                 link.send_message(Msg::SetSelectParam);
             },
             Msg::RequestParamsList => {
                 spawn_local(async move {
                     let res = make_query(GetParams::build_query(
-                        get_params::Variables { param_ids: None }
+                        get_params::Variables { param_ids: None, ipt_paginate: None }
                     )).await.unwrap();
                     link.send_message(Msg::GetParamsListResult(res));
                 })
@@ -121,10 +128,17 @@ impl Component for ComponentParamsTags {
                 })
             },
             Msg::RequestComponentParams => {
+                if self.props.component_uuid.len() != 36 {
+                    return true
+                }
                 let component_uuid = self.props.component_uuid.clone();
+                let ipt_paginate = Some(get_component_params::IptPaginate {
+                    currentPage: self.page_set.current_page,
+                    perPage: self.page_set.per_page,
+                });
                 spawn_local(async move {
                     let res = make_query(GetComponentParams::build_query(
-                        get_component_params::Variables { component_uuid }
+                        get_component_params::Variables { component_uuid, ipt_sort: None, ipt_paginate }
                     )).await.unwrap();
                     link.send_message(Msg::GetComponentParamsResult(res));
                 })
@@ -144,6 +158,7 @@ impl Component for ComponentParamsTags {
                     Ok(result) => {
                         debug!("putComponentParams: {:?}", result);
                         self.hide_add_param_modal = result > 0;
+                        self.total_items += 1;
                         self.request_set_param_value = String::new();
                         link.send_message(Msg::RequestComponentParams);
                     },
@@ -181,23 +196,22 @@ impl Component for ComponentParamsTags {
                 }
             },
             Msg::ResponseError(err) => self.error = Some(err),
-            Msg::ShowFullCharacteristics => self.show_full_characteristics = !self.show_full_characteristics,
+            Msg::ChangePaginate(page_set) => {
+                self.page_set = page_set;
+                self.link.send_message(Msg::RequestComponentParams);
+            },
             Msg::ClearError => self.error = None,
         }
         true
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.component_uuid == props.component_uuid &&
-             self.props.component_params.len() == props.component_params.len() {
+        if self.props.component_uuid == props.component_uuid {
             false
         } else {
             self.hide_add_param_modal = true;
-            self.show_full_characteristics = props.component_params.len() < 4;
             self.param_ids = BTreeSet::new();
-            for param in props.component_params.iter() {
-                self.param_ids.insert(param.param.param_id);
-            };
+            self.total_items = props.params_count;
             self.props = props;
             true
         }
@@ -205,24 +219,8 @@ impl Component for ComponentParamsTags {
 
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
-
+        let onclick_paginate = self.link.callback(|page_set| Msg::ChangePaginate(page_set));
         html!{<>
-            <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
-            {self.modal_add_param()}
-            {self.show_params()}
-        </>}
-    }
-}
-
-impl ComponentParamsTags {
-    fn show_params(&self) -> Html {
-        let classes_table = match self.component_params.len() > 15 {
-            // narrow table, if there are many elements
-            true => classes!("table", "is-fullwidth", "is-narrow"),
-            false => classes!("table", "is-fullwidth"),
-        };
-
-        html!{
             <div class="card">
                 <header class="card-header">
                     <p class="card-header-title">
@@ -233,90 +231,87 @@ impl ComponentParamsTags {
                     </p>
                 </header>
                 <div class="card-content">
-                    <div class="content">
-                        <table class={classes_table}>
-                            <thead>
-                                <tr>
-                                    <th>{get_value_field(&178)}</th> // Param
-                                    <th>{get_value_field(&179)}</th> // Value
-                                    {match self.props.show_manage_btn {
-                                        true => html!{<>
-                                            <th>{get_value_field(&59)}</th> // Change
-                                            <th>{get_value_field(&135)}</th> // Delete
-                                        </>},
-                                        false => html!{},
-                                    }}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {self.element_display_options()}
-                            </tbody>
-                        </table>
-                    </div>
+            <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
+            {self.modal_add_param()}
+            {self.show_params()}
+            <Paginate
+                callback_change={onclick_paginate}
+                current_items={self.current_items}
+                current_page={Some(self.page_set.current_page)}
+                per_page={Some(self.page_set.per_page)}
+                total_items={self.total_items}
+                />
+            {match self.props.show_manage_btn {
+                true => html!{
                     <footer class="card-footer">
-                        {match self.props.show_manage_btn {
-                            true => ft_add_btn(
-                                "add-param-component",
-                                get_value_field(&180),
-                                self.link.callback(|_| Msg::ChangeHideAddParam),
-                                true,
-                                false
-                            ),
-                            false => match self.component_params.len() {
-                                0 => html!{<span>{get_value_field(&136)}</span>},
-                                0..=3 => html!{},
-                                _ => self.show_see_characteristic_btn(),
-                            },
-                        }}
+                        {ft_add_btn(
+                            "add-param-component",
+                            get_value_field(&180),
+                            self.link.callback(|_| Msg::ChangeHideAddParam),
+                            true,
+                            false
+                        )}
                     </footer>
-                </div>
-            </div>
-        }
+                },
+                false => html!{},
+            }}
+        </div>
+    </div>
+        </>}
     }
+}
 
-    fn element_display_options(&self) -> Html {
-        match self.props.show_manage_btn {
-            true => html!{
-                {for self.component_params.iter().map(|data| {
-                    match self.param_ids.get(&data.param.param_id) {
-                        Some(_) => self.show_param_item(&data),
-                        None => html!{},
-                    }
-                })}
-            },
-            false => html!{
-                {for self.component_params.iter().enumerate().map(|(index, data)| {
-                    match (index >= 3, self.show_full_characteristics) {
-                        // show full list
-                        (_, true) => self.show_param_item(data),
-                        // show full list or first 3 items
-                        (false, false) => self.show_param_item(data),
-                        _ => html!{},
-                    }
-                })}
-            },
-        }
-    }
-
-    fn show_param_item(&self, data: &ComponentParam) -> Html {
+impl ComponentParamsTags {
+    fn show_params(&self) -> Html {
         let onclick_delete_param = match self.props.show_manage_btn {
             true => Some(self.link.callback(|value: usize| Msg::DeleteComponentParam(value))),
             false => None,
         };
+        let classes_table = match self.component_params.len() > 10 {
+            // narrow table, if there are many elements
+            true => classes!("table", "is-fullwidth", "is-narrow"),
+            false => classes!("table", "is-fullwidth"),
+        };
+        let numero_offset = self.page_set.numero_offset();
 
         html!{
-            <ComponentParamTag
-                show_manage_btn={self.props.show_manage_btn}
-                component_uuid={self.props.component_uuid.clone()}
-                param_data={data.clone()}
-                delete_param={onclick_delete_param}
-            />
+            <div class="content">
+            <div class="table-container">
+                <table class={classes_table}>
+                    <thead>
+                        <tr>
+                            <th>{"\u{2116}"}</th> // Numero sign
+                            <th>{get_value_field(&178)}</th> // Param
+                            <th>{get_value_field(&179)}</th> // Value
+                            {match self.props.show_manage_btn {
+                                true => html!{<>
+                                    <th>{get_value_field(&59)}</th> // Change
+                                    <th>{get_value_field(&135)}</th> // Delete
+                                </>},
+                                false => html!{},
+                            }}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {for self.component_params.iter().enumerate().map(|(numer, data)| {
+                            match self.param_ids.get(&data.param.param_id) {
+                                Some(_) => html!{
+                                    <ComponentParamTag
+                                        show_manage_btn={self.props.show_manage_btn}
+                                        component_uuid={self.props.component_uuid.clone()}
+                                        param_data={data.clone()}
+                                        ordinal_indicator={numero_offset+numer}
+                                        delete_param={onclick_delete_param.clone()}
+                                        />
+                                },
+                                None => html!{},
+                            }
+                        })}
+                    </tbody>
+                </table>
+            </div>
+            </div>
         }
-    }
-
-    fn show_see_characteristic_btn(&self) -> Html {
-        let show_full_characteristics_btn = self.link.callback(|_| Msg::ShowFullCharacteristics);
-        ft_see_btn(show_full_characteristics_btn, self.show_full_characteristics)
     }
 
     fn modal_add_param(&self) -> Html {

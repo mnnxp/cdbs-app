@@ -462,21 +462,15 @@ impl ShowComponent {
         }
     }
 
-    fn show_additional_params(&self, component_data: &ComponentInfo) -> Html {
-        html!{
-            <ComponentParamsTags
-                show_manage_btn={false}
-                component_uuid={self.current_component_uuid.clone()}
-                component_params={component_data.component_params.clone()}
-            />
-        }
-    }
-
     fn show_cards(&self, component_data: &ComponentInfo) -> Html {
         html!{<>
             <div class="columns">
                 <div class="column">
-                    {self.show_additional_params(component_data)}
+                    <ComponentParamsTags
+                        show_manage_btn={false}
+                        component_uuid={self.current_component_uuid.clone()}
+                        params_count={component_data.params_count}
+                        />
                 </div>
                 <div class="column">
                     {self.show_component_files(component_data)}

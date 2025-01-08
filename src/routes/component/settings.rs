@@ -451,7 +451,13 @@ impl Component for ComponentSettings {
                                 <br/>
                                 <div class="columns">
                                     {self.update_component_favicon()}
-                                    {self.show_additional_params(component_data)}
+                                    <div class="column">
+                                        <ComponentParamsTags
+                                            show_manage_btn={true}
+                                            component_uuid={self.current_component_uuid.clone()}
+                                            params_count={component_data.params_count}
+                                            />
+                                    </div>
                                 </div>
                                 {self.show_component_files()}
                                 <br/>
@@ -607,21 +613,6 @@ impl ComponentSettings {
                       </select>
                     </div>
                 </div>
-            </div>
-        }
-    }
-
-    fn show_additional_params(
-        &self,
-        component_data: &ComponentInfo,
-    ) -> Html {
-        html!{
-            <div class="column">
-              <ComponentParamsTags
-                  show_manage_btn={true}
-                  component_uuid={self.current_component_uuid.clone()}
-                  component_params={component_data.component_params.clone()}
-              />
             </div>
         }
     }
