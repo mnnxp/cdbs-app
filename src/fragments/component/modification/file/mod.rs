@@ -70,6 +70,9 @@ impl Component for ModificationFilesTableCard {
 
         match msg {
             Msg::RequestModificationFilesList => {
+                if self.props.modification_uuid.len() != 36 {
+                    return true
+                }
                 let modification_uuid = self.props.modification_uuid.clone();
                 let ipt_modification_files_arg = component_modification_files_list::IptModificationFilesArg{
                     filesUuids: None,
@@ -97,9 +100,7 @@ impl Component for ModificationFilesTableCard {
             },
             Msg::ChangePaginate(page_set) => {
                 self.page_set = page_set;
-                if self.props.modification_uuid.len() == 36 {
-                    self.link.send_message(Msg::RequestModificationFilesList);
-                }
+                self.link.send_message(Msg::RequestModificationFilesList);
             },
             Msg::ClearError => self.error = None,
         }
@@ -114,9 +115,7 @@ impl Component for ModificationFilesTableCard {
             debug!("update modification files {:?}", props.modification_uuid);
             self.props = props;
             self.files_list.clear();
-            if self.props.modification_uuid.len() == 36 {
-                self.link.send_message(Msg::RequestModificationFilesList);
-            }
+            self.link.send_message(Msg::RequestModificationFilesList);
             true
         }
     }
