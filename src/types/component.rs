@@ -249,3 +249,39 @@ impl ComponentsQueryArg {
         }
     }
 }
+
+#[derive(PartialEq, Serialize, Deserialize, Clone, Default, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct IptSearchArg {
+  search: String,
+  as_desc: bool,
+  by_keywords: bool,
+  by_params: bool,
+  by_specs: bool,
+  order_by: String,
+  company_uuid: Option<UUID>,
+  favorite: bool,
+  limit: i64,
+  offset: i64,
+  standard_uuid: Option<UUID>,
+  user_uuid: Option<UUID>,
+}
+
+// impl Default for search_by_components::IptSearchArg {
+//   fn default() -> Self {
+//       search_by_components::IptSearchArg {
+//           search: "".to_string(),
+//           asDesc: false,
+//           byKeywords: false,
+//           byParams: false,
+//           bySpecs: false,
+//           orderBy: "".to_string(),
+//           companyUuid: None,
+//           favorite: false,
+//           limit: 10,
+//           offset: 0,
+//           standardUuid: None,
+//           userUuid: None,
+//       }
+//   }
+// }

@@ -45,6 +45,8 @@ dotenv_codegen = "0.15.0"
 lazy_static = "1.4.0"
 toml = "0.5.8"
 
+gloo-timers = {version = "0.3.0", features = ["futures"]}
+
 [dependencies.web-sys]
 features = [
   "CanvasRenderingContext2d",

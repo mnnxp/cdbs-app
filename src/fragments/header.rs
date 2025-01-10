@@ -14,6 +14,8 @@ use crate::services::{set_token, get_logged_user, set_logged_user, logout, get_v
 use crate::routes::AppRoute;
 use crate::types::SlimUser;
 
+use crate::fragments::search_bar::SearchBar;
+
 pub struct Header {
     props: Props,
     router_agent: Box<dyn Bridge<RouteAgent>>,
@@ -152,7 +154,7 @@ impl Component for Header {
                     <h1 class={logo_classes}>
                         {match &self.current_user {
                             Some(user_info) => html!{
-                                <RouterAnchor<AppRoute> route={AppRoute::Profile(user_info.username.clone())}>
+                                <RouterAnchor<AppRoute> classes="is-flex" route={AppRoute::Profile(user_info.username.clone())}>
                                     {self.show_logo()}
                                 </RouterAnchor<AppRoute>>
                             },
@@ -164,12 +166,19 @@ impl Component for Header {
                         }}
                     </h1>
                     <div role="button" class={classes!("navbar-burger", active_menu)} onclick={triggrt_menu} aria-label="menu" aria-expanded="false">
-                      <span aria-hidden="true"></span>
-                      <span aria-hidden="true"></span>
-                      <span aria-hidden="true"></span>
+                        <span aria-hidden="true"></span>
+                        <span aria-hidden="true"></span>
+                        <span aria-hidden="true"></span>
                     </div>
                 </div>
                 <div class={classes!("navbar-menu", active_menu)}>
+                    <div class="navbar-start"></div>
+                    <div class="navbar-item is-flex-grow-1">
+                        <div style="width: 100%; max-width: 400px; margin: 0 auto;">
+                            <SearchBar />
+                        </div>
+                    </div>
+
                     <div class="navbar-end">
                         {match &self.current_user {
                             Some(user_info) => self.logged_in_view(&user_info, onclick),
