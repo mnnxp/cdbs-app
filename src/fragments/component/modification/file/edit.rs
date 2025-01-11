@@ -5,12 +5,12 @@ use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
 use super::ModificationFileItem;
+use crate::fragments::paginate::Paginate;
 use crate::services::{get_value_field, resp_parsing};
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::file::{UploaderFiles, commit_msg_field};
-use crate::fragments::buttons::ft_see_btn;
-use crate::types::{UUID, ShowFileInfo, UploadFile};
+use crate::types::{PaginateSet, ShowFileInfo, UploadFile, UUID};
 use crate::gqls::make_query;
 use crate::gqls::component::{
     ComponentModificationFilesList, component_modification_files_list,
@@ -23,6 +23,7 @@ type FileName = String;
 pub struct Props {
     pub show_download_btn: bool,
     pub modification_uuid: UUID,
+    pub files_count: i64,
 }
 
 pub struct ManageModificationFilesCard {
@@ -33,6 +34,9 @@ pub struct ManageModificationFilesCard {
     files_list: Vec<ShowFileInfo>,
     files_deleted_list: BTreeSet<UUID>,
     show_full_files: bool,
+    page_set: PaginateSet,
+    current_items: i64,
+    total_items: i64,
     commit_msg: String,
 }
 
@@ -46,6 +50,7 @@ pub enum Msg {
     UploadConfirm(usize),
     UpdateCommitMsg(String),
     ShowFullList,
+    ChangePaginate(PaginateSet),
     RemoveFile(UUID),
     ClearError,
 }
@@ -55,6 +60,7 @@ impl Component for ManageModificationFilesCard {
     type Properties = Props;
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+        let total_items = props.files_count;
         Self {
             error: None,
             request_upload_data: Vec::new(),
@@ -63,6 +69,9 @@ impl Component for ManageModificationFilesCard {
             files_list: Vec::new(),
             files_deleted_list: BTreeSet::new(),
             show_full_files: false,
+            page_set: PaginateSet::new(),
+            current_items: 0,
+            total_items,
             commit_msg: String::new(),
         }
     }
@@ -76,20 +85,22 @@ impl Component for ManageModificationFilesCard {
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         let link = self.link.clone();
-
         match msg {
             Msg::RequestModificationFilesList => {
                 if self.props.modification_uuid.len() != 36 {
                     return true
                 }
-                let modification_uuid = self.props.modification_uuid.clone();
+                let ipt_modification_files_arg = component_modification_files_list::IptModificationFilesArg{
+                    filesUuids: None,
+                    modificationUuid: self.props.modification_uuid.clone(),
+                };
+                let ipt_paginate = Some(component_modification_files_list::IptPaginate {
+                    currentPage: self.page_set.current_page,
+                    perPage: self.page_set.per_page,
+                });
                 spawn_local(async move {
-                    let ipt_modification_files_arg = component_modification_files_list::IptModificationFilesArg{
-                        filesUuids: None,
-                        modificationUuid: modification_uuid,
-                    };
                     let res = make_query(ComponentModificationFilesList::build_query(
-                        component_modification_files_list::Variables { ipt_modification_files_arg, ipt_paginate: None }
+                        component_modification_files_list::Variables { ipt_modification_files_arg, ipt_paginate }
                     )).await.unwrap();
                     link.send_message(Msg::GetModificationFilesListResult(res));
                 })
@@ -115,6 +126,7 @@ impl Component for ManageModificationFilesCard {
             },
             Msg::UploadConfirm(confirmations) => {
                 debug!("Confirmation upload of files: {:?}", confirmations);
+                self.total_items += confirmations as i64;
                 self.request_upload_data.clear();
                 self.files_list.clear();
                 self.commit_msg.clear();
@@ -141,7 +153,13 @@ impl Component for ManageModificationFilesCard {
                 }
             },
             Msg::ShowFullList => self.show_full_files = !self.show_full_files,
+            Msg::ChangePaginate(page_set) => {
+                self.page_set = page_set;
+                self.link.send_message(Msg::RequestModificationFilesList);
+            },
             Msg::RemoveFile(file_uuid) => {
+                self.total_items -= 1;
+                self.current_items -= 1;
                 self.files_deleted_list.insert(file_uuid);
             },
             Msg::ClearError => self.error = None,
@@ -173,6 +191,8 @@ impl Component for ManageModificationFilesCard {
             false => Some(self.request_upload_data.clone()),
         };
         let callback_upload_confirm = self.link.callback(|confirmations| Msg::UploadConfirm(confirmations));
+        let callback_delete_file = self.link.callback(|value: UUID| Msg::RemoveFile(value));
+        let onclick_paginate = self.link.callback(|page_set| Msg::ChangePaginate(page_set));
         html!{<>
             <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
             <div class="column">
@@ -189,56 +209,28 @@ impl Component for ManageModificationFilesCard {
             </div>
             <div class="column">
                 <p class={"title is-4"}>{get_value_field(&203)}</p> // Files for modification
-                {self.show_files_list()}
+                <div class={"buttons"}>
+                    {for self.files_list.iter().map(|file| {
+                        match self.files_deleted_list.get(&file.uuid) {
+                            Some(_) => html!{}, // removed file
+                            None => html!{
+                                <ModificationFileItem
+                                    show_download_btn={self.props.show_download_btn}
+                                    show_delete_btn={true}
+                                    modification_uuid={self.props.modification_uuid.clone()}
+                                    file={file.clone()}
+                                    callback_delete_file={callback_delete_file.clone()}
+                                    />
+                            },
+                        }
+                    })}
+                </div>
+                <Paginate
+                    callback_change={onclick_paginate}
+                    current_items={self.current_items}
+                    total_items={self.total_items}
+                    />
             </div>
         </>}
-    }
-}
-
-impl ManageModificationFilesCard {
-    fn show_files_list(&self) -> Html {
-        html!{<>
-            <div class={"buttons"}>
-                {for self.files_list.iter().enumerate().map(|(index, file)| {
-                    match (index >= 3, self.show_full_files) {
-                        // show full list
-                        (_, true) => self.show_file_info(&file),
-                        // show full list or first 3 items
-                        (false, false) => self.show_file_info(&file),
-                        _ => html!{},
-                    }
-                })}
-            </div>
-            <footer class="card-footer">
-                {match self.files_list.len() {
-                    0 => html!{<span>{get_value_field(&204)}</span>},
-                    0..=3 => html!{},
-                    _ => self.show_see_btn(),
-                }}
-            </footer>
-        </>}
-    }
-
-    fn show_file_info(&self, file_info: &ShowFileInfo) -> Html {
-        let callback_delete_file =
-            self.link.callback(|value: UUID| Msg::RemoveFile(value));
-
-        match self.files_deleted_list.get(&file_info.uuid) {
-            Some(_) => html!{}, // removed file
-            None => html!{
-                <ModificationFileItem
-                  show_download_btn={self.props.show_download_btn}
-                  show_delete_btn={true}
-                  modification_uuid={self.props.modification_uuid.clone()}
-                  file={file_info.clone()}
-                  callback_delete_file={callback_delete_file.clone()}
-                />
-            },
-        }
-    }
-
-    fn show_see_btn(&self) -> Html {
-        let show_full_files_btn = self.link.callback(|_| Msg::ShowFullList);
-        ft_see_btn(show_full_files_btn, self.show_full_files)
     }
 }

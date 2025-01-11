@@ -218,6 +218,7 @@ impl ModificationEdit {
                             <ManageModificationFilesCard
                                 show_download_btn={false}
                                 modification_uuid={self.props.modification.uuid.clone()}
+                                files_count={self.props.modification.files_count}
                                 />
                         </div>
                     },
