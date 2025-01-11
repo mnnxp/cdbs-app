@@ -80,8 +80,16 @@ query ComponentFiles($iptComponentFilesArg: IptComponentFilesArg!) {
   }
 }
 
-query ComponentFilesList($iptComponentFilesArg: IptComponentFilesArg!) {
-  componentFilesList(args: $iptComponentFilesArg){
+query ComponentFilesList(
+  $iptComponentFilesArg: IptComponentFilesArg!,
+  $IptSort: IptSort,
+  $IptPaginate: IptPaginate
+) {
+  componentFilesList(
+    args: $iptComponentFilesArg,
+    sort: $IptSort,
+    paginate: $IptPaginate
+  ){
     ...showFileRelatedDataFields
   }
 }
