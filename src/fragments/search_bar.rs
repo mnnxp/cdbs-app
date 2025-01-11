@@ -9,8 +9,8 @@ use log::debug;
 use crate::services::resp_parsing;
 use crate::types::ShowComponentShort;
 use web_sys::KeyboardEvent;
-use gloo_timers::callback::Timeout;
-use gloo_timers::future::TimeoutFuture;
+use yew::services::timeout::{TimeoutService, TimeoutTask};
+use std::time::Duration;
 
 #[derive(PartialEq)]
 pub enum RequestStatus {
@@ -27,7 +27,8 @@ pub struct SearchBar {
     menu_arr: Vec<ShowComponentShort>,
     request_status: RequestStatus,
     is_focused: bool,
-    debounce_timeout: Option<Timeout>,
+    debounce_timeout: Option<TimeoutTask>,
+    focus_timeout: Option<TimeoutTask>,
 }
 
 #[derive(Properties, Clone)]
@@ -70,7 +71,7 @@ impl Component for SearchBar {
     type Properties = Props;
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        Self { props, link, search_value: "".to_string(), menu_arr: vec![], request_status: RequestStatus::None, is_focused: false, debounce_timeout: None }
+        Self { props, link, search_value: "".to_string(), menu_arr: vec![], request_status: RequestStatus::None, is_focused: false, debounce_timeout: None, focus_timeout: None }
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
@@ -83,15 +84,14 @@ impl Component for SearchBar {
             Msg::InputSearch(value) => {
                 self.search_value = value;
                 
-                if let Some(timeout) = self.debounce_timeout.take() {
-                    timeout.cancel();
-                }
+                self.debounce_timeout = None;
 
                 if !self.search_value.is_empty() {
                     let link = self.link.clone();
-                    let timeout = Timeout::new(1000, move || {
-                        link.send_message(Msg::AutoSearch);
-                    });
+                    let timeout = TimeoutService::spawn(
+                        Duration::from_millis(1000),
+                        link.callback(|_| Msg::AutoSearch)
+                    );
                     self.debounce_timeout = Some(timeout);
                 }
             },
@@ -139,10 +139,11 @@ impl Component for SearchBar {
             Msg::Ignore => {},
             Msg::SetFocus(focused) => {
                 let link = self.link.clone();
-                spawn_local(async move {
-                    TimeoutFuture::new(200).await; 
-                    link.send_message(Msg::SetFocusAfterDelay(focused));
-                });
+                let timeout = TimeoutService::spawn(
+                  Duration::from_millis(200),
+                  link.callback(move |_| Msg::SetFocusAfterDelay(focused))
+                );
+                self.focus_timeout = Some(timeout);
             },
             Msg::SetFocusAfterDelay(focused) => {
                 self.is_focused = focused;
