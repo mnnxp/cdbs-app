@@ -499,8 +499,8 @@ impl ShowComponent {
                             show_download_btn={true}
                             show_delete_btn={false}
                             component_uuid={component_data.uuid.clone()}
-                            files={component_data.files.clone()}
-                        />
+                            files_count={component_data.files_count}
+                            />
                     </div>
                 </div>
             </div>
