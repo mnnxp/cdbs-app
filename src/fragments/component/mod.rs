@@ -10,7 +10,7 @@ mod standard;
 mod update_favicon;
 
 pub use catalog::{CatalogComponents, ListItem};
-pub use file::{ComponentFileItem, ComponentFilesBlock};
+pub use file::{ComponentFileItem, ComponentFilesBlock, ManageComponentFilesCard};
 pub use keyword::{KeywordsTags, KeywordTagItem, AddKeywordsTags};
 pub use license::{ComponentLicenseTag, ComponentLicensesTags};
 pub use modification::{
