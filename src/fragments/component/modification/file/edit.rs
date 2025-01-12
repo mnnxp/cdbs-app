@@ -154,6 +154,9 @@ impl Component for ManageModificationFilesCard {
             },
             Msg::ShowFullList => self.show_full_files = !self.show_full_files,
             Msg::ChangePaginate(page_set) => {
+                if self.page_set.compare(&page_set) {
+                    return true
+                }
                 self.page_set = page_set;
                 self.link.send_message(Msg::RequestModificationFilesList);
             },

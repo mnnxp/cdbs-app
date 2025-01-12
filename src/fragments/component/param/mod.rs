@@ -197,6 +197,9 @@ impl Component for ComponentParamsTags {
             },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::ChangePaginate(page_set) => {
+                if self.page_set.compare(&page_set) {
+                    return true
+                }
                 self.page_set = page_set;
                 self.link.send_message(Msg::RequestComponentParams);
             },

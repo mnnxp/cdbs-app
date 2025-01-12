@@ -36,7 +36,6 @@ pub struct ModificationsTableEdit {
     invalid_modification_uuids: BTreeSet<UUID>,
     open_add_modification_card: bool,
     open_edit_modification_card: bool,
-    change_page: bool,
     skip_change_page: bool,
     page_set: PaginateSet,
     current_items: i64,
@@ -76,7 +75,6 @@ impl Component for ModificationsTableEdit {
             invalid_modification_uuids: BTreeSet::new(),
             open_add_modification_card: false,
             open_edit_modification_card: false,
-            change_page: false,
             skip_change_page: false,
             page_set: PaginateSet::new(),
             current_items: 0,
@@ -112,6 +110,9 @@ impl Component for ModificationsTableEdit {
                 })
             },
             Msg::RequestComponentModificationsData => {
+                if self.props.current_component_uuid.len() != 36 {
+                    return true
+                }
                 let component_uuid = self.props.current_component_uuid.clone();
                 // if a new modification is added, only it is requested, and sorting with pagination is not required
                 let (filter, ipt_sort, ipt_paginate) = match self.open_add_modification_card {
@@ -178,7 +179,6 @@ impl Component for ModificationsTableEdit {
                         }
                         self.current_modifications = result;
                         self.current_items = self.current_modifications.len() as i64;
-                        self.change_page = false;
                         // don't change the selected modification if the old one is in the list
                         let mut change_select = true;
                         for cm in &self.current_modifications {
@@ -246,12 +246,11 @@ impl Component for ModificationsTableEdit {
                     self.skip_change_page = false;
                     return true
                 }
-                let check = !self.page_set.compare(&page_set);
-                self.page_set = page_set;
-                if self.props.current_component_uuid.len() == 36 && check {
-                    self.change_page = true;
-                    self.link.send_message(Msg::RequestComponentModificationsData);
+                if self.page_set.compare(&page_set) {
+                    return true
                 }
+                self.page_set = page_set;
+                self.link.send_message(Msg::RequestComponentModificationsData);
             },
             Msg::ClearError => self.error = None,
         }

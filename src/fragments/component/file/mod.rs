@@ -52,7 +52,6 @@ impl Component for ComponentFilesBlock {
     type Properties = Props;
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        let total_items = props.files_count;
         Self {
             error: None,
             link,
@@ -61,7 +60,14 @@ impl Component for ComponentFilesBlock {
             files_list: Vec::new(),
             page_set: PaginateSet::new(),
             current_items: 0,
-            total_items,
+            total_items: 0,
+        }
+    }
+
+    fn rendered(&mut self, first_render: bool) {
+        if first_render {
+            self.total_items = self.props.files_count;
+            self.link.send_message(Msg::RequestComponentFilesList);
         }
     }
 
@@ -100,6 +106,9 @@ impl Component for ComponentFilesBlock {
                 debug!("componentFilesList {:?}", self.files_list.len());
             },
             Msg::ChangePaginate(page_set) => {
+                if self.page_set.compare(&page_set) {
+                    return true
+                }
                 self.page_set = page_set;
                 self.link.send_message(Msg::RequestComponentFilesList);
             },

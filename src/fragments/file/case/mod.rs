@@ -37,7 +37,7 @@ pub struct Props {
 
 #[derive(Clone)]
 pub enum Msg {
-  RequestRevisionsFile(UUID),
+  RequestRevisionsFile,
   ParsingFiles(String),
   SetActiveRev(UUID),
   GetActiveRevResult(String, String),
@@ -53,36 +53,34 @@ impl Component for FileShowcase {
     type Properties = Props;
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-      let active_revision = props.file_info.uuid.clone();
       FileShowcase {
         error: None,
         props,
         link,
         file_arr: Vec::new(),
-        active_revision,
+        active_revision: String::new(),
         files_deleted_list: BTreeSet::new(),
         get_confirm: String::new(),
       }
     }
 
     fn rendered(&mut self, first_render: bool) {
-      // if first_render && self.props.show_revisions && !self.active_revision.is_empty() {
-      if first_render && !self.props.file_info.uuid.is_empty() {
-        // self.link.send_message(Msg::RequestRevisionsFile(self.active_revision.clone()));
-
-        if self.props.show_revisions {
-          self.active_revision = self.props.file_info.uuid.clone();
-          self.files_deleted_list.clear();
-          self.link.send_message(Msg::RequestRevisionsFile(self.active_revision.clone()));
+      if first_render {
+        self.active_revision = self.props.file_info.uuid.clone();
+        if self.props.show_revisions && self.props.open_modal_frame {
+          self.link.send_message(Msg::RequestRevisionsFile);
         }
       }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
       let link = self.link.clone();
-
       match msg {
-        Msg::RequestRevisionsFile(file_uuid) => {
+        Msg::RequestRevisionsFile => {
+          if self.active_revision.len() != 36 {
+            return true
+          }
+          let file_uuid = self.active_revision.clone();
           spawn_local(async move {
               let res = make_query(ShowFileRevisions::build_query(
                 show_file_revisions::Variables{file_uuid}
@@ -92,10 +90,7 @@ impl Component for FileShowcase {
         },
         Msg::ParsingFiles(res) => {
           match resp_parsing(res, "showFileRevisions") {
-            Ok(file_arr) => {
-              // debug!("showFileRevisions: {:?}", file_arr);
-              self.file_arr = file_arr;
-            },
+            Ok(file_arr) => self.file_arr = file_arr,
             Err(err) => link.send_message(Msg::ResponseError(err)),
           }
         },
@@ -141,13 +136,19 @@ impl Component for FileShowcase {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
+      debug!("show revisions: {:?}", self.props.show_revisions);
       if self.props.open_modal_frame == props.open_modal_frame &&
           self.props.show_revisions == props.show_revisions {
-        debug!("show revisions: {:?}", self.props.show_revisions);
         false
       } else {
+        self.files_deleted_list.clear();
+        if self.props.file_info.filename != props.file_info.filename {
+          self.active_revision = props.file_info.uuid.clone();
+        }
         self.props = props;
-        debug!("show revisions: {:?}", self.props.show_revisions);
+        if self.props.show_revisions && self.props.open_modal_frame {
+          self.link.send_message(Msg::RequestRevisionsFile);
+        }
         true
       }
     }

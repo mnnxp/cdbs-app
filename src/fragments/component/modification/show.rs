@@ -29,7 +29,6 @@ pub struct ModificationsTableCard {
     select_modification_uuid: UUID,
     open_modification_card: bool,
     modifications: Vec<ComponentModificationInfo>,
-    change_page: bool,
     skip_change_page: bool,
     page_set: PaginateSet,
     current_items: i64,
@@ -60,7 +59,6 @@ impl Component for ModificationsTableCard {
             select_modification_uuid: String::new(),
             open_modification_card: false,
             modifications: Vec::new(),
-            change_page: false,
             skip_change_page: false,
             page_set: PaginateSet::new(),
             current_items: 0,
@@ -70,9 +68,8 @@ impl Component for ModificationsTableCard {
     fn rendered(&mut self, first_render: bool) {
         if first_render {
             debug!("First show modifications");
-            if self.props.component_uuid.len() == 36 {
-                self.component_uuid = self.props.component_uuid.clone();
-            }
+            self.component_uuid = self.props.component_uuid.clone();
+            self.link.send_message(Msg::RequestComponentModificationsData);
         }
     }
 
@@ -80,6 +77,9 @@ impl Component for ModificationsTableCard {
         let link = self.link.clone();
         match msg {
             Msg::RequestComponentModificationsData => {
+                if self.component_uuid.len() != 36 {
+                    return true
+                }
                 let component_uuid = self.component_uuid.clone();
                 let ipt_sort = Some(get_component_modifications::IptSort {
                     byField: "name".to_string(),
@@ -108,7 +108,6 @@ impl Component for ModificationsTableCard {
                         self.current_items = self.modifications.len() as i64;
                         self.select_modification_uuid = self.modifications.first().map(|m| m.uuid.clone()).unwrap_or_default();
                         self.link.send_message(Msg::CallOfChange);
-                        self.change_page = false;
                         debug!("Update modifications list");
                     },
                     Err(err) => link.send_message(Msg::ResponseError(err)),
@@ -144,11 +143,11 @@ impl Component for ModificationsTableCard {
                     self.skip_change_page = false;
                     return true
                 }
-                self.page_set = page_set;
-                if self.props.component_uuid.len() == 36 {
-                    self.change_page = true;
-                    self.link.send_message(Msg::RequestComponentModificationsData);
+                if self.page_set.compare(&page_set) {
+                    return true
                 }
+                self.page_set = page_set;
+                self.link.send_message(Msg::RequestComponentModificationsData);
             },
             Msg::ClearError => self.error = None,
         }
