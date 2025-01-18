@@ -1078,6 +1078,7 @@ type QueryRoot {
     offset: Int
   ): [ShowFileRelatedData!]!
   typesAccess(args: IptTypeAccessArg): [TypeAccessTranslateList!]!
+  searchByComponents(args: IptSearchArg!): [ShowComponentShort!]!
 }
 
 type RegionTranslateList {
@@ -1327,4 +1328,19 @@ type UserToken {
   token: String!
   createdAt: NaiveDateTime!
   expirationAt: NaiveDateTime!
+}
+
+input IptSearchArg {
+  search: String!
+  byParams: Boolean!
+  bySpecs: Boolean!
+  byKeywords: Boolean!
+  orderBy: String!
+  asDesc: Boolean!
+  companyUuid: UUID
+  standardUuid: UUID
+  userUuid: UUID
+  favorite: Boolean!
+  limit: Int!
+  offset: Int! 
 }

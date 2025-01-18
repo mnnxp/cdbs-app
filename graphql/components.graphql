@@ -191,6 +191,12 @@ query ComponentActualStatuses($filterInt: [Int!]) {
   }
 }
 
+query SearchByComponents($iptSearchArg: IptSearchArg!) {
+  searchByComponents(args: $iptSearchArg) {
+    ...showComponentShortFields
+  }
+}
+
 mutation PutComponentParams($iptComponentParamsData: IptComponentParamsData!) {
   putComponentParams(args: $iptComponentParamsData)
 }
