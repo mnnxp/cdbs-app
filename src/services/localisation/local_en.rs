@@ -352,5 +352,7 @@ lazy_static! {
             (346, "rows"),
             (347, "Import"),
             (348, "Export"),
+            (349, "Search"),
+            (350, "No results"),
         ]);
 }

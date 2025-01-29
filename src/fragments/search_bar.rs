@@ -8,7 +8,7 @@ use crate::gqls::component::{SearchByComponents, search_by_components};
 use log::debug;
 use crate::fragments::list_errors::ListErrors;
 use crate::error::Error;
-use crate::services::resp_parsing;
+use crate::services::{resp_parsing, get_value_field};
 use crate::types::ShowComponentShort;
 use web_sys::KeyboardEvent;
 use yew::services::timeout::{TimeoutService, TimeoutTask};
@@ -87,6 +87,7 @@ impl Component for SearchBar {
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
+        let link = self.link.clone();
         match msg {
             Msg::InputSearch(value) => {
                 self.search_value = value;
@@ -94,7 +95,6 @@ impl Component for SearchBar {
                 self.debounce_timeout = None;
 
                 if !self.search_value.is_empty() {
-                    let link = self.link.clone();
                     let timeout = TimeoutService::spawn(
                         Duration::from_millis(1000),
                         link.callback(|_| Msg::AutoSearch)
@@ -105,12 +105,11 @@ impl Component for SearchBar {
             Msg::AutoSearch => {
                 self.debounce_timeout = None;
                 if !self.search_value.is_empty() {
-                    self.link.send_message(Msg::Search);
+                    link.send_message(Msg::Search);
                 }
             },
             Msg::Search => {
                 self.request_status = RequestStatus::Loading;
-                let link = self.link.clone();
                 let ipt_arg = search_by_components::IptSearchArg::default();
                 let ipt_search_arg = search_by_components::IptSearchArg {
                   search: self.search_value.clone(),
@@ -138,13 +137,12 @@ impl Component for SearchBar {
                     Err(err) => {
                         self.menu_arr.clear();
                         self.request_status = RequestStatus::Error;
-                        self.link.send_message(Msg::ResponseError(err))
+                        link.send_message(Msg::ResponseError(err))
                     },
                 }
             },
             Msg::Ignore => {},
             Msg::SetFocus(focused) => {
-                let link = self.link.clone();
                 let timeout = TimeoutService::spawn(
                   Duration::from_millis(200),
                   link.callback(move |_| Msg::SetFocusAfterDelay(focused))
@@ -157,7 +155,7 @@ impl Component for SearchBar {
             },
             Msg::KeyPress(event) => {
                 if event.key() == "Enter" {
-                    self.link.send_message(Msg::Search);
+                    link.send_message(Msg::Search);
                 }
             }
             Msg::ResponseError(err) => self.error = Some(err),
@@ -172,7 +170,7 @@ impl Component for SearchBar {
         let is_loading = if self.request_status == RequestStatus::Loading { "is-loading" } else { "" };
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         html! {
-          <div class="field  has-addons is-relative">
+          <div class="field has-addons is-relative">
             <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
             <div class={classes!("control", "has-icons-left", "has-icons-right", is_loading)} style="width: 100%;">
               <input class="input" style="width: 100%;" oninput={self.link.callback(|ev: InputData| Msg::InputSearch(ev.value))} onfocus={self.link.callback(|_| Msg::SetFocus(true))} onblur={self.link.callback(|_| Msg::SetFocus(false))} onkeypress={self.link.callback(|e: KeyboardEvent| Msg::KeyPress(e))} type="email" placeholder="Input Search" />
@@ -182,7 +180,7 @@ impl Component for SearchBar {
             </div>
             <div class={"control"}>
               <button class="button is-info search-button" onclick={self.link.callback(|_| Msg::Search)}>
-                {"Search"}
+                {get_value_field(&349)} // Search
               </button>
             </div>
             <div class={classes!("dropdown", "is-absolute", show_dropdown)}>
@@ -196,7 +194,7 @@ impl Component for SearchBar {
                                     <span class="icon">
                                         <i class="fas fa-search-minus"></i>
                                     </span>
-                                    <span>{"Not Found"}</span>
+                                    <span>{get_value_field(&350)}</span> // No results
                                 </span>
                             </div>
                         }
