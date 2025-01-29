@@ -276,15 +276,15 @@ impl ComponentsQueryArg {
     }
 }
 
-#[derive(PartialEq, Serialize, Deserialize, Clone, Default, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct IptSearchArg {
-  search: String,
-  by_keywords: bool,
-  by_params: bool,
-  by_specs: bool,
-  company_uuid: Option<UUID>,
-  favorite: bool,
-  standard_uuid: Option<UUID>,
-  user_uuid: Option<UUID>,
-}
+// #[derive(PartialEq, Serialize, Deserialize, Clone, Default, Debug)]
+// #[serde(rename_all = "camelCase")]
+// pub struct IptSearchArg {
+//   search: String,
+//   by_keywords: bool,
+//   by_params: bool,
+//   by_specs: bool,
+//   company_uuid: Option<UUID>,
+//   favorite: bool,
+//   standard_uuid: Option<UUID>,
+//   user_uuid: Option<UUID>,
+// }
