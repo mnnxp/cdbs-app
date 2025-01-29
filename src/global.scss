@@ -359,6 +359,20 @@ scene-hull {
   }
 }
 
+.is-absolute {
+  position: absolute;
+  bottom: 0px;
+  width: 100%;
+}
+
+#component-dropdown-menu {
+  width: 100%;
+}
+
+.search-button {
+  border-radius:0 4px 4px 0!important;
+}
+
 .card-relate-data{
   flex:1;
   margin: 0.33rem;
