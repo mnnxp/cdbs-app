@@ -1316,3 +1316,18 @@ type UserToken {
   createdAt: NaiveDateTime!
   expirationAt: NaiveDateTime!
 }
+
+input IptSearchArg {
+  search: String!
+  byParams: Boolean!
+  bySpecs: Boolean!
+  byKeywords: Boolean!
+  orderBy: String!
+  asDesc: Boolean!
+  companyUuid: UUID
+  standardUuid: UUID
+  userUuid: UUID
+  favorite: Boolean!
+  limit: Int!
+  offset: Int! 
+}

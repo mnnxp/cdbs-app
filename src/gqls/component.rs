@@ -467,3 +467,12 @@ pub(crate) struct DeleteSuppliersComponent;
     response_derives = "Debug"
 )]
 pub(crate) struct UploadComponentFavicon;
+
+/// Поиск компонентов по параметрам
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/components.graphql",
+    response_derives = "Debug"
+)]
+pub(crate) struct SearchByComponents;

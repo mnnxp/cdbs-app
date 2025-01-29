@@ -10,6 +10,7 @@ mod util;
 mod response_parsing;
 mod subscribers;
 mod clipboard;
+
 pub(crate) mod content_adapter;
 pub(crate) mod title_changer;
 
