@@ -6,6 +6,8 @@ use graphql_client::GraphQLQuery;
 use crate::gqls::make_query;
 use crate::gqls::component::{SearchByComponents, search_by_components};
 use log::debug;
+use crate::fragments::list_errors::ListErrors;
+use crate::error::Error;
 use crate::services::resp_parsing;
 use crate::types::ShowComponentShort;
 use web_sys::KeyboardEvent;
@@ -21,7 +23,7 @@ pub enum RequestStatus {
 }
 
 pub struct SearchBar {
-    props: Props,
+    error: Option<Error>,
     link: ComponentLink<Self>,
     search_value: String,
     menu_arr: Vec<ShowComponentShort>,
@@ -32,8 +34,7 @@ pub struct SearchBar {
 }
 
 #[derive(Properties, Clone)]
-pub struct Props {
-}
+pub struct Props {}
 
 #[derive(Clone)]
 pub enum Msg {
@@ -45,21 +46,19 @@ pub enum Msg {
     KeyPress(KeyboardEvent),
     SetFocusAfterDelay(bool),
     AutoSearch,
+    ResponseError(Error),
+    ClearError,
 }
 
 impl Default for search_by_components::IptSearchArg {
   fn default() -> Self {
       search_by_components::IptSearchArg {
           search: "".to_string(),
-          asDesc: false,
           byKeywords: false,
           byParams: false,
           bySpecs: false,
-          orderBy: "".to_string(),
           companyUuid: None,
           favorite: false,
-          limit: 10,
-          offset: 0,
           standardUuid: None,
           userUuid: None,
       }
@@ -70,13 +69,21 @@ impl Component for SearchBar {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        Self { props, link, search_value: "".to_string(), menu_arr: vec![], request_status: RequestStatus::None, is_focused: false, debounce_timeout: None, focus_timeout: None }
+    fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
+        Self {
+            error: None,
+            link,
+            search_value: "".to_string(),
+            menu_arr: vec![],
+            request_status: RequestStatus::None,
+            is_focused: false,
+            debounce_timeout: None,
+            focus_timeout: None
+        }
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        self.props = props;
-        true
+    fn change(&mut self, _: Self::Properties) -> ShouldRender {
+        false
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
@@ -123,18 +130,17 @@ impl Component for SearchBar {
             },
             Msg::GetSearchByComponentsResult(res) => {
                 debug!("search result: {:?}", res);
-                self.request_status = RequestStatus::Success;
-                // match resp_parsing::<SearchByComponents>(res, "searchByComponents") {
-                //     Ok(slim_user) => {
-                //         debug!("SlimUser data: {:?}", slim_user);
-                //     },
-                //     Err(err) => {
-                //         debug!("Logged error: {:?}", err);
-                //         Err(err)
-                //     },
-                // }
-                let menu_arr = resp_parsing::<Vec<ShowComponentShort>>(res, "searchByComponents");
-                self.menu_arr = menu_arr.unwrap();
+                match resp_parsing::<Vec<ShowComponentShort>>(res, "searchByComponents") {
+                    Ok(search_result) => {
+                        self.menu_arr = search_result;
+                        self.request_status = RequestStatus::Success;
+                    },
+                    Err(err) => {
+                        self.menu_arr.clear();
+                        self.request_status = RequestStatus::Error;
+                        self.link.send_message(Msg::ResponseError(err))
+                    },
+                }
             },
             Msg::Ignore => {},
             Msg::SetFocus(focused) => {
@@ -154,6 +160,8 @@ impl Component for SearchBar {
                     self.link.send_message(Msg::Search);
                 }
             }
+            Msg::ResponseError(err) => self.error = Some(err),
+            Msg::ClearError => self.error = None,
         }
         
         true
@@ -162,9 +170,10 @@ impl Component for SearchBar {
     fn view(&self) -> Html {
         let show_dropdown = if self.request_status == RequestStatus::Success && self.is_focused { "is-active" } else { "" };
         let is_loading = if self.request_status == RequestStatus::Loading { "is-loading" } else { "" };
-
+        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         html! {
           <div class="field  has-addons is-relative">
+            <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
             <div class={classes!("control", "has-icons-left", "has-icons-right", is_loading)} style="width: 100%;">
               <input class="input" style="width: 100%;" oninput={self.link.callback(|ev: InputData| Msg::InputSearch(ev.value))} onfocus={self.link.callback(|_| Msg::SetFocus(true))} onblur={self.link.callback(|_| Msg::SetFocus(false))} onkeypress={self.link.callback(|e: KeyboardEvent| Msg::KeyPress(e))} type="email" placeholder="Input Search" />
               <span class="icon is-small is-left">
