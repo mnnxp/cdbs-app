@@ -10,8 +10,8 @@ query GetSupplierCompanyData($companyUuid: UUID!) {
   }
 }
 
-query GetCompaniesShortList($iptCompaniesArg: IptCompaniesArg) {
-  companies(args: $iptCompaniesArg) {
+query GetCompaniesShortList($iptCompaniesArg: IptCompaniesArg, $IptPaginate: IptPaginate) {
+  companies(args: $iptCompaniesArg, paginate: $IptPaginate) {
     ...companyShortFields
   }
 }

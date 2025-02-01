@@ -22,13 +22,16 @@ pub struct ComponentInfo {
   pub created_at: NaiveDateTime,
   pub updated_at: NaiveDateTime,
   pub licenses: Vec<LicenseInfo>,
-  pub component_params: Vec<ComponentParam>,
   pub files: Vec<ShowFileInfo>,
   pub component_specs: Vec<Spec>,
   pub component_keywords: Vec<Keyword>,
-  pub component_modifications: Vec<ComponentModificationInfo>,
   pub component_suppliers: Vec<Supplier>,
   pub component_standards: Vec<ShowStandardShort>,
+  pub params_count: i64,
+  pub files_count: i64,
+  pub modifications_count: i64,
+  pub suppliers_count: i64,
+  pub standards_count: i64,
 }
 
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]
@@ -143,7 +146,7 @@ pub struct ComponentParam{
   pub value: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Param{
   pub param_id: usize,
@@ -168,12 +171,30 @@ pub struct ComponentModificationInfo{
   pub description: String,
   pub actual_status: ActualStatus,
   pub updated_at: NaiveDateTime,
-  pub filesets_for_program: Vec<FilesetProgramInfo>,
   pub modification_params: Vec<ModificationParam>,
+  pub files_count: i64,
 }
 
-#[derive(Serialize, Deserialize, Clone, Default, Debug)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default)]
+pub struct NewModificationsPreData{
+    pub modification_name: String,
+    pub description: String,
+    pub actual_status_id: usize,
+    pub params: Vec<ParamValue>,
+}
+
+impl NewModificationsPreData {
+    pub(crate) fn new() -> Self {
+        Self {
+            modification_name: String::new(),
+            description: String::new(),
+            actual_status_id: 1,
+            params: Vec::new(),
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
 pub struct ModificationUpdatePreData{
   pub modification_name: String,
   pub description: String,
@@ -198,6 +219,13 @@ pub struct ModificationParam{
   pub value: String,
 }
 
+#[derive(Serialize, Deserialize, Clone, Default, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct ModificationParams{
+  pub modification_uuid: UUID,
+  pub params: Vec<ParamValue>,
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct FilesetProgramInfo{
@@ -215,8 +243,6 @@ pub struct ComponentsQueryArg {
     pub standard_uuid: Option<UUID>,
     pub user_uuid: Option<UUID>,
     pub favorite: Option<bool>,
-    pub limit: Option<i64>,
-    pub offset: Option<i64>,
 }
 
 impl ComponentsQueryArg {
@@ -250,38 +276,15 @@ impl ComponentsQueryArg {
     }
 }
 
-#[derive(PartialEq, Serialize, Deserialize, Clone, Default, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct IptSearchArg {
-  search: String,
-  as_desc: bool,
-  by_keywords: bool,
-  by_params: bool,
-  by_specs: bool,
-  order_by: String,
-  company_uuid: Option<UUID>,
-  favorite: bool,
-  limit: i64,
-  offset: i64,
-  standard_uuid: Option<UUID>,
-  user_uuid: Option<UUID>,
-}
-
-// impl Default for search_by_components::IptSearchArg {
-//   fn default() -> Self {
-//       search_by_components::IptSearchArg {
-//           search: "".to_string(),
-//           asDesc: false,
-//           byKeywords: false,
-//           byParams: false,
-//           bySpecs: false,
-//           orderBy: "".to_string(),
-//           companyUuid: None,
-//           favorite: false,
-//           limit: 10,
-//           offset: 0,
-//           standardUuid: None,
-//           userUuid: None,
-//       }
-//   }
+// #[derive(PartialEq, Serialize, Deserialize, Clone, Default, Debug)]
+// #[serde(rename_all = "camelCase")]
+// pub struct IptSearchArg {
+//   search: String,
+//   by_keywords: bool,
+//   by_params: bool,
+//   by_specs: bool,
+//   company_uuid: Option<UUID>,
+//   favorite: bool,
+//   standard_uuid: Option<UUID>,
+//   user_uuid: Option<UUID>,
 // }

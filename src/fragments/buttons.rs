@@ -4,6 +4,7 @@ use crate::services::get_value_field;
 /// Returns a VNode with Html code of button to download url in the <a> tag
 /// (the button is not active if the link is empty)
 pub fn ft_download_btn(download_url: String, as_button: bool) -> Html {
+    let title = get_value_field(&126);
     let class_btn = match as_button {
         true => classes!("button", "is-white"),
         false => classes!("is-white"),
@@ -12,11 +13,15 @@ pub fn ft_download_btn(download_url: String, as_button: bool) -> Html {
         <a class={class_btn}
         href={download_url.clone()}
         disabled={download_url.is_empty()}
-        title={get_value_field(&126)}
+        title={title}
         target={"_blank"}>
             <span class={"icon"}>
                 <i class={"fas fa-file-download"} style={"color: #1872f0;"} aria-hidden={"true"}></i>
             </span>
+            {match as_button {
+                true => html!{},
+                false => html!{<span>{title}</span>},
+            }}
         </a>
     }
 }
@@ -272,10 +277,46 @@ pub fn ft_back_btn(
             class={"button"}
             onclick={trigger_btn}
             title={title_text.to_string()}>
-            <span class="icon is-small">
-                <i class="fas fa-arrow-left" style={"color: #1872f0;"}></i>
+            <span class={"icon is-small"}>
+                <i class={"fas fa-arrow-left"} style={"color: #1872f0;"}></i>
             </span>
             <span>{title_text.to_string()}</span>
+        </button>
+    }
+}
+
+/// Returns a VNode with Html code of a return import button
+pub fn ft_import_btn(
+    id_btn: &str,
+    trigger_btn: Callback<MouseEvent>,
+    title_text: &str,
+    is_fullwidth: bool,
+    disabled: bool,
+) -> Html {
+    let class_btn = match is_fullwidth {
+        true => classes!("button", "is-link", "is-fullwidth"),
+        false => classes!("button"),
+    };
+    html!{
+        <button
+            id={id_btn.to_string()}
+            class={class_btn}
+            disabled={disabled}
+            onclick={trigger_btn}
+            title={title_text.to_string()}>
+            {match is_fullwidth {
+                true => html!{
+                    <span class={"icon is-small"}>
+                        <i class={"far fa-save"} aria-hidden="true"></i>
+                    </span>
+                },
+                false => html!{
+                    <span class={"icon is-small"}>
+                        <i class={"fas fa-upload"} style={"color: #1872f0;"}></i>
+                    </span>
+                },
+            }}
+            <span>{get_value_field(&347)}</span>
         </button>
     }
 }

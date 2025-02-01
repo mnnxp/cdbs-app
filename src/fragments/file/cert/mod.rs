@@ -201,9 +201,9 @@ impl CertificateItem {
         match self.props.show_cert_btn {
             true => html!{
                 <button id={"show-cert"}
-                    class="button is-light is-fullwidth has-text-weight-bold"
+                    class={"button is-info is-light is-fullwidth has-text-weight-bold"}
                     onclick={onclick_show_cert}>
-                    { text_btn }
+                    {text_btn}
                 </button>
             },
             false => html!{},
@@ -246,7 +246,7 @@ impl CertificateItem {
     fn show_download_btn(&self) -> Html {
         match self.props.download_btn {
             true => html!{<button id={"down-cert"}
-                class="button is-light is-fullwidth has-text-weight-bold"
+                class={"button is-info is-light is-fullwidth has-text-weight-bold"}
                 href={self.props.certificate.file.download_url.clone()}
                 download={self.props.certificate.file.filename.clone()}>
                 {get_value_field(&126)}

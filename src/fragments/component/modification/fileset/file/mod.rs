@@ -5,28 +5,37 @@ pub use list_item::FilesetFileItem;
 use std::collections::BTreeSet;
 use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
 use log::debug;
+use graphql_client::GraphQLQuery;
+use wasm_bindgen_futures::spawn_local;
+use crate::services::{get_value_field, resp_parsing};
+use crate::error::Error;
 use crate::fragments::buttons::ft_see_btn;
 use crate::types::{UUID, ShowFileInfo};
-use crate::services::get_value_field;
+use crate::gqls::make_query;
+use crate::gqls::component::{ComModFilesOfFileset, com_mod_files_of_fileset};
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
-    pub show_download_btn: bool,
+    pub upload_files: usize,
     pub show_delete_btn: bool,
     pub select_fileset_uuid: UUID,
-    pub files: Vec<ShowFileInfo>,
 }
 
 pub struct FilesetFilesBlock {
+    error: Option<Error>,
     link: ComponentLink<Self>,
     props: Props,
     show_full_files: bool,
+    files: Vec<ShowFileInfo>,
     files_deleted_list: BTreeSet<UUID>,
 }
 
 #[derive(Clone)]
 pub enum Msg {
     ShowFullList,
+    RequestFilesOfFileset,
+    ResponseError(Error),
+    GetFilesOfFilesetResult(String),
     RemoveFile(UUID),
 }
 
@@ -36,27 +45,60 @@ impl Component for FilesetFilesBlock {
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
         Self {
+            error: None,
             link,
             props,
             show_full_files: false,
+            files: Vec::new(),
             files_deleted_list: BTreeSet::new(),
         }
     }
 
+    fn rendered(&mut self, first_render: bool) {
+        if first_render {
+            self.link.send_message(Msg::RequestFilesOfFileset);
+        }
+    }
+
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        // let link = self.link.clone();
+        let link = self.link.clone();
         match msg {
-            Msg::ShowFullList => self.show_full_files = !self.show_full_files,
-            Msg::RemoveFile(file_uuid) => {
-                self.files_deleted_list.insert(file_uuid);
+            Msg::RequestFilesOfFileset => {
+                self.files.clear();
+                if self.props.select_fileset_uuid.len() == 36 {
+                    let ipt_file_of_fileset_arg = com_mod_files_of_fileset::IptFileOfFilesetArg{
+                        filesetUuid: self.props.select_fileset_uuid.clone(),
+                        fileUuids: None,
+                    };
+                    spawn_local(async move {
+                        let res = make_query(ComModFilesOfFileset::build_query(com_mod_files_of_fileset::Variables {
+                            ipt_file_of_fileset_arg
+                        })).await.unwrap();
+
+                        link.send_message(Msg::GetFilesOfFilesetResult(res));
+                    })
+                }
             },
+            Msg::ResponseError(err) => self.error = Some(err),
+            Msg::GetFilesOfFilesetResult(res) => {
+                match resp_parsing(res, "componentModificationFilesOfFileset") {
+                    Ok(res) => {
+                        self.files = res;
+                        debug!("componentModificationFilesOfFileset: {:?}", self.files.len());
+                    },
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
+                }
+            },
+            Msg::ShowFullList => self.show_full_files = !self.show_full_files,
+            Msg::RemoveFile(file_uuid) => {self.files_deleted_list.insert(file_uuid);},
         }
         true
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
         if self.props.select_fileset_uuid == props.select_fileset_uuid &&
-             self.props.files.first().map(|x| &x.uuid) == props.files.first().map(|x| &x.uuid) {
+        self.props.upload_files == props.upload_files &&
+        self.props.show_delete_btn == props.show_delete_btn {
             debug!("no change fileset uuid: {:?}", props.select_fileset_uuid);
             false
         } else {
@@ -64,14 +106,16 @@ impl Component for FilesetFilesBlock {
             self.show_full_files = false;
             self.files_deleted_list.clear();
             self.props = props;
+            self.link.send_message(Msg::RequestFilesOfFileset);
             true
         }
     }
 
     fn view(&self) -> Html {
+        let show_full_files_btn = self.link.callback(|_| Msg::ShowFullList);
         html!{<>
             <div class={"buttons"}>
-                {for self.props.files.iter().enumerate().map(|(index, file)| {
+                {for self.files.iter().enumerate().map(|(index, file)| {
                     match (index >= 3, self.show_full_files) {
                         // show full list
                         (_, true) => self.show_file_info(&file),
@@ -82,10 +126,10 @@ impl Component for FilesetFilesBlock {
                 })}
             </div>
             <footer class="card-footer">
-                {match self.props.files.len() {
+                {match self.files.len() {
                     0 => html!{<span>{get_value_field(&204)}</span>},
                     0..=3 => html!{},
-                    _ => self.show_see_btn(),
+                    _ => ft_see_btn(show_full_files_btn, self.show_full_files),
                 }}
             </footer>
         </>}
@@ -104,7 +148,6 @@ impl FilesetFilesBlock {
             Some(_) => html!{}, // removed file
             None => html!{
                 <FilesetFileItem
-                  show_download_btn={self.props.show_download_btn}
                   show_delete_btn={self.props.show_delete_btn}
                   select_fileset_uuid={self.props.select_fileset_uuid.clone()}
                   file={file_info.clone()}
@@ -112,10 +155,5 @@ impl FilesetFilesBlock {
                 />
             },
         }
-    }
-
-    fn show_see_btn(&self) -> Html {
-        let show_full_files_btn = self.link.callback(|_| Msg::ShowFullList);
-        ft_see_btn(show_full_files_btn, self.show_full_files)
     }
 }

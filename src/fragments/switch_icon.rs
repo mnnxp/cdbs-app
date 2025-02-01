@@ -1,18 +1,31 @@
 use yew::{html, Callback, MouseEvent, Html, Classes, classes};
-use crate::services::{ext_str, image_detector};
+use crate::{services::{ext_str, image_detector}, types::Pathname};
 
 pub fn res_btn(
   classes_icon: Classes,
   onclick: Callback<MouseEvent>,
   span_style: String,
   title: &str,
+  pathname: Pathname,
 ) -> Html {
   html!{
-    <button class="button" onclick={onclick} title={title.to_string()}>
-      <span class="icon is-small" style={span_style} >
+    <a class={"button"} onclick={onclick} href={pathname.get_pathname()} title={title.to_string()}>
+      <span class={"icon is-small"} style={span_style} >
         <i class={classes_icon}></i>
       </span>
-    </button>
+    </a>
+  }
+}
+
+pub fn res_fullwidth_btn(
+  onclick: Callback<MouseEvent>,
+  label: &str,
+  pathname: Pathname,
+) -> Html {
+  html!{
+    <a class={"button is-info is-light is-fullwidth has-text-weight-bold"} onclick={onclick} href={pathname.get_pathname()}>
+      {label.to_string()}
+    </a>
   }
 }
 

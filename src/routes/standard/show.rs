@@ -13,7 +13,7 @@ use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{
     buttons::{ft_see_btn, ft_follow_btn},
-    user::ModalCardUser,
+    user::GoToUser,
     switch_icon::res_btn,
     list_errors::ListErrors,
     component::CatalogComponents,
@@ -21,8 +21,8 @@ use crate::fragments::{
     img_showcase::ImgShowcase,
 };
 use crate::services::content_adapter::{DateDisplay, Markdownable};
-use crate::services::{Counter, get_logged_user, get_value_field, resp_parsing, title_changer};
-use crate::types::{UUID, StandardInfo, SlimUser, DownloadFile, ComponentsQueryArg};
+use crate::services::{get_logged_user, get_value_field, resp_parsing, set_history_back, title_changer, Counter};
+use crate::types::{ComponentsQueryArg, DownloadFile, Pathname, SlimUser, StandardInfo, UUID};
 use crate::gqls::make_query;
 use crate::gqls::standard::{
     GetStandardData, get_standard_data,
@@ -100,6 +100,7 @@ impl Component for ShowStandard {
 
     fn rendered(&mut self, first_render: bool) {
         if let None = get_logged_user() {
+            set_history_back(Some(String::new()));
             // route to login page if not found token
             self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
         };
@@ -145,8 +146,6 @@ impl Component for ShowStandard {
                     let ipt_standard_files_arg = standard_files::IptStandardFilesArg{
                         filesUuids: None,
                         standardUuid: standard_uuid,
-                        limit: None,
-                        offset: None,
                     };
                     let res = make_query(StandardFiles::build_query(standard_files::Variables{
                         ipt_standard_files_arg
@@ -322,7 +321,7 @@ impl ShowStandard {
                 <div class="media">
                     <div class="media-content">
                         {get_value_field(&94)}
-                        <ModalCardUser data = {standard_data.owner_user.clone()} />
+                        <GoToUser data = {standard_data.owner_user.clone()} />
                     </div>
                     <div class="media-right" style="margin-right: 1rem">
                         {get_value_field(&145)} // type access
@@ -472,7 +471,8 @@ impl ShowStandard {
                 classes!("fa", "fa-tools"),
                 onclick_setting_standard_btn,
                 String::new(),
-                get_value_field(&16)
+                get_value_field(&16),
+                Pathname::StandardSetting(self.current_standard_uuid.clone())
             )},
             false => html!{},
         }

@@ -119,13 +119,8 @@ impl Component for AddKeywordsTags {
             Msg::RequestGetComponentKeywords => {
                 let component_uuid = self.props.component_uuid.clone();
                 spawn_local(async move {
-                    let ipt_component_keywords_arg = get_component_keywords::IptComponentKeywordsArg{
-                        componentUuid: component_uuid,
-                        limit: None,
-                        offset: None,
-                    };
                     let res = make_query(GetComponentKeywords::build_query(get_component_keywords::Variables {
-                        ipt_component_keywords_arg
+                        component_uuid
                     })).await.unwrap();
                     link.send_message(Msg::GetComponentKeywordsResult(res));
                 })

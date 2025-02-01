@@ -14,7 +14,7 @@ use crate::error::Error;
 use crate::fragments::{
     buttons::ft_follow_btn,
     clipboard::ShareLinkBtn,
-    user::ModalCardUser,
+    user::GoToUser,
     switch_icon::res_btn,
     list_errors::ListErrors,
     list_empty::ListEmpty,
@@ -26,8 +26,8 @@ use crate::fragments::{
 use crate::services::content_adapter::{
     ContentDisplay, Markdownable, DateDisplay, ContactDisplay, SpecDisplay
 };
-use crate::services::{Counter, get_logged_user, get_value_field, resp_parsing, title_changer};
-use crate::types::{UUID, CompanyInfo, SlimUser, ComponentsQueryArg, StandardsQueryArg};
+use crate::services::{get_logged_user, get_value_field, resp_parsing, set_history_back, title_changer, Counter};
+use crate::types::{CompanyInfo, ComponentsQueryArg, Pathname, SlimUser, StandardsQueryArg, UUID};
 use crate::gqls::make_query;
 use crate::gqls::company::{
     GetCompanyData, get_company_data,
@@ -110,6 +110,7 @@ impl Component for ShowCompany {
 
     fn rendered(&mut self, first_render: bool) {
         if let None = get_logged_user() {
+            set_history_back(Some(String::new()));
             // route to login page if not found token
             self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
         };
@@ -206,7 +207,7 @@ impl Component for ShowCompany {
                         self.subscribers = company_data.subscribers.to_owned();
                         self.is_followed = company_data.is_followed.to_owned();
                         self.current_company_uuid = company_data.uuid.to_owned();
-                        if let Some(user) = &self.props.current_user {
+                        if let Some(user) = get_logged_user() {
                             self.current_user_owner = company_data.owner_user.uuid == user.uuid;
                         }
                         self.company = Some(company_data);
@@ -299,7 +300,7 @@ impl ShowCompany {
                           </p>
                       },
                   }}
-                  <ModalCardUser data = {company_data.owner_user.clone()} />
+                  <GoToUser data = {company_data.owner_user.clone()} />
                 </div>
                 <div class="column">
                     <p class="subtitle is-6 has-text-right">
@@ -311,7 +312,8 @@ impl ShowCompany {
                             classes!("fa", "fa-tools"),
                             onclick_setting_company_btn,
                             String::new(),
-                            get_value_field(&16)
+                            get_value_field(&16),
+                            Pathname::CompanySetting(self.current_company_uuid.clone())
                         )},
                         false => html!{},
                       }}
@@ -376,7 +378,7 @@ impl ShowCompany {
             <div class="columns is-mobile">
                 <div class="column is-flex">
                     { self.show_company_action() }
-                    <div class="card-relate-data" style="flex:1;" >
+                    <div class="card-relate-data">
                         {match self.company_tab {
                             CompanyTab::Certificates =>
                                 self.view_certificates(&company_data),

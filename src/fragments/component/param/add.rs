@@ -7,8 +7,10 @@ use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::buttons::ft_save_btn;
 use crate::services::{get_value_field, resp_parsing};
+use crate::services::content_adapter::Markdownable;
 use crate::gqls::make_query;
 use crate::gqls::relate::{RegisterParam, register_param};
+use crate::types::Param;
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
@@ -71,10 +73,10 @@ impl Component for RegisterParamnameBlock {
                 })
             },
             Msg::GetRegisterParamnameResult(res) => {
-                match resp_parsing(res, "registerParam") {
+                match resp_parsing::<Param>(res, "registerParam") {
                     Ok(result) => {
                         debug!("registerParam: {:?}", result);
-                        self.props.callback_add_param.emit((result, self.set_param_value.clone()));
+                        self.props.callback_add_param.emit((result.param_id, self.set_param_value.clone()));
                         self.active_loading_btn = false;
                         // clear old data
                         self.request_new_paramname.clear();
@@ -115,26 +117,34 @@ impl RegisterParamnameBlock {
         let onclick_register_paramname = self.link.callback(|_| Msg::RequestRegisterParamname);
         let oninput_set_paramname = self.link.callback(|ev: InputData| Msg::UpdateParamname(ev.value));
         let oninput_set_param_value = self.link.callback(|ev: InputData| Msg::UpdateParamValue(ev.value));
-
         html!{<>
             <div class="column">
-                <label class="label">{get_value_field(&205)}</label> // Set a paramname (letter case has matter)
+                <label class="label">{get_value_field(&178)}</label>
+                <p class="help">{get_value_field(&336)}<span>{" "}</span>{get_value_field(&337)}</p>
                 <input
                     id="paramname"
                     class="input is-fullwidth"
                     type="text"
-                    placeholder={get_value_field(&205)}
+                    placeholder={get_value_field(&205)} // Set a paramname (letter case has matter)
                     value={self.request_new_paramname.clone()}
                     oninput={oninput_set_paramname}
                     />
+                    <div class={"columns"}>
+                        <div class={"column is-narrow pr-0"}>
+                           <p class="help">{get_value_field(&335)}<span>{":"}</span></p>
+                        </div>
+                        <div class={"column is-narrow"}>
+                            <p class="help">{self.request_new_paramname.to_markdown()}</p>
+                        </div>
+                    </div>
             </div>
             <div class="column">
-                <label class="label">{get_value_field(&133)}</label> // Set a value
+                <label class="label">{get_value_field(&179)}</label>
                 <input
                     id="param-value"
                     class="input is-fullwidth"
                     type="text"
-                    placeholder={get_value_field(&133)}
+                    placeholder={get_value_field(&133)} // Set a value
                     value={self.set_param_value.clone()}
                     oninput={oninput_set_param_value}
                     />

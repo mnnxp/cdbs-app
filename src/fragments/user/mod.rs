@@ -1,7 +1,7 @@
 mod catalog;
 mod certificate;
-mod modal_card;
+mod go_to_user;
 
 pub use catalog::{CatalogUsers, ListItemUser};
 pub use certificate::{UserCertificatesCard, UserCertificateItem, AddUserCertificateCard};
-pub use modal_card::ModalCardUser;
+pub use go_to_user::GoToUser;

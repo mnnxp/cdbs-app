@@ -113,8 +113,6 @@ pub struct CompaniesQueryArg {
     pub user_uuid:  Option<UUID>,
     pub favorite: Option<bool>,
     pub supplier: Option<bool>,
-    pub limit: Option<i64>,
-    pub offset: Option<i64>,
 }
 
 impl CompaniesQueryArg {

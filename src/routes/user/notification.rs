@@ -8,7 +8,7 @@ use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::services::content_adapter::DateDisplay;
-use crate::services::{get_logged_user, get_value_field, resp_parsing};
+use crate::services::{get_logged_user, get_value_field, resp_parsing, set_history_back};
 use crate::types::{ShowNotification, DegreeImportanceTranslateList};
 use crate::gqls::make_query;
 use crate::gqls::user::{
@@ -78,6 +78,7 @@ impl Component for Notifications {
         let link = self.link.clone();
 
         if let None = get_logged_user() {
+            set_history_back(Some(String::new()));
             // route to login page if not found token
             self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
         };
@@ -85,9 +86,7 @@ impl Component for Notifications {
         if first_render {
             spawn_local(async move {
                 let res = make_query(GetNotifications::build_query(
-                    get_notifications::Variables {
-                        ipt_notification_arg: None
-                    }
+                    get_notifications::Variables { notification_ids: None }
                 )).await.unwrap();
                 link.send_message(Msg::GetAllNotification(res));
             })

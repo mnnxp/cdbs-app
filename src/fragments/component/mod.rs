@@ -10,13 +10,13 @@ mod standard;
 mod update_favicon;
 
 pub use catalog::{CatalogComponents, ListItem};
-pub use file::{ComponentFileItem, ComponentFilesBlock};
+pub use file::{ComponentFileItem, ComponentFilesBlock, ManageComponentFilesCard};
 pub use keyword::{KeywordsTags, KeywordTagItem, AddKeywordsTags};
 pub use license::{ComponentLicenseTag, ComponentLicensesTags};
 pub use modification::{
-    ModificationsTable, ModificationsTableEdit, ModificationTableItemModule,
+    ModificationsTableCard, ModificationsTable, ModificationsTableEdit, ModificationTableItemModule,
     ModificationTableItem, ModificationTableHeads, ModificationFilesTableCard,
-    ManageModificationFilesCard, ManageFilesOfFilesetBlock, FilesOfFilesetCard,
+    ManageModificationFilesCard, ModificationFilesetsCard, FilesOfFilesetCard,
 };
 pub use param::{ComponentParamTag, ComponentParamsTags, RegisterParamnameBlock};
 pub use spec::{SpecsTags, SpecTagItem, SearchSpecsTags};

@@ -7,13 +7,14 @@ use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use log::debug;
 use crate::error::Error;
+use crate::fragments::switch_icon::res_fullwidth_btn;
 use crate::routes::AppRoute;
 use crate::fragments::{
     buttons::ft_follow_btn,
     list_errors::ListErrors,
     switch_icon::res_btn,
 };
-use crate::types::ShowStandardShort;
+use crate::types::{Pathname, ShowStandardShort};
 use crate::services::content_adapter::DateDisplay;
 use crate::services::{get_value_field, resp_parsing};
 use crate::gqls::make_query;
@@ -208,7 +209,8 @@ impl ListItemStandard {
                             classes!("far", "fa-folder"),
                             show_standard_btn,
                             String::new(),
-                            get_value_field(&315)
+                            get_value_field(&315),
+                            Pathname::Standard(self.props.data.uuid.clone())
                           )}
                           {ft_follow_btn(
                             trigger_fav_btn,
@@ -276,10 +278,7 @@ impl ListItemStandard {
                   </span>
                 </div>
               <div class="btnBox">
-                <button class="button is-light is-fullwidth has-text-weight-bold"
-                    onclick={show_standard_btn}>
-                    {get_value_field(&143)} // Show standard
-                </button>
+                {res_fullwidth_btn(show_standard_btn, get_value_field(&143), Pathname::Standard(self.props.data.uuid.clone()))}
                 <div style="margin-left: 8px;">
                 {ft_follow_btn(
                     trigger_fav_btn,

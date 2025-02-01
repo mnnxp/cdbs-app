@@ -11,9 +11,9 @@ use crate::routes::AppRoute;
 use crate::fragments::{
     buttons::ft_follow_btn,
     list_errors::ListErrors,
-    switch_icon::res_btn,
+    switch_icon::{res_btn, res_fullwidth_btn},
 };
-use crate::types::{UUID, ShowCompanyShort};
+use crate::types::{Pathname, ShowCompanyShort, UUID};
 use crate::services::content_adapter::DateDisplay;
 use crate::services::{get_value_field, resp_parsing};
 use crate::gqls::make_query;
@@ -167,29 +167,25 @@ impl ListItemCompany {
             ..
         } = &self.props.data;
 
-        let show_company_btn = self.link.callback(|_| Msg::OpenCompany);
+        let onclick_open_company = self.link.callback(|_| Msg::OpenCompany);
         let trigger_fav_btn = self.link.callback(|_| Msg::TriggerFav);
 
         html!{
           <div class="box itemBox">
               <article class="media center-media">
-                  <div class="media-left">
+                  <div class="media-left" onclick={onclick_open_company.clone()}>
                     <figure class="image is-96x96">
                         <div hidden={!is_supplier} class="top-tag" >{get_value_field(&3)}</div> // supplier
-                        // <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
-                        <img
-                            src={image_file.download_url.clone()} alt="Favicon profile"
-                            loading="lazy"
-                        />
+                        <img src={image_file.download_url.clone()} alt="Favicon company" loading="lazy" />
                     </figure>
                   </div>
                   <div class="media-content">
                     {get_value_field(&164)} <span class="id-box has-text-weight-bold">{region.region.clone()}</span>
                     <div class="columns" style="margin-bottom:0">
-                        <div class="column">
-                            <div class="overflow-title has-text-weight-bold is-size-4">{
-                                format!("{} {}", &shortname, &company_type.shortname
-                            )}</div>
+                        <div class="column" onclick={onclick_open_company.clone()}>
+                            <p class="overflow-title has-text-weight-bold is-size-4">
+                                {format!("{} {}", &shortname, &company_type.shortname)}
+                            </p>
                             <p class="overflow-title">
                                 {match &description.len() {
                                     0..=50 => description.clone(),
@@ -200,9 +196,10 @@ impl ListItemCompany {
                         <div class="column buttons is-one-quarter flexBox" >
                             {res_btn(
                                 classes!("far", "fa-folder"),
-                                show_company_btn,
+                                onclick_open_company.clone(),
                                 String::new(),
-                                get_value_field(&315)
+                                get_value_field(&315),
+                                Pathname::Company(self.props.data.uuid.clone())
                             )}
                             {ft_follow_btn(
                                 trigger_fav_btn,
@@ -211,7 +208,7 @@ impl ListItemCompany {
                             )}
                         </div>
                     </div>
-                    <div class="columns is-gapless">
+                    <div class="columns is-gapless" onclick={onclick_open_company}>
                         <div class="column">
                             {get_value_field(&163)}
                             <span class="id-box has-text-weight-bold">{inn.clone()}</span>
@@ -229,6 +226,7 @@ impl ListItemCompany {
 
     fn showing_in_box(&self) -> Html {
         let ShowCompanyShort {
+            uuid,
             shortname,
             image_file,
             region,
@@ -238,28 +236,23 @@ impl ListItemCompany {
             ..
         } = self.props.data.clone();
 
-        let show_company_btn = self.link.callback(|_| Msg::OpenCompany);
+        let onclick_open_company = self.link.callback(|_| Msg::OpenCompany);
         let trigger_fav_btn = self.link.callback(|_| Msg::TriggerFav);
 
         html!{
           <div class="boxItem" >
             <div class="innerBox" >
-              <div class="imgBox" >
-                <div class="top-tag" hidden={!is_supplier} >{get_value_field(&3)}</div> // supplier
-                <img
-                    src={image_file.download_url.to_string()} alt="Favicon profile"
-                    loading="lazy"
-                />
+              <div onclick={onclick_open_company.clone()}>
+                <div class="imgBox">
+                  <div class="top-tag" hidden={!is_supplier} >{get_value_field(&3)}</div> // supplier
+                  <img src={image_file.download_url.to_string()} alt="Favicon profile" loading="lazy" />
+                </div>
+                <p>{get_value_field(&164)}<span class="id-box has-text-weight-bold">{region.region.to_string()}</span></p>
+                <p class="overflow-title has-text-weight-bold is-size-4">{shortname}</p>
+                <p class="has-text-weight-bold">{company_type.shortname.to_string()}</p>
               </div>
-              <div>
-                {get_value_field(&164)}<span class="id-box has-text-weight-bold">{region.region.to_string()}</span>
-              </div>
-              <div class="overflow-title has-text-weight-bold is-size-4">{shortname}</div>
-              <div class="has-text-weight-bold">{company_type.shortname.to_string()}</div>
               <div class="btnBox">
-                <button class="button is-light is-fullwidth has-text-weight-bold" onclick={show_company_btn}>
-                    {get_value_field(&165)} // Show company
-                </button>
+                {res_fullwidth_btn(onclick_open_company, get_value_field(&165), Pathname::Company(uuid))}
                 <div style="margin-left: 8px;">
                 {ft_follow_btn(
                     trigger_fav_btn,

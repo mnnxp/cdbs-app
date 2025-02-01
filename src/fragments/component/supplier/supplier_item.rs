@@ -78,12 +78,15 @@ impl Component for ComponentSupplierItem {
                     userUuid: None,
                     favorite: None,
                     supplier: None,
-                    limit: Some(1),
-                    offset: None,
+                });
+                let ipt_paginate = Some(get_companies_short_list::IptPaginate {
+                    currentPage: 1,
+                    perPage: 1,
                 });
                 spawn_local(async move {
                     let res = make_query(GetCompaniesShortList::build_query(get_companies_short_list::Variables {
-                        ipt_companies_arg
+                        ipt_companies_arg,
+                        ipt_paginate,
                     })).await.unwrap();
                     link.send_message(Msg::GetCompanyDataResult(res));
                 });

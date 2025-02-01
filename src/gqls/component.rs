@@ -279,6 +279,15 @@ pub(crate) struct UploadFilesToFileset;
 )]
 pub(crate) struct RegisterComponentModification;
 
+/// Добавление модификаций с параметрами для компонента
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/components.graphql",
+    response_derives = "Debug"
+)]
+pub(crate) struct RegisterComponentModificationsBulk;
+
 /// Обновление информации о модификации компонента
 #[derive(GraphQLQuery)]
 #[graphql(

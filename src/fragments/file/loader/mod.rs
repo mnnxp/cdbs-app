@@ -1,3 +1,6 @@
+mod commit_msg;
+pub use commit_msg::commit_msg_field;
+
 use std::collections::HashMap;
 use yew::services::fetch::FetchTask;
 use yew::services::reader::{File, FileData, ReaderService, ReaderTask};
@@ -10,6 +13,7 @@ use web_sys::FileList;
 use crate::services::{PutUploadFile, UploadData, get_value_field, resp_parsing, image_detector};
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
+use crate::fragments::switch_icon::res_file_btn;
 use crate::types::{UUID, UploadFile};
 use crate::gqls::make_query;
 use crate::gqls::relate::{ConfirmUploadCompleted, confirm_upload_completed};
@@ -31,6 +35,7 @@ pub struct UploaderFiles {
     get_result_up_file: bool,
     get_result_up_completed: usize,
     active_loading_files_btn: bool,
+    label_filenames: Vec<String>,
 }
 
 #[derive(Clone, Debug, Properties)]
@@ -83,6 +88,7 @@ impl Component for UploaderFiles {
             get_result_up_file: false,
             get_result_up_completed: 0,
             active_loading_files_btn: false,
+            label_filenames: Vec::new(),
         }
     }
 
@@ -206,6 +212,7 @@ impl Component for UploaderFiles {
                     }
                     temp_index += 1;
                     self.files.push(file.clone());
+                    self.label_filenames.push(file.name().clone());
                 }
                 self.files_index += temp_index;
                 debug!("files_index: {:?}", self.files_index);
@@ -219,10 +226,12 @@ impl Component for UploaderFiles {
                 self.presigned_url.clear();
                 self.request_upload_confirm.clear();
                 self.files.clear();
+                self.label_filenames.clear();
                 self.files_index = 0;
             },
             Msg::ClearFilesBoxed => {
                 self.files.clear();
+                self.label_filenames.clear();
                 self.files_index = 0;
             },
             Msg::ClearError => self.error = None,
@@ -250,6 +259,10 @@ impl Component for UploaderFiles {
         html!{<>
             <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
             {self.show_frame_upload_files()}
+            <div class="buttons">
+                {self.show_clear_btn()}
+                {self.show_upload_files_btn()}
+            </div>
         </>}
     }
 }
@@ -278,7 +291,7 @@ impl UploaderFiles {
         html!{<>
             <div class="file has-name is-boxed is-centered">
                 <label class="file-label" style="width: 100%">
-                  <input id="component-file-input"
+                  <input id="file-input"
                   class="file-input"
                   type="file"
                   // accept="image/*,application/vnd*,application/rtf,text/*,.pdf"
@@ -293,12 +306,8 @@ impl UploaderFiles {
                   <span class="file-label">{get_value_field(&self.props.text_choose_files)}</span>
                   {self.accept_image()}
                 </span>
-                <div class="column" title={get_value_field(&85)}>
+                <div class="column">
                     {self.select_files()}
-                </div>
-                <div class="buttons">
-                    {self.show_clear_btn()}
-                    {self.show_upload_files_btn()}
                 </div>
               </label>
             </div>
@@ -306,17 +315,15 @@ impl UploaderFiles {
     }
 
     fn select_files(&self) -> Html {
+        let onclick_file_info_btn = self.link.callback(|_| Msg::Ignore);
         match self.files.is_empty() {
-            true => html!{<span>{get_value_field(&194)}</span>}, // No file uploaded
-            false => html!{
-                <div class="tags">
-                    {for self.files.iter().map(|f| html!{
-                        <span class="file-name mb-1 mr-1">
-                            {f.name().clone()}
-                        </span>
-                    })}
-                </div>
-            }
+            true => html!{<p class={"subtitle"}>{get_value_field(&194)}</p>}, // No file uploaded
+            false => html!{<>
+                {for self.label_filenames.iter().map(|f_name| html!{
+                    {res_file_btn(onclick_file_info_btn.clone(), f_name.clone())}
+                })}
+                <p class="help">{get_value_field(&85)}</p>
+            </>}
         }
     }
 

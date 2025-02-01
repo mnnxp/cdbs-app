@@ -10,6 +10,7 @@ const TOKEN_KEY: &str = dotenv!("TOKEN_KEY");
 const LOGGED_USER_KEY: &str = dotenv!("LOGGED_USER_KEY");
 const ACCEPT_LANGUAGE: &str = dotenv!("ACCEPT_LANGUAGE");
 const LIST_VIEW_TYPE: &str = dotenv!("LIST_VIEW_TYPE");
+const HISTORY_BACK: &str = dotenv!("HISTORY_BACK");
 
 lazy_static! {
     /// Jwt token read from local storage.
@@ -47,6 +48,16 @@ lazy_static! {
         let storage = StorageService::new(Area::Local).expect("storage was disabled by the user");
         if let Ok(list_view) = storage.restore(LIST_VIEW_TYPE) {
             RwLock::new(Some(list_view))
+        } else {
+            RwLock::new(None)
+        }
+    };
+
+    /// Read flag of need to return to previous page
+    pub static ref HISTORYBACK: RwLock<Option<String>> = {
+        let storage = StorageService::new(Area::Local).expect("storage was disabled by the user");
+        if let Ok(history_back) = storage.restore(HISTORY_BACK) {
+            RwLock::new(Some(history_back))
         } else {
             RwLock::new(None)
         }
@@ -131,4 +142,22 @@ pub fn set_list_view(list_view: Option<String>) {
 pub fn get_list_view() -> Option<String> {
     let list_view_lock = LISTVIEWTYPE.read();
     list_view_lock.clone()
+}
+
+/// Sets flag of need to return to previous page after authorization
+pub fn set_history_back(history_back: Option<String>) {
+    let mut storage = StorageService::new(Area::Local).expect("storage was disabled by the user");
+    if let Some(h) = history_back.clone() {
+        storage.store(HISTORY_BACK, Ok(h));
+    } else {
+        storage.remove(HISTORY_BACK);
+    }
+    let mut history_back_lock = HISTORYBACK.write();
+    *history_back_lock = history_back;
+}
+
+/// Gets flag of need to return to previous page after authorization
+pub fn get_history_back() -> Option<String> {
+    let history_back_lock = HISTORYBACK.read();
+    history_back_lock.clone()
 }

@@ -15,18 +15,17 @@ use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{
     buttons::{ft_save_btn, ft_back_btn},
-    file::UploaderFiles,
     list_errors::ListErrors,
     notification::show_notification,
     component::{
         ComponentStandardsCard, ComponentSuppliersCard, ComponentParamsTags, UpdateComponentFaviconCard,
-        ModificationsTableEdit, ComponentFilesBlock, SearchSpecsTags, AddKeywordsTags
+        ModificationsTableEdit, ManageComponentFilesCard, SearchSpecsTags, AddKeywordsTags
     },
 };
-use crate::services::{get_logged_user, get_value_field, resp_parsing, get_value_response, get_from_value};
+use crate::services::{get_from_value, get_logged_user, get_value_field, get_value_response, resp_parsing, set_history_back};
 use crate::types::{
-    UUID, ComponentInfo, SlimUser, TypeAccessInfo, UploadFile, ActualStatus, ComponentUpdatePreData,
-    ComponentUpdateData, ShowCompanyShort, ComponentModificationInfo, ShowFileInfo,
+    UUID, ComponentInfo, SlimUser, TypeAccessInfo, ActualStatus, ComponentUpdatePreData,
+    ComponentUpdateData, ShowCompanyShort, ComponentModificationInfo,
 };
 use crate::gqls::make_query;
 use crate::gqls::component::{
@@ -34,11 +33,7 @@ use crate::gqls::component::{
     PutComponentUpdate, put_component_update,
     DeleteComponent, delete_component,
     ChangeComponentAccess, change_component_access,
-    ComponentFilesList, component_files_list,
-    UploadComponentFiles, upload_component_files,
 };
-
-type FileName = String;
 
 pub struct ComponentSettings {
     error: Option<Error>,
@@ -47,7 +42,6 @@ pub struct ComponentSettings {
     current_component_is_base: bool,
     current_modifications: Vec<ComponentModificationInfo>,
     request_component: ComponentUpdatePreData,
-    request_upload_data: Vec<UploadFile>,
     request_access: i64,
     router_agent: Box<dyn Bridge<RouteAgent>>,
     props: Props,
@@ -58,7 +52,6 @@ pub struct ComponentSettings {
     update_component: bool,
     update_component_access: bool,
     update_component_supplier: bool,
-    files_list: Vec<ShowFileInfo>,
     disable_delete_component_btn: bool,
     confirm_delete_component: String,
     hide_delete_modal: bool,
@@ -78,19 +71,13 @@ pub struct Props {
 pub enum Msg {
     OpenComponent,
     RequestManager,
-    RequestComponentFilesList,
     RequestUpdateComponentData,
     RequestChangeAccess,
     RequestDeleteComponent,
-    RequestUploadComponentFiles(Vec<FileName>),
     GetComponentData(String),
     GetListOpt(String),
     GetUpdateComponentResult(String),
     GetUpdateAccessResult(String),
-    GetComponentFilesListResult(String),
-    GetUploadData(String),
-    UploadConfirm(usize),
-    FinishUploadFiles,
     GetDeleteComponentResult(String),
     UpdateTypeAccessId(String),
     UpdateActualStatusId(String),
@@ -117,7 +104,6 @@ impl Component for ComponentSettings {
             current_component_is_base: false,
             current_modifications: Vec::new(),
             request_component: ComponentUpdatePreData::default(),
-            request_upload_data: Vec::new(),
             request_access: 0,
             router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             props,
@@ -128,7 +114,6 @@ impl Component for ComponentSettings {
             update_component: false,
             update_component_access: false,
             update_component_supplier: false,
-            files_list: Vec::new(),
             disable_delete_component_btn: true,
             confirm_delete_component: String::new(),
             hide_delete_modal: true,
@@ -143,6 +128,7 @@ impl Component for ComponentSettings {
         let logged_user_uuid = match get_logged_user() {
             Some(cu) => cu.uuid,
             None => {
+                set_history_back(Some(String::new()));
                 // route to login page if not found token
                 self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
                 String::new()
@@ -182,8 +168,6 @@ impl Component for ComponentSettings {
                     userUuid: Some(logged_user_uuid),
                     favorite: None,
                     supplier: Some(true),
-                    limit: None,
-                    offset: None,
                 };
                 let res = make_query(GetUpdateComponentDataOpt::build_query(get_update_component_data_opt::Variables {
                     component_uuid: target_component_uuid,
@@ -219,21 +203,6 @@ impl Component for ComponentSettings {
                 self.disable_save_changes_btn = true;
                 self.get_result_component_data = 0;
                 self.get_result_access = false;
-            },
-            Msg::RequestComponentFilesList => {
-                let component_uuid = self.props.component_uuid.clone();
-                spawn_local(async move {
-                    let ipt_component_files_arg = component_files_list::IptComponentFilesArg{
-                        filesUuids: None,
-                        componentUuid: component_uuid,
-                        limit: None,
-                        offset: None,
-                    };
-                    let res = make_query(ComponentFilesList::build_query(
-                        component_files_list::Variables { ipt_component_files_arg }
-                    )).await.unwrap();
-                    link.send_message(Msg::GetComponentFilesListResult(res));
-                })
             },
             Msg::RequestUpdateComponentData => {
                 let component_uuid = self.current_component_uuid.clone();
@@ -284,49 +253,13 @@ impl Component for ComponentSettings {
                     link.send_message(Msg::GetDeleteComponentResult(res));
                 })
             },
-            Msg::RequestUploadComponentFiles(filenames) => {
-                debug!("filenames: {:?}", filenames);
-                if self.current_component_uuid.len() != 36 || filenames.is_empty() {
-                    return false
-                }
-                let component_uuid = self.current_component_uuid.clone();
-                spawn_local(async move {
-                    let ipt_component_files_data = upload_component_files::IptComponentFilesData{
-                        filenames,
-                        componentUuid: component_uuid,
-                    };
-                    let res = make_query(UploadComponentFiles::build_query(upload_component_files::Variables{
-                        ipt_component_files_data
-                    })).await.unwrap();
-                    link.send_message(Msg::GetUploadData(res));
-                })
-            },
-            Msg::GetComponentFilesListResult(res) => {
-                match resp_parsing(res, "componentFilesList") {
-                    Ok(result) => self.files_list = result,
-                    Err(err) => link.send_message(Msg::ResponseError(err)),
-                }
-                debug!("componentFilesList {:?}", self.files_list.len());
-            },
-            Msg::GetUploadData(res) => {
-                match resp_parsing(res, "uploadComponentFiles") {
-                    Ok(result) => self.request_upload_data = result,
-                    Err(err) => link.send_message(Msg::ResponseError(err)),
-                }
-                debug!("uploadComponentFiles {:?}", self.request_upload_data);
-            },
             Msg::GetComponentData(res) => {
                 match resp_parsing::<ComponentInfo>(res, "component") {
                     Ok(component_data) => {
-                        // debug!("Component data: {:?}", component_data);
                         self.current_component_uuid = component_data.uuid.clone();
                         self.current_component_is_base = component_data.is_base;
                         self.current_component = Some(component_data.clone());
-                        // if let Some(user) = &self.props.current_user {
-                        //     self.current_user_owner = component_data.owner_user.uuid == user.uuid;
-                        // }
-                        self.current_modifications = component_data.component_modifications.clone();
-                        self.files_list = component_data.files.clone();
+                        self.current_modifications = Vec::new();
                         self.request_component = component_data.into();
                     },
                     Err(err) => link.send_message(Msg::ResponseError(err)),
@@ -354,15 +287,6 @@ impl Component for ComponentSettings {
                     Ok(result) => self.get_result_access = result,
                     Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
-            },
-            Msg::UploadConfirm(confirmations) => {
-                debug!("Confirmation upload of files: {:?}", confirmations);
-                link.send_message(Msg::FinishUploadFiles);
-            },
-            Msg::FinishUploadFiles => {
-                self.request_upload_data.clear();
-                self.files_list.clear();
-                link.send_message(Msg::RequestComponentFilesList);
             },
             Msg::GetDeleteComponentResult(res) => {
                 match resp_parsing::<UUID>(res, "deleteComponent") {
@@ -445,14 +369,24 @@ impl Component for ComponentSettings {
                                 <br/>
                                 <ModificationsTableEdit
                                     current_component_uuid={self.current_component_uuid.clone()}
-                                    component_modifications={self.current_modifications.clone()}
+                                    modifications_count={component_data.modifications_count}
                                     />
                                 <br/>
                                 <div class="columns">
                                     {self.update_component_favicon()}
-                                    {self.show_additional_params(component_data)}
+                                    <div class="column">
+                                        <ComponentParamsTags
+                                            show_manage_btn={true}
+                                            component_uuid={self.current_component_uuid.clone()}
+                                            params_count={component_data.params_count}
+                                            />
+                                    </div>
                                 </div>
-                                {self.show_component_files()}
+                                <ManageComponentFilesCard
+                                    show_download_btn={true}
+                                    component_uuid={self.current_component_uuid.clone()}
+                                    files_count={component_data.files_count}
+                                    />
                                 <br/>
                                 <div class="columns">
                                     <div class="column">
@@ -610,21 +544,6 @@ impl ComponentSettings {
         }
     }
 
-    fn show_additional_params(
-        &self,
-        component_data: &ComponentInfo,
-    ) -> Html {
-        html!{
-            <div class="column">
-              <ComponentParamsTags
-                  show_manage_btn={true}
-                  component_uuid={self.current_component_uuid.clone()}
-                  component_params={component_data.component_params.clone()}
-              />
-            </div>
-        }
-    }
-
     fn update_component_favicon(&self) -> Html {
         let callback_update_favicon = self.link.callback(|_| Msg::Ignore);
 
@@ -640,48 +559,6 @@ impl ComponentSettings {
                                 component_uuid={self.current_component_uuid.clone()}
                                 callback={callback_update_favicon.clone()}
                             />
-                        </div>
-                    </div>
-                </div>
-            </div>
-        }
-    }
-
-    fn show_component_files(&self) -> Html {
-        let callback_upload_filenames =
-            self.link.callback(move |filenames| Msg::RequestUploadComponentFiles(filenames));
-        let request_upload_files = match self.request_upload_data.is_empty() {
-            true => None,
-            false => Some(self.request_upload_data.clone()),
-        };
-        let callback_upload_confirm =
-            self.link.callback(|confirmations| Msg::UploadConfirm(confirmations));
-        html!{
-            <div class="card">
-                <header class="card-header">
-                    <p class="card-header-title">{get_value_field(&187)}</p> // Manage component files
-                </header>
-                <div class="card-content">
-                    <div class="content">
-                        <div class="columns">
-                            <div class="column">
-                                <h3 class="has-text-weight-bold">{get_value_field(&188)}</h3> // Files for component
-                                <ComponentFilesBlock
-                                    show_download_btn={false}
-                                    show_delete_btn={true}
-                                    component_uuid={self.current_component_uuid.clone()}
-                                    files={self.files_list.clone()}
-                                />
-                            </div>
-                            <div class="column">
-                                <h3 class="has-text-weight-bold">{get_value_field(&186)}</h3> // Upload component files
-                                <UploaderFiles
-                                    text_choose_files={200} // Choose component files…
-                                    callback_upload_filenames={callback_upload_filenames}
-                                    request_upload_files={request_upload_files}
-                                    callback_upload_confirm={callback_upload_confirm}
-                                />
-                            </div>
                         </div>
                     </div>
                 </div>

@@ -369,7 +369,45 @@ scene-hull {
   width: 100%;
 }
 
-
 .search-button {
   border-radius:0 4px 4px 0!important;
+}
+
+.card-relate-data{
+  flex:1;
+  margin: 0.33rem;
+}
+
+.select-title{
+  margin-top: .3em;
+}
+
+.modal-content.box {
+  width: auto;
+}
+
+.pagination-smart{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+  margin-bottom: 0.5em;
+  .input {
+    width: max-content;
+    margin-bottom: 0.5em;
+    margin-right: 0.5em;
+  }
+  .select {
+    margin-bottom: 0.5em;
+    margin-right: 0.5em;
+  }
+  .ps-next {
+    transform: rotate(90deg);
+  }
+  .ps-prev {
+    transform: rotate(270deg);
+  }
+  .ps-first {
+    transform: rotate(180deg);
+  }
 }

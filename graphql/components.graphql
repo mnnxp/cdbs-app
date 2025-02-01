@@ -4,8 +4,18 @@ query GetComponentData($componentUuid: UUID!) {
   }
 }
 
-query GetComponentModifications($iptComponentModificationArg: IptComponentModificationArg!) {
-  componentModifications(args: $iptComponentModificationArg) {
+query GetComponentModifications(
+    $componentUuid: UUID!,
+    $filter: [UUID!],
+    $IptSort: IptSort,
+    $IptPaginate: IptPaginate
+) {
+  componentModifications(
+    componentUuid: $componentUuid,
+    filter: $filter,
+    sort: $IptSort,
+    paginate: $IptPaginate
+  ) {
     ...componentModificationFields
   }
 }
@@ -32,9 +42,13 @@ query GetComponentLicenses($componentUuid: UUID!) {
   }
 }
 
-query GetComponentParams($componentUuid: UUID!) {
+query GetComponentParams(
+  $componentUuid: UUID!,
+  $IptSort: IptSort,
+  $IptPaginate: IptPaginate
+) {
   component(componentUuid: $componentUuid) {
-    componentParams {
+    componentParams(sort: $IptSort, paginate: $IptPaginate) {
       ...componentParamFields
     }
   }
@@ -66,8 +80,16 @@ query ComponentFiles($iptComponentFilesArg: IptComponentFilesArg!) {
   }
 }
 
-query ComponentFilesList($iptComponentFilesArg: IptComponentFilesArg!) {
-  componentFilesList(args: $iptComponentFilesArg){
+query ComponentFilesList(
+  $iptComponentFilesArg: IptComponentFilesArg!,
+  $IptSort: IptSort,
+  $IptPaginate: IptPaginate
+) {
+  componentFilesList(
+    args: $iptComponentFilesArg,
+    sort: $IptSort,
+    paginate: $IptPaginate
+  ){
     ...showFileRelatedDataFields
   }
 }
@@ -78,8 +100,8 @@ query ComponentModificationFiles($iptModificationFilesArg: IptModificationFilesA
   }
 }
 
-query ComponentModificationFilesList($iptModificationFilesArg: IptModificationFilesArg!) {
-  componentModificationFilesList(args: $iptModificationFilesArg){
+query ComponentModificationFilesList($iptModificationFilesArg: IptModificationFilesArg!, $IptPaginate: IptPaginate) {
+  componentModificationFilesList(args: $iptModificationFilesArg, paginate: $IptPaginate){
     ...showFileRelatedDataFields
   }
 }
@@ -178,8 +200,8 @@ query GetComponentDataOpt {
   }
 }
 
-query GetComponentKeywords($iptComponentKeywordsArg: IptComponentKeywordsArg!) {
-  componentKeywords(args: $iptComponentKeywordsArg) {
+query GetComponentKeywords($componentUuid: UUID!) {
+  componentKeywords(componentUuid: $componentUuid) {
     id
     keyword
   }
@@ -219,6 +241,10 @@ mutation PutComponentUpdate($componentUuid: UUID!, $iptUpdateComponentData: IptU
 
 mutation RegisterComponentModification($iptComponentModificationData: IptComponentModificationData!) {
   registerComponentModification(args: $iptComponentModificationData)
+}
+
+mutation RegisterComponentModificationsBulk($iptMultipleModificationsData: IptMultipleModificationsData!) {
+  registerComponentModificationsBulk(args: $iptMultipleModificationsData)
 }
 
 mutation DeleteComponentModification($delComponentModificationData: DelComponentModificationData!) {
@@ -328,27 +354,26 @@ fragment componentFields on ComponentAndRelatedData {
   licenses {
     ...licenseFields
   }
-  componentParams {
-    ...componentParamFields
-  }
+  paramsCount
   files {
     ...showFileRelatedDataFields
   }
+  filesCount
   componentSpecs {
     ...specFields
   }
   componentKeywords {
     ...keywordFields
   }
-  componentModifications {
-    ...componentModificationFields
-  }
+  modificationsCount
   componentSuppliers {
     ...componentSupplierFields
   }
+  suppliersCount
   componentStandards {
     ...showStandardShortFields
   }
+  standardsCount
 }
 
 fragment showUserShortFields on ShowUserShort {
@@ -398,8 +423,9 @@ fragment componentParamFields on ComponentParamWithTranslation {
 fragment showFileRelatedDataFields on ShowFileRelatedData {
   uuid
   filename
-  parentFileUuid
   revision
+  commitMsg
+  parentFileUuid
   ownerUser {
     ...showUserShortFields
   }
@@ -408,6 +434,8 @@ fragment showFileRelatedDataFields on ShowFileRelatedData {
   program {
     ...programFields
   }
+  hash
+  downloadUrl
   createdAt
   updatedAt
 }
@@ -445,12 +473,15 @@ fragment componentModificationFields on ComponentModificationAndRelatedData {
   }
   createdAt
   updatedAt
-  filesetsForProgram {
-    ...filesetProgramRelatedDataFields
-  }
+  filesCount
+  # filesetsForProgram {
+  #   ...filesetProgramRelatedDataFields
+  # }
+  # filesetsCount
   modificationParams {
     ...modificationParamFields
   }
+  # paramsCount
 }
 
 fragment filesetProgramRelatedDataFields on FilesetProgramRelatedData {
@@ -459,6 +490,7 @@ fragment filesetProgramRelatedDataFields on FilesetProgramRelatedData {
   program {
     ...programFields
   }
+  # filesCount
 }
 
 fragment componentSupplierFields on ComponentSupplierRelatedData {

@@ -82,8 +82,6 @@ impl Component for CatalogComponents {
                         standardUuid: arg.standard_uuid.to_owned(),
                         userUuid: arg.user_uuid.to_owned(),
                         favorite: arg.favorite,
-                        limit: arg.limit,
-                        offset: arg.offset,
                     }),
                     None => None,
                 };

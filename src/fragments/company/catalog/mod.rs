@@ -75,15 +75,14 @@ impl Component for CatalogCompanies {
                         userUuid: arg.user_uuid.to_owned(),
                         favorite: arg.favorite,
                         supplier: arg.supplier,
-                        limit: arg.limit,
-                        offset: arg.offset,
                     }),
                     None => None,
                 };
                 spawn_local(async move {
                     let res = make_query(GetCompaniesShortList::build_query(
                         get_companies_short_list::Variables {
-                            ipt_companies_arg
+                            ipt_companies_arg,
+                            ipt_paginate: None,
                     })).await.unwrap();
                     debug!("GetList res: {:?}", res);
                     link.send_message(Msg::UpdateList(res));

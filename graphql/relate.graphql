@@ -1,17 +1,17 @@
-query GetTypesAccess($iptTypeAccessArg: IptTypeAccessArg) {
-  typesAccess(args: $iptTypeAccessArg) {
+query GetTypesAccess($typeAccessIds: [Int!]) {
+  typesAccess(typeAccessIds: $typeAccessIds) {
     ...typesAccessTransListFields
   }
 }
 
-query GetParams($iptParamArg: IptParamArg) {
-  params(args: $iptParamArg) {
+query GetParams($paramIds: [Int!], $IptPaginate: IptPaginate) {
+  params(paramIds: $paramIds, paginate: $IptPaginate) {
     ...paramFields
   }
 }
 
-query GetPrograms($iptProgramArg: IptProgramArg) {
-  programs(args: $iptProgramArg) {
+query GetPrograms($programIds: [Int!]) {
+  programs(programIds: $programIds) {
     id
     name
   }
@@ -23,8 +23,8 @@ fragment paramFields on ParamTranslateList {
   paramname
 }
 
-query GetLicenses($iptLicenseArg: IptLicenseArg) {
-  licenses(args: $iptLicenseArg) {
+query GetLicenses($licenseIds: [Int!]) {
+  licenses(licenseIds: $licenseIds) {
     ...licenseFields
   }
 }
@@ -51,18 +51,22 @@ mutation DeleteFile($fileUuid: UUID!) {
 }
 
 mutation RegisterParam($iptParamTranslateListData: IptParamTranslateListData!) {
-  registerParam(args: $iptParamTranslateListData)
+  registerParam(args: $iptParamTranslateListData) {
+    ...paramFields
+  }
+}
+
+mutation RegisterParamsBulk($iptParamsTranslateListData: [IptParamTranslateListData!]!) {
+  registerParamsBulk(args: $iptParamsTranslateListData) {
+    ...paramFields
+  }
 }
 
 query ShowFileRevisions(
-  $fileUuid: UUID!,
-  $limit: Int,
-  $offset: Int
+  $fileUuid: UUID!
 ){
   showFileRevisions(
-    fileUuid: $fileUuid,
-    limit: $limit,
-    offset: $offset
+    fileUuid: $fileUuid
   ){
     ...showFileRelatedDataFields
   }
@@ -75,8 +79,9 @@ mutation ChangeActiveFileRevision($fileUuid: UUID!){
 fragment showFileRelatedDataFields on ShowFileRelatedData {
   uuid
   filename
-  parentFileUuid
   revision
+  commitMsg
+  parentFileUuid
   ownerUser {
     ...showUserShortFields
   }
@@ -85,6 +90,8 @@ fragment showFileRelatedDataFields on ShowFileRelatedData {
   program {
     ...programFields
   }
+  hash
+  downloadUrl
   createdAt
   updatedAt
 }
