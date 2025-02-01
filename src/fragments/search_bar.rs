@@ -1,6 +1,4 @@
-use yew::{
-    classes, html, Component, ComponentLink, Html, Properties, ShouldRender, InputData
-};
+use yew::{classes, html, Component, ComponentLink, Html, Properties, ShouldRender, InputData};
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use crate::gqls::make_query;
@@ -170,35 +168,35 @@ impl Component for SearchBar {
         let is_loading = if self.request_status == RequestStatus::Loading { "is-loading" } else { "" };
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         html! {
-          <div class="field has-addons is-relative">
+          <div class={"field has-addons is-relative"}>
             <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
-            <div class={classes!("control", "has-icons-left", "has-icons-right", is_loading)} style="width: 100%;">
-              <input class="input" style="width: 100%;"
+            <div class={classes!("control", "has-icons-left", "has-icons-right", is_loading)} style={"width: 100%;"}>
+              <input class={"input"} style={"width: 100%;"}
                 oninput={self.link.callback(|ev: InputData| Msg::InputSearch(ev.value))}
                 onfocus={self.link.callback(|_| Msg::SetFocus(true))}
                 onblur={self.link.callback(|_| Msg::SetFocus(false))}
                 onkeypress={self.link.callback(|e: KeyboardEvent| Msg::KeyPress(e))}
                 placeholder={get_value_field(&351)} // Enter search text
                 />
-              <span class="icon is-small is-left">
-                <i class="fas fa-search fa-xs"></i>
+              <span class={"icon is-small is-left"}>
+                <i class={"fas fa-search fa-xs"}></i>
               </span>
             </div>
             <div class={"control"}>
-              <button class="button is-info search-button" onclick={self.link.callback(|_| Msg::Search)}>
+              <button class={"button is-info search-button"} onclick={self.link.callback(|_| Msg::Search)}>
                 {get_value_field(&349)} // Search
               </button>
             </div>
             <div class={classes!("dropdown", "is-absolute", show_dropdown)}>
-              <div class="dropdown-menu" id="component-dropdown-menu" role="menu">
-                <div class="dropdown-content">
+              <div class={"dropdown-menu"} id={"component-dropdown-menu"} role={"menu"}>
+                <div class={"dropdown-content"}>
                   {
                     if self.request_status == RequestStatus::Success && self.menu_arr.is_empty() {
                         html! {
-                            <div class="dropdown-item has-text-grey">
-                                <span class="icon-text">
-                                    <span class="icon">
-                                        <i class="fas fa-search-minus"></i>
+                            <div class={"dropdown-item has-text-grey"}>
+                                <span class={"icon-text"}>
+                                    <span class={"icon"}>
+                                        <i class={"fas fa-search-minus"}></i>
                                     </span>
                                     <span>{get_value_field(&350)}</span> // No results
                                 </span>
@@ -208,7 +206,7 @@ impl Component for SearchBar {
                         html! {
                             {for self.menu_arr.iter().map(|x| {
                                 html!{
-                                    <a href={format!("#/component/{}", x.uuid)} class="dropdown-item">
+                                    <a href={format!("#/component/{}", x.uuid)} class={"dropdown-item"}>
                                         {x.name.clone()} 
                                     </a>
                                 }
