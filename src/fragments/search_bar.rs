@@ -173,7 +173,13 @@ impl Component for SearchBar {
           <div class="field has-addons is-relative">
             <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
             <div class={classes!("control", "has-icons-left", "has-icons-right", is_loading)} style="width: 100%;">
-              <input class="input" style="width: 100%;" oninput={self.link.callback(|ev: InputData| Msg::InputSearch(ev.value))} onfocus={self.link.callback(|_| Msg::SetFocus(true))} onblur={self.link.callback(|_| Msg::SetFocus(false))} onkeypress={self.link.callback(|e: KeyboardEvent| Msg::KeyPress(e))} type="email" placeholder="Input Search" />
+              <input class="input" style="width: 100%;"
+                oninput={self.link.callback(|ev: InputData| Msg::InputSearch(ev.value))}
+                onfocus={self.link.callback(|_| Msg::SetFocus(true))}
+                onblur={self.link.callback(|_| Msg::SetFocus(false))}
+                onkeypress={self.link.callback(|e: KeyboardEvent| Msg::KeyPress(e))}
+                placeholder={get_value_field(&351)} // Enter search text
+                />
               <span class="icon is-small is-left">
                 <i class="fas fa-search fa-xs"></i>
               </span>
@@ -201,12 +207,8 @@ impl Component for SearchBar {
                     } else {
                         html! {
                             {for self.menu_arr.iter().map(|x| {
-                                let uuid = x.uuid.clone();
                                 html!{
-                                    <a 
-                                        href={format!("#/component/{}", uuid)} 
-                                        class="dropdown-item"
-                                    > 
+                                    <a href={format!("#/component/{}", x.uuid)} class="dropdown-item">
                                         {x.name.clone()} 
                                     </a>
                                 }

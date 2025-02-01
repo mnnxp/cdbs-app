@@ -354,5 +354,6 @@ lazy_static! {
             (348, "Export"),
             (349, "Search"),
             (350, "No results"),
+            (351, "Enter search text"),
         ]);
 }
