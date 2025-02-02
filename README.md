@@ -91,8 +91,8 @@ Extending software functionality through integration is an important feature of 
 
 Solutions for integration with CADBase platform with our support:
 
- - `CADBase Library` workbench for **FreeCAD** parametric 3D modeler - [GitHub](https://github.com/mnnxp/cadbaselibrary-freecad/), [GitLab](https://gitlab.com/cadbase/cadbaselibrary-freecad/), [Codeberg](https://codeberg.org/mnnxp/cadbaselibrary-freecad/)
- - `CADBase Library` add-on for **Blender** 3D computer graphics program - [Blender Extensions](https://extensions.blender.org/add-ons/cadbase-library/), [GitLab](https://gitlab.com/cadbase/cadbaselibrary-blender/)
+ - [CADBase Library](https://github.com/mnnxp/cadbaselibrary-freecad/) workbench for **FreeCAD** parametric 3D modeler
+ - [CADBase Library](https://extensions.blender.org/add-ons/cadbase-library/) add-on for **Blender** 3D computer graphics program
 
 We also welcome participation from stakeholders and developers and hope that the list of integration solutions will grow as the platform grows in popularity.
 
