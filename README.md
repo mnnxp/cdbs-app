@@ -19,7 +19,6 @@
 </div>
 
 
-
 <!-- TABLE OF CONTENTS -->
 <details>
   <summary>Table of Contents</summary>
@@ -27,6 +26,7 @@
     <li>
       <a href="#about-the-project">About The Project</a>
       <ul>
+        <li><a href="#integrations-and-additions">Integrations and additions</a></li>
         <li><a href="#built-with">Built With</a></li>
       </ul>
     </li>
@@ -61,7 +61,6 @@
 </details>
 
 
-
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
@@ -85,12 +84,25 @@ And if you're not interested in this site and its functionality, you can try to 
 
 <div align="right">(<a href="#about-the-project">back to top</a>)</div>
 
+<!-- INTEGRATIONS AND ADDITIONS -->
+### Integrations and additions
+
+Extending software functionality through integration is an important feature of this platform.
+
+Solutions for integration with CADBase platform with our support:
+
+ - [CADBase Library (GitHub)](https://github.com/mnnxp/cadbaselibrary-freecad/) workbench for **FreeCAD** parametric 3D modeler
+ - [CADBase Library (Blender Extensions)](https://extensions.blender.org/add-ons/cadbase-library/) add-on for **Blender** 3D computer graphics program
+
+We also welcome participation from stakeholders and developers and hope that the list of integration solutions will grow as the platform grows in popularity.
+
+<div align="right">(<a href="#about-the-project">back to top</a>)</div>
 
 
 ### Built With
 
 For the creation of this part of the project, the following solutions have been used
-<a href="https://yew.rs"><img src="https://yew.rs/img/logo.svg" alt="Yew" width="40"/></a>  <a href="https://bulma.io"><img src="https://bulma.io/images/bulma-logo.png" alt="BULMA" width="125"/></a>  <a href="https://threejs.org"><img src="https://global.discourse-cdn.com/standard17/uploads/threejs/original/2X/c/c74c5243388bbfa21a39c3e824ddba702a623dec.png" alt="Three.js" width="45"/></a>
+<a href="https://yew.rs"><img src="https://yew.rs/img/logo.svg" alt="Yew" width="40"/></a>  <a href="https://bulma.io"><img src="https://github.com/jgthms/bulma/blob/main/docs/assets/images/bulma-icon.png?raw=true" alt="Bulma" width="45"></a>  <a href="https://threejs.org" alt="Three.js"><img src="https://github.com/mrdoob/three.js/blob/dev/icon.png?raw=true" alt="Three.js" width="50"></a>
 
 | Libraries used |
 | ------------- |
@@ -100,7 +112,6 @@ For the creation of this part of the project, the following solutions have been 
 Many thanks to all of you who have contributed to the projects listed above and to the projects listed in the <a href="#acknowledgments">Acknowledgments</a> section! Your input has allowed us to make CADBase better and faster.
 
 <div align="right">(<a href="#about-the-project">back to top</a>)</div>
-
 
 
 <!-- GETTING STARTED -->
@@ -145,7 +156,6 @@ Note: Before performing step 2, check the correct settings of the environment in
    ```
 
 <div align="right">(<a href="#about-the-project">back to top</a>)</div>
-
 
 
 <!-- USAGE EXAMPLES -->
@@ -193,10 +203,11 @@ This example will run a login test that will be performed using the Firefox brow
 <!-- ROADMAP -->
 ## Roadmap
 
-- [x] Make an MVP
 - [ ] Add instructions for site users
 - [x] Add versioning support for files
-- [x] Add 3D Viewer (via [Three.js](https://github.com/mrdoob/three.js))
+- [x] Add 3D Viewer STL (via [Three.js](https://github.com/mrdoob/three.js))
+- [ ] Add 3D Viewer STEP (via [Mayo](https://github.com/fougue/mayo))
+- [ ] Search page
 - [ ] Multi-language Support
     - [x] English
     - [x] Russian
@@ -206,7 +217,6 @@ This example will run a login test that will be performed using the Firefox brow
 See the [open issues](https://gitlab.com/cadbase/cdbs-app/issues) for a full list of proposed features (and known issues).
 
 <div align="right">(<a href="#about-the-project">back to top</a>)</div>
-
 
 
 <!-- CONTRIBUTING -->
@@ -224,7 +234,6 @@ Don't forget to give the project a star! Thanks again!
 5. Open a Pull Request
 
 <div align="right">(<a href="#about-the-project">back to top</a>)</div>
-
 
 
 <!-- REPOSITORIES -->
@@ -247,7 +256,6 @@ GitHub - https://github.com/mnnxp/cdbs-app
 <div align="right">(<a href="#about-the-project">back to top</a>)</div>
 
 
-
 <!-- LICENSE -->
 ## License
 
@@ -256,16 +264,14 @@ Distributed under the MIT License. See [LICENSE](/LICENSE) for more information.
 <div align="right">(<a href="#about-the-project">back to top</a>)</div>
 
 
-
 <!-- CONTACT -->
 ## Contact
 
-Ivan Nosovsky - in@cadbase.rs or `mnnxp#1839` (Discord)
+Ivan Nosovsky - in@cadbase.rs or `mnnxp@trashserver.net` (Jabber)
 
 Xia TianHao - xth@cadbase.rs or [Sansx](https://github.com/sansx) (GitHub)
 
 <div align="right">(<a href="#about-the-project">back to top</a>)</div>
-
 
 
 <!-- ACKNOWLEDGMENTS -->
@@ -274,8 +280,6 @@ Xia TianHao - xth@cadbase.rs or [Sansx](https://github.com/sansx) (GitHub)
 * [Yew-graphql-demo](https://github.com/sansx/yew-graphql-demo)
 * [Webapp.rs](https://github.com/saschagrunert/webapp.rs)
 * [Canduma](https://github.com/clifinger/canduma)
-* [Font Awesome](https://fontawesome.com)
-* [TestCafe](https://testcafe.io)
 * [Best-README-Template](https://github.com/othneildrew/Best-README-Template)
 * [Choose an Open Source License](https://choosealicense.com)
 * [Container Registry](https://container-registry.com)
@@ -283,7 +287,6 @@ Xia TianHao - xth@cadbase.rs or [Sansx](https://github.com/sansx) (GitHub)
 * [Jordan Leigh](https://jordizle.com)
 
 <div align="right">(<a href="#about-the-project">back to top</a>)</div>
-
 
 
 <!-- MARKDOWN LINKS & IMAGES -->
