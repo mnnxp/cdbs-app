@@ -39,7 +39,6 @@ pub enum Msg {
     InputSearch(String),
     GetSearchByComponentsResult(String),
     Search,
-    Ignore,
     SetFocus(bool),
     KeyPress(KeyboardEvent),
     SetFocusAfterDelay(bool),
@@ -139,7 +138,6 @@ impl Component for SearchBar {
                     },
                 }
             },
-            Msg::Ignore => {},
             Msg::SetFocus(focused) => {
                 let timeout = TimeoutService::spawn(
                   Duration::from_millis(200),
