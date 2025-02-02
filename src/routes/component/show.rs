@@ -153,6 +153,7 @@ impl Component for ShowComponent {
                 self.modification_filesets = HashMap::new();
                 self.select_fileset_uuid = String::new();
                 self.current_filesets_program.clear();
+                self.file_arr.clear();
             }
 
             {
