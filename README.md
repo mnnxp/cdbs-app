@@ -267,7 +267,7 @@ Distributed under the MIT License. See [LICENSE](/LICENSE) for more information.
 <!-- CONTACT -->
 ## Contact
 
-Ivan Nosovsky - in@cadbase.rs or `mnnxp@trashserver.net` (Jabber)
+Ivan Nosovsky - in@cadbase.rs
 
 Xia TianHao - xth@cadbase.rs or [Sansx](https://github.com/sansx) (GitHub)
 
