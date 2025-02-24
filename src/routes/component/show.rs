@@ -444,6 +444,7 @@ impl ShowComponent {
                 component_uuid={self.current_component_uuid.clone()}
                 modifications_count={modifications_count}
                 callback_select_modification={onclick_select_modification.clone()}
+                user_owner={self.current_user_owner}
               />
         }
     }

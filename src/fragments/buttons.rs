@@ -293,14 +293,15 @@ pub fn ft_import_btn(
     is_fullwidth: bool,
     disabled: bool,
 ) -> Html {
-    let class_btn = match is_fullwidth {
-        true => classes!("button", "is-link", "is-fullwidth"),
-        false => classes!("button"),
+    let (class_btn, style_btn) = match is_fullwidth {
+        true => (classes!("button", "is-link", "is-fullwidth"), ""),
+        false => (classes!("button"), "position: absolute;right: 1em;"),
     };
     html!{
         <button
             id={id_btn.to_string()}
             class={class_btn}
+            style={style_btn}
             disabled={disabled}
             onclick={trigger_btn}
             title={title_text.to_string()}>

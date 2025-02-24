@@ -9,6 +9,7 @@ use crate::fragments::buttons::ft_back_btn;
 use crate::services::content_adapter::{DateDisplay, Markdownable};
 use crate::services::{get_value_field, resp_parsing};
 use crate::types::{UUID, ComponentModificationInfo, PaginateSet};
+use crate::routes::other_component::modification::ImportModificationsData;
 use crate::gqls::make_query;
 use crate::gqls::component::{GetComponentModifications, get_component_modifications};
 use super::table::ModificationsTable;
@@ -19,6 +20,7 @@ pub struct Props {
     pub component_uuid: UUID,
     pub modifications_count: i64,
     pub callback_select_modification: Option<Callback<UUID>>,
+    pub user_owner: bool,
 }
 
 pub struct ModificationsTableCard {
@@ -168,6 +170,7 @@ impl Component for ModificationsTableCard {
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         let onclick_modification_card = self.link.callback(|_| Msg::ShowModificationCard);
+        let callback_finish_import = self.link.callback(|_| Msg::RequestComponentModificationsData);
         html!{
             <div class="card">
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
@@ -178,6 +181,17 @@ impl Component for ModificationsTableCard {
                             false => html!{get_value_field(&100)} // Modifications,
                         }}
                     </p>
+                    {match self.props.user_owner && !self.open_modification_card {
+                        true => html!{
+                            <div class="card-header-title">
+                                <ImportModificationsData
+                                    component_uuid={self.props.component_uuid.clone()}
+                                    callback_finish_import={callback_finish_import}
+                                    />
+                            </div>
+                        },
+                        false => html!{}
+                    }}
                 </header>
                 {match self.open_modification_card {
                     true => self.show_modification_card(),

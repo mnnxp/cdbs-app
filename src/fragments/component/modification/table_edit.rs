@@ -275,18 +275,18 @@ impl Component for ModificationsTableEdit {
             <div class="card">
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
                 <header class="card-header">
-                    <p class="card-header-title">
-                        {match &self.open_edit_modification_card {
-                            true => ft_back_btn("open-modifications", onclick_modification_card, get_value_field(&115)),
-                            false => html!{get_value_field(&100)} // Modifications,
-                        }}
-                    </p>
-                    <div class="card-header-title">
-                        <ImportModificationsData
-                            component_uuid={self.props.current_component_uuid.clone()}
-                            callback_finish_import={callback_finish_import}
-                            />
-                    </div>
+                    {match &self.open_edit_modification_card {
+                        true => ft_back_btn("open-modifications", onclick_modification_card, get_value_field(&115)),
+                        false => html!{<>
+                            <p class="card-header-title">{get_value_field(&100)}</p> // Modifications
+                            <div class="card-header-title">
+                                <ImportModificationsData
+                                    component_uuid={self.props.current_component_uuid.clone()}
+                                    callback_finish_import={callback_finish_import}
+                                    />
+                            </div>
+                        </>}
+                    }}
                 </header>
                 {match self.open_edit_modification_card {
                     true => self.show_modification_edit(),
