@@ -46,18 +46,17 @@ pub fn ft_download_full_btn(download_url: String) -> Html {
 
 /// Returns a VNode with Html code of a button for the "Show more" or "Show less" action
 pub fn ft_see_btn(show_full_files_btn: Callback<MouseEvent>, show_full_files: bool) -> Html {
-    let class_btn = classes!("button", "is-white", "is-fullwidth");
-    match show_full_files {
-        true => html!{
-          <button class={class_btn} onclick={show_full_files_btn}>
-            {get_value_field(&99)}
-          </button>
-        },
-        false => html!{
-          <button class={class_btn} onclick={show_full_files_btn}>
-            {get_value_field(&98)}
-          </button>
-        },
+    let (title_text, class_icon) = match show_full_files {
+        true => (get_value_field(&99), "fas fa-caret-up"),
+        false => (get_value_field(&98), "fas fa-caret-down"),
+    };
+    html!{
+        <button class={classes!("button", "is-white", "is-fullwidth")} onclick={show_full_files_btn}>
+          {title_text}
+          <span class={"icon"} style={"color: #1872f0; padding-left: 1rem;"}>
+              <i class={class_icon} aria-hidden={"true"}></i>
+          </span>
+        </button>
     }
 }
 
