@@ -162,7 +162,7 @@ lazy_static! {
             (156, "Updated at"),
             (157, "Managing master data of the standard"),
             (158, "Supplier"),
-            (159, "Actual status"),
+            (159, "Stage"),
             (160, "manufactured by "),
             (161, "Open"),
             (162, "License"),

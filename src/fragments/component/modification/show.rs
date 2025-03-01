@@ -178,7 +178,7 @@ impl Component for ModificationsTableCard {
                     <p class="card-header-title">
                         {match &self.open_modification_card {
                             true => ft_back_btn("open-modifications", onclick_modification_card, get_value_field(&42)),
-                            false => html!{get_value_field(&100)} // Modifications,
+                            false => html!{get_value_field(&100)} // Modifications
                         }}
                     </p>
                     {match self.props.user_owner && !self.open_modification_card {
@@ -240,6 +240,7 @@ impl ModificationsTableCard {
                         <div class="column">
                         <div class="columns">
                             <div class="column" title={get_value_field(&96)}>
+                                {get_value_field(&159)}{": "}
                                 {&mod_data.actual_status.name}
                             </div>
                             <div class="column is-4">
