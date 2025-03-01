@@ -177,7 +177,7 @@ impl Component for ModificationsTableCard {
                 <header class="card-header">
                     <p class="card-header-title">
                         {match &self.open_modification_card {
-                            true => ft_back_btn("open-modifications", onclick_modification_card, get_value_field(&115)),
+                            true => ft_back_btn("open-modifications", onclick_modification_card, get_value_field(&42)),
                             false => html!{get_value_field(&100)} // Modifications,
                         }}
                     </p>
@@ -193,9 +193,10 @@ impl Component for ModificationsTableCard {
                         false => html!{}
                     }}
                 </header>
+                {self.show_modifications_table()}
                 {match self.open_modification_card {
                     true => self.show_modification_card(),
-                    false => self.show_modifications_table(),
+                    false => html!{},
                 }}
             </div>
         }
@@ -229,8 +230,13 @@ impl ModificationsTableCard {
         let modification_data = self.modifications.iter().find(|x| x.uuid == self.select_modification_uuid);
         match modification_data {
             Some(mod_data) => html!{
-                <div class="card-content">
+                <div class="card-content" style="padding-top: 0px;">
                     <div class="content">
+                        <div class="column" title={get_value_field(&176)}>
+                            <p class="overflow-title has-text-weight-bold">
+                                {mod_data.modification_name.clone()}
+                            </p>
+                        </div>
                         <div class="column">
                         <div class="columns">
                             <div class="column" title={get_value_field(&96)}>
@@ -241,11 +247,6 @@ impl ModificationsTableCard {
                                 {mod_data.updated_at.date_to_display()}
                             </div>
                         </div>
-                        </div>
-                        <div class="column" title={get_value_field(&176)}>
-                            <p class="overflow-title has-text-weight-bold">
-                                {mod_data.modification_name.clone()}
-                            </p>
                         </div>
                         <div class="column" title={{get_value_field(&61)}}> // Description
                             <p>{mod_data.description.to_markdown()}</p>
