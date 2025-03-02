@@ -36,6 +36,12 @@ use crate::gqls::component::{
     DeleteComponentFav, delete_component_fav,
 };
 
+pub enum ActiveTab {
+    Description,
+    Characteristics,
+    ComponentFiles
+}
+
 /// Component with relate data
 pub struct ShowComponent {
     error: Option<Error>,
@@ -56,6 +62,7 @@ pub struct ShowComponent {
     show_related_standards: bool,
     file_arr: Vec<DownloadFile>,
     show_three_view: bool,
+    active_tab: ActiveTab,
 }
 
 impl Counter for ShowComponent {
@@ -70,7 +77,6 @@ pub struct Props {
     pub component_uuid: UUID,
 }
 
-#[derive(Clone)]
 pub enum Msg {
     SelectFileset(UUID),
     SelectModification(UUID),
@@ -86,6 +92,7 @@ pub enum Msg {
     OpenComponentSetting,
     GetDownloadFileResult(String),
     Show3D,
+    ChangeActiveTab(ActiveTab),
     ClearError,
     Ignore,
 }
@@ -114,6 +121,7 @@ impl Component for ShowComponent {
             show_related_standards: false,
             file_arr: Vec::new(),
             show_three_view: false,
+            active_tab: ActiveTab::Description,
         }
     }
 
@@ -279,6 +287,7 @@ impl Component for ShowComponent {
                 }
             },
             Msg::Show3D => self.show_three_view = !self.show_three_view,
+            Msg::ChangeActiveTab(set_tab) => self.active_tab = set_tab,
             Msg::ClearError => self.error = None,
             Msg::Ignore => {},
         }
@@ -314,7 +323,14 @@ impl Component for ShowComponent {
                             <br/>
                             {self.show_modifications_table(component_data.modifications_count)}
                             <br/>
-                            {self.show_cards(component_data)}
+                            <div class="columns">
+                                <div class="column">
+                                    {self.show_component_standards(component_data)}
+                                </div>
+                                <div class="column">
+                                    {self.show_component_suppliers(component_data)}
+                                </div>
+                            </div>
                             <SpecsTags
                                 show_manage_btn={false}
                                 component_uuid={component_data.uuid.clone()}
@@ -358,21 +374,10 @@ impl ShowComponent {
                     },
                 }}
               <div class="column">
-                <div class="media">
-                    <div class="media-content">
-                        {get_value_field(&94)}
-                        <GoToUser data = {component_data.owner_user.clone()} />
-                    </div>
-                    <div class="media-right" style="margin-right: 1rem">
-                        {get_value_field(&95)}<span class="id-box">
-                            {component_data.updated_at.date_to_display()}
-                        </span>
-                    </div>
-                </div>
-                // <h1>{"Component"}</h1>
                 <div class="has-text-weight-bold is-size-4">{
                     component_data.name.clone()
                 }</div>
+                {self.show_component_info(component_data)}
                 <div class="buttons flexBox">
                     {self.show_three_btn()}
                     <ModificationFilesetsCard
@@ -387,19 +392,7 @@ impl ShowComponent {
                         false => self.show_component_licenses(component_data),
                     }}
                 </div>
-                {self.show_component_params(component_data)}
-                <div class="component-description">
-                    {match component_data.description.len() {
-                        250.. => match self.show_full_description {
-                            true => html!{},
-                            false => html!{<>
-                                {format!("{:.*}", 200, component_data.description).to_markdown()}
-                                {ft_see_btn(show_description_btn.clone(), self.show_full_description)}
-                            </>},
-                        },
-                        _ => component_data.description.to_markdown(),
-                    }}
-                </div>
+                {self.show_component_tabs(component_data)}
               </div>
             </div>
             {match self.show_full_description && component_data.description.len() > 249 {
@@ -449,64 +442,95 @@ impl ShowComponent {
         }
     }
 
-    fn show_component_params(&self, component_data: &ComponentInfo) -> Html {
+    fn show_component_info(&self, component_data: &ComponentInfo) -> Html {
         html!{
-            <div class="columns">
+            <div class="columns is-mobile is-multiline">
                 <div class="column">
-                    <label class="label">{get_value_field(&96)}</label>
+                    {get_value_field(&159)}{": "}
                     {component_data.actual_status.name.clone()}
                 </div>
                 <div class="column">
-                    <label class="label">{get_value_field(&114)}</label>
-                    {component_data.type_access.name.clone()}
+                    {get_value_field(&58)}{": "}
+                    {component_data.type_access.get_with_icon()}
+                </div>
+                <div class="column is-narrow" title={get_value_field(&141)}>
+                    <span class="icon is-small">
+                        <i class={classes!("fa", "fa-user")}></i>
+                    </span>
+                    {" "}
+                    <GoToUser data = {component_data.owner_user.clone()} />
+                </div>
+                <div class="column is-narrow" title={get_value_field(&95)}>
+                    <span class="icon is-small">
+                        <i class={classes!("fa", "fa-sync")}></i>
+                    </span>
+                    {" "}
+                    <span class="id-box">
+                        {component_data.updated_at.date_to_display()}
+                    </span>
                 </div>
             </div>
         }
     }
 
-    fn show_cards(&self, component_data: &ComponentInfo) -> Html {
+    fn show_component_tabs(&self, component_data: &ComponentInfo) -> Html {
+        let onclick_tab_description = self.link.callback(|_| Msg::ChangeActiveTab(ActiveTab::Description));
+        let onclick_tab_characteristics = self.link.callback(|_| Msg::ChangeActiveTab(ActiveTab::Characteristics));
+        let onclick_tab_component_files = self.link.callback(|_| Msg::ChangeActiveTab(ActiveTab::ComponentFiles));
+        let at = match self.active_tab {
+            ActiveTab::Description => ("is-active","",""),
+            ActiveTab::Characteristics => ("","is-active",""),
+            ActiveTab::ComponentFiles => ("","","is-active"),
+        };
+        let show_description_btn = self.link.callback(|_| Msg::ShowDescription);
         html!{<>
-            <div class="columns">
-                <div class="column">
-                    <ComponentParamsTags
-                        show_manage_btn={false}
-                        component_uuid={self.current_component_uuid.clone()}
-                        params_count={component_data.params_count}
-                        />
-                </div>
-                <div class="column">
-                    {self.show_component_files(component_data)}
-                </div>
+            <div class="tabs">
+                <ul>
+                    <li class={at.0} onclick={onclick_tab_description}><a>{get_value_field(&61)}</a></li>
+                    <li class={at.1} onclick={onclick_tab_characteristics}><a>{get_value_field(&101)}</a></li>
+                    <li class={at.2} onclick={onclick_tab_component_files}><a>{get_value_field(&102)}</a></li>
+                </ul>
             </div>
-            <div class="columns">
-                <div class="column">
-                    {self.show_component_standards(component_data)}
-                </div>
-                <div class="column">
-                    {self.show_component_suppliers(component_data)}
-                </div>
+            <div class="card-content">
+                {match self.active_tab {
+                    ActiveTab::Description => html!{
+                        <div class="content">
+                            <div class="component-description">
+                                {match component_data.description.len() {
+                                    250.. => match self.show_full_description {
+                                        true => html!{},
+                                        false => html!{<>
+                                            {format!("{:.*}", 200, component_data.description).to_markdown()}
+                                            {ft_see_btn(show_description_btn.clone(), self.show_full_description)}
+                                        </>},
+                                    },
+                                    _ => component_data.description.to_markdown(),
+                                }}
+                            </div>
+                        </div>
+                    },
+                    ActiveTab::Characteristics => html!{
+                        <div class="content">
+                            <ComponentParamsTags
+                                show_manage_btn={false}
+                                component_uuid={self.current_component_uuid.clone()}
+                                params_count={component_data.params_count}
+                                />
+                        </div>
+                    },
+                    ActiveTab::ComponentFiles => html!{
+                        <div class="content">
+                            <ComponentFilesBlock
+                                show_download_btn={true}
+                                show_delete_btn={false}
+                                component_uuid={component_data.uuid.clone()}
+                                files_count={component_data.files_count}
+                                />
+                        </div>
+                    },
+                }}
             </div>
         </>}
-    }
-
-    fn show_component_files(&self, component_data: &ComponentInfo) -> Html {
-        html!{
-            <div id="files" class="card">
-                <header class="card-header">
-                    <p class="card-header-title">{get_value_field(&102)}</p> // Component files
-                </header>
-                <div class="card-content">
-                    <div class="content">
-                        <ComponentFilesBlock
-                            show_download_btn={true}
-                            show_delete_btn={false}
-                            component_uuid={component_data.uuid.clone()}
-                            files_count={component_data.files_count}
-                            />
-                    </div>
-                </div>
-            </div>
-        }
     }
 
     fn show_component_suppliers(&self, component_data: &ComponentInfo) -> Html {

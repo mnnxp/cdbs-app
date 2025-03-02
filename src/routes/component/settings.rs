@@ -375,11 +375,18 @@ impl Component for ComponentSettings {
                                 <div class="columns">
                                     {self.update_component_favicon()}
                                     <div class="column">
-                                        <ComponentParamsTags
-                                            show_manage_btn={true}
-                                            component_uuid={self.current_component_uuid.clone()}
-                                            params_count={component_data.params_count}
-                                            />
+                                    <div class="card">
+                                        <header class="card-header">
+                                            <p class="card-header-title">{get_value_field(&185)}</p>
+                                        </header>
+                                        <div class="card-content">
+                                            <ComponentParamsTags
+                                                show_manage_btn={true}
+                                                component_uuid={self.current_component_uuid.clone()}
+                                                params_count={component_data.params_count}
+                                                />
+                                        </div>
+                                    </div>
                                     </div>
                                 </div>
                                 <ManageComponentFilesCard
