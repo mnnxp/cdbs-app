@@ -175,15 +175,17 @@ impl Component for ModificationsTableCard {
             <div class="card">
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
                 <header class="card-header">
-                    <p class="card-header-title">
-                        {match &self.open_modification_card {
-                            true => ft_back_btn("open-modifications", onclick_modification_card, get_value_field(&42)),
-                            false => html!{get_value_field(&100)} // Modifications
-                        }}
-                    </p>
+                    {match &self.open_modification_card {
+                        true => html!{
+                            <div class="m-1">
+                                {ft_back_btn("open-modifications", onclick_modification_card, get_value_field(&42))}
+                            </div>
+                        },
+                        false => html!{<p class="card-header-title">{get_value_field(&100)}</p>}, // Modifications
+                    }}
                     {match self.props.user_owner && !self.open_modification_card {
                         true => html!{
-                            <div class="card-header-title">
+                            <div class="right-side mt-1">
                                 <ImportModificationsData
                                     component_uuid={self.props.component_uuid.clone()}
                                     callback_finish_import={callback_finish_import}

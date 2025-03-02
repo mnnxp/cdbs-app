@@ -119,7 +119,7 @@ lazy_static! {
             (113, "Specified tolerance"),
             (114, "Type access "),
             (115, "Back"),
-            (116, "Managing master data of the component"),
+            (116, "Main component data"),
             (117, "Add"),
             (118, "Created by user"),
             (119, "Files of the selected modification"),
@@ -355,5 +355,6 @@ lazy_static! {
             (349, "Search"),
             (350, "No results"),
             (351, "Enter search text"),
+            (352, "Component (Part)"),
         ]);
 }

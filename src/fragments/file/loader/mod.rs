@@ -317,7 +317,7 @@ impl UploaderFiles {
     fn select_files(&self) -> Html {
         let onclick_file_info_btn = self.link.callback(|_| Msg::Ignore);
         match self.files.is_empty() {
-            true => html!{<p class={"subtitle"}>{get_value_field(&194)}</p>}, // No file uploaded
+            true => html!{<p class={"is-6"}>{get_value_field(&194)}</p>}, // No file uploaded
             false => html!{<>
                 {for self.label_filenames.iter().map(|f_name| html!{
                     {res_file_btn(onclick_file_info_btn.clone(), f_name.clone())}

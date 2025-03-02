@@ -117,35 +117,26 @@ impl Component for ManageComponentFilesCard {
         };
         let callback_upload_confirm = self.link.callback(|confirmations| Msg::UploadConfirm(confirmations));
         html!{
-            <div class={"card"}>
+            <div class={"columns"}>
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
-                <header class={"card-header"}>
-                    <p class={"card-header-title"}>{get_value_field(&187)}</p> // Manage component files
-                </header>
-                <div class={"card-content"}>
-                    <div class={"column"}>
-                        <div class={"column"}>
-                            <p class={"title is-4"}>{get_value_field(&186)}</p> // Upload component files
-                        </div>
-                        {commit_msg_field(self.commit_msg.clone(), oninput_commit_msg.clone())}
-                        <div class={"column"}>
-                            <UploaderFiles
-                                text_choose_files={200} // Choose component files…
-                                callback_upload_filenames={callback_upload_filenames}
-                                request_upload_files={request_upload_files}
-                                callback_upload_confirm={callback_upload_confirm}
-                                />
-                        </div>
-                        <div class={"column"}>
-                            <p class={"title is-4"}>{get_value_field(&188)}</p> // Files for component
-                            <ComponentFilesBlock
-                                show_download_btn={self.props.show_download_btn}
-                                show_delete_btn={true}
-                                component_uuid={self.props.component_uuid.clone()}
-                                files_count={self.total_items}
-                                />
-                        </div>
-                    </div>
+                <div class={"column"}>
+                    <p class={"title is-5"}>{get_value_field(&186)}</p> // Upload component files
+                    {commit_msg_field(self.commit_msg.clone(), oninput_commit_msg.clone())}
+                    <UploaderFiles
+                        text_choose_files={200} // Choose component files…
+                        callback_upload_filenames={callback_upload_filenames}
+                        request_upload_files={request_upload_files}
+                        callback_upload_confirm={callback_upload_confirm}
+                        />
+                </div>
+                <div class={"column"}>
+                    <p class={"title is-5"}>{get_value_field(&188)}</p> // Files for component
+                    <ComponentFilesBlock
+                        show_download_btn={self.props.show_download_btn}
+                        show_delete_btn={true}
+                        component_uuid={self.props.component_uuid.clone()}
+                        files_count={self.total_items}
+                        />
                 </div>
             </div>
         }

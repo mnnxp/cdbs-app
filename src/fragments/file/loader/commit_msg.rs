@@ -8,7 +8,7 @@ pub fn commit_msg_field(commit_msg: String, oninput_commit_msg: Callback<InputDa
         <div class={"column"}>
             <div class={"columns"}>
                 <div class={"column is-narrow"}>
-                    <p class={"title is-5 select-title"}>{get_value_field(&338)}</p>
+                    <p class={"title is-6 select-title"}>{get_value_field(&338)}</p>
                 </div>
                 <div class={"column"}>
                     <input
