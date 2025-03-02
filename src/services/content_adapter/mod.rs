@@ -1,5 +1,6 @@
 mod date_wrapper;
 mod parsing_md;
+mod type_access;
 
 pub(crate) use date_wrapper::{two_dates_display, date_display};
 pub(crate) use parsing_md::inner_markdown;
