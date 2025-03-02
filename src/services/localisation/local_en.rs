@@ -356,5 +356,6 @@ lazy_static! {
             (350, "No results"),
             (351, "Enter search text"),
             (352, "Component (Part)"),
+            (353, "Data of the selected modification"),
         ]);
 }

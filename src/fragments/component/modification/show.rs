@@ -231,7 +231,10 @@ impl ModificationsTableCard {
     fn show_modification_card(&self) -> Html {
         let modification_data = self.modifications.iter().find(|x| x.uuid == self.select_modification_uuid);
         match modification_data {
-            Some(mod_data) => html!{
+            Some(mod_data) => html!{<>
+                <header class={"card-header has-background-info-light"}>
+                    <p class={"card-header-title"}>{get_value_field(&353)}</p>
+                </header>
                 <div class="card-content" style="padding-top: 0px;">
                     <div class="content">
                         <div class="column" title={get_value_field(&176)}>
@@ -261,7 +264,7 @@ impl ModificationsTableCard {
                         files_count={mod_data.files_count}
                     />
                 </div>
-            },
+            </>},
             None => html!{},
         }
     }
