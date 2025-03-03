@@ -224,16 +224,6 @@ impl Component for ComponentParamsTags {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         let onclick_paginate = self.link.callback(|page_set| Msg::ChangePaginate(page_set));
         html!{<>
-            <div class="card">
-                <header class="card-header">
-                    <p class="card-header-title">
-                        {match self.props.show_manage_btn {
-                            true => get_value_field(&185),  // Manage component characteristics
-                            false => get_value_field(&101), // Сharacteristics of the component
-                        }}
-                    </p>
-                </header>
-                <div class="card-content">
             <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
             {self.modal_add_param()}
             {self.show_params()}
@@ -258,8 +248,6 @@ impl Component for ComponentParamsTags {
                 },
                 false => html!{},
             }}
-        </div>
-    </div>
         </>}
     }
 }

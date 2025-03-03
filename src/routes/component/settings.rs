@@ -35,6 +35,13 @@ use crate::gqls::component::{
     ChangeComponentAccess, change_component_access,
 };
 
+pub enum ActiveTab {
+    Data,
+    ImagePreview,
+    Characteristics,
+    ComponentFiles
+}
+
 pub struct ComponentSettings {
     error: Option<Error>,
     current_component: Option<ComponentInfo>,
@@ -59,6 +66,7 @@ pub struct ComponentSettings {
     select_component_modification: UUID,
     get_result_component_data: usize,
     get_result_access: bool,
+    active_tab: ActiveTab,
 }
 
 #[derive(Properties, Clone)]
@@ -67,7 +75,6 @@ pub struct Props {
     pub component_uuid: UUID,
 }
 
-#[derive(Clone)]
 pub enum Msg {
     OpenComponent,
     RequestManager,
@@ -87,6 +94,7 @@ pub enum Msg {
     ResponseError(Error),
     RegisterNewModification(UUID),
     DeleteModification(UUID),
+    ChangeActiveTab(ActiveTab),
     ChangeHideDeleteComponent,
     ClearError,
     Ignore,
@@ -121,6 +129,7 @@ impl Component for ComponentSettings {
             select_component_modification: String::new(),
             get_result_component_data: 0,
             get_result_access: false,
+            active_tab: ActiveTab::Data,
         }
     }
 
@@ -332,6 +341,7 @@ impl Component for ComponentSettings {
                 // link.send_message(Msg::RequestComponentModificationsData);
                 self.select_component_modification = String::new();
             },
+            Msg::ChangeActiveTab(set_tab) => self.active_tab = set_tab,
             Msg::ChangeHideDeleteComponent => self.hide_delete_modal = !self.hide_delete_modal,
             Msg::ClearError => self.error = None,
             Msg::Ignore => {},
@@ -363,29 +373,13 @@ impl Component for ComponentSettings {
                         )}
                         {self.show_top_btn()}
                         <br/>
-                        {self.show_main_card()}
                         {match &self.current_component {
                             Some(component_data) => html!{<>
+                                {self.show_component_tabs(&component_data)}
                                 <br/>
                                 <ModificationsTableEdit
                                     current_component_uuid={self.current_component_uuid.clone()}
                                     modifications_count={component_data.modifications_count}
-                                    />
-                                <br/>
-                                <div class="columns">
-                                    {self.update_component_favicon()}
-                                    <div class="column">
-                                        <ComponentParamsTags
-                                            show_manage_btn={true}
-                                            component_uuid={self.current_component_uuid.clone()}
-                                            params_count={component_data.params_count}
-                                            />
-                                    </div>
-                                </div>
-                                <ManageComponentFilesCard
-                                    show_download_btn={true}
-                                    component_uuid={self.current_component_uuid.clone()}
-                                    files_count={component_data.files_count}
                                     />
                                 <br/>
                                 <div class="columns">
@@ -428,69 +422,112 @@ impl Component for ComponentSettings {
 }
 
 impl ComponentSettings {
-    fn show_main_card(&self) -> Html {
-        let oninput_name = self.link.callback(|ev: InputData| Msg::UpdateName(ev.value));
-        let oninput_description = self.link.callback(|ev: InputData| Msg::UpdateDescription(ev.value));
-        let onclick_save_changes = self.link.callback(|_| Msg::RequestManager);
-
+    fn show_component_tabs(&self, component_data: &ComponentInfo) -> Html {
+        let onclick_tab_data = self.link.callback(|_| Msg::ChangeActiveTab(ActiveTab::Data));
+        let onclick_tab_image_preview = self.link.callback(|_| Msg::ChangeActiveTab(ActiveTab::ImagePreview));
+        let onclick_tab_characteristics = self.link.callback(|_| Msg::ChangeActiveTab(ActiveTab::Characteristics));
+        let onclick_tab_component_files = self.link.callback(|_| Msg::ChangeActiveTab(ActiveTab::ComponentFiles));
+        let at = match self.active_tab {
+            ActiveTab::Data => ("is-active","","",""),
+            ActiveTab::ImagePreview => ("","is-active","",""),
+            ActiveTab::Characteristics => ("","","is-active",""),
+            ActiveTab::ComponentFiles => ("","","","is-active"),
+        };
+        let callback_update_favicon = self.link.callback(|_| Msg::Ignore);
         html!{
             <div class="card">
-                <header class="card-header">
-                    <p class="card-header-title">{get_value_field(&116)}</p>
-                </header>
-                <div class="card-content">
-                    <div class="content">
-                        <div class="field">
-                            <label class="label">{get_value_field(&110)}</label>
-                            <input
-                                id="update-name"
-                                class="input"
-                                type="text"
-                                placeholder={get_value_field(&110)}
-                                value={self.request_component.name.clone()}
-                                oninput={oninput_name} />
+            <header class="card-header">
+                <p class="card-header-title">{get_value_field(&352)}</p>
+            </header>
+            <div class="card-content">
+            <div class="tabs is-centered is-medium">
+                <ul>
+                    <li class={at.0} onclick={onclick_tab_data}><a>{get_value_field(&116)}</a></li>
+                    <li class={at.1} onclick={onclick_tab_image_preview}><a>{get_value_field(&184)}</a></li>
+                    <li class={at.2} onclick={onclick_tab_characteristics}><a>{get_value_field(&101)}</a></li>
+                    <li class={at.3} onclick={onclick_tab_component_files}><a>{get_value_field(&102)}</a></li>
+                </ul>
+            </div>
+                {match self.active_tab {
+                    ActiveTab::Data => html!{
+                        <div class="content">
+                            {self.show_main_card()}
                         </div>
-                        <div class="field">
-                            <label class="label">{get_value_field(&61)}</label>
-                            <textarea
-                                id="update-description"
-                                class="textarea"
-                                // rows="10"
-                                type="text"
-                                placeholder={get_value_field(&61)}
-                                value={self.request_component.description.clone()}
-                                oninput={oninput_description} />
+                    },
+                    ActiveTab::ImagePreview => html!{
+                        <div class="content">
+                            <UpdateComponentFaviconCard
+                                component_uuid={self.current_component_uuid.clone()}
+                                callback={callback_update_favicon.clone()}
+                                />
                         </div>
-                        {self.show_component_params()}
-                    </div>
-                    <footer class="card-footer">
-                        {ft_save_btn(
-                            "update-component-data",
-                            onclick_save_changes,
-                            true,
-                            self.disable_save_changes_btn
-                        )}
-                    </footer>
+                    },
+                    ActiveTab::Characteristics => html!{
+                        <div class="content">
+                            <ComponentParamsTags
+                                show_manage_btn={true}
+                                component_uuid={self.current_component_uuid.clone()}
+                                params_count={component_data.params_count}
+                                />
+                        </div>
+                    },
+                    ActiveTab::ComponentFiles => html!{
+                        <div class="content">
+                            <ManageComponentFilesCard
+                                show_download_btn={true}
+                                component_uuid={self.current_component_uuid.clone()}
+                                files_count={component_data.files_count}
+                                />
+                        </div>
+                    },
+                }}
                 </div>
             </div>
         }
     }
 
-    // todo!(show the block for license management)
-    // fn show_component_licenses(&self) -> Html {
-    //     match &self.current_component {
-    //         Some(component_data) => html!{
-    //             <ComponentLicensesTags
-    //                 show_delete_btn={true}
-    //                 component_uuid={self.current_component_uuid.clone()}
-    //                 component_licenses={component_data.licenses.clone()}
-    //             />
-    //         },
-    //         None => html!{},
-    //     }
-    // }
+    fn show_main_card(&self) -> Html {
+        let oninput_name = self.link.callback(|ev: InputData| Msg::UpdateName(ev.value));
+        let oninput_description = self.link.callback(|ev: InputData| Msg::UpdateDescription(ev.value));
+        let onclick_save_changes = self.link.callback(|_| Msg::RequestManager);
 
-    fn show_component_params(&self) -> Html {
+        html!{<>
+            <div class="content">
+                <div class="field">
+                    <label class="label">{get_value_field(&110)}</label>
+                    <input
+                        id="update-name"
+                        class="input"
+                        type="text"
+                        placeholder={get_value_field(&110)}
+                        value={self.request_component.name.clone()}
+                        oninput={oninput_name} />
+                </div>
+                <div class="field">
+                    <label class="label">{get_value_field(&61)}</label>
+                    <textarea
+                        id="update-description"
+                        class="textarea"
+                        // rows="10"
+                        type="text"
+                        placeholder={get_value_field(&61)}
+                        value={self.request_component.description.clone()}
+                        oninput={oninput_description} />
+                </div>
+                {self.show_component_info()}
+            </div>
+            <footer class="card-footer">
+                {ft_save_btn(
+                    "update-component-data",
+                    onclick_save_changes,
+                    true,
+                    self.disable_save_changes_btn
+                )}
+            </footer>
+        </>}
+    }
+
+    fn show_component_info(&self) -> Html {
         let onchange_actual_status_id = self.link.callback(|ev: ChangeData| Msg::UpdateActualStatusId(match ev {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
@@ -538,28 +575,6 @@ impl ComponentSettings {
                           }
                       )}
                       </select>
-                    </div>
-                </div>
-            </div>
-        }
-    }
-
-    fn update_component_favicon(&self) -> Html {
-        let callback_update_favicon = self.link.callback(|_| Msg::Ignore);
-
-        html!{
-            <div class="column">
-                <div class="card">
-                    <header class="card-header">
-                        <p class="card-header-title">{get_value_field(&184)}</p> // Update image for preview
-                    </header>
-                    <div class="card-content">
-                        <div class="content">
-                            <UpdateComponentFaviconCard
-                                component_uuid={self.current_component_uuid.clone()}
-                                callback={callback_update_favicon.clone()}
-                            />
-                        </div>
                     </div>
                 </div>
             </div>

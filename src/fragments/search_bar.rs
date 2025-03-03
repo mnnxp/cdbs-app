@@ -166,7 +166,7 @@ impl Component for SearchBar {
         let is_loading = if self.request_status == RequestStatus::Loading { "is-loading" } else { "" };
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         html! {
-          <div class={"field has-addons is-relative"}>
+          <div class={"field is-relative"}>
             <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
             <div class={classes!("control", "has-icons-left", "has-icons-right", is_loading)} style={"width: 100%;"}>
               <input class={"input"} style={"width: 100%;"}
@@ -179,11 +179,6 @@ impl Component for SearchBar {
               <span class={"icon is-small is-left"}>
                 <i class={"fas fa-search fa-xs"}></i>
               </span>
-            </div>
-            <div class={"control"}>
-              <button class={"button is-info search-button"} onclick={self.link.callback(|_| Msg::Search)}>
-                {get_value_field(&349)} // Search
-              </button>
             </div>
             <div class={classes!("dropdown", "is-absolute", show_dropdown)}>
               <div class={"dropdown-menu"} id={"component-dropdown-menu"} role={"menu"}>

@@ -270,7 +270,7 @@ impl ModificationEdit {
                         </div>
                     </div>
                     </div>
-                    <div class={"column"} title={get_value_field(&176)}>
+                    <div class={"column"}>
                         <p class={"title is-5"}>{get_value_field(&176)}</p>
                         <input
                             id={"add-modification-name"}
@@ -280,18 +280,14 @@ impl ModificationEdit {
                             value={self.request_edit_modification.modification_name.clone()}
                             oninput={oninput_modification_name} />
                     </div>
-                    <div class={"column"} title={{get_value_field(&61)}}> // Description
-                        <div class={"columns"}>
-                            <div class={"column is-narrow"}>
-                                <p class={"title is-5"}>{get_value_field(&61)}</p>
-                            </div>
-                            <div class={"column is-narrow"} onclick={onclick_show_preview_description} title={{get_value_field(&336)}}>
-                                <a>{match self.preview_description {
-                                    true => {get_value_field(&334)},
-                                    false => {get_value_field(&335)},
-                                }}</a>
-                            </div>
-                        </div>
+                    <div class={"column"}> // Description
+                        <p class={"title is-5"}>{get_value_field(&61)}</p>
+                        <button class={"button is-small is-fullwidth"} onclick={onclick_show_preview_description}>
+                            <a>{match self.preview_description {
+                                true => {get_value_field(&334)},
+                                false => {get_value_field(&335)},
+                            }}</a>
+                        </button>
                         {match self.preview_description {
                             true => html!{
                                 <div id={"update-modification-preview-description"} class={"box"}>
@@ -308,6 +304,7 @@ impl ModificationEdit {
                                     oninput={oninput_modification_description} />
                             },
                         }}
+                        <p class="help">{get_value_field(&336)}</p>
                     </div>
                 </div>
                 <div class="columns">

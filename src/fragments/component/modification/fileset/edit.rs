@@ -325,29 +325,40 @@ impl ManageModificationFilesets {
               ChangeData::Select(el) => el.value(),
               _ => String::new(),
             }));
-
-        html!{<div class="columns">
-            <div class="column">
-                <div class="select is-fullwidth" style="margin-right: .5rem">
-                  <select
-                        id="select-fileset-program-edit"
-                        select={self.select_fileset_uuid.clone()}
-                        onchange={onchange_select_fileset_btn} >
-                      {for self.filesets_program.iter().map(|(fileset_uuid, program_name)|
-                          html!{
-                              <option value={fileset_uuid.to_string()}
-                                    selected={fileset_uuid == &self.select_fileset_uuid} >
-                                  {program_name}
-                              </option>
-                          }
-                      )}
-                  </select>
+        let onclick_new_fileset_card = self.link.callback(|_| Msg::ShowAddFilesetCard);
+        html!{
+            <div class="columns">
+                <div class="column">
+                    <div class="select is-fullwidth" style="margin-right: .5rem">
+                    <select
+                            id="select-fileset-program-edit"
+                            select={self.select_fileset_uuid.clone()}
+                            onchange={onchange_select_fileset_btn} >
+                        {for self.filesets_program.iter().map(|(fileset_uuid, program_name)|
+                            html!{
+                                <option value={fileset_uuid.to_string()}
+                                        selected={fileset_uuid == &self.select_fileset_uuid} >
+                                    {program_name}
+                                </option>
+                            }
+                        )}
+                    </select>
+                    </div>
+                </div>
+                <div class="column">
+                    {self.show_delete_btn()}
+                </div>
+                <div class="column">
+                    {ft_add_btn(
+                        "create-new-fileset",
+                        get_value_field(&196),
+                        onclick_new_fileset_card,
+                        true,
+                        self.props.select_modification_uuid.is_empty()
+                    )}
                 </div>
             </div>
-            <div class="column">
-                {self.show_delete_btn()}
-            </div>
-        </div>}
+        }
     }
 
     fn fileset_block(&self) -> Html {
@@ -359,36 +370,28 @@ impl ManageModificationFilesets {
             false => Some(self.request_upload_data.clone()),
         };
         let callback_upload_confirm = self.link.callback(|confirmations| Msg::UploadConfirm(confirmations));
-        let onclick_new_fileset_card = self.link.callback(|_| Msg::ShowAddFilesetCard);
-        html!{<>
-            <div class="column">
-                <p class={"title is-4"}>{get_value_field(&197)}</p> // Upload files for fileset
-            </div>
-            {commit_msg_field(self.commit_msg.clone(), oninput_commit_msg.clone())}
-            <div class="column">
-                <UploaderFiles
-                    text_choose_files={195} // Choose fileset files…
-                    callback_upload_filenames={callback_upload_filenames}
-                    request_upload_files={request_upload_files}
-                    callback_upload_confirm={callback_upload_confirm}
+        html!{
+            <div class="columns">
+                <div class="column">
+                    <p class={"title is-5"}>{get_value_field(&197)}</p> // Upload files for fileset
+                    {commit_msg_field(self.commit_msg.clone(), oninput_commit_msg.clone())}
+                    <UploaderFiles
+                        text_choose_files={195} // Choose fileset files…
+                        callback_upload_filenames={callback_upload_filenames}
+                        request_upload_files={request_upload_files}
+                        callback_upload_confirm={callback_upload_confirm}
+                        />
+                </div>
+                <div class="column">
+                    <p class={"title is-5"}>{get_value_field(&198)}</p> // Files of fileset
+                    <FilesetFilesBlock
+                        upload_files={self.upload_files}
+                        show_delete_btn={true}
+                        select_fileset_uuid={self.select_fileset_uuid.clone()}
                     />
+                </div>
             </div>
-            <div class="column">
-                <p class={"title is-4"}>{get_value_field(&198)}</p> // Files of fileset
-                <FilesetFilesBlock
-                    upload_files={self.upload_files}
-                    show_delete_btn={true}
-                    select_fileset_uuid={self.select_fileset_uuid.clone()}
-                />
-            </div>
-            {ft_add_btn(
-                "create-new-fileset",
-                get_value_field(&196),
-                onclick_new_fileset_card,
-                true,
-                self.props.select_modification_uuid.is_empty()
-            )}
-        </>}
+        }
     }
 
     fn add_fileset_block(&self) -> Html {

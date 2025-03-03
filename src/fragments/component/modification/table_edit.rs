@@ -270,27 +270,42 @@ impl Component for ModificationsTableEdit {
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         let onclick_modification_card = self.link.callback(|_| Msg::ShowEditModificationCard);
+        let onclick_add_new_modification = self.link.callback(|_| Msg::AddNewModification);
         let callback_finish_import = self.link.callback(|_| Msg::RequestComponentModificationsData);
         html!{
             <div class="card">
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
                 <header class="card-header">
-                    <p class="card-header-title">
-                        {match &self.open_edit_modification_card {
-                            true => ft_back_btn("open-modifications", onclick_modification_card, get_value_field(&115)),
-                            false => html!{get_value_field(&100)} // Modifications,
-                        }}
-                    </p>
-                    <div class="card-header-title">
-                        <ImportModificationsData
-                            component_uuid={self.props.current_component_uuid.clone()}
-                            callback_finish_import={callback_finish_import}
-                            />
-                    </div>
+                    {match &self.open_edit_modification_card {
+                        true => html!{
+                            <div class="m-1">
+                                {ft_back_btn("open-modifications", onclick_modification_card, get_value_field(&42))}
+                            </div>
+                        },
+                        false => html!{
+                            <div class="card-header-title">
+                                <p>{get_value_field(&100)}</p> // Modifications
+                                <div class="buttons right-side">
+                                    <ImportModificationsData
+                                        component_uuid={self.props.current_component_uuid.clone()}
+                                        callback_finish_import={callback_finish_import}
+                                        />
+                                    {ft_add_btn(
+                                        "add-component-modification",
+                                        get_value_field(&174),
+                                        onclick_add_new_modification,
+                                        false,
+                                        false
+                                    )}
+                                </div>
+                            </div>
+                        }
+                    }}
                 </header>
+                {self.show_modifications_table()}
                 {match self.open_edit_modification_card {
                     true => self.show_modification_edit(),
-                    false => self.show_modifications_table(),
+                    false => html!{},
                 }}
             </div>
         }
@@ -300,7 +315,6 @@ impl Component for ModificationsTableEdit {
 impl ModificationsTableEdit {
     fn show_modifications_table(&self) -> Html {
         let onclick_new_modification_param = self.link.callback(|value: UUID| Msg::ChangeNewModificationParam(value));
-        let onclick_add_new_modification = self.link.callback(|_| Msg::AddNewModification);
         let onclick_paginate = self.link.callback(|page_set| Msg::ChangePaginate(page_set));
         let onclick_select_modification = self.link.callback(|value: UUID| Msg::ChangeSelectModification(value));
         let mut modifications = Vec::new();
@@ -325,15 +339,6 @@ impl ModificationsTableEdit {
                     per_page={Some(self.page_set.per_page)}
                     total_items={self.total_items}
                 />
-                <footer class="card-footer">
-                    {ft_add_btn(
-                        "add-component-modification",
-                        get_value_field(&174),
-                        onclick_add_new_modification,
-                        true,
-                        false
-                    )}
-                </footer>
             </div>
         }
     }

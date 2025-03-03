@@ -196,44 +196,44 @@ impl Component for ManageModificationFilesCard {
         let callback_upload_confirm = self.link.callback(|confirmations| Msg::UploadConfirm(confirmations));
         let callback_delete_file = self.link.callback(|value: UUID| Msg::RemoveFile(value));
         let onclick_paginate = self.link.callback(|page_set| Msg::ChangePaginate(page_set));
-        html!{<>
-            <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
-            <div class="column">
-                <p class={"title is-4"}>{get_value_field(&202)}</p> // Upload modification files
-            </div>
-            {commit_msg_field(self.commit_msg.clone(), oninput_commit_msg.clone())}
-            <div class="column">
-              <UploaderFiles
-                text_choose_files={201} // Choose modification files…
-                callback_upload_filenames={callback_upload_filenames}
-                request_upload_files={request_upload_files}
-                callback_upload_confirm={callback_upload_confirm}
-                />
-            </div>
-            <div class="column">
-                <p class={"title is-4"}>{get_value_field(&203)}</p> // Files for modification
-                <div class={"buttons"}>
-                    {for self.files_list.iter().map(|file| {
-                        match self.files_deleted_list.get(&file.uuid) {
-                            Some(_) => html!{}, // removed file
-                            None => html!{
-                                <ModificationFileItem
-                                    show_download_btn={self.props.show_download_btn}
-                                    show_delete_btn={true}
-                                    modification_uuid={self.props.modification_uuid.clone()}
-                                    file={file.clone()}
-                                    callback_delete_file={callback_delete_file.clone()}
-                                    />
-                            },
-                        }
-                    })}
+        html!{
+            <div class="columns">
+                <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
+                <div class="column">
+                    <p class={"title is-5"}>{get_value_field(&202)}</p> // Upload modification files
+                    {commit_msg_field(self.commit_msg.clone(), oninput_commit_msg.clone())}
+                    <UploaderFiles
+                        text_choose_files={201} // Choose modification files…
+                        callback_upload_filenames={callback_upload_filenames}
+                        request_upload_files={request_upload_files}
+                        callback_upload_confirm={callback_upload_confirm}
+                        />
                 </div>
-                <Paginate
-                    callback_change={onclick_paginate}
-                    current_items={self.current_items}
-                    total_items={self.total_items}
-                    />
+                <div class="column">
+                    <p class={"title is-5"}>{get_value_field(&203)}</p> // Files for modification
+                    <div class={"buttons"}>
+                        {for self.files_list.iter().map(|file| {
+                            match self.files_deleted_list.get(&file.uuid) {
+                                Some(_) => html!{}, // removed file
+                                None => html!{
+                                    <ModificationFileItem
+                                        show_download_btn={self.props.show_download_btn}
+                                        show_delete_btn={true}
+                                        modification_uuid={self.props.modification_uuid.clone()}
+                                        file={file.clone()}
+                                        callback_delete_file={callback_delete_file.clone()}
+                                        />
+                                },
+                            }
+                        })}
+                    </div>
+                    <Paginate
+                        callback_change={onclick_paginate}
+                        current_items={self.current_items}
+                        total_items={self.total_items}
+                        />
+                </div>
             </div>
-        </>}
+        }
     }
 }
