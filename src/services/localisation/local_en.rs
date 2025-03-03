@@ -104,7 +104,7 @@ lazy_static! {
             (98, "See more"),
             (99, "See less"),
             (100, "Modifications"),
-            (101, "Сharacteristics of the component"),
+            (101, "Сharacteristics"),
             (102, "Component files"),
             (103, "Standards"),
             (104, "Catalogs"),
