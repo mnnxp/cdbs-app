@@ -126,11 +126,9 @@ impl Component for ShowComponent {
     }
 
     fn rendered(&mut self, first_render: bool) {
-        if let None = get_logged_user() {
+        if get_logged_user().is_none() {
             set_history_back(Some(String::new()));
-            // route to login page if not found token
-            self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
-        };
+        }
 
         // get component uuid for request component data
         let route_service: RouteService<()> = RouteService::new();
@@ -256,7 +254,14 @@ impl Component for ShowComponent {
                         self.file_arr.push(component_data.image_file.clone());
                         self.component = Some(component_data);
                     },
-                    Err(err) => link.send_message(Msg::ResponseError(err)),
+                    Err(err) => {
+                        link.send_message(Msg::ResponseError(err));
+                        if let None = get_logged_user() {
+                            set_history_back(Some(String::new()));
+                            // route to login page if not found token
+                            self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
+                        };
+                    },
                 }
             },
             Msg::GetDownloadFileResult(res) => {
