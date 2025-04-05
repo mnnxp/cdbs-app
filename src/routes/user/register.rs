@@ -8,6 +8,7 @@ use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::buttons::ft_create_btn;
+use crate::fragments::conditions::ConditionsBlock;
 use crate::services::{get_logged_user, get_value_field, get_value_response, get_from_value};
 use crate::types::{RegisterInfo, Program, TypeAccessInfo};
 use crate::gqls::make_query;
@@ -25,7 +26,6 @@ pub struct Register {
     programs: Vec<Program>,
     types_access: Vec<TypeAccessInfo>,
     link: ComponentLink<Self>,
-    show_conditions: bool,
 }
 
 pub enum Msg {
@@ -40,7 +40,6 @@ pub enum Msg {
     UpdateTypeAccessId(String),
     UpdateList(String),
     GetRegister(String),
-    ShowConditions,
     ResponseError(Error),
     ClearError,
     Ignore,
@@ -59,7 +58,6 @@ impl Component for Register {
             link,
             programs: Vec::new(),
             types_access: Vec::new(),
-            show_conditions: false,
         }
     }
 
@@ -137,7 +135,6 @@ impl Component for Register {
                 self.request.program_id = program_id.parse::<usize>().unwrap_or(1),
             Msg::UpdateTypeAccessId(type_access_id) =>
                 self.request.type_access_id = type_access_id.parse::<usize>().unwrap_or(1),
-            Msg::ShowConditions => self.show_conditions = !self.show_conditions,
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::ClearError => self.error = None,
             Msg::Ignore => {}
@@ -151,7 +148,6 @@ impl Component for Register {
 
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
-        let onclick_show_conditions = self.link.callback(|_| Msg::ShowConditions);
         let onclick_signup_btn = self.link.callback(|_| Msg::Request);
 
         html!{<div class="container page">
@@ -163,7 +159,6 @@ impl Component for Register {
                     </RouterAnchor<AppRoute>>
                 </h2>
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
-                {self.modal_conditions()}
                 <div class="card column">
                     {self.fieldset_profile()}
                     <div class="columns">
@@ -179,10 +174,7 @@ impl Component for Register {
                         </div>
                         <div class="column">
                             <div class="column is-flex is-vcentered">
-                                <span>
-                                    {get_value_field(&28)}
-                                    {" ["}<a onclick={onclick_show_conditions}>{ get_value_field(&29)}</a>{"]"}
-                                </span>
+                                <ConditionsBlock />
                             </div>
                         </div>
                     </div>
@@ -231,34 +223,6 @@ impl Register {
                     )}
                 </div>
             </div>
-
-            // second columns (fio)
-            // <div class="columns">
-            //     <div class="column">
-            //         {self.fileset_generator(
-            //             "firstname", get_value_field(&23), // "Firstname (not required)",
-            //             "", // no set icon for input
-            //             self.request.firstname.clone(),
-            //             oninput_firstname
-            //         )}
-            //     </div>
-            //     <div class="column">
-            //         {self.fileset_generator(
-            //             "lastname", get_value_field(&24), // "Lastname (not required)",
-            //             "", // no set icon for input
-            //             self.request.lastname.clone(),
-            //             oninput_lastname
-            //         )}
-            //     </div>
-            //     <div class="column">
-            //         {self.fileset_generator(
-            //             "secondname", get_value_field(&25), // "Secondname (not required)",
-            //             "", // no set icon for input
-            //             self.request.secondname.clone(),
-            //             oninput_secondname
-            //         )}
-            //     </div>
-            // </div>
 
             // third columns (password)
             {self.fileset_generator(
@@ -321,10 +285,10 @@ impl Register {
         oninput: Callback<InputData>,
     ) -> Html {
         let placeholder = label;
-        let input_type = match id {
-            "email" => "email",
-            "password" => "password",
-            _ => "text",
+        let (input_type, input_autocomplete) = match id {
+            "email" => ("email", "on"),
+            "password" => ("password", "new-password"),
+            _ => ("text", "on"),
         };
 
         html!{
@@ -338,6 +302,7 @@ impl Register {
                             type={input_type}
                             placeholder={placeholder.to_string()}
                             value={value}
+                            autocomplete={input_autocomplete}
                             oninput={oninput} />
                     },
                     false => html!{
@@ -348,6 +313,7 @@ impl Register {
                                 type={input_type}
                                 placeholder={placeholder.to_string()}
                                 value={value}
+                                autocomplete={input_autocomplete}
                                 oninput={oninput} />
                             <span class="icon is-small is-left">
                               <i class={icon_left.to_string()}></i>
@@ -357,35 +323,5 @@ impl Register {
                 }}
             </fieldset>
         }
-    }
-
-    fn modal_conditions(&self) -> Html {
-        let onclick_show_conditions = self.link.callback(|_| Msg::ShowConditions);
-
-        let class_modal = match &self.show_conditions {
-            true => "modal is-active",
-            false => "modal",
-        };
-
-        html!{<div class={class_modal}>
-          <div class="modal-background" onclick={onclick_show_conditions.clone()} />
-          <div class="modal-card">
-            <header class="modal-card-head">
-              <p class="modal-card-title">{get_value_field(&285)}</p>
-              <button class="delete" aria-label="close" onclick={onclick_show_conditions.clone()} />
-            </header>
-            <section class="modal-card-body">
-              <span>{get_value_field(&251)}</span>
-              <br/>
-              <span class="has-text-weight-bold">{get_value_field(&287)}</span>
-              <a href="mailto:support@cadbase.rs">{"support@cadbase.rs"}</a>
-            </section>
-            <footer class="modal-card-foot">
-              <button class="button is-fullwidth is-large" onclick={onclick_show_conditions}>
-                {get_value_field(&288)}
-              </button>
-            </footer>
-          </div>
-        </div>}
     }
 }

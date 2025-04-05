@@ -18,13 +18,14 @@ use crate::fragments::{
     list_errors::ListErrors,
     list_empty::ListEmpty,
     side_menu::{MenuItem, SideMenu},
+    supplier_service::CatalogServices,
     standard::CatalogStandards,
     user::CatalogUsers,
     user::UserCertificatesCard,
 };
 use crate::services::{Counter, get_logged_user, get_value_field, resp_parsing, title_changer};
 use crate::types::{
-    UserDataCard, CompaniesQueryArg, ComponentsQueryArg, SelfUserInfo, SlimUser,
+    UserDataCard, CompaniesQueryArg, ComponentsQueryArg, ServicesQueryArg, SelfUserInfo, SlimUser,
     StandardsQueryArg, UserCertificate, UserInfo, UsersQueryArg, UUID,
 };
 use crate::gqls::make_query;
@@ -85,6 +86,7 @@ pub enum ProfileTab {
     Certificates,
     Components,
     Companies,
+    Services,
     FavoriteComponents,
     FavoriteCompanies,
     FavoriteStandards,
@@ -328,11 +330,12 @@ impl Profile {
             <div class="columns is-mobile">
                 <div class="column is-flex">
                     { self.show_profile_action() }
-                    <div class="card-relate-data">
+                    <div class="card-relate-data card-fix-width">
                         {match self.profile_tab {
                             ProfileTab::Certificates => self.view_certificates(self_data.certificates.clone()),
                             ProfileTab::Components => self.view_components(&self_data.uuid),
                             ProfileTab::Companies => self.view_companies(&self_data.uuid),
+                            ProfileTab::Services => self.view_self_services(&self_data.uuid),
                             ProfileTab::FavoriteComponents => self.view_favorite_components(None),
                             ProfileTab::FavoriteCompanies => self.view_favorite_companies(None),
                             ProfileTab::FavoriteStandards => self.view_favorite_standards(),
@@ -380,11 +383,12 @@ impl Profile {
             <div class="columns is-mobile">
                 <div class="column is-flex">
                   { self.show_profile_action() }
-                  <div class="card-relate-data">
+                  <div class="card-relate-data card-fix-width">
                       {match self.profile_tab {
                           ProfileTab::Certificates => self.view_certificates(user_data.certificates.clone()),
                           ProfileTab::Components => self.view_components(&user_data.uuid),
                           ProfileTab::Companies => self.view_companies(&user_data.uuid),
+                          ProfileTab::Services => self.view_self_services(&user_data.uuid),
                           ProfileTab::FavoriteComponents => self.view_favorite_components(Some(user_data.uuid.clone())),
                           ProfileTab::FavoriteCompanies => self.view_favorite_companies(Some(user_data.uuid.clone())),
                           _ => html!{},
@@ -509,6 +513,15 @@ impl Profile {
                 is_active: self.profile_tab == ProfileTab::FavoriteComponents,
                 is_extend: self.check_extend(&ProfileTab::FavoriteComponents),
             },
+            MenuItem {
+                title: get_value_field(&379).to_string(),
+                action: self.cb_generator(ProfileTab::Services),
+                count: self.get_number_of_items(&ProfileTab::Services),
+                item_class: classes!("has-background-white"),
+                icon_classes: vec![classes!("fas", "fa-ticket-alt")],
+                is_active: self.profile_tab == ProfileTab::Services,
+                is_extend: self.check_extend(&ProfileTab::Services),
+            },
             // company MenuItem
             MenuItem {
                 title: get_value_field(&35).to_string(),
@@ -535,7 +548,7 @@ impl Profile {
                 action: self.cb_generator(ProfileTab::FavoriteStandards),
                 count: self.get_number_of_items(&ProfileTab::FavoriteStandards),
                 item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-cube"), classes!("fas", "fa-bookmark")],
+                icon_classes: vec![classes!("fas", "fa-book"), classes!("fas", "fa-bookmark")],
                 is_active: self.profile_tab == ProfileTab::FavoriteStandards,
                 is_extend: self.check_extend(&ProfileTab::FavoriteStandards),
             },
@@ -627,6 +640,15 @@ impl Profile {
         }
     }
 
+    fn view_self_services(&self, user_uuid: &UUID) -> Html {
+        html! {
+            <CatalogServices
+                show_create_btn={self.self_profile.is_some()}
+                arguments={ServicesQueryArg::set_user_uuid(user_uuid)}
+            />
+        }
+    }
+
     fn view_favorite_components(&self, user_uuid: Option<UUID>) -> Html {
         html! {
             <CatalogComponents
@@ -677,6 +699,7 @@ impl Profile {
             Some( ref res) =>  match tab {
               ProfileTab::Certificates => res.certificates.len(),
               ProfileTab::Components => res.components_count,
+              ProfileTab::Services => 0,
               ProfileTab::FavoriteComponents => res.fav_components_count,
               ProfileTab::Companies => res.companies_count,
               ProfileTab::FavoriteCompanies => res.fav_companies_count,

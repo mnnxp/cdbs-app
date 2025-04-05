@@ -7,6 +7,7 @@ mod file;
 mod profiles;
 mod relate;
 mod standard;
+mod supplier_service;
 mod tags;
 
 use serde::{Deserialize, Serialize};
@@ -20,6 +21,7 @@ pub use profiles::*;
 pub use file::*;
 pub use relate::*;
 pub use standard::*;
+pub use supplier_service::*;
 pub use tags::*;
 
 /// Conduit api error info for Unprocessable Entity error
@@ -42,6 +44,8 @@ pub enum Pathname {
     CompanySetting(UUID),
     Standard(UUID),
     StandardSetting(UUID),
+    Service(UUID),
+    ServiceSetting(UUID),
     User(UUID),
     UserSetting,
 }
@@ -56,6 +60,8 @@ impl Pathname {
             Self::CompanySetting(uuid) => format!("#/company/settings/{}", uuid),
             Self::Standard(uuid) => format!("#/standard/{}", uuid),
             Self::StandardSetting(uuid) => format!("#/standard/settings/{}", uuid),
+            Self::Service(uuid) => format!("#/service/{}", uuid),
+            Self::ServiceSetting(uuid) => format!("#/service/settings/{}", uuid),
             Self::User(username) => format!("#/@{}", username),
             Self::UserSetting => format!("#/settings"),
         }

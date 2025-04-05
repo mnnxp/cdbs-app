@@ -80,6 +80,7 @@ impl Component for CatalogComponents {
                         componentsUuids: arg.components_uuids.clone(),
                         companyUuid: arg.company_uuid.to_owned(),
                         standardUuid: arg.standard_uuid.to_owned(),
+                        serviceUuid: arg.service_uuid.to_owned(),
                         userUuid: arg.user_uuid.to_owned(),
                         favorite: arg.favorite,
                     }),

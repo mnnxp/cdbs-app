@@ -175,7 +175,7 @@ impl ListItemStandard {
                     </figure>
                   </div>
                   <div class="media-content">
-                    <div class="columns is-gapless" style="margin-bottom:0">
+                    <div class="columns is-gapless mb-0">
                       <div class="column">
                           {get_value_field(&142)} // classifier
                           <span class="id-box has-text-weight-bold">{classifier}</span>
@@ -185,15 +185,10 @@ impl ListItemStandard {
                           <span class="id-box has-text-weight-bold">{specified_tolerance}</span>
                       </div>
                     </div>
-                    <div class="columns" style="margin-bottom:0">
-                        <div class="column">
+                    <div class="columns mb-0">
+                        <div class="column fix-width" onclick={show_standard_btn.clone()}>
                             <div class="has-text-weight-bold is-size-4">{name}</div>
-                            <div class="overflow-title">
-                                {match &description.len() {
-                                    0..=50 => description.clone(),
-                                    _ => format!("{:.*}...", 50, description),
-                                }}
-                            </div>
+                            <div class="overflow-title">{description.clone()}</div>
                             <div class="overflow-title">
                                 {get_value_field(&141)} // owner
                                 <span class="has-text-weight-bold">
@@ -219,7 +214,7 @@ impl ListItemStandard {
                           )}
                         </div>
                     </div>
-                    <div class="columns is-gapless" style="margin-bottom:0">
+                    <div class="columns is-gapless mb-0">
                         <div class="column">
                             {format!("{}: ", get_value_field(&155))}
                             {publication_at.date_to_display()}

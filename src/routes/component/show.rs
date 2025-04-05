@@ -467,7 +467,7 @@ impl ShowComponent {
                 </div>
                 <div class="column is-narrow" title={get_value_field(&95)}>
                     <span class="icon is-small">
-                        <i class={classes!("fa", "fa-sync")}></i>
+                        <i class={classes!("fa", "fa-edit")}></i>
                     </span>
                     {" "}
                     <span class="id-box">

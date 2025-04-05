@@ -121,15 +121,10 @@ impl ListItem {
                       </span>
                     </div>
                   </div>
-                  <div class="columns" style="margin-bottom:0">
-                      <div class="column" onclick={onclick_open_component.clone()}>
+                  <div class="columns mb-0">
+                        <div class="column fix-width" onclick={onclick_open_component.clone()}>
                           <div class="overflow-title has-text-weight-bold is-size-4">{name}</div>
-                          <div class="overflow-title">
-                            {match &description.len() {
-                                0..=50 => description.clone(),
-                                _ => format!("{:.*}...", 70, description),
-                            }}
-                          </div>
+                          <div class="overflow-title">{description.clone()}</div>
                       </div>
                       <div class="column buttons is-one-fifth flexBox" >
                           {res_btn(

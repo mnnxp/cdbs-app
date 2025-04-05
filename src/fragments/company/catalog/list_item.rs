@@ -181,17 +181,12 @@ impl ListItemCompany {
                   </div>
                   <div class="media-content">
                     {get_value_field(&164)} <span class="id-box has-text-weight-bold">{region.region.clone()}</span>
-                    <div class="columns" style="margin-bottom:0">
-                        <div class="column" onclick={onclick_open_company.clone()}>
+                    <div class="columns mb-0">
+                        <div class="column fix-width" onclick={onclick_open_company.clone()}>
                             <p class="overflow-title has-text-weight-bold is-size-4">
                                 {format!("{} {}", &shortname, &company_type.shortname)}
                             </p>
-                            <p class="overflow-title">
-                                {match &description.len() {
-                                    0..=50 => description.clone(),
-                                    _ => format!("{:.*}...", 50, description),
-                                }}
-                            </p>
+                            <p class="overflow-title">{description.clone()}</p>
                         </div>
                         <div class="column buttons is-one-quarter flexBox" >
                             {res_btn(

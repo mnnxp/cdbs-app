@@ -29,17 +29,14 @@ impl ContentDisplay for CompanyInfo {
         let company_type_short = html!{
             <span id="title-type" class="subtitle is-6">{self.company_type.shortname.clone()}</span>
         };
-        let company_type = html!{
-            <span id="title-type" class="subtitle is-4">{self.company_type.name.clone()}</span>
-        };
         let lang = get_lang().unwrap_or(String::new());
         match lang.as_str() {
             "ru" => html!{<>
-                <p>{company_type}<br/>{company_name}</p>
+                <p>{company_name}</p>
                 <p>{company_type_short}<span>{" "}</span>{company_name_short}</p>
             </>},
             _ => html!{<>
-                <p>{company_name}<span><br/></span>{company_type}</p>
+                <p>{company_name}</p>
                 <p>{company_name_short}<span>{" "}</span>{company_type_short}</p>
             </>}
         }

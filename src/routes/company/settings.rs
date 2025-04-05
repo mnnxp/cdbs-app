@@ -62,8 +62,8 @@ impl From<CompanyInfo> for CompanyUpdateInfo {
 pub enum Menu {
     Company,
     UpdateFavicon,
-    Certificates,
     Represent,
+    Certificates,
     Spec,
     Access,
     RemoveCompany,
@@ -435,15 +435,6 @@ impl CompanySettings {
                 is_active: self.select_menu == Menu::UpdateFavicon,
                 ..Default::default()
             },
-            // Certificates MenuItem
-            MenuItem {
-                title: get_value_field(&64).to_string(), // Certificates
-                action: self.cb_generator(Menu::Certificates),
-                item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-certificate")],
-                is_active: self.select_menu == Menu::Certificates,
-                ..Default::default()
-            },
             // Represent MenuItem
             MenuItem {
                 title: get_value_field(&266).to_string(), // Representations
@@ -451,6 +442,15 @@ impl CompanySettings {
                 item_class: classes!("has-background-white"),
                 icon_classes: vec![classes!("fas", "fa-industry")],
                 is_active: self.select_menu == Menu::Represent,
+                ..Default::default()
+            },
+            // Certificates MenuItem
+            MenuItem {
+                title: get_value_field(&64).to_string(), // Certificates
+                action: self.cb_generator(Menu::Certificates),
+                item_class: classes!("has-background-white"),
+                icon_classes: vec![classes!("fas", "fa-certificate")],
+                is_active: self.select_menu == Menu::Certificates,
                 ..Default::default()
             },
             // Spec MenuItem
@@ -495,19 +495,19 @@ impl CompanySettings {
             Menu::Company => self.manage_master_data(),
             // Show interface for change favicon company
             Menu::UpdateFavicon => self.update_favicon_block(),
-            // Show interface for add and update Certificates
-            Menu::Certificates => html!{<>
-                <h4 id="updated-certificates" class="title is-4">{get_value_field(&64)}</h4> // Certificates
-                {self.add_certificate_block()}
-                <br/>
-                {self.certificates_block()}
-            </>},
             // Show interface for add and update Represents
             Menu::Represent => html!{<>
                 <h4 id="updated-represents" class="title is-4">{get_value_field(&266)}</h4> // Represents
                 <AddCompanyRepresentCard company_uuid={self.company_uuid.clone()} />
                 <br/>
                 {self.represents_block()}
+            </>},
+            // Show interface for add and update Certificates
+            Menu::Certificates => html!{<>
+                <h4 id="updated-certificates" class="title is-4">{get_value_field(&64)}</h4> // Certificates
+                {self.add_certificate_block()}
+                <br/>
+                {self.certificates_block()}
             </>},
             // Show interface for add and update company catalogs
             Menu::Spec => self.manage_specs_block(),

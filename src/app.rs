@@ -12,6 +12,7 @@ use crate::fragments::{
     footer::Footer,
     header::Header,
 };
+use crate::routes::supplier_service::{CreateService, ServiceSettings, ShowService};
 use crate::routes::{
     fix_fragment_routes,
     home::Home,
@@ -160,6 +161,13 @@ impl Component for App {
                                 component_uuid={component_uuid.to_string()}
                                 />},
                             AppRoute::CreateComponent => html!{<CreateComponent />},
+                            AppRoute::CreateService => html!{<CreateService />},
+                            AppRoute::ShowService(service_uuid) => html!{<ShowService
+                                    current_user={self.current_user.clone()}
+                                    service_uuid={service_uuid.clone()}
+                                />},
+                            AppRoute::ServiceSettings(service_uuid)  =>
+                                html!{<ServiceSettings service_uuid={service_uuid.clone()} />},
                         }
                     } else {
                         // 404 when route matches no component

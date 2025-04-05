@@ -241,6 +241,7 @@ pub struct ComponentsQueryArg {
     pub components_uuids: Option<Vec<UUID>>,
     pub company_uuid: Option<UUID>,
     pub standard_uuid: Option<UUID>,
+    pub service_uuid: Option<UUID>,
     pub user_uuid: Option<UUID>,
     pub favorite: Option<bool>,
 }
@@ -271,6 +272,13 @@ impl ComponentsQueryArg {
     pub fn set_standard_uuid(standard_uuid: &UUID) -> Self {
         Self {
             standard_uuid: Some(standard_uuid.clone()),
+            ..Default::default()
+        }
+    }
+
+    pub fn set_service_uuid(service_uuid: &UUID) -> Self {
+        Self {
+            service_uuid: Some(service_uuid.clone()),
             ..Default::default()
         }
     }

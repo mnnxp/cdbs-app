@@ -14,20 +14,21 @@ use crate::error::Error;
 use crate::fragments::{
     buttons::ft_follow_btn,
     clipboard::ShareLinkBtn,
-    user::GoToUser,
+    // user::GoToUser,
     switch_icon::res_btn,
     list_errors::ListErrors,
     list_empty::ListEmpty,
     side_menu::{MenuItem, SideMenu},
     company::{CompanyCertificatesCard, CompanyRepresents, diamond_svg},
     component::CatalogComponents,
+    supplier_service::{CatalogServices, ServiceRequestBtn},
     standard::CatalogStandards,
 };
 use crate::services::content_adapter::{
-    ContentDisplay, Markdownable, DateDisplay, ContactDisplay, SpecDisplay
+    ContentDisplay, Markdownable, ContactDisplay, SpecDisplay
 };
 use crate::services::{get_logged_user, get_value_field, resp_parsing, set_history_back, title_changer, Counter};
-use crate::types::{CompanyInfo, ComponentsQueryArg, Pathname, SlimUser, StandardsQueryArg, UUID};
+use crate::types::{CompanyInfo, ComponentsQueryArg, Pathname, SlimUser, StandardsQueryArg, ServicesQueryArg, UUID};
 use crate::gqls::make_query;
 use crate::gqls::company::{
     GetCompanyData, get_company_data,
@@ -80,10 +81,11 @@ pub enum Msg {
 
 #[derive(Clone, PartialEq)]
 pub enum CompanyTab {
+    Represent,
     Certificates,
     Components,
+    Services,
     Standards,
-    Represent,
     // Members,
 }
 
@@ -289,23 +291,12 @@ impl ShowCompany {
                   </figure>
                 </div>
                 <div id="company-region" class={classes!("column", "is-three-fifths")}>
-                  <abbr title={get_value_field(&275)} hidden={!company_data.is_supplier}>
-                      {diamond_svg(company_data.is_supplier, "25")}
-                  </abbr>
-                  {match self.show_full_company_info {
-                      true => {company_data.to_display()},
-                      false => html!{
-                          <p id="subtitle-shortname">
-                            <strong>{company_data.shortname.clone()}</strong>
-                          </p>
-                      },
-                  }}
-                  <GoToUser data = {company_data.owner_user.clone()} />
+                    {company_data.to_display()}
+                    <abbr title={get_value_field(&275)} hidden={!company_data.is_supplier}>
+                        {diamond_svg(company_data.is_supplier, "25")}
+                    </abbr>
                 </div>
                 <div class="column">
-                    <p class="subtitle is-6 has-text-right">
-                        {company_data.date_to_display()}
-                    </p>
                     <div class="buttons flexBox" >
                       {match &self.current_user_owner {
                         true => {res_btn(
@@ -319,6 +310,12 @@ impl ShowCompany {
                       }}
                       {self.show_favorite_btn()}
                       <ShareLinkBtn />
+                      {match company_data.is_supplier {
+                        true => html!{<>
+                            <ServiceRequestBtn company_uuid={company_data.uuid.clone()} />
+                        </>},
+                        false => html!{},
+                      }}
                     </div>
                 </div>
             </div>},
@@ -378,16 +375,13 @@ impl ShowCompany {
             <div class="columns is-mobile">
                 <div class="column is-flex">
                     { self.show_company_action() }
-                    <div class="card-relate-data">
+                    <div class="card-relate-data card-fix-width">
                         {match self.company_tab {
-                            CompanyTab::Certificates =>
-                                self.view_certificates(&company_data),
-                            CompanyTab::Represent =>
-                                self.view_represents(&company_data),
-                            CompanyTab::Components =>
-                                self.view_components(&company_data.uuid),
-                            CompanyTab::Standards =>
-                                self.view_standards(&company_data.uuid),
+                            CompanyTab::Represent => self.view_represents(&company_data),
+                            CompanyTab::Certificates => self.view_certificates(&company_data),
+                            CompanyTab::Components => self.view_components(&company_data.uuid),
+                            CompanyTab::Services => self.view_services(&company_data.uuid),
+                            CompanyTab::Standards => self.view_standards(&company_data.uuid),
                             // CompanyTab::Members => {},
                         }}
                     </div>
@@ -398,16 +392,6 @@ impl ShowCompany {
 
     fn show_company_action(&self) -> Html {
         let menu_arr: Vec<MenuItem> = vec![
-            // certificates MenuItem
-            MenuItem {
-                title: get_value_field(&32).to_string(), // CERTIFICATES
-                action: self.cb_generator(CompanyTab::Certificates),
-                count: self.get_number_of_items(&CompanyTab::Certificates),
-                item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-certificate")],
-                is_active: self.company_tab == CompanyTab::Certificates,
-                is_extend: self.check_extend(&CompanyTab::Certificates),
-            },
             // representations MenuItem
             MenuItem {
                 title: get_value_field(&266).to_string(), // REPRESENTATIONS
@@ -417,6 +401,16 @@ impl ShowCompany {
                 icon_classes: vec![classes!("fas", "fa-industry")],
                 is_active: self.company_tab == CompanyTab::Represent,
                 is_extend: self.check_extend(&CompanyTab::Represent),
+            },
+            // certificates MenuItem
+            MenuItem {
+                title: get_value_field(&32).to_string(), // CERTIFICATES
+                action: self.cb_generator(CompanyTab::Certificates),
+                count: self.get_number_of_items(&CompanyTab::Certificates),
+                item_class: classes!("has-background-white"),
+                icon_classes: vec![classes!("fas", "fa-certificate")],
+                is_active: self.company_tab == CompanyTab::Certificates,
+                is_extend: self.check_extend(&CompanyTab::Certificates),
             },
             // components MenuItem
             MenuItem {
@@ -428,13 +422,23 @@ impl ShowCompany {
                 is_active: self.company_tab == CompanyTab::Components,
                 is_extend: self.check_extend(&CompanyTab::Components),
             },
+            // services MenuItem
+            MenuItem {
+                title: get_value_field(&379).to_string(), // SERVICES
+                action: self.cb_generator(CompanyTab::Services),
+                count: self.get_number_of_items(&CompanyTab::Services),
+                item_class: classes!("has-background-white"),
+                icon_classes: vec![classes!("fas", "fa-ticket-alt")],
+                is_active: self.company_tab == CompanyTab::Services,
+                is_extend: self.check_extend(&CompanyTab::Services),
+            },
             // standards MenuItem
             MenuItem {
                 title: get_value_field(&103).to_string(), // STANDARDS
                 action: self.cb_generator(CompanyTab::Standards),
                 count: self.get_number_of_items(&CompanyTab::Standards),
                 item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-cube")],
+                icon_classes: vec![classes!("fas", "fa-book")],
                 is_active: self.company_tab == CompanyTab::Standards,
                 is_extend: self.check_extend(&CompanyTab::Standards),
             },
@@ -499,6 +503,18 @@ impl ShowCompany {
         }
     }
 
+    fn view_services(
+        &self,
+        company_uuid: &UUID,
+    ) -> Html {
+        html!{
+            <CatalogServices
+                show_create_btn={true}
+                arguments={ServicesQueryArg::set_company_uuid(company_uuid)}
+            />
+        }
+    }
+
     fn view_standards(
         &self,
         company_uuid: &UUID,
@@ -529,6 +545,7 @@ impl ShowCompany {
               CompanyTab::Certificates => company.company_certificates.len(),
               CompanyTab::Represent => company.company_represents.len(),
               CompanyTab::Components => 0,
+              CompanyTab::Services => 0,
               CompanyTab::Standards => 0,
               // CompanyTab::Members => 0,
             },

@@ -6,10 +6,10 @@ use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::error::Error;
+use crate::fragments::supplier_service::{ServiceRequestBtn};
 use crate::fragments::{
     buttons::ft_follow_btn,
     clipboard::ShareLinkBtn,
-    user::GoToUser,
     list_errors::ListErrors,
     list_empty::ListEmpty,
     side_menu::{MenuItem, SideMenu},
@@ -18,7 +18,7 @@ use crate::fragments::{
     standard::CatalogStandards,
 };
 use crate::services::content_adapter::{
-    ContentDisplay, Markdownable, DateDisplay, ContactDisplay, SpecDisplay
+    ContentDisplay, Markdownable, ContactDisplay, SpecDisplay
 };
 use crate::services::{Counter, get_value_field, resp_parsing, title_changer};
 use crate::types::{UUID, CompanyInfo, ComponentsQueryArg, StandardsQueryArg};
@@ -252,15 +252,12 @@ impl ShowSupplierCompany {
                     {diamond_svg(company_data.is_supplier, "175")}
                 </abbr>
                   {company_data.to_display()}
-                  <GoToUser data = {company_data.owner_user.clone()} />
                 </div>
                 <div class="column">
-                  <p class="subtitle is-6 has-text-right">
-                    {company_data.date_to_display()}
-                  </p>
                   <div class="buttons flexBox" >
                     {self.show_favorite_btn()}
                     <ShareLinkBtn />
+                    <ServiceRequestBtn company_uuid={company_data.uuid.clone()} />
                   </div>
                 </div>
               </div>
@@ -309,7 +306,7 @@ impl ShowSupplierCompany {
             <div class="columns is-mobile">
                 <div class="column is-flex">
                     { self.show_company_action() }
-                    <div class="card-relate-data">
+                    <div class="card-relate-data card-fix-width">
                         {match self.company_tab {
                             CompanyTab::Certificates =>
                                 self.view_certificates(&company_data),
@@ -364,7 +361,7 @@ impl ShowSupplierCompany {
                 action: self.cb_generator(CompanyTab::Standards),
                 count: self.get_number_of_items(&CompanyTab::Standards),
                 item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-cube")],
+                icon_classes: vec![classes!("fas", "fa-book")],
                 is_active: self.company_tab == CompanyTab::Standards,
                 is_extend: self.check_extend(&CompanyTab::Standards),
             },
