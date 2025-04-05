@@ -159,10 +159,8 @@ impl ListItemCompany {
             inn,
             description,
             image_file,
-            region,
             company_type,
             is_supplier,
-            // is_followed,
             updated_at,
             ..
         } = &self.props.data;
@@ -180,7 +178,18 @@ impl ListItemCompany {
                     </figure>
                   </div>
                   <div class="media-content">
-                    {get_value_field(&164)} <span class="id-box has-text-weight-bold">{region.region.clone()}</span>
+                    <div class="columns is-gapless mb-0" onclick={onclick_open_company.clone()}>
+                        <div class="column">
+                            {get_value_field(&163)}
+                            <span class="id-box has-text-weight-bold">{inn.clone()}</span>
+                        </div>
+                        <div class="column">
+                            <span class={"icon"} title={get_value_field(&156)}>
+                            <i class="fas fa-edit"></i>
+                            </span>
+                            { updated_at.date_to_display() }
+                        </div>
+                    </div>
                     <div class="columns mb-0">
                         <div class="column fix-width" onclick={onclick_open_company.clone()}>
                             <p class="overflow-title has-text-weight-bold is-size-4">
@@ -188,31 +197,21 @@ impl ListItemCompany {
                             </p>
                             <p class="overflow-title">{description.clone()}</p>
                         </div>
-                        <div class="column buttons is-one-quarter flexBox" >
-                            {res_btn(
-                                classes!("far", "fa-folder"),
-                                onclick_open_company.clone(),
-                                String::new(),
-                                get_value_field(&315),
-                                Pathname::Company(self.props.data.uuid.clone())
-                            )}
-                            {ft_follow_btn(
-                                trigger_fav_btn,
-                                self.is_followed,
-                                String::new(),
-                            )}
-                        </div>
                     </div>
-                    <div class="columns is-gapless" onclick={onclick_open_company}>
-                        <div class="column">
-                            {get_value_field(&163)}
-                            <span class="id-box has-text-weight-bold">{inn.clone()}</span>
-                        </div>
-                        <div class="column">
-                          {get_value_field(&30)}
-                          { updated_at.date_to_display() }
-                        </div>
-                    </div>
+                  </div>
+                  <div class="column buttons flexBox p-0" >
+                      {res_btn(
+                          classes!("far", "fa-folder"),
+                          onclick_open_company.clone(),
+                          String::new(),
+                          get_value_field(&315),
+                          Pathname::Company(self.props.data.uuid.clone())
+                      )}
+                      {ft_follow_btn(
+                          trigger_fav_btn,
+                          self.is_followed,
+                          String::new(),
+                      )}
                   </div>
               </article>
             </div>

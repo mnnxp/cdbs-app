@@ -112,22 +112,7 @@ impl ListItemService {
                     </figure>
                   </div>
                   <div class="media-content">
-                    <div class="columns mb-0" onclick={onclick_open_service.clone()} >
-                        <div class="column fix-width">
-                            <div class="overflow-title has-text-weight-bold is-size-4">{name}</div>
-                            <div class="overflow-title">{description.clone()}</div>
-                        </div>
-                        <div class="column buttons is-one-quarter flexBox" >
-                          {res_btn(
-                            classes!("far", "fa-folder"),
-                            onclick_open_service.clone(),
-                            String::new(),
-                            get_value_field(&378),
-                            Pathname::Service(self.props.data.uuid.clone())
-                          )}
-                        </div>
-                    </div>
-                    <div class="columns is-gapless" onclick={onclick_open_service}>
+                    <div class="columns is-gapless mb-0" onclick={onclick_open_service.clone()}>
                         <div class="column">
                             {get_value_field(&118)}
                             <span class="id-box has-text-weight-bold">
@@ -141,10 +126,27 @@ impl ListItemService {
                             </span>
                         </div>
                         <div class="column">
-                          {get_value_field(&30)}
-                          { updated_at.date_to_display() }
+                          <span class={"icon"} title={get_value_field(&156)}>
+                            <i class="fas fa-edit"></i>
+                          </span>
+                          {updated_at.date_to_display()}
                         </div>
                     </div>
+                    <div class="columns mb-0" onclick={onclick_open_service.clone()} >
+                        <div class="column fix-width">
+                            <div class="overflow-title has-text-weight-bold is-size-4">{name}</div>
+                            <div class="overflow-title">{description.clone()}</div>
+                        </div>
+                    </div>
+                  </div>
+                  <div class="column buttons flexBox p-0" >
+                    {res_btn(
+                      classes!("far", "fa-folder"),
+                      onclick_open_service,
+                      String::new(),
+                      get_value_field(&378),
+                      Pathname::Service(self.props.data.uuid.clone())
+                    )}
                   </div>
               </article>
             </div>

@@ -145,16 +145,11 @@ impl Component for ListItemStandard {
 impl ListItemStandard {
     fn showing_in_list(&self) -> Html {
         let ShowStandardShort {
-            classifier,
             name,
             description,
-            specified_tolerance,
             publication_at,
             image_file,
             owner_company,
-            standard_status,
-            updated_at,
-            // is_followed,
             ..
         } = &self.props.data;
 
@@ -166,7 +161,6 @@ impl ListItemStandard {
               <article class="media center-media">
                   <div class="media-left">
                     <figure class="image is-96x96">
-                      <div class="top-tag" >{standard_status.name.to_string()}</div>
                       // <img src="https://bulma.io/images/placeholders/128x128.png" alt="Image" />
                       <img
                         src={image_file.download_url.clone()} alt="Image standard"
@@ -175,56 +169,37 @@ impl ListItemStandard {
                     </figure>
                   </div>
                   <div class="media-content">
-                    <div class="columns is-gapless mb-0">
-                      <div class="column">
-                          {get_value_field(&142)} // classifier
-                          <span class="id-box has-text-weight-bold">{classifier}</span>
-                      </div>
-                      <div class="column">
-                          {get_value_field(&144)} // specified tolerance
-                          <span class="id-box has-text-weight-bold">{specified_tolerance}</span>
-                      </div>
+                    <div class="columns is-gapless mb-0" onclick={show_standard_btn.clone()}>
+                        <div class="column">
+                            {get_value_field(&141)} // owner
+                            <span class="has-text-weight-bold">{owner_company.shortname.clone()}</span>
+                        </div>
+                        <div class="column">
+                            {format!("{}: ", get_value_field(&155))}
+                            <span class="id-box has-text-weight-bold">{publication_at.date_to_display()}</span>
+                        </div>
                     </div>
                     <div class="columns mb-0">
                         <div class="column fix-width" onclick={show_standard_btn.clone()}>
                             <div class="has-text-weight-bold is-size-4">{name}</div>
                             <div class="overflow-title">{description.clone()}</div>
-                            <div class="overflow-title">
-                                {get_value_field(&141)} // owner
-                                <span class="has-text-weight-bold">
-                                    {format!("{} {}",
-                                            &owner_company.shortname,
-                                            &owner_company.company_type.shortname
-                                    )}
-                                </span>
-                            </div>
                         </div>
-                        <div class="column buttons is-one-quarter flexBox" >
-                          {res_btn(
+                    </div>
+                    </div>
+                    <div class="column buttons flexBox p-0" >
+                        {res_btn(
                             classes!("far", "fa-folder"),
                             show_standard_btn,
                             String::new(),
                             get_value_field(&315),
                             Pathname::Standard(self.props.data.uuid.clone())
-                          )}
-                          {ft_follow_btn(
+                        )}
+                        {ft_follow_btn(
                             trigger_fav_btn,
                             self.is_followed,
                             String::new(),
-                          )}
-                        </div>
+                        )}
                     </div>
-                    <div class="columns is-gapless mb-0">
-                        <div class="column">
-                            {format!("{}: ", get_value_field(&155))}
-                            {publication_at.date_to_display()}
-                        </div>
-                        <div class="column">
-                            {format!("{}: ", get_value_field(&156))}
-                            {updated_at.date_to_display()}
-                        </div>
-                    </div>
-                  </div>
               </article>
             </div>
         }

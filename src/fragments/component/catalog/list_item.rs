@@ -105,20 +105,20 @@ impl ListItem {
                 </figure>
               </div>
               <div class="media-content">
-                  <div class="columns is-gapless" style="margin-bottom:0" onclick={onclick_open_component.clone()}>
+                  <div class="columns is-gapless mb-0" onclick={onclick_open_component.clone()}>
                     <div class="column">
                       {self.show_owner()}
                     </div>
-                    <div class="column is-2">
+                    <div class="column">
+                      <span class="id-box has-text-weight-bold" title={get_value_field(&159)}>
+                        {self.props.data.actual_status.name.clone()}
+                      </span>
+                    </div>
+                    <div class="column">
                       <span class={"icon"} title={get_value_field(&156)}>
                         <i class="fas fa-edit"></i>
                       </span>
                       {updated_at.date_to_display()}
-                    </div>
-                    <div class="column is-4">
-                      <span class="id-box has-text-weight-bold" title={get_value_field(&159)}>
-                        {self.props.data.actual_status.name.clone()}
-                      </span>
                     </div>
                   </div>
                   <div class="columns mb-0">
@@ -126,21 +126,21 @@ impl ListItem {
                           <div class="overflow-title has-text-weight-bold is-size-4">{name}</div>
                           <div class="overflow-title">{description.clone()}</div>
                       </div>
-                      <div class="column buttons is-one-fifth flexBox" >
-                          {res_btn(
-                            classes!("far", "fa-folder"),
-                            onclick_open_component,
-                            String::new(),
-                            get_value_field(&315),
-                            Pathname::Component(self.props.data.uuid.clone())
-                          )}
-                          {ft_follow_btn(
-                            trigger_fav_btn,
-                            self.props.data.is_followed,
-                            String::new(),
-                          )}
-                      </div>
                   </div>
+                </div>
+                <div class="column buttons flexBox p-0" >
+                    {res_btn(
+                      classes!("far", "fa-folder"),
+                      onclick_open_component,
+                      String::new(),
+                      get_value_field(&315),
+                      Pathname::Component(self.props.data.uuid.clone())
+                    )}
+                    {ft_follow_btn(
+                      trigger_fav_btn,
+                      self.props.data.is_followed,
+                      String::new(),
+                    )}
                 </div>
             </article>
           </div>
