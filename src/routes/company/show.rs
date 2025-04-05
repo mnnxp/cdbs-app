@@ -497,7 +497,7 @@ impl ShowCompany {
     ) -> Html {
         html!{
             <CatalogComponents
-                show_create_btn={false}
+                show_create_btn={self.current_user_owner}
                 arguments={ComponentsQueryArg::set_company_uuid(company_uuid)}
             />
         }

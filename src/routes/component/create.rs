@@ -1,4 +1,4 @@
-use yew::{agent::Bridged, html, Bridge, Component, ComponentLink, Html, ShouldRender, InputData, ChangeData};
+use yew::{agent::Bridged, html, Properties, Bridge, Component, ComponentLink, Html, ShouldRender, InputData, ChangeData};
 use yew_router::{
     agent::RouteRequest::ChangeRoute,
     prelude::RouteAgent,
@@ -17,13 +17,20 @@ use crate::gqls::make_query;
 use crate::gqls::component::{
     GetComponentDataOpt, get_component_data_opt,
     RegisterComponent, register_component,
+    SetCompanyOwnerSupplier, set_company_owner_supplier,
 };
+
+#[derive(Clone, Debug, Properties)]
+pub struct Props {
+    pub company_uuid: Option<UUID>,
+}
 
 /// Component with relate data
 pub struct CreateComponent {
     error: Option<Error>,
     request_component: ComponentCreateData,
     router_agent: Box<dyn Bridge<RouteAgent>>,
+    props: Props,
     link: ComponentLink<Self>,
     actual_statuses: Vec<ActualStatus>,
     types_access: Vec<TypeAccessInfo>,
@@ -35,9 +42,11 @@ pub struct CreateComponent {
 pub enum Msg {
     RequestManager,
     RequestCreateComponentData,
+    RequestChangeOwnerSupplier(UUID, UUID),
     ResponseError(Error),
     GetListOpt(String),
     GetCreateComponentResult(String),
+    GetUpdateSetSupplierResult(String, UUID),
     UpdateName(String),
     UpdateDescription(String),
     UpdateTypeAccessId(String),
@@ -48,13 +57,14 @@ pub enum Msg {
 
 impl Component for CreateComponent {
     type Message = Msg;
-    type Properties = ();
+    type Properties = Props;
 
-    fn create(_props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
         CreateComponent {
             error: None,
             request_component: ComponentCreateData::new(),
             router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
+            props,
             link,
             actual_statuses: Vec::new(),
             types_access: Vec::new(),
@@ -101,31 +111,33 @@ impl Component for CreateComponent {
                 }
             },
             Msg::RequestCreateComponentData => {
-                let request_component: ComponentCreateData = self.request_component.clone();
-
+                let ipt_component_data = register_component::IptComponentData {
+                    parentComponentUuid: self.request_component.parent_component_uuid.clone(),
+                    name: self.request_component.name.clone(),
+                    description: self.request_component.description.clone(),
+                    typeAccessId: self.request_component.type_access_id as i64,
+                    componentTypeId: self.request_component.component_type_id as i64,
+                    actualStatusId: self.request_component.actual_status_id as i64,
+                    isBase: self.request_component.is_base,
+                };
                 spawn_local(async move {
-                    let ComponentCreateData {
-                        parent_component_uuid,
-                        name,
-                        description,
-                        type_access_id,
-                        component_type_id,
-                        actual_status_id,
-                        is_base,
-                    } = request_component;
-                    let ipt_component_data = register_component::IptComponentData {
-                        parentComponentUuid: parent_component_uuid,
-                        name,
-                        description,
-                        typeAccessId: type_access_id as i64,
-                        componentTypeId: component_type_id as i64,
-                        actualStatusId: actual_status_id as i64,
-                        isBase: is_base,
-                    };
                     let res = make_query(RegisterComponent::build_query(register_component::Variables {
                         ipt_component_data
                     })).await.unwrap();
                     link.send_message(Msg::GetCreateComponentResult(res));
+                })
+            },
+            Msg::RequestChangeOwnerSupplier(component_uuid, company_uuid) => {
+                let ipt_supplier_component_data = set_company_owner_supplier::IptSupplierComponentData{
+                    componentUuid: component_uuid.clone(),
+                    companyUuid: company_uuid,
+                    description: String::new(), // self.request_set_supplier_description.clone(),
+                };
+                spawn_local(async move {
+                    let res = make_query(SetCompanyOwnerSupplier::build_query(
+                        set_company_owner_supplier::Variables { ipt_supplier_component_data }
+                    )).await.unwrap();
+                    link.send_message(Msg::GetUpdateSetSupplierResult(res, component_uuid));
                 })
             },
             Msg::ResponseError(err) => self.error = Some(err),
@@ -140,14 +152,30 @@ impl Component for CreateComponent {
             },
             Msg::GetCreateComponentResult(res) => {
                 match resp_parsing::<UUID>(res, "registerComponent") {
-                    Ok(result) => {
-                        debug!("registerComponent: {:?}", result);
-                        // Redirect to setting component page
-                        if !result.is_empty() {
-                            self.router_agent.send(
-                                ChangeRoute(AppRoute::ComponentSettings(result).into())
-                            );
+                    Ok(component_uuid) => {
+                        debug!("registerComponent: {:?}", component_uuid);
+                        if component_uuid.is_empty() {
+                            return true
                         }
+                        if let Some(company_uuid) = &self.props.company_uuid {
+                            link.send_message(Msg::RequestChangeOwnerSupplier(component_uuid, company_uuid.clone()));
+                            return true
+                        }
+                        // Redirect to setting component page
+                        self.router_agent.send(
+                            ChangeRoute(AppRoute::ComponentSettings(component_uuid).into())
+                        );
+                    },
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
+                }
+            },
+            Msg::GetUpdateSetSupplierResult(res, component_uuid) => {
+                match resp_parsing::<bool>(res, "setCompanyOwnerSupplier") {
+                    Ok(result) => {
+                        debug!("setCompanyOwnerSupplier: {:?}", result);
+                        self.router_agent.send(
+                            ChangeRoute(AppRoute::ComponentSettings(component_uuid).into())
+                        );
                     },
                     Err(err) => link.send_message(Msg::ResponseError(err)),
                 }

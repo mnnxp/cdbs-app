@@ -176,7 +176,7 @@ impl Component for ComponentSettings {
                     companiesUuids: None,
                     userUuid: Some(logged_user_uuid),
                     favorite: None,
-                    supplier: Some(true),
+                    supplier: None,
                 };
                 let res = make_query(GetUpdateComponentDataOpt::build_query(get_update_component_data_opt::Variables {
                     component_uuid: target_component_uuid,

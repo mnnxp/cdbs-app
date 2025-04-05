@@ -9,6 +9,7 @@ use wasm_bindgen_futures::spawn_local;
 
 use crate::error::Error;
 use crate::fragments::{list_errors::ListErrors, list_empty::ListEmpty};
+use crate::routes::component::CreateComponent;
 use crate::routes::AppRoute;
 use crate::types::{ComponentsQueryArg, ShowComponentShort, UUID};
 use crate::services::{get_value_field, resp_parsing};
@@ -26,6 +27,7 @@ pub enum Msg {
     AddFav(UUID),
     DelFav(UUID),
     GetList,
+    ShowAddComponentCard,
     ResponseError(Error),
     ClearError,
 }
@@ -36,6 +38,8 @@ pub struct CatalogComponents {
     props: Props,
     show_type: ListState,
     list: Vec<ShowComponentShort>,
+    company_uuid: Option<UUID>,
+    show_add_component: bool,
 }
 
 #[derive(Properties, Clone)]
@@ -49,12 +53,15 @@ impl Component for CatalogComponents {
     type Properties = Props;
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+        let company_uuid = props.arguments.as_ref().map(|arg| arg.company_uuid.clone()).unwrap_or_default();
         Self {
             error: None,
             link,
             props,
             show_type: ListState::get_from_storage(),
             list: Vec::new(),
+            company_uuid,
+            show_add_component: false,
         }
     }
 
@@ -124,6 +131,7 @@ impl Component for CatalogComponents {
                     link.send_message(Msg::GetList);
                 });
             },
+            Msg::ShowAddComponentCard => self.show_add_component = !self.show_add_component,
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::ClearError => self.error = None,
         }
@@ -156,7 +164,6 @@ impl Component for CatalogComponents {
             ListState::Box => ("fas fa-bars", "flex-box"),
             ListState::List => ("fas fa-th-large", ""),
         };
-
         html! {
             <div class="componentsBox" >
               <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
@@ -166,11 +173,7 @@ impl Component for CatalogComponents {
                 <div class="level-right">
                     <div class="buttons">
                         {match &self.props.show_create_btn {
-                          true => html!{
-                              <RouterAnchor<AppRoute> route={AppRoute::CreateComponent} classes="button is-info">
-                                  {get_value_field(&290)} // Create component
-                              </RouterAnchor<AppRoute>>
-                          },
+                          true => self.create_component_block(),
                           false => html!{},
                         }}
                         <button class="button" onclick={onclick_change_view} >
@@ -194,6 +197,45 @@ impl Component for CatalogComponents {
 }
 
 impl CatalogComponents {
+    fn create_component_block(&self) -> Html {
+        let onclick_show_add_component = self.link.callback(|_| Msg::ShowAddComponentCard);
+        html!{
+            {match self.company_uuid.is_none() {
+                true => html!{
+                    <RouterAnchor<AppRoute> route={AppRoute::CreateComponent} classes={"button is-info"}>
+                        {get_value_field(&290)} // Create component
+                    </RouterAnchor<AppRoute>>
+                },
+                false => html!{<>
+                    {self.modal_add_component()}
+                    <button class={"button is-info"} onclick={onclick_show_add_component}>
+                        <span>{get_value_field(&290)}</span>
+                    </button>
+                </>},
+            }}
+        }
+    }
+
+    fn modal_add_component(&self) -> Html {
+        let onclick_show_add_component = self.link.callback(|_| Msg::ShowAddComponentCard);
+        let class_modal = match &self.show_add_component {
+            true => "modal is-active",
+            false => "modal",
+        };
+
+        html!{
+            <div class={class_modal}>
+                <div class="modal-background" onclick={onclick_show_add_component.clone()} />
+                <div class="modal-card">
+                <div class="box">
+                    <CreateComponent company_uuid={self.company_uuid.clone()} />
+                </div>
+                </div>
+                <button class="modal-close is-large" aria-label="close" onclick={onclick_show_add_component} />
+            </div>
+        }
+    }
+
     fn show_card(&self, show_comp: &ShowComponentShort) -> Html {
         let target_uuid_add = show_comp.uuid.clone();
         let target_uuid_del = show_comp.uuid.clone();
