@@ -9,7 +9,7 @@ use super::table::ModificationsTable;
 use crate::error::Error;
 use crate::fragments::component::modification::ImportModificationsData;
 use crate::fragments::paginate::Paginate;
-use crate::fragments::buttons::{ft_add_btn, ft_back_btn};
+use crate::fragments::buttons::ft_add_btn;
 use crate::fragments::list_errors::ListErrors;
 use crate::services::{get_value_field, resp_parsing};
 use crate::types::{UUID, ComponentModificationInfo, ActualStatus, ModificationUpdatePreData, PaginateSet};
@@ -74,7 +74,7 @@ impl Component for ModificationsTableEdit {
             actual_statuses: Vec::new(),
             invalid_modification_uuids: BTreeSet::new(),
             open_add_modification_card: false,
-            open_edit_modification_card: false,
+            open_edit_modification_card: true,
             skip_change_page: false,
             page_set: PaginateSet::new(),
             current_items: 0,
@@ -269,38 +269,28 @@ impl Component for ModificationsTableEdit {
 
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
-        let onclick_modification_card = self.link.callback(|_| Msg::ShowEditModificationCard);
         let onclick_add_new_modification = self.link.callback(|_| Msg::AddNewModification);
         let callback_finish_import = self.link.callback(|_| Msg::RequestComponentModificationsData);
         html!{
             <div class="card">
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
                 <header class="card-header">
-                    {match &self.open_edit_modification_card {
-                        true => html!{
-                            <div class="m-1">
-                                {ft_back_btn("open-modifications", onclick_modification_card, get_value_field(&42))}
-                            </div>
-                        },
-                        false => html!{
-                            <div class="card-header-title">
-                                <p>{get_value_field(&100)}</p> // Modifications
-                                <div class="buttons right-side">
-                                    <ImportModificationsData
-                                        component_uuid={self.props.current_component_uuid.clone()}
-                                        callback_finish_import={callback_finish_import}
-                                        />
-                                    {ft_add_btn(
-                                        "add-component-modification",
-                                        get_value_field(&174),
-                                        onclick_add_new_modification,
-                                        false,
-                                        false
-                                    )}
-                                </div>
-                            </div>
-                        }
-                    }}
+                    <div class="card-header-title">
+                        <p>{get_value_field(&100)}</p> // Modifications
+                        <div class="buttons right-side">
+                            <ImportModificationsData
+                                component_uuid={self.props.current_component_uuid.clone()}
+                                callback_finish_import={callback_finish_import}
+                                />
+                            {ft_add_btn(
+                                "add-component-modification",
+                                get_value_field(&174),
+                                onclick_add_new_modification,
+                                false,
+                                false
+                            )}
+                        </div>
+                    </div>
                 </header>
                 {self.show_modifications_table()}
                 {match self.open_edit_modification_card {

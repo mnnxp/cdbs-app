@@ -5,7 +5,6 @@ use log::debug;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::paginate::Paginate;
-use crate::fragments::buttons::ft_back_btn;
 use crate::services::content_adapter::{DateDisplay, Markdownable};
 use crate::services::{get_value_field, resp_parsing};
 use crate::types::{UUID, ComponentModificationInfo, PaginateSet};
@@ -59,7 +58,7 @@ impl Component for ModificationsTableCard {
             link,
             component_uuid,
             select_modification_uuid: String::new(),
-            open_modification_card: false,
+            open_modification_card: true,
             modifications: Vec::new(),
             skip_change_page: false,
             page_set: PaginateSet::new(),
@@ -169,21 +168,13 @@ impl Component for ModificationsTableCard {
 
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
-        let onclick_modification_card = self.link.callback(|_| Msg::ShowModificationCard);
         let callback_finish_import = self.link.callback(|_| Msg::RequestComponentModificationsData);
         html!{
             <div class="card">
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
                 <header class="card-header">
-                    {match &self.open_modification_card {
-                        true => html!{
-                            <div class="m-1">
-                                {ft_back_btn("open-modifications", onclick_modification_card, get_value_field(&42))}
-                            </div>
-                        },
-                        false => html!{<p class="card-header-title">{get_value_field(&100)}</p>}, // Modifications
-                    }}
-                    {match self.props.user_owner && !self.open_modification_card {
+                    <p class="card-header-title">{get_value_field(&100)}</p> // Modifications
+                    {match self.props.user_owner {
                         true => html!{
                             <div class="right-side mt-1">
                                 <ImportModificationsData
