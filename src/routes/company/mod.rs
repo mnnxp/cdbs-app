@@ -29,7 +29,6 @@ impl ContentDisplay for CompanyInfo {
         let company_type_short = html!{
             <span id="title-type" class="subtitle is-6">{self.company_type.shortname.clone()}</span>
         };
-        let lang = get_lang().unwrap_or(String::new());
         if self.company_type.company_type_id == 10 {
             // Do not show if set "Other legal entity"
             return html!{<>
@@ -37,6 +36,7 @@ impl ContentDisplay for CompanyInfo {
                 <p>{company_name_short}</p>
             </>}
         }
+        let lang = get_lang().unwrap_or(String::new());
         match lang.as_str() {
             "ru" => html!{<>
                 <p>{company_name}</p>
