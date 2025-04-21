@@ -265,13 +265,12 @@ impl CertificateItem {
         html!{
             <div class={class_modal}>
               <div class="modal-background" onclick={onclick_show_cert.clone()} />
-              <div class="modal-content box">
-                <p class="image is-4by3">
-                  <img
-                    src={self.cert_url.clone()}
-                    loading="lazy"
-                  />
-                </p>
+              <div class="modal-content">
+                <div class="box">
+                    <p class="image">
+                    <img src={self.cert_url.clone()} loading="lazy" />
+                    </p>
+                </div>
               </div>
               <button class="modal-close is-large" aria-label="close" onclick={onclick_show_cert} />
             </div>
