@@ -152,12 +152,8 @@ impl ImgShowcase {
                 <div class={class_modal}>
                   <div class="modal-background" onclick={onclick_show_image.clone()} />
                   <div class="modal-content">
-                    <p class="image is-4by3">
-                      // <img src="https://bulma.io/images/placeholders/1280x960.png" alt="" />
-                      <img
-                        src={img_data.download_url.clone()}
-                        loading="lazy"
-                      />
+                    <p class="image">
+                      <img src={img_data.download_url.clone()} loading="lazy" />
                     </p>
                   </div>
                   <button class="modal-close is-large" aria-label="close" onclick={onclick_show_image} />
