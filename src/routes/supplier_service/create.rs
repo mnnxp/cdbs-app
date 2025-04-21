@@ -244,13 +244,14 @@ impl Component for CreateService {
                         if result.is_empty() {
                             return true;
                         }
+                        self.new_service_uuid = result;
                         if self.user_entry {
                             self.router_agent.send(
                                 ChangeRoute(AppRoute::ShowService(self.new_service_uuid.clone()).into())
                             );
+                        } else {
+                            link.send_message(Msg::LoginRequest);
                         }
-                        self.new_service_uuid = result;
-                        link.send_message(Msg::LoginRequest);
                         return false
                     },
                     Err(err) => link.send_message(Msg::ResponseError(err)),

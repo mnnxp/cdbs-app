@@ -73,9 +73,10 @@ impl ServiceStatus {
     /// Returns class for CSS highlighting according to status
     pub(crate) fn get_class_color(&self) -> Classes {
         match self.service_status_id {
-            1 => classes!("has-background-link-light"),
+            1 => classes!(""),
             2 => classes!("has-background-warning-light"),
             3 => classes!("has-background-success-light"),
+            4 => classes!("has-background-link-light"),
             _ => classes!("has-background-danger-light"),
         }
     }

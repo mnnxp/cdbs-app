@@ -2,16 +2,14 @@ mod list_item;
 pub use list_item::ListItemService;
 
 use yew::{html, Component, ComponentLink, Html, ShouldRender, Properties};
-use yew_router::prelude::RouterAnchor;
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 // use log::debug;
 
-use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{list_errors::ListErrors, list_empty::ListEmpty};
 use crate::types::{ShowServiceShort, ServicesQueryArg};
-use crate::services::{get_value_field, resp_parsing};
+use crate::services::resp_parsing;
 use crate::gqls::make_query;
 use crate::gqls::supplier_service::{GetServicesShortList, get_services_short_list};
 use crate::fragments::ListState;
@@ -34,7 +32,6 @@ pub struct CatalogServices {
 
 #[derive(Properties, Clone)]
 pub struct Props {
-    pub show_create_btn: bool,
     pub arguments: Option<ServicesQueryArg>,
 }
 
@@ -120,14 +117,6 @@ impl Component for CatalogServices {
                 </div>
                 <div class="level-right">
                     <div class="buttons">
-                        {match &self.props.show_create_btn {
-                            true => html!{
-                                <RouterAnchor<AppRoute> route={AppRoute::CreateService} classes="button is-info">
-                                    {get_value_field(&364)} // Create service
-                                </RouterAnchor<AppRoute>>
-                            },
-                            false => html!{},
-                        }}
                         <button class="button" onclick={onclick_change_view} >
                           <span class={"icon is-small"}>
                             <i class={class_for_icon}></i>

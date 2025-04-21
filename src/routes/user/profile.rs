@@ -643,7 +643,6 @@ impl Profile {
     fn view_self_services(&self, user_uuid: &UUID) -> Html {
         html! {
             <CatalogServices
-                show_create_btn={self.self_profile.is_some()}
                 arguments={ServicesQueryArg::set_user_uuid(user_uuid)}
             />
         }

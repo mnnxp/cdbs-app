@@ -509,7 +509,6 @@ impl ShowCompany {
     ) -> Html {
         html!{
             <CatalogServices
-                show_create_btn={true}
                 arguments={ServicesQueryArg::set_company_uuid(company_uuid)}
             />
         }
