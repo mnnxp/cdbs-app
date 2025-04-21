@@ -45,8 +45,6 @@ impl Component for ListItem {
 impl ListItem {
     fn showing_in_list(&self) -> Html {
         let CompanyRepresentInfo {
-            // uuid,
-            // company_uuid,
             region,
             representation_type,
             name,
@@ -57,23 +55,30 @@ impl ListItem {
 
         html!{
           <div class="box itemBox">
-            <article class="media center-media">
-              <div class="media-content" style="min-width: 0px;">
-                <div class="content">
-                  <p>
-                  <div style="margin-bottom:0" >
-                      <span class="title is-5">{name.to_string()}</span>
-                      {get_value_field(&231)}
-                      <span class="id-box has-text-weight-bold">{region.region.to_string()}</span>
-                    </div>
-                    {format!("{}: {}", get_value_field(&232), address)}
-                  </p>
-                </div>
+            <article class="column overflow-title m-0 p-0">
+              <div class="column m-0 p-0">
+                  <p class="title is-5">{name.to_string()}</p>
               </div>
-              <div class="overflow-title media-right overflow-title">
-                  {format!("{}: {}", get_value_field(&235), representation_type.representation_type)}
-                  <br/>
-                  {format!("{}: {}", get_value_field(&234), phone)}
+              {match address.is_empty() {
+                true => html!{},
+                false => html!{
+                  <div class="column m-0 p-0">
+                    {format!("{}: {}", get_value_field(&232), address)}
+                  </div>
+                },
+              }}
+              <div class="column">
+              <div class="columns">
+                  <div class="column m-0 p-0">
+                      {format!("{}: {}", get_value_field(&231), region.region)}
+                  </div>
+                  <div class="column m-0 p-0">
+                      {format!("{}: {}", get_value_field(&235), representation_type.representation_type)}
+                  </div>
+                  <div class="column m-0 p-0">
+                      {format!("{}: {}", get_value_field(&234), phone)}
+                  </div>
+              </div>
               </div>
             </article>
           </div>
@@ -82,12 +87,8 @@ impl ListItem {
 
     fn showing_in_box(&self) -> Html {
         let CompanyRepresentInfo {
-            // uuid,
-            // company_uuid,
-            region,
             representation_type,
             name,
-            address,
             phone,
             ..
         } = self.props.data.clone();
@@ -97,18 +98,13 @@ impl ListItem {
             <div class="innerBox" >
               <div style="margin-bottom:0" >
                   <span class="title is-5">{name.to_string()}</span>
-                  {get_value_field(&231)}
-                  <span class="id-box has-text-weight-bold">{region.region.to_string()}</span>
               </div>
-              <div class="overflow-title">{
-                  format!("{}: {}", get_value_field(&232), address)
-              }</div>
-              <div class="overflow-title">{
-                  format!("{}: {}", get_value_field(&233), representation_type.representation_type)
-              }</div>
-              <div class="overflow-title has-text-weight-bold">{
-                  format!("{}: {}", get_value_field(&234), phone)
-              }</div>
+              <div class="overflow-title">
+                  {format!("{}: {}", get_value_field(&233), representation_type.representation_type)}
+              </div>
+              <div class="overflow-title">
+                  {format!("{}: {}", get_value_field(&234), phone)}
+              </div>
             </div>
           </div>
         }

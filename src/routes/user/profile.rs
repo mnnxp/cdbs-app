@@ -26,7 +26,7 @@ use crate::fragments::{
 use crate::services::{Counter, get_logged_user, get_value_field, resp_parsing, title_changer};
 use crate::types::{
     UserDataCard, CompaniesQueryArg, ComponentsQueryArg, ServicesQueryArg, SelfUserInfo, SlimUser,
-    StandardsQueryArg, UserCertificate, UserInfo, UsersQueryArg, UUID,
+    StandardsQueryArg, UserCertificate, UserInfo, UsersQueryArg, UUID, Region
 };
 use crate::gqls::make_query;
 use crate::gqls::user::{
@@ -309,7 +309,7 @@ impl Profile {
                                     { self.view_user_info(
                                         self_data.description.as_str(),
                                         self_data.position.as_str(),
-                                        self_data.region.region.as_str(),
+                                        &self_data.region,
                                         self_data.program.name.as_str(),
                                     ) }
                                 </div>
@@ -362,7 +362,7 @@ impl Profile {
                                     { self.view_user_info(
                                         user_data.description.as_str(),
                                         user_data.position.as_str(),
-                                        user_data.region.region.as_str(),
+                                        &user_data.region,
                                         user_data.program.name.as_str(),
                                     ) }
                                 </div>
@@ -575,7 +575,7 @@ impl Profile {
         &self,
         description: &str,
         position: &str,
-        region: &str,
+        region: &Region,
         program: &str,
     ) -> Html {
         let onclick_change_full_show =
@@ -595,10 +595,10 @@ impl Profile {
                             <span>{get_value_field(&39)}</span>
                             <span class="overflow-title has-text-weight-bold">{position}</span>
                         </div>
-                        <div id="region">
+                        <div id="region" hidden={region.region_id == 8}>
                             <span class="icon is-small"><i class="fas fa-map-marker-alt" /></span>
                             <span>{get_value_field(&40)}</span>
-                            <span class="overflow-title has-text-weight-bold">{region}</span>
+                            <span class="overflow-title has-text-weight-bold">{&region.region}</span>
                         </div>
                         <div id="program" hidden={program == "Unknown"}>
                             <span class="icon is-small"><i class="fas fa-drafting-compass" /></span>

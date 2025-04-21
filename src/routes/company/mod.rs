@@ -30,6 +30,13 @@ impl ContentDisplay for CompanyInfo {
             <span id="title-type" class="subtitle is-6">{self.company_type.shortname.clone()}</span>
         };
         let lang = get_lang().unwrap_or(String::new());
+        if self.company_type.company_type_id == 10 {
+            // Do not show if set "Other legal entity"
+            return html!{<>
+                <p>{company_name}</p>
+                <p>{company_name_short}</p>
+            </>}
+        }
         match lang.as_str() {
             "ru" => html!{<>
                 <p>{company_name}</p>
@@ -70,12 +77,14 @@ impl ContactDisplay for CompanyInfo {
                 <span>{get_value_field(&280)}</span> // Reg.№
                 <span class="has-text-weight-bold">{self.inn.clone()}</span>
             </div>
-            <div id="company-region">
+            <div id="company-region" hidden={self.region.region_id == 8 && self.address.is_empty()}>
                 <span class="icon is-small"><i class="fas fa-map-marker-alt" /></span>
                 <span>{get_value_field(&281)}</span> // Location
-                <span class="has-text-weight-bold">{self.region.region.clone()}</span>
-                <span id="company-address" class="has-text-weight-bold" hidden={self.address.is_empty()}>
-                    {format!(", {}", self.address.clone())}
+                <span class="has-text-weight-bold">
+                    {match self.address.is_empty() {
+                        true => {self.region.region.clone()},
+                        false => {self.address.clone()},
+                    }}
                 </span>
             </div>
             <div id="company-site_url" hidden={self.site_url.is_empty()}>

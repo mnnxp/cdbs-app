@@ -290,7 +290,7 @@ impl ShowCompany {
                     />
                   </figure>
                 </div>
-                <div id="company-region" class={classes!("column", "is-three-fifths")}>
+                <div id="company-is-supplier" class={classes!("column", "is-three-fifths")}>
                     {company_data.to_display()}
                     <abbr title={get_value_field(&275)} hidden={!company_data.is_supplier}>
                         {diamond_svg(company_data.is_supplier, "25")}
