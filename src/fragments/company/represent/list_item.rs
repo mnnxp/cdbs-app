@@ -55,7 +55,7 @@ impl ListItem {
 
         html!{
           <div class="box itemBox">
-            <article class="column overflow-title m-0 p-0">
+            <article class="column m-0 p-0">
               <div class="column m-0 p-0">
                   <p class="title is-5">{name.to_string()}</p>
               </div>
