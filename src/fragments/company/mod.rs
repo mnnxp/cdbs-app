@@ -2,7 +2,9 @@ mod catalog;
 mod certificate;
 mod represent;
 mod spec;
+mod menu_block;
 
+pub(crate) use menu_block::{view_content, view_certificates, view_represents, view_components, view_standards, view_services};
 pub use catalog::{CatalogCompanies, ListItemCompany};
 pub use certificate::{CompanyCertificatesCard, CompanyCertificateItem, AddCompanyCertificateCard};
 pub use represent::{CompanyRepresents, AddCompanyRepresentCard};

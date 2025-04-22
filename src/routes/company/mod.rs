@@ -70,6 +70,11 @@ impl ContactDisplay for CompanyInfo {
     /// Returns company contact information with description and icons, blank fields are skipped
     fn contact_block(&self) -> Html {
         html!{<>
+            <div id="company-inn" hidden={self.inn.is_empty()}>
+                <span class="icon is-small"><i class="fas fa-building" /></span>
+                <span>{get_value_field(&280)}</span> // Reg.№
+                <span class="has-text-weight-bold">{self.inn.clone()}</span>
+            </div>
             <div id="company-email" hidden={self.email.is_empty()}>
                 <span class="icon is-small"><i class="fas fa-envelope" /></span>
                 <span>{get_value_field(&278)}</span> // Email
@@ -79,11 +84,6 @@ impl ContactDisplay for CompanyInfo {
                 <span class="icon is-small"><i class="fas fa-phone" /></span>
                 <span>{get_value_field(&279)}</span> // Phone
                 <span class="has-text-weight-bold">{self.phone.clone()}</span>
-            </div>
-            <div id="company-inn" hidden={self.inn.is_empty()}>
-                <span class="icon is-small"><i class="fas fa-building" /></span>
-                <span>{get_value_field(&280)}</span> // Reg.№
-                <span class="has-text-weight-bold">{self.inn.clone()}</span>
             </div>
             <div id="company-region" hidden={self.region.region_id == 8 && self.address.is_empty()}>
                 <span class="icon is-small"><i class="fas fa-map-marker-alt" /></span>
@@ -110,17 +110,16 @@ impl SpecDisplay for CompanyInfo {
         match self.company_specs.is_empty() {
             true => html!{},
             false => html!{
-                <div class="columns">
-                    <div>
-                        <h5>{get_value_field(&283)}</h5> // Sphere of activity
-                    </div>
-                    <div class="px-1 mb-4">
-                        <SpecsTags
-                            show_manage_btn={false}
-                            company_uuid={self.uuid.clone()}
-                            specs={self.company_specs.clone()}
-                        />
-                    </div>
+                <div class={"column is-full pl-0"}>
+                    <p class={"title is-6"}>
+                        <span class={"icon is-small"}><i class={"fas fa-cubes"}></i></span>
+                        <span>{" "}{get_value_field(&283)}</span>
+                    </p> // Sphere of activity
+                    <SpecsTags
+                        show_manage_btn={false}
+                        company_uuid={self.uuid.clone()}
+                        specs={self.company_specs.clone()}
+                    />
                 </div>
             }
         }

@@ -6,22 +6,18 @@ use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::error::Error;
-use crate::fragments::supplier_service::{ServiceRequestBtn};
+use crate::fragments::company::{view_certificates, view_components, view_content, view_represents, view_standards};
 use crate::fragments::{
     buttons::ft_follow_btn,
     clipboard::ShareLinkBtn,
     list_errors::ListErrors,
-    list_empty::ListEmpty,
     side_menu::{MenuItem, SideMenu},
-    company::{CompanyCertificatesCard, CompanyRepresents, diamond_svg},
-    component::CatalogComponents,
-    standard::CatalogStandards,
+    company::diamond_svg,
+    supplier_service::ServiceRequestBtn
 };
-use crate::services::content_adapter::{
-    ContentDisplay, Markdownable, ContactDisplay, SpecDisplay
-};
+use crate::services::content_adapter::ContentDisplay;
 use crate::services::{Counter, get_value_field, resp_parsing, title_changer};
-use crate::types::{UUID, CompanyInfo, ComponentsQueryArg, StandardsQueryArg};
+use crate::types::{UUID, CompanyInfo};
 use crate::gqls::make_query;
 use crate::gqls::company::{
     GetSupplierCompanyData, get_supplier_company_data,
@@ -68,10 +64,11 @@ pub enum Msg {
 
 #[derive(Clone, PartialEq)]
 pub enum CompanyTab {
+    Info,
     Certificates,
+    Represent,
     Components,
     Standards,
-    Represent,
 }
 
 impl Component for ShowSupplierCompany {
@@ -87,7 +84,7 @@ impl Component for ShowSupplierCompany {
             link,
             subscribers: 0,
             is_followed: false,
-            company_tab: CompanyTab::Certificates,
+            company_tab: CompanyTab::Info,
             extend_tab: None,
         }
     }
@@ -219,11 +216,8 @@ impl Component for ShowSupplierCompany {
                             <div class="card">
                               <div class="card-content">
                                 {self.view_card()}
-                                <div class="content">
-                                    {self.view_content(company_data)}
-                                </div>
+                              </div>
                             </div>
-                          </div>
                           {self.company_relate_object(company_data)}
                         </div>
                     </div>
@@ -279,25 +273,6 @@ impl ShowSupplierCompany {
         )
     }
 
-    fn view_content(
-        &self,
-        company_data: &CompanyInfo,
-    ) -> Html {
-        html! {<>
-            <div class="columns">
-                <div class="column is-two-thirds">
-                    <div id="description" class="content">
-                      {company_data.description.to_markdown()}
-                    </div>
-                </div>
-                <div class="column">
-                    {company_data.contact_block()}
-                </div>
-            </div>
-            {company_data.spec_block()}
-        </>}
-    }
-
     fn company_relate_object(
         &self,
         company_data: &CompanyInfo,
@@ -308,14 +283,11 @@ impl ShowSupplierCompany {
                     { self.show_company_action() }
                     <div class="card-relate-data card-fix-width">
                         {match self.company_tab {
-                            CompanyTab::Certificates =>
-                                self.view_certificates(&company_data),
-                            CompanyTab::Represent =>
-                                self.view_represents(&company_data),
-                            CompanyTab::Components =>
-                                self.view_components(&company_data.uuid),
-                            CompanyTab::Standards =>
-                                self.view_standards(&company_data.uuid),
+                            CompanyTab::Info => view_content(&company_data),
+                            CompanyTab::Certificates => view_certificates(&company_data),
+                            CompanyTab::Represent => view_represents(&company_data),
+                            CompanyTab::Components => view_components(&company_data.uuid),
+                            CompanyTab::Standards => view_standards(&company_data.uuid),
                         }}
                     </div>
                 </div>
@@ -325,6 +297,16 @@ impl ShowSupplierCompany {
 
     fn show_company_action(&self) -> Html {
         let menu_arr: Vec<MenuItem> = vec![
+            // company info MenuItem
+            MenuItem {
+                title: get_value_field(&232).to_string(), // INFO
+                action: self.cb_generator(CompanyTab::Info),
+                count: self.get_number_of_items(&CompanyTab::Info),
+                item_class: classes!("has-background-white"),
+                icon_classes: vec![classes!("fas", "fa-info")],
+                is_active: self.company_tab == CompanyTab::Info,
+                is_extend: self.check_extend(&CompanyTab::Info),
+            },
             // certificates MenuItem
             MenuItem {
                 title: get_value_field(&32).to_string(), // CERTIFICATES
@@ -374,60 +356,6 @@ impl ShowSupplierCompany {
         }
     }
 
-    fn view_certificates(
-        &self,
-        company_data: &CompanyInfo,
-    ) -> Html {
-        if company_data.company_certificates.is_empty() {
-            html!{<ListEmpty />}
-        } else {
-            html!{<div class="profileBox" >
-                <CompanyCertificatesCard
-                    certificates={company_data.company_certificates.clone()}
-                    show_cert_btn={false}
-                    download_btn={false}
-                    manage_btn={false}
-                 />
-            </div>}
-        }
-    }
-
-    fn view_represents(
-        &self,
-        company_data: &CompanyInfo,
-    ) -> Html {
-        html!{
-            <CompanyRepresents
-                show_manage_btn={false}
-                list={company_data.company_represents.clone()}
-            />
-        }
-    }
-
-    fn view_components(
-        &self,
-        company_uuid: &UUID,
-    ) -> Html {
-        html!{
-            <CatalogComponents
-                show_create_btn={false}
-                arguments={ComponentsQueryArg::set_company_uuid(company_uuid)}
-            />
-        }
-    }
-
-    fn view_standards(
-        &self,
-        company_uuid: &UUID,
-    ) -> Html {
-        html!{
-            <CatalogStandards
-                show_create_btn={true}
-                arguments={StandardsQueryArg::set_company_uuid(company_uuid)}
-            />
-        }
-    }
-
     fn cb_generator(&self, cb: CompanyTab) -> Callback<MouseEvent> {
         self.link.callback(move |_| Msg::ChangeTab(cb.clone()))
     }
@@ -443,6 +371,7 @@ impl ShowSupplierCompany {
     fn get_number_of_items(&self, tab: &CompanyTab) -> usize {
         match &self.company {
             Some(ref company) =>  match tab {
+              CompanyTab::Info => 0,
               CompanyTab::Certificates => company.company_certificates.len(),
               CompanyTab::Represent => company.company_represents.len(),
               CompanyTab::Components => 0,

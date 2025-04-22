@@ -63,20 +63,20 @@ impl ListItem {
                 true => html!{},
                 false => html!{
                   <div class="column m-0 p-0">
-                    {format!("{}: {}", get_value_field(&232), address)}
+                    {format!("{}: {}", get_value_field(&57), address)}
                   </div>
                 },
               }}
               <div class="column">
               <div class="columns">
                   <div class="column m-0 p-0">
-                      {format!("{}: {}", get_value_field(&231), region.region)}
+                      {format!("{}: {}", get_value_field(&27), region.region)}
                   </div>
                   <div class="column m-0 p-0">
-                      {format!("{}: {}", get_value_field(&235), representation_type.representation_type)}
+                      {format!("{}: {}", get_value_field(&216), representation_type.representation_type)}
                   </div>
                   <div class="column m-0 p-0">
-                      {format!("{}: {}", get_value_field(&234), phone)}
+                      {format!("{}: {}", get_value_field(&56), phone)}
                   </div>
               </div>
               </div>
@@ -103,7 +103,7 @@ impl ListItem {
                   {format!("{}: {}", get_value_field(&233), representation_type.representation_type)}
               </div>
               <div class="overflow-title">
-                  {format!("{}: {}", get_value_field(&234), phone)}
+                  {format!("{}: {}", get_value_field(&56), phone)}
               </div>
             </div>
           </div>

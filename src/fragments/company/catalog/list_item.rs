@@ -14,7 +14,6 @@ use crate::fragments::{
     switch_icon::{res_btn, res_fullwidth_btn},
 };
 use crate::types::{Pathname, ShowCompanyShort, UUID};
-use crate::services::content_adapter::DateDisplay;
 use crate::services::{get_value_field, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::company::{
@@ -161,7 +160,6 @@ impl ListItemCompany {
             image_file,
             company_type,
             is_supplier,
-            updated_at,
             ..
         } = &self.props.data;
 
@@ -178,18 +176,6 @@ impl ListItemCompany {
                     </figure>
                   </div>
                   <div class="media-content">
-                    <div class="columns is-gapless mb-0" onclick={onclick_open_company.clone()}>
-                        <div class="column">
-                            {get_value_field(&163)}
-                            <span class="id-box has-text-weight-bold">{inn.clone()}</span>
-                        </div>
-                        <div class="column">
-                            <span class={"icon"} title={get_value_field(&156)}>
-                            <i class="fas fa-edit"></i>
-                            </span>
-                            { updated_at.date_to_display() }
-                        </div>
-                    </div>
                     <div class="columns mb-0" onclick={onclick_open_company.clone()}>
                         <div class="column fix-width">
                             {company_type.to_dispaly_order(
@@ -199,6 +185,15 @@ impl ListItemCompany {
                             <p class="overflow-title">{description.clone()}</p>
                         </div>
                     </div>
+                    {match inn.is_empty() {
+                        true => html!{},
+                        false => html!{
+                            <div class="column p-0 mb-0" onclick={onclick_open_company.clone()}>
+                                {get_value_field(&163)}
+                                <span class="id-box has-text-weight-bold">{inn.clone()}</span>
+                            </div>
+                        },
+                    }}
                   </div>
                   <div class="column buttons flexBox p-0" >
                       {res_btn(
