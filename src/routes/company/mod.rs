@@ -9,43 +9,51 @@ pub use settings::CompanySettings;
 pub use show::ShowCompany;
 pub use supplier::ShowSupplierCompany;
 
-use yew::{html, Html};
+use yew::virtual_dom::VNode;
+use yew::{classes, html, Classes, Html};
 use crate::fragments::company::SpecsTags;
 use crate::services::content_adapter::{
     ContentDisplay, DateDisplay, ContactDisplay, SpecDisplay, two_dates_display
 };
 use crate::services::{get_lang, get_value_field};
-use crate::types::CompanyInfo;
+use crate::types::{CompanyInfo, CompanyType};
 
 impl ContentDisplay for CompanyInfo {
     /// Returns a company name and type of the company, the sequence depends on the localization
     fn to_display(&self) -> Html {
-        let company_name_short = html!{
-            <span id="title-orgname" class="title is-6">{self.shortname.clone()}</span>
-        };
         let company_name = html!{
             <span id="title-orgname" class="title is-4">{self.orgname.clone()}</span>
         };
-        let company_type_short = html!{
-            <span id="title-type" class="subtitle is-6">{self.company_type.shortname.clone()}</span>
-        };
         if self.company_type.company_type_id == 10 {
             // Do not show if set "Other legal entity"
-            return html!{<>
-                <p>{company_name}</p>
-                <p>{company_name_short}</p>
-            </>}
+            return html!{<p>{company_name}</p>}
         }
+        let company_name_short = html!{
+            <span id="title-orgname" class="title is-6">{self.shortname.clone()}</span>
+        };
+        html!{<>
+            <p>{company_name}</p>
+            {self.company_type.to_dispaly_order(classes!("is-6"), company_name_short)}
+        </>}
+    }
+}
+
+impl CompanyType {
+    /// Determines the order in which the name and type of the company are displayed depending on the set language.
+    /// If the company type is specified as "Other legal entity" (id 10), then only the name in the <p> tag is returned.
+    /// For example, for Russian, first the type, then the name, and for English, vice versa.
+    pub(crate) fn to_dispaly_order(&self, classes_type: Classes, name: VNode) -> Html {
+        if self.company_type_id == 10 {
+            // Do not show if set "Other legal entity"
+            return html!{<p>{name}</p>}
+        }
+        let company_type_short = html!{
+            <span id="title-type" class={classes_type}>{self.shortname.clone()}</span>
+        };
         let lang = get_lang().unwrap_or(String::new());
         match lang.as_str() {
-            "ru" => html!{<>
-                <p>{company_name}</p>
-                <p>{company_type_short}<span>{" "}</span>{company_name_short}</p>
-            </>},
-            _ => html!{<>
-                <p>{company_name}</p>
-                <p>{company_name_short}<span>{" "}</span>{company_type_short}</p>
-            </>}
+            "ru" => html!{<p>{company_type_short}<span>{" "}</span>{name}</p>},
+            _ => html!{<p>{name}<span>{" "}</span>{company_type_short}</p>}
         }
     }
 }

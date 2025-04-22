@@ -190,11 +190,12 @@ impl ListItemCompany {
                             { updated_at.date_to_display() }
                         </div>
                     </div>
-                    <div class="columns mb-0">
-                        <div class="column fix-width" onclick={onclick_open_company.clone()}>
-                            <p class="overflow-title has-text-weight-bold is-size-4">
-                                {format!("{} {}", &shortname, &company_type.shortname)}
-                            </p>
+                    <div class="columns mb-0" onclick={onclick_open_company.clone()}>
+                        <div class="column fix-width">
+                            {company_type.to_dispaly_order(
+                                classes!("is-size-4"),
+                                html!{<span class={"has-text-weight-bold is-size-4"}>{shortname.clone()}</span>}
+                            )}
                             <p class="overflow-title">{description.clone()}</p>
                         </div>
                     </div>
@@ -223,10 +224,7 @@ impl ListItemCompany {
             uuid,
             shortname,
             image_file,
-            region,
-            company_type,
             is_supplier,
-            // is_followed,
             ..
         } = self.props.data.clone();
 
@@ -241,9 +239,7 @@ impl ListItemCompany {
                   <div class="top-tag" hidden={!is_supplier} >{get_value_field(&3)}</div> // supplier
                   <img src={image_file.download_url.to_string()} alt="Favicon profile" loading="lazy" />
                 </div>
-                <p>{get_value_field(&164)}<span class="id-box has-text-weight-bold">{region.region.to_string()}</span></p>
                 <p class="overflow-title has-text-weight-bold is-size-4">{shortname}</p>
-                <p class="has-text-weight-bold">{company_type.shortname.to_string()}</p>
               </div>
               <div class="btnBox">
                 {res_fullwidth_btn(onclick_open_company, get_value_field(&165), Pathname::Company(uuid))}
