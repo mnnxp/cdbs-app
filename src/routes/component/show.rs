@@ -497,9 +497,9 @@ impl ShowComponent {
                 </ul>
             </div>
             <div class="card-content p-0">
-                {match self.active_tab {
-                    ActiveTab::Description => html!{
-                        <div class="content">
+                <div class="content">
+                    {match self.active_tab {
+                        ActiveTab::Description => html!{
                             <div class="component-description">
                                 {match component_data.description.len() {
                                     250.. => match self.show_full_description {
@@ -512,28 +512,24 @@ impl ShowComponent {
                                     _ => component_data.description.to_markdown(),
                                 }}
                             </div>
-                        </div>
-                    },
-                    ActiveTab::Characteristics => html!{
-                        <div class="content">
+                        },
+                        ActiveTab::Characteristics => html!{
                             <ComponentParamsTags
                                 show_manage_btn={false}
                                 component_uuid={self.current_component_uuid.clone()}
                                 params_count={component_data.params_count}
                                 />
-                        </div>
-                    },
-                    ActiveTab::ComponentFiles => html!{
-                        <div class="content">
+                        },
+                        ActiveTab::ComponentFiles => html!{
                             <ComponentFilesBlock
                                 show_download_btn={true}
                                 show_delete_btn={false}
                                 component_uuid={component_data.uuid.clone()}
                                 files_count={component_data.files_count}
                                 />
-                        </div>
-                    },
-                }}
+                        },
+                    }}
+                </div>
             </div>
         </>}
     }
