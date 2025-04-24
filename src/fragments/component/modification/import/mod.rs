@@ -212,7 +212,7 @@ impl Component for ImportModificationsData {
                     }
                     self.paramnames.push(String::new());
                 }
-                debug!("Complete self.paramnames: {:?}", self.value_column);
+                debug!("Complete self.paramnames: {:?}", self.paramnames);
                 debug!("Complete self.value_column: {:?}", self.value_column);
                 link.send_message(Msg::RequestRegisterParams);
             },
