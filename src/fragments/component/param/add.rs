@@ -10,11 +10,11 @@ use crate::services::{get_value_field, resp_parsing};
 use crate::services::content_adapter::Markdownable;
 use crate::gqls::make_query;
 use crate::gqls::relate::{RegisterParam, register_param};
-use crate::types::Param;
+use crate::types::{Param, ParamValue};
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
-    pub callback_add_param: Callback<(usize, String)>,
+    pub callback_add_param: Callback<ParamValue>,
 }
 
 pub struct RegisterParamnameBlock {
@@ -76,7 +76,12 @@ impl Component for RegisterParamnameBlock {
                 match resp_parsing::<Param>(res, "registerParam") {
                     Ok(result) => {
                         debug!("registerParam: {:?}", result);
-                        self.props.callback_add_param.emit((result.param_id, self.set_param_value.clone()));
+                        self.props.callback_add_param.emit(
+                            ParamValue{
+                                param_id: result.param_id,
+                                value: self.set_param_value.clone()
+                            }
+                        );
                         self.active_loading_btn = false;
                         // clear old data
                         self.request_new_paramname.clear();

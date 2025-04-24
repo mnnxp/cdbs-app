@@ -56,7 +56,7 @@ pub struct ModificationTableItem {
 
 pub enum Msg {
     RequestParamsListData,
-    RequestAddNewParam(usize, String),
+    RequestAddNewParam(ParamValue),
     RequestAddParamData,
     RequestUpdateParamData,
     RequestDeleteParamData,
@@ -115,9 +115,9 @@ impl Component for ModificationTableItem {
                     link.send_message(Msg::GetParamsListResult(res));
                 })
             },
-            Msg::RequestAddNewParam(param_id, param_value) => {
-                self.request_add_param.param_id = param_id;
-                self.request_add_param.value = param_value;
+            Msg::RequestAddNewParam(pv) => {
+                self.request_add_param.param_id = pv.param_id;
+                self.request_add_param.value = pv.value;
                 link.send_message(Msg::RequestAddParamData);
             },
             Msg::RequestAddParamData => {
@@ -422,8 +422,7 @@ impl ModificationTableItem {
 
     fn modal_new_value(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
-        let onclick_add_new_param =
-            self.link.callback(|(param_id, param_value)| Msg::RequestAddNewParam(param_id, param_value));
+        let onclick_add_new_param = self.link.callback(|pv| Msg::RequestAddNewParam(pv));
         let onclick_close_param_card = self.link.callback(|_| Msg::ShowNewParamCard);
         let class_modal = match &self.open_new_param_card {
             true => "modal is-active",
