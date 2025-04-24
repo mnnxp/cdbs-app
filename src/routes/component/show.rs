@@ -489,14 +489,14 @@ impl ShowComponent {
         };
         let show_description_btn = self.link.callback(|_| Msg::ShowDescription);
         html!{<>
-            <div class="tabs">
+            <div class="tabs mb-1">
                 <ul>
                     <li class={at.0} onclick={onclick_tab_description}><a>{get_value_field(&61)}</a></li>
                     <li class={at.1} onclick={onclick_tab_characteristics}><a>{get_value_field(&101)}</a></li>
                     <li class={at.2} onclick={onclick_tab_component_files}><a>{get_value_field(&102)}</a></li>
                 </ul>
             </div>
-            <div class="card-content">
+            <div class="card-content p-0">
                 {match self.active_tab {
                     ActiveTab::Description => html!{
                         <div class="content">

@@ -80,7 +80,7 @@ impl Component for ComponentParamsTags {
             request_add_param_id: 0,
             request_set_param_value: String::new(),
             hide_add_param_modal: true,
-            page_set: PaginateSet::new(),
+            page_set: PaginateSet::set(Some(1), Some(10)),
             current_items: 0,
             total_items,
         }
