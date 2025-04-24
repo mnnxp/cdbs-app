@@ -148,7 +148,7 @@ impl Component for ImportParamsData {
             <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
             {show_notification(&self.stat_info, "is-success", self.hide_import && !self.stat_info.is_empty())}
             {match self.hide_import {
-                true => ft_import_btn("open-import-btn", onclick_show_import, get_value_field(&342), false, false),
+                true => ft_import_btn("open-import-btn", onclick_show_import, get_value_field(&209), false, false),
                 false => self.show_import_modal(),
             }}
         </>}
@@ -171,7 +171,7 @@ impl ImportParamsData {
                   <div class={"card"}>
                     <header class={"modal-card-head"}>
                       <div class={"modal-card-title"}>
-                        <p>{get_value_field(&342)}</p>
+                        <p>{get_value_field(&209)}</p>
                       </div>
                       <button class={"delete"} aria-label="close" onclick={onclick_hide_modal.clone()} />
                     </header>
@@ -195,7 +195,7 @@ impl ImportParamsData {
                             {ft_import_btn(
                                 "import-params-btn",
                                 onclick_subbmit,
-                                get_value_field(&342),
+                                get_value_field(&209),
                                 true,
                                 self.new_params_raw.is_empty()
                             )}

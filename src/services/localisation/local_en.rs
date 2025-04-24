@@ -212,7 +212,7 @@ lazy_static! {
             (206, "Adding a set of files for the selected modification"),
             (207, "Select a set of files"),
             (208, "Paste the copied table data here."),
-            (209, ""),
+            (209, "Importing component parameters"),
             (210, "Name of parameter"),
             (211, "Changing the parameter value"),
             (212, "Select standard"),
