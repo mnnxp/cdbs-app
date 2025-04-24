@@ -74,7 +74,7 @@ impl Component for ModificationsTableEdit {
             actual_statuses: Vec::new(),
             invalid_modification_uuids: BTreeSet::new(),
             open_add_modification_card: false,
-            open_edit_modification_card: true,
+            open_edit_modification_card: false,
             skip_change_page: false,
             page_set: PaginateSet::new(),
             current_items: 0,
