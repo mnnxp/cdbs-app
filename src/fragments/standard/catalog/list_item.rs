@@ -168,8 +168,8 @@ impl ListItemStandard {
                       />
                     </figure>
                   </div>
-                  <div class="media-content">
-                    <div class="columns is-gapless mb-0" onclick={show_standard_btn.clone()}>
+                  <div class="media-content" onclick={show_standard_btn.clone()}>
+                    <div class="columns is-gapless mb-0">
                         <div class="column">
                             {get_value_field(&141)} // owner
                             <span class="has-text-weight-bold">{owner_company.shortname.clone()}</span>
@@ -179,7 +179,7 @@ impl ListItemStandard {
                             <span class="id-box has-text-weight-bold">{publication_at.date_to_display()}</span>
                         </div>
                     </div>
-                    <div class="column fix-width mb-0 p-0" onclick={show_standard_btn.clone()}>
+                    <div class="column fix-width mb-0 p-0">
                         <div class="has-text-weight-bold is-size-4">{name}</div>
                         <div class="overflow-title">{description.clone()}</div>
                     </div>

@@ -175,8 +175,8 @@ impl ListItemCompany {
                         <img src={image_file.download_url.clone()} alt="Favicon company" loading="lazy" />
                     </figure>
                   </div>
-                  <div class="media-content">
-                    <div class="column fix-width mb-0 p-0" onclick={onclick_open_company.clone()}>
+                  <div class="media-content" onclick={onclick_open_company.clone()}>
+                    <div class="column fix-width mb-0 p-0">
                         {company_type.to_dispaly_order(
                             classes!("is-size-4"),
                             html!{<span class={"has-text-weight-bold is-size-4"}>{shortname.clone()}</span>}
@@ -186,7 +186,7 @@ impl ListItemCompany {
                     {match inn.is_empty() {
                         true => html!{},
                         false => html!{
-                            <div class="column p-0 mb-0" onclick={onclick_open_company.clone()}>
+                            <div class="column p-0 mb-0">
                                 {get_value_field(&163)}
                                 <span class="id-box has-text-weight-bold">{inn.clone()}</span>
                             </div>

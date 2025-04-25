@@ -104,8 +104,8 @@ impl ListItem {
                   <img src={self.props.data.image_file.download_url.clone()} alt="Image" />
                 </figure>
               </div>
-              <div class="media-content">
-                  <div class="columns is-gapless mb-0" onclick={onclick_open_component.clone()}>
+              <div class="media-content" onclick={onclick_open_component.clone()}>
+                  <div class="columns is-gapless mb-0">
                     <div class="column">
                       {self.show_owner()}
                     </div>
@@ -121,7 +121,7 @@ impl ListItem {
                       {updated_at.date_to_display()}
                     </div>
                   </div>
-                  <div class="column fix-width mb-0 p-0" onclick={onclick_open_component.clone()}>
+                  <div class="column fix-width mb-0 p-0">
                     <div class="overflow-title has-text-weight-bold is-size-4">{name}</div>
                     <div class="overflow-title">{description.clone()}</div>
                   </div>

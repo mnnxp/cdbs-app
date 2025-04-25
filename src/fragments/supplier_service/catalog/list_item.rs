@@ -111,8 +111,8 @@ impl ListItemService {
                       <img src={files.first().map(|x| x.download_url.clone()).unwrap_or_default()} loading="lazy" alt="Image" />
                     </figure>
                   </div>
-                  <div class="media-content">
-                    <div class="columns is-gapless mb-0" onclick={onclick_open_service.clone()}>
+                  <div class="media-content" onclick={onclick_open_service.clone()}>
+                    <div class="columns is-gapless mb-0">
                         <div class="column">
                             {get_value_field(&118)}
                             <span class="id-box has-text-weight-bold">
@@ -132,7 +132,7 @@ impl ListItemService {
                           {updated_at.date_to_display()}
                         </div>
                     </div>
-                    <div class="column fix-width mb-0 p-0" onclick={onclick_open_service.clone()} >
+                    <div class="column fix-width mb-0 p-0">
                       <div class="overflow-title has-text-weight-bold is-size-4">{name}</div>
                       <div class="overflow-title">{description.clone()}</div>
                     </div>
