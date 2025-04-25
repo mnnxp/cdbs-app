@@ -6,14 +6,15 @@ use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::error::Error;
-use crate::fragments::company::{view_certificates, view_components, view_content, view_represents, view_standards};
 use crate::fragments::{
     buttons::ft_follow_btn,
     clipboard::ShareLinkBtn,
     list_errors::ListErrors,
     side_menu::{MenuItem, SideMenu},
     company::diamond_svg,
-    supplier_service::ServiceRequestBtn
+    supplier_service::ServiceRequestBtn,
+    company::{view_certificates, view_components, view_content, view_represents, view_standards},
+    responsive::resizer,
 };
 use crate::services::content_adapter::ContentDisplay;
 use crate::services::{Counter, get_value_field, resp_parsing, title_changer};
@@ -277,11 +278,11 @@ impl ShowSupplierCompany {
         &self,
         company_data: &CompanyInfo,
     ) -> Html {
-        html!{<div class="card">
+        html!{<div id={"supplier-card-list"} class="card">
             <div class="columns is-mobile">
                 <div class="column is-flex">
                     { self.show_company_action() }
-                    <div class="card-relate-data is-flex">
+                    <div id={"supplier-card-list-items"} class="card-relate-data" style={resizer("supplier-card-list", 5)}>
                         {match self.company_tab {
                             CompanyTab::Info => view_content(&company_data),
                             CompanyTab::Certificates => view_certificates(&company_data),

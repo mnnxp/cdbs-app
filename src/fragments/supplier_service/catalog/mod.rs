@@ -110,7 +110,7 @@ impl Component for CatalogServices {
         };
 
         html!{
-            <div class="servicesBox" >
+            <div id={"services-box"} class="itemsBox" >
               <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
               <div class="level" >
                 <div class="level-left">

@@ -9,6 +9,7 @@ use graphql_client::GraphQLQuery;
 use log::debug;
 use wasm_bindgen_futures::spawn_local;
 
+use crate::fragments::responsive::resizer;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{
@@ -326,11 +327,11 @@ impl Profile {
         &self,
         self_data: &SelfUserInfo,
     ) -> Html {
-        html!{<div class="card">
+        html!{<div id={"card-list"} class="card">
             <div class="columns is-mobile">
                 <div class="column is-flex">
                     { self.show_profile_action() }
-                    <div class="card-relate-data is-flex">
+                    <div id={"card-list-items"} class="card-relate-data" style={resizer("card-list", 5)}>
                         {match self.profile_tab {
                             ProfileTab::Certificates => self.view_certificates(self_data.certificates.clone()),
                             ProfileTab::Components => self.view_components(&self_data.uuid),
@@ -379,11 +380,11 @@ impl Profile {
         &self,
         user_data: &UserInfo,
     ) -> Html {
-        html!{<div class="card">
+        html!{<div id={"other-card-list"} class="card">
             <div class="columns is-mobile">
                 <div class="column is-flex">
                   { self.show_profile_action() }
-                  <div class="card-relate-data is-flex">
+                  <div id={"other-card-list-items"} class="card-relate-data" style={resizer("other-card-list", 5)}>
                       {match self.profile_tab {
                           ProfileTab::Certificates => self.view_certificates(user_data.certificates.clone()),
                           ProfileTab::Components => self.view_components(&user_data.uuid),

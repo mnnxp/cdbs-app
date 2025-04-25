@@ -9,7 +9,6 @@ use log::debug;
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
-use crate::fragments::company::{view_certificates, view_components, view_content, view_represents, view_services, view_standards};
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{
@@ -21,6 +20,8 @@ use crate::fragments::{
     side_menu::{MenuItem, SideMenu},
     company::diamond_svg,
     supplier_service::ServiceRequestBtn,
+    company::{view_certificates, view_components, view_content, view_represents, view_services, view_standards},
+    responsive::resizer,
 };
 use crate::services::content_adapter::{ContentDisplay, DateDisplay};
 use crate::services::{get_logged_user, get_value_field, resp_parsing, set_history_back, title_changer, Counter};
@@ -328,11 +329,11 @@ impl ShowCompany {
         &self,
         company_data: &CompanyInfo,
     ) -> Html {
-        html!{<div class="card">
+        html!{<div id={"company-card-list"} class="card">
             <div class="columns is-mobile">
                 <div class="column is-flex">
                     { self.show_company_action() }
-                    <div class="card-relate-data is-flex">
+                    <div id={"company-card-list-items"} class="card-relate-data" style={resizer("company-card-list", 5)}>
                         {match self.company_tab {
                             CompanyTab::Info => view_content(&company_data),
                             CompanyTab::Represent => view_represents(&company_data),

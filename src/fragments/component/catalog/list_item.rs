@@ -121,11 +121,9 @@ impl ListItem {
                       {updated_at.date_to_display()}
                     </div>
                   </div>
-                  <div class="columns mb-0">
-                        <div class="column fix-width" onclick={onclick_open_component.clone()}>
-                          <div class="overflow-title has-text-weight-bold is-size-4">{name}</div>
-                          <div class="overflow-title">{description.clone()}</div>
-                      </div>
+                  <div class="column fix-width mb-0 p-0" onclick={onclick_open_component.clone()}>
+                    <div class="overflow-title has-text-weight-bold is-size-4">{name}</div>
+                    <div class="overflow-title">{description.clone()}</div>
                   </div>
                 </div>
                 <div class="column buttons flexBox p-0" >

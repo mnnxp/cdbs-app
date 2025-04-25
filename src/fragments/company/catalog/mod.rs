@@ -128,7 +128,7 @@ impl Component for CatalogCompanies {
         };
 
         html!{
-            <div class="companiesBox" >
+            <div id={"companies-box"} class="itemsBox" >
               <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
               <div class="level" >
                 <div class="level-left">

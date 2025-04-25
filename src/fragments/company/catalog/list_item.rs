@@ -176,14 +176,12 @@ impl ListItemCompany {
                     </figure>
                   </div>
                   <div class="media-content">
-                    <div class="columns mb-0" onclick={onclick_open_company.clone()}>
-                        <div class="column fix-width">
-                            {company_type.to_dispaly_order(
-                                classes!("is-size-4"),
-                                html!{<span class={"has-text-weight-bold is-size-4"}>{shortname.clone()}</span>}
-                            )}
-                            <p class="overflow-title">{description.clone()}</p>
-                        </div>
+                    <div class="column fix-width mb-0 p-0" onclick={onclick_open_company.clone()}>
+                        {company_type.to_dispaly_order(
+                            classes!("is-size-4"),
+                            html!{<span class={"has-text-weight-bold is-size-4"}>{shortname.clone()}</span>}
+                        )}
+                        <p class="overflow-title">{description.clone()}</p>
                     </div>
                     {match inn.is_empty() {
                         true => html!{},
