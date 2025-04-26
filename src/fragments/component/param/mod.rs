@@ -247,26 +247,26 @@ impl Component for ComponentParamsTags {
             {self.modal_add_param()}
             {match self.props.show_manage_btn {
                 true => html!{
-                    <div id={"card-manage-import-params"} class={"columns"}>
-                        <div class={"column"}>
-                            <p class={"title is-5"}>{get_value_field(&185)}</p>
-                        </div>
-                        <div class={"column p-1"}>
-                            <div class={"buttons right-side"}>
-                                <ImportParamsData
-                                    component_uuid={self.props.component_uuid.clone()}
-                                    callback_add_params={onclick_add_params.clone()}
-                                    />
-                                {ft_add_btn(
-                                    "add-param-component",
-                                    get_value_field(&180),
-                                    self.link.callback(|_| Msg::ChangeHideAddParam),
-                                    false,
-                                    false
-                                )}
+                    <nav id={"card-manage-import-params"} class="level">
+                        <div class="level-left">
+                            <div class="level-item">
+                                <p class={"title is-5"}>{get_value_field(&185)}</p>
                             </div>
                         </div>
-                    </div>
+                        <div class="level-right buttons">
+                            <ImportParamsData
+                                component_uuid={self.props.component_uuid.clone()}
+                                callback_add_params={onclick_add_params.clone()}
+                            />
+                            {ft_add_btn(
+                                "add-param-component",
+                                get_value_field(&180),
+                                self.link.callback(|_| Msg::ChangeHideAddParam),
+                                false,
+                                false
+                            )}
+                        </div>
+                    </nav>
                 },
                 false => html!{},
             }}
