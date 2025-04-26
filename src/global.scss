@@ -278,6 +278,13 @@ body {
   height: 240px;
   display: inline-flex;
   position: relative;
+  .certificate-image {
+    width: max-content;
+    height: max-content;
+    max-width: 240px;
+    max-height: 240px;
+    margin: auto;
+  }
 }
 
 .imgBox > img {

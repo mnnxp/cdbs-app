@@ -159,8 +159,8 @@ impl CertificateItem {
         html!{<div class="boxItem" >
           <div class="innerBox" >
             <div class="imgBox" >
-                <figure class="image is-256x256" onclick={onclick_show_cert}>
-                    <img src={self.cert_url.clone()} loading="lazy" />
+                <figure class="image" onclick={onclick_show_cert}>
+                    <img class={"certificate-image"} src={self.cert_url.clone()} loading="lazy" />
                 </figure>
             </div>
             <div class="overflow-title has-text-weight-bold">{self.props.certificate.description.clone()}</div>
