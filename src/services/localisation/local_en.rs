@@ -84,7 +84,7 @@ lazy_static! {
             (78, "Favicon"),
             (79, "Select a supplier"),
             (80, "Access Policy"),
-            (81, "INN"),
+            (81, "* please note that login is by username, not email."),
             (82, "Remove profile"),
             (83, "Upload new certificate"),
             (84, "It is recommended to upload the certificate in image format."),

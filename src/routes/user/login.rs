@@ -167,6 +167,7 @@ impl Component for Login {
                                   <i class="fas fa-user"></i>
                                 </span>
                             </div>
+                            <p class="help">{get_value_field(&81)}</p>
                         </fieldset>
                         <fieldset class="field">
                             <label class="label">{get_value_field(&20)}</label>

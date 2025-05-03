@@ -328,7 +328,7 @@ impl CreateCompany {
             <div class="columns">
                 <div class="column">
                     {self.fileset_generator(
-                        "inn", get_value_field(&81), // Inn
+                        "inn", get_value_field(&163),
                         "",
                         self.request_company.inn.clone(),
                         oninput_inn

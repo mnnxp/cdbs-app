@@ -595,7 +595,7 @@ impl CompanySettings {
                 </div>
                 <div class="column">
                     {self.fileset_generator(
-                        "inn", get_value_field(&81), // Inn
+                        "inn", get_value_field(&163),
                         self.request_company.inn.as_ref().map(|x| x.to_string()).unwrap_or_default(),
                         oninput_inn.clone()
                     )}
