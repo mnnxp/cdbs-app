@@ -110,7 +110,7 @@ impl SpecDisplay for CompanyInfo {
         match self.company_specs.is_empty() {
             true => html!{},
             false => html!{
-                <div class={"column is-full pl-0"}>
+                <div id={"company-related-catalogs"} class={"column p-0"}>
                     <p class={"title is-6"}>
                         <span class={"icon is-small"}><i class={"fas fa-cubes"}></i></span>
                         <span>{" "}{get_value_field(&283)}</span>

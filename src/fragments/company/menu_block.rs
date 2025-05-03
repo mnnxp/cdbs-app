@@ -10,17 +10,19 @@ use crate::services::content_adapter::{Markdownable, ContactDisplay, SpecDisplay
 pub(crate) fn view_content(company_data: &CompanyInfo) -> Html {
     html! {
         <div class="profileBox" >
-            <div class="columns">
-                <div class="column is-two-thirds">
-                    <div id="description" class="content">
-                        {company_data.description.to_markdown()}
+            <div class="column">
+                <div class="columns">
+                    <div class="column is-two-thirds">
+                        <div id="description" class="content">
+                            {company_data.description.to_markdown()}
+                        </div>
+                    </div>
+                    <div class="column is-narrow">
+                        {company_data.contact_block()}
                     </div>
                 </div>
-                <div class="column">
-                    {company_data.contact_block()}
-                </div>
+                {company_data.spec_block()}
             </div>
-            {company_data.spec_block()}
         </div>
     }
 }
