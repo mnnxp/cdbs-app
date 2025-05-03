@@ -17,7 +17,7 @@ pub(crate) fn view_content(company_data: &CompanyInfo) -> Html {
                             {company_data.description.to_markdown()}
                         </div>
                     </div>
-                    <div class="column is-narrow">
+                    <div class="column">
                         {company_data.contact_block()}
                     </div>
                 </div>
