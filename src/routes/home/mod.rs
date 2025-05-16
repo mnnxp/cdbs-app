@@ -1,5 +1,8 @@
 mod banner;
 mod main_view;
+mod search_page;
+
+pub use search_page::SearchPage;
 
 use yew::{Bridged, classes, html, Bridge, Component, ComponentLink, Html, ShouldRender};
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};

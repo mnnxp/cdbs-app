@@ -66,6 +66,8 @@ pub enum AppRoute {
     // CatalogUsers,
     #[to = "#/@{username}"]
     Profile(String),
+    #[to = "#/search"]
+    SearchPage,
     #[to = "#/"]
     Home,
 }

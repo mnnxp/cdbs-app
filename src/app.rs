@@ -15,7 +15,7 @@ use crate::fragments::{
 use crate::routes::supplier_service::{CreateService, ServiceSettings, ShowService};
 use crate::routes::{
     fix_fragment_routes,
-    home::Home,
+    home::{Home, SearchPage},
     login::Login,
     notification::Notifications,
     profile::Profile,
@@ -128,6 +128,7 @@ impl Component for App {
                             AppRoute::Login => html!{<Login callback={callback_login} />},
                             AppRoute::Register => html!{<Register />},
                             AppRoute::Home => html!{<Home />},
+                            AppRoute::SearchPage => html!{<SearchPage />},
                             AppRoute::Notifications => html!{<Notifications />},
                             AppRoute::Settings => html!{<Settings />},
                             AppRoute::Profile(_username) =>

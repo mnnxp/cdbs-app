@@ -11,14 +11,23 @@ use crate::types::UUID;
 )]
 pub(crate) struct ConfirmUploadCompleted;
 
-/// Получение путей каталогов (спецификаций)
+/// Получение путей каталогов
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "./graphql/schema.graphql",
     query_path = "./graphql/specs.graphql",
     response_derives = "Debug"
 )]
+
 pub(crate) struct GetSpecsPaths;
+/// Получение каталогов
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/specs.graphql",
+    response_derives = "Debug"
+)]
+pub(crate) struct GetSpecs;
 
 /// Поиск спецификации по наименованию
 #[derive(GraphQLQuery)]

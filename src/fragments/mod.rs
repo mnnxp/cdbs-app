@@ -23,6 +23,6 @@ pub mod side_menu;
 pub mod upload_favicon;
 pub mod img_showcase;
 pub mod three_showcase;
-pub mod search_bar;
+pub mod search;
 
 pub use list_item::ListState;
