@@ -57,6 +57,24 @@ pub(crate) fn url_decode(text: &str) -> String {
     output
 }
 
+/// Compares UUIDs wrapped in option
+pub(crate) fn compare_op_uuid(first_uuid: &Option<UUID>, second_uuid: &Option<UUID>) -> bool {
+    match (first_uuid, second_uuid) {
+        (None, None) => true,
+        (Some(_), None) => false,
+        (None, Some(_)) => false,
+        (Some(f_uuid), Some(s_uuid)) => f_uuid == s_uuid,
+    }
+}
+
+/// Wraps a string in Option and returns None if it is empty.
+pub(crate) fn wraps_text(text: String) -> Option<String> {
+    match text.is_empty() {
+        true => None,
+        false => Some(text),
+    }
+}
+
 #[cfg(test)]
 mod test_utils {
     use super::*;
