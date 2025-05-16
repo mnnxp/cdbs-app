@@ -207,7 +207,7 @@ impl Component for SearchSpecsTags {
         html!{
             <div class="card">
                 <header class="card-header">
-                    <p class="card-header-title">{get_value_field(&104)}</p> // Catalogs
+                    <p class="card-header-title">{get_value_field(&104)}</p>
                 </header>
                 <div class="card-content">
                     <div class="content">
@@ -222,14 +222,10 @@ impl Component for SearchSpecsTags {
 impl SearchSpecsTags {
     fn fieldset_manage_specs(&self) -> Html {
         let ipt_ref = self.ipt_ref.clone();
-        let onclick_added_spec =
-            self.link.callback(|value: usize| Msg::AddedSpec(value));
-        let onclick_del_new_spec =
-            self.link.callback(|value: usize| Msg::DeleteNewSpec(value));
-        let onclick_del_old_spec =
-            self.link.callback(|value: usize| Msg::DeleteCurrentSpec(value));
-        let onclick_set_ipt_timer =
-            self.link.callback(|ev: InputData| Msg::SetIptTimer(ev.value));
+        let onclick_added_spec = self.link.callback(|value: usize| Msg::AddedSpec(value));
+        let onclick_del_new_spec = self.link.callback(|value: usize| Msg::DeleteNewSpec(value));
+        let onclick_del_old_spec = self.link.callback(|value: usize| Msg::DeleteCurrentSpec(value));
+        let onclick_set_ipt_timer = self.link.callback(|ev: InputData| Msg::SetIptTimer(ev.value));
         let mut class_p_control = classes!("control", "has-icons-left");
         if self.specs_search_loading { class_p_control.push("is-loading"); }
 
