@@ -77,6 +77,7 @@ pub struct ShowCompanyShort{
   pub company_type: CompanyType,
   pub is_supplier: bool,
   pub is_followed: bool,
+  pub created_at: NaiveDateTime,
   pub updated_at: NaiveDateTime,
 }
 

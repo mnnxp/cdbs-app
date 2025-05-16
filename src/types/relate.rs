@@ -27,6 +27,15 @@ pub struct Spec {
 
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]
 #[serde(rename_all = "camelCase")]
+pub struct SpecWithParent {
+    pub spec_id: usize,
+    pub lang_id: usize,
+    pub spec: String,
+    pub parent_spec: Spec,
+}
+
+#[derive(Serialize, Deserialize, Clone, Default, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct SpecPathInfo {
     pub spec_id: usize,
     pub lang_id: usize,

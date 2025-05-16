@@ -72,6 +72,7 @@ pub struct ShowComponentShort {
     pub actual_status: ActualStatus,
     pub is_followed: bool,
     pub is_base: bool,
+    pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
     pub licenses: Vec<LicenseInfo>,
     pub files: Vec<DownloadFile>, // images
@@ -243,6 +244,7 @@ pub struct ComponentsQueryArg {
     pub standard_uuid: Option<UUID>,
     pub service_uuid: Option<UUID>,
     pub user_uuid: Option<UUID>,
+    pub spec_id: Option<i64>,
     pub favorite: Option<bool>,
 }
 
@@ -282,17 +284,15 @@ impl ComponentsQueryArg {
             ..Default::default()
         }
     }
-}
 
-// #[derive(PartialEq, Serialize, Deserialize, Clone, Default, Debug)]
-// #[serde(rename_all = "camelCase")]
-// pub struct IptSearchArg {
-//   search: String,
-//   by_keywords: bool,
-//   by_params: bool,
-//   by_specs: bool,
-//   company_uuid: Option<UUID>,
-//   favorite: bool,
-//   standard_uuid: Option<UUID>,
-//   user_uuid: Option<UUID>,
-// }
+    pub fn set_spec_id(spec_id: i64) -> Self {
+        let spec_id = match spec_id > 1 {
+            true => Some(spec_id),
+            false => None,
+        };
+        Self {
+            spec_id,
+            ..Default::default()
+        }
+    }
+}
