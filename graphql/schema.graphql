@@ -497,6 +497,7 @@ input IptComponentsArg {
   standardUuid: UUID
   serviceUuid: UUID
   userUuid: UUID
+  specId: Int
   favorite: Boolean
 }
 
@@ -606,6 +607,7 @@ input IptSearchArg {
   companyUuid: UUID
   standardUuid: UUID
   userUuid: UUID
+  specId: Int
   favorite: Boolean! = false
 }
 
@@ -1282,6 +1284,7 @@ type ShowCompanyShort {
   companyType: CompanyTypeTranslateList!
   isSupplier: Boolean!
   isFollowed: Boolean!
+  createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!
 }
 
@@ -1296,6 +1299,7 @@ type ShowComponentShort {
   actualStatus: ActualStatusTranslateList!
   isBase: Boolean!
   isFollowed: Boolean!
+  createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!
   licenses: [License!]!
   files(paginate: IptPaginate, images: Boolean): [DownloadFile!]!
@@ -1399,6 +1403,7 @@ type SpecTranslateList {
   specId: Int!
   langId: Int!
   spec: String!
+  parentSpec: SpecTranslateList!
 }
 
 type StandardAndRelatedData {

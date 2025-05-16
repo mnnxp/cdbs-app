@@ -171,6 +171,7 @@ fragment companyShortFields on ShowCompanyShort {
   }
   isSupplier
   isFollowed
+  createdAt
   updatedAt
 }
 
@@ -214,6 +215,7 @@ fragment showCompanyShortFields on ShowCompanyShort {
   }
   isSupplier
   isFollowed
+  createdAt
   updatedAt
 }
 

@@ -48,6 +48,7 @@ fragment companyShortFields on ShowCompanyShort {
   }
   isSupplier
   isFollowed
+  createdAt
   updatedAt
 }
 

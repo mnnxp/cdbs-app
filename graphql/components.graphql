@@ -537,6 +537,7 @@ fragment companyShortFields on ShowCompanyShort {
   }
   isSupplier
   isFollowed
+  createdAt
   updatedAt
 }
 
@@ -591,6 +592,7 @@ fragment showComponentShortFields on ShowComponentShort {
   }
   isFollowed
   isBase
+  createdAt
   updatedAt
   licenses {
     ...licenseFields
