@@ -1,5 +1,7 @@
 use regex::Regex;
 
+use crate::types::UUID;
+
 /// Returns extension derived from filename
 /// Extension with dot in ascii and lower case
 pub(crate) fn ext_str(filename: &str) -> String {
