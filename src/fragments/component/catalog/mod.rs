@@ -46,6 +46,7 @@ pub struct CatalogComponents {
 pub struct Props {
     pub show_create_btn: bool,
     pub arguments: Option<ComponentsQueryArg>,
+    pub component_list: Option<Vec<ShowComponentShort>>,
 }
 
 impl Component for CatalogComponents {
@@ -66,7 +67,7 @@ impl Component for CatalogComponents {
     }
 
     fn rendered(&mut self, first_render: bool) {
-        if first_render {
+        if first_render && self.props.component_list.is_none() {
             self.link.send_message(Msg::GetList);
         }
     }
@@ -89,6 +90,7 @@ impl Component for CatalogComponents {
                         standardUuid: arg.standard_uuid.to_owned(),
                         serviceUuid: arg.service_uuid.to_owned(),
                         userUuid: arg.user_uuid.to_owned(),
+                        specId: arg.spec_id.to_owned(),
                         favorite: arg.favorite,
                     }),
                     None => None,
@@ -139,20 +141,27 @@ impl Component for CatalogComponents {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        let flag_change = match (&self.props.arguments, &props.arguments) {
+        let mut flag_change = match (&self.props.arguments, &props.arguments) {
             (Some(self_arg), Some(arg)) => self_arg == arg,
             (None, None) => true,
             _ => false,
         };
-
+        if flag_change {
+            flag_change = match (&self.props.component_list, &props.component_list) {
+                (Some(self_list), Some(list)) =>
+                    self_list.len() == list.len() && self_list.first().map(|c| &c.uuid) == list.first().map(|c| &c.uuid),
+                (None, None) => true,
+                _ => false,
+            };
+        }
         debug!("self_arg == arg: {}", flag_change);
-
         if self.props.show_create_btn == props.show_create_btn && flag_change {
             false
         } else {
-            self.props.show_create_btn = props.show_create_btn;
-            self.props.arguments = props.arguments;
-            self.link.send_message(Msg::GetList);
+            self.props = props;
+            if self.props.component_list.is_none() {
+                self.link.send_message(Msg::GetList);
+            }
             true
         }
     }
@@ -160,9 +169,9 @@ impl Component for CatalogComponents {
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         let onclick_change_view = self.link.callback(|_| Msg::SwitchShowType);
-        let (class_for_icon, class_for_list) = match self.show_type {
-            ListState::Box => ("fas fa-bars", "flex-box"),
-            ListState::List => ("fas fa-th-large", ""),
+        let class_for_icon = match self.show_type {
+            ListState::Box => "fas fa-bars",
+            ListState::List => "fas fa-th-large",
         };
         html! {
             <div id={"components-box"} class="itemsBox" >
@@ -184,19 +193,32 @@ impl Component for CatalogComponents {
                     </div>
                 </div>
               </div>
-              {if self.list.is_empty() {
-                html!{<ListEmpty />}
-              } else { html!{
-                <div class={class_for_list}>
-                  {for self.list.iter().map(|x| self.show_card(&x))}
-                </div>
-              }}}
+              {match self.props.component_list {
+                Some(ref list) => self.show_list(list),
+                None => self.show_list(&self.list),
+              }}
             </div>
         }
     }
 }
 
 impl CatalogComponents {
+    fn show_list(&self, list: &[ShowComponentShort]) -> Html {
+        let class_for_list = match self.show_type {
+            ListState::Box => "flex-box",
+            ListState::List => "",
+        };
+        if list.is_empty() {
+            html!{<ListEmpty />}
+        } else {
+            html!{
+                <div class={class_for_list}>
+                    {for list.iter().map(|x| self.show_card(&x))}
+                </div>
+            }
+        }
+    }
+
     fn create_component_block(&self) -> Html {
         let onclick_show_add_component = self.link.callback(|_| Msg::ShowAddComponentCard);
         html!{
