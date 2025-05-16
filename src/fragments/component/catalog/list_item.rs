@@ -89,6 +89,7 @@ impl ListItem {
         let ShowComponentShort {
             name,
             description,
+            type_access,
             updated_at,
             ..
         } = &self.props.data;
@@ -106,11 +107,9 @@ impl ListItem {
               </div>
               <div class="media-content" onclick={onclick_open_component.clone()}>
                   <div class="columns is-gapless mb-0">
+                    <div class="column">{self.show_owner()}</div>
                     <div class="column">
-                      {self.show_owner()}
-                    </div>
-                    <div class="column">
-                      <span class="id-box has-text-weight-bold" title={get_value_field(&159)}>
+                      <span class="id-box" title={get_value_field(&159)}>
                         {self.props.data.actual_status.name.clone()}
                       </span>
                     </div>
@@ -120,6 +119,7 @@ impl ListItem {
                       </span>
                       {updated_at.date_to_display()}
                     </div>
+                    <div class="column">{type_access.get_with_icon()}</div>
                   </div>
                   <div class="column fix-width mb-0 p-0">
                     <div class="overflow-title has-text-weight-bold is-size-4">{name}</div>
