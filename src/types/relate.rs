@@ -159,3 +159,26 @@ impl PaginateSet {
         ((self.per_page * self.current_page) - self.per_page + 1) as usize
     }
 }
+
+#[derive(Clone, Debug)]
+pub struct SpecNode {
+    pub spec_id: usize,
+    pub spec: String,
+    pub children: Vec<SpecNode>,
+    pub parent_spec: SpecWithParent,
+    pub expanded: bool,
+    pub loading: bool,
+}
+
+impl Default for SpecNode {
+    fn default() -> Self {
+        SpecNode {
+            spec_id: 1,
+            spec: "ROOT".to_string(),
+            children: Vec::new(),
+            parent_spec: SpecWithParent::default(),
+            expanded: false,
+            loading: false,
+        }
+    }
+}

@@ -4,7 +4,7 @@ use wasm_bindgen_futures::spawn_local;
 use log::debug;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
-use crate::types::{PaginateSet, SpecWithParent};
+use crate::types::{PaginateSet, SpecWithParent, SpecNode};
 use crate::services::{get_value_field, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::relate::{GetSpecs, get_specs};
@@ -22,13 +22,14 @@ pub enum Msg {
     GetSpecsResult(String),
     ResponseError(Error),
     ClearError,
+    ToggleExpand(usize),
     Ignore,
 }
 
 pub struct CatalogSpec {
     error: Option<Error>,
     current_spec_id: usize,
-    spec_list: Vec<SpecWithParent>,
+    spec_tree: Vec<SpecNode>,
     final_section: bool,
     props: Props,
     link: ComponentLink<Self>,
@@ -43,7 +44,7 @@ impl Component for CatalogSpec {
         CatalogSpec {
             error: None,
             current_spec_id: props.current_spec_id.unwrap_or(1),
-            spec_list: Vec::new(),
+            spec_tree: Vec::new(),
             final_section: false,
             props,
             link,
@@ -63,6 +64,7 @@ impl Component for CatalogSpec {
         match msg {
             Msg::ChangeSpec(set_spec_id) => {
                 self.current_spec_id = set_spec_id;
+                self.set_node_loading(set_spec_id, true);
                 link.send_message(Msg::GetSpecs);
             },
             Msg::GetSpecs => {
@@ -87,20 +89,40 @@ impl Component for CatalogSpec {
                         debug!("get specs: {:?}", get_specs);
                         self.final_section = get_specs.is_empty();
                         self.props.callback_select_spec.emit(self.current_spec_id);
+                        
                         if !self.final_section {
-                            self.spec_list = get_specs;
-                            if let Some(x) = self.spec_list.get(0) {
-                                if x.spec_id == 1 {
-                                    self.spec_list.remove(0); // remove ROOT of list
-                                }
+                            let new_nodes: Vec<SpecNode> = get_specs.into_iter()
+                                .filter(|s| s.spec_id != 1)
+                                .map(|s| SpecNode {
+                                    spec_id: s.spec_id,
+                                    spec: s.spec.clone(),
+                                    children: Vec::new(),
+                                    parent_spec: s,
+                                    expanded: false,
+                                    loading: false,
+                                })
+                                .collect();
+                            
+                            if self.spec_tree.is_empty() {
+                                self.spec_tree = new_nodes;
+                            } else {
+                                self.add_children_to_parent(self.current_spec_id, new_nodes);
                             }
+                            self.toggle_node_expanded(self.current_spec_id);
                         }
+                        self.set_node_loading(self.current_spec_id, false);
                     },
-                    Err(err) => link.send_message(Msg::ResponseError(err)),
+                    Err(err) => {
+                        self.set_node_loading(self.current_spec_id, false);
+                        link.send_message(Msg::ResponseError(err))
+                    },
                 }
             },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::ClearError => self.error = None,
+            Msg::ToggleExpand(spec_id) => {
+                self.toggle_node_expanded(spec_id);
+            },
             Msg::Ignore => {},
         }
         true
@@ -124,30 +146,78 @@ impl Component for CatalogSpec {
 }
 
 impl CatalogSpec {
+    fn add_children_to_parent(&mut self, parent_id: usize, children: Vec<SpecNode>) {
+        fn add_children_recursive(nodes: &mut Vec<SpecNode>, parent_id: usize, children: Vec<SpecNode>) -> bool {
+            for node in nodes.iter_mut() {
+                if node.spec_id == parent_id {
+                    node.children = children;
+                    return true;
+                }
+                if !node.children.is_empty() {
+                    if add_children_recursive(&mut node.children, parent_id, children.clone()) {
+                        return true;
+                    }
+                }
+            }
+            false
+        }
+        
+        add_children_recursive(&mut self.spec_tree, parent_id, children);
+    }
+
     fn result_area(&self) -> Html {
-        let (parent_spec_id, parent_spec_name) = self.spec_list.first().map(|s| (s.parent_spec.spec_id, s.parent_spec.spec.clone())).unwrap_or_default();
         html!{
-            <div class={"block"}>
-                <div class={"column"} onclick={self.link.callback(move |_| Msg::ChangeSpec(parent_spec_id))}>
-                    <p class={"subtitle is-6 overflow-title"}>{parent_spec_name}</p>
-                </div>
-                {for self.spec_list.iter().map(|sl| self.spec_item(sl))}
-            </div>
+            <aside class={"menu"}>
+                {self.render_spec_tree(&self.spec_tree)}
+            </aside>
         }
     }
 
-    fn spec_item(&self, sl: &SpecWithParent) -> Html {
-        let spec_id = sl.spec_id;
-        let mut p_class = classes!("subtitle", "is-7", "overflow-title");
-        if self.final_section && sl.spec_id == self.current_spec_id {
+    fn render_spec_tree(&self, nodes: &[SpecNode]) -> Html {
+        html!{
+            <ul class={"menu-list"}>
+                {for nodes.iter().map(|node| self.render_spec_node(node))}
+            </ul>
+        }
+    }
+
+    fn render_spec_node(&self, node: &SpecNode) -> Html {
+        let spec_id = node.spec_id;
+        let mut p_class = classes!("is-7");
+        let mut a_class = classes!("overflow-title", "is-flex-grow-1");
+        
+        if self.final_section && node.spec_id == self.current_spec_id {
             p_class.push("has-text-weight-bold");
         }
+
+        if node.spec_id == self.current_spec_id {
+            a_class.push("is-active");
+        }
+
         html!{
-            <div class={"spec-item mb-1"} onclick={self.link.callback(move |_| Msg::ChangeSpec(spec_id))}>
-                <p class={p_class}>
-                    {format!{"{}:{}", sl.spec_id, sl.spec}}
-                </p>
-            </div>
+            <li>
+                <div class={p_class}>
+                    <div class="icon-text is-flex-direction-row	is-align-items-center	">
+                        <span class="icon is-small" onclick={self.link.callback(move |_| Msg::ToggleExpand(spec_id))}>
+                            {if node.loading {
+                                html!{<i class="fas fa-spinner fa-pulse"></i>}
+                            } else if !node.children.is_empty() {
+                                html!{<i class={classes!("fas", if node.expanded { "fa-chevron-down" } else { "fa-chevron-right" })}></i>}
+                            } else {
+                                html!{<i class="fas fa-minus"></i>}
+                            }}
+                        </span>
+                        <a class={a_class} style="flex: 1;" onclick={self.link.callback(move |_| Msg::ChangeSpec(spec_id))}>
+                            {format!{"{}", node.spec}}
+                        </a>
+                    </div>
+                </div>
+                {if node.expanded && !node.children.is_empty() {
+                    self.render_spec_tree(&node.children)
+                } else {
+                    html!{}
+                }}
+            </li>
         }
     }
 
@@ -161,5 +231,41 @@ impl CatalogSpec {
                 </div>
             </div>
         }
+    }
+
+    fn set_node_loading(&mut self, spec_id: usize, loading: bool) {
+        fn set_loading_recursive(nodes: &mut Vec<SpecNode>, spec_id: usize, loading: bool) -> bool {
+            for node in nodes.iter_mut() {
+                if node.spec_id == spec_id {
+                    node.loading = loading;
+                    return true;
+                }
+                if !node.children.is_empty() {
+                    if set_loading_recursive(&mut node.children, spec_id, loading) {
+                        return true;
+                    }
+                }
+            }
+            false
+        }
+        set_loading_recursive(&mut self.spec_tree, spec_id, loading);
+    }
+
+    fn toggle_node_expanded(&mut self, spec_id: usize) {
+        fn toggle_expanded_recursive(nodes: &mut Vec<SpecNode>, spec_id: usize) -> bool {
+            for node in nodes.iter_mut() {
+                if node.spec_id == spec_id {
+                    node.expanded = !node.expanded;
+                    return true;
+                }
+                if !node.children.is_empty() {
+                    if toggle_expanded_recursive(&mut node.children, spec_id) {
+                        return true;
+                    }
+                }
+            }
+            false
+        }
+        toggle_expanded_recursive(&mut self.spec_tree, spec_id);
     }
 }
