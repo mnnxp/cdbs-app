@@ -1,5 +1,7 @@
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
+use crate::fragments::search::SearchArg;
+
 use super::{
     UUID, SlimCompany, TypeAccessInfo, ShowStandardShort, ShowUserShort,
     ShowFileInfo, DownloadFile, LicenseInfo, Spec, Keyword, Program
@@ -285,13 +287,17 @@ impl ComponentsQueryArg {
         }
     }
 
-    pub fn set_spec_id(spec_id: i64) -> Self {
-        let spec_id = match spec_id > 1 {
-            true => Some(spec_id),
+    pub fn set_by_arg(search_arg: &SearchArg) -> Self {
+        let favorite = match search_arg.favorite {
+            true => Some(true),
             false => None,
         };
         Self {
-            spec_id,
+            company_uuid: search_arg.company_uuid.clone(),
+            standard_uuid: search_arg.standard_uuid.clone(),
+            user_uuid: search_arg.user_uuid.clone(),
+            spec_id: search_arg.spec_id.clone(),
+            favorite,
             ..Default::default()
         }
     }

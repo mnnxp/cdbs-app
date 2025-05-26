@@ -189,7 +189,7 @@ impl Component for SearchBar {
 impl SearchBar {
     fn result_area(&self) -> Html {
         let (arguments, component_list) = match self.search_arg.search.is_empty() {
-            true => (self.search_arg.spec_id.map(|spec_id| ComponentsQueryArg::set_spec_id(spec_id)), None),
+            true => (Some(ComponentsQueryArg::set_by_arg(&self.search_arg)), None),
             false => (None, Some(self.found_components.clone())),
         };
         html!{
