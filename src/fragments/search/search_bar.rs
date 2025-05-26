@@ -145,10 +145,18 @@ impl Component for SearchBar {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
+
+        if props.search_arg.is_none() {
+          return false;
+        }
+
         let flag = props.search_arg
             .as_ref()
             .map(|p_arg| self.search_arg.partial_comparison(p_arg))
-            .unwrap_or(true);
+            .unwrap_or(false);
+
+        debug!("flag: {:?}, {:?}, {}", props.search_arg.clone().unwrap(), self.search_arg, flag);
+
         if flag && self.has_props == props.search_arg.is_some() {
             false
         } else {
@@ -160,7 +168,7 @@ impl Component for SearchBar {
             } else {
                 self.has_props = false;
             }
-            self.link.send_message(Msg::AutoSearch);
+            self.link.send_message(Msg::Search);
             true
         }
     }

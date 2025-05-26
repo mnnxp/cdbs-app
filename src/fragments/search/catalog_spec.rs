@@ -23,6 +23,7 @@ pub enum Msg {
     ResponseError(Error),
     ClearError,
     ToggleExpand(usize),
+    BlockExpand,
     Ignore,
 }
 
@@ -34,6 +35,7 @@ pub struct CatalogSpec {
     props: Props,
     link: ComponentLink<Self>,
     page_set: PaginateSet,
+    expanded: bool,
 }
 
 impl Component for CatalogSpec {
@@ -49,6 +51,7 @@ impl Component for CatalogSpec {
             props,
             link,
             page_set: PaginateSet::set(None, Some(100)),
+            expanded: true,
         }
     }
 
@@ -123,6 +126,9 @@ impl Component for CatalogSpec {
             Msg::ToggleExpand(spec_id) => {
                 self.toggle_node_expanded(spec_id);
             },
+            Msg::BlockExpand => {
+                self.expanded = !self.expanded;
+            },
             Msg::Ignore => {},
         }
         true
@@ -134,12 +140,27 @@ impl Component for CatalogSpec {
 
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+        let onclick_toggle = self.link.callback(|_| Msg::BlockExpand);
+
         html!{
             <div class={"card"}>
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
-                <div class={"column"}><p class={"title is-5 select-title"}>{get_value_field(&104)}</p></div>
-                <div class={"column"}>{self.filters()}</div>
-                <div class={"column"}>{self.result_area()}</div>
+                <div class={"column is-flex is-justify-content-space-between is-align-items-center pointer"} onclick={onclick_toggle}>
+                    <p class={"title is-5 select-title"} style="margin-bottom: 0px;">{get_value_field(&104)}</p>
+                    <span class="icon is-clickable">
+                        <i class={classes!("fas", if self.expanded { "fa-chevron-up" } else { "fa-chevron-down" })}></i>
+                    </span>
+                </div>
+                {if self.expanded {
+                  html!{
+                      <>
+                        <div class={"column"}>{self.filters()}</div>
+                        <div class={"column"}>{self.result_area()}</div>
+                      </>
+                  }
+                } else {
+                    html!{}
+                }}
             </div>
         }
     }
