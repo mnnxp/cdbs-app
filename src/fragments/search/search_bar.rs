@@ -95,17 +95,22 @@ impl Component for SearchBar {
             },
             Msg::Search => {
                 self.request_status = RequestStatus::Loading;
-                let ipt_search_arg = search_by_components::IptSearchArg::get_ipt(&self.search_arg);
-                spawn_local(async move {
-                  let res = make_query(SearchByComponents::build_query(search_by_components::Variables {
-                    ipt_search_arg
-                  })).await.unwrap();
+                if !self.search_arg.search.is_empty() {
+                    let ipt_search_arg = search_by_components::IptSearchArg::get_ipt(&self.search_arg);
+                    spawn_local(async move {
+                        let res = make_query(SearchByComponents::build_query(search_by_components::Variables {
+                            ipt_search_arg
+                        })).await.unwrap();
 
-                  debug!("search result: {:?}", res);
+                        debug!("search result: {:?}", res);
 
-                  link.send_message(Msg::GetSearchByComponentsResult(res));
-                });
-                debug!("search: {:?}", self.search_arg.search);
+                        link.send_message(Msg::GetSearchByComponentsResult(res));
+                    });
+                    debug!("search: {:?}", self.search_arg.search);
+                } else {
+                    self.request_status = RequestStatus::Success;
+                    self.found_components.clear();
+                }
             },
             Msg::GetSearchByComponentsResult(res) => {
                 debug!("search result: {:?}", res);
