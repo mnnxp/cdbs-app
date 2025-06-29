@@ -2,6 +2,10 @@ body {
   background-color: #fafafa;
 }
 
+.column {
+  overflow-y: hidden;
+}
+
 .flex_warp {
   display: flex;
   flex-wrap: wrap;
@@ -516,4 +520,89 @@ scene-hull {
 
 .pointer {
   cursor: pointer;
+}
+
+.comment {
+  display:block;
+  font-size:16px;
+  line-height:1.4;
+  padding:12px 8px 8px;
+  transition:background .3s ease-in-out;
+  .button {
+    font-size: x-small;
+  }
+}
+
+.comment-avatar {
+  height:24px;
+  margin-right:8px;
+  width:24px;
+  img {
+    border-radius: 3px;
+    box-shadow: 0 .5em 1em -.125em rgba(10,10,10,.1),0 0 0 1px rgba(10,10,10,.02);
+  }
+}
+
+.comment-body {
+  padding-left:17px;
+}
+
+.comment-info {
+  align-items:center;
+  display:flex;
+  flex-wrap:wrap;
+  font-size:14px;
+  margin-bottom:12px;
+  padding-right:84px;
+  position:relative;
+  .right-side {
+    @media screen and (max-width: 420px) {
+      margin-bottom: .5rem !important;
+    }
+  }
+}
+
+.comment-text {
+  margin-bottom:4px;
+  overflow:hidden;
+}
+
+.comment-time {
+  margin-left:8px;
+  margin-right:8px;
+  text-decoration:none;
+  vertical-align:middle;
+}
+
+.comment-username {
+  font-weight:700;
+  text-decoration:none;
+  vertical-align:middle;
+  .id-box {
+    display: inline;
+  }
+}
+
+.variative-display:hover {
+  opacity:.75;
+  .show-it-info {
+    display: none;
+    opacity: 0;
+  }
+  .hide-it-info {
+    display: inline;
+    opacity: 1;
+  }
+}
+
+.show-it-info {
+  display: inline;
+  opacity: 1;
+}
+
+.hide-it-info {
+  display: none;
+  text-align: center;
+  opacity: 0;
+  transition: opacity .4s ease-in-out;
 }

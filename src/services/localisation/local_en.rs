@@ -383,5 +383,10 @@ lazy_static! {
             (377, "Upload files for the service"),
             (378, "Open service"),
             (379, "Services"),
+            (380, "Discussion"),
+            (381, "Post"),
+            (382, "Reply"),
+            (383, "Show answers"),
+            (384, "Enter a new comment"),
         ]);
 }

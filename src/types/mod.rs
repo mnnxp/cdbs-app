@@ -3,6 +3,7 @@
 mod auth;
 mod company;
 mod component;
+mod discussion;
 mod file;
 mod profiles;
 mod relate;
@@ -17,6 +18,7 @@ pub use chrono::NaiveDateTime;
 pub use auth::*;
 pub use company::*;
 pub use component::*;
+pub use discussion::*;
 pub use profiles::*;
 pub use file::*;
 pub use relate::*;

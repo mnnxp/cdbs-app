@@ -36,11 +36,14 @@ pub(crate) fn two_dates_display(created_dt: &NaiveDateTime, updated_dt: &NaiveDa
 /// Returns VNode (Html) with date, with date and time information in time tag
 pub(crate) fn date_display(dt: &NaiveDateTime) -> Html {
     let srtfmt = srtfmt_dt();
+    let title = dt.format_with_items(srtfmt.title).to_string();
     html!{
         <time
-        title={dt.format_with_items(srtfmt.title).to_string()}
+        class={"variative-display"}
+        title={title.clone()}
         datetime={dt.format_with_items(srtfmt.datetime).to_string()}>
-            {dt.format_with_items(srtfmt.text).to_string()}
+            <span class="show-it-info">{dt.format_with_items(srtfmt.text).to_string()}</span>
+            <span class="hide-it-info">{title}</span>
         </time>
     }
 }
