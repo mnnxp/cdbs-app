@@ -1,0 +1,76 @@
+# Queries
+query GetDiscussions(
+  $iptObjectDiscussionsArg: IptObjectDiscussionsArg!
+  $IptSort: IptSort,
+  $IptPaginate: IptPaginate
+) {
+  discussions(args: $iptObjectDiscussionsArg) {
+    ...DiscussionFields
+    comments(sort: $IptSort, paginate: $IptPaginate){
+      ...DiscussionCommentFields
+      replies {
+        ...DiscussionCommentFields
+      }
+    }
+  }
+}
+
+query GetDiscussionComments(
+  $iptDiscussionCommentsArg: IptDiscussionCommentsArg!
+  $IptSort: IptSort,
+  $IptPaginate: IptPaginate
+) {
+  discussionComments(args: $iptDiscussionCommentsArg, sort: $IptSort, paginate: $IptPaginate) {
+    ...DiscussionCommentFields
+    # replies {
+    #   ...DiscussionCommentFields
+    # }
+  }
+}
+
+# Mutations
+mutation RegisterDiscussionComment($iptDiscussionCommentData: IptDiscussionCommentData!) {
+  registerDiscussionComment(args: $iptDiscussionCommentData)
+}
+
+mutation EditComment($iptEditCommentData: IptEditCommentData!) {
+  editComment(data: $iptEditCommentData)
+}
+
+# Fragments
+fragment DiscussionFields on DiscussionInfo {
+  uuid
+  title
+  isPinned
+  lastActivityAt
+  createdAt
+  repliesCount
+}
+
+fragment DiscussionCommentFields on DiscussionCommentData {
+  uuid
+  discussionUuid
+  parentCommentUuid
+  author {
+    uuid
+    firstname
+    lastname
+    username
+    imageFile {
+      ...downloadFileFields
+    }
+  }
+  messageContent
+  isEdited
+  isHidden
+  createdAt
+  updatedAt
+  repliesCount
+}
+
+fragment downloadFileFields on DownloadFile {
+  uuid
+  filename
+  filesize
+  downloadUrl
+}

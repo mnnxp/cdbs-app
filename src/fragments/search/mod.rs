@@ -17,6 +17,7 @@ pub struct SearchArg {
     pub company_uuid: Option<UUID>,
     pub user_uuid: Option<UUID>,
     pub standard_uuid: Option<UUID>,
+    pub service_uuid: Option<UUID>,
     pub favorite: bool,
     pub spec_id: Option<i64>,
 }
@@ -71,6 +72,7 @@ impl IptSearchArg {
             companyUuid: arg.company_uuid.clone(),
             userUuid: arg.user_uuid.clone(),
             standardUuid: arg.standard_uuid.clone(),
+            serviceUuid: arg.service_uuid.clone(),
             favorite: arg.favorite,
             specId: arg.spec_id,
         }

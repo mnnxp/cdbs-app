@@ -44,6 +44,8 @@ input ChangeTypeAccessStandard {
   newTypeAccessId: Int!
 }
 
+scalar Char
+
 type Claims {
   iss: String!
   username: String!
@@ -339,6 +341,34 @@ input DeleteStandardFileData {
   standardUuid: UUID!
 }
 
+type DiscussionCommentData {
+  uuid: UUID!
+  discussionUuid: UUID!
+  parentCommentUuid: UUID!
+  author: ShowUserShort!
+  messageContent: String!
+  isEdited: Boolean!
+  isHidden: Boolean!
+  createdAt: NaiveDateTime!
+  updatedAt: NaiveDateTime!
+  repliesCount: Int!
+  replies(sort: IptSort, paginate: IptPaginate): [DiscussionCommentData!]!
+}
+
+type DiscussionInfo {
+  uuid: UUID!
+  title: String!
+  isPinned: Boolean!
+  lastActivityAt: NaiveDateTime!
+  createdAt: NaiveDateTime!
+  repliesCount: Int!
+  comments(
+    filterByUuids: [UUID!]
+    sort: IptSort
+    paginate: IptPaginate
+  ): [DiscussionCommentData!]!
+}
+
 type DownloadFile {
   uuid: UUID!
   hash: String!
@@ -501,6 +531,29 @@ input IptComponentsArg {
   favorite: Boolean
 }
 
+input IptDiscussionArg {
+  objectUuid: UUID!
+  toObject: ToObject!
+}
+
+input IptDiscussionCommentData {
+  objectDiscussion: IptDiscussionArg!
+  discussionUuid: UUID
+  parentCommentUuid: UUID
+  messageContent: String!
+}
+
+input IptDiscussionCommentsArg {
+  discussionUuid: UUID!
+  filterByParentUuid: UUID
+  filterByUuids: [UUID!]
+}
+
+input IptEditCommentData {
+  commentUuid: UUID!
+  updatedMessage: String!
+}
+
 input IptExtensionData {
   extension: String!
   programId: Int!
@@ -564,6 +617,12 @@ input IptMultipleModificationsData {
   modificationsData: [IptModificationsData!]!
 }
 
+input IptObjectDiscussionsArg {
+  objectUuid: UUID!
+  toObject: ToObject!
+  filterByUuids: [UUID!]
+}
+
 input IptPaginate {
   currentPage: Int! = 1
   perPage: Int! = 5
@@ -606,6 +665,7 @@ input IptSearchArg {
   byKeywords: Boolean! = false
   companyUuid: UUID
   standardUuid: UUID
+  serviceUuid: UUID
   userUuid: UUID
   specId: Int
   favorite: Boolean! = false
@@ -1044,6 +1104,8 @@ type MutationRoot {
   setCompanyOwnerSupplier(args: IptSupplierComponentData!): Boolean!
   deleteSupplierCompany(args: DelCompanyOfSuppliersData!): Boolean!
   registerExtension(args: IptExtensionData!): Extension!
+  registerDiscussionComment(args: IptDiscussionCommentData!): UUID!
+  editComment(data: IptEditCommentData!): Boolean!
   registerKeyword(args: IptKeywordData!): Keyword!
   registerLicense(args: LicenseData!): License!
   registerParam(args: IptParamTranslateListData!): ParamTranslateList!
@@ -1198,6 +1260,16 @@ type QueryRoot {
   companyTypes: [CompanyTypeTranslateList!]!
   companySpecs(companyUuid: UUID!, paginate: IptPaginate): [SpecTranslateList!]!
   companyRepresentTypes: [RepresentationTypeTranslateList!]!
+  discussions(
+    args: IptObjectDiscussionsArg!
+    sort: IptSort
+    paginate: IptPaginate
+  ): [DiscussionInfo!]!
+  discussionComments(
+    args: IptDiscussionCommentsArg!
+    sort: IptSort
+    paginate: IptPaginate
+  ): [DiscussionCommentData!]!
   keywords(keywordIds: [Int!]!, paginate: IptPaginate): [Keyword!]!
   languages(langIds: [Int!], paginate: IptPaginate): [Language!]!
   licenses(licenseIds: [Int!], paginate: IptPaginate): [License!]!
@@ -1434,6 +1506,12 @@ type StandardStatusTranslateList {
   standardStatusId: Int!
   langId: Int!
   name: String!
+}
+
+enum ToObject {
+  COMPANY
+  COMPONENT
+  SERVICE
 }
 
 type Token {
