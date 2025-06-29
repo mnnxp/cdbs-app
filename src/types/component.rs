@@ -295,6 +295,7 @@ impl ComponentsQueryArg {
         Self {
             company_uuid: search_arg.company_uuid.clone(),
             standard_uuid: search_arg.standard_uuid.clone(),
+            service_uuid: search_arg.service_uuid.clone(),
             user_uuid: search_arg.user_uuid.clone(),
             spec_id: search_arg.spec_id.clone(),
             favorite,
