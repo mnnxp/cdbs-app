@@ -306,10 +306,10 @@ impl UploaderFiles {
                   <span class="file-label">{get_value_field(&self.props.text_choose_files)}</span>
                   {self.accept_image()}
                 </span>
-                <div class="column">
-                    {self.select_files()}
-                </div>
               </label>
+            </div>
+            <div class="column">
+                {self.select_files()}
             </div>
         </>}
     }
