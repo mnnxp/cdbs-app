@@ -95,9 +95,22 @@ impl Component for CatalogComponents {
                     }),
                     None => None,
                 };
+                let ipt_sort = Some(get_components_short_list::IptSort {
+                    byField: "createdAt".to_string(),
+                    asDesc: true,
+                });
+                // todo!(make paginate)
+                let ipt_paginate = Some(get_components_short_list::IptPaginate {
+                    currentPage: 1,
+                    perPage: 25,
+                });
                 spawn_local(async move {
                     let res = make_query(GetComponentsShortList::build_query(
-                        get_components_short_list::Variables { ipt_components_arg },
+                        get_components_short_list::Variables {
+                            ipt_components_arg,
+                            ipt_sort,
+                            ipt_paginate,
+                        },
                     ))
                     .await
                     .unwrap();

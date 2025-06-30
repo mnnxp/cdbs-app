@@ -54,8 +54,12 @@ query GetComponentParams(
   }
 }
 
-query GetComponentsShortList($iptComponentsArg: IptComponentsArg) {
-  components(args: $iptComponentsArg) {
+query GetComponentsShortList(
+  $iptComponentsArg: IptComponentsArg
+  $IptSort: IptSort,
+  $IptPaginate: IptPaginate
+) {
+  components(args: $iptComponentsArg, sort: $IptSort, paginate: $IptPaginate) {
     ...showComponentShortFields
   }
 }
