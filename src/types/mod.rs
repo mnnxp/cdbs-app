@@ -48,7 +48,7 @@ pub enum Pathname {
     StandardSetting(UUID),
     Service(UUID),
     ServiceSetting(UUID),
-    User(UUID),
+    User(String),
     UserSetting,
 }
 

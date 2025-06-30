@@ -59,6 +59,12 @@ pub(crate) fn url_decode(text: &str) -> String {
     output
 }
 
+/// Prepares a username by removing leading special characters and decoding URL-encoded characters.
+/// This function takes a raw username as input, removes start `#/@` characters, and then decodes URL-encoded characters.
+pub(crate) fn prepare_username(raw_username: &str) -> String {
+    url_decode(raw_username.trim_start_matches("#/@"))
+}
+
 /// Compares UUIDs wrapped in option
 pub(crate) fn compare_op_uuid(first_uuid: &Option<UUID>, second_uuid: &Option<UUID>) -> bool {
     match (first_uuid, second_uuid) {

@@ -36,7 +36,7 @@ use crate::gqls::user::{
     GetSelfData, get_self_data,
     GetUserData, get_user_data,
 };
-use crate::services::url_decode;
+use crate::services::prepare_username;
 
 /// Profile user with relate data
 pub struct Profile {
@@ -129,7 +129,7 @@ impl Component for Profile {
         // get username for request user data
         let route_service: RouteService<()> = RouteService::new();
         // get and decode target user from route
-        let target_username = url_decode(route_service.get_fragment().trim_start_matches("#/@"));
+        let target_username = prepare_username(&route_service.get_fragment());
 
         // get flag changing current profile in route
         let not_matches_username = target_username != self.current_username;
