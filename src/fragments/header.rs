@@ -189,8 +189,8 @@ impl Component for Header {
                 <div class="navbar-brand">
                     <h1 class={logo_classes}>
                         {match &self.current_user {
-                            Some(user_info) => html!{
-                                <RouterAnchor<AppRoute> classes="is-flex" route={AppRoute::Profile(user_info.username.clone())}>
+                            Some(_) => html!{
+                                <RouterAnchor<AppRoute> classes="is-flex" route={AppRoute::SearchPage}>
                                     {self.show_logo()}
                                 </RouterAnchor<AppRoute>>
                             },
