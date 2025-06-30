@@ -23,7 +23,7 @@ pub enum CurrentPage {
     Home,
     Search,
     Settings,
-    Profile(String),
+    SelfProfile,
     Unknown,
 }
 
@@ -120,7 +120,7 @@ impl Component for Header {
                     if path.starts_with("#/@") {
                         self.current_user.as_ref().map(|cu| {
                             if cu.username == prepare_username(path) {
-                                set_page = CurrentPage::Profile(cu.username.clone())
+                                set_page = CurrentPage::SelfProfile
                             }
                         });
                     }
@@ -140,7 +140,11 @@ impl Component for Header {
             match go_to {
                 CurrentPage::Notifications => self.router_agent.send(ChangeRoute(AppRoute::Notifications.into())),
                 CurrentPage::Settings => self.router_agent.send(ChangeRoute(AppRoute::Settings.into())),
-                CurrentPage::Profile(username) => self.router_agent.send(ChangeRoute(AppRoute::Profile(username).into())),
+                CurrentPage::SelfProfile => {
+                    if let Some(cu) = &self.current_user {
+                        self.router_agent.send(ChangeRoute(AppRoute::Profile(cu.username.clone()).into()))
+                    }
+                },
                 // CurrentPage::Search => {},
                 _ => (),
             }
@@ -331,29 +335,22 @@ impl Header {
     }
 
     fn profile_btn(&self, username: String) -> Html {
-        let (to_profile, show_username)= match self.open_page {
-            CurrentPage::Settings => (true, false),
-            CurrentPage::Profile(_) => (false, false),
-            _ => (true, true),
+        let (to_profile, show_username, onclick_btn)= match self.open_page {
+            CurrentPage::Settings => (true, false, self.link.callback(move |_| Msg::ChangePointTo(CurrentPage::SelfProfile))),
+            CurrentPage::SelfProfile => (false, false, self.link.callback(|_| Msg::ChangePointTo(CurrentPage::Settings))),
+            _ => (true, true, self.link.callback(move |_| Msg::ChangePointTo(CurrentPage::SelfProfile))),
         };
         match to_profile {
-            true =>{
-                let move_username = username.clone();
-                let onclick_profile_btn = self.link.callback(move |_| Msg::ChangePointTo(CurrentPage::Profile(move_username.clone())));
-                html!{
-                    <button id="header-profile" class={"button"} onclick={onclick_profile_btn} >
-                        <span class="icon"><i class="fas fa-user" style={self.style_color.clone()}></i></span>
-                        {if show_username {html!{<span>{"@"}{username}</span>}} else {html!{}}}
-                    </button>
-                }
+            true => html!{
+                <button id="header-profile" class={"button"} onclick={onclick_btn} >
+                    <span class="icon"><i class="fas fa-user" style={self.style_color.clone()}></i></span>
+                    {if show_username {html!{<span>{"@"}{username}</span>}} else {html!{}}}
+                </button>
             },
-            false =>{
-                let onclick_settings_btn = self.link.callback(|_| Msg::ChangePointTo(CurrentPage::Settings));
-                html!{
-                    <button id="header-settings" class={"button"} onclick={onclick_settings_btn} >
-                        <span class="icon"><i class="fas fa-user-cog" style={self.style_color.clone()}></i></span>
-                    </button>
-                }
+            false => html!{
+                <button id="header-settings" class={"button"} onclick={onclick_btn} >
+                    <span class="icon"><i class="fas fa-user-cog" style={self.style_color.clone()}></i></span>
+                </button>
             },
         }
     }
