@@ -10,18 +10,20 @@ use yew_router::{
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
 
-use crate::services::{get_logged_user, get_value_field, logout, set_logged_user, set_token, title_changer};
+use crate::services::{get_logged_user, get_value_field, logout, prepare_username, set_logged_user, set_token, title_changer};
 use crate::routes::AppRoute;
 use crate::types::SlimUser;
 
 use crate::fragments::search::SearchBar;
 
-enum CurrentPage {
+pub enum CurrentPage {
     Register,
     Login,
     Notifications,
     Home,
     Search,
+    Settings,
+    Profile(String),
     Unknown,
 }
 
@@ -33,6 +35,7 @@ pub struct Header {
     current_user: Option<SlimUser>,
     open_page: CurrentPage,
     is_active: bool,
+    style_color: String,
 }
 
 #[derive(Properties, Clone)]
@@ -48,6 +51,7 @@ pub enum Msg {
   CheckPath,
   SetActive(bool),
   SetTitle,
+  ChangePointTo(CurrentPage),
   Ignore,
 }
 
@@ -64,6 +68,7 @@ impl Component for Header {
             current_user: None,
             open_page: CurrentPage::Unknown,
             is_active: false,
+            style_color: String::from("color: #1872f0;"),
         }
     }
 
@@ -109,7 +114,18 @@ impl Component for Header {
                 "#/login" => CurrentPage::Login,
                 "#/notifications" => CurrentPage::Notifications,
                 "#/search" => CurrentPage::Search,
-                _ => CurrentPage::Unknown,
+                "#/settings" => CurrentPage::Settings,
+                path => {
+                    let mut set_page = CurrentPage::Unknown;
+                    if path.starts_with("#/@") {
+                        self.current_user.as_ref().map(|cu| {
+                            if cu.username == prepare_username(path) {
+                                set_page = CurrentPage::Profile(cu.username.clone())
+                            }
+                        });
+                    }
+                    set_page
+                },
               };
               self.link.send_message(Msg::SetTitle);
           },
@@ -120,6 +136,15 @@ impl Component for Header {
                 _ => (),
             }
           },
+          Msg::ChangePointTo(go_to) => {
+            match go_to {
+                CurrentPage::Notifications => self.router_agent.send(ChangeRoute(AppRoute::Notifications.into())),
+                CurrentPage::Settings => self.router_agent.send(ChangeRoute(AppRoute::Settings.into())),
+                CurrentPage::Profile(username) => self.router_agent.send(ChangeRoute(AppRoute::Profile(username).into())),
+                // CurrentPage::Search => {},
+                _ => (),
+            }
+          }
           Msg::Ignore => {}
         }
 
@@ -242,7 +267,6 @@ impl Header {
     }
 
     fn logged_out_view(&self) -> Html {
-        let style_color = "color: #1872f0;";
         let (class_login_btn, class_register_btn) = match self.open_page {
             CurrentPage::Register => ("button", "button is-info is-light"),
             CurrentPage::Login => ("button is-info is-light", "button"),
@@ -253,13 +277,13 @@ impl Header {
           <div class="navbar-item">
             <RouterAnchor<AppRoute> route={AppRoute::Login} classes={class_login_btn}>
                 <span class={"icon"}>
-                    <i class={"fa fa-user"} aria-hidden={"true"} style={style_color}></i>
+                    <i class={"fas fa-sign-in-alt"} aria-hidden={"true"} style={self.style_color.clone()}></i>
                 </span>
                 <span>{get_value_field(&13)}</span>
             </RouterAnchor<AppRoute>>
             <RouterAnchor<AppRoute> route={AppRoute::Register} classes={class_register_btn}>
                 <span class={"icon"}>
-                    <i class={"fa fa-user-plus"} aria-hidden={"true"} style={style_color}></i>
+                    <i class={"fa fa-user-plus"} aria-hidden={"true"} style={self.style_color.clone()}></i>
                 </span>
                 <span>{get_value_field(&14)}</span>
             </RouterAnchor<AppRoute>>
@@ -278,45 +302,59 @@ impl Header {
 
         html!{
             <div class="buttons navbar-item">
-                 {match self.open_page {
-                    CurrentPage::Notifications => html!{
-                         <button id="header-notifications"
-                            class="button is-active"
-                            disabled={true} >
-                             <span class="icon is-small" >
-                               <i class="far fa-bell"></i>
-                             </span>
-                         </button>
-                     },
-                     _ => html!{
-                         <RouterAnchor<AppRoute> route={AppRoute::Notifications} classes="button navbar-item" >
-                             <span class="icon is-small" >
-                               <i class="far fa-bell"></i>
-                             </span>
-                         </RouterAnchor<AppRoute>>
-                     },
-                 }}
-                 <div class={classes!("navbar-item", "has-dropdown", active_menu)} onmouseover={triggrt_menu} onmouseout={out_menu} >
-                  <a id="header-menu-button"
-                    class="navbar-link"
-                    aria-haspopup="true"
-                    aria-controls="dropdown-menu">
-                      <span>{ &user_info.username }</span>
-                  </a>
-                  <div class="navbar-dropdown is-boxed is-right" id="dropdown-menu" role="menu">
-                    <RouterAnchor<AppRoute> classes="navbar-item" route={AppRoute::Profile(user_info.username.clone())} >
-                        {get_value_field(&15)}
-                    </RouterAnchor<AppRoute>>
-                    <RouterAnchor<AppRoute> classes="navbar-item" route={AppRoute::Settings}>
-                        {get_value_field(&16)}
-                    </RouterAnchor<AppRoute>>
-                    <hr class="navbar-divider" />
-                    <a class="navbar-item" onclick={logout} >
-                        {get_value_field(&17)}
-                    </a>
-                  </div>
+                {self.notification_btn()}
+                {self.profile_btn(user_info.username.clone())}
+                <button id="header-logout" class="button" onclick={logout} title={{get_value_field(&17)}} >
+                    <span class={"icon"}>
+                        <i class={"fas fa-sign-out-alt"} aria-hidden={"true"} style={self.style_color.clone()}></i>
+                    </span>
+                </button>
+                <div class={classes!("navbar-item", "has-dropdown", active_menu)} onmouseover={triggrt_menu} onmouseout={out_menu} >
+                <div class="navbar-dropdown is-boxed is-right" id="dropdown-menu" role="menu">
+                </div>
                 </div>
             </div>
+        }
+    }
+
+    fn notification_btn(&self) -> Html {
+        let (class_btn, is_disabled) = match self.open_page {
+            CurrentPage::Notifications => ("button is-active", true),
+            _ => ("button", false),
+        };
+        let onclick_notification_btn = self.link.callback(|_| Msg::ChangePointTo(CurrentPage::Notifications));
+        html!{
+            <button id="header-notifications" class={class_btn} disabled={is_disabled} onclick={onclick_notification_btn} >
+                <span class="icon"><i class="far fa-bell" style={self.style_color.clone()}></i></span>
+            </button>
+        }
+    }
+
+    fn profile_btn(&self, username: String) -> Html {
+        let (to_profile, show_username)= match self.open_page {
+            CurrentPage::Settings => (true, false),
+            CurrentPage::Profile(_) => (false, false),
+            _ => (true, true),
+        };
+        match to_profile {
+            true =>{
+                let move_username = username.clone();
+                let onclick_profile_btn = self.link.callback(move |_| Msg::ChangePointTo(CurrentPage::Profile(move_username.clone())));
+                html!{
+                    <button id="header-profile" class={"button"} onclick={onclick_profile_btn} >
+                        <span class="icon"><i class="fas fa-user" style={self.style_color.clone()}></i></span>
+                        {if show_username {html!{<span>{"@"}{username}</span>}} else {html!{}}}
+                    </button>
+                }
+            },
+            false =>{
+                let onclick_settings_btn = self.link.callback(|_| Msg::ChangePointTo(CurrentPage::Settings));
+                html!{
+                    <button id="header-settings" class={"button"} onclick={onclick_settings_btn} >
+                        <span class="icon"><i class="fas fa-user-cog" style={self.style_color.clone()}></i></span>
+                    </button>
+                }
+            },
         }
     }
 }
