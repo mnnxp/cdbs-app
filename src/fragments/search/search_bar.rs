@@ -236,7 +236,7 @@ impl SearchBar {
                     true => html!{
                         <div class={"control"}>
                             <button class="button is-info search-button" onclick={self.link.callback(|_| Msg::Search)}>
-                                {"Search"}
+                                {get_value_field(&349)}
                             </button>
                         </div>
                     },

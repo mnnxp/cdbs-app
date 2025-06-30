@@ -388,5 +388,16 @@ lazy_static! {
             (382, "Reply"),
             (383, "Show answers"),
             (384, "Enter a new comment"),
+            (385, "By component parameters"),
+            (386, "By catalog section"),
+            (387, "By keywords"),
+            (388, "only favorites"),
+            (389, "Clarification checkboxes"),
+            (390, "Selection by objects"),
+            (391, "By company"),
+            (392, "By standard"),
+            (393, "By user"),
+            (394, "Enter UUID"),
+            (395, "Reset selection"),
         ]);
 }

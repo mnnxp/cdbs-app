@@ -154,7 +154,7 @@ impl Component for CatalogSpec {
                 {if self.expanded {
                   html!{
                       <>
-                        <div class={"column"}>{self.filters()}</div>
+                        {self.filters()}
                         <div class={"column"}>{self.result_area()}</div>
                       </>
                   }
@@ -243,14 +243,11 @@ impl CatalogSpec {
     }
 
     fn filters(&self) -> Html {
+        // todo!(make filter by catalogs (search specs))
         html!{
-            <div class={"columns"}>
-                <div class={"column"} onclick={self.link.callback(move |_| Msg::ChangeSpec(1))}>
-                    <p class={"subtitle is-7 overflow-title"}>
-                        {"TOP"}
-                    </p>
-                </div>
-            </div>
+            <button class={"button is-white is-small overflow-title"} onclick={self.link.callback(move |_| Msg::ChangeSpec(1))}>
+                {get_value_field(&395)}
+            </button>
         }
     }
 

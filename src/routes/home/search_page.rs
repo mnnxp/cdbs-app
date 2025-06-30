@@ -1,6 +1,6 @@
 use yew::{classes, html, Component, ComponentLink, Html, InputData, ShouldRender};
 use crate::fragments::search::{CatalogSpec, SearchArg, SearchBar};
-use crate::services::wraps_text;
+use crate::services::{get_value_field, wraps_text};
 
 #[derive(Clone)]
 pub enum Msg {
@@ -103,7 +103,7 @@ impl SearchPage {
         html!{
             <div class={"card"}>
                 <div class={"column is-flex is-justify-content-space-between is-align-items-center pointer"} onclick={onclick_toggle}>
-                    <p class={"title is-5 select-title"} style="margin-bottom: 0px;">{"For objects"}</p>
+                    <p class={"title is-5 select-title"} style="margin-bottom: 0px;">{get_value_field(&390)}</p>
                     <span class="icon is-clickable">
                         <i class={classes!("fas", if self.for_objects_expanded { "fa-chevron-up" } else { "fa-chevron-down" })}></i>
                     </span>
@@ -112,16 +112,16 @@ impl SearchPage {
                     html!{
                         <>
                             <label class="column pt-0 mt-0 checkbox">
-                                {"for_company (uuid)"}
-                                <input class="input is-small" type="text" value={self.search_arg.company_uuid.clone().unwrap_or_default()} oninput={oninput_for_company}/>
+                                {get_value_field(&391)}
+                                <input class="input is-small" type="text" placeholder={get_value_field(&394)} value={self.search_arg.company_uuid.clone().unwrap_or_default()} oninput={oninput_for_company}/>
                             </label>
                             <label class="column pt-0 mt-0 checkbox">
-                                {"for_standard (uuid)"}
-                                <input class="input is-small" type="text" value={self.search_arg.standard_uuid.clone().unwrap_or_default()} oninput={oninput_for_standard}/>
+                                {get_value_field(&392)}
+                                <input class="input is-small" type="text" placeholder={get_value_field(&394)} value={self.search_arg.standard_uuid.clone().unwrap_or_default()} oninput={oninput_for_standard}/>
                             </label>
                             <label class="column pt-0 mt-0 checkbox">
-                                {"for_user (uuid)"}
-                                <input class="input is-small" type="text" value={self.search_arg.user_uuid.clone().unwrap_or_default()} oninput={oninput_for_user}/>
+                                {get_value_field(&393)}
+                                <input class="input is-small" type="text" placeholder={get_value_field(&394)} value={self.search_arg.user_uuid.clone().unwrap_or_default()} oninput={oninput_for_user}/>
                             </label>
                         </>
                     }
@@ -142,7 +142,7 @@ impl SearchPage {
         html!{
             <div class={"card"}>
                 <div class={"column is-flex is-justify-content-space-between is-align-items-center pointer"} onclick={onclick_toggle}>
-                    <p class={"title is-5 select-title"} style="margin-bottom: 0px;">{"Checkboxs"}</p>
+                    <p class={"title is-5 select-title"} style="margin-bottom: 0px;">{get_value_field(&389)}</p>
                     <span class="icon is-clickable">
                         <i class={classes!("fas", if self.checkboxs_expanded { "fa-chevron-up" } else { "fa-chevron-down" })}></i>
                     </span>
@@ -152,19 +152,19 @@ impl SearchPage {
                         <>
                             <label class="column pt-0 mt-0 checkbox">
                                 <input type="checkbox" checked={self.search_arg.by_params} onclick={onclick_by_params}/>
-                                {" "}{"by_params (component params)"}
+                                {" "}{get_value_field(&385)}
                             </label>
                             <label class="column pt-0 mt-0 checkbox">
                                 <input type="checkbox" checked={self.search_arg.by_specs} onclick={onclick_by_specs}/>
-                                {" "}{"by_specs"}
+                                {" "}{get_value_field(&386)}
                             </label>
                             <label class="column pt-0 mt-0 checkbox">
                                 <input type="checkbox" checked={self.search_arg.by_keywords} onclick={onclick_by_keywords}/>
-                                {" "}{"by_keywords"}
+                                {" "}{get_value_field(&387)}
                             </label>
                             <label class="column pt-0 mt-0 checkbox">
                                 <input type="checkbox" checked={self.search_arg.favorite} onclick={onclick_only_favorite}/>
-                                {" "}{"only_favorite"}
+                                {" "}{get_value_field(&388)}
                             </label>
                         </>
                     }
