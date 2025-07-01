@@ -73,6 +73,12 @@ impl Component for SearchBar {
         }
     }
 
+    fn rendered(&mut self, first_render: bool) {
+        if first_render && !self.search_arg.search.is_empty() {
+            self.link.send_message(Msg::Search);
+        }
+    }
+
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         let link = self.link.clone();
         match msg {
@@ -227,6 +233,7 @@ impl SearchBar {
                     onblur={self.link.callback(|_| Msg::SetFocus(false))}
                     onkeypress={self.link.callback(|e: KeyboardEvent| Msg::KeyPress(e))}
                     placeholder={get_value_field(&351)} // Enter search text
+                    value={self.search_arg.search.clone()}
                     />
                 <span class={"icon is-small is-left"}>
                     <i class={"fas fa-search fa-xs"}></i>

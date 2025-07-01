@@ -210,7 +210,7 @@ impl Component for Header {
                 <div class={classes!("navbar-menu", active_menu)}>
                     <div class="navbar-start"></div>
                     {match self.open_page {
-                        CurrentPage::Search => html!{},
+                        CurrentPage::Search | CurrentPage::Home => html!{},
                         _ => html!{
                             <div class="navbar-item is-flex-grow-1">
                                 <div style="width: 100%; max-width: 400px; margin: 0 auto;">

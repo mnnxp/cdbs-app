@@ -1,6 +1,6 @@
 use yew::{classes, html, Component, ComponentLink, Html, InputData, ShouldRender};
 use crate::fragments::search::{CatalogSpec, SearchArg, SearchBar};
-use crate::services::{get_value_field, wraps_text};
+use crate::services::{get_history_search, get_value_field, set_history_search, wraps_text};
 
 #[derive(Clone)]
 pub enum Msg {
@@ -31,9 +31,17 @@ impl Component for SearchPage {
     type Properties = ();
 
     fn create(_props: Self::Properties, link: ComponentLink<Self>) -> Self {
+        let mut search_arg = SearchArg::by_spec_id(1);
+        // checking the availability of the prepared text for search
+        if let Some(s) = get_history_search() {
+            // set the search query from the previous page
+            search_arg.search = s;
+            // clear the already accepted search query
+            set_history_search(None)
+        }
         SearchPage {
             link,
-            search_arg: SearchArg::by_spec_id(1),
+            search_arg,
             catalog_spec_expanded: true,
             checkboxs_expanded: true,
             for_objects_expanded: true,
