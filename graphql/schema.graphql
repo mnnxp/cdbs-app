@@ -744,16 +744,12 @@ input IptSpecPathArg {
 
 input IptStandardData {
   parentStandardUuid: UUID
-  classifier: String!
   name: String!
   description: String!
-  specifiedTolerance: String!
-  technicalCommittee: String!
   publicationAt: NaiveDateTime!
   companyUuid: UUID!
   typeAccessId: Int!
   standardStatusId: Int!
-  regionId: Int!
 }
 
 input IptStandardFaviconData {
@@ -865,15 +861,11 @@ input IptUpdateServiceData {
 }
 
 input IptUpdateStandardData {
-  classifier: String
   name: String
   description: String
-  specifiedTolerance: String
-  technicalCommittee: String
   publicationAt: NaiveDateTime
   companyUuid: UUID
   standardStatusId: Int
-  regionId: Int
 }
 
 input IptUpdateUserCertificateData {
@@ -1415,10 +1407,8 @@ type ShowServiceShort {
 
 type ShowStandardShort {
   uuid: UUID!
-  classifier: String!
   name: String!
   description: String!
-  specifiedTolerance: String!
   publicationAt: NaiveDateTime!
   imageFile: DownloadFile!
   ownerCompany: ShowCompanyShort!
@@ -1481,18 +1471,14 @@ type SpecTranslateList {
 type StandardAndRelatedData {
   uuid: UUID!
   parentStandardUuid: UUID!
-  classifier: String!
   name: String!
   description: String!
-  specifiedTolerance: String!
-  technicalCommittee: String!
   publicationAt: NaiveDateTime!
   imageFile: DownloadFile!
   ownerUser: ShowUserShort!
   ownerCompany: ShowCompanyShort!
   typeAccess: TypeAccessTranslateList!
   standardStatus: StandardStatusTranslateList!
-  region: RegionTranslateList!
   createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!
   standardFiles: [ShowFileRelatedData!]!

@@ -599,8 +599,6 @@ impl ShowComponent {
                         <table class={classes_table}>
                             <thead>
                             <tr>
-                                <th>{get_value_field(&112)}</th> // Classifier
-                                <th>{get_value_field(&113)}</th> // Specified tolerance
                                 <th>{get_value_field(&111)}</th> // Action
                             </tr>
                             </thead>

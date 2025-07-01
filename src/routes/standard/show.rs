@@ -368,28 +368,12 @@ impl ShowStandard {
                         <table class="table is-fullwidth">
                             <tbody>
                             <tr>
-                                <td>{get_value_field(&146)}</td> // classifier
-                                <td>{standard_data.classifier.clone()}</td>
-                            </tr>
-                            <tr>
-                                <td>{get_value_field(&147)}</td> // specified_tolerance
-                                <td>{standard_data.specified_tolerance.clone()}</td>
-                            </tr>
-                            <tr>
-                                <td>{get_value_field(&148)}</td> // technical_committee
-                                <td>{standard_data.technical_committee.clone()}</td>
-                            </tr>
-                            <tr>
                                 <td>{get_value_field(&149)}</td> // publication_at
                                 <td>{standard_data.publication_at.date_to_display()}</td>
                             </tr>
                             <tr>
                                 <td>{get_value_field(&150)}</td> // standard_status
                                 <td>{standard_data.standard_status.name.clone()}</td>
-                            </tr>
-                            <tr>
-                                <td>{get_value_field(&151)}</td> // region
-                                <td>{standard_data.region.region.clone()}</td>
                             </tr>
                             </tbody>
                         </table>

@@ -26,7 +26,7 @@ use crate::fragments::{
 };
 use crate::services::{get_from_value, get_logged_user, get_value_field, get_value_response, resp_parsing, resp_parsing_two_level, set_history_back};
 use crate::types::{
-    UUID, StandardInfo, SlimUser, Region, TypeAccessInfo, UploadFile, ShowFileInfo,
+    UUID, StandardInfo, SlimUser, TypeAccessInfo, UploadFile, ShowFileInfo,
     ShowCompanyShort, StandardUpdatePreData, StandardUpdateData, StandardStatus,
 };
 use crate::gqls::make_query;
@@ -54,7 +54,6 @@ pub struct StandardSettings {
     link: ComponentLink<Self>,
     supplier_list: Vec<ShowCompanyShort>,
     standard_statuses: Vec<StandardStatus>,
-    regions: Vec<Region>,
     types_access: Vec<TypeAccessInfo>,
     update_standard: bool,
     update_standard_access: bool,
@@ -92,15 +91,11 @@ pub enum Msg {
     FinishUploadFiles,
     GetDeleteStandard(String),
     UpdateTypeAccessId(String),
-    UpdateClassifier(String),
     UpdateName(String),
     UpdateDescription(String),
-    UpdateSpecifiedTolerance(String),
-    UpdateTechnicalCommittee(String),
     UpdatePublicationAt(String),
     UpdateCompanyUuid(String),
     UpdateStandardStatusId(String),
-    UpdateRegionId(String),
     UpdateConfirmDelete(String),
     ResponseError(Error),
     ChangeHideDeleteStandard,
@@ -125,7 +120,6 @@ impl Component for StandardSettings {
             link,
             supplier_list: Vec::new(),
             standard_statuses: Vec::new(),
-            regions: Vec::new(),
             types_access: Vec::new(),
             update_standard: false,
             update_standard_access: false,
@@ -224,26 +218,18 @@ impl Component for StandardSettings {
 
                 spawn_local(async move {
                     let StandardUpdateData {
-                        classifier,
                         name,
                         description,
-                        specified_tolerance,
-                        technical_committee,
                         publication_at,
                         company_uuid,
                         standard_status_id,
-                        region_id,
                     } = request_standard;
                     let ipt_update_standard_data = put_standard_update::IptUpdateStandardData {
-                        classifier,
                         name,
                         description,
-                        specifiedTolerance: specified_tolerance,
-                        technicalCommittee: technical_committee,
                         publicationAt: publication_at,
                         companyUuid: company_uuid,
                         standardStatusId: standard_status_id,
-                        regionId: region_id,
                     };
                     let res = make_query(PutStandardUpdate::build_query(put_standard_update::Variables {
                         standard_uuid,
@@ -325,7 +311,6 @@ impl Component for StandardSettings {
                     Ok(value) => {
                         self.supplier_list = get_from_value(&value, "companies").unwrap_or_default();
                         self.standard_statuses = get_from_value(&value, "standardStatuses").unwrap_or_default();
-                        self.regions = get_from_value(&value, "regions").unwrap_or_default();
                         self.types_access = get_from_value(&value, "typesAccess").unwrap_or_default();
                     },
                     Err(err) => link.send_message(Msg::ResponseError(err)),
@@ -376,11 +361,6 @@ impl Component for StandardSettings {
                 self.disable_save_changes_btn = false;
             },
             // items request update main standard data
-            Msg::UpdateClassifier(data) => {
-                self.request_standard.classifier = data;
-                self.update_standard = true;
-                self.disable_save_changes_btn = false;
-            },
             Msg::UpdateName(data) => {
                 self.request_standard.name = data;
                 self.update_standard = true;
@@ -388,16 +368,6 @@ impl Component for StandardSettings {
             },
             Msg::UpdateDescription(data) => {
                 self.request_standard.description = data;
-                self.update_standard = true;
-                self.disable_save_changes_btn = false;
-            },
-            Msg::UpdateSpecifiedTolerance(data) => {
-                self.request_standard.specified_tolerance = data;
-                self.update_standard = true;
-                self.disable_save_changes_btn = false;
-            },
-            Msg::UpdateTechnicalCommittee(data) => {
-                self.request_standard.technical_committee = data;
                 self.update_standard = true;
                 self.disable_save_changes_btn = false;
             },
@@ -423,9 +393,6 @@ impl Component for StandardSettings {
                 self.request_standard.standard_status_id = data.parse::<usize>().unwrap_or_default();
                 self.update_standard = true;
                 self.disable_save_changes_btn = false;
-            },
-            Msg::UpdateRegionId(data) => {
-                self.request_standard.region_id = data.parse::<usize>().unwrap_or_default();
             },
             Msg::UpdateConfirmDelete(data) => {
                 self.disable_delete_standard_btn = self.current_standard_uuid != data;
@@ -616,17 +583,9 @@ impl StandardSettings {
     }
 
     fn show_standard_params(&self) -> Html {
-        let oninput_classifier = self.link.callback(|ev: InputData| Msg::UpdateClassifier(ev.value));
-        let oninput_specified_tolerance = self.link.callback(|ev: InputData| Msg::UpdateSpecifiedTolerance(ev.value));
-        let oninput_technical_committee = self.link.callback(|ev: InputData| Msg::UpdateTechnicalCommittee(ev.value));
         let oninput_publication_at = self.link.callback(|ev: InputData| Msg::UpdatePublicationAt(ev.value));
         let onchange_standard_status_id =
             self.link.callback(|ev: ChangeData| Msg::UpdateStandardStatusId(match ev {
-              ChangeData::Select(el) => el.value(),
-              _ => "1".to_string(),
-            }));
-        let onchange_region_id =
-            self.link.callback(|ev: ChangeData| Msg::UpdateRegionId(match ev {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
             }));
@@ -640,37 +599,6 @@ impl StandardSettings {
                     <div class="content">
                         <table class="table is-fullwidth">
                             <tbody>
-                            <tr>
-                                <td>{get_value_field(&146)}</td> // classifier
-                                <td><input
-                                    id="update-classifier"
-                                    class="input"
-                                    type="text"
-                                    placeholder={get_value_field(&146)}
-                                    value={self.request_standard.classifier.clone()}
-                                    oninput={oninput_classifier} /></td>
-                            </tr>
-                            <tr>
-                                <td>{get_value_field(&147)}</td>
-                                // <td>{self.request_standard.specified_tolerance.as_ref().map(|x| x.clone()).unwrap_or_default()}</td>
-                                <td><input
-                                    id="update-specified-tolerance"
-                                    class="input"
-                                    type="text"
-                                    placeholder={get_value_field(&147)}
-                                    value={self.request_standard.specified_tolerance.clone()}
-                                    oninput={oninput_specified_tolerance} /></td>
-                            </tr>
-                            <tr>
-                                <td>{get_value_field(&148)}</td>
-                                <td><input
-                                    id="update-technical-committee"
-                                    class="input"
-                                    type="text"
-                                    placeholder={get_value_field(&148)}
-                                    value={self.request_standard.technical_committee.clone()}
-                                    oninput={oninput_technical_committee} /></td>
-                            </tr>
                             <tr>
                                 <td>{get_value_field(&149)}</td>
                                 <td><input
@@ -705,26 +633,6 @@ impl StandardSettings {
                                     </select>
                                     </div>
                                 </div></td>
-                            </tr>
-                            <tr>
-                                <td>{get_value_field(&151)}</td>
-                                <td><div class="select">
-                                    <select
-                                        id="region"
-                                        select={self.request_standard.region_id.to_string()}
-                                        onchange={onchange_region_id}
-                                        >
-                                        { for self.regions.iter().map(|x|
-                                            html!{
-                                                <option value={x.region_id.to_string()}
-                                                    selected={x.region_id == self.request_standard.region_id} >
-                                                    {&x.region}
-                                                </option>
-                                            }
-                                        )}
-                                    </select>
-                                    </div>
-                                </td>
                             </tr>
                             </tbody>
                         </table>

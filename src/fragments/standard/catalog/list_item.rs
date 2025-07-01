@@ -205,10 +205,7 @@ impl ListItemStandard {
 
     fn showing_in_box(&self) -> Html {
         let ShowStandardShort {
-            classifier,
             name,
-            // specified_tolerance,
-            // publication_at,
             image_file,
             owner_company,
             standard_status,
@@ -229,11 +226,6 @@ impl ListItemStandard {
                   src={image_file.download_url.clone()} alt="Image standard"
                   loading="lazy"
                 />
-              </div>
-              <div>
-                {get_value_field(&142)} // classifier
-                <span class="id-box has-text-weight-bold">{classifier}</span>
-                <br/>
               </div>
               <div class="has-text-weight-bold is-size-4">{name}</div>
               <div class="overflow-title">

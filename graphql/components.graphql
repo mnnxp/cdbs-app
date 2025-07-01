@@ -507,10 +507,8 @@ fragment componentSupplierFields on ComponentSupplierRelatedData {
 
 fragment showStandardShortFields on ShowStandardShort {
   uuid
-  classifier
   name
   description
-  specifiedTolerance
   publicationAt
   imageFile {
     ...downloadFileFields

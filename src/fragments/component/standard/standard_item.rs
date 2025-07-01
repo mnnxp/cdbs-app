@@ -131,8 +131,6 @@ impl ComponentStandardItem {
         html!{<>
             {self.show_modal_standard_info()}
             <tr>
-                <td>{self.props.standard_data.classifier.clone()}</td>
-                <td>{self.props.standard_data.specified_tolerance.clone()}</td>
                 <td><a onclick={onclick_standard_data_info}>
                     <span class="icon" >
                         <i class="fas fa-info" aria-hidden="true"></i>

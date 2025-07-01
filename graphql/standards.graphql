@@ -59,10 +59,8 @@ query GetUpdateStandardDataOpt($standardUuid: UUID!, $iptCompaniesArg: IptCompan
 query GetStandardsShortList($iptStandardsArg: IptStandardsArg) {
   standards(args: $iptStandardsArg) {
     uuid
-    classifier
     name
     description
-    specifiedTolerance
     publicationAt
     imageFile {
       ...downloadFileFields
@@ -261,11 +259,8 @@ fragment showFileRelatedDataFields on ShowFileRelatedData {
 fragment standardAndRelatedDataFields on StandardAndRelatedData {
   uuid
   parentStandardUuid
-  classifier
   name
   description
-  specifiedTolerance
-  technicalCommittee
   publicationAt
   imageFile {
     ...downloadFileFields
@@ -281,9 +276,6 @@ fragment standardAndRelatedDataFields on StandardAndRelatedData {
   }
   standardStatus {
     ...standardStatusFields
-  }
-  region {
-    ...regionFields
   }
   standardFiles {
     ...showFileRelatedDataFields

@@ -17,7 +17,7 @@ use crate::fragments::list_errors::ListErrors;
 use crate::fragments::buttons::ft_create_btn;
 use crate::services::{get_from_value, get_logged_user, get_value_field, get_value_response, resp_parsing, set_history_back};
 use crate::types::{
-    UUID, StandardCreateData, SlimUser, Region, TypeAccessInfo,
+    UUID, StandardCreateData, SlimUser, TypeAccessInfo,
     ShowCompanyShort, StandardStatus,
 };
 use crate::gqls::make_query;
@@ -35,10 +35,8 @@ pub struct CreateStandard {
     link: ComponentLink<Self>,
     company_list: Vec<ShowCompanyShort>,
     standard_statuses: Vec<StandardStatus>,
-    regions: Vec<Region>,
     types_access: Vec<TypeAccessInfo>,
     disable_create_btn: bool,
-    // get_result_created_standard: UUID,
 }
 
 #[derive(Properties, Clone)]
@@ -52,16 +50,12 @@ pub enum Msg {
     RequestCreateStandardData,
     GetListOpt(String),
     GetCreateStandardResult(String),
-    UpdateClassifier(String),
     UpdateName(String),
     UpdateDescription(String),
-    UpdateSpecifiedTolerance(String),
-    UpdateTechnicalCommittee(String),
     UpdatePublicationAt(String),
     UpdateTypeAccessId(String),
     UpdateCompanyUuid(String),
     UpdateStandardStatusId(String),
-    UpdateRegionId(String),
     ResponseError(Error),
     ClearError,
     Ignore,
@@ -80,7 +74,6 @@ impl Component for CreateStandard {
             link,
             company_list: Vec::new(),
             standard_statuses: Vec::new(),
-            regions: Vec::new(),
             types_access: Vec::new(),
             disable_create_btn: false,
         }
@@ -124,7 +117,6 @@ impl Component for CreateStandard {
                 let mut flag = true;
                 // checking have data
                 if self.request_standard.company_uuid.is_empty() {
-                    debug!("company_uuid is empty: {:?}", self.request_standard.classifier);
                     match self.company_list.first() {
                         Some(company) => self.request_standard.company_uuid = company.uuid.clone(),
                         None => {
@@ -132,10 +124,6 @@ impl Component for CreateStandard {
                             flag = false;
                         },
                     }
-                }
-                if self.request_standard.classifier.is_empty() {
-                    debug!("classifier is empty: {:?}", self.request_standard.classifier);
-                    flag = false;
                 }
                 if self.request_standard.name.is_empty() {
                     debug!("name is empty: {:?}", self.request_standard.name);
@@ -145,15 +133,6 @@ impl Component for CreateStandard {
                     debug!("description is empty: {:?}", self.request_standard.description);
                     flag = false;
                 }
-                if self.request_standard.specified_tolerance.is_empty() {
-                    debug!("specified_tolerance is empty: {:?}", self.request_standard.specified_tolerance);
-                    flag = false;
-                }
-                if self.request_standard.technical_committee.is_empty() {
-                    debug!("technical_committee {:?}", self.request_standard.technical_committee);
-                    flag = false;
-                }
-
                 if flag {
                     link.send_message(Msg::RequestCreateStandardData);
                 }
@@ -164,29 +143,21 @@ impl Component for CreateStandard {
                 spawn_local(async move {
                     let StandardCreateData {
                         parent_standard_uuid,
-                        classifier,
                         name,
                         description,
-                        specified_tolerance,
-                        technical_committee,
                         publication_at,
                         company_uuid,
                         type_access_id,
                         standard_status_id,
-                        region_id,
                     } = request_standard;
                     let ipt_standard_data = register_standard::IptStandardData {
                         parentStandardUuid: parent_standard_uuid,
-                        classifier,
                         name,
                         description,
-                        specifiedTolerance: specified_tolerance,
-                        technicalCommittee: technical_committee,
                         publicationAt: publication_at,
                         companyUuid: company_uuid,
                         typeAccessId: type_access_id as i64,
                         standardStatusId: standard_status_id as i64,
-                        regionId: region_id as i64,
                     };
                     let res = make_query(RegisterStandard::build_query(register_standard::Variables {
                         ipt_standard_data
@@ -199,7 +170,6 @@ impl Component for CreateStandard {
                     Ok(ref value) => {
                         self.company_list = get_from_value(value, "companies").unwrap_or_default();
                         self.standard_statuses = get_from_value(value, "standardStatuses").unwrap_or_default();
-                        self.regions = get_from_value(value, "regions").unwrap_or_default();
                         self.types_access = get_from_value(value, "typesAccess").unwrap_or_default();
                     },
                     Err(err) => link.send_message(Msg::ResponseError(err)),
@@ -221,11 +191,8 @@ impl Component for CreateStandard {
                 }
             },
             // items request create main standard data
-            Msg::UpdateClassifier(data) => self.request_standard.classifier = data,
             Msg::UpdateName(data) => self.request_standard.name = data,
             Msg::UpdateDescription(data) => self.request_standard.description = data,
-            Msg::UpdateSpecifiedTolerance(data) => self.request_standard.specified_tolerance = data,
-            Msg::UpdateTechnicalCommittee(data) => self.request_standard.technical_committee = data,
             Msg::UpdatePublicationAt(data) => {
                 let date = NaiveDateTime::parse_from_str(&format!("{} 00:00:00", data), "%Y-%m-%d %H:%M:%S");
                 debug!("new date: {:?}", date);
@@ -238,8 +205,6 @@ impl Component for CreateStandard {
             Msg::UpdateCompanyUuid(data) => self.request_standard.company_uuid = data,
             Msg::UpdateStandardStatusId(data) =>
                 self.request_standard.standard_status_id = data.parse::<usize>().unwrap_or_default(),
-            Msg::UpdateRegionId(data) =>
-                self.request_standard.region_id = data.parse::<usize>().unwrap_or_default(),
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::ClearError => self.error = None,
             Msg::Ignore => {},
@@ -360,12 +325,6 @@ impl CreateStandard {
     }
 
     fn show_standard_params(&self) -> Html {
-        let oninput_classifier =
-            self.link.callback(|ev: InputData| Msg::UpdateClassifier(ev.value));
-        let oninput_specified_tolerance =
-            self.link.callback(|ev: InputData| Msg::UpdateSpecifiedTolerance(ev.value));
-        let oninput_technical_committee =
-            self.link.callback(|ev: InputData| Msg::UpdateTechnicalCommittee(ev.value));
         let oninput_publication_at =
             self.link.callback(|ev: InputData| Msg::UpdatePublicationAt(ev.value));
         let onchange_standard_status_id =
@@ -373,49 +332,12 @@ impl CreateStandard {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
             }));
-        let onchange_region_id =
-            self.link.callback(|ev: ChangeData| Msg::UpdateRegionId(match ev {
-              ChangeData::Select(el) => el.value(),
-              _ => "1".to_string(),
-            }));
-
         html!{
             <>
               <h2 class="has-text-weight-bold">{get_value_field(&229)}</h2> // Set standard characteristics
               <div class="card column">
                 <table class="table is-fullwidth">
                     <tbody>
-                      <tr>
-                        <td>{get_value_field(&146)}</td> // classifier
-                        <td><input
-                            id="update-classifier"
-                            class="input"
-                            type="text"
-                            placeholder={get_value_field(&146)}
-                            value={self.request_standard.classifier.clone()}
-                            oninput={oninput_classifier} /></td>
-                      </tr>
-                      <tr>
-                        <td>{get_value_field(&147)}</td> // specified_tolerance
-                        // <td>{self.request_standard.specified_tolerance.as_ref().map(|x| x.clone()).unwrap_or_default()}</td>
-                        <td><input
-                            id="update-specified-tolerance"
-                            class="input"
-                            type="text"
-                            placeholder={get_value_field(&147)}
-                            value={self.request_standard.specified_tolerance.clone()}
-                            oninput={oninput_specified_tolerance} /></td>
-                      </tr>
-                      <tr>
-                        <td>{get_value_field(&148)}</td> // technical_committee
-                        <td><input
-                            id="update-technical-committee"
-                            class="input"
-                            type="text"
-                            placeholder={get_value_field(&148)}
-                            value={self.request_standard.technical_committee.clone()}
-                            oninput={oninput_technical_committee} /></td>
-                      </tr>
                       <tr>
                         <td>{get_value_field(&149)}</td> // publication_at
                         <td><input
@@ -447,26 +369,6 @@ impl CreateStandard {
                               </select>
                             </div>
                         </div></td>
-                      </tr>
-                      <tr>
-                        <td>{get_value_field(&151)}</td> // region
-                        <td><div class="select">
-                              <select
-                                  id="region"
-                                  select={self.request_standard.region_id.to_string()}
-                                  onchange={onchange_region_id}
-                                  >
-                                { for self.regions.iter().map(|x|
-                                    html!{
-                                        <option value={x.region_id.to_string()}
-                                              selected={x.region_id == self.request_standard.region_id} >
-                                            {&x.region}
-                                        </option>
-                                    }
-                                )}
-                              </select>
-                            </div>
-                        </td>
                       </tr>
                     </tbody>
                   </table>

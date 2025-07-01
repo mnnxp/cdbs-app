@@ -227,8 +227,6 @@ impl ComponentStandardsCard {
           <table class="table is-fullwidth">
             <thead>
             <tr>
-                <th>{get_value_field(&112)}</th> // Classifier
-                <th>{get_value_field(&113)}</th> // Specified tolerance
                 <th>{get_value_field(&111)}</th> // Action
                 {match self.props.show_delete_btn {
                     true => html!{<th>{get_value_field(&135)}</th>},
@@ -289,9 +287,9 @@ impl ComponentStandardsCard {
                                 { for self.standard_list.iter().map(|x|
                                     match self.standard_uuids.get(&x.uuid) {
                                         Some(_) => html!{}, // this standard already has
-                                        None => html!{ <option value={x.uuid.to_string()}>{
-                                            format!("{} ({})", &x.classifier, &x.name)
-                                        }</option> },
+                                        None => html!{
+                                            <option value={x.uuid.clone()}>{x.name.clone()}</option>
+                                        },
                                     }
                                 )}
                                 </select>
