@@ -126,7 +126,7 @@ impl ListItem {
                     <div class="overflow-title">{description.clone()}</div>
                   </div>
                 </div>
-                <div class="column buttons flexBox p-0" >
+                <div class="buttons flexBox p-0" >
                     {res_btn(
                       classes!("far", "fa-folder"),
                       onclick_open_component,

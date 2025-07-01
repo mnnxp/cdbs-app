@@ -184,7 +184,7 @@ impl ListItemStandard {
                         <div class="overflow-title">{description.clone()}</div>
                     </div>
                     </div>
-                    <div class="column buttons flexBox p-0" >
+                    <div class="buttons flexBox p-0" >
                         {res_btn(
                             classes!("far", "fa-folder"),
                             show_standard_btn,

@@ -193,7 +193,7 @@ impl ListItemCompany {
                         },
                     }}
                   </div>
-                  <div class="column buttons flexBox p-0" >
+                  <div class="buttons flexBox p-0" >
                       {res_btn(
                           classes!("far", "fa-folder"),
                           onclick_open_company.clone(),
