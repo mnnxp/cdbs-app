@@ -169,7 +169,7 @@ impl Component for ModificationsTableCard {
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         let callback_finish_import = self.link.callback(|_| Msg::RequestComponentModificationsData);
-        html!{
+        html!{<>
             <div class="card">
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
                 <header class="card-header">
@@ -187,12 +187,13 @@ impl Component for ModificationsTableCard {
                     }}
                 </header>
                 {self.show_modifications_table()}
-                {match self.open_modification_card {
-                    true => self.show_modification_card(),
-                    false => html!{},
-                }}
             </div>
-        }
+            <br/>
+            {match self.open_modification_card {
+                true => self.show_modification_card(),
+                false => html!{},
+            }}
+        </>}
     }
 }
 
@@ -222,40 +223,42 @@ impl ModificationsTableCard {
     fn show_modification_card(&self) -> Html {
         let modification_data = self.modifications.iter().find(|x| x.uuid == self.select_modification_uuid);
         match modification_data {
-            Some(mod_data) => html!{<>
-                <header class={"card-header has-background-info-light"}>
-                    <p class={"card-header-title"}>{get_value_field(&353)}</p>
-                </header>
-                <div class="card-content" style="padding-top: 0px;">
-                    <div class="content">
-                        <div class="column" title={get_value_field(&176)}>
-                            <p class="overflow-title has-text-weight-bold">
-                                {mod_data.modification_name.clone()}
-                            </p>
-                        </div>
-                        <div class="column">
-                        <div class="columns">
-                            <div class="column" title={get_value_field(&96)}>
-                                {get_value_field(&159)}{": "}
-                                {&mod_data.actual_status.name}
+            Some(mod_data) => html!{
+                <div class="card">
+                    <header class="card-header has-background-info-light">
+                        <p class="card-header-title">{get_value_field(&353)}</p>
+                    </header>
+                    <div class="card-content" style="padding-top: 0px;">
+                        <div class="content">
+                            <div class="column" title={get_value_field(&176)}>
+                                <p class="overflow-title has-text-weight-bold">
+                                    {mod_data.modification_name.clone()}
+                                </p>
                             </div>
-                            <div class="column is-4">
-                                {get_value_field(&30)}
-                                {mod_data.updated_at.date_to_display()}
+                            <div class="column">
+                            <div class="columns">
+                                <div class="column" title={get_value_field(&96)}>
+                                    {get_value_field(&159)}{": "}
+                                    {&mod_data.actual_status.name}
+                                </div>
+                                <div class="column is-4">
+                                    {get_value_field(&30)}
+                                    {mod_data.updated_at.date_to_display()}
+                                </div>
+                            </div>
+                            </div>
+                            <div class="column" title={{get_value_field(&61)}}> // Description
+                                <p>{mod_data.description.to_markdown()}</p>
                             </div>
                         </div>
-                        </div>
-                        <div class="column" title={{get_value_field(&61)}}> // Description
-                            <p>{mod_data.description.to_markdown()}</p>
-                        </div>
+                        <ModificationFilesTableCard
+                            show_download_btn={true}
+                            modification_uuid={self.select_modification_uuid.clone()}
+                            files_count={mod_data.files_count}
+                        />
                     </div>
-                    <ModificationFilesTableCard
-                        show_download_btn={true}
-                        modification_uuid={self.select_modification_uuid.clone()}
-                        files_count={mod_data.files_count}
-                    />
                 </div>
-            </>},
+            },
             None => html!{},
         }
     }
