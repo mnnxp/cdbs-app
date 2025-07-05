@@ -24,6 +24,14 @@ pub(crate) struct EditComment;
     query_path = "./graphql/discussions.graphql",
     response_derives = "Debug"
 )]
+pub(crate) struct DeleteComment;
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/discussions.graphql",
+    response_derives = "Debug"
+)]
 pub(crate) struct GetDiscussions;
 
 #[derive(GraphQLQuery)]

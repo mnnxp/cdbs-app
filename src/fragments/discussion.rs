@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use chrono::NaiveDateTime;
-use yew::{html, Component, ComponentLink, FocusEvent, Html, InputData, Properties, ShouldRender};
+use yew::{classes, html, Component, ComponentLink, FocusEvent, Html, InputData, Properties, ShouldRender};
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
@@ -17,8 +17,11 @@ use crate::gqls::discussion::{
     RegisterDiscussionComment, register_discussion_comment,
     GetDiscussions, get_discussions,
     GetDiscussionComments, get_discussion_comments,
-    EditComment, edit_comment
+    EditComment, edit_comment,
+    DeleteComment, delete_comment,
 };
+
+use super::buttons::ft_delete_class_btn;
 
 // Block for adding and displaying comments
 pub struct DiscussionCommentsBlock {
@@ -29,6 +32,7 @@ pub struct DiscussionCommentsBlock {
     parent_comment_uuid: Option<UUID>,
     edit_comment: String,
     edit_comment_uuid: Option<UUID>,
+    delete_comment_uuid: UUID,
     error: Option<Error>,
     props: Props,
     link: ComponentLink<Self>,
@@ -56,6 +60,8 @@ pub enum Msg {
     EditCommentResult(String),
     ToEditComment(UUID, UUID, String),
     UpdateEditComment(String),
+    DeleteComment(UUID, UUID),
+    DeleteCommentResult(String),
     ClearReplies(UUID),
     ResetCommentFields,
     ResponseError(Error),
@@ -76,6 +82,7 @@ impl Component for DiscussionCommentsBlock {
             parent_comment_uuid: None,
             edit_comment: String::new(),
             edit_comment_uuid: None,
+            delete_comment_uuid: String::new(),
             error: None,
             props,
             link,
@@ -202,7 +209,7 @@ impl Component for DiscussionCommentsBlock {
             },
             Msg::EditComment => {
                 if let Some(comment_uuid) = &self.edit_comment_uuid {
-                    // Request for answers in edit comment
+                    // Request for edit comment
                     let ipt_edit_comment_data = edit_comment::IptEditCommentData{
                         commentUuid: comment_uuid.clone(),
                         updatedMessage: self.edit_comment.clone(),
@@ -253,6 +260,44 @@ impl Component for DiscussionCommentsBlock {
                 // Change the text of the old comment
                 self.edit_comment = edit_comment;
             },
+            Msg::DeleteComment(comment_uuid, parent_comment_uuid) => {
+                if self.delete_comment_uuid != comment_uuid {
+                    self.delete_comment_uuid = comment_uuid.clone();
+                    return true;
+                }
+                match comment_uuid == parent_comment_uuid {
+                    true => self.parent_comment_uuid = None,
+                    false => {
+                        // specify the parent of the deteled comment to update the thread after the change
+                        self.parent_comment_uuid = Some(parent_comment_uuid.clone());
+                        // clear old replies to this parent comment
+                        self.replies.remove(&parent_comment_uuid);
+                    },
+                }
+                // Request for delete comment
+                spawn_local(async move {
+                    let res = make_query(DeleteComment::build_query(
+                        delete_comment::Variables{ comment_uuid }
+                    )).await.unwrap();
+                    link.send_message(Msg::DeleteCommentResult(res));
+                })
+            },
+            Msg::DeleteCommentResult(res) => {
+                match resp_parsing::<bool>(res, "deleteComment") {
+                    Ok(result) => {
+                        debug!("deleteComment: {:?}", result);
+                        // if the comment is in the answer in a thread - update the thread
+                        if let Some(parent_comment_uuid) = &self.parent_comment_uuid {
+                            link.send_message(Msg::FetchReplies(parent_comment_uuid.clone()));
+                        } else {
+                            link.send_message(Msg::FetchDiscussions)
+                        }
+                        // Clear UUID and fields
+                        link.send_message(Msg::ResetCommentFields);
+                    },
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
+                }
+            },
             Msg::ClearReplies(parent_uuid) => {
                 // Delete comment replies thread (clear)
                 self.replies.remove(&parent_uuid);
@@ -261,11 +306,13 @@ impl Component for DiscussionCommentsBlock {
                 // Clear UUID for reply to comment
                 self.parent_comment_uuid = None;
                 // Clear field for new comment
-                self.new_comment = String::new();
+                self.new_comment.clear();
                 // Clear UUID for edit comment
                 self.edit_comment_uuid = None;
                 // Clear field for edit comment
-                self.edit_comment = String::new();
+                self.edit_comment.clear();
+                // Clear UUID for flag confirm delete comment
+                self.delete_comment_uuid.clear();
             },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::ClearError => self.error = None,
@@ -289,32 +336,27 @@ impl Component for DiscussionCommentsBlock {
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         html! {
-            <div class="section">
+            <div class="container">
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
-                <div class="container">
-                    <div class="level">
-                        <h2 class="title has-text-centered">{ get_value_field(&380) }</h2>
-                    </div>
-                    {match &self.parent_comment_uuid {
-                        Some(_) => html!{},
-                        None => self.view_form_add(),
+                {match &self.parent_comment_uuid {
+                    Some(_) => html!{},
+                    None => self.view_form_add(),
+                }}
+                <ul class="menu-list">
+                    {match &self.discussion {
+                        Some(discuss) => html!{ for discuss.comments.iter().map(|comment|
+                            self.view_comment(
+                                &comment.uuid,
+                                &comment.parent_comment_uuid,
+                                &comment.message_content,
+                                &comment.author,
+                                &comment.replies_count,
+                                &comment.created_at,
+                            ))
+                        },
+                        None => html!{},
                     }}
-                    <ul class="menu-list">
-                        {match &self.discussion {
-                            Some(discuss) => html!{ for discuss.comments.iter().map(|comment|
-                                self.view_comment(
-                                    &comment.uuid,
-                                    &comment.parent_comment_uuid,
-                                    &comment.message_content,
-                                    &comment.author,
-                                    &comment.replies_count,
-                                    &comment.created_at,
-                                ))
-                            },
-                            None => html!{},
-                        }}
-                    </ul>
-                </div>
+                </ul>
             </div>
         }
     }
@@ -344,7 +386,15 @@ impl DiscussionCommentsBlock {
                         </div>
                         <div class="columns is-mobile right-side">
                             <div class="comment-time has-text-grey-light">{created_at.date_to_display()}</div>
-                            {self.to_edit_btn(&author.uuid, comment_uuid.clone(), parent_comment_uuid.clone(), &message_content)}
+                            {match &self.current_user {
+                                Some(slim_user) if slim_user.uuid == author.uuid => html!{
+                                    <div class="buttons">
+                                        {self.to_edit_btn(comment_uuid.clone(), parent_comment_uuid.clone(), &message_content)}
+                                        {self.to_delete_btn(comment_uuid.clone(), parent_comment_uuid.clone())}
+                                    </div>
+                                },
+                                _ => html!{},
+                            }}
                         </div>
                     </div>
                     <div class="comment-body">
@@ -477,22 +527,19 @@ impl DiscussionCommentsBlock {
     }
 
     // View to display a button for opening a message edit form for a reply to reply to a comment
-    fn to_edit_btn(&self, author_uuid: &UUID, comment_uuid: UUID, parent_comment_uuid: UUID, message_content: &str) -> Html {
+    fn to_edit_btn(&self, comment_uuid: UUID, parent_comment_uuid: UUID, message_content: &str) -> Html {
         let e_message_content = message_content.to_string();
         let onclick_edit_btn = self.link.callback(move |_| {
             Msg::ToEditComment(comment_uuid.clone(), parent_comment_uuid.clone(), e_message_content.clone())
         });
         let disabled_btn = self.edit_comment_uuid.is_some();
-        match &self.current_user {
-            Some(slim_user) if &slim_user.uuid == author_uuid => html!{
-                <button class="button is-small" onclick={onclick_edit_btn} disabled={disabled_btn} >
-                    <span class="icon">
-                    <i aria-hidden="true" class="fas fa-edit"></i>
-                    </span>
-                    <span>{get_value_field(&334)}</span>
-                </button>
-            },
-            _ => html!{},
+        html!{
+            <button class="button is-small" onclick={onclick_edit_btn} disabled={disabled_btn} >
+                <span class="icon">
+                <i aria-hidden="true" class="fas fa-edit"></i>
+                </span>
+                <span>{get_value_field(&334)}</span>
+            </button>
         }
     }
 
@@ -520,5 +567,14 @@ impl DiscussionCommentsBlock {
                 </form>
             </div>
         }
+    }
+
+    // View for displaying the delete comment button
+    fn to_delete_btn(&self, comment_uuid: UUID, parent_comment_uuid: UUID) -> Html {
+        let confirm = self.delete_comment_uuid == comment_uuid;
+        let onclick_delete_btn = self.link.callback(move |_| {
+            Msg::DeleteComment(comment_uuid.clone(), parent_comment_uuid.clone())
+        });
+        ft_delete_class_btn("delete-comment", onclick_delete_btn, confirm, false, classes!("is-small"))
     }
 }

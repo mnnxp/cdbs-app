@@ -37,6 +37,10 @@ mutation EditComment($iptEditCommentData: IptEditCommentData!) {
   editComment(data: $iptEditCommentData)
 }
 
+mutation DeleteComment($commentUuid: UUID!) {
+  deleteComment(commentUuid: $commentUuid)
+}
+
 # Fragments
 fragment DiscussionFields on DiscussionInfo {
   uuid

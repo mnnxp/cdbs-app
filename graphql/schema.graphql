@@ -1098,6 +1098,7 @@ type MutationRoot {
   registerExtension(args: IptExtensionData!): Extension!
   registerDiscussionComment(args: IptDiscussionCommentData!): UUID!
   editComment(data: IptEditCommentData!): Boolean!
+  deleteComment(commentUuid: UUID!): Boolean!
   registerKeyword(args: IptKeywordData!): Keyword!
   registerLicense(args: LicenseData!): License!
   registerParam(args: IptParamTranslateListData!): ParamTranslateList!
