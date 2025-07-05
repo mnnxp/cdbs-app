@@ -399,5 +399,6 @@ lazy_static! {
             (393, "By user"),
             (394, "Enter UUID"),
             (395, "Reset selection"),
+            (396, "New modification"),
         ]);
 }
