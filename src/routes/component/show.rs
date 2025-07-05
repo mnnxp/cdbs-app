@@ -9,6 +9,7 @@ use log::debug;
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
+use crate::fragments::discussion::DiscussionCommentsBlock;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{
@@ -27,7 +28,7 @@ use crate::fragments::{
 };
 use crate::services::content_adapter::{DateDisplay, Markdownable};
 use crate::services::{get_classes_table, get_logged_user, get_value_field, resp_parsing, set_history_back, title_changer, Counter};
-use crate::types::{ComponentInfo, DownloadFile, Pathname, SlimUser, UUID};
+use crate::types::{ComponentInfo, DownloadFile, ObjectType, Pathname, SlimUser, ToObject, UUID};
 use crate::gqls::make_query;
 use crate::gqls::component::{
     ComponentFiles, component_files,
@@ -59,6 +60,7 @@ pub struct ShowComponent {
     current_filesets_program: Vec<(UUID, String)>,
     show_full_description: bool,
     open_fileset_files_card: bool,
+    open_discussion_card: bool,
     show_related_standards: bool,
     file_arr: Vec<DownloadFile>,
     show_three_view: bool,
@@ -89,6 +91,7 @@ pub enum Msg {
     ShowDescription,
     ShowStandardsList,
     ShowFilesetFilesBlock(bool),
+    OpenDiscussionBlock,
     OpenComponentSetting,
     GetDownloadFileResult(String),
     Show3D,
@@ -118,6 +121,7 @@ impl Component for ShowComponent {
             current_filesets_program: Vec::new(),
             show_full_description: false,
             open_fileset_files_card: false,
+            open_discussion_card: false,
             show_related_standards: false,
             file_arr: Vec::new(),
             show_three_view: false,
@@ -283,6 +287,7 @@ impl Component for ShowComponent {
             Msg::ShowDescription => self.show_full_description = !self.show_full_description,
             Msg::ShowStandardsList => self.show_related_standards = !self.show_related_standards,
             Msg::ShowFilesetFilesBlock(value) => self.open_fileset_files_card = value,
+            Msg::OpenDiscussionBlock => self.open_discussion_card = !self.open_discussion_card,
             Msg::OpenComponentSetting => {
                 if let Some(component_data) = &self.component {
                     // Redirect to page for change and update component
@@ -326,6 +331,7 @@ impl Component for ShowComponent {
                                 select_fileset_uuid={self.select_fileset_uuid.clone()}
                                 />
                             <br/>
+                            {self.show_component_discussion()}
                             {self.show_modifications_table(component_data.modifications_count)}
                             <br/>
                             <div class="columns">
@@ -389,6 +395,7 @@ impl ShowComponent {
                         modification_uuid={self.select_modification_uuid.clone()}
                         callback_select_fileset_uuid={callback_select_fileset_uuid}
                         callback_open_fileset={callback_open_fileset} />
+                    {self.show_discussion_btn()}
                     {self.show_setting_btn()}
                     {self.show_followers_btn()}
                     <ShareLinkBtn />
@@ -669,5 +676,43 @@ impl ShowComponent {
               <span>{show_btn}</span>
             </button>
         </>}
+    }
+
+    fn show_discussion_btn(&self) -> Html {
+        let onclick_open_discussion_btn =
+            self.link.callback(|_| Msg::OpenDiscussionBlock);
+        let class_fileset_btn = match self.open_discussion_card {
+            true => "button is-light is-info is-active",
+            false => "button is-info",
+        };
+        html!{
+            <button
+            class={class_fileset_btn}
+            onclick={onclick_open_discussion_btn}
+            title={get_value_field(&106)}>
+                <span class={"icon is-small"}><i class={"far fa-comments"}></i></span>
+                <span>{get_value_field(&380)}</span>
+            </button>
+        }
+    }
+
+    fn show_component_discussion(&self) -> Html {
+        match self.open_discussion_card {
+            true => html!{<>
+                <div class="card">
+                    <header class="card-header has-background-info-light">
+                        <p class="card-header-title">{get_value_field(&380)}</p>
+                    </header>
+                    <div class="card-content">
+                        <DiscussionCommentsBlock
+                            discussion_uuid={None}
+                            object_type={ObjectType::new(self.current_component_uuid.clone(), ToObject::COMPONENT)}
+                        />
+                    </div>
+                </div>
+                <br/>
+            </>},
+            false => html!{},
+        }
     }
 }
