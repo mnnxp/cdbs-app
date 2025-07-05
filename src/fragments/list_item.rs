@@ -16,8 +16,8 @@ impl ListState {
 
     pub fn get_from_storage() -> Self {
         match get_list_view() {
-            Some(ref t) if t == "List" => ListState::List,
-            _ => ListState::Box,
+            Some(ref t) if t == "Box" => ListState::Box,
+            _ => ListState::List,
         }
     }
 }
