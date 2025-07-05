@@ -1,10 +1,11 @@
 use yew::{html, Html};
 use crate::fragments::company::{CompanyCertificatesCard, CompanyRepresents};
 use crate::fragments::component::CatalogComponents;
+use crate::fragments::discussion::DiscussionCommentsBlock;
 use crate::fragments::list_empty::ListEmpty;
 use crate::fragments::standard::CatalogStandards;
 use crate::fragments::supplier_service::CatalogServices;
-use crate::types::{CompanyInfo, ComponentsQueryArg, ServicesQueryArg, StandardsQueryArg, UUID};
+use crate::types::{CompanyInfo, ComponentsQueryArg, ObjectType, ServicesQueryArg, StandardsQueryArg, ToObject, UUID};
 use crate::services::content_adapter::{Markdownable, ContactDisplay, SpecDisplay};
 
 pub(crate) fn view_content(company_data: &CompanyInfo) -> Html {
@@ -72,6 +73,15 @@ pub(crate) fn view_standards(company_uuid: &UUID) -> Html {
 pub(crate) fn view_services(company_uuid: &UUID) -> Html {
     html!{
         <CatalogServices arguments={ServicesQueryArg::set_company_uuid(company_uuid)} />
+    }
+}
+
+pub(crate) fn view_discussion(company_uuid: &UUID) -> Html {
+    html!{
+        <DiscussionCommentsBlock
+            discussion_uuid={None}
+            object_type={ObjectType::new(company_uuid.clone(), ToObject::COMPANY)}
+        />
     }
 }
 

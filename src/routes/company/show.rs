@@ -20,7 +20,7 @@ use crate::fragments::{
     side_menu::{MenuItem, SideMenu},
     company::diamond_svg,
     supplier_service::ServiceRequestBtn,
-    company::{view_certificates, view_components, view_content, view_represents, view_services, view_standards},
+    company::{view_certificates, view_components, view_content, view_represents, view_services, view_standards, view_discussion},
     responsive::resizer,
 };
 use crate::services::content_adapter::{ContentDisplay, DateDisplay};
@@ -82,6 +82,7 @@ pub enum CompanyTab {
     Components,
     Services,
     Standards,
+    Discussion,
     // Members,
 }
 
@@ -341,6 +342,7 @@ impl ShowCompany {
                             CompanyTab::Components => view_components(&company_data.uuid),
                             CompanyTab::Services => view_services(&company_data.uuid),
                             CompanyTab::Standards => view_standards(&company_data.uuid),
+                            CompanyTab::Discussion => view_discussion(&company_data.uuid),
                             // CompanyTab::Members => {},
                         }}
                     </div>
@@ -411,6 +413,16 @@ impl ShowCompany {
                 is_active: self.company_tab == CompanyTab::Standards,
                 is_extend: self.check_extend(&CompanyTab::Standards),
             },
+            // discussion MenuItem
+            MenuItem {
+                title: get_value_field(&380).to_string(), // DISCUSSION
+                action: self.cb_generator(CompanyTab::Discussion),
+                count: self.get_number_of_items(&CompanyTab::Discussion),
+                item_class: classes!("has-background-white"),
+                icon_classes: vec![classes!("far", "fa-comments")],
+                is_active: self.company_tab == CompanyTab::Discussion,
+                is_extend: self.check_extend(&CompanyTab::Discussion),
+            },
             // memebers MenuItem
             // MenuItem {
             //     title: get_value_field(&286).to_string(), // MEMBERS
@@ -451,6 +463,7 @@ impl ShowCompany {
               CompanyTab::Components => 0,
               CompanyTab::Services => 0,
               CompanyTab::Standards => 0,
+              CompanyTab::Discussion => 0,
               // CompanyTab::Members => 0,
             },
             None => 0,
