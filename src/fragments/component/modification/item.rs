@@ -347,24 +347,24 @@ impl ModificationTableItem {
             true => "is-selected",
             false => "",
         };
-        let (title_text, click_icon) =
-        match (&self.props.show_manage_btn, &self.props.select_item) {
+        let (title_text, click_icon) = match (&self.props.show_manage_btn, &self.props.select_item) {
             (true, true) => (get_value_field(&127), "fas fa-pencil-alt"),   // edit
             (false, true) => (get_value_field(&128), "fas fa-info"),        // info
             (_, false) => (get_value_field(&129), "far fa-hand-pointer"),   // select
         };
 
         html!{<tr class={class_style}>
-            <th onclick={onclick_select_modification.clone()}>{self.props.ordinal_indicator}</th>
-            <td onclick={onclick_select_modification}>
-                <a title={title_text}>
+            <td class="is-narrow" onclick={onclick_select_modification.clone()}>
+                <a>
                     <span class="icon">
                         <i class={click_icon} aria-hidden="true"></i>
                     </span>
+                    <span>{title_text}</span>
                 </a>
             </td>
+            <td class="is-narrow" onclick={onclick_select_modification}>{self.props.ordinal_indicator}</td>
             {match self.collect_item.get(&0) {
-                Some(value) => html!{<td>{value.clone()}</td>},
+                Some(value) => html!{<td class="is-narrow">{value.clone()}</td>},
                 None => html!{<td></td>},
             }}
             {self.show_items()}
