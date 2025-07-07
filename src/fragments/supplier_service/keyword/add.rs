@@ -243,7 +243,6 @@ impl AddKeywordsTags {
                     _ => Msg::Ignore,
                 }
             });
-        let onclick_hide_notification = self.link.callback(|_| Msg::HideNotification);
         let onclick_del_new_keyword =
             self.link.callback(|value: Keyword| Msg::DeleteNewKeyword(value.keyword));
         let onclick_del_old_keyword =
@@ -251,22 +250,21 @@ impl AddKeywordsTags {
 
         html!{<>
             <div class="panel-block">
-                <input
-                    oninput={oninput_parse_keyword}
-                    onkeypress={onkeypress_parse_keyword}
-                    class="input"
-                    type="text"
-                    value={self.ipt_keyword.clone()}
-                    placeholder={get_value_field(&193)} // Emter keywords separated by spaces or commas
-                  />
+                <div class="column p-0">
+                    <input
+                        oninput={oninput_parse_keyword}
+                        onkeypress={onkeypress_parse_keyword}
+                        class="input"
+                        type="text"
+                        value={self.ipt_keyword.clone()}
+                        placeholder={get_value_field(&193)} // Emter keywords separated by spaces or commas
+                    />
+                    {match self.bad_keyword {
+                        true => html!{<p class="help is-danger">{get_value_field(&243)}</p>}, // Keywords must be less...
+                        false => html!{}
+                    }}
+                </div>
             </div>
-           {match self.bad_keyword {
-               true => html!{<div class="notification is-danger">
-                  <button class="delete" onclick={onclick_hide_notification}></button>
-                  {"Keywords must be less than 10 symbols"}
-               </div>},
-               false => html!{}
-           }}
            <div class="panel-block">
                <div id="new-keywords" class="field is-grouped is-grouped-multiline">
                  {for self.new_keywords.iter().map(|keyword| {
