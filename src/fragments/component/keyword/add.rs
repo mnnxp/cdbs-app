@@ -74,7 +74,6 @@ impl Component for AddKeywordsTags {
         match msg {
             Msg::GetString(keyword) => {
                 self.ipt_keyword = keyword.clone();
-                self.bad_keyword = self.ipt_keyword.len() > 9;
                 if !self.ipt_keyword.is_empty() {
                     link.send_message(Msg::ParseKeywords)
                 }
@@ -86,35 +85,15 @@ impl Component for AddKeywordsTags {
             },
             Msg::ParseKeywords => {
                 // debug!("ParseKeywords: {:?}", self.ipt_keyword);
-                let keyword = self.ipt_keyword.clone();
-                match keyword.find(|c| (c == ' ') || (c == ',')) {
-                    None => (),
-                    Some(1) => {
-                        if keyword.len() < 11 {
-                            self.add_keywords.push(Keyword {
-                                id: self.ipt_index,
-                                keyword: keyword.trim().to_string()
-                            });
-                            self.ipt_keyword = String::new();
-                            self.ipt_index += 1;
-                        };
-                        link.send_message(Msg::RequestAddKeywords)
-                    },
-                    Some(_) => {
-                        for k in keyword.split(|c| c == ' ' || c == ',') {
-                            if k.len() < 11 {
-                                self.add_keywords.push(Keyword {
-                                    id: self.ipt_index,
-                                    keyword: k.trim().to_string()
-                                });
-                                self.ipt_keyword = String::new();
-                                self.ipt_index += 1;
-                            }
-                        };
-                        debug!("Keywords: {:?}", self.add_keywords.len());
-                        link.send_message(Msg::RequestAddKeywords)
-                    },
-                }
+                Keyword::parse_keywords(
+                    self.ipt_keyword.clone(),
+                    &mut self.ipt_index,
+                    &mut self.ipt_keyword,
+                    &mut self.add_keywords,
+                    &mut self.bad_keyword
+                );
+                debug!("Keywords: {:?}", self.add_keywords.len());
+                link.send_message(Msg::RequestAddKeywords)
             },
             Msg::RequestGetComponentKeywords => {
                 let component_uuid = self.props.component_uuid.clone();
@@ -282,7 +261,7 @@ impl AddKeywordsTags {
            {match self.bad_keyword {
                true => html!{<div class="notification is-danger">
                   <button class="delete" onclick={onclick_hide_notification}></button>
-                  {get_value_field(&243)} // Keywords must be less than 10 symbols
+                  {get_value_field(&243)} // Keywords must be less...
                </div>},
                false => html!{}
            }}

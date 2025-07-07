@@ -246,7 +246,7 @@ lazy_static! {
             (240, "Upload by"),
             (241, "Upload at"),
             (242, "Created at"),
-            (243, "Keywords must be less than 10 symbols"),
+            (243, "Keywords must be less than 30 bytes/characters"),
             (244, "Add a license for a component"),
             (245, "Select a license"),
             (246, "Id:"),
