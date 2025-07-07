@@ -400,5 +400,6 @@ lazy_static! {
             (394, "Enter UUID"),
             (395, "Reset selection"),
             (396, "New modification"),
+            (397, "Data not available"),
         ]);
 }
