@@ -89,10 +89,7 @@ impl Component for ModificationEdit {
                         true => None,
                         false => Some(self.request_edit_modification.modification_name.clone())
                     },
-                    description: match self.request_edit_modification.description.is_empty() {
-                        true => None,
-                        false => Some(self.request_edit_modification.description.clone())
-                    },
+                    description: Some(self.request_edit_modification.description.clone()),
                     actualStatusId: match self.request_edit_modification.actual_status_id == 0 {
                         true => None,
                         false => Some(self.request_edit_modification.actual_status_id as i64)
