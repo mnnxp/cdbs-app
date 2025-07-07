@@ -79,25 +79,21 @@ impl Keyword {
         add_keywords: &mut Vec<Keyword>,
         bad_keyword: &mut bool,
     ) {
-        *bad_keyword = false;
-        let mut is_bad_keyword = false;
+        *bad_keyword = false; // Clear errors before parsing
         match keyword.find(|c| (c == ' ') || (c == ',')) {
             None => (), // No spaces or commas, the keyword is not complete
-            Some(1) => Keyword::prepare_keyword(&keyword, ipt_index, ipt_keyword, add_keywords, &mut is_bad_keyword),
+            Some(1) => Keyword::prepare_keyword(&keyword, ipt_index, ipt_keyword, add_keywords, bad_keyword),
             Some(_) => for k in keyword.split(|c| c == ' ' || c == ',') {
                 // Split by spaces or commas and process each segment
-                Keyword::prepare_keyword(&k, ipt_index, ipt_keyword, add_keywords, &mut is_bad_keyword);
+                Keyword::prepare_keyword(&k, ipt_index, ipt_keyword, add_keywords, bad_keyword);
             },
-        }
-        if is_bad_keyword {
-            *bad_keyword = is_bad_keyword;
         }
     }
 
     /// Prepares a single keyword for storage by performing validation and adding it to the list.
     ///
     /// This function checks the length of the input `keyword`. If it exceeds 30 bytes/characters,
-    /// it marks `is_bad_keyword` as `true` and returns without adding the keyword.
+    /// it marks `bad_keyword` as `true` and returns without adding the keyword.
     /// Otherwise, it creates a `Keyword` struct, assigns it the current `ipt_index` as its ID,
     /// trims any leading/trailing whitespace from the keyword, and adds it to the `add_keywords` vector.
     /// It then clears `ipt_keyword` and increments `ipt_index`.
@@ -106,10 +102,10 @@ impl Keyword {
         ipt_index: &mut usize,
         ipt_keyword: &mut String,
         add_keywords: &mut Vec<Keyword>,
-        is_bad_keyword: &mut bool,
+        bad_keyword: &mut bool,
     ) {
         if keyword.len() > 30 {
-            *is_bad_keyword = true;
+            *bad_keyword = true;
             return;
         }
         add_keywords.push(Keyword {
