@@ -117,7 +117,7 @@ impl From<&ComponentUpdatePreData> for ComponentUpdateData {
     fn from(new_data: &ComponentUpdatePreData) -> Self {
         Self {
             parent_component_uuid: Some(new_data.parent_component_uuid.clone()),
-            name: Some(new_data.name.clone()),
+            name: if new_data.name.is_empty() { None } else { Some(new_data.name.clone()) },
             description: Some(new_data.description.clone()),
             component_type_id: None,
             actual_status_id: Some(new_data.actual_status_id as i64),
