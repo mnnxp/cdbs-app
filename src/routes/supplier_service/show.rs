@@ -212,9 +212,7 @@ impl Component for ShowService {
                             </div>
                             <br/>
                             {self.show_related_components_card(&service_data.uuid)}
-                            <br/>
                             {self.show_service_discussion()}
-                            <br/>
                             <div class="columns">
                                 <div class="column">
                                     {self.show_service_params(service_data)}
@@ -353,7 +351,7 @@ impl ShowService {
 
     fn show_related_components_card(&self, service_uuid: &UUID) -> Html {
         match &self.show_related_components {
-            true => html!{
+            true => html!{<>
                 <div class="card">
                     <header class="card-header has-background-info-light">
                         <p class="card-header-title">{get_value_field(&154)}</p> // Components
@@ -367,7 +365,8 @@ impl ShowService {
                         </div>
                     </div>
                 </div>
-            },
+                <br/>
+            </>},
             false => html!{},
         }
     }
