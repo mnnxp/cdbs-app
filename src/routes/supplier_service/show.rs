@@ -9,6 +9,7 @@ use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::fragments::clipboard::ShareLinkBtn;
+use crate::fragments::discussion::DiscussionCommentsBlock;
 use crate::fragments::supplier_service::ServiceParamsTags;
 use crate::routes::AppRoute;
 use crate::error::Error;
@@ -21,7 +22,7 @@ use crate::fragments::{
 };
 use crate::services::content_adapter::Markdownable;
 use crate::services::{get_logged_user, get_value_field, resp_parsing, set_history_back, title_changer};
-use crate::types::{ComponentsQueryArg, DownloadFile, Pathname, SlimUser, ServiceInfo, UUID};
+use crate::types::{ComponentsQueryArg, DownloadFile, ObjectType, Pathname, ServiceInfo, SlimUser, UUID, ToObject};
 use crate::gqls::make_query;
 use crate::gqls::supplier_service::{
     GetServiceData, get_service_data,
@@ -39,6 +40,7 @@ pub struct ShowService {
     link: ComponentLink<Self>,
     show_full_description: bool,
     show_related_components: bool,
+    open_discussion_card: bool,
     file_arr: Vec<DownloadFile>,
 }
 
@@ -55,6 +57,7 @@ pub enum Msg {
     GetServiceData(String),
     // ShowDescription,
     ShowComponentsList,
+    OpenDiscussionBlock,
     OpenServiceSetting,
     ResponseError(Error),
     ClearError,
@@ -77,6 +80,7 @@ impl Component for ShowService {
             link,
             show_full_description: false,
             show_related_components: false,
+            open_discussion_card: false,
             file_arr: Vec::new(),
         }
     }
@@ -169,6 +173,7 @@ impl Component for ShowService {
             },
             // Msg::ShowDescription => self.show_full_description = !self.show_full_description,
             Msg::ShowComponentsList => self.show_related_components = !self.show_related_components,
+            Msg::OpenDiscussionBlock => self.open_discussion_card = !self.open_discussion_card,
             Msg::OpenServiceSetting => {
                 if let Some(service_data) = &self.service {
                     // Redirect to page for change and update service
@@ -206,30 +211,29 @@ impl Component for ShowService {
                               {self.show_main_card(service_data)}
                             </div>
                             <br/>
-                            {match &self.show_related_components {
-                                true => self.show_related_components_card(&service_data.uuid),
-                                false => html!{<>
-                                    <div class="columns">
-                                        <div class="column">
-                                            {self.show_service_params(service_data)}
-                                        </div>
-                                        <div class="column">
-                                            {self.show_service_files(service_data)}
-                                        </div>
-                                    </div>
-                                    <SpecsTags
-                                        show_manage_btn={false}
-                                        service_uuid={service_data.uuid.clone()}
-                                        specs={service_data.service_specs.clone()}
-                                    />
-                                    <br/>
-                                    <KeywordsTags
-                                        show_delete_btn={false}
-                                        service_uuid={service_data.uuid.clone()}
-                                        keywords={service_data.service_keywords.clone()}
-                                    />
-                                </>},
-                            }}
+                            {self.show_related_components_card(&service_data.uuid)}
+                            <br/>
+                            {self.show_service_discussion()}
+                            <br/>
+                            <div class="columns">
+                                <div class="column">
+                                    {self.show_service_params(service_data)}
+                                </div>
+                                <div class="column">
+                                    {self.show_service_files(service_data)}
+                                </div>
+                            </div>
+                            <SpecsTags
+                                show_manage_btn={false}
+                                service_uuid={service_data.uuid.clone()}
+                                specs={service_data.service_specs.clone()}
+                            />
+                            <br/>
+                            <KeywordsTags
+                                show_delete_btn={false}
+                                service_uuid={service_data.uuid.clone()}
+                                keywords={service_data.service_keywords.clone()}
+                            />
                             <br/>
                         </div>
                     </div>
@@ -281,6 +285,7 @@ impl ShowService {
                 // </div>
                 <div class="buttons flexBox">
                     {self.show_related_components_btn()}
+                    {self.show_discussion_btn()}
                     {self.show_setting_btn()}
                     <ShareLinkBtn />
                 </div>
@@ -347,20 +352,23 @@ impl ShowService {
     }
 
     fn show_related_components_card(&self, service_uuid: &UUID) -> Html {
-        html!{
-            <div class="card">
-                <header class="card-header">
-                    <p class="card-header-title">{get_value_field(&154)}</p> // Components
-                </header>
-                <div class="card-content">
-                    <div class="content">
-                        <CatalogComponents
-                            show_create_btn={false}
-                            arguments={ComponentsQueryArg::set_service_uuid(service_uuid)}
-                            />
+        match &self.show_related_components {
+            true => html!{
+                <div class="card">
+                    <header class="card-header has-background-info-light">
+                        <p class="card-header-title">{get_value_field(&154)}</p> // Components
+                    </header>
+                    <div class="card-content">
+                        <div class="content">
+                            <CatalogComponents
+                                show_create_btn={false}
+                                arguments={ComponentsQueryArg::set_service_uuid(service_uuid)}
+                                />
+                        </div>
                     </div>
                 </div>
-            </div>
+            },
+            false => html!{},
         }
     }
 
@@ -374,6 +382,44 @@ impl ShowService {
                 get_value_field(&16),
                 Pathname::ServiceSetting(self.current_service_uuid.clone())
             )},
+            false => html!{},
+        }
+    }
+
+    fn show_discussion_btn(&self) -> Html {
+        let onclick_open_discussion_btn =
+            self.link.callback(|_| Msg::OpenDiscussionBlock);
+        let class_fileset_btn = match self.open_discussion_card {
+            true => "button is-light is-info is-active",
+            false => "button is-info",
+        };
+        html!{
+            <button
+            class={class_fileset_btn}
+            onclick={onclick_open_discussion_btn}
+            title={get_value_field(&106)}>
+                <span class={"icon is-small"}><i class={"far fa-comments"}></i></span>
+                <span>{get_value_field(&380)}</span>
+            </button>
+        }
+    }
+
+    fn show_service_discussion(&self) -> Html {
+        match self.open_discussion_card {
+            true => html!{<>
+                <div class="card">
+                    <header class="card-header has-background-info-light">
+                        <p class="card-header-title">{get_value_field(&380)}</p>
+                    </header>
+                    <div class="card-content">
+                        <DiscussionCommentsBlock
+                            discussion_uuid={None}
+                            object_type={ObjectType::new(self.current_service_uuid.clone(), ToObject::SERVICE)}
+                        />
+                    </div>
+                </div>
+                <br/>
+            </>},
             false => html!{},
         }
     }
