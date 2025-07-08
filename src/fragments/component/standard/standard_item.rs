@@ -131,6 +131,7 @@ impl ComponentStandardItem {
         html!{<>
             {self.show_modal_standard_info()}
             <tr>
+                <td>{self.props.standard_data.name.clone()}</td>
                 <td><a onclick={onclick_standard_data_info}>
                     <span class="icon" >
                         <i class="fas fa-info" aria-hidden="true"></i>

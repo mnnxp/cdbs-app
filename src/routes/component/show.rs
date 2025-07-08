@@ -606,6 +606,7 @@ impl ShowComponent {
                         <table class={classes_table}>
                             <thead>
                             <tr>
+                                <th>{get_value_field(&110)}</th> // Name
                                 <th>{get_value_field(&111)}</th> // Action
                             </tr>
                             </thead>
