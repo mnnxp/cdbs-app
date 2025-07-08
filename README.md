@@ -207,7 +207,7 @@ This example will run a login test that will be performed using the Firefox brow
 - [x] Add versioning support for files
 - [x] Add 3D Viewer STL (via [Three.js](https://github.com/mrdoob/three.js))
 - [ ] Add a more useful 3D Viewer (still looking for a solution)
-- [ ] Search page
+- [x] Search page
 - [ ] Multi-language Support
     - [x] English
     - [x] Russian
