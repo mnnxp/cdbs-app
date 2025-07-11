@@ -25,6 +25,8 @@ pub struct UploaderFiles {
     response_upload_file: Callback<Result<Option<String>, Error>>,
     request_upload_confirm: Vec<UUID>,
     readers: HashMap<FileName, ReaderTask>,
+    upload_progress: Callback<(Option<String>, f32)>,
+    progress_indicator: HashMap<FileName, f32>,
     presigned_url: HashMap<FileName, UploadFile>,
     task: Vec<FetchTask>,
     link: ComponentLink<Self>,
@@ -57,6 +59,7 @@ pub enum Msg {
     PutFiles,
     RequestUploadFile(FileName, Vec<u8>),
     ResponseUploadFile(Result<Option<String>, Error>),
+    UploadProgress((Option<String>, f32)),
     RequestUploadCompleted,
     ResponseError(Error),
     GetUploadFile,
@@ -78,6 +81,8 @@ impl Component for UploaderFiles {
             response_upload_file: link.callback(Msg::ResponseUploadFile),
             request_upload_confirm: Vec::new(),
             readers: HashMap::new(),
+            upload_progress: link.callback(Msg::UploadProgress),
+            progress_indicator: HashMap::new(),
             presigned_url: HashMap::new(),
             task: Vec::new(),
             link,
@@ -143,6 +148,7 @@ impl Component for UploaderFiles {
                 match self.presigned_url.get(&filename) {
                     Some(upload_data) => {
                         let request = UploadData {
+                            filename: filename.clone(),
                             upload_url: upload_data.upload_url.clone(),
                             file_data: data,
                         };
@@ -151,7 +157,8 @@ impl Component for UploaderFiles {
                         self.task.push(
                             self.put_upload_file.put_file(
                                 request,
-                                self.response_upload_file.clone()
+                                self.response_upload_file.clone(),
+                                self.upload_progress.clone(),
                             )
                         );
                         self.request_upload_confirm.push(upload_data.file_uuid.clone());
@@ -167,6 +174,9 @@ impl Component for UploaderFiles {
                 debug!("ResponseUploadFile Err: {:?}", err);
                 self.error = Some(err);
                 link.send_message(Msg::FinishUploadFiles);
+            },
+            Msg::UploadProgress((file_name_op, upload_progress)) => {
+                file_name_op.map(|file_name| self.progress_indicator.insert(file_name.clone(), upload_progress));
             },
             Msg::RequestUploadCompleted => {
                 let file_uuids = self.request_upload_confirm.clone();
@@ -319,9 +329,14 @@ impl UploaderFiles {
         match self.files.is_empty() {
             true => html!{<p class={"is-6"}>{get_value_field(&194)}</p>}, // No file uploaded
             false => html!{<>
-                {for self.label_filenames.iter().map(|f_name| html!{
+                {for self.label_filenames.iter().map(|f_name| html!{<>
+                    {match self.progress_indicator.get(f_name) {
+                        // preliminary output for testing
+                        Some(p) => format!("...[{}]...", p),
+                        None => String::new(),
+                    }}
                     {res_file_btn(onclick_file_info_btn.clone(), f_name.clone())}
-                })}
+                </>})}
                 <p class="help">{get_value_field(&85)}</p>
             </>}
         }

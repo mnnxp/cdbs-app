@@ -7,6 +7,7 @@ use crate::error::Error;
 
 #[derive(Default, Debug)]
 pub struct UploadData {
+    pub filename: String,
     pub upload_url: String,
     pub file_data: Vec<u8>,
 }
@@ -29,12 +30,13 @@ impl PutUploadFile {
         &mut self,
         upload_data: UploadData,
         callback: Callback<Result<Option<String>, Error>>,
+        progress_callback: Callback<(Option<String>, f32)>,
     ) -> FetchTask {
         // debug!("File data: {:?}", upload_data.file_data);
         self.requests.put_f::<String>(
-            upload_data.upload_url,
-            upload_data.file_data,
+            upload_data,
             callback,
+            progress_callback,
         )
     }
 }

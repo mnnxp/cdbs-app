@@ -9,6 +9,8 @@ use crate::error::Error;
 use crate::services::get_token;
 use crate::types::ErrorInfo;
 
+use super::UploadData;
+
 const API_BACKEND: &str = dotenv!("API_BACKEND");
 
 /// Http request
@@ -128,9 +130,9 @@ impl Requests {
     /// Put request for send file to storage
     pub fn put_f<T>(
         &mut self,
-        url: String,
-        body: Vec<u8>,
+        upload_data: UploadData,
         callback: Callback<Result<Option<T>, Error>>,
+        progress_callback: Callback<(Option<String>, f32)>,
     ) -> FetchTask
     where
         for<'de> T: Deserialize<'de> + 'static + std::fmt::Debug,
@@ -168,14 +170,19 @@ impl Requests {
             }
         };
 
-        let body: Binary = Ok(body);
+        let body: Binary = Ok(upload_data.file_data);
 
         let builder = Request::builder()
             .method("PUT")
-            .uri(url.as_str());
+            .uri(upload_data.upload_url.as_str());
 
         let request = builder.body(body).unwrap();
         debug!("Request: {:?}", request);
+
+        // loading progress is sent from here to be displayed on the page
+        // progress_cb = progress_callback.clone();
+        // let progress = (upload_len / total_len) as f32;
+        // progress_cb.emit((Some(upload_data.filename.clone()), progress));
 
         FetchService::fetch_binary(request, handler.into()).unwrap()
     }
