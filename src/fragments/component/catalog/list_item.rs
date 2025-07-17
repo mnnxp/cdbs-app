@@ -109,7 +109,7 @@ impl ListItem {
                   <div class="columns is-gapless mb-0">
                     <div class="column">{self.show_owner()}</div>
                     <div class="column">
-                      <span class="id-box" title={get_value_field(&159)}>
+                      <span class="id-box" title={get_value_field(&96)}>
                         {self.props.data.actual_status.name.clone()}
                       </span>
                     </div>
