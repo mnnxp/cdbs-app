@@ -220,7 +220,7 @@ impl Component for ServiceSettings {
                 })
             },
             Msg::GetServiceFilesList(res) => {
-                match resp_parsing_two_level(res, "service", "serviceFiles") {
+                match resp_parsing_two_level(res, "service", "files") {
                     Ok(result) => self.files_list = result,
                     Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
