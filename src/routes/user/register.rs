@@ -4,6 +4,7 @@ use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
 
+use crate::fragments::type_access::TypeAccessBlock;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
@@ -30,14 +31,11 @@ pub struct Register {
 
 pub enum Msg {
     Request,
-    // UpdateFirstname(String),
-    // UpdateLastname(String),
-    // UpdateSecondname(String),
     UpdateUsername(String),
     UpdateEmail(String),
     UpdatePassword(String),
     UpdateProgramId(String),
-    UpdateTypeAccessId(String),
+    UpdateTypeAccessId(usize),
     UpdateList(String),
     GetRegister(String),
     ResponseError(Error),
@@ -125,16 +123,12 @@ impl Component for Register {
                     Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
-            // Msg::UpdateFirstname(firstname) => self.request.firstname = firstname,
-            // Msg::UpdateLastname(lastname) => self.request.lastname = lastname,
-            // Msg::UpdateSecondname(secondname) => self.request.secondname = secondname,
             Msg::UpdateEmail(email) => self.request.email = email,
             Msg::UpdatePassword(password) => self.request.password = password,
             Msg::UpdateUsername(username) => self.request.username = username,
             Msg::UpdateProgramId(program_id) =>
                 self.request.program_id = program_id.parse::<usize>().unwrap_or(1),
-            Msg::UpdateTypeAccessId(type_access_id) =>
-                self.request.type_access_id = type_access_id.parse::<usize>().unwrap_or(1),
+            Msg::UpdateTypeAccessId(type_access_id) => self.request.type_access_id = type_access_id,
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::ClearError => self.error = None,
             Msg::Ignore => {}
@@ -186,9 +180,6 @@ impl Component for Register {
 
 impl Register {
     fn fieldset_profile(&self) -> Html {
-        // let oninput_firstname = self.link.callback(|ev: InputData| Msg::UpdateFirstname(ev.value));
-        // let oninput_lastname = self.link.callback(|ev: InputData| Msg::UpdateLastname(ev.value));
-        // let oninput_secondname = self.link.callback(|ev: InputData| Msg::UpdateSecondname(ev.value));
         let oninput_username = self.link.callback(|ev: InputData| Msg::UpdateUsername(ev.value));
         let oninput_email = self.link.callback(|ev: InputData| Msg::UpdateEmail(ev.value));
         let oninput_password = self.link.callback(|ev: InputData| Msg::UpdatePassword(ev.value));
@@ -197,11 +188,7 @@ impl Register {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
             }));
-        let onchange_type_access_id =
-            self.link.callback(|ev: ChangeData| Msg::UpdateTypeAccessId(match ev {
-                ChangeData::Select(el) => el.value(),
-                _ => "1".to_string(),
-            }));
+        let onchange_type_access = self.link.callback(|value| Msg::UpdateTypeAccessId(value));
 
         html! {<>
             // first columns (username, email)
@@ -252,24 +239,11 @@ impl Register {
                 </div>
                 <div class="column">
                     <label class="label">{get_value_field(&58)}</label> // "Type Access"
-                    <div class="control">
-                        <div class="select">
-                          <select
-                              id="types-access"
-                              select={self.request.type_access_id.to_string()}
-                              onchange={onchange_type_access_id}
-                              >
-                              { for self.types_access.iter().map(|x|
-                                  html!{
-                                      <option value={x.type_access_id.to_string()}
-                                        selected={x.type_access_id == self.request.type_access_id} >
-                                          {&x.name}
-                                      </option>
-                                  }
-                              )}
-                          </select>
-                        </div>
-                    </div>
+                    <TypeAccessBlock
+                        change_cb={onchange_type_access}
+                        types={self.types_access.clone()}
+                        selected={self.request.type_access_id}
+                    />
                 </div>
             </div>
         </>}

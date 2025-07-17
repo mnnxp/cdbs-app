@@ -461,10 +461,7 @@ impl ShowComponent {
                     {get_value_field(&159)}{": "}
                     {component_data.actual_status.name.clone()}
                 </div>
-                <div class="column">
-                    {get_value_field(&58)}{": "}
-                    {component_data.type_access.get_with_icon()}
-                </div>
+                <div class="column">{component_data.type_access.get_with_icon()}</div>
                 <div class="column is-narrow" title={get_value_field(&141)}>
                     <span class="icon is-small">
                         <i class={classes!("fa", "fa-user")}></i>

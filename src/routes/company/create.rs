@@ -10,6 +10,7 @@ use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
 
+use crate::fragments::type_access::TypeAccessBlock;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
@@ -44,7 +45,7 @@ pub enum Msg {
     RequestCreateCompany,
     ResponseError(Error),
     GetCreateCompanyResult(String),
-    UpdateTypeAccessId(String),
+    UpdateTypeAccessId(usize),
     UpdateOrgname(String),
     UpdateShortname(String),
     UpdateInn(String),
@@ -151,10 +152,7 @@ impl Component for CreateCompany {
                     Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
-            Msg::UpdateTypeAccessId(type_access_id) => {
-                self.request_company.type_access_id = type_access_id.parse::<i64>().unwrap_or_default();
-                debug!("Update: {:?}", type_access_id);
-            },
+            Msg::UpdateTypeAccessId(type_access_id) => self.request_company.type_access_id = type_access_id as i64,
             Msg::UpdateOrgname(orgname) => self.request_company.orgname = orgname,
             Msg::UpdateShortname(shortname) => self.request_company.shortname = shortname,
             Msg::UpdateInn(inn) => self.request_company.inn = inn,
@@ -300,11 +298,8 @@ impl CreateCompany {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
             }));
-        let onchange_type_access_id =
-            self.link.callback(|ev: ChangeData| Msg::UpdateTypeAccessId(match ev {
-              ChangeData::Select(el) => el.value(),
-              _ => "1".to_string(),
-            }));
+        let onchange_type_access =
+            self.link.callback(|value| Msg::UpdateTypeAccessId(value));
 
         html!{<>
             <div class="columns">
@@ -421,24 +416,11 @@ impl CreateCompany {
                 <div class="column">
                     <fieldset class="field">
                         <label class="label">{get_value_field(&58)}</label> // Type access
-                        <div class="control">
-                            <div class="select">
-                              <select
-                                  id="types-access"
-                                  select={self.request_company.type_access_id.to_string()}
-                                  onchange={onchange_type_access_id}
-                                  >
-                                {for self.types_access.iter().map(|x|
-                                    html!{
-                                        <option value={x.type_access_id.to_string()}
-                                              selected={x.type_access_id as i64 == self.request_company.type_access_id} >
-                                            {&x.name}
-                                        </option>
-                                    }
-                                )}
-                              </select>
-                            </div>
-                        </div>
+                        <TypeAccessBlock
+                            change_cb={onchange_type_access}
+                            types={self.types_access.clone()}
+                            selected={self.request_company.type_access_id as usize}
+                        />
                     </fieldset>
                 </div>
             </div>

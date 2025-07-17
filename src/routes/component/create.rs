@@ -7,6 +7,7 @@ use log::debug;
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
+use crate::fragments::type_access::TypeAccessBlock;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
@@ -49,7 +50,7 @@ pub enum Msg {
     GetUpdateSetSupplierResult(String, UUID),
     UpdateName(String),
     UpdateDescription(String),
-    UpdateTypeAccessId(String),
+    UpdateTypeAccessId(usize),
     UpdateActualStatusId(String),
     ClearError,
     Ignore,
@@ -186,8 +187,7 @@ impl Component for CreateComponent {
                 self.name_empty = false;
             },
             Msg::UpdateDescription(data) => self.request_component.description = data,
-            Msg::UpdateTypeAccessId(data) =>
-                self.request_component.type_access_id = data.parse::<usize>().unwrap_or_default(),
+            Msg::UpdateTypeAccessId(value) => self.request_component.type_access_id = value,
             Msg::UpdateActualStatusId(data) =>
                 self.request_component.actual_status_id = data.parse::<usize>().unwrap_or_default(),
             Msg::ClearError => self.error = None,
@@ -232,11 +232,8 @@ impl CreateComponent {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
             }));
-        let onchange_change_type_access =
-            self.link.callback(|ev: ChangeData| Msg::UpdateTypeAccessId(match ev {
-              ChangeData::Select(el) => el.value(),
-              _ => "1".to_string(),
-            }));
+        let onchange_type_access =
+            self.link.callback(|value| Msg::UpdateTypeAccessId(value));
         let oninput_name =
             self.link.callback(|ev: InputData| Msg::UpdateName(ev.value));
         let oninput_description =
@@ -289,23 +286,12 @@ impl CreateComponent {
                             </div>
                         </div>
                         <div class="column" style="margin-right: 1rem">
-                            <label class="label">{get_value_field(&114)}</label>
-                            <div class="select">
-                              <select
-                                  id="set-type-access"
-                                  select={self.request_component.type_access_id.to_string()}
-                                  onchange={onchange_change_type_access}
-                                >
-                              { for self.types_access.iter().map(|x|
-                                  html!{
-                                      <option value={x.type_access_id.to_string()}
-                                            selected={x.type_access_id == self.request_component.type_access_id} >
-                                          {&x.name}
-                                      </option>
-                                  }
-                              )}
-                              </select>
-                            </div>
+                          <label class="label">{get_value_field(&58)}</label>
+                            <TypeAccessBlock
+                                change_cb={onchange_type_access}
+                                types={self.types_access.clone()}
+                                selected={self.request_component.type_access_id}
+                            />
                         </div>
                     </div>
                 </div>

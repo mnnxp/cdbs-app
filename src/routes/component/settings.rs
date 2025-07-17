@@ -11,6 +11,7 @@ use log::debug;
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
+use crate::fragments::type_access::TypeAccessBlock;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{
@@ -86,7 +87,7 @@ pub enum Msg {
     GetUpdateComponentResult(String),
     GetUpdateAccessResult(String),
     GetDeleteComponentResult(String),
-    UpdateTypeAccessId(String),
+    UpdateTypeAccessId(usize),
     UpdateActualStatusId(String),
     UpdateName(String),
     UpdateDescription(String),
@@ -309,7 +310,7 @@ impl Component for ComponentSettings {
                 }
             },
             Msg::UpdateTypeAccessId(data) => {
-                self.request_access = data.parse::<i64>().unwrap_or_default();
+                self.request_access = data as i64;
                 self.update_component_access = true;
                 self.disable_save_changes_btn = false;
             },
@@ -532,10 +533,7 @@ impl ComponentSettings {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
-        let onchange_change_type_access = self.link.callback(|ev: ChangeData| Msg::UpdateTypeAccessId(match ev {
-              ChangeData::Select(el) => el.value(),
-              _ => "1".to_string(),
-          }));
+        let onchange_type_access = self.link.callback(|value| Msg::UpdateTypeAccessId(value));
 
         html!{
             <div class="columns">
@@ -559,23 +557,13 @@ impl ComponentSettings {
                     </div>
                 </div>
                 <div class="column">
-                    <label class="label">{get_value_field(&114)}</label>
-                    <div class="select is-fullwidth">
-                      <select
-                          id="set-type-access"
-                          select={self.request_access.to_string()}
-                          onchange={onchange_change_type_access}
-                        >
-                      { for self.types_access.iter().map(|x|
-                          html!{
-                              <option value={x.type_access_id.to_string()}
-                                    selected={x.type_access_id as i64 == self.request_access} >
-                                  {&x.name}
-                              </option>
-                          }
-                      )}
-                      </select>
-                    </div>
+                    <label class="label">{get_value_field(&58)}</label>
+                    <TypeAccessBlock
+                        change_cb={onchange_type_access}
+                        types={self.types_access.clone()}
+                        selected={self.request_access as usize}
+                        preset={self.current_component.as_ref().map(|data| data.type_access.type_access_id)}
+                    />
                 </div>
             </div>
         }

@@ -6,6 +6,7 @@ use log::debug;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::error::Error;
+use crate::fragments::type_access::TypeAccessBlock;
 use crate::fragments::{
     buttons::{ft_delete_btn, ft_submit_btn},
     notification::show_notification,
@@ -76,7 +77,7 @@ pub enum Msg {
     GetUpdateProfileResult(String),
     GetRemoveProfileResult(String),
     UpdateUserPassword(String),
-    UpdateTypeAccessId(String),
+    UpdateTypeAccessId(usize),
     UpdateOldPassword(String),
     UpdateNewPassword(String),
     UpdateFirstname(String),
@@ -297,8 +298,7 @@ impl Component for Settings {
                     Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
-            Msg::UpdateTypeAccessId(type_access_id) =>
-                self.request_access = type_access_id.parse::<i64>().unwrap_or_default(),
+            Msg::UpdateTypeAccessId(type_access_id) => self.request_access = type_access_id as i64,
             Msg::UpdateOldPassword(old_password) => self.request_password.old_password = old_password,
             Msg::UpdateNewPassword(new_password) => self.request_password.new_password = new_password,
             Msg::UpdateEmail(email) => self.request_profile.email = Some(email),
@@ -600,40 +600,16 @@ impl Settings {
     }
 
     fn change_access_card(&self) -> Html {
-        let onchange_type_access_id = self.link.callback(|ev: ChangeData| {
-            Msg::UpdateTypeAccessId(match ev {
-                ChangeData::Select(el) => el.value(),
-                _ => "1".to_string(),
-            })
-        });
-
+        let onchange_type_access = self.link.callback(|value| Msg::UpdateTypeAccessId(value));
         html! {
-            <div class="columns">
-                <div class="column">
-                    <label class="label">{get_value_field(&58)}</label> // "Type Access"
-                </div>
-                <div class="column">
-                    <fieldset class="field">
-                        <div class="control">
-                            <div class="select">
-                              <select
-                                  id="types-access"
-                                  select={self.request_access.to_string()}
-                                  onchange={onchange_type_access_id}
-                                  >
-                                {for self.types_access.iter().map(|x|
-                                    html!{
-                                        <option value={x.type_access_id.to_string()}
-                                          selected={x.type_access_id == self.current_data.as_ref().map(|x| x.type_access.type_access_id).unwrap_or_default()} >
-                                            {&x.name}
-                                        </option>
-                                    }
-                                )}
-                              </select>
-                            </div>
-                        </div>
-                    </fieldset>
-                </div>
+            <div class="column">
+                <label class="label">{get_value_field(&58)}</label> // "Type Access"
+                <TypeAccessBlock
+                    change_cb={onchange_type_access}
+                    types={self.types_access.clone()}
+                    selected={self.request_access as usize}
+                    preset={self.current_data.as_ref().map(|data| data.type_access.type_access_id)}
+                />
             </div>
         }
     }
