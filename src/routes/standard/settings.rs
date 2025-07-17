@@ -12,6 +12,7 @@ use log::debug;
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
+use crate::fragments::type_access::TypeAccessBlock;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{
@@ -52,7 +53,7 @@ pub struct StandardSettings {
     router_agent: Box<dyn Bridge<RouteAgent>>,
     props: Props,
     link: ComponentLink<Self>,
-    supplier_list: Vec<ShowCompanyShort>,
+    company_list: Vec<ShowCompanyShort>,
     standard_statuses: Vec<StandardStatus>,
     types_access: Vec<TypeAccessInfo>,
     update_standard: bool,
@@ -90,7 +91,7 @@ pub enum Msg {
     UploadConfirm(usize),
     FinishUploadFiles,
     GetDeleteStandard(String),
-    UpdateTypeAccessId(String),
+    UpdateTypeAccessId(usize),
     UpdateName(String),
     UpdateDescription(String),
     UpdatePublicationAt(String),
@@ -118,7 +119,7 @@ impl Component for StandardSettings {
             router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             props,
             link,
-            supplier_list: Vec::new(),
+            company_list: Vec::new(),
             standard_statuses: Vec::new(),
             types_access: Vec::new(),
             update_standard: false,
@@ -168,7 +169,7 @@ impl Component for StandardSettings {
                     companiesUuids: None,
                     userUuid: Some(logged_user_uuid),
                     favorite: None,
-                    supplier: Some(true),
+                    supplier: None,
                 };
                 let res = make_query(GetUpdateStandardDataOpt::build_query(get_update_standard_data_opt::Variables {
                     standard_uuid: target_standard_uuid,
@@ -309,7 +310,7 @@ impl Component for StandardSettings {
             Msg::GetListOpt(res) => {
                 match get_value_response(res) {
                     Ok(value) => {
-                        self.supplier_list = get_from_value(&value, "companies").unwrap_or_default();
+                        self.company_list = get_from_value(&value, "companies").unwrap_or_default();
                         self.standard_statuses = get_from_value(&value, "standardStatuses").unwrap_or_default();
                         self.types_access = get_from_value(&value, "typesAccess").unwrap_or_default();
                     },
@@ -356,7 +357,7 @@ impl Component for StandardSettings {
                 }
             },
             Msg::UpdateTypeAccessId(data) => {
-                self.request_access = data.parse::<i64>().unwrap_or_default();
+                self.request_access = data as i64;
                 self.update_standard_access = true;
                 self.disable_save_changes_btn = false;
             },
@@ -436,9 +437,6 @@ impl Component for StandardSettings {
                             <div class="column">
                                 {self.update_standard_favicon()}
                             </div>
-                            <div class="column">
-                                {self.show_standard_params()}
-                            </div>
                         </div>
                         {match &self.current_standard {
                             Some(standard_data) => html!{<>
@@ -466,16 +464,6 @@ impl Component for StandardSettings {
 
 impl StandardSettings {
     fn show_main_card(&self) -> Html {
-        let onchange_change_owner_company =
-            self.link.callback(|ev: ChangeData| Msg::UpdateCompanyUuid(match ev {
-              ChangeData::Select(el) => el.value(),
-              _ => String::new(),
-            }));
-        let onchange_change_type_access =
-            self.link.callback(|ev: ChangeData| Msg::UpdateTypeAccessId(match ev {
-              ChangeData::Select(el) => el.value(),
-              _ => "1".to_string(),
-            }));
         let oninput_name = self.link.callback(|ev: InputData| Msg::UpdateName(ev.value));
         let oninput_description = self.link.callback(|ev: InputData| Msg::UpdateDescription(ev.value));
         let onclick_save_changes = self.link.callback(|_| Msg::RequestManager);
@@ -487,46 +475,6 @@ impl StandardSettings {
                 </header>
                 <div class="card-content">
                     <div class="content">
-                        <div class="columns">
-                            <div class="column">
-                                <label class="label">{get_value_field(&223)}</label> // Owner company
-                                <div class="select is-fullwidth">
-                                <select
-                                    id="set-owner-company"
-                                    select={self.request_standard.company_uuid.clone()}
-                                    onchange={onchange_change_owner_company}
-                                    >
-                                {for self.supplier_list.iter().map(|x|
-                                    html!{
-                                        <option value={x.uuid.to_string()}
-                                                selected={x.uuid == self.request_standard.company_uuid} >
-                                            {&x.shortname}
-                                        </option>
-                                    }
-                                )}
-                                </select>
-                                </div>
-                            </div>
-                            <div class="column">
-                                <label class="label">{get_value_field(&114)}</label>
-                                <div class="select is-fullwidth">
-                                <select
-                                    id="set-type-access"
-                                    select={self.request_access.to_string()}
-                                    onchange={onchange_change_type_access}
-                                    >
-                                {for self.types_access.iter().map(|x|
-                                    html!{
-                                        <option value={x.type_access_id.to_string()}
-                                                selected={x.type_access_id as i64 == self.request_access} >
-                                            {&x.name}
-                                        </option>
-                                    }
-                                )}
-                                </select>
-                                </div>
-                            </div>
-                        </div>
                         <div class="field">
                             <label class="label">{get_value_field(&110)}</label>
                             <input
@@ -548,6 +496,7 @@ impl StandardSettings {
                                 value={self.request_standard.description.clone()}
                                 oninput={oninput_description} />
                         </div>
+                        {self.show_standard_params()}
                     </div>
                     <footer class="card-footer">
                         {ft_save_btn(
@@ -589,54 +538,76 @@ impl StandardSettings {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
             }));
-
+        let onchange_change_owner_company =
+            self.link.callback(|ev: ChangeData| Msg::UpdateCompanyUuid(match ev {
+              ChangeData::Select(el) => el.value(),
+              _ => String::new(),
+            }));
+        let onchange_type_access = self.link.callback(|value| Msg::UpdateTypeAccessId(value));
         html!{
-            <div class="card">
-                <header class="card-header">
-                    <p class="card-header-title">{get_value_field(&224)}</p> // Manage standard characteristics
-                </header>
-                <div class="card-content">
-                    <div class="content">
-                        <table class="table is-fullwidth">
-                            <tbody>
-                            <tr>
-                                <td>{get_value_field(&149)}</td>
-                                <td><input
-                                    id="update-publication-at"
-                                    class="input"
-                                    type="date"
-                                    placeholder={get_value_field(&149)}
-                                    value={self.request_standard.publication_at
-                                        .as_ref()
-                                        .map(|x| format!("{:.*}", 10, x.to_string()))
-                                        .unwrap_or_default()}
-                                    oninput={oninput_publication_at}
-                                    /></td>
-                            </tr>
-                            <tr>
-                                <td>{get_value_field(&150)}</td>
-                                <td><div class="control">
-                                    <div class="select">
-                                    <select
-                                        id="standard-status-id"
-                                        select={self.request_standard.standard_status_id.to_string()}
-                                        onchange={onchange_standard_status_id}
-                                        >
-                                        { for self.standard_statuses.iter().map(|x|
-                                            html!{
-                                                <option value={x.standard_status_id.to_string()}
-                                                    selected={x.standard_status_id == self.request_standard.standard_status_id} >
-                                                    {&x.name}
-                                                </option>
-                                            }
-                                        )}
-                                    </select>
-                                    </div>
-                                </div></td>
-                            </tr>
-                            </tbody>
-                        </table>
+            <div class="columns">
+                <div class="column">
+                    <div class="columns">
+                        <div class="column">
+                            <label class="label">{get_value_field(&155)}</label>
+                            <input
+                                id="update-publication-at"
+                                class="input"
+                                type="date"
+                                placeholder={get_value_field(&155)}
+                                value={self.request_standard.publication_at
+                                    .as_ref()
+                                    .map(|x| format!("{:.*}", 10, x.to_string()))
+                                    .unwrap_or_default()}
+                                oninput={oninput_publication_at}
+                            />
+                        </div>
+                        <div class="column">
+                            <label class="label">{get_value_field(&96)}</label>
+                            <div class="select">
+                                <select
+                                    id="standard-status-id"
+                                    select={self.request_standard.standard_status_id.to_string()}
+                                    onchange={onchange_standard_status_id}
+                                    >
+                                    { for self.standard_statuses.iter().map(|x|
+                                        html!{
+                                            <option value={x.standard_status_id.to_string()}
+                                                selected={x.standard_status_id == self.request_standard.standard_status_id} >
+                                                {&x.name}
+                                            </option>
+                                        }
+                                    )}
+                                </select>
+                            </div>
+                        </div>
                     </div>
+                    <label class="label">{get_value_field(&223)}</label> // Owner company
+                    <div class="select is-fullwidth">
+                        <select
+                            id="set-owner-company"
+                            select={self.request_standard.company_uuid.clone()}
+                            onchange={onchange_change_owner_company}
+                            >
+                        {for self.company_list.iter().map(|x|
+                            html!{
+                                <option value={x.uuid.to_string()}
+                                        selected={x.uuid == self.request_standard.company_uuid} >
+                                    {&x.shortname}
+                                </option>
+                            }
+                        )}
+                        </select>
+                    </div>
+                </div>
+                <div class="column">
+                    <label class="label">{get_value_field(&58)}</label>
+                    <TypeAccessBlock
+                        change_cb={onchange_type_access}
+                        types={self.types_access.clone()}
+                        selected={self.request_access as usize}
+                        preset={self.current_standard.as_ref().map(|data| data.type_access.type_access_id)}
+                    />
                 </div>
             </div>
         }
