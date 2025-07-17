@@ -46,7 +46,7 @@ impl ModificationTableHeads {
         html!{<>
             <th>{get_value_field(&111)}</th>
             <th>{"\u{2116}"}</th> // Numero sign №
-            <th>{get_value_field(&176)}</th> // Modification name
+            <th>{get_value_field(&110)}</th> // Name
             {for self.props.params.iter().map(|head| {
                 html!{<th title={get_value_field(&210)}>{head.paramname.to_markdown()}</th>}
             })}
