@@ -132,7 +132,7 @@ impl Requests {
         &mut self,
         upload_data: UploadData,
         callback: Callback<Result<Option<T>, Error>>,
-        progress_callback: Callback<(Option<String>, f32)>,
+        _progress_callback: Callback<(Option<String>, f32)>,
     ) -> FetchTask
     where
         for<'de> T: Deserialize<'de> + 'static + std::fmt::Debug,
