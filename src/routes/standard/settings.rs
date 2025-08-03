@@ -563,7 +563,8 @@ impl StandardSettings {
     }
 
     fn update_standard_favicon(&self) -> Html {
-        let callback_update_favicon = self.link.callback(|_| Msg::Ignore);
+                        let callback_update_favicon = self.link.callback(|_| Msg::OpenStandard);
+        let existing_image_url = self.current_standard.as_ref().map(|s| s.image_file.download_url.clone());
 
         html!{
             <div class="card">
@@ -575,6 +576,7 @@ impl StandardSettings {
                         <UpdateStandardFaviconCard
                             standard_uuid={self.current_standard_uuid.clone()}
                             callback={callback_update_favicon.clone()}
+                            existing_image_url={existing_image_url}
                         />
                     </div>
                 </div>

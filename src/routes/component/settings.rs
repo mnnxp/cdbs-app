@@ -96,6 +96,8 @@ pub enum Msg {
     DeleteModification(UUID),
     ChangeActiveTab(ActiveTab),
     ChangeHideDeleteComponent,
+    RefreshComponentData, 
+    ForceRerender, 
     ClearError,
     Ignore,
 }
@@ -343,6 +345,36 @@ impl Component for ComponentSettings {
             },
             Msg::ChangeActiveTab(set_tab) => self.active_tab = set_tab,
             Msg::ChangeHideDeleteComponent => self.hide_delete_modal = !self.hide_delete_modal,
+            Msg::RefreshComponentData => {
+                let component_uuid = self.current_component_uuid.clone();
+                let logged_user_uuid = match get_logged_user() {
+                    Some(cu) => cu.uuid,
+                    None => String::new(),
+                };
+                spawn_local(async move {
+                    let ipt_companies_arg = get_update_component_data_opt::IptCompaniesArg{
+                        companiesUuids: None,
+                        userUuid: Some(logged_user_uuid),
+                        favorite: None,
+                        supplier: None,
+                    };
+                    let res = make_query(GetUpdateComponentDataOpt::build_query(
+                        get_update_component_data_opt::Variables { 
+                            component_uuid,
+                            ipt_companies_arg,
+                        }
+                    )).await.unwrap();
+                    link.send_message(Msg::GetComponentData(res.clone()));
+                    link.send_message(Msg::GetListOpt(res));
+                    let link_clone = link.clone();
+                    gloo_timers::callback::Timeout::new(100, move || {
+                        link_clone.send_message(Msg::ForceRerender);
+                    }).forget();
+                });
+            },
+            Msg::ForceRerender => {
+                debug!("ForceRerender triggered");
+            },
             Msg::ClearError => self.error = None,
             Msg::Ignore => {},
         }
@@ -433,7 +465,7 @@ impl ComponentSettings {
             ActiveTab::Characteristics => ("","","is-active",""),
             ActiveTab::ComponentFiles => ("","","","is-active"),
         };
-        let callback_update_favicon = self.link.callback(|_| Msg::Ignore);
+        let callback_update_favicon = self.link.callback(|_| Msg::RefreshComponentData);
         html!{
             <div class="card">
             <header class="card-header">
@@ -459,6 +491,7 @@ impl ComponentSettings {
                             <UpdateComponentFaviconCard
                                 component_uuid={self.current_component_uuid.clone()}
                                 callback={callback_update_favicon.clone()}
+                                existing_image_url={component_data.image_file.download_url.clone()}
                                 />
                         </div>
                     },

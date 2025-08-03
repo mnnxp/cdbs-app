@@ -20,12 +20,15 @@ pub struct UpdateComponentFaviconCard {
     props: Props,
     link: ComponentLink<Self>,
     get_result_up_completed: bool,
+    force_refresh: bool,
 }
 
 #[derive(PartialEq, Clone, Debug, Properties)]
 pub struct Props {
     pub component_uuid: String,
     pub callback: Callback<()>,
+    #[prop_or_default]
+    pub existing_image_url: Option<String>, // URL of existing favicon image
 }
 
 pub enum Msg {
@@ -48,6 +51,7 @@ impl Component for UpdateComponentFaviconCard {
             props,
             link,
             get_result_up_completed: false,
+            force_refresh: false,
         }
     }
 
@@ -82,15 +86,22 @@ impl Component for UpdateComponentFaviconCard {
             Msg::UploadConfirm(confirmations) => {
                 debug!("Confirmation upload of favicon: {:?}", confirmations);
                 self.get_result_up_completed = confirmations > 0;
-                self.props.callback.emit(());
+                if confirmations > 0 {
+                    self.props.callback.emit(());
+                }
             },
             Msg::ClearError => self.error = None,
         }
         true
     }
 
-    fn change(&mut self, _props: Self::Properties) -> ShouldRender {
-        false
+    fn change(&mut self, props: Self::Properties) -> ShouldRender {
+        let existing_image_changed = self.props.existing_image_url != props.existing_image_url;
+        self.props = props;
+        if existing_image_changed {
+            self.force_refresh = true;
+        }
+        existing_image_changed
     }
 
     fn view(&self) -> Html {
@@ -102,9 +113,22 @@ impl Component for UpdateComponentFaviconCard {
             self.link.callback(|confirmations| Msg::UploadConfirm(confirmations));
         html!{<>
           <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
-          {match self.get_result_up_completed {
-              true => html!{self.show_success_upload()},
-              false => html!{
+          {if self.get_result_up_completed {
+              html!{<>
+                  {self.show_success_upload()}
+                  <UploaderFiles
+                      text_choose_files={182} // Drop preview image here
+                      callback_upload_filenames={callback_upload_filenames}
+                      request_upload_files={request_upload_files}
+                      callback_upload_confirm={callback_upload_confirm}
+                      multiple={false}
+                      accept={"image/*".to_string()}
+                      existing_images={self.props.existing_image_url.clone().map(|url| vec![url]).unwrap_or_default()}
+                      single_image_mode={true}
+                      />
+              </>}
+          } else {
+              html!{
                 <UploaderFiles
                     text_choose_files={182} // Drop preview image here
                     callback_upload_filenames={callback_upload_filenames}
@@ -112,8 +136,10 @@ impl Component for UpdateComponentFaviconCard {
                     callback_upload_confirm={callback_upload_confirm}
                     multiple={false}
                     accept={"image/*".to_string()}
+                    existing_images={self.props.existing_image_url.clone().map(|url| vec![url]).unwrap_or_default()}
+                    single_image_mode={true}
                     />
-              },
+              }
           }}
         </>}
     }

@@ -39,6 +39,8 @@ anyhow = "1.0.41"
 graphql_client = "0.10.0"
 serde = {version = "1.0.126", features = ["derive"]}
 serde_json = "1.0.64"
+base64 = "0.21.0"
+gloo-timers = "0.3.0"
 
 dotenv_codegen = "0.15.0"
 

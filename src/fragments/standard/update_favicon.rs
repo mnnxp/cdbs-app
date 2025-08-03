@@ -26,6 +26,8 @@ pub struct UpdateStandardFaviconCard {
 pub struct Props {
     pub standard_uuid: String,
     pub callback: Callback<()>,
+    #[prop_or_default]
+    pub existing_image_url: Option<String>, // URL of existing favicon image
 }
 
 pub enum Msg {
@@ -112,6 +114,8 @@ impl Component for UpdateStandardFaviconCard {
                     callback_upload_confirm={callback_upload_confirm}
                     multiple={false}
                     accept={"image/*".to_string()}
+                    existing_images={self.props.existing_image_url.clone().map(|url| vec![url]).unwrap_or_default()}
+                    single_image_mode={true}
                     />
               },
           }}
