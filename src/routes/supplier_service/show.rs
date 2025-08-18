@@ -388,15 +388,14 @@ impl ShowService {
     fn show_discussion_btn(&self) -> Html {
         let onclick_open_discussion_btn =
             self.link.callback(|_| Msg::OpenDiscussionBlock);
-        let class_fileset_btn = match self.open_discussion_card {
+        let class_discussion_btn = match self.open_discussion_card {
             true => "button is-light is-info is-active",
             false => "button is-info",
         };
         html!{
             <button
-            class={class_fileset_btn}
-            onclick={onclick_open_discussion_btn}
-            title={get_value_field(&106)}>
+            class={class_discussion_btn}
+            onclick={onclick_open_discussion_btn}>
                 <span class={"icon is-small"}><i class={"far fa-comments"}></i></span>
                 <span>{get_value_field(&380)}</span>
             </button>
