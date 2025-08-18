@@ -409,7 +409,7 @@ impl ShowComponent {
             </div>
             {match self.show_full_description && component_data.description.len() > 249 {
                 true => html!{
-                    <div class="column">
+                    <div class="content component-description">
                         {component_data.description.to_markdown()}
                         {ft_see_btn(show_description_btn, self.show_full_description)}
                     </div>
