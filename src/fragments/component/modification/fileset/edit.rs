@@ -307,11 +307,28 @@ impl Component for ManageModificationFilesets {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         html!{<>
             <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
+            <p class={"subtitle is-size-5"}>{get_value_field(&401)}</p>
             {match &self.open_add_fileset_card {
                 true => self.add_fileset_block(),
                 false => html!{<>
                     {self.show_manage()}
-                    {self.fileset_block()}
+                    {match self.select_fileset_uuid.is_empty() {
+                        true => html!{
+                            <div class={"column"}>
+                                <div class={"notification is-light is-warning"}>
+                                    <p class={"subtitle"}>{get_value_field(&114)}</p>
+                                    <p>{get_value_field(&402)}</p>
+                                </div>
+                                <p class={"has-text-weight-bold"}>{get_value_field(&403)}</p>
+                                <ol>
+                                    <li>{get_value_field(&404)}</li>
+                                    <li>{get_value_field(&405)}</li>
+                                    <li>{get_value_field(&406)}</li>
+                                </ol>
+                            </div>
+                        },
+                        false => self.fileset_block(),
+                    }}
                 </>},
             }}
         </>}

@@ -117,7 +117,7 @@ lazy_static! {
             (111, "Action"),
             (112, "Classifier"),
             (113, "Specified tolerance"),
-            (114, ""),
+            (114, "Attention!"),
             (115, "Back"),
             (116, "Main component data"),
             (117, "Add"),
@@ -405,5 +405,11 @@ lazy_static! {
             (398, "Permission based access for users/groups"),
             (399, "Some data is available to users"),
             (400, "Available to all users"),
+            (401, "A file set (fileset) is a logical group of files linked to a specific component modification. It is used to organize and categorize files by the type of software or the format in which they were created."),
+            (402, "For the selected component modification a file set is missing, so file upload is currently unavailable."),
+            (403, "How to create a file set?"),
+            (404, "Click the “Add fileset” button."),
+            (405, "Choose a name for the set (for example, “FreeCAD”, “Blender”, “GLTF”, etc.)."),
+            (406, "Save the set – after that you will be able to upload files to it."),
         ]);
 }
