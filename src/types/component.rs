@@ -235,6 +235,7 @@ pub struct FilesetProgramInfo{
   pub uuid: UUID,
   pub modification_uuid: UUID,
   pub program: Program,
+  pub files_count: i64,
 }
 
 // for arguments users query

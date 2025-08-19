@@ -158,8 +158,16 @@ mutation DeleteModificationParams($delModificationParamData: DelModificationPara
   deleteModificationParams(args: $delModificationParamData)
 }
 
-query ComModFilesOfFileset($iptFileOfFilesetArg: IptFileOfFilesetArg!) {
-  componentModificationFilesOfFileset(args: $iptFileOfFilesetArg){
+query ComModFilesOfFileset(
+  $iptFileOfFilesetArg: IptFileOfFilesetArg!,
+  $IptSort: IptSort,
+  $IptPaginate: IptPaginate
+  ) {
+  componentModificationFilesOfFileset(
+    args: $iptFileOfFilesetArg,
+    sort: $IptSort,
+    paginate: $IptPaginate
+  ){
     ...showFileRelatedDataFields
   }
 }
@@ -494,7 +502,7 @@ fragment filesetProgramRelatedDataFields on FilesetProgramRelatedData {
   program {
     ...programFields
   }
-  # filesCount
+  filesCount
 }
 
 fragment componentSupplierFields on ComponentSupplierRelatedData {

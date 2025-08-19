@@ -7,10 +7,10 @@ use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
 use log::debug;
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
-use crate::services::{get_value_field, resp_parsing};
+use crate::services::resp_parsing;
 use crate::error::Error;
-use crate::fragments::buttons::ft_see_btn;
-use crate::types::{UUID, ShowFileInfo};
+use crate::fragments::paginate::Paginate;
+use crate::types::{UUID, ShowFileInfo, FilesetProgramInfo, PaginateSet};
 use crate::gqls::make_query;
 use crate::gqls::component::{ComModFilesOfFileset, com_mod_files_of_fileset};
 
@@ -18,23 +18,24 @@ use crate::gqls::component::{ComModFilesOfFileset, com_mod_files_of_fileset};
 pub struct Props {
     pub upload_files: usize,
     pub show_delete_btn: bool,
-    pub select_fileset_uuid: UUID,
+    pub select_fileset: FilesetProgramInfo,
 }
 
 pub struct FilesetFilesBlock {
     error: Option<Error>,
     link: ComponentLink<Self>,
     props: Props,
-    show_full_files: bool,
     files: Vec<ShowFileInfo>,
     files_deleted_list: BTreeSet<UUID>,
+    page_set: PaginateSet,
+    current_items: i64,
 }
 
 #[derive(Clone)]
 pub enum Msg {
-    ShowFullList,
     RequestFilesOfFileset,
     ResponseError(Error),
+    ChangePaginate(PaginateSet),
     GetFilesOfFilesetResult(String),
     RemoveFile(UUID),
 }
@@ -48,9 +49,10 @@ impl Component for FilesetFilesBlock {
             error: None,
             link,
             props,
-            show_full_files: false,
             files: Vec::new(),
             files_deleted_list: BTreeSet::new(),
+            page_set: PaginateSet::new(),
+            current_items: 0,
         }
     }
 
@@ -65,14 +67,24 @@ impl Component for FilesetFilesBlock {
         match msg {
             Msg::RequestFilesOfFileset => {
                 self.files.clear();
-                if self.props.select_fileset_uuid.len() == 36 {
+                if self.props.select_fileset.uuid.len() == 36 {
                     let ipt_file_of_fileset_arg = com_mod_files_of_fileset::IptFileOfFilesetArg{
-                        filesetUuid: self.props.select_fileset_uuid.clone(),
+                        filesetUuid: self.props.select_fileset.uuid.clone(),
                         fileUuids: None,
                     };
+                    let ipt_sort = Some(com_mod_files_of_fileset::IptSort {
+                        byField: "name".to_string(),
+                        asDesc: false,
+                    });
+                    let ipt_paginate = Some(com_mod_files_of_fileset::IptPaginate {
+                        currentPage: self.page_set.current_page,
+                        perPage: self.page_set.per_page,
+                    });
                     spawn_local(async move {
                         let res = make_query(ComModFilesOfFileset::build_query(com_mod_files_of_fileset::Variables {
-                            ipt_file_of_fileset_arg
+                            ipt_file_of_fileset_arg,
+                            ipt_sort,
+                            ipt_paginate,
                         })).await.unwrap();
 
                         link.send_message(Msg::GetFilesOfFilesetResult(res));
@@ -80,6 +92,14 @@ impl Component for FilesetFilesBlock {
                 }
             },
             Msg::ResponseError(err) => self.error = Some(err),
+            Msg::ChangePaginate(page_set) => {
+                debug!("Change page_set, old: {:?}, new: {:?} (Show fileset)", self.page_set, page_set);
+                if self.page_set.compare(&page_set) {
+                    return true
+                }
+                self.page_set = page_set;
+                self.link.send_message(Msg::RequestFilesOfFileset);
+            },
             Msg::GetFilesOfFilesetResult(res) => {
                 match resp_parsing(res, "componentModificationFilesOfFileset") {
                     Ok(res) => {
@@ -89,21 +109,19 @@ impl Component for FilesetFilesBlock {
                     Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
-            Msg::ShowFullList => self.show_full_files = !self.show_full_files,
             Msg::RemoveFile(file_uuid) => {self.files_deleted_list.insert(file_uuid);},
         }
         true
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.select_fileset_uuid == props.select_fileset_uuid &&
+        if self.props.select_fileset.uuid == props.select_fileset.uuid &&
         self.props.upload_files == props.upload_files &&
         self.props.show_delete_btn == props.show_delete_btn {
-            debug!("no change fileset uuid: {:?}", props.select_fileset_uuid);
+            debug!("no change fileset uuid: {:?}", props.select_fileset.uuid);
             false
         } else {
-            debug!("change fileset uuid: {:?}", props.select_fileset_uuid);
-            self.show_full_files = false;
+            debug!("change fileset uuid: {:?}", props.select_fileset.uuid);
             self.files_deleted_list.clear();
             self.props = props;
             self.link.send_message(Msg::RequestFilesOfFileset);
@@ -112,25 +130,19 @@ impl Component for FilesetFilesBlock {
     }
 
     fn view(&self) -> Html {
-        let show_full_files_btn = self.link.callback(|_| Msg::ShowFullList);
+        let onclick_paginate = self.link.callback(|page_set| Msg::ChangePaginate(page_set));
         html!{<>
             <div class={"buttons"}>
-                {for self.files.iter().enumerate().map(|(index, file)| {
-                    match (index >= 3, self.show_full_files) {
-                        // show full list
-                        (_, true) => self.show_file_info(&file),
-                        // show full list or first 3 items
-                        (false, false) => self.show_file_info(&file),
-                        _ => html!{},
-                    }
-                })}
+                {for self.files.iter().map(|file| self.show_file_info(&file))}
             </div>
             <footer class="card-footer">
-                {match self.files.len() {
-                    0 => html!{<span>{get_value_field(&204)}</span>},
-                    0..=3 => html!{},
-                    _ => ft_see_btn(show_full_files_btn, self.show_full_files),
-                }}
+                <Paginate
+                    callback_change={onclick_paginate}
+                    current_items={self.current_items}
+                    current_page={Some(self.page_set.current_page)}
+                    per_page={Some(self.page_set.per_page)}
+                    total_items={self.props.select_fileset.files_count + self.props.upload_files as i64}
+                />
             </footer>
         </>}
     }
@@ -149,7 +161,7 @@ impl FilesetFilesBlock {
             None => html!{
                 <FilesetFileItem
                   show_delete_btn={self.props.show_delete_btn}
-                  select_fileset_uuid={self.props.select_fileset_uuid.clone()}
+                  select_fileset_uuid={self.props.select_fileset.uuid.clone()}
                   file={file_info.clone()}
                   callback_delete_file={callback_delete_file.clone()}
                 />

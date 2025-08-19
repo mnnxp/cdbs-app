@@ -28,7 +28,7 @@ use crate::fragments::{
 };
 use crate::services::content_adapter::{DateDisplay, Markdownable};
 use crate::services::{get_classes_table, get_logged_user, get_value_field, resp_parsing, set_history_back, title_changer, Counter};
-use crate::types::{ComponentInfo, DownloadFile, ObjectType, Pathname, SlimUser, ToObject, UUID};
+use crate::types::{ComponentInfo, FilesetProgramInfo, DownloadFile, ObjectType, Pathname, SlimUser, ToObject, UUID};
 use crate::gqls::make_query;
 use crate::gqls::component::{
     ComponentFiles, component_files,
@@ -56,7 +56,7 @@ pub struct ShowComponent {
     is_followed: bool,
     select_modification_uuid: UUID,
     modification_filesets: HashMap<UUID, Vec<(UUID, String)>>,
-    select_fileset_uuid: UUID,
+    select_fileset: Option<FilesetProgramInfo>,
     current_filesets_program: Vec<(UUID, String)>,
     show_full_description: bool,
     open_fileset_files_card: bool,
@@ -80,7 +80,7 @@ pub struct Props {
 }
 
 pub enum Msg {
-    SelectFileset(UUID),
+    SelectFileset(FilesetProgramInfo),
     SelectModification(UUID),
     Follow,
     AddFollow(String),
@@ -117,7 +117,7 @@ impl Component for ShowComponent {
             is_followed: false,
             select_modification_uuid: String::new(),
             modification_filesets: HashMap::new(),
-            select_fileset_uuid: String::new(),
+            select_fileset: None,
             current_filesets_program: Vec::new(),
             show_full_description: false,
             open_fileset_files_card: false,
@@ -161,7 +161,7 @@ impl Component for ShowComponent {
                 self.current_user_owner = false;
                 self.select_modification_uuid = String::new();
                 self.modification_filesets = HashMap::new();
-                self.select_fileset_uuid = String::new();
+                self.select_fileset = None;
                 self.current_filesets_program.clear();
                 self.file_arr.clear();
             }
@@ -198,7 +198,7 @@ impl Component for ShowComponent {
         let link = self.link.clone();
 
         match msg {
-            Msg::SelectFileset(fileset_uuid) => self.select_fileset_uuid = fileset_uuid,
+            Msg::SelectFileset(fileset) => self.select_fileset = Some(fileset),
             Msg::SelectModification(modification_uuid) => self.select_modification_uuid = modification_uuid,
             Msg::Follow => {
                 let component_uuid = self.component.as_ref().unwrap().uuid.clone();
@@ -325,11 +325,16 @@ impl Component for ShowComponent {
                             <div class="card column">
                               {self.show_main_card(component_data)}
                             </div>
-                            <FilesOfFilesetCard
-                                show_card={self.open_fileset_files_card}
-                                show_download_btn={true}
-                                select_fileset_uuid={self.select_fileset_uuid.clone()}
-                                />
+                            {match &self.select_fileset {
+                                Some(sf) => html!{
+                                    <FilesOfFilesetCard
+                                        show_card={self.open_fileset_files_card}
+                                        show_download_btn={true}
+                                        select_fileset={sf.clone()}
+                                    />
+                                },
+                                None => html!{},
+                            }}
                             <br/>
                             {self.show_component_discussion()}
                             {self.show_modifications_table(component_data.modifications_count)}
@@ -366,7 +371,7 @@ impl Component for ShowComponent {
 impl ShowComponent {
     fn show_main_card(&self, component_data: &ComponentInfo) -> Html {
         let show_description_btn = self.link.callback(|_| Msg::ShowDescription);
-        let callback_select_fileset_uuid = self.link.callback(|value: UUID| Msg::SelectFileset(value));
+        let callback_select_fileset = self.link.callback(|value: FilesetProgramInfo| Msg::SelectFileset(value));
         let callback_open_fileset = self.link.callback(|value: bool| Msg::ShowFilesetFilesBlock(value));
 
         html!{<>
@@ -374,7 +379,7 @@ impl ShowComponent {
                 {match self.show_three_view {
                     true => html!{
                         <ThreeShowcase
-                            fileset_uuid={self.select_fileset_uuid.clone()}
+                            fileset_uuid={self.select_fileset.as_ref().map(|f| f.uuid.clone()).unwrap_or_default()}
                         />
                     },
                     false => html!{
@@ -393,7 +398,7 @@ impl ShowComponent {
                     {self.show_three_btn()}
                     <ModificationFilesetsCard
                         modification_uuid={self.select_modification_uuid.clone()}
-                        callback_select_fileset_uuid={callback_select_fileset_uuid}
+                        callback_select_fileset={callback_select_fileset}
                         callback_open_fileset={callback_open_fileset} />
                     {self.show_discussion_btn()}
                     {self.show_setting_btn()}
