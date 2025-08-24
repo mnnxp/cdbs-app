@@ -92,7 +92,7 @@ impl Keyword {
 
     /// Prepares a single keyword for storage by performing validation and adding it to the list.
     ///
-    /// This function checks the length of the input `keyword`. If it exceeds 30 bytes/characters,
+    /// This function checks the length of the input `keyword`. If it exceeds 100 bytes/characters,
     /// it marks `bad_keyword` as `true` and returns without adding the keyword.
     /// Otherwise, it creates a `Keyword` struct, assigns it the current `ipt_index` as its ID,
     /// trims any leading/trailing whitespace from the keyword, and adds it to the `add_keywords` vector.
@@ -104,7 +104,7 @@ impl Keyword {
         add_keywords: &mut Vec<Keyword>,
         bad_keyword: &mut bool,
     ) {
-        if keyword.len() > 30 {
+        if keyword.len() > 100 {
             *bad_keyword = true;
             return;
         }
