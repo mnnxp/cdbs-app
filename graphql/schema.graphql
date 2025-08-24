@@ -372,6 +372,7 @@ type DiscussionInfo {
 type DownloadFile {
   uuid: UUID!
   hash: String!
+  sha256Hash: String!
   filename: String!
   filesize: Int!
   downloadUrl: String!
@@ -1382,6 +1383,7 @@ type ShowFileRelatedData {
   filesize: Int!
   program: Program!
   hash: String!
+  sha256Hash: String!
   downloadUrl: String!
   createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!

@@ -446,7 +446,7 @@ fragment showFileRelatedDataFields on ShowFileRelatedData {
   program {
     ...programFields
   }
-  hash
+  sha256Hash
   downloadUrl
   createdAt
   updatedAt

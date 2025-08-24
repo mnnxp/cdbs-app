@@ -242,7 +242,7 @@ fragment showFileRelatedDataFields on ShowFileRelatedData {
     id
     name
   }
-  hash
+  sha256Hash
   downloadUrl
   createdAt
   updatedAt
