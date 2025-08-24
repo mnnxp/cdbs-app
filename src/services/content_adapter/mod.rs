@@ -16,6 +16,9 @@ pub(crate) trait ContentDisplay {
 pub(crate) trait Markdownable {
     /// Returns a result of converting a text as Markdown content into Html code
     fn to_markdown(&self) -> Html;
+
+    /// Returns a result of converting a first line of text as Markdown content into Html code
+    fn to_markdown_short(&self) -> Html;
 }
 
 impl Markdownable for String {
@@ -23,12 +26,22 @@ impl Markdownable for String {
     fn to_markdown(&self) -> Html {
         inner_markdown(&self)
     }
+
+    /// Returns a VNode (Html) with the result of converting a first line of text to markdown style
+    fn to_markdown_short(&self) -> Html {
+        inner_markdown(&self.lines().next().unwrap_or_default())
+    }
 }
 
 impl Markdownable for &str {
     /// Returns a VNode (Html) with the result of converting text to markdown style
     fn to_markdown(&self) -> Html {
         inner_markdown(self)
+    }
+
+    /// Returns a VNode (Html) with the result of converting a first line of text to markdown style
+    fn to_markdown_short(&self) -> Html {
+        inner_markdown(&self.lines().next().unwrap_or_default())
     }
 }
 

@@ -15,7 +15,7 @@ use crate::fragments::{
     switch_icon::res_btn,
 };
 use crate::types::{Pathname, ShowStandardShort};
-use crate::services::content_adapter::DateDisplay;
+use crate::services::content_adapter::{DateDisplay, Markdownable};
 use crate::services::{get_value_field, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::standard::{
@@ -181,7 +181,7 @@ impl ListItemStandard {
                     </div>
                     <div class="column fix-width mb-0 p-0">
                         <div class="has-text-weight-bold is-size-4">{name}</div>
-                        <div class="overflow-title">{description.clone()}</div>
+                        <div class="overflow-title">{description.to_markdown_short()}</div>
                     </div>
                     </div>
                     <div class="buttons flexBox p-0" >

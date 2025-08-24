@@ -12,7 +12,7 @@ use crate::fragments::{
     switch_icon::res_btn,
 };
 use crate::types::{Pathname, ShowServiceShort};
-use crate::services::content_adapter::DateDisplay;
+use crate::services::content_adapter::{DateDisplay, Markdownable};
 use crate::services::get_value_field;
 
 pub enum Msg {
@@ -134,7 +134,7 @@ impl ListItemService {
                     </div>
                     <div class="column fix-width mb-0 p-0">
                       <div class="overflow-title has-text-weight-bold is-size-4">{name}</div>
-                      <div class="overflow-title">{description.clone()}</div>
+                      <div class="overflow-title">{description.to_markdown_short()}</div>
                     </div>
                   </div>
                   <div class="buttons flexBox p-0" >

@@ -13,6 +13,7 @@ use crate::fragments::{
     list_errors::ListErrors,
     switch_icon::{res_btn, res_fullwidth_btn},
 };
+use crate::services::content_adapter::Markdownable;
 use crate::types::{Pathname, ShowCompanyShort, UUID};
 use crate::services::{get_value_field, resp_parsing};
 use crate::gqls::make_query;
@@ -181,7 +182,7 @@ impl ListItemCompany {
                             classes!("is-size-4"),
                             html!{<span class={"has-text-weight-bold is-size-4"}>{shortname.clone()}</span>}
                         )}
-                        <p class="overflow-title">{description.clone()}</p>
+                        <div class="overflow-title">{description.to_markdown_short()}</div>
                     </div>
                     {match inn.is_empty() {
                         true => html!{},

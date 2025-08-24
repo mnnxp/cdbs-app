@@ -4,7 +4,7 @@ use yew_router::{
     prelude::RouteAgent,
 };
 use crate::fragments::switch_icon::res_fullwidth_btn;
-use crate::services::content_adapter::DateDisplay;
+use crate::services::content_adapter::{DateDisplay, Markdownable};
 use crate::services::get_value_field;
 use crate::routes::AppRoute;
 use crate::fragments::{
@@ -123,7 +123,7 @@ impl ListItem {
                   </div>
                   <div class="column fix-width mb-0 p-0">
                     <div class="overflow-title has-text-weight-bold is-size-4">{name}</div>
-                    <div class="overflow-title">{description.clone()}</div>
+                    <div class="overflow-title">{description.to_markdown_short()}</div>
                   </div>
                 </div>
                 <div class="buttons flexBox p-0" >
