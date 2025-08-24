@@ -12,7 +12,10 @@ use crate::error::Error;
 use crate::fragments::paginate::Paginate;
 use crate::types::{UUID, ShowFileInfo, FilesetProgramInfo, PaginateSet};
 use crate::gqls::make_query;
-use crate::gqls::component::{ComModFilesOfFileset, com_mod_files_of_fileset};
+use crate::gqls::component::{
+    ComModFilesOfFileset, com_mod_files_of_fileset,
+    ComponentModificationFilesets, component_modification_filesets,
+};
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
@@ -29,14 +32,17 @@ pub struct FilesetFilesBlock {
     files_deleted_list: BTreeSet<UUID>,
     page_set: PaginateSet,
     current_items: i64,
+    total_items: i64,
 }
 
 #[derive(Clone)]
 pub enum Msg {
     RequestFilesOfFileset,
+    RequestFilesetFilesCount,
     ResponseError(Error),
     ChangePaginate(PaginateSet),
     GetFilesOfFilesetResult(String),
+    GetFilesetFilesCountResult(String),
     RemoveFile(UUID),
 }
 
@@ -45,6 +51,7 @@ impl Component for FilesetFilesBlock {
     type Properties = Props;
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+        let total_items = props.select_fileset.files_count;
         Self {
             error: None,
             link,
@@ -53,6 +60,7 @@ impl Component for FilesetFilesBlock {
             files_deleted_list: BTreeSet::new(),
             page_set: PaginateSet::new(),
             current_items: 0,
+            total_items,
         }
     }
 
@@ -91,6 +99,20 @@ impl Component for FilesetFilesBlock {
                     })
                 }
             },
+            Msg::RequestFilesetFilesCount => {
+                if self.props.select_fileset.uuid.len() == 36 {
+                    let ipt_fileset_program_arg = component_modification_filesets::IptFilesetProgramArg{
+                        modificationUuid: self.props.select_fileset.modification_uuid.clone(),
+                        programIds: Some(vec![self.props.select_fileset.program.id as i64]),
+                    };
+                    spawn_local(async move {
+                        let res = make_query(ComponentModificationFilesets::build_query(component_modification_filesets::Variables {
+                            ipt_fileset_program_arg
+                        })).await.unwrap();
+                        link.send_message(Msg::GetFilesetFilesCountResult(res));
+                    })
+                }
+            },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::ChangePaginate(page_set) => {
                 debug!("Change page_set, old: {:?}, new: {:?} (Show fileset)", self.page_set, page_set);
@@ -104,7 +126,18 @@ impl Component for FilesetFilesBlock {
                 match resp_parsing(res, "componentModificationFilesOfFileset") {
                     Ok(res) => {
                         self.files = res;
+                        self.current_items = self.files.len() as i64;
                         debug!("componentModificationFilesOfFileset: {:?}", self.files.len());
+                    },
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
+                }
+            },
+            Msg::GetFilesetFilesCountResult(res) => {
+                match resp_parsing::<Vec<FilesetProgramInfo>>(res, "componentModificationFilesets") {
+                    Ok(res) => {
+                        if let Some(fpi) = res.first() {
+                            self.total_items = fpi.files_count;
+                        }
                     },
                     Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
@@ -123,6 +156,10 @@ impl Component for FilesetFilesBlock {
         } else {
             debug!("change fileset uuid: {:?}", props.select_fileset.uuid);
             self.files_deleted_list.clear();
+            if self.props.upload_files != props.upload_files {
+                // get the current number of files if new ones have been uploaded
+                self.link.send_message(Msg::RequestFilesetFilesCount);
+            }
             self.props = props;
             self.link.send_message(Msg::RequestFilesOfFileset);
             true
@@ -141,7 +178,7 @@ impl Component for FilesetFilesBlock {
                     current_items={self.current_items}
                     current_page={Some(self.page_set.current_page)}
                     per_page={Some(self.page_set.per_page)}
-                    total_items={self.props.select_fileset.files_count + self.props.upload_files as i64}
+                    total_items={self.total_items}
                 />
             </footer>
         </>}

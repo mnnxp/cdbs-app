@@ -152,7 +152,6 @@ impl Component for ManageModificationFilesets {
                 if self.select_fileset_uuid.len() != 36 || filenames.is_empty() {
                     return false
                 }
-                self.upload_files = 0;
                 let fileset_uuid = self.select_fileset_uuid.clone();
                 let commit_msg = self.commit_msg.clone();
                 spawn_local(async move {
@@ -260,6 +259,7 @@ impl Component for ManageModificationFilesets {
                 }
             },
             Msg::GetUploadData(res) => {
+                self.upload_files = 0;
                 match resp_parsing(res, "uploadFilesToFileset") {
                     Ok(result) => {
                         self.request_upload_data = result;
