@@ -36,7 +36,6 @@ pub(crate) fn view_certificates(company_data: &CompanyInfo) -> Html {
             <CompanyCertificatesCard
                 certificates={company_data.company_certificates.clone()}
                 show_cert_btn={false}
-                download_btn={false}
                 manage_btn={false}
              />
         </div>}

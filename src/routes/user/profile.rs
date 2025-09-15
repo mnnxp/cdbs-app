@@ -633,7 +633,6 @@ impl Profile {
                         user_uuid={self.current_user_uuid.clone()}
                         certificates={certificates}
                         show_cert_btn={false}
-                        download_btn={false}
                         manage_btn={false}
                     />
                 </div>

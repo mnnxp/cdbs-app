@@ -715,7 +715,6 @@ impl CompanySettings {
                 <CompanyCertificatesCard
                     certificates={current_data.company_certificates.clone()}
                     show_cert_btn={true}
-                    download_btn={false}
                     manage_btn={true}
                 />
             },

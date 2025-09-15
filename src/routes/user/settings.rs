@@ -574,7 +574,6 @@ impl Settings {
                     user_uuid={self.current_data.as_ref().map(|x| x.uuid.clone()).unwrap_or_default()}
                     certificates={current_data.certificates.clone()}
                     show_cert_btn={true}
-                    download_btn={false}
                     manage_btn={true}
                 />
             },
