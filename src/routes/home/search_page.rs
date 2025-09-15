@@ -12,7 +12,6 @@ pub enum Msg {
     ForCompany(String),
     ForStandard(String),
     ForUser(String),
-    ToggleCatalogSpec,
     ToggleCheckboxs,
     ToggleForObjects,
     Ignore,
@@ -21,7 +20,6 @@ pub enum Msg {
 pub struct SearchPage {
     link: ComponentLink<Self>,
     search_arg: SearchArg,
-    catalog_spec_expanded: bool,
     checkboxs_expanded: bool,
     for_objects_expanded: bool,
 }
@@ -42,9 +40,8 @@ impl Component for SearchPage {
         SearchPage {
             link,
             search_arg,
-            catalog_spec_expanded: true,
-            checkboxs_expanded: true,
-            for_objects_expanded: true,
+            checkboxs_expanded: false,
+            for_objects_expanded: false,
         }
     }
 
@@ -58,7 +55,6 @@ impl Component for SearchPage {
             Msg::ForCompany(company_uuid) => self.search_arg.company_uuid = wraps_text(company_uuid),
             Msg::ForStandard(standard_uuid) => self.search_arg.standard_uuid = wraps_text(standard_uuid),
             Msg::ForUser(user_uuid) => self.search_arg.user_uuid = wraps_text(user_uuid),
-            Msg::ToggleCatalogSpec => self.catalog_spec_expanded = !self.catalog_spec_expanded,
             Msg::ToggleCheckboxs => self.checkboxs_expanded = !self.checkboxs_expanded,
             Msg::ToggleForObjects => self.for_objects_expanded = !self.for_objects_expanded,
             Msg::Ignore => {},
