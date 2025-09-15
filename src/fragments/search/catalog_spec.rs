@@ -245,7 +245,10 @@ impl CatalogSpec {
     fn filters(&self) -> Html {
         // todo!(make filter by catalogs (search specs))
         html!{
-            <button class={"button is-white is-small overflow-title"} onclick={self.link.callback(move |_| Msg::ChangeSpec(1))}>
+            <button
+                class={"button is-white is-small overflow-title"}
+                disabled={self.current_spec_id == 1}
+                onclick={self.link.callback(move |_| Msg::ChangeSpec(1))} >
                 {get_value_field(&395)}
             </button>
         }
