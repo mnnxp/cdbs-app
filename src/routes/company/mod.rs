@@ -12,9 +12,7 @@ pub use supplier::ShowSupplierCompany;
 use yew::virtual_dom::VNode;
 use yew::{classes, html, Classes, Html};
 use crate::fragments::company::SpecsTags;
-use crate::services::content_adapter::{
-    ContentDisplay, DateDisplay, ContactDisplay, SpecDisplay, two_dates_display
-};
+use crate::services::content_adapter::{ContentDisplay, ContactDisplay, SpecDisplay};
 use crate::services::{get_lang, get_value_field};
 use crate::types::{CompanyInfo, CompanyType};
 
@@ -55,14 +53,6 @@ impl CompanyType {
             "ru" => html!{<p>{company_type_short}<span>{" "}</span>{name}</p>},
             _ => html!{<p>{name}<span>{" "}</span>{company_type_short}</p>}
         }
-    }
-}
-
-impl DateDisplay for CompanyInfo {
-    /// Returns VNode (Html) with convert dates to display.
-    /// Update date and creation/update with time in abbr tag.
-    fn date_to_display(&self) -> Html {
-        two_dates_display(&self.created_at, &self.updated_at)
     }
 }
 
