@@ -412,5 +412,11 @@ lazy_static! {
             (405, "Choose a name for the set (for example, “FreeCAD”, “Blender”, “GLTF”, etc.)."),
             (406, "Save the set – after that you will be able to upload files to it."),
             (407, "A component modification is an individual variant or version of a component that captures specific parameters, material, dimensions, configuration, and other product characteristics; each modification is linked to its own file sets, enabling the management of different product variants, maintaining their change history, and providing quick access to the corresponding drawings, models, and documentation."),
+            (408, "This action will place this object, including all its related data, in a pending deletion state and delete it permanently."),
+            (409, "Are you absolutely sure?"),
+            (410, "After this point, "),
+            (411, " data cannot be recovered."),
+            (412, "This action can lead to data loss. To prevent accidental actions we ask you to confirm your intention."),
+            (413, "Enter the following to confirm:"),
         ]);
 }

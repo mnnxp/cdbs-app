@@ -11,6 +11,7 @@ use log::debug;
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
+use crate::fragments::delete_card::ft_delete_card;
 use crate::fragments::type_access::TypeAccessBlock;
 use crate::routes::AppRoute;
 use crate::error::Error;
@@ -412,6 +413,8 @@ impl Component for ComponentSettings {
                                     component_uuid={component_data.uuid.clone()}
                                 />
                                 <br/>
+                                {self.show_bottom_btn()}
+                                <br/>
                             </>},
                             None => html!{},
                         }}
@@ -571,79 +574,33 @@ impl ComponentSettings {
 
     fn show_top_btn(&self) -> Html {
         let onclick_open_component = self.link.callback(|_| Msg::OpenComponent);
-        let onclick_show_delete_modal = self.link.callback(|_| Msg::ChangeHideDeleteComponent);
-
         html!{
-            <div class="media">
-                <div class="media-left">
+            <div class="columns p-0 m-0">
+                <div class="column">
                     {ft_back_btn(
                         "open-standard",
                         onclick_open_component,
                         get_value_field(&199), // Open component
                     )}
                 </div>
-                <div class="media-content"></div>
-                <div class="media-right">
-                    {self.modal_delete_component()}
-                    <div class="buttons">
-                        <button
-                            id="delete-component"
-                            class="button is-danger"
-                            onclick={onclick_show_delete_modal} >
-                            {get_value_field(&135)}
-                        </button>
-                    </div>
-                </div>
+                <div class="column"></div>
             </div>
         }
     }
 
-    fn modal_delete_component(&self) -> Html {
-        let onclick_hide_modal = self.link.callback(|_| Msg::ChangeHideDeleteComponent);
-        let oninput_delete_component = self.link.callback(|ev: InputData| Msg::UpdateConfirmDelete(ev.value));
-        let onclick_delete_component = self.link.callback(|_| Msg::RequestDeleteComponent);
-        let class_modal = match &self.hide_delete_modal {
-            true => "modal",
-            false => "modal is-active",
-        };
-
-        html!{
-            <div class={class_modal}>
-              <div class="modal-background" onclick={onclick_hide_modal.clone()} />
-                <div class="modal-content">
-                  <div class="card">
-                    <header class="modal-card-head">
-                      <p class="modal-card-title">{get_value_field(&217)}</p> // Delete component
-                      <button class="delete" aria-label="close" onclick={onclick_hide_modal.clone()} />
-                    </header>
-                    <section class="modal-card-body">
-                        <p class="is-size-6">
-                            {get_value_field(&218)} // For confirm deleted all data this
-                            <span class="has-text-danger-dark">{self.request_component.name.clone()}</span>
-                            {get_value_field(&219)} // component enter this uuid
-                            <br/>
-                            <span class="has-text-weight-bold is-size-6">{self.current_component_uuid.clone()}</span>
-                        </p>
-                        <br/>
-                         <input
-                           id="delete-component"
-                           class="input"
-                           type="text"
-                           placeholder="uuid"
-                           value={self.confirm_delete_component.clone()}
-                           oninput={oninput_delete_component} />
-                    </section>
-                    <footer class="modal-card-foot">
-                        <button
-                            id="delete-component"
-                            class="button is-danger"
-                            disabled={self.disable_delete_component_btn}
-                            onclick={onclick_delete_component} >{get_value_field(&220)}</button> // Yes, delete
-                        <button class="button" onclick={onclick_hide_modal.clone()}>{get_value_field(&221)}</button> // Cancel
-                    </footer>
-                </div>
-              </div>
-            </div>
-        }
+    fn show_bottom_btn(&self) -> Html {
+        // Delete component
+        ft_delete_card(
+            "component",
+            get_value_field(&217),
+            self.request_component.name.clone(),
+            self.current_component_uuid.clone(),
+            self.confirm_delete_component.clone(),
+            self.link.callback(|_| Msg::ChangeHideDeleteComponent),
+            self.link.callback(|ev: InputData| Msg::UpdateConfirmDelete(ev.value)),
+            self.link.callback(|_| Msg::RequestDeleteComponent),
+            self.hide_delete_modal,
+            self.disable_delete_component_btn,
+        )
     }
 }
