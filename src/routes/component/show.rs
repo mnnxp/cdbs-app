@@ -661,7 +661,7 @@ impl ShowComponent {
         let mut class_btn = classes!("button");
         let show_btn = match self.show_three_view {
             true => {
-                class_btn.push("is-focused");
+                class_btn.push("is-active");
                 get_value_field(&301)
             },
             false => get_value_field(&300),
