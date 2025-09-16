@@ -322,6 +322,7 @@ impl ModificationsTableEdit {
                 <ModificationsTable
                     modifications={modifications}
                     select_modification_uuid={self.select_modification_uuid.clone()}
+                    open_modification_card={self.open_edit_modification_card}
                     callback_select_modification={onclick_select_modification}
                     callback_new_modification_param={Some(onclick_new_modification_param)}
                     numero_offset={self.page_set.numero_offset()}

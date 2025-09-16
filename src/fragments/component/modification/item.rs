@@ -29,6 +29,7 @@ pub struct Props {
     pub collect_heads: Vec<Param>,
     pub collect_item: HashMap<usize, String>,
     pub select_item: bool,
+    pub open_modification_card: bool,
     pub callback_new_modification_param: Option<Callback<UUID>>,
     pub callback_select_modification: Option<Callback<UUID>>,
     pub ordinal_indicator: usize,
@@ -39,6 +40,7 @@ pub struct ModificationTableItem {
     props: Props,
     link: ComponentLink<Self>,
     modification_uuid: UUID,
+    open_modification_card: bool,
     collect_item: HashMap<usize, String>,
     select_item: bool,
     params_list: BTreeMap<usize, Param>,
@@ -64,6 +66,7 @@ pub enum Msg {
     GetAddParamResult(String),
     GetUpdateParamResult(String),
     GetDeleteParamResult(String),
+    ModificationAction,
     SelectModification,
     UpdateValue(String),
     ShowNewParamCard,
@@ -79,6 +82,7 @@ impl Component for ModificationTableItem {
     type Properties = Props;
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
         let modification_uuid = props.modification_uuid.clone();
+        let open_modification_card = props.open_modification_card;
         let collect_item = props.collect_item.clone();
         let select_item = props.select_item;
         Self {
@@ -86,6 +90,7 @@ impl Component for ModificationTableItem {
             props,
             link,
             modification_uuid,
+            open_modification_card,
             collect_item,
             select_item,
             params_list: BTreeMap::new(),
@@ -248,13 +253,21 @@ impl Component for ModificationTableItem {
                     Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
+            Msg::ModificationAction => {
+                if let Some(select_modification) = &self.props.callback_select_modification {
+                    select_modification.emit(self.modification_uuid.clone());
+                }
+                self.open_modification_card = !self.open_modification_card;
+            },
             Msg::SelectModification => {
                 debug!("Callback ITEM, modification uuid: {:?}, self.props.m...uuid: {:?} (Show modifications)",
                     self.modification_uuid,
                     self.props.modification_uuid
                 );
-                if let Some(select_modification) = &self.props.callback_select_modification {
-                    select_modification.emit(self.modification_uuid.clone());
+                if !self.props.select_item {
+                    if let Some(select_modification) = &self.props.callback_select_modification {
+                        select_modification.emit(self.modification_uuid.clone());
+                    }
                 }
             },
             Msg::UpdateValue(data) => {
@@ -323,6 +336,7 @@ impl Component for ModificationTableItem {
             false
         } else {
             self.modification_uuid = props.modification_uuid.clone();
+            self.open_modification_card = props.open_modification_card;
             self.collect_item = props.collect_item.clone();
             self.select_item = props.select_item;
             self.props = props;
@@ -342,29 +356,34 @@ impl Component for ModificationTableItem {
 
 impl ModificationTableItem {
     fn show_modification_row(&self) -> Html {
+        let onclick_modification_action = self.link.callback(|_| Msg::ModificationAction);
         let onclick_select_modification = self.link.callback(|_| Msg::SelectModification);
         let class_style = match &self.props.select_item {
             true => "is-selected",
             false => "",
         };
-        let (title_text, click_icon) = match (&self.props.show_manage_btn, &self.props.select_item) {
-            (true, true) => (get_value_field(&127), "fas fa-pencil-alt"),   // edit
-            (false, true) => (get_value_field(&128), "fas fa-info"),        // info
-            (_, false) => (get_value_field(&129), "far fa-hand-pointer"),   // select
+        let (title_text, click_icon, style_btn) = match (&self.props.show_manage_btn, &self.props.select_item, &self.open_modification_card) {
+            (true, true, true) => (get_value_field(&127), "fas fa-pencil-alt", "color: #ED760E;"), // edit
+            (true, true, false) => (get_value_field(&127), "fas fa-pencil-alt", ""), // edit
+            (false, true, true) => (get_value_field(&314), "fas fa-info", "color: #c2c2c2"), // hide
+            (false, true, false) => (get_value_field(&128), "fas fa-info", ""), // info
+            (_, false, _) => (get_value_field(&129), "far fa-hand-pointer", ""), // select
         };
 
         html!{<tr class={class_style}>
-            <td class="is-narrow" onclick={onclick_select_modification.clone()}>
-                <a>
+            <td class="is-narrow" onclick={onclick_modification_action}>
+                <a style={style_btn}>
                     <span class="icon">
                         <i class={click_icon} aria-hidden="true"></i>
                     </span>
                     <span>{title_text}</span>
                 </a>
             </td>
-            <td class="is-narrow" onclick={onclick_select_modification}>{self.props.ordinal_indicator}</td>
+            <td class="is-narrow" onclick={onclick_select_modification.clone()}>{self.props.ordinal_indicator}</td>
             {match self.collect_item.get(&0) {
-                Some(value) => html!{<td class="is-narrow">{value.clone()}</td>},
+                Some(value) => html!{
+                    <td class="is-narrow" onclick={onclick_select_modification}>{value.clone()}</td>
+                },
                 None => html!{<td></td>},
             }}
             {self.show_items()}

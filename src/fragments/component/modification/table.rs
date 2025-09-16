@@ -8,6 +8,7 @@ use super::{heads::ModificationTableHeads, item::ModificationTableItem};
 pub struct Props {
     pub modifications: Vec<ComponentModificationInfo>,
     pub select_modification_uuid: UUID,
+    pub open_modification_card: bool,
     pub callback_select_modification: Option<Callback<UUID>>,
     pub callback_new_modification_param: Option<Callback<UUID>>,
     pub numero_offset: usize,
@@ -172,6 +173,7 @@ impl Component for ModificationsTable {
                                 collect_heads={self.collect_heads.clone()}
                                 collect_item={item.clone()}
                                 select_item={&self.props.select_modification_uuid == modification_uuid}
+                                open_modification_card={self.props.open_modification_card}
                                 callback_new_modification_param={self.props.callback_new_modification_param.clone()}
                                 callback_select_modification={onclick_select_modification.clone()}
                                 ordinal_indicator={self.props.numero_offset+numer}
