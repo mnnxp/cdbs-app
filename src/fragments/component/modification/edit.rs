@@ -8,8 +8,8 @@ use super::fileset::ManageModificationFilesets;
 use crate::error::Error;
 use crate::fragments::buttons::{ft_delete_btn, ft_save_btn};
 use crate::fragments::list_errors::ListErrors;
+use crate::fragments::markdown::MarkdownEditCard;
 use crate::services::{get_value_field, resp_parsing};
-use crate::services::content_adapter::Markdownable;
 use crate::types::{UUID, ComponentModificationInfo, ActualStatus, ModificationUpdatePreData};
 use crate::gqls::make_query;
 use crate::gqls::component::{
@@ -38,7 +38,6 @@ pub struct ModificationEdit {
     modification_changed: bool,
     get_confirm: UUID,
     active_tab: ActiveTab,
-    preview_description: bool,
 }
 
 pub enum Msg {
@@ -52,7 +51,6 @@ pub enum Msg {
     UpdateEditActualStatusId(String),
     ResetSelectModification,
     ChangeActiveTab(ActiveTab),
-    PreviewDescription,
     ClearError,
 }
 
@@ -74,7 +72,6 @@ impl Component for ModificationEdit {
             modification_changed: false,
             get_confirm: String::new(),
             active_tab: ActiveTab::Data,
-            preview_description: false,
         }
     }
 
@@ -164,7 +161,6 @@ impl Component for ModificationEdit {
                 self.request_edit_modification.actual_status_id = self.props.modification.actual_status.actual_status_id;
             },
             Msg::ChangeActiveTab(set_tab) => self.active_tab = set_tab,
-            Msg::PreviewDescription => self.preview_description = !self.preview_description,
             Msg::ClearError => self.error = None,
         }
         true
@@ -241,7 +237,6 @@ impl ModificationEdit {
           }));
         let onclick_delete_component_modification = self.link.callback(|_| Msg::RequestDeleteModificationData);
         let onclick_component_modification_update = self.link.callback(|_| Msg::RequestUpdateModificationData);
-        let onclick_show_preview_description = self.link.callback(|_| Msg::PreviewDescription);
         html!{<>
                 <div class={"content"}>
                     <div class={"column"}>
@@ -270,7 +265,7 @@ impl ModificationEdit {
                     </div>
                     </div>
                     <div class={"column"}>
-                        <p class={"title is-5"}>{get_value_field(&176)}</p>
+                        <label class={"title is-5"} for="add-modification-name">{get_value_field(&176)}</label>
                         <input
                             id={"add-modification-name"}
                             class={"input is-fullwidth"}
@@ -279,32 +274,13 @@ impl ModificationEdit {
                             value={self.request_edit_modification.modification_name.clone()}
                             oninput={oninput_modification_name} />
                     </div>
-                    <div class={"column"}> // Description
-                        <p class={"title is-5"}>{get_value_field(&61)}</p>
-                        <button class={"button is-small is-fullwidth"} onclick={onclick_show_preview_description}>
-                            <a>{match self.preview_description {
-                                true => {get_value_field(&334)},
-                                false => {get_value_field(&335)},
-                            }}</a>
-                        </button>
-                        {match self.preview_description {
-                            true => html!{
-                                <div id={"update-modification-preview-description"} class={"box"}>
-                                    {self.request_edit_modification.description.to_markdown()}
-                                </div>
-                            },
-                            false => html!{
-                                <textarea
-                                    id={"update-modification-description"}
-                                    class={"textarea is-fullwidth"}
-                                    type={"text"}
-                                    placeholder={self.props.modification.description.clone()}
-                                    value={self.request_edit_modification.description.clone()}
-                                    oninput={oninput_modification_description} />
-                            },
-                        }}
-                        <p class="help">{get_value_field(&336)}</p>
-                    </div>
+                    <MarkdownEditCard
+                        id_tag={"modification-description"}
+                        title={get_value_field(&61)}
+                        placeholder={self.props.modification.description.clone()}
+                        raw_text={self.request_edit_modification.description.clone()}
+                        oninput_text={oninput_modification_description}
+                        />
                 </div>
                 <div class="columns">
                     <div class="column">

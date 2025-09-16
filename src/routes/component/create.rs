@@ -7,6 +7,7 @@ use log::debug;
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
+use crate::fragments::markdown::MarkdownEditCard;
 use crate::fragments::type_access::TypeAccessBlock;
 use crate::routes::AppRoute;
 use crate::error::Error;
@@ -246,24 +247,22 @@ impl CreateComponent {
         html!{
             <div class="card">
                 <div class="column">
-                  <label class="label">{get_value_field(&110)}</label>
+                  <label class="title is-5" for="update-component-name">{get_value_field(&110)}</label>
                   <input
-                      id="update-name"
+                      id="update-component-name"
                       class={class_name}
                       type="text"
                       placeholder={get_value_field(&110)}
                       value={self.request_component.name.clone()}
                       oninput={oninput_name} />
-                  <label class="label">{get_value_field(&61)}</label>
-                  <textarea
-                      id="update-description"
-                      class="textarea"
-                      // rows="10"
-                      type="text"
-                      placeholder={get_value_field(&61)}
-                      value={self.request_component.description.clone()}
-                      oninput={oninput_description} />
                 </div>
+                <MarkdownEditCard
+                    id_tag={"component-description"}
+                    title={get_value_field(&61)}
+                    placeholder={String::new()}
+                    raw_text={self.request_component.description.clone()}
+                    oninput_text={oninput_description}
+                    />
                 <div class="column">
                     <div class="columns">
                         <div class="column" style="margin-right: 1rem">
