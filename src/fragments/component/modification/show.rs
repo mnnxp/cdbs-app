@@ -6,7 +6,7 @@ use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::paginate::Paginate;
 use crate::services::content_adapter::{DateDisplay, Markdownable};
-use crate::services::{get_value_field, resp_parsing};
+use crate::services::{get_value_field, resp_parsing, set_focus};
 use crate::types::{UUID, ComponentModificationInfo, PaginateSet};
 use crate::routes::other_component::modification::ImportModificationsData;
 use crate::gqls::make_query;
@@ -43,6 +43,7 @@ pub enum Msg {
     CallOfChange,
     ShowModificationCard,
     ChangePaginate(PaginateSet),
+    Focuser,
     ClearError,
 }
 
@@ -135,7 +136,12 @@ impl Component for ModificationsTableCard {
                     select_modification.emit(self.select_modification_uuid.clone());
                 }
             },
-            Msg::ShowModificationCard => self.open_modification_card = !self.open_modification_card,
+            Msg::ShowModificationCard => {
+                self.open_modification_card = !self.open_modification_card;
+                if self.open_modification_card {
+                    self.link.send_message(Msg::Focuser);
+                }
+            },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::ChangePaginate(page_set) => {
                 debug!("Change page_set, old: {:?}, new: {:?} (Show modifications)", self.page_set, page_set);
@@ -150,6 +156,7 @@ impl Component for ModificationsTableCard {
                 self.page_set = page_set;
                 self.link.send_message(Msg::RequestComponentModificationsData);
             },
+            Msg::Focuser => set_focus("show-modification-card"),
             Msg::ClearError => self.error = None,
         }
         true
@@ -224,7 +231,7 @@ impl ModificationsTableCard {
         let modification_data = self.modifications.iter().find(|x| x.uuid == self.select_modification_uuid);
         match modification_data {
             Some(mod_data) => html!{
-                <div class="card">
+                <div id="show-modification-card" class="card">
                     <header class="card-header has-background-info-light">
                         <p class="card-header-title">{get_value_field(&353)}</p>
                     </header>

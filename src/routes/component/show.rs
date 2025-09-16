@@ -27,7 +27,7 @@ use crate::fragments::{
     clipboard::ShareLinkBtn,
 };
 use crate::services::content_adapter::{DateDisplay, Markdownable};
-use crate::services::{get_classes_table, get_logged_user, get_value_field, resp_parsing, set_history_back, title_changer, Counter};
+use crate::services::{get_classes_table, get_logged_user, get_value_field, resp_parsing, set_focus, set_history_back, title_changer, Counter};
 use crate::types::{ComponentInfo, FilesetProgramInfo, DownloadFile, ObjectType, Pathname, SlimUser, ToObject, UUID};
 use crate::gqls::make_query;
 use crate::gqls::component::{
@@ -96,6 +96,7 @@ pub enum Msg {
     GetDownloadFileResult(String),
     Show3D,
     ChangeActiveTab(ActiveTab),
+    Focuser,
     ClearError,
     Ignore,
 }
@@ -287,7 +288,12 @@ impl Component for ShowComponent {
             Msg::ShowDescription => self.show_full_description = !self.show_full_description,
             Msg::ShowStandardsList => self.show_related_standards = !self.show_related_standards,
             Msg::ShowFilesetFilesBlock(value) => self.open_fileset_files_card = value,
-            Msg::OpenDiscussionBlock => self.open_discussion_card = !self.open_discussion_card,
+            Msg::OpenDiscussionBlock => {
+                self.open_discussion_card = !self.open_discussion_card;
+                if self.open_discussion_card {
+                    link.send_message(Msg::Focuser)
+                }
+            },
             Msg::OpenComponentSetting => {
                 if let Some(component_data) = &self.component {
                     // Redirect to page for change and update component
@@ -298,6 +304,7 @@ impl Component for ShowComponent {
             },
             Msg::Show3D => self.show_three_view = !self.show_three_view,
             Msg::ChangeActiveTab(set_tab) => self.active_tab = set_tab,
+            Msg::Focuser => set_focus("show-component-discussion"),
             Msg::ClearError => self.error = None,
             Msg::Ignore => {},
         }
@@ -701,7 +708,7 @@ impl ShowComponent {
     fn show_component_discussion(&self) -> Html {
         match self.open_discussion_card {
             true => html!{<>
-                <div class="card">
+                <div id="show-component-discussion" class="card">
                     <header class="card-header has-background-info-light">
                         <p class="card-header-title">{get_value_field(&380)}</p>
                     </header>

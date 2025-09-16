@@ -2,6 +2,7 @@ mod auth;
 mod localisation;
 mod filesize;
 mod local_storage;
+mod focuser;
 mod preview_model;
 mod requests;
 mod set_classes;
@@ -21,6 +22,7 @@ pub use local_storage::{
     get_logged_user, set_logged_user, get_token, is_authenticated, set_lang, get_lang,
     set_token, set_list_view, get_list_view, set_history_back, get_history_back, set_history_search, get_history_search,
 };
+pub(crate) use focuser::set_focus;
 pub(crate) use preview_model::preview_model;
 pub use requests::Requests;
 pub use set_classes::get_classes_table;

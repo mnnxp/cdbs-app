@@ -139,7 +139,7 @@ impl Component for FilesOfFilesetCard {
         match self.props.show_card {
             true => html!{<>
                 <br/>
-                <div class="card">
+                <div id="files-of-fileset-card" class="card">
                     <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
                     <header class={"card-header has-background-info-light"}>
                         <p class={"card-header-title"}>{get_value_field(&106)}</p> // Files of select fileset

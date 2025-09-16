@@ -11,7 +11,7 @@ use crate::fragments::component::modification::ImportModificationsData;
 use crate::fragments::paginate::Paginate;
 use crate::fragments::buttons::ft_add_btn;
 use crate::fragments::list_errors::ListErrors;
-use crate::services::{get_value_field, resp_parsing};
+use crate::services::{get_value_field, resp_parsing, set_focus};
 use crate::types::{UUID, ComponentModificationInfo, ActualStatus, ModificationUpdatePreData, PaginateSet};
 use crate::gqls::make_query;
 use crate::gqls::component::{
@@ -56,6 +56,7 @@ pub enum Msg {
     ChangeNewModificationParam(UUID),
     ChangeSelectModification(UUID),
     ChangePaginate(PaginateSet),
+    Focuser,
     ClearError,
 }
 
@@ -217,7 +218,9 @@ impl Component for ModificationsTableEdit {
                 if self.actual_statuses.is_empty() {
                     link.send_message(Msg::RequestListOptData);
                 }
-                if !self.open_edit_modification_card {
+                if self.open_edit_modification_card {
+                    link.send_message(Msg::Focuser);
+                } else {
                     link.send_message(Msg::RequestComponentModificationsData);
                 }
             },
@@ -252,6 +255,7 @@ impl Component for ModificationsTableEdit {
                 self.page_set = page_set;
                 self.link.send_message(Msg::RequestComponentModificationsData);
             },
+            Msg::Focuser => set_focus("show-modification-edit"),
             Msg::ClearError => self.error = None,
         }
         true
