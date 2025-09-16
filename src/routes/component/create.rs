@@ -13,7 +13,7 @@ use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::buttons::ft_create_btn;
-use crate::services::{get_from_value, get_logged_user, get_value_field, get_value_response, resp_parsing, set_history_back};
+use crate::services::{get_from_value, get_logged_user, get_value_field, get_value_response, resp_parsing, set_focus, set_history_back};
 use crate::types::{UUID, ComponentCreateData, TypeAccessInfo, ActualStatus};
 use crate::gqls::make_query;
 use crate::gqls::component::{
@@ -54,6 +54,7 @@ pub enum Msg {
     UpdateTypeAccessId(usize),
     UpdateActualStatusId(String),
     ClearError,
+    Focuser,
     Ignore,
 }
 
@@ -107,7 +108,9 @@ impl Component for CreateComponent {
                     self.name_empty = true;
                     self.disable_create_btn = false;
                 }
-
+                if self.name_empty {
+                    link.send_message(Msg::Focuser);
+                }
                 if self.disable_create_btn {
                     link.send_message(Msg::RequestCreateComponentData);
                 }
@@ -192,6 +195,7 @@ impl Component for CreateComponent {
             Msg::UpdateActualStatusId(data) =>
                 self.request_component.actual_status_id = data.parse::<usize>().unwrap_or_default(),
             Msg::ClearError => self.error = None,
+            Msg::Focuser => set_focus("update-component-name"),
             Msg::Ignore => {},
         }
         true
