@@ -7,7 +7,7 @@ use log::debug;
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
-use crate::fragments::markdown::MarkdownEditCard;
+use crate::fragments::markdown_edit::MarkdownEditCard;
 use crate::fragments::type_access::TypeAccessBlock;
 use crate::routes::AppRoute;
 use crate::error::Error;
@@ -251,9 +251,9 @@ impl CreateComponent {
         html!{
             <div class="card">
                 <div class="column">
-                  <label class="title is-5" for="update-component-name">{get_value_field(&110)}</label>
+                  <label class="title is-5" for="create-component-name">{get_value_field(&110)}</label>
                   <input
-                      id="update-component-name"
+                      id="create-component-name"
                       class={class_name}
                       type="text"
                       placeholder={get_value_field(&110)}
@@ -261,7 +261,7 @@ impl CreateComponent {
                       oninput={oninput_name} />
                 </div>
                 <MarkdownEditCard
-                    id_tag={"component-description"}
+                    id_tag={"create-component-description"}
                     title={get_value_field(&61)}
                     placeholder={String::new()}
                     raw_text={self.request_component.description.clone()}
@@ -269,11 +269,11 @@ impl CreateComponent {
                     />
                 <div class="column">
                     <div class="columns">
-                        <div class="column" style="margin-right: 1rem">
-                            <label class="label">{get_value_field(&96)}</label>
+                        <div class="column">
+                            <label class="label" for="create-component-actual-status">{get_value_field(&96)}</label>
                             <div class="select">
                               <select
-                                  id="component-status-id"
+                                  id="create-component-actual-status"
                                   select={self.request_component.actual_status_id.to_string()}
                                   onchange={onchange_actual_status_id}
                                   >
@@ -288,8 +288,8 @@ impl CreateComponent {
                               </select>
                             </div>
                         </div>
-                        <div class="column" style="margin-right: 1rem">
-                          <label class="label">{get_value_field(&58)}</label>
+                        <div class="column">
+                          <label class="label" for="type-access-block">{get_value_field(&58)}</label>
                             <TypeAccessBlock
                                 change_cb={onchange_type_access}
                                 types={self.types_access.clone()}

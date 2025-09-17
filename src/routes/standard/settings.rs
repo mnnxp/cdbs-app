@@ -13,6 +13,7 @@ use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::fragments::delete_card::ft_delete_card;
+use crate::fragments::markdown_edit::MarkdownEditCard;
 use crate::fragments::type_access::TypeAccessBlock;
 use crate::routes::AppRoute;
 use crate::error::Error;
@@ -478,28 +479,26 @@ impl StandardSettings {
                 </header>
                 <div class="card-content">
                     <div class="content">
-                        <div class="field">
-                            <label class="label">{get_value_field(&110)}</label>
+                        <div class="column">
+                            <label class="title is-5" for="update-standard-name">{get_value_field(&110)}</label>
                             <input
-                                id="update-name"
+                                id="update-standard-name"
                                 class="input"
                                 type="text"
                                 placeholder={get_value_field(&110)}
                                 value={self.request_standard.name.clone()}
                                 oninput={oninput_name} />
                         </div>
-                        <div class="field">
-                            <label class="label">{get_value_field(&61)}</label>
-                            <textarea
-                                id="update-description"
-                                class="textarea"
-                                // rows="10"
-                                type="text"
-                                placeholder={get_value_field(&61)}
-                                value={self.request_standard.description.clone()}
-                                oninput={oninput_description} />
+                        <MarkdownEditCard
+                            id_tag={"update-standard-description"}
+                            title={get_value_field(&61)}
+                            placeholder={String::new()}
+                            raw_text={self.request_standard.description.clone()}
+                            oninput_text={oninput_description}
+                            />
+                        <div class="column">
+                            {self.show_standard_params()}
                         </div>
-                        {self.show_standard_params()}
                     </div>
                     <footer class="card-footer">
                         {ft_save_btn(
@@ -552,9 +551,9 @@ impl StandardSettings {
                 <div class="column">
                     <div class="columns">
                         <div class="column">
-                            <label class="label">{get_value_field(&155)}</label>
+                            <label class="label" for="update-standard-publication-at">{get_value_field(&155)}</label>
                             <input
-                                id="update-publication-at"
+                                id="update-standard-publication-at"
                                 class="input"
                                 type="date"
                                 placeholder={get_value_field(&155)}
@@ -566,10 +565,10 @@ impl StandardSettings {
                             />
                         </div>
                         <div class="column">
-                            <label class="label">{get_value_field(&96)}</label>
+                            <label class="label" for="update-standard-status-id">{get_value_field(&96)}</label>
                             <div class="select">
                                 <select
-                                    id="standard-status-id"
+                                    id="update-standard-status-id"
                                     select={self.request_standard.standard_status_id.to_string()}
                                     onchange={onchange_standard_status_id}
                                     >
@@ -585,10 +584,10 @@ impl StandardSettings {
                             </div>
                         </div>
                     </div>
-                    <label class="label">{get_value_field(&223)}</label> // Owner company
+                    <label class="label" for="update-set-owner-company">{get_value_field(&223)}</label> // Owner company
                     <div class="select is-fullwidth">
                         <select
-                            id="set-owner-company"
+                            id="update-set-owner-company"
                             select={self.request_standard.company_uuid.clone()}
                             onchange={onchange_change_owner_company}
                             >
@@ -604,7 +603,7 @@ impl StandardSettings {
                     </div>
                 </div>
                 <div class="column">
-                    <label class="label">{get_value_field(&58)}</label>
+                    <label class="label" for="type-access-block">{get_value_field(&58)}</label>
                     <TypeAccessBlock
                         change_cb={onchange_type_access}
                         types={self.types_access.clone()}

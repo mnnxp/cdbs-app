@@ -11,6 +11,7 @@ use log::debug;
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
+use crate::fragments::markdown_edit::MarkdownEditCard;
 use crate::fragments::type_access::TypeAccessBlock;
 use crate::routes::AppRoute;
 use crate::error::Error;
@@ -248,24 +249,22 @@ impl CreateStandard {
         html!{
             <div class="card">
               <div class="column">
-                <label class="label">{get_value_field(&110)}</label>
+                <label class="title is-5" for="create-standard-name">{get_value_field(&110)}</label>
                 <input
-                    id="update-name"
+                    id="create-standard-name"
                     class="input"
                     type="text"
                     placeholder={get_value_field(&110)}
                     value={self.request_standard.name.clone()}
                     oninput={oninput_name} />
-                <label class="label">{get_value_field(&61)}</label>
-                <textarea
-                    id="update-description"
-                    class="textarea"
-                    // rows="10"
-                    type="text"
-                    placeholder={get_value_field(&61)}
-                    value={self.request_standard.description.clone()}
-                    oninput={oninput_description} />
                 </div>
+                <MarkdownEditCard
+                    id_tag={"create-standard-description"}
+                    title={get_value_field(&61)}
+                    placeholder={String::new()}
+                    raw_text={self.request_standard.description.clone()}
+                    oninput_text={oninput_description}
+                    />
                 <div class="column">
                     {self.show_standard_params()}
                 </div>
@@ -292,9 +291,9 @@ impl CreateStandard {
                 <div class="column">
                     <div class="columns">
                         <div class="column">
-                            <label class="label">{get_value_field(&155)}</label>
+                            <label class="label" for="create-standard-publication-at">{get_value_field(&155)}</label>
                             <input
-                                id="update-publication-at"
+                                id="create-standard-publication-at"
                                 class="input"
                                 type="date"
                                 placeholder={get_value_field(&155)}
@@ -303,10 +302,10 @@ impl CreateStandard {
                             />
                         </div>
                         <div class="column">
-                            <label class="label">{get_value_field(&96)}</label>
+                            <label class="label" for="create-standard-status-id">{get_value_field(&96)}</label>
                             <div class="select">
                                 <select
-                                    id="standard-status-id"
+                                    id="create-standard-status-id"
                                     select={self.request_standard.standard_status_id.to_string()}
                                     onchange={onchange_standard_status_id}
                                     >
@@ -322,10 +321,10 @@ impl CreateStandard {
                             </div>
                         </div>
                     </div>
-                    <label class="label">{get_value_field(&223)}</label> // Owner company
+                    <label class="label" for="create-set-owner-company">{get_value_field(&223)}</label> // Owner company
                     <div class="select is-fullwidth">
                         <select
-                            id="set-owner-company"
+                            id="create-set-owner-company"
                             select={self.request_standard.company_uuid.clone()}
                             onchange={onchange_change_owner_company}
                             >
@@ -341,7 +340,7 @@ impl CreateStandard {
                     </div>
                 </div>
                 <div class="column">
-                    <label class="label">{get_value_field(&58)}</label>
+                    <label class="label" for="type-access-block">{get_value_field(&58)}</label>
                     <TypeAccessBlock
                         change_cb={onchange_type_access}
                         types={self.types_access.clone()}

@@ -14,7 +14,7 @@ pub mod header;
 pub mod list_empty;
 pub mod list_errors;
 pub mod list_item;
-pub mod markdown;
+pub mod markdown_edit;
 pub mod notification;
 pub mod paginate;
 pub mod responsive;

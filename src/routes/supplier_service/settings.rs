@@ -11,6 +11,7 @@ use log::debug;
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
+use crate::fragments::markdown_edit::MarkdownEditCard;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{
@@ -355,27 +356,23 @@ impl ServiceSettings {
                 </header>
                 <div class="card-content">
                     <div class="content">
-                        <div class="field">
-                            <label class="label">{get_value_field(&110)}</label>
+                        <div class="column">
+                            <label class="title is-5" for="update-service-name">{get_value_field(&110)}</label>
                             <input
-                                id="update-name"
+                                id="update-service-name"
                                 class="input"
                                 type="text"
                                 placeholder={get_value_field(&110)}
                                 value={self.request_service.name.clone()}
                                 oninput={oninput_name} />
                         </div>
-                        <div class="field">
-                            <label class="label">{get_value_field(&61)}</label>
-                            <textarea
-                                id="update-description"
-                                class="textarea"
-                                // rows="10"
-                                type="text"
-                                placeholder={get_value_field(&61)}
-                                value={self.request_service.description.clone()}
-                                oninput={oninput_description} />
-                        </div>
+                        <MarkdownEditCard
+                            id_tag={"update-service-description"}
+                            title={get_value_field(&61)}
+                            placeholder={String::new()}
+                            raw_text={self.request_service.description.clone()}
+                            oninput_text={oninput_description}
+                            />
                     </div>
                     <footer class="card-footer">
                         {ft_save_btn(

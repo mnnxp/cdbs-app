@@ -4,6 +4,7 @@ use log::debug;
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
+use crate::fragments::markdown_edit::MarkdownEditCard;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
@@ -319,11 +320,11 @@ impl Component for CreateService {
                         <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
                         <h1 class="title">{get_value_field(&364)}</h1>
                         <div class="card">
-                        {self.show_main_card()}
-                        {match self.user_entry {
-                            true => html!{},
-                            false => self.show_user_data(),
-                        }}
+                            {self.show_main_card()}
+                            {match self.user_entry {
+                                true => html!{},
+                                false => self.show_user_data(),
+                            }}
                         </div>
                         <br/>
                         {self.show_manage_btn()}
@@ -342,50 +343,35 @@ impl CreateService {
             false => "input",
         };
         let oninput_description = self.link.callback(|ev: InputData| Msg::UpdateDescription(ev.value));
-        let class_description = match self.request_service.description.is_empty() && self.click_create_btn {
-            true => "textarea is-danger",
-            false => "textarea",
-        };
-
         html!{
-              <div class={"column"}>
-                <label class={"label"}>{get_value_field(&110)}</label>
-                <div class={"control has-icons-right"}>
-                <input
-                    id={"update-name"}
-                    class={class_name}
-                    type={"text"}
-                    placeholder={get_value_field(&110)}
-                    value={self.request_service.name.clone()}
-                    oninput={oninput_name} />
-                    {match self.request_service.name.is_empty() && self.click_create_btn {
-                        true => html!{
-                            <span class="icon is-small is-right">
-                                <i class="fas fa-exclamation-triangle"></i>
-                            </span>
-                        },
-                        false => html!{},
-                    }}
+            <div>
+                <div class={"column"}>
+                    <label class="title is-5" for="create-service-name">{get_value_field(&110)}</label>
+                    <div class={"control has-icons-right"}>
+                        <input
+                            id={"create-service-name"}
+                            class={class_name}
+                            type={"text"}
+                            placeholder={get_value_field(&110)}
+                            value={self.request_service.name.clone()}
+                            oninput={oninput_name} />
+                            {match self.request_service.name.is_empty() && self.click_create_btn {
+                                true => html!{
+                                    <span class="icon is-small is-right">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                    </span>
+                                },
+                                false => html!{},
+                            }}
+                    </div>
                 </div>
-                <label class="label">{get_value_field(&61)}</label>
-                <div class={"control has-icons-right"}>
-                <textarea
-                    id={"update-description"}
-                    class={class_description}
-                    // rows="10"
-                    type={"text"}
-                    placeholder={get_value_field(&61)}
-                    value={self.request_service.description.clone()}
-                    oninput={oninput_description} />
-                    {match self.request_service.description.is_empty() && self.click_create_btn {
-                        true => html!{
-                            <span class="icon is-small is-right">
-                                <i class="fas fa-exclamation-triangle"></i>
-                            </span>
-                        },
-                        false => html!{},
-                    }}
-                </div>
+                <MarkdownEditCard
+                    id_tag={"create-service-description"}
+                    title={get_value_field(&61)}
+                    placeholder={String::new()}
+                    raw_text={self.request_service.description.clone()}
+                    oninput_text={oninput_description}
+                    />
             </div>
         }
     }
@@ -415,10 +401,10 @@ impl CreateService {
             <div class={"column"}>
             <div class={"columns"}>
             <div class={"column"}>
-                <label class={"label"}>{get_value_field(&22)}</label>
+                <label class={"label"} for={"create-service-email"}>{get_value_field(&22)}</label>
                 <div class={"control has-icons-left has-icons-right"}>
                 <input
-                    id={"email"}
+                    id={"create-service-email"}
                     class={class_email}
                     type={"email"}
                     oninput={oninput_email}
@@ -439,10 +425,10 @@ impl CreateService {
                 </div>
             </div>
             <div class={"column"}>
-                <label class={"label"}>{get_value_field(&56)}</label>
+                <label class={"label"} for={"create-service-phone"}>{get_value_field(&56)}</label>
                 <div class={"control has-icons-left has-icons-right"}>
                 <input
-                    id={"phone"}
+                    id={"create-service-phone"}
                     class={class_tel}
                     type={"tel"}
                     oninput={oninput_tel}
@@ -465,10 +451,10 @@ impl CreateService {
             </div>
             <div class={"columns"}>
             <div class={"column"}>
-                <label class={"label"}>{get_value_field(&50)}</label>
+                <label class={"label"} for={"create-service-username"}>{get_value_field(&50)}</label>
                 <div class={"control has-icons-left has-icons-right"}>
                 <input
-                    id={"username"}
+                    id={"create-service-username"}
                     class={class_username}
                     type={"username"}
                     oninput={oninput_username}
@@ -489,10 +475,10 @@ impl CreateService {
                 </div>
             </div>
             <div class={"column"}>
-                <label class={"label"}>{get_value_field(&20)}</label>
+                <label class={"label"} for={"create-service-password"}>{get_value_field(&20)}</label>
                 <div class={"control has-icons-left has-icons-right"}>
                 <input
-                    id={"password"}
+                    id={"create-service-password"}
                     class={class_password}
                     type={"password"}
                     oninput={oninput_password}

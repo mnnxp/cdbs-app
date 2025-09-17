@@ -12,6 +12,7 @@ use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::fragments::delete_card::ft_delete_card;
+use crate::fragments::markdown_edit::MarkdownEditCard;
 use crate::fragments::type_access::TypeAccessBlock;
 use crate::routes::AppRoute;
 use crate::error::Error;
@@ -497,28 +498,26 @@ impl ComponentSettings {
 
         html!{<>
             <div class="content">
-                <div class="field">
-                    <label class="label">{get_value_field(&110)}</label>
+                <div class="column">
+                    <label class="title is-5" for="setting-component-update-name">{get_value_field(&110)}</label>
                     <input
-                        id="update-name"
+                        id="setting-component-update-name"
                         class="input"
                         type="text"
                         placeholder={get_value_field(&110)}
                         value={self.request_component.name.clone()}
                         oninput={oninput_name} />
                 </div>
-                <div class="field">
-                    <label class="label">{get_value_field(&61)}</label>
-                    <textarea
-                        id="update-description"
-                        class="textarea"
-                        // rows="10"
-                        type="text"
-                        placeholder={get_value_field(&61)}
-                        value={self.request_component.description.clone()}
-                        oninput={oninput_description} />
+                <MarkdownEditCard
+                    id_tag={"setting-component-description"}
+                    title={get_value_field(&61)}
+                    placeholder={String::new()}
+                    raw_text={self.request_component.description.clone()}
+                    oninput_text={oninput_description}
+                    />
+                <div class="column">
+                    {self.show_component_info()}
                 </div>
-                {self.show_component_info()}
             </div>
             <footer class="card-footer">
                 {ft_save_btn(
@@ -541,10 +540,10 @@ impl ComponentSettings {
         html!{
             <div class="columns">
                 <div class="column">
-                    <label class="label">{get_value_field(&96)}</label>
+                    <label class="label" for="setting-component-actual-status">{get_value_field(&96)}</label>
                     <div class="select is-fullwidth">
                         <select
-                            id="component-actual-status"
+                            id="setting-component-actual-status"
                             select={self.request_component.actual_status_id.to_string()}
                             onchange={onchange_actual_status_id}
                             >
@@ -560,7 +559,7 @@ impl ComponentSettings {
                     </div>
                 </div>
                 <div class="column">
-                    <label class="label">{get_value_field(&58)}</label>
+                    <label class="label" for="type-access-block">{get_value_field(&58)}</label>
                     <TypeAccessBlock
                         change_cb={onchange_type_access}
                         types={self.types_access.clone()}

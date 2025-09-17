@@ -8,7 +8,7 @@ use super::fileset::ManageModificationFilesets;
 use crate::error::Error;
 use crate::fragments::buttons::{ft_delete_btn, ft_save_btn};
 use crate::fragments::list_errors::ListErrors;
-use crate::fragments::markdown::MarkdownEditCard;
+use crate::fragments::markdown_edit::MarkdownEditCard;
 use crate::services::{get_value_field, resp_parsing};
 use crate::types::{UUID, ComponentModificationInfo, ActualStatus, ModificationUpdatePreData};
 use crate::gqls::make_query;

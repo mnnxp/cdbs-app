@@ -60,6 +60,7 @@ impl Component for TypeAccessBlock {
                       <div class="column p-0 m-0">
                       <label class="radio">
                           <input
+                              id="type-access-block"
                               type="radio"
                               name="type-access"
                               value={x.type_access_id.to_string()}
