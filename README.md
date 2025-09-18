@@ -68,7 +68,7 @@
 
 This platform facilitates the sharing and versioning of parts, while offering API access and seamless integration options.
 
-At first glance, it might seem like the challenges of sharing 3D models, drawings, and other engineering data—like keeping track of versions and making everything accessible—have already been taken care of by existing solutions. But CADBase takes a different approach, with some advantages of its own.
+There are many solutions for sharing 3D models, drawings and other engineering data. However, the CADBase platform has a number of distinctive features that improve product data management by offering an effective solution for both individual use and collaborative work in engineering and design.
 
 ### Key Features & Improvements
 
