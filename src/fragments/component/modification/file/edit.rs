@@ -196,9 +196,10 @@ impl Component for ManageModificationFilesCard {
         let callback_upload_confirm = self.link.callback(|confirmations| Msg::UploadConfirm(confirmations));
         let callback_delete_file = self.link.callback(|value: UUID| Msg::RemoveFile(value));
         let onclick_paginate = self.link.callback(|page_set| Msg::ChangePaginate(page_set));
-        html!{
+        html!{<>
+            <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
+            <p class={"subtitle is-size-5"}>{get_value_field(&407)}</p>
             <div class="columns">
-                <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
                 <div class="column">
                     <p class={"title is-5"}>{get_value_field(&202)}</p> // Upload modification files
                     {commit_msg_field(self.commit_msg.clone(), oninput_commit_msg.clone())}
@@ -234,6 +235,6 @@ impl Component for ManageModificationFilesCard {
                         />
                 </div>
             </div>
-        }
+        </>}
     }
 }

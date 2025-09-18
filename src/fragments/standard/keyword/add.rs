@@ -24,7 +24,6 @@ pub struct Props {
 
 pub struct AddKeywordsTags {
     error: Option<Error>,
-    // current_keywords: Vec<Keyword>,
     props: Props,
     link: ComponentLink<Self>,
     ipt_index: usize,
@@ -58,7 +57,6 @@ impl Component for AddKeywordsTags {
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
         Self {
             error: None,
-            // current_keywords: props.standard_keywords.clone(),
             props,
             link,
             ipt_index: 0,
@@ -76,7 +74,6 @@ impl Component for AddKeywordsTags {
         match msg {
             Msg::GetString(keyword) => {
                 self.ipt_keyword = keyword.clone();
-                self.bad_keyword = self.ipt_keyword.len() > 9;
                 if !self.ipt_keyword.is_empty() {
                     link.send_message(Msg::ParseKeywords)
                 }
@@ -88,35 +85,15 @@ impl Component for AddKeywordsTags {
             },
             Msg::ParseKeywords => {
                 // debug!("ParseKeywords: {:?}", self.ipt_keyword);
-                let keyword = self.ipt_keyword.clone();
-                match keyword.find(|c| (c == ' ') || (c == ',')) {
-                    None => (),
-                    Some(1) => {
-                        if keyword.len() < 11 {
-                            self.add_keywords.push(Keyword {
-                                id: self.ipt_index,
-                                keyword: keyword.trim().to_string()
-                            });
-                            self.ipt_keyword = String::new();
-                            self.ipt_index += 1;
-                        };
-                        link.send_message(Msg::RequestAddKeywords)
-                    },
-                    Some(_) => {
-                        for k in keyword.split(|c| c == ' ' || c == ',') {
-                            if k.len() < 11 {
-                                self.add_keywords.push(Keyword {
-                                    id: self.ipt_index,
-                                    keyword: k.trim().to_string()
-                                });
-                                self.ipt_keyword = String::new();
-                                self.ipt_index += 1;
-                            }
-                        };
-                        debug!("Keywords: {:?}", self.add_keywords.len());
-                        link.send_message(Msg::RequestAddKeywords)
-                    },
-                }
+                Keyword::parse_keywords(
+                    self.ipt_keyword.clone(),
+                    &mut self.ipt_index,
+                    &mut self.ipt_keyword,
+                    &mut self.add_keywords,
+                    &mut self.bad_keyword
+                );
+                debug!("Keywords: {:?}", self.add_keywords.len());
+                link.send_message(Msg::RequestAddKeywords)
             },
             Msg::RequestGetStandardKeywords => {
                 let standard_uuid = self.props.standard_uuid.clone();
@@ -264,7 +241,6 @@ impl AddKeywordsTags {
                     _ => Msg::Ignore,
                 }
             });
-        let onclick_hide_notification = self.link.callback(|_| Msg::HideNotification);
         let onclick_del_new_keyword =
             self.link.callback(|value: Keyword| Msg::DeleteNewKeyword(value.keyword));
         let onclick_del_old_keyword =
@@ -272,22 +248,21 @@ impl AddKeywordsTags {
 
         html!{<>
             <div class="panel-block">
-                <input
-                    oninput={oninput_parse_keyword}
-                    onkeypress={onkeypress_parse_keyword}
-                    class="input"
-                    type="text"
-                    value={self.ipt_keyword.clone()}
-                    placeholder={get_value_field(&193)} // Emter keywords separated by spaces or commas
-                  />
+                <div class="column p-0">
+                    <input
+                        oninput={oninput_parse_keyword}
+                        onkeypress={onkeypress_parse_keyword}
+                        class="input"
+                        type="text"
+                        value={self.ipt_keyword.clone()}
+                        placeholder={get_value_field(&193)} // Emter keywords separated by spaces or commas
+                    />
+                    {match self.bad_keyword {
+                        true => html!{<p class="help is-danger">{get_value_field(&243)}</p>}, // Keywords must be less...
+                        false => html!{}
+                    }}
+                </div>
             </div>
-           {match self.bad_keyword {
-               true => html!{<div class="notification is-danger">
-                  <button class="delete" onclick={onclick_hide_notification}></button>
-                  {"Keywords must be less than 10 symbols"}
-               </div>},
-               false => html!{}
-           }}
            <div class="panel-block">
                <div id="new-keywords" class="field is-grouped is-grouped-multiline">
                  {for self.new_keywords.iter().map(|keyword| {

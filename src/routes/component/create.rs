@@ -1,4 +1,4 @@
-use yew::{agent::Bridged, html, Bridge, Component, ComponentLink, Html, ShouldRender, InputData, ChangeData};
+use yew::{agent::Bridged, html, Properties, Bridge, Component, ComponentLink, Html, ShouldRender, InputData, ChangeData};
 use yew_router::{
     agent::RouteRequest::ChangeRoute,
     prelude::RouteAgent,
@@ -7,23 +7,32 @@ use log::debug;
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
+use crate::fragments::markdown_edit::MarkdownEditCard;
+use crate::fragments::type_access::TypeAccessBlock;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::buttons::ft_create_btn;
-use crate::services::{get_from_value, get_logged_user, get_value_field, get_value_response, resp_parsing, set_history_back};
+use crate::services::{get_from_value, get_logged_user, get_value_field, get_value_response, resp_parsing, set_focus, set_history_back};
 use crate::types::{UUID, ComponentCreateData, TypeAccessInfo, ActualStatus};
 use crate::gqls::make_query;
 use crate::gqls::component::{
     GetComponentDataOpt, get_component_data_opt,
     RegisterComponent, register_component,
+    SetCompanyOwnerSupplier, set_company_owner_supplier,
 };
+
+#[derive(Clone, Debug, Properties)]
+pub struct Props {
+    pub company_uuid: Option<UUID>,
+}
 
 /// Component with relate data
 pub struct CreateComponent {
     error: Option<Error>,
     request_component: ComponentCreateData,
     router_agent: Box<dyn Bridge<RouteAgent>>,
+    props: Props,
     link: ComponentLink<Self>,
     actual_statuses: Vec<ActualStatus>,
     types_access: Vec<TypeAccessInfo>,
@@ -35,26 +44,30 @@ pub struct CreateComponent {
 pub enum Msg {
     RequestManager,
     RequestCreateComponentData,
+    RequestChangeOwnerSupplier(UUID, UUID),
     ResponseError(Error),
     GetListOpt(String),
     GetCreateComponentResult(String),
+    GetUpdateSetSupplierResult(String, UUID),
     UpdateName(String),
     UpdateDescription(String),
-    UpdateTypeAccessId(String),
+    UpdateTypeAccessId(usize),
     UpdateActualStatusId(String),
     ClearError,
+    Focuser,
     Ignore,
 }
 
 impl Component for CreateComponent {
     type Message = Msg;
-    type Properties = ();
+    type Properties = Props;
 
-    fn create(_props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
         CreateComponent {
             error: None,
             request_component: ComponentCreateData::new(),
             router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
+            props,
             link,
             actual_statuses: Vec::new(),
             types_access: Vec::new(),
@@ -95,37 +108,41 @@ impl Component for CreateComponent {
                     self.name_empty = true;
                     self.disable_create_btn = false;
                 }
-
+                if self.name_empty {
+                    link.send_message(Msg::Focuser);
+                }
                 if self.disable_create_btn {
                     link.send_message(Msg::RequestCreateComponentData);
                 }
             },
             Msg::RequestCreateComponentData => {
-                let request_component: ComponentCreateData = self.request_component.clone();
-
+                let ipt_component_data = register_component::IptComponentData {
+                    parentComponentUuid: self.request_component.parent_component_uuid.clone(),
+                    name: self.request_component.name.clone(),
+                    description: self.request_component.description.clone(),
+                    typeAccessId: self.request_component.type_access_id as i64,
+                    componentTypeId: self.request_component.component_type_id as i64,
+                    actualStatusId: self.request_component.actual_status_id as i64,
+                    isBase: self.request_component.is_base,
+                };
                 spawn_local(async move {
-                    let ComponentCreateData {
-                        parent_component_uuid,
-                        name,
-                        description,
-                        type_access_id,
-                        component_type_id,
-                        actual_status_id,
-                        is_base,
-                    } = request_component;
-                    let ipt_component_data = register_component::IptComponentData {
-                        parentComponentUuid: parent_component_uuid,
-                        name,
-                        description,
-                        typeAccessId: type_access_id as i64,
-                        componentTypeId: component_type_id as i64,
-                        actualStatusId: actual_status_id as i64,
-                        isBase: is_base,
-                    };
                     let res = make_query(RegisterComponent::build_query(register_component::Variables {
                         ipt_component_data
                     })).await.unwrap();
                     link.send_message(Msg::GetCreateComponentResult(res));
+                })
+            },
+            Msg::RequestChangeOwnerSupplier(component_uuid, company_uuid) => {
+                let ipt_supplier_component_data = set_company_owner_supplier::IptSupplierComponentData{
+                    componentUuid: component_uuid.clone(),
+                    companyUuid: company_uuid,
+                    description: String::new(), // self.request_set_supplier_description.clone(),
+                };
+                spawn_local(async move {
+                    let res = make_query(SetCompanyOwnerSupplier::build_query(
+                        set_company_owner_supplier::Variables { ipt_supplier_component_data }
+                    )).await.unwrap();
+                    link.send_message(Msg::GetUpdateSetSupplierResult(res, component_uuid));
                 })
             },
             Msg::ResponseError(err) => self.error = Some(err),
@@ -140,14 +157,30 @@ impl Component for CreateComponent {
             },
             Msg::GetCreateComponentResult(res) => {
                 match resp_parsing::<UUID>(res, "registerComponent") {
-                    Ok(result) => {
-                        debug!("registerComponent: {:?}", result);
-                        // Redirect to setting component page
-                        if !result.is_empty() {
-                            self.router_agent.send(
-                                ChangeRoute(AppRoute::ComponentSettings(result).into())
-                            );
+                    Ok(component_uuid) => {
+                        debug!("registerComponent: {:?}", component_uuid);
+                        if component_uuid.is_empty() {
+                            return true
                         }
+                        if let Some(company_uuid) = &self.props.company_uuid {
+                            link.send_message(Msg::RequestChangeOwnerSupplier(component_uuid, company_uuid.clone()));
+                            return true
+                        }
+                        // Redirect to setting component page
+                        self.router_agent.send(
+                            ChangeRoute(AppRoute::ComponentSettings(component_uuid).into())
+                        );
+                    },
+                    Err(err) => link.send_message(Msg::ResponseError(err)),
+                }
+            },
+            Msg::GetUpdateSetSupplierResult(res, component_uuid) => {
+                match resp_parsing::<bool>(res, "setCompanyOwnerSupplier") {
+                    Ok(result) => {
+                        debug!("setCompanyOwnerSupplier: {:?}", result);
+                        self.router_agent.send(
+                            ChangeRoute(AppRoute::ComponentSettings(component_uuid).into())
+                        );
                     },
                     Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
@@ -158,11 +191,11 @@ impl Component for CreateComponent {
                 self.name_empty = false;
             },
             Msg::UpdateDescription(data) => self.request_component.description = data,
-            Msg::UpdateTypeAccessId(data) =>
-                self.request_component.type_access_id = data.parse::<usize>().unwrap_or_default(),
+            Msg::UpdateTypeAccessId(value) => self.request_component.type_access_id = value,
             Msg::UpdateActualStatusId(data) =>
                 self.request_component.actual_status_id = data.parse::<usize>().unwrap_or_default(),
             Msg::ClearError => self.error = None,
+            Msg::Focuser => set_focus("update-component-name"),
             Msg::Ignore => {},
         }
         true
@@ -204,11 +237,8 @@ impl CreateComponent {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
             }));
-        let onchange_change_type_access =
-            self.link.callback(|ev: ChangeData| Msg::UpdateTypeAccessId(match ev {
-              ChangeData::Select(el) => el.value(),
-              _ => "1".to_string(),
-            }));
+        let onchange_type_access =
+            self.link.callback(|value| Msg::UpdateTypeAccessId(value));
         let oninput_name =
             self.link.callback(|ev: InputData| Msg::UpdateName(ev.value));
         let oninput_description =
@@ -221,31 +251,29 @@ impl CreateComponent {
         html!{
             <div class="card">
                 <div class="column">
-                  <label class="label">{get_value_field(&110)}</label>
+                  <label class="title is-5" for="create-component-name">{get_value_field(&110)}</label>
                   <input
-                      id="update-name"
+                      id="create-component-name"
                       class={class_name}
                       type="text"
                       placeholder={get_value_field(&110)}
                       value={self.request_component.name.clone()}
                       oninput={oninput_name} />
-                  <label class="label">{get_value_field(&61)}</label>
-                  <textarea
-                      id="update-description"
-                      class="textarea"
-                      // rows="10"
-                      type="text"
-                      placeholder={get_value_field(&61)}
-                      value={self.request_component.description.clone()}
-                      oninput={oninput_description} />
                 </div>
+                <MarkdownEditCard
+                    id_tag={"create-component-description"}
+                    title={get_value_field(&61)}
+                    placeholder={String::new()}
+                    raw_text={self.request_component.description.clone()}
+                    oninput_text={oninput_description}
+                    />
                 <div class="column">
                     <div class="columns">
-                        <div class="column" style="margin-right: 1rem">
-                            <label class="label">{get_value_field(&96)}</label>
+                        <div class="column">
+                            <label class="label" for="create-component-actual-status">{get_value_field(&96)}</label>
                             <div class="select">
                               <select
-                                  id="component-status-id"
+                                  id="create-component-actual-status"
                                   select={self.request_component.actual_status_id.to_string()}
                                   onchange={onchange_actual_status_id}
                                   >
@@ -260,24 +288,13 @@ impl CreateComponent {
                               </select>
                             </div>
                         </div>
-                        <div class="column" style="margin-right: 1rem">
-                            <label class="label">{get_value_field(&114)}</label>
-                            <div class="select">
-                              <select
-                                  id="set-type-access"
-                                  select={self.request_component.type_access_id.to_string()}
-                                  onchange={onchange_change_type_access}
-                                >
-                              { for self.types_access.iter().map(|x|
-                                  html!{
-                                      <option value={x.type_access_id.to_string()}
-                                            selected={x.type_access_id == self.request_component.type_access_id} >
-                                          {&x.name}
-                                      </option>
-                                  }
-                              )}
-                              </select>
-                            </div>
+                        <div class="column">
+                          <label class="label" for="type-access-block">{get_value_field(&58)}</label>
+                            <TypeAccessBlock
+                                change_cb={onchange_type_access}
+                                types={self.types_access.clone()}
+                                selected={self.request_component.type_access_id}
+                            />
                         </div>
                     </div>
                 </div>

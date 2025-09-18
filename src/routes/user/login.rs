@@ -32,7 +32,6 @@ pub struct Login {
     auth: Auth,
     error: Option<Error>,
     request: LoginInfo,
-    response: Callback<Result<UserToken, Error>>,
     task: Option<FetchTask>,
     props: Props,
     router_agent: Arc<Mutex<Box<dyn Bridge<RouteAgent>>>>,
@@ -42,6 +41,7 @@ pub struct Login {
 pub enum Msg {
     Request,
     Response(Result<UserToken, Error>),
+    GetResponseMySelf(String),
     UpdateUsername(String),
     UpdatePassword(String),
     ClearError,
@@ -58,7 +58,6 @@ impl Component for Login {
             error: None,
             props,
             request: LoginInfo::default(),
-            response: link.callback(Msg::Response),
             router_agent: Arc::new(Mutex::new(RouteAgent::bridge(link.callback(|_| Msg::Ignore)))) ,
             task: None,
             link,
@@ -75,45 +74,49 @@ impl Component for Login {
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
+        let link = self.link.clone();
         let props = self.props.clone();
         let router_agent = self.router_agent.clone();
         match msg {
             Msg::Request => {
-                let request = LoginInfoWrapper {
-                    user: self.request.clone(),
-                };
-                self.task = Some(self.auth.login(request, self.response.clone()));
+                self.task = Some(self.auth.login(
+                    LoginInfoWrapper { user: self.request.clone() },
+                    link.callback(Msg::Response)
+                ));
             },
             Msg::Response(Ok(user_info)) => {
                 set_token(Some(user_info.to_string()));
                 spawn_local(async move {
                     let res = make_query(GetMySelf::build_query(get_my_self::Variables)).await.unwrap();
-                    debug!("res: {}", res);
-                    let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
-                    let res = data.as_object().unwrap().get("data").unwrap();
-                    let user_json = res.get("myself").unwrap().clone();
-                    set_logged_user(Some(user_json.to_string()));
-                    let user: SlimUser = serde_json::from_value(user_json).unwrap();
-                    debug!("user.username: {}", user.username);
-                    let username = user.username.clone();
-                    props.callback.emit(user);
-                    // return to the previous page if the user was redirected to the authorization page
-                    let to_profile = match (get_history_back(), web_sys::window().map(|w| w.history())) {
-                        (Some(_), Some(Ok(history))) => {
-                            set_history_back(None);
-                            history.back().is_err()
-                        },
-                        _ => true,
-                    };
-                    if to_profile {
-                        router_agent.lock().unwrap().send(ChangeRoute(AppRoute::Profile(username).into()));
-                    }
+                    link.send_message(Msg::GetResponseMySelf(res));
                 });
                 // debug!("get_token().unwrap(): {:?}", get_token().unwrap());
             },
             Msg::Response(Err(err)) => {
                 self.error = Some(err);
                 self.task = None;
+            },
+            Msg::GetResponseMySelf(res) => {
+                debug!("res: {}", res);
+                let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
+                let res = data.as_object().unwrap().get("data").unwrap();
+                let user_json = res.get("myself").unwrap().clone();
+                set_logged_user(Some(user_json.to_string()));
+                let user: SlimUser = serde_json::from_value(user_json).unwrap();
+                debug!("user.username: {}", user.username);
+                let username = user.username.clone();
+                props.callback.emit(user);
+                // return to the previous page if the user was redirected to the authorization page
+                let to_profile = match (get_history_back(), web_sys::window().map(|w| w.history())) {
+                    (Some(_), Some(Ok(history))) => {
+                        set_history_back(None);
+                        history.back().is_err()
+                    },
+                    _ => true,
+                };
+                if to_profile {
+                    router_agent.lock().unwrap().send(ChangeRoute(AppRoute::Profile(username).into()));
+                }
             },
             Msg::UpdateUsername(username) => self.request.username = username,
             Msg::UpdatePassword(password) => self.request.password = password,
@@ -164,6 +167,7 @@ impl Component for Login {
                                   <i class="fas fa-user"></i>
                                 </span>
                             </div>
+                            <p class="help">{get_value_field(&81)}</p>
                         </fieldset>
                         <fieldset class="field">
                             <label class="label">{get_value_field(&20)}</label>

@@ -1,5 +1,7 @@
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
+use crate::{fragments::search::SearchArg, services::get_value_field};
+
 use super::{
     UUID, SlimCompany, TypeAccessInfo, ShowStandardShort, ShowUserShort,
     ShowFileInfo, DownloadFile, LicenseInfo, Spec, Keyword, Program
@@ -72,6 +74,7 @@ pub struct ShowComponentShort {
     pub actual_status: ActualStatus,
     pub is_followed: bool,
     pub is_base: bool,
+    pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
     pub licenses: Vec<LicenseInfo>,
     pub files: Vec<DownloadFile>, // images
@@ -114,7 +117,7 @@ impl From<&ComponentUpdatePreData> for ComponentUpdateData {
     fn from(new_data: &ComponentUpdatePreData) -> Self {
         Self {
             parent_component_uuid: Some(new_data.parent_component_uuid.clone()),
-            name: Some(new_data.name.clone()),
+            name: if new_data.name.is_empty() { None } else { Some(new_data.name.clone()) },
             description: Some(new_data.description.clone()),
             component_type_id: None,
             actual_status_id: Some(new_data.actual_status_id as i64),
@@ -204,7 +207,7 @@ pub struct ModificationUpdatePreData{
 impl ModificationUpdatePreData {
     pub(crate) fn new() -> Self {
         Self {
-            modification_name: String::new(),
+            modification_name: String::from(get_value_field(&396)),
             description: String::new(),
             actual_status_id: 1,
         }
@@ -232,6 +235,7 @@ pub struct FilesetProgramInfo{
   pub uuid: UUID,
   pub modification_uuid: UUID,
   pub program: Program,
+  pub files_count: i64,
 }
 
 // for arguments users query
@@ -241,7 +245,9 @@ pub struct ComponentsQueryArg {
     pub components_uuids: Option<Vec<UUID>>,
     pub company_uuid: Option<UUID>,
     pub standard_uuid: Option<UUID>,
+    pub service_uuid: Option<UUID>,
     pub user_uuid: Option<UUID>,
+    pub spec_id: Option<i64>,
     pub favorite: Option<bool>,
 }
 
@@ -274,17 +280,27 @@ impl ComponentsQueryArg {
             ..Default::default()
         }
     }
-}
 
-// #[derive(PartialEq, Serialize, Deserialize, Clone, Default, Debug)]
-// #[serde(rename_all = "camelCase")]
-// pub struct IptSearchArg {
-//   search: String,
-//   by_keywords: bool,
-//   by_params: bool,
-//   by_specs: bool,
-//   company_uuid: Option<UUID>,
-//   favorite: bool,
-//   standard_uuid: Option<UUID>,
-//   user_uuid: Option<UUID>,
-// }
+    pub fn set_service_uuid(service_uuid: &UUID) -> Self {
+        Self {
+            service_uuid: Some(service_uuid.clone()),
+            ..Default::default()
+        }
+    }
+
+    pub fn set_by_arg(search_arg: &SearchArg) -> Self {
+        let favorite = match search_arg.favorite {
+            true => Some(true),
+            false => None,
+        };
+        Self {
+            company_uuid: search_arg.company_uuid.clone(),
+            standard_uuid: search_arg.standard_uuid.clone(),
+            service_uuid: search_arg.service_uuid.clone(),
+            user_uuid: search_arg.user_uuid.clone(),
+            spec_id: search_arg.spec_id.clone(),
+            favorite,
+            ..Default::default()
+        }
+    }
+}

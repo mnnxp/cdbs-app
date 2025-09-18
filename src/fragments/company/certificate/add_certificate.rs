@@ -88,6 +88,7 @@ impl Component for AddCompanyCertificateCard {
                 debug!("Confirmation upload of favicon: {:?}", confirmations);
                 self.get_result_up_completed = confirmations > 0;
                 self.description.clear();
+                self.request_upload_data = None;
                 self.props.callback.emit(());
             },
             Msg::ClearError => self.error = None,
@@ -95,36 +96,23 @@ impl Component for AddCompanyCertificateCard {
         true
     }
 
-    fn change(&mut self, _props: Self::Properties) -> ShouldRender {
-        false
+    fn change(&mut self, props: Self::Properties) -> ShouldRender {
+        if self.props.company_uuid == props.company_uuid {
+            false
+        } else {
+            self.props = props;
+            true
+        }
     }
 
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
-        let callback_upload_filenames =
-            self.link.callback(move |filenames| Msg::RequestUploadData(filenames));
-        let request_upload_files = self.request_upload_data.clone().map(|uf| vec![uf]);
-        let callback_upload_confirm =
-            self.link.callback(|confirmations| Msg::UploadConfirm(confirmations));
         html!{<div class="card">
           <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
           <div class="block">
             {match self.get_result_up_completed {
                 true => html!{<div class="column">{self.show_success_upload()}</div>},
-                false => html!{
-                    <div class="column">
-                        <label class="label">{get_value_field(&83)}</label> // Upload new certificate
-                        {self.show_input_description()}
-                        <UploaderFiles
-                            text_choose_files={86} // Drop certificate file here
-                            callback_upload_filenames={callback_upload_filenames}
-                            request_upload_files={request_upload_files}
-                            callback_upload_confirm={callback_upload_confirm}
-                            multiple={false}
-                            accept={"image/*".to_string()}
-                            />
-                    </div>
-                },
+                false => self.form_new_certificate(),
             }}
           </div>
         </div>}
@@ -132,6 +120,28 @@ impl Component for AddCompanyCertificateCard {
 }
 
 impl AddCompanyCertificateCard {
+    fn form_new_certificate(&self) -> Html {
+        let callback_upload_filenames =
+            self.link.callback(move |filenames| Msg::RequestUploadData(filenames));
+        let request_upload_files = self.request_upload_data.clone().map(|uf| vec![uf]);
+        let callback_upload_confirm =
+            self.link.callback(|confirmations| Msg::UploadConfirm(confirmations));
+        html!{
+            <div class="column">
+                <label class="label">{get_value_field(&83)}</label> // Upload new certificate
+                {self.show_input_description()}
+                <UploaderFiles
+                    text_choose_files={86} // Drop certificate file here
+                    callback_upload_filenames={callback_upload_filenames}
+                    request_upload_files={request_upload_files}
+                    callback_upload_confirm={callback_upload_confirm}
+                    multiple={false}
+                    accept={"image/*".to_string()}
+                    />
+            </div>
+        }
+    }
+
     fn show_input_description(&self) -> Html {
         let oninput_cert_description = self.link.callback(|ev: InputData| Msg::UpdateDescription(ev.value));
 

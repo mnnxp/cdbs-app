@@ -14,6 +14,11 @@ input ChangeOwnerComponent {
   newOwnerUserUuid: UUID!
 }
 
+input ChangeOwnerService {
+  serviceUuid: UUID!
+  newOwnerUserUuid: UUID!
+}
+
 input ChangeOwnerStandard {
   standardUuid: UUID!
   newOwnerUserUuid: UUID!
@@ -29,10 +34,17 @@ input ChangeTypeAccessComponent {
   newTypeAccessId: Int!
 }
 
+input ChangeTypeAccessService {
+  serviceUuid: UUID!
+  newTypeAccessId: Int!
+}
+
 input ChangeTypeAccessStandard {
   standardUuid: UUID!
   newTypeAccessId: Int!
 }
+
+scalar Char
 
 type Claims {
   iss: String!
@@ -45,6 +57,15 @@ type Claims {
 
 type CompanyAccessComponentAndRelatedData {
   componentUuid: UUID!
+  companyUuid: UUID!
+  typeAccess: TypeAccessTranslateList!
+  isEnabled: Boolean!
+  createdAt: NaiveDateTime!
+  updatedAt: NaiveDateTime!
+}
+
+type CompanyAccessServiceAndRelatedData {
+  serviceUuid: UUID!
   companyUuid: UUID!
   typeAccess: TypeAccessTranslateList!
   isEnabled: Boolean!
@@ -206,6 +227,11 @@ input DelCompanyAccessComponentData {
   companyUuid: UUID!
 }
 
+input DelCompanyAccessServiceData {
+  serviceUuid: UUID!
+  companyUuid: UUID!
+}
+
 input DelCompanyAccessStandardData {
   standardUuid: UUID!
   companyUuid: UUID!
@@ -271,6 +297,11 @@ input DelRoleMemberData {
   roleId: Int!
 }
 
+input DelServiceParamData {
+  serviceUuid: UUID!
+  paramIds: [Int!]!
+}
+
 input DelStandardToComponentData {
   standardsUuids: [UUID!]!
   componentUuid: UUID!
@@ -286,6 +317,11 @@ input DelUserAccessComponentData {
   userUuid: UUID!
 }
 
+input DelUserAccessServiceData {
+  serviceUuid: UUID!
+  userUuid: UUID!
+}
+
 input DelUserAccessStandardData {
   standardUuid: UUID!
   userUuid: UUID!
@@ -295,14 +331,48 @@ input DelUserCertificateData {
   fileUuid: UUID!
 }
 
+input DeleteServiceFileData {
+  fileUuid: UUID!
+  serviceUuid: UUID!
+}
+
 input DeleteStandardFileData {
   fileUuid: UUID!
   standardUuid: UUID!
 }
 
+type DiscussionCommentData {
+  uuid: UUID!
+  discussionUuid: UUID!
+  parentCommentUuid: UUID!
+  author: ShowUserShort!
+  messageContent: String!
+  isEdited: Boolean!
+  isHidden: Boolean!
+  createdAt: NaiveDateTime!
+  updatedAt: NaiveDateTime!
+  repliesCount: Int!
+  replies(sort: IptSort, paginate: IptPaginate): [DiscussionCommentData!]!
+}
+
+type DiscussionInfo {
+  uuid: UUID!
+  title: String!
+  isPinned: Boolean!
+  lastActivityAt: NaiveDateTime!
+  createdAt: NaiveDateTime!
+  repliesCount: Int!
+  comments(
+    filterByUuids: [UUID!]
+    sort: IptSort
+    paginate: IptPaginate
+  ): [DiscussionCommentData!]!
+}
+
 type DownloadFile {
   uuid: UUID!
   hash: String!
+  sha256Hash: String!
   filename: String!
   filesize: Int!
   downloadUrl: String!
@@ -331,6 +401,12 @@ input IptCompaniesArg {
 
 input IptCompanyAccessComponentData {
   componentUuid: UUID!
+  companyUuid: UUID!
+  typeAccessId: Int!
+}
+
+input IptCompanyAccessServiceData {
+  serviceUuid: UUID!
   companyUuid: UUID!
   typeAccessId: Int!
 }
@@ -450,8 +526,33 @@ input IptComponentsArg {
   componentsUuids: [UUID!]
   companyUuid: UUID
   standardUuid: UUID
+  serviceUuid: UUID
   userUuid: UUID
+  specId: Int
   favorite: Boolean
+}
+
+input IptDiscussionArg {
+  objectUuid: UUID!
+  toObject: ToObject!
+}
+
+input IptDiscussionCommentData {
+  objectDiscussion: IptDiscussionArg!
+  discussionUuid: UUID
+  parentCommentUuid: UUID
+  messageContent: String!
+}
+
+input IptDiscussionCommentsArg {
+  discussionUuid: UUID!
+  filterByParentUuid: UUID
+  filterByUuids: [UUID!]
+}
+
+input IptEditCommentData {
+  commentUuid: UUID!
+  updatedMessage: String!
 }
 
 input IptExtensionData {
@@ -517,6 +618,12 @@ input IptMultipleModificationsData {
   modificationsData: [IptModificationsData!]!
 }
 
+input IptObjectDiscussionsArg {
+  objectUuid: UUID!
+  toObject: ToObject!
+  filterByUuids: [UUID!]
+}
+
 input IptPaginate {
   currentPage: Int! = 1
   perPage: Int! = 5
@@ -559,7 +666,9 @@ input IptSearchArg {
   byKeywords: Boolean! = false
   companyUuid: UUID
   standardUuid: UUID
+  serviceUuid: UUID
   userUuid: UUID
+  specId: Int
   favorite: Boolean! = false
 }
 
@@ -567,6 +676,55 @@ input IptSearchSpecArg {
   text: String!
   splitChar: String
   depthLevel: Int
+}
+
+input IptServiceData {
+  name: String!
+  description: String!
+  companyUuid: UUID!
+  regionId: Int!
+}
+
+input IptServiceFilesArg {
+  serviceUuid: UUID!
+  filesUuids: [UUID!]
+}
+
+input IptServiceFilesData {
+  filenames: [String!]!
+  serviceUuid: UUID!
+  commitMsg: String! = ""
+}
+
+input IptServiceKeywordsData {
+  serviceUuid: UUID!
+  keywordIds: [Int!]!
+}
+
+input IptServiceKeywordsNames {
+  serviceUuid: UUID!
+  keywords: [String!]!
+}
+
+input IptServiceParamsData {
+  serviceUuid: UUID!
+  params: [IptParamData!]!
+}
+
+input IptServiceSpecsData {
+  serviceUuid: UUID!
+  specIds: [Int!]!
+}
+
+input IptServiceStatusArg {
+  serviceUuid: UUID!
+  serviceStatusId: Int!
+}
+
+input IptServicesArg {
+  servicesUuids: [UUID!]
+  companyUuid: UUID
+  userUuid: UUID
 }
 
 input IptSort {
@@ -587,16 +745,12 @@ input IptSpecPathArg {
 
 input IptStandardData {
   parentStandardUuid: UUID
-  classifier: String!
   name: String!
   description: String!
-  specifiedTolerance: String!
-  technicalCommittee: String!
   publicationAt: NaiveDateTime!
   companyUuid: UUID!
   typeAccessId: Int!
   standardStatusId: Int!
-  regionId: Int!
 }
 
 input IptStandardFaviconData {
@@ -701,16 +855,18 @@ input IptUpdatePassword {
   newPassword: String!
 }
 
-input IptUpdateStandardData {
-  classifier: String
+input IptUpdateServiceData {
   name: String
   description: String
-  specifiedTolerance: String
-  technicalCommittee: String
+  regionId: Int
+}
+
+input IptUpdateStandardData {
+  name: String
+  description: String
   publicationAt: NaiveDateTime
   companyUuid: UUID
   standardStatusId: Int
-  regionId: Int
 }
 
 input IptUpdateUserCertificateData {
@@ -735,6 +891,12 @@ input IptUpdateUserData {
 
 input IptUserAccessComponentData {
   componentUuid: UUID!
+  userUuid: UUID!
+  typeAccessId: Int!
+}
+
+input IptUserAccessServiceData {
+  serviceUuid: UUID!
   userUuid: UUID!
   typeAccessId: Int!
 }
@@ -849,7 +1011,9 @@ type MutationRoot {
   addStandardToComponent(args: IptStandardToComponentData!): Boolean!
   deleteStandardsComponent(args: DelStandardToComponentData!): Int!
   registerComponentModification(args: IptComponentModificationData!): UUID!
-  registerComponentModificationsBulk(args: IptMultipleModificationsData!): [UUID!]!
+  registerComponentModificationsBulk(
+    args: IptMultipleModificationsData!
+  ): [UUID!]!
   putComponentModificationUpdate(
     componentModificationUuid: UUID!
     args: IptUpdateComponentModificationData!
@@ -882,6 +1046,25 @@ type MutationRoot {
   uploadStandardFiles(args: IptStandardFilesData!): [UploadFile!]!
   uploadStandardFavicon(args: IptStandardFaviconData!): UploadFile!
   deleteStandardFile(args: DeleteStandardFileData!): Boolean!
+  serviceRequest(args: IptServiceData!, newUser: IptUserData): UUID!
+  transferServiceOwnership(args: ChangeOwnerService!): Boolean!
+  changeServiceAccess(args: ChangeTypeAccessService!): Boolean!
+  changeServiceStatus(args: IptServiceStatusArg!): Boolean!
+  putServiceUpdate(serviceUuid: UUID!, args: IptUpdateServiceData!): Int!
+  deleteService(serviceUuid: UUID!): UUID!
+  putServiceParams(args: IptServiceParamsData!): Int!
+  deleteServiceParams(args: DelServiceParamData!): Int!
+  setCompanyAccessService(args: IptCompanyAccessServiceData!): Boolean!
+  deleteCompanyAccessService(args: DelCompanyAccessServiceData!): Boolean!
+  setUserAccessService(args: IptUserAccessServiceData!): Boolean!
+  deleteUserAccessService(args: DelUserAccessServiceData!): Boolean!
+  addServiceSpecs(args: IptServiceSpecsData!): Int!
+  deleteServiceSpecs(args: IptServiceSpecsData!): Int!
+  addServiceKeywords(args: IptServiceKeywordsData!): Int!
+  addServiceKeywordsByNames(args: IptServiceKeywordsNames!): Int!
+  deleteServiceKeywords(args: IptServiceKeywordsData!): Int!
+  uploadServiceFiles(args: IptServiceFilesData!): [UploadFile!]!
+  deleteServiceFile(args: DeleteServiceFileData!): Boolean!
   registerCompany(args: IptCompanyData!): UUID!
   putCompanyUpdate(companyUuid: UUID!, args: IptUpdateCompanyData!): Int!
   changeCompanyAccess(args: ChangeTypeAccessCompany!): Boolean!
@@ -914,10 +1097,15 @@ type MutationRoot {
   setCompanyOwnerSupplier(args: IptSupplierComponentData!): Boolean!
   deleteSupplierCompany(args: DelCompanyOfSuppliersData!): Boolean!
   registerExtension(args: IptExtensionData!): Extension!
+  registerDiscussionComment(args: IptDiscussionCommentData!): UUID!
+  editComment(data: IptEditCommentData!): Boolean!
+  deleteComment(commentUuid: UUID!): Boolean!
   registerKeyword(args: IptKeywordData!): Keyword!
   registerLicense(args: LicenseData!): License!
   registerParam(args: IptParamTranslateListData!): ParamTranslateList!
-  registerParamsBulk(args: [IptParamTranslateListData!]!): [ParamTranslateList!]!
+  registerParamsBulk(
+    args: [IptParamTranslateListData!]!
+  ): [ParamTranslateList!]!
   registerProgram(args: IptProgramData!): Program!
   registerRegion(args: IptRegionTranslateListData!): RegionTranslateList!
   uploadCompleted(fileUuids: [UUID!]!): Int!
@@ -1035,6 +1223,25 @@ type QueryRoot {
     standardUuid: UUID!
   ): [UserAccessStandardAndRelatedData!]!
   standardStatuses(filter: [Int!]): [StandardStatusTranslateList!]!
+  services(
+    args: IptServicesArg
+    sort: IptSort
+    paginate: IptPaginate
+  ): [ShowServiceShort!]!
+  service(serviceUuid: UUID!): ServiceAndRelatedData!
+  serviceFiles(
+    args: IptServiceFilesArg!
+    paginate: IptPaginate
+  ): [DownloadFile!]!
+  serviceSpecs(serviceUuid: UUID!, paginate: IptPaginate): [SpecTranslateList!]!
+  serviceKeywords(serviceUuid: UUID!, paginate: IptPaginate): [Keyword!]!
+  getCompaniesListAccessService(
+    serviceUuid: UUID!
+  ): [CompanyAccessServiceAndRelatedData!]!
+  getUsersListAccessService(
+    serviceUuid: UUID!
+  ): [UserAccessServiceAndRelatedData!]!
+  serviceStatuses(filter: [Int!]): [ServiceStatusTranslateList!]!
   companies(args: IptCompaniesArg, paginate: IptPaginate): [ShowCompanyShort!]!
   company(companyUuid: UUID!): CompanyAndRelatedData!
   supplierCompany(companyUuid: UUID!): CompanyAndRelatedData!
@@ -1047,6 +1254,16 @@ type QueryRoot {
   companyTypes: [CompanyTypeTranslateList!]!
   companySpecs(companyUuid: UUID!, paginate: IptPaginate): [SpecTranslateList!]!
   companyRepresentTypes: [RepresentationTypeTranslateList!]!
+  discussions(
+    args: IptObjectDiscussionsArg!
+    sort: IptSort
+    paginate: IptPaginate
+  ): [DiscussionInfo!]!
+  discussionComments(
+    args: IptDiscussionCommentsArg!
+    sort: IptSort
+    paginate: IptPaginate
+  ): [DiscussionCommentData!]!
   keywords(keywordIds: [Int!]!, paginate: IptPaginate): [Keyword!]!
   languages(langIds: [Int!], paginate: IptPaginate): [Language!]!
   licenses(licenseIds: [Int!], paginate: IptPaginate): [License!]!
@@ -1090,6 +1307,39 @@ type RoleMemberTranslateList {
   name: String!
 }
 
+type ServiceAndRelatedData {
+  uuid: UUID!
+  name: String!
+  description: String!
+  ownerUser: ShowUserShort!
+  ownerCompany: ShowCompanyShort!
+  serviceStatus: ServiceStatusTranslateList!
+  region: RegionTranslateList!
+  createdAt: NaiveDateTime!
+  updatedAt: NaiveDateTime!
+  serviceParams(
+    sort: IptSort
+    paginate: IptPaginate
+  ): [ServiceParamWithTranslation!]!
+  paramsCount: Int!
+  files(sort: IptSort, paginate: IptPaginate): [ShowFileRelatedData!]!
+  filesCount: Int!
+  serviceSpecs(paginate: IptPaginate): [SpecTranslateList!]!
+  serviceKeywords(paginate: IptPaginate): [Keyword!]!
+}
+
+type ServiceParamWithTranslation {
+  serviceUuid: UUID!
+  param: ParamTranslateList!
+  value: String!
+}
+
+type ServiceStatusTranslateList {
+  serviceStatusId: Int!
+  langId: Int!
+  name: String!
+}
+
 type ShowCompanyShort {
   uuid: UUID!
   shortname: String!
@@ -1100,6 +1350,7 @@ type ShowCompanyShort {
   companyType: CompanyTypeTranslateList!
   isSupplier: Boolean!
   isFollowed: Boolean!
+  createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!
 }
 
@@ -1114,6 +1365,7 @@ type ShowComponentShort {
   actualStatus: ActualStatusTranslateList!
   isBase: Boolean!
   isFollowed: Boolean!
+  createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!
   licenses: [License!]!
   files(paginate: IptPaginate, images: Boolean): [DownloadFile!]!
@@ -1131,6 +1383,7 @@ type ShowFileRelatedData {
   filesize: Int!
   program: Program!
   hash: String!
+  sha256Hash: String!
   downloadUrl: String!
   createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!
@@ -1144,12 +1397,21 @@ type ShowNotification {
   isRead: Boolean!
 }
 
-type ShowStandardShort {
+type ShowServiceShort {
   uuid: UUID!
-  classifier: String!
   name: String!
   description: String!
-  specifiedTolerance: String!
+  ownerUser: ShowUserShort!
+  ownerCompany: ShowCompanyShort!
+  serviceStatus: ServiceStatusTranslateList!
+  updatedAt: NaiveDateTime!
+  files(paginate: IptPaginate, images: Boolean): [DownloadFile!]!
+}
+
+type ShowStandardShort {
+  uuid: UUID!
+  name: String!
+  description: String!
   publicationAt: NaiveDateTime!
   imageFile: DownloadFile!
   ownerCompany: ShowCompanyShort!
@@ -1206,23 +1468,20 @@ type SpecTranslateList {
   specId: Int!
   langId: Int!
   spec: String!
+  parentSpec: SpecTranslateList!
 }
 
 type StandardAndRelatedData {
   uuid: UUID!
   parentStandardUuid: UUID!
-  classifier: String!
   name: String!
   description: String!
-  specifiedTolerance: String!
-  technicalCommittee: String!
   publicationAt: NaiveDateTime!
   imageFile: DownloadFile!
   ownerUser: ShowUserShort!
   ownerCompany: ShowCompanyShort!
   typeAccess: TypeAccessTranslateList!
   standardStatus: StandardStatusTranslateList!
-  region: RegionTranslateList!
   createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!
   standardFiles: [ShowFileRelatedData!]!
@@ -1236,6 +1495,12 @@ type StandardStatusTranslateList {
   standardStatusId: Int!
   langId: Int!
   name: String!
+}
+
+enum ToObject {
+  COMPANY
+  COMPONENT
+  SERVICE
 }
 
 type Token {
@@ -1258,6 +1523,15 @@ type UploadFile {
 
 type UserAccessComponentAndRelatedData {
   componentUuid: UUID!
+  userUuid: UUID!
+  typeAccess: TypeAccessTranslateList!
+  isEnabled: Boolean!
+  createdAt: NaiveDateTime!
+  updatedAt: NaiveDateTime!
+}
+
+type UserAccessServiceAndRelatedData {
+  serviceUuid: UUID!
   userUuid: UUID!
   typeAccess: TypeAccessTranslateList!
   isEnabled: Boolean!

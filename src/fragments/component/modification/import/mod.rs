@@ -212,7 +212,7 @@ impl Component for ImportModificationsData {
                     }
                     self.paramnames.push(String::new());
                 }
-                debug!("Complete self.paramnames: {:?}", self.value_column);
+                debug!("Complete self.paramnames: {:?}", self.paramnames);
                 debug!("Complete self.value_column: {:?}", self.value_column);
                 link.send_message(Msg::RequestRegisterParams);
             },
@@ -306,7 +306,6 @@ impl ImportModificationsData {
             true => "modal",
             false => "modal is-active",
         };
-
         html!{
             <div class={class_modal}>
               <div class={"modal-background"} onclick={onclick_hide_modal.clone()} />
@@ -318,12 +317,15 @@ impl ImportModificationsData {
                     </header>
                     <section class={"modal-card-body"}>
                         <div class={"column"}>
-                            <div class={"subtitle is-6"}>{get_value_field(&343).to_markdown()}</div>
+                            <div class={"subtitle is-6"}>
+                                {get_value_field(&234)}<br/>
+                                {get_value_field(&343).to_markdown()}
+                            </div>
                             <textarea
                                 id={"update-description"}
                                 class={"textarea"}
                                 type={"text"}
-                                placeholder={get_value_field(&344)}
+                                placeholder={format!("{}\n{}", get_value_field(&208), get_value_field(&344))}
                                 value={self.new_modifications_raw.clone()}
                                 oninput={oninput_data}
                                 />

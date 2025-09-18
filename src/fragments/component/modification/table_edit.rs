@@ -9,9 +9,9 @@ use super::table::ModificationsTable;
 use crate::error::Error;
 use crate::fragments::component::modification::ImportModificationsData;
 use crate::fragments::paginate::Paginate;
-use crate::fragments::buttons::{ft_add_btn, ft_back_btn};
+use crate::fragments::buttons::ft_add_btn;
 use crate::fragments::list_errors::ListErrors;
-use crate::services::{get_value_field, resp_parsing};
+use crate::services::{get_value_field, resp_parsing, set_focus};
 use crate::types::{UUID, ComponentModificationInfo, ActualStatus, ModificationUpdatePreData, PaginateSet};
 use crate::gqls::make_query;
 use crate::gqls::component::{
@@ -56,6 +56,7 @@ pub enum Msg {
     ChangeNewModificationParam(UUID),
     ChangeSelectModification(UUID),
     ChangePaginate(PaginateSet),
+    Focuser,
     ClearError,
 }
 
@@ -217,7 +218,9 @@ impl Component for ModificationsTableEdit {
                 if self.actual_statuses.is_empty() {
                     link.send_message(Msg::RequestListOptData);
                 }
-                if !self.open_edit_modification_card {
+                if self.open_edit_modification_card {
+                    link.send_message(Msg::Focuser);
+                } else {
                     link.send_message(Msg::RequestComponentModificationsData);
                 }
             },
@@ -252,6 +255,7 @@ impl Component for ModificationsTableEdit {
                 self.page_set = page_set;
                 self.link.send_message(Msg::RequestComponentModificationsData);
             },
+            Msg::Focuser => set_focus("show-modification-edit"),
             Msg::ClearError => self.error = None,
         }
         true
@@ -269,38 +273,28 @@ impl Component for ModificationsTableEdit {
 
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
-        let onclick_modification_card = self.link.callback(|_| Msg::ShowEditModificationCard);
         let onclick_add_new_modification = self.link.callback(|_| Msg::AddNewModification);
         let callback_finish_import = self.link.callback(|_| Msg::RequestComponentModificationsData);
         html!{
             <div class="card">
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
                 <header class="card-header">
-                    {match &self.open_edit_modification_card {
-                        true => html!{
-                            <div class="m-1">
-                                {ft_back_btn("open-modifications", onclick_modification_card, get_value_field(&42))}
-                            </div>
-                        },
-                        false => html!{
-                            <div class="card-header-title">
-                                <p>{get_value_field(&100)}</p> // Modifications
-                                <div class="buttons right-side">
-                                    <ImportModificationsData
-                                        component_uuid={self.props.current_component_uuid.clone()}
-                                        callback_finish_import={callback_finish_import}
-                                        />
-                                    {ft_add_btn(
-                                        "add-component-modification",
-                                        get_value_field(&174),
-                                        onclick_add_new_modification,
-                                        false,
-                                        false
-                                    )}
-                                </div>
-                            </div>
-                        }
-                    }}
+                    <div class="card-header-title">
+                        <p>{get_value_field(&100)}</p> // Modifications
+                        <div class="buttons right-side">
+                            <ImportModificationsData
+                                component_uuid={self.props.current_component_uuid.clone()}
+                                callback_finish_import={callback_finish_import}
+                                />
+                            {ft_add_btn(
+                                "add-component-modification",
+                                get_value_field(&174),
+                                onclick_add_new_modification,
+                                false,
+                                false
+                            )}
+                        </div>
+                    </div>
                 </header>
                 {self.show_modifications_table()}
                 {match self.open_edit_modification_card {
@@ -328,6 +322,7 @@ impl ModificationsTableEdit {
                 <ModificationsTable
                     modifications={modifications}
                     select_modification_uuid={self.select_modification_uuid.clone()}
+                    open_modification_card={self.open_edit_modification_card}
                     callback_select_modification={onclick_select_modification}
                     callback_new_modification_param={Some(onclick_new_modification_param)}
                     numero_offset={self.page_set.numero_offset()}

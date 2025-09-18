@@ -11,6 +11,7 @@ const LOGGED_USER_KEY: &str = dotenv!("LOGGED_USER_KEY");
 const ACCEPT_LANGUAGE: &str = dotenv!("ACCEPT_LANGUAGE");
 const LIST_VIEW_TYPE: &str = dotenv!("LIST_VIEW_TYPE");
 const HISTORY_BACK: &str = dotenv!("HISTORY_BACK");
+const HISTORY_SEARCH: &str = dotenv!("HISTORY_SEARCH");
 
 lazy_static! {
     /// Jwt token read from local storage.
@@ -58,6 +59,16 @@ lazy_static! {
         let storage = StorageService::new(Area::Local).expect("storage was disabled by the user");
         if let Ok(history_back) = storage.restore(HISTORY_BACK) {
             RwLock::new(Some(history_back))
+        } else {
+            RwLock::new(None)
+        }
+    };
+
+    /// Read the search history. It is used to store the search query between threads.
+    pub static ref HISTORYSEARCH: RwLock<Option<String>> = {
+        let storage = StorageService::new(Area::Local).expect("storage was disabled by the user");
+        if let Ok(history_search) = storage.restore(HISTORY_SEARCH) {
+            RwLock::new(Some(history_search))
         } else {
             RwLock::new(None)
         }
@@ -160,4 +171,22 @@ pub fn set_history_back(history_back: Option<String>) {
 pub fn get_history_back() -> Option<String> {
     let history_back_lock = HISTORYBACK.read();
     history_back_lock.clone()
+}
+
+/// Set value for search history
+pub fn set_history_search(history_search: Option<String>) {
+    let mut storage = StorageService::new(Area::Local).expect("storage was disabled by the user");
+    if let Some(h) = history_search.clone() {
+        storage.store(HISTORY_SEARCH, Ok(h));
+    } else {
+        storage.remove(HISTORY_SEARCH);
+    }
+    let mut history_search_lock = HISTORYSEARCH.write();
+    *history_search_lock = history_search;
+}
+
+/// Gets value from search history
+pub fn get_history_search() -> Option<String> {
+    let history_search_lock = HISTORYSEARCH.read();
+    history_search_lock.clone()
 }

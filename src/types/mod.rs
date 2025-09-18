@@ -3,10 +3,12 @@
 mod auth;
 mod company;
 mod component;
+mod discussion;
 mod file;
 mod profiles;
 mod relate;
 mod standard;
+mod supplier_service;
 mod tags;
 
 use serde::{Deserialize, Serialize};
@@ -16,10 +18,12 @@ pub use chrono::NaiveDateTime;
 pub use auth::*;
 pub use company::*;
 pub use component::*;
+pub use discussion::*;
 pub use profiles::*;
 pub use file::*;
 pub use relate::*;
 pub use standard::*;
+pub use supplier_service::*;
 pub use tags::*;
 
 /// Conduit api error info for Unprocessable Entity error
@@ -42,7 +46,9 @@ pub enum Pathname {
     CompanySetting(UUID),
     Standard(UUID),
     StandardSetting(UUID),
-    User(UUID),
+    Service(UUID),
+    ServiceSetting(UUID),
+    User(String),
     UserSetting,
 }
 
@@ -56,6 +62,8 @@ impl Pathname {
             Self::CompanySetting(uuid) => format!("#/company/settings/{}", uuid),
             Self::Standard(uuid) => format!("#/standard/{}", uuid),
             Self::StandardSetting(uuid) => format!("#/standard/settings/{}", uuid),
+            Self::Service(uuid) => format!("#/service/{}", uuid),
+            Self::ServiceSetting(uuid) => format!("#/service/settings/{}", uuid),
             Self::User(username) => format!("#/@{}", username),
             Self::UserSetting => format!("#/settings"),
         }

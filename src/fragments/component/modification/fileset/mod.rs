@@ -15,9 +15,10 @@ use wasm_bindgen_futures::spawn_local;
 
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
+use crate::fragments::paginate::Paginate;
 use crate::fragments::file::{FileHeadersShow, FileInfoItemShow};
 use crate::services::{get_classes_table, get_value_field, resp_parsing};
-use crate::types::{UUID, ShowFileInfo};
+use crate::types::{ShowFileInfo, PaginateSet, FilesetProgramInfo};
 use crate::gqls::make_query;
 use crate::gqls::component::{ComModFilesOfFileset, com_mod_files_of_fileset};
 
@@ -25,7 +26,7 @@ use crate::gqls::component::{ComModFilesOfFileset, com_mod_files_of_fileset};
 pub struct Props {
     pub show_card: bool,
     pub show_download_btn: bool,
-    pub select_fileset_uuid: UUID,
+    pub select_fileset: FilesetProgramInfo,
 }
 
 pub struct FilesOfFilesetCard {
@@ -33,11 +34,14 @@ pub struct FilesOfFilesetCard {
     props: Props,
     link: ComponentLink<Self>,
     files_list: Vec<ShowFileInfo>,
+    page_set: PaginateSet,
+    current_items: i64,
 }
 
 pub enum Msg {
     RequestFilesOfFileset,
     ResponseError(Error),
+    ChangePaginate(PaginateSet),
     GetFilesOfFilesetResult(String),
     ClearError,
 }
@@ -52,6 +56,8 @@ impl Component for FilesOfFilesetCard {
             props,
             link,
             files_list: Vec::new(),
+            page_set: PaginateSet::new(),
+            current_items: 0,
         }
     }
 
@@ -67,14 +73,24 @@ impl Component for FilesOfFilesetCard {
         match msg {
             Msg::RequestFilesOfFileset => {
                 // request only if the uuid is provided and the card is showing
-                if self.props.select_fileset_uuid.len() == 36 && self.props.show_card {
+                if self.props.select_fileset.uuid.len() == 36 && self.props.show_card {
                     let ipt_file_of_fileset_arg = com_mod_files_of_fileset::IptFileOfFilesetArg{
-                        filesetUuid: self.props.select_fileset_uuid.clone(),
+                        filesetUuid: self.props.select_fileset.uuid.clone(),
                         fileUuids: None,
                     };
+                    let ipt_sort = Some(com_mod_files_of_fileset::IptSort {
+                        byField: "name".to_string(),
+                        asDesc: false,
+                    });
+                    let ipt_paginate = Some(com_mod_files_of_fileset::IptPaginate {
+                        currentPage: self.page_set.current_page,
+                        perPage: self.page_set.per_page,
+                    });
                     spawn_local(async move {
                         let res = make_query(ComModFilesOfFileset::build_query(com_mod_files_of_fileset::Variables {
-                            ipt_file_of_fileset_arg
+                            ipt_file_of_fileset_arg,
+                            ipt_sort,
+                            ipt_paginate,
                         })).await.unwrap();
                         link.send_message(Msg::GetFilesOfFilesetResult(res));
                     })
@@ -83,6 +99,14 @@ impl Component for FilesOfFilesetCard {
                 }
             },
             Msg::ResponseError(err) => self.error = Some(err),
+            Msg::ChangePaginate(page_set) => {
+                debug!("Change page_set, old: {:?}, new: {:?} (Show fileset)", self.page_set, page_set);
+                if self.page_set.compare(&page_set) {
+                    return true
+                }
+                self.page_set = page_set;
+                self.link.send_message(Msg::RequestFilesOfFileset);
+            },
             Msg::GetFilesOfFilesetResult(res) => {
                 match resp_parsing(res, "componentModificationFilesOfFileset") {
                     Ok(result) => self.files_list = result,
@@ -95,12 +119,12 @@ impl Component for FilesOfFilesetCard {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.select_fileset_uuid == props.select_fileset_uuid &&
+        if self.props.select_fileset.uuid == props.select_fileset.uuid &&
             self.props.show_card == props.show_card {
-            debug!("No parsing files for fileset: {:?}, {}", props.select_fileset_uuid, props.show_card);
+            debug!("No parsing files for fileset: {:?}, {}", props.select_fileset.uuid, props.show_card);
             false
         } else {
-            debug!("Parsing files for fileset: {:?}, {}", props.select_fileset_uuid, props.show_card);
+            debug!("Parsing files for fileset: {:?}, {}", props.select_fileset.uuid, props.show_card);
             self.props = props;
             self.link.send_message(Msg::RequestFilesOfFileset);
             true
@@ -109,12 +133,13 @@ impl Component for FilesOfFilesetCard {
 
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+        let onclick_paginate = self.link.callback(|page_set| Msg::ChangePaginate(page_set));
         let mut classes_table = get_classes_table(self.files_list.len());
         classes_table.push("is-striped");
         match self.props.show_card {
             true => html!{<>
                 <br/>
-                <div class="card">
+                <div id="files-of-fileset-card" class="card">
                     <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
                     <header class={"card-header has-background-info-light"}>
                         <p class={"card-header-title"}>{get_value_field(&106)}</p> // Files of select fileset
@@ -136,6 +161,13 @@ impl Component for FilesOfFilesetCard {
                                 </table>
                             </div>
                         </div>
+                        <Paginate
+                            callback_change={onclick_paginate}
+                            current_items={self.current_items}
+                            current_page={Some(self.page_set.current_page)}
+                            per_page={Some(self.page_set.per_page)}
+                            total_items={self.props.select_fileset.files_count}
+                        />
                     </div>
                 </div>
             </>},

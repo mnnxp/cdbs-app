@@ -15,7 +15,7 @@ pub struct ShowFileInfo {
     pub content_type: String,
     pub filesize: usize,
     pub program: Program,
-    pub hash: String,
+    pub sha256_hash: String,
     pub download_url: String,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,

@@ -1,6 +1,8 @@
 mod item;
 mod add;
+mod import;
 
+use import::ImportParamsData;
 pub use item::ComponentParamTag;
 pub use add::RegisterParamnameBlock;
 
@@ -14,7 +16,7 @@ use crate::error::Error;
 use crate::fragments::buttons::ft_add_btn;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::paginate::Paginate;
-use crate::types::{ComponentParam, PaginateSet, Param, UUID};
+use crate::types::{ComponentParam, PaginateSet, Param, ParamValue, UUID};
 use crate::services::{get_classes_table, get_value_field, resp_parsing, resp_parsing_two_level};
 use crate::gqls::{
     make_query,
@@ -42,6 +44,7 @@ pub struct ComponentParamsTags {
     request_add_param_id: usize,
     request_set_param_value: String,
     hide_add_param_modal: bool,
+    hide_import_param_modal: bool,
     page_set: PaginateSet,
     current_items: i64,
     total_items: i64,
@@ -51,13 +54,14 @@ pub struct ComponentParamsTags {
 pub enum Msg {
     DeleteComponentParam(usize),
     RequestParamsList,
-    RequestAddParam(usize, String),
+    RequestAddParams(Vec<ParamValue>),
     RequestComponentParams,
     GetParamsListResult(String),
     GetComponentParamsResult(String),
     GetAddParamResult(String),
     UpdateParamValue(String),
     ChangeHideAddParam,
+    ChangeHideImportParam,
     SetSelectParam,
     ResponseError(Error),
     ChangePaginate(PaginateSet),
@@ -80,7 +84,8 @@ impl Component for ComponentParamsTags {
             request_add_param_id: 0,
             request_set_param_value: String::new(),
             hide_add_param_modal: true,
-            page_set: PaginateSet::new(),
+            hide_import_param_modal: true,
+            page_set: PaginateSet::set(Some(1), Some(10)),
             current_items: 0,
             total_items,
         }
@@ -111,14 +116,19 @@ impl Component for ComponentParamsTags {
                     link.send_message(Msg::GetParamsListResult(res));
                 })
             },
-            Msg::RequestAddParam(param_id, param_value) => {
-                let ipt_param_data = put_component_params::IptParamData{
-                    paramId: param_id as i64,
-                    value: param_value,
-                };
+            Msg::RequestAddParams(params) => {
+                let mut ipt_param_data = Vec::new();
+                for p in params {
+                    ipt_param_data.push(
+                        put_component_params::IptParamData{
+                            paramId: p.param_id as i64,
+                            value: p.value.clone(),
+                        }
+                    );
+                }
                 let ipt_component_params_data = put_component_params::IptComponentParamsData{
                     componentUuid: self.props.component_uuid.clone(),
-                    params: vec![ipt_param_data],
+                    params: ipt_param_data,
                 };
                 spawn_local(async move {
                     let res = make_query(PutComponentParams::build_query(
@@ -157,7 +167,8 @@ impl Component for ComponentParamsTags {
                 match resp_parsing::<usize>(res, "putComponentParams") {
                     Ok(result) => {
                         debug!("putComponentParams: {:?}", result);
-                        self.hide_add_param_modal = result > 0;
+                        self.hide_add_param_modal = true;
+                        self.hide_import_param_modal = true;
                         self.total_items += 1;
                         self.request_set_param_value = String::new();
                         link.send_message(Msg::RequestComponentParams);
@@ -186,6 +197,12 @@ impl Component for ComponentParamsTags {
                 }
                 self.hide_add_param_modal = !self.hide_add_param_modal
             },
+            Msg::ChangeHideImportParam => {
+                if self.hide_import_param_modal && self.param_list.is_empty() {
+                    link.send_message(Msg::RequestParamsList)
+                }
+                self.hide_import_param_modal = !self.hide_import_param_modal
+            },
             Msg::SetSelectParam => {
                 self.request_add_param_id = 0;
                 for param in self.param_list.iter() {
@@ -213,6 +230,7 @@ impl Component for ComponentParamsTags {
             false
         } else {
             self.hide_add_param_modal = true;
+            self.hide_import_param_modal = true;
             self.param_ids = BTreeSet::new();
             self.total_items = props.params_count;
             self.props = props;
@@ -221,11 +239,37 @@ impl Component for ComponentParamsTags {
     }
 
     fn view(&self) -> Html {
+        let onclick_add_params = self.link.callback(|params| Msg::RequestAddParams(params));
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         let onclick_paginate = self.link.callback(|page_set| Msg::ChangePaginate(page_set));
         html!{<>
             <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
             {self.modal_add_param()}
+            {match self.props.show_manage_btn {
+                true => html!{
+                    <nav id={"card-manage-import-params"} class="level">
+                        <div class="level-left">
+                            <div class="level-item">
+                                <p class={"title is-5"}>{get_value_field(&185)}</p>
+                            </div>
+                        </div>
+                        <div class="level-right buttons">
+                            <ImportParamsData
+                                component_uuid={self.props.component_uuid.clone()}
+                                callback_add_params={onclick_add_params.clone()}
+                            />
+                            {ft_add_btn(
+                                "add-param-component",
+                                get_value_field(&180),
+                                self.link.callback(|_| Msg::ChangeHideAddParam),
+                                false,
+                                false
+                            )}
+                        </div>
+                    </nav>
+                },
+                false => html!{},
+            }}
             {self.show_params()}
             <Paginate
                 callback_change={onclick_paginate}
@@ -234,20 +278,6 @@ impl Component for ComponentParamsTags {
                 per_page={Some(self.page_set.per_page)}
                 total_items={self.total_items}
                 />
-            {match self.props.show_manage_btn {
-                true => html!{
-                    <footer class="card-footer">
-                        {ft_add_btn(
-                            "add-param-component",
-                            get_value_field(&180),
-                            self.link.callback(|_| Msg::ChangeHideAddParam),
-                            true,
-                            false
-                        )}
-                    </footer>
-                },
-                false => html!{},
-            }}
         </>}
     }
 }
@@ -302,8 +332,7 @@ impl ComponentParamsTags {
     }
 
     fn modal_add_param(&self) -> Html {
-        let onclick_add_param =
-            self.link.callback(|(param_id, param_value)| Msg::RequestAddParam(param_id, param_value));
+        let onclick_add_param = self.link.callback(|pv| Msg::RequestAddParams(vec![pv]));
         let onclick_hide_modal = self.link.callback(|_| Msg::ChangeHideAddParam);
         let class_modal = match &self.hide_add_param_modal {
             true => "modal",

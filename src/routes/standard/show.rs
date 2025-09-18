@@ -9,11 +9,11 @@ use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::fragments::clipboard::ShareLinkBtn;
+use crate::fragments::company::ListItemCompany;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{
     buttons::{ft_see_btn, ft_follow_btn},
-    user::GoToUser,
     switch_icon::res_btn,
     list_errors::ListErrors,
     component::CatalogComponents,
@@ -44,6 +44,7 @@ pub struct ShowStandard {
     is_followed: bool,
     show_full_description: bool,
     show_related_components: bool,
+    show_owner_company: bool,
     file_arr: Vec<DownloadFile>,
 }
 
@@ -70,6 +71,7 @@ pub enum Msg {
     GetStandardData(String),
     ShowDescription,
     ShowComponentsList,
+    ShowCompanyCard,
     OpenStandardSetting,
     ResponseError(Error),
     ClearError,
@@ -94,6 +96,7 @@ impl Component for ShowStandard {
             is_followed: false,
             show_full_description: false,
             show_related_components: false,
+            show_owner_company: false,
             file_arr: Vec::new(),
         }
     }
@@ -234,6 +237,7 @@ impl Component for ShowStandard {
             },
             Msg::ShowDescription => self.show_full_description = !self.show_full_description,
             Msg::ShowComponentsList => self.show_related_components = !self.show_related_components,
+            Msg::ShowCompanyCard => self.show_owner_company = !self.show_owner_company,
             Msg::OpenStandardSetting => {
                 if let Some(standard_data) = &self.standard {
                     // Redirect to page for change and update standard
@@ -272,29 +276,25 @@ impl Component for ShowStandard {
                             </div>
                             <br/>
                             {match &self.show_related_components {
-                                true => self.show_related_components_card(&standard_data.uuid),
-                                false => html!{<>
-                                    <div class="columns">
-                                        <div class="column">
-                                            {self.show_standard_params(standard_data)}
-                                        </div>
-                                        <div class="column">
-                                            {self.show_standard_files(standard_data)}
-                                        </div>
-                                    </div>
-                                    <SpecsTags
-                                        show_manage_btn={false}
-                                        standard_uuid={standard_data.uuid.clone()}
-                                        specs={standard_data.standard_specs.clone()}
-                                    />
+                                true => html!{<>
+                                    {self.show_related_components_card(&standard_data.uuid)}
                                     <br/>
-                                    <KeywordsTags
-                                        show_delete_btn={false}
-                                        standard_uuid={standard_data.uuid.clone()}
-                                        keywords={standard_data.standard_keywords.clone()}
-                                    />
                                 </>},
+                                false => html!{},
                             }}
+                            {self.show_standard_files(standard_data)}
+                            <br/>
+                            <SpecsTags
+                                show_manage_btn={false}
+                                standard_uuid={standard_data.uuid.clone()}
+                                specs={standard_data.standard_specs.clone()}
+                            />
+                            <br/>
+                            <KeywordsTags
+                                show_delete_btn={false}
+                                standard_uuid={standard_data.uuid.clone()}
+                                keywords={standard_data.standard_keywords.clone()}
+                            />
                             <br/>
                         </div>
                     </div>
@@ -318,19 +318,25 @@ impl ShowStandard {
                 file_arr={self.file_arr.clone()}
               />
               <div class="column">
-                <div class="media">
-                    <div class="media-content">
-                        {get_value_field(&94)}
-                        <GoToUser data = {standard_data.owner_user.clone()} />
+                <div class="columns pb-0 mb-0">
+                    <div class="column">
+                        {get_value_field(&159)}{": "}
+                        {standard_data.standard_status.name.clone()}
                     </div>
-                    <div class="media-right" style="margin-right: 1rem">
-                        {get_value_field(&145)} // type access
-                        <span class="id-box has-text-weight-bold">
-                            {standard_data.type_access.name.clone()}
+                    <div class="column">
+                        {standard_data.type_access.get_with_icon()}
+                    </div>
+                    <div class="column is-narrow" title={get_value_field(&159)}>
+                        <span class="icon is-small">
+                            <i class={classes!("fa", "fa-edit")}></i>
+                        </span>
+                        {" "}
+                        <span class="id-box">
+                            {standard_data.publication_at.date_to_display()}
                         </span>
                     </div>
                 </div>
-                // <h1>{"Standard"}</h1>
+                {self.show_modal_company_info(standard_data)}
                 <div class="has-text-weight-bold is-size-4">
                     {standard_data.name.clone()}
                 </div>
@@ -340,7 +346,7 @@ impl ShowStandard {
                     {self.show_followers_btn()}
                     <ShareLinkBtn />
                 </div>
-                <div class="standard-description">
+                <div id={"standard-description"} class="pl-5 pr-5">
                     {match standard_data.description.len() {
                         250.. => html!{<>
                             {match self.show_full_description {
@@ -353,48 +359,6 @@ impl ShowStandard {
                     }}
                 </div>
               </div>
-            </div>
-        }
-    }
-
-    fn show_standard_params(&self, standard_data: &StandardInfo) -> Html {
-        html!{
-            <div class="card">
-                <header class="card-header">
-                    <p class="card-header-title">{get_value_field(&152)}</p> // Сharacteristics of the standard
-                </header>
-                <div class="card-content">
-                    <div class="content">
-                        <table class="table is-fullwidth">
-                            <tbody>
-                            <tr>
-                                <td>{get_value_field(&146)}</td> // classifier
-                                <td>{standard_data.classifier.clone()}</td>
-                            </tr>
-                            <tr>
-                                <td>{get_value_field(&147)}</td> // specified_tolerance
-                                <td>{standard_data.specified_tolerance.clone()}</td>
-                            </tr>
-                            <tr>
-                                <td>{get_value_field(&148)}</td> // technical_committee
-                                <td>{standard_data.technical_committee.clone()}</td>
-                            </tr>
-                            <tr>
-                                <td>{get_value_field(&149)}</td> // publication_at
-                                <td>{standard_data.publication_at.date_to_display()}</td>
-                            </tr>
-                            <tr>
-                                <td>{get_value_field(&150)}</td> // standard_status
-                                <td>{standard_data.standard_status.name.clone()}</td>
-                            </tr>
-                            <tr>
-                                <td>{get_value_field(&151)}</td> // region
-                                <td>{standard_data.region.region.clone()}</td>
-                            </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
             </div>
         }
     }
@@ -434,14 +398,15 @@ impl ShowStandard {
     fn show_related_components_btn(&self) -> Html {
         let onclick_related_components_btn = self.link.callback(|_| Msg::ShowComponentsList);
         let (text_btn, classes_btn) = match &self.show_related_components {
-            true => (get_value_field(&295), "button"),
-            false => (get_value_field(&296), "button is-info is-light"),
+            true => (get_value_field(&295), "button is-info is-light is-active"),
+            false => (get_value_field(&296), "button is-info"),
         };
 
         html!{
             <button class={classes_btn}
                 onclick={onclick_related_components_btn} >
-              <span class="has-text-black">{text_btn}</span>
+              <span class="icon is-small"><i class="fa fa-cubes"></i></span>
+              <span>{text_btn}</span>
             </button>
         }
     }
@@ -476,5 +441,30 @@ impl ShowStandard {
             )},
             false => html!{},
         }
+    }
+
+    fn show_modal_company_info(&self, standard_data: &StandardInfo) -> Html {
+        let onclick_company_data_info = self.link.callback(|_| Msg::ShowCompanyCard);
+        let class_modal = match &self.show_owner_company {
+            true => "modal is-active",
+            false => "modal",
+        };
+
+        html!{<>
+            {get_value_field(&109)}{" "}
+            <a class={"has-text-grey-light has-text-weight-bold"} onclick={onclick_company_data_info.clone()} >
+                {standard_data.owner_company.shortname.clone()}
+            </a>
+            <div class={class_modal}>
+              <div class="modal-background" onclick={onclick_company_data_info.clone()} />
+                <div class="card">
+                    <ListItemCompany
+                        data={standard_data.owner_company.clone()}
+                        show_list={true}
+                    />
+                </div>
+              <button class="modal-close is-large" aria-label="close" onclick={onclick_company_data_info} />
+            </div>
+        </>}
     }
 }

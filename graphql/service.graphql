@@ -1,0 +1,284 @@
+mutation ServiceRequest($iptServiceData: IptServiceData!, $iptUserData: IptUserData) {
+  serviceRequest(args: $iptServiceData, newUser: $iptUserData)
+}
+
+mutation ChangeServiceStatus($iptServiceStatusArg: IptServiceStatusArg!) {
+  changeServiceStatus(args: $iptServiceStatusArg)
+}
+
+query GetServiceDataOpt($iptCompaniesArg: IptCompaniesArg!) {
+  companies(args: $iptCompaniesArg) {
+    ...showCompanyShortFields
+  }
+
+  regions{
+    ...regionFields
+  }
+}
+
+query GetServiceData($serviceUuid: UUID!) {
+  service(serviceUuid: $serviceUuid) {
+    ...serviceAndRelatedDataFields
+  }
+}
+
+query ServiceFilesList($serviceUuid: UUID!) {
+  service(serviceUuid: $serviceUuid) {
+    files {
+      ...showFileRelatedDataFields
+    }
+  }
+}
+
+query GetUpdateServiceDataOpt($serviceUuid: UUID!, $iptCompaniesArg: IptCompaniesArg!) {
+  service(serviceUuid: $serviceUuid) {
+    ...serviceAndRelatedDataFields
+  }
+
+  companies(args: $iptCompaniesArg) {
+    ...showCompanyShortFields
+  }
+
+  serviceStatuses{
+    ...serviceStatusFields
+  }
+
+  regions{
+    ...regionFields
+  }
+}
+
+query GetServicesShortList(
+  $iptServicesArg: IptServicesArg,
+  $IptPaginate: IptPaginate,
+  $imagesOnly: Boolean
+) {
+  services(args: $iptServicesArg) {
+    uuid
+    name
+    description
+    ownerUser {
+      ...showUserShortFields
+    }
+    ownerCompany {
+      ...showCompanyShortFields
+    }
+    serviceStatus {
+      ...serviceStatusFields
+    }
+    files(paginate: $IptPaginate, images: $imagesOnly) {
+      ...downloadFileFields
+    }
+    updatedAt
+  }
+}
+
+query ServiceFiles($iptServiceFilesArg: IptServiceFilesArg!) {
+  serviceFiles(args: $iptServiceFilesArg){
+    ...downloadFileFields
+  }
+}
+
+mutation PutServiceUpdate($serviceUuid: UUID!, $iptUpdateServiceData: IptUpdateServiceData!) {
+  putServiceUpdate(serviceUuid: $serviceUuid, args: $iptUpdateServiceData)
+}
+
+mutation DeleteService($serviceUuid: UUID!) {
+  deleteService(serviceUuid: $serviceUuid)
+}
+
+mutation UploadServiceFiles($iptServiceFilesData: IptServiceFilesData!) {
+  uploadServiceFiles(args: $iptServiceFilesData){
+    ...uploadUrlFields
+  }
+}
+
+mutation AddServiceSpecs($iptServiceSpecsData: IptServiceSpecsData!) {
+  addServiceSpecs(args: $iptServiceSpecsData)
+}
+
+mutation DeleteServiceSpecs($iptServiceSpecsData: IptServiceSpecsData!){
+  deleteServiceSpecs(args: $iptServiceSpecsData)
+}
+
+query GetServiceKeywords($serviceUuid: UUID!) {
+  serviceKeywords(serviceUuid: $serviceUuid) {
+    id
+    keyword
+  }
+}
+
+mutation AddServiceKeywordsByNames($iptServiceKeywordsNames: IptServiceKeywordsNames!) {
+  addServiceKeywordsByNames(args: $iptServiceKeywordsNames)
+}
+
+mutation DeleteServiceKeywords($iptServiceKeywordsData: IptServiceKeywordsData!){
+  deleteServiceKeywords(args: $iptServiceKeywordsData)
+}
+
+fragment uploadUrlFields on UploadFile {
+  fileUuid
+  filename
+  uploadUrl
+}
+
+mutation ChangeServiceAccess($changeTypeAccessService: ChangeTypeAccessService!) {
+  changeServiceAccess(args: $changeTypeAccessService)
+}
+
+mutation DeleteServiceFile($deleteServiceFileData: DeleteServiceFileData!) {
+  deleteServiceFile(args: $deleteServiceFileData)
+}
+
+
+mutation PutServiceParams($iptServiceParamsData: IptServiceParamsData!) {
+  putServiceParams(args: $iptServiceParamsData)
+}
+
+mutation DeleteServiceParams($delServiceParamData: DelServiceParamData!) {
+  deleteServiceParams(args: $delServiceParamData)
+}
+
+query GetServiceParams(
+  $serviceUuid: UUID!,
+  $IptSort: IptSort,
+  $IptPaginate: IptPaginate
+) {
+  service(serviceUuid: $serviceUuid) {
+    serviceParams(sort: $IptSort, paginate: $IptPaginate) {
+      ...serviceParamFields
+    }
+  }
+}
+
+fragment serviceParamFields on ServiceParamWithTranslation {
+  serviceUuid
+  param {
+    ...paramFields
+  }
+  value
+}
+
+fragment paramFields on ParamTranslateList {
+  paramId
+  langId
+  paramname
+}
+
+fragment serviceStatusFields on ServiceStatusTranslateList {
+  serviceStatusId
+  langId
+  name
+}
+
+fragment companyTypeFields on CompanyTypeTranslateList {
+  companyTypeId
+  langId
+  name
+  shortname
+}
+
+fragment downloadFileFields on DownloadFile {
+  uuid
+  filename
+  filesize
+  downloadUrl
+}
+
+fragment showUserShortFields on ShowUserShort {
+  uuid
+  firstname
+  lastname
+  username
+  imageFile {
+    ...downloadFileFields
+  }
+}
+
+fragment showCompanyShortFields on ShowCompanyShort {
+  uuid
+  shortname
+  inn
+  description
+  imageFile {
+    ...downloadFileFields
+  }
+  region {
+    ...regionFields
+  }
+  companyType {
+    ...companyTypeFields
+  }
+  isSupplier
+  isFollowed
+  createdAt
+  updatedAt
+}
+
+fragment regionFields on RegionTranslateList {
+  regionId
+  langId
+  region
+}
+
+fragment specFields on SpecTranslateList {
+  specId
+  langId
+  spec
+}
+
+fragment showFileRelatedDataFields on ShowFileRelatedData {
+  uuid
+  filename
+  revision
+  commitMsg
+  parentFileUuid
+  ownerUser {
+    ...showUserShortFields
+  }
+  contentType
+  filesize
+  program {
+    id
+    name
+  }
+  sha256Hash
+  downloadUrl
+  createdAt
+  updatedAt
+}
+
+fragment serviceAndRelatedDataFields on ServiceAndRelatedData {
+  uuid
+  name
+  description
+  ownerUser {
+    ...showUserShortFields
+  }
+  ownerCompany {
+    ...showCompanyShortFields
+  }
+  serviceStatus {
+    ...serviceStatusFields
+  }
+  region {
+    ...regionFields
+  }
+  files {
+    ...showFileRelatedDataFields
+  }
+  #serviceParams {
+  #  ...serviceParamFields
+  #}
+  paramsCount
+  filesCount
+  serviceSpecs {
+    ...specFields
+  }
+  serviceKeywords {
+    id
+    keyword
+  }
+  createdAt
+  updatedAt
+}

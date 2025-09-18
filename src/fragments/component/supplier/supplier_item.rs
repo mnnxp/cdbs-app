@@ -3,12 +3,13 @@ use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use log::debug;
 use crate::error::Error;
+use crate::fragments::notification::show_notification;
 use crate::fragments::{
     buttons::ft_delete_small_btn,
     list_errors::ListErrors,
     company::ListItemCompany,
 };
-use crate::services::resp_parsing;
+use crate::services::{get_value_field, resp_parsing};
 use crate::types::{UUID, Supplier, ShowCompanyShort};
 use crate::gqls::{
     make_query,
@@ -154,6 +155,11 @@ impl Component for ComponentSupplierItem {
 
         html!{<>
             <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
+            {show_notification(
+                get_value_field(&397),
+                "is-warning",
+                self.company_data.is_none() && self.open_company_info
+            )}
             {self.show_modal_company_info()}
             <tr>
                 <td>{self.props.supplier_data.supplier.shortname.clone()}</td>

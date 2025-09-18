@@ -13,8 +13,8 @@ use crate::fragments::{
     list_errors::ListErrors,
     switch_icon::{res_btn, res_fullwidth_btn},
 };
+use crate::services::content_adapter::Markdownable;
 use crate::types::{Pathname, ShowCompanyShort, UUID};
-use crate::services::content_adapter::DateDisplay;
 use crate::services::{get_value_field, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::company::{
@@ -159,11 +159,8 @@ impl ListItemCompany {
             inn,
             description,
             image_file,
-            region,
             company_type,
             is_supplier,
-            // is_followed,
-            updated_at,
             ..
         } = &self.props.data;
 
@@ -179,45 +176,37 @@ impl ListItemCompany {
                         <img src={image_file.download_url.clone()} alt="Favicon company" loading="lazy" />
                     </figure>
                   </div>
-                  <div class="media-content">
-                    {get_value_field(&164)} <span class="id-box has-text-weight-bold">{region.region.clone()}</span>
-                    <div class="columns" style="margin-bottom:0">
-                        <div class="column" onclick={onclick_open_company.clone()}>
-                            <p class="overflow-title has-text-weight-bold is-size-4">
-                                {format!("{} {}", &shortname, &company_type.shortname)}
-                            </p>
-                            <p class="overflow-title">
-                                {match &description.len() {
-                                    0..=50 => description.clone(),
-                                    _ => format!("{:.*}...", 50, description),
-                                }}
-                            </p>
-                        </div>
-                        <div class="column buttons is-one-quarter flexBox" >
-                            {res_btn(
-                                classes!("far", "fa-folder"),
-                                onclick_open_company.clone(),
-                                String::new(),
-                                get_value_field(&315),
-                                Pathname::Company(self.props.data.uuid.clone())
-                            )}
-                            {ft_follow_btn(
-                                trigger_fav_btn,
-                                self.is_followed,
-                                String::new(),
-                            )}
-                        </div>
+                  <div class="media-content" onclick={onclick_open_company.clone()}>
+                    <div class="column fix-width mb-0 p-0">
+                        {company_type.to_dispaly_order(
+                            classes!("is-size-4"),
+                            html!{<span class={"has-text-weight-bold is-size-4"}>{shortname.clone()}</span>}
+                        )}
+                        <div class="overflow-title">{description.to_markdown_short()}</div>
                     </div>
-                    <div class="columns is-gapless" onclick={onclick_open_company}>
-                        <div class="column">
-                            {get_value_field(&163)}
-                            <span class="id-box has-text-weight-bold">{inn.clone()}</span>
-                        </div>
-                        <div class="column">
-                          {get_value_field(&30)}
-                          { updated_at.date_to_display() }
-                        </div>
-                    </div>
+                    {match inn.is_empty() {
+                        true => html!{},
+                        false => html!{
+                            <div class="column p-0 mb-0">
+                                {get_value_field(&163)}
+                                <span class="id-box has-text-weight-bold">{inn.clone()}</span>
+                            </div>
+                        },
+                    }}
+                  </div>
+                  <div class="buttons flexBox p-0" >
+                      {res_btn(
+                          classes!("far", "fa-folder"),
+                          onclick_open_company.clone(),
+                          String::new(),
+                          get_value_field(&315),
+                          Pathname::Company(self.props.data.uuid.clone())
+                      )}
+                      {ft_follow_btn(
+                          trigger_fav_btn,
+                          self.is_followed,
+                          String::new(),
+                      )}
                   </div>
               </article>
             </div>
@@ -229,10 +218,7 @@ impl ListItemCompany {
             uuid,
             shortname,
             image_file,
-            region,
-            company_type,
             is_supplier,
-            // is_followed,
             ..
         } = self.props.data.clone();
 
@@ -247,9 +233,7 @@ impl ListItemCompany {
                   <div class="top-tag" hidden={!is_supplier} >{get_value_field(&3)}</div> // supplier
                   <img src={image_file.download_url.to_string()} alt="Favicon profile" loading="lazy" />
                 </div>
-                <p>{get_value_field(&164)}<span class="id-box has-text-weight-bold">{region.region.to_string()}</span></p>
                 <p class="overflow-title has-text-weight-bold is-size-4">{shortname}</p>
-                <p class="has-text-weight-bold">{company_type.shortname.to_string()}</p>
               </div>
               <div class="btnBox">
                 {res_fullwidth_btn(onclick_open_company, get_value_field(&165), Pathname::Company(uuid))}

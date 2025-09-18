@@ -1,7 +1,7 @@
 use yew::{Component, Callback, ComponentLink, Html, Properties, ShouldRender, html, ChangeData};
 use log::debug;
 use crate::types::{UUID, FilesetProgramInfo};
-use crate::services::get_value_field;
+use crate::services::{get_value_field, set_focus};
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
@@ -22,6 +22,7 @@ pub enum Msg {
     ParseFirstFilesetUuid,
     SelectFilesetUuid(UUID),
     OpenFilesetFilesBlock,
+    Focuser,
 }
 
 impl Component for ManageFilesOfFilesetBlock {
@@ -57,7 +58,11 @@ impl Component for ManageFilesOfFilesetBlock {
             Msg::OpenFilesetFilesBlock => {
                 self.open_fileset_files_card = !self.open_fileset_files_card;
                 self.props.callback_open_fileset.emit(self.open_fileset_files_card);
+                if self.open_fileset_files_card {
+                    self.link.send_message(Msg::Focuser)
+                }
             },
+            Msg::Focuser => set_focus("files-of-fileset-card"),
         }
         true
     }
@@ -108,7 +113,8 @@ impl Component for ManageFilesOfFilesetBlock {
                 <button
                 class={class_fileset_btn}
                 onclick={onclick_open_fileset_files_list_btn}
-                title={get_value_field(&106)}>
+                title={get_value_field(&106)}
+                disabled={self.select_fileset_uuid.is_empty()} >
                     <span class={"icon is-small"}><i class={"fa fa-list"}></i></span>
                     <span>{get_value_field(&198)}</span>
                 </button>

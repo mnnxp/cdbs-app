@@ -14,20 +14,18 @@ use crate::error::Error;
 use crate::fragments::{
     buttons::ft_follow_btn,
     clipboard::ShareLinkBtn,
-    user::GoToUser,
+    // user::GoToUser,
     switch_icon::res_btn,
     list_errors::ListErrors,
-    list_empty::ListEmpty,
     side_menu::{MenuItem, SideMenu},
-    company::{CompanyCertificatesCard, CompanyRepresents, diamond_svg},
-    component::CatalogComponents,
-    standard::CatalogStandards,
+    company::diamond_svg,
+    supplier_service::ServiceRequestBtn,
+    company::{view_certificates, view_components, view_content, view_represents, view_services, view_standards, view_discussion},
+    responsive::resizer,
 };
-use crate::services::content_adapter::{
-    ContentDisplay, Markdownable, DateDisplay, ContactDisplay, SpecDisplay
-};
+use crate::services::content_adapter::{ContentDisplay, DateDisplay};
 use crate::services::{get_logged_user, get_value_field, resp_parsing, set_history_back, title_changer, Counter};
-use crate::types::{CompanyInfo, ComponentsQueryArg, Pathname, SlimUser, StandardsQueryArg, UUID};
+use crate::types::{CompanyInfo, Pathname, SlimUser, UUID};
 use crate::gqls::make_query;
 use crate::gqls::company::{
     GetCompanyData, get_company_data,
@@ -48,7 +46,6 @@ pub struct ShowCompany {
     is_followed: bool,
     company_tab: CompanyTab,
     extend_tab: Option<CompanyTab>,
-    show_full_company_info: bool,
 }
 
 impl Counter for ShowCompany {
@@ -72,7 +69,6 @@ pub enum Msg {
     GetCompanyResult(String),
     ChangeTab(CompanyTab),
     OpenSettingCompany,
-    ShowFullCompanyInfo,
     ResponseError(Error),
     ClearError,
     Ignore,
@@ -80,10 +76,13 @@ pub enum Msg {
 
 #[derive(Clone, PartialEq)]
 pub enum CompanyTab {
+    Info,
     Certificates,
-    Components,
-    Standards,
     Represent,
+    Components,
+    Services,
+    Standards,
+    Discussion,
     // Members,
 }
 
@@ -104,7 +103,6 @@ impl Component for ShowCompany {
             is_followed: false,
             company_tab: CompanyTab::Components,
             extend_tab: None,
-            show_full_company_info: false,
         }
     }
 
@@ -224,7 +222,6 @@ impl Component for ShowCompany {
                     ).into()));
                 }
             },
-            Msg::ShowFullCompanyInfo => self.show_full_company_info = !self.show_full_company_info,
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::ClearError => self.error = None,
             Msg::Ignore => {},
@@ -253,9 +250,6 @@ impl Component for ShowCompany {
                             <div class="card">
                               <div class="card-content">
                                 {self.view_card()}
-                                <div class="content">
-                                    {self.view_content(company_data)}
-                                </div>
                             </div>
                           </div>
                           {self.company_relate_object(company_data)}
@@ -271,42 +265,25 @@ impl Component for ShowCompany {
 impl ShowCompany {
     fn view_card(&self) -> Html {
         let onclick_setting_company_btn = self.link.callback(|_| Msg::OpenSettingCompany);
-
-        let size_favicon = match self.show_full_company_info {
-            true => "is-128x128",
-            false => "is-64x64",
-        };
-
         match &self.company {
             Some(company_data) => html!{
               <div class="columns">
                 <div class="box">
-                  <figure class={classes!("container", "image", size_favicon)}>
+                  <figure class={classes!("container", "image", "is-64x64")}>
                     <img
                         src={company_data.image_file.download_url.to_string()} alt="Favicon company"
                         loading="lazy"
                     />
                   </figure>
                 </div>
-                <div id="company-region" class={classes!("column", "is-three-fifths")}>
-                  <abbr title={get_value_field(&275)} hidden={!company_data.is_supplier}>
-                      {diamond_svg(company_data.is_supplier, "25")}
-                  </abbr>
-                  {match self.show_full_company_info {
-                      true => {company_data.to_display()},
-                      false => html!{
-                          <p id="subtitle-shortname">
-                            <strong>{company_data.shortname.clone()}</strong>
-                          </p>
-                      },
-                  }}
-                  <GoToUser data = {company_data.owner_user.clone()} />
+                <div id="company-is-supplier" class={classes!("column", "is-three-fifths")}>
+                    {company_data.to_display()}
+                    <abbr title={get_value_field(&275)} hidden={!company_data.is_supplier}>
+                        {diamond_svg(company_data.is_supplier, "25")}
+                    </abbr>
                 </div>
                 <div class="column">
-                    <p class="subtitle is-6 has-text-right">
-                        {company_data.date_to_display()}
-                    </p>
-                    <div class="buttons flexBox" >
+                    <div class="buttons flexBox mb-0" >
                       {match &self.current_user_owner {
                         true => {res_btn(
                             classes!("fa", "fa-tools"),
@@ -319,6 +296,16 @@ impl ShowCompany {
                       }}
                       {self.show_favorite_btn()}
                       <ShareLinkBtn />
+                      {match company_data.is_supplier {
+                        true => html!{<>
+                            <ServiceRequestBtn company_uuid={company_data.uuid.clone()} />
+                        </>},
+                        false => html!{},
+                      }}
+                    </div>
+                    <div id="company-on-since">
+                      <span>{get_value_field(&231)}{" "}</span> // On the platform since
+                      <span>{company_data.created_at.date_to_display()}</span>
                     </div>
                 </div>
             </div>},
@@ -339,55 +326,23 @@ impl ShowCompany {
         )
     }
 
-    fn view_content(
-        &self,
-        company_data: &CompanyInfo,
-    ) -> Html {
-        let onclick_change_full_show = self.link.callback(|_| Msg::ShowFullCompanyInfo);
-
-        match self.show_full_company_info {
-            true => html! {<>
-                <div class="columns">
-                    <div class="column is-two-thirds">
-                        <div id="description" class="content">
-                          {company_data.description.to_markdown()}
-                        </div>
-                    </div>
-                    <div class="column">
-                        {company_data.contact_block()}
-                    </div>
-                </div>
-                {company_data.spec_block()}
-                <button class="button is-ghost" onclick={onclick_change_full_show}>
-                    <span>{get_value_field(&42)}</span>
-                </button>
-            </>},
-            false => html!{
-                <button class="button is-ghost" onclick={onclick_change_full_show}>
-                    <span>{get_value_field(&43)}</span>
-                </button>
-            },
-        }
-    }
-
     fn company_relate_object(
         &self,
         company_data: &CompanyInfo,
     ) -> Html {
-        html!{<div class="card">
+        html!{<div id={"company-card-list"} class="card">
             <div class="columns is-mobile">
                 <div class="column is-flex">
                     { self.show_company_action() }
-                    <div class="card-relate-data">
+                    <div id={"company-card-list-items"} class="card-relate-data" style={resizer("company-card-list", 5)}>
                         {match self.company_tab {
-                            CompanyTab::Certificates =>
-                                self.view_certificates(&company_data),
-                            CompanyTab::Represent =>
-                                self.view_represents(&company_data),
-                            CompanyTab::Components =>
-                                self.view_components(&company_data.uuid),
-                            CompanyTab::Standards =>
-                                self.view_standards(&company_data.uuid),
+                            CompanyTab::Info => view_content(&company_data),
+                            CompanyTab::Represent => view_represents(&company_data),
+                            CompanyTab::Certificates => view_certificates(&company_data),
+                            CompanyTab::Components => view_components(&company_data.uuid),
+                            CompanyTab::Services => view_services(&company_data.uuid),
+                            CompanyTab::Standards => view_standards(&company_data.uuid),
+                            CompanyTab::Discussion => view_discussion(&company_data.uuid),
                             // CompanyTab::Members => {},
                         }}
                     </div>
@@ -398,6 +353,16 @@ impl ShowCompany {
 
     fn show_company_action(&self) -> Html {
         let menu_arr: Vec<MenuItem> = vec![
+            // company info MenuItem
+            MenuItem {
+                title: get_value_field(&232).to_string(), // INFO
+                action: self.cb_generator(CompanyTab::Info),
+                count: self.get_number_of_items(&CompanyTab::Info),
+                item_class: classes!("has-background-white"),
+                icon_classes: vec![classes!("fas", "fa-info")],
+                is_active: self.company_tab == CompanyTab::Info,
+                is_extend: self.check_extend(&CompanyTab::Info),
+            },
             // certificates MenuItem
             MenuItem {
                 title: get_value_field(&32).to_string(), // CERTIFICATES
@@ -428,15 +393,35 @@ impl ShowCompany {
                 is_active: self.company_tab == CompanyTab::Components,
                 is_extend: self.check_extend(&CompanyTab::Components),
             },
+            // services MenuItem
+            MenuItem {
+                title: get_value_field(&379).to_string(), // SERVICES
+                action: self.cb_generator(CompanyTab::Services),
+                count: self.get_number_of_items(&CompanyTab::Services),
+                item_class: classes!("has-background-white"),
+                icon_classes: vec![classes!("fas", "fa-ticket-alt")],
+                is_active: self.company_tab == CompanyTab::Services,
+                is_extend: self.check_extend(&CompanyTab::Services),
+            },
             // standards MenuItem
             MenuItem {
                 title: get_value_field(&103).to_string(), // STANDARDS
                 action: self.cb_generator(CompanyTab::Standards),
                 count: self.get_number_of_items(&CompanyTab::Standards),
                 item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-cube")],
+                icon_classes: vec![classes!("fas", "fa-book")],
                 is_active: self.company_tab == CompanyTab::Standards,
                 is_extend: self.check_extend(&CompanyTab::Standards),
+            },
+            // discussion MenuItem
+            MenuItem {
+                title: get_value_field(&380).to_string(), // DISCUSSION
+                action: self.cb_generator(CompanyTab::Discussion),
+                count: self.get_number_of_items(&CompanyTab::Discussion),
+                item_class: classes!("has-background-white"),
+                icon_classes: vec![classes!("far", "fa-comments")],
+                is_active: self.company_tab == CompanyTab::Discussion,
+                is_extend: self.check_extend(&CompanyTab::Discussion),
             },
             // memebers MenuItem
             // MenuItem {
@@ -457,60 +442,6 @@ impl ShowCompany {
         }
     }
 
-    fn view_certificates(
-        &self,
-        company_data: &CompanyInfo,
-    ) -> Html {
-        if company_data.company_certificates.is_empty() {
-            html!{<ListEmpty />}
-        } else {
-            html!{<div class="profileBox" >
-                <CompanyCertificatesCard
-                    certificates={company_data.company_certificates.clone()}
-                    show_cert_btn={false}
-                    download_btn={false}
-                    manage_btn={false}
-                 />
-            </div>}
-        }
-    }
-
-    fn view_represents(
-        &self,
-        company_data: &CompanyInfo,
-    ) -> Html {
-        html!{
-            <CompanyRepresents
-                show_manage_btn={false}
-                list={company_data.company_represents.clone()}
-            />
-        }
-    }
-
-    fn view_components(
-        &self,
-        company_uuid: &UUID,
-    ) -> Html {
-        html!{
-            <CatalogComponents
-                show_create_btn={false}
-                arguments={ComponentsQueryArg::set_company_uuid(company_uuid)}
-            />
-        }
-    }
-
-    fn view_standards(
-        &self,
-        company_uuid: &UUID,
-    ) -> Html {
-        html!{
-            <CatalogStandards
-                show_create_btn={true}
-                arguments={StandardsQueryArg::set_company_uuid(company_uuid)}
-            />
-        }
-    }
-
     fn cb_generator(&self, cb: CompanyTab) -> Callback<MouseEvent> {
         self.link.callback(move |_| Msg::ChangeTab(cb.clone()))
     }
@@ -526,21 +457,16 @@ impl ShowCompany {
     fn get_number_of_items(&self, tab: &CompanyTab) -> usize {
         match &self.company {
             Some(ref company) =>  match tab {
+              CompanyTab::Info => 0,
               CompanyTab::Certificates => company.company_certificates.len(),
               CompanyTab::Represent => company.company_represents.len(),
               CompanyTab::Components => 0,
+              CompanyTab::Services => 0,
               CompanyTab::Standards => 0,
+              CompanyTab::Discussion => 0,
               // CompanyTab::Members => 0,
             },
             None => 0,
         }
     }
-
-    // fn view_members(&self) -> Html {
-    //     html!{
-    //         <CatalogUsers
-    //             arguments = UsersQueryArg::set_favorite()
-    //         />
-    //     }
-    // }
 }

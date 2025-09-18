@@ -1,10 +1,13 @@
 mod banner;
 mod main_view;
+mod search_page;
 
-use yew::{Bridged, classes, html, Bridge, Component, ComponentLink, Html, ShouldRender};
+pub use search_page::SearchPage;
+
+use yew::{classes, html, Bridge, Bridged, Component, ComponentLink, Html, InputData, ShouldRender};
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
 use crate::routes::AppRoute;
-use crate::services::{get_logged_user, get_value_field};
+use crate::services::{get_logged_user, get_value_field, set_history_search};
 
 use banner::Banner;
 // use main_view::MainView;
@@ -12,10 +15,13 @@ use banner::Banner;
 /// Home page with an article list and a tag list.
 pub struct Home {
     router_agent: Box<dyn Bridge<RouteAgent>>,
-    // link: ComponentLink<Self>,
+    link: ComponentLink<Self>,
+    search_text: String,
 }
 
 pub enum Msg {
+    InputSearch(String),
+    OpenSearchPage,
     Ignore,
 }
 
@@ -24,7 +30,11 @@ impl Component for Home {
     type Properties = ();
 
     fn create(_props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        Home { router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)) }
+        Home {
+            router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
+            link,
+            search_text: String::new(),
+        }
     }
 
     fn rendered(&mut self, first_render: bool) {
@@ -36,8 +46,17 @@ impl Component for Home {
         }
     }
 
-    fn update(&mut self, _msg: Self::Message) -> ShouldRender {
-        false
+    fn update(&mut self, msg: Self::Message) -> ShouldRender {
+        match msg {
+            Msg::InputSearch(value) => self.search_text = value,
+            Msg::OpenSearchPage => {
+                // save the text to use it on SearchPage
+                set_history_search(Some(self.search_text.clone()));
+                self.router_agent.send(ChangeRoute(AppRoute::SearchPage.into()))
+            },
+            Msg::Ignore => (),
+        }
+        true
     }
 
     fn change(&mut self, _props: Self::Properties) -> ShouldRender {
@@ -84,8 +103,32 @@ impl Component for Home {
                         </div>
                     </div>
                 </div>
-
+                {self.search_block()}
                 <Banner />
+            </div>
+        }
+    }
+}
+
+impl Home {
+    fn search_block(&self) -> Html {
+        let oninput_search_text = self.link.callback(|ev: InputData| Msg::InputSearch(ev.value));
+        let onclick_open_search = self.link.callback(|_| Msg::OpenSearchPage);
+        html!{
+            <div class="tile is-parent container">
+                <div class="tile is-parent">
+                    <form class="field is-relative has-addons column p-0 m-0">
+                        <div style="width: 100%;" class="control has-icons-left has-icons-right">
+                            <input placeholder={get_value_field(&351)} style="width: 100%;" class="input" oninput={oninput_search_text} />
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-search fa-xs"></i>
+                            </span>
+                        </div>
+                        <div class="control">
+                            <button class="button is-info search-button" type="submit" onclick={onclick_open_search}>{get_value_field(&349)}</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         }
     }

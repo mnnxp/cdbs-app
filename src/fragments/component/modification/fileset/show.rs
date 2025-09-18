@@ -14,7 +14,7 @@ use crate::gqls::component::{ComponentModificationFilesets, component_modificati
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
     pub modification_uuid: UUID,
-    pub callback_select_fileset_uuid: Callback<UUID>,
+    pub callback_select_fileset: Callback<FilesetProgramInfo>,
     pub callback_open_fileset: Callback<bool>,
 }
 
@@ -90,7 +90,9 @@ impl Component for ModificationFilesetsCard {
             Msg::SelectFileset(fileset_uuid) => {
                 debug!("SelectFileset: {:?}", fileset_uuid);
                 self.select_fileset_uuid = fileset_uuid;
-                self.props.callback_select_fileset_uuid.emit(self.select_fileset_uuid.clone());
+                if let Some(fp) = self.filesets_program.iter().find(|sf| sf.uuid == self.select_fileset_uuid) {
+                    self.props.callback_select_fileset.emit(fp.clone());
+                }
             },
             Msg::ClearError => self.error = None,
         }

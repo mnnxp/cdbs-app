@@ -54,8 +54,12 @@ query GetComponentParams(
   }
 }
 
-query GetComponentsShortList($iptComponentsArg: IptComponentsArg) {
-  components(args: $iptComponentsArg) {
+query GetComponentsShortList(
+  $iptComponentsArg: IptComponentsArg
+  $IptSort: IptSort,
+  $IptPaginate: IptPaginate
+) {
+  components(args: $iptComponentsArg, sort: $IptSort, paginate: $IptPaginate) {
     ...showComponentShortFields
   }
 }
@@ -154,8 +158,16 @@ mutation DeleteModificationParams($delModificationParamData: DelModificationPara
   deleteModificationParams(args: $delModificationParamData)
 }
 
-query ComModFilesOfFileset($iptFileOfFilesetArg: IptFileOfFilesetArg!) {
-  componentModificationFilesOfFileset(args: $iptFileOfFilesetArg){
+query ComModFilesOfFileset(
+  $iptFileOfFilesetArg: IptFileOfFilesetArg!,
+  $IptSort: IptSort,
+  $IptPaginate: IptPaginate
+  ) {
+  componentModificationFilesOfFileset(
+    args: $iptFileOfFilesetArg,
+    sort: $IptSort,
+    paginate: $IptPaginate
+  ){
     ...showFileRelatedDataFields
   }
 }
@@ -434,7 +446,7 @@ fragment showFileRelatedDataFields on ShowFileRelatedData {
   program {
     ...programFields
   }
-  hash
+  sha256Hash
   downloadUrl
   createdAt
   updatedAt
@@ -490,7 +502,7 @@ fragment filesetProgramRelatedDataFields on FilesetProgramRelatedData {
   program {
     ...programFields
   }
-  # filesCount
+  filesCount
 }
 
 fragment componentSupplierFields on ComponentSupplierRelatedData {
@@ -503,10 +515,8 @@ fragment componentSupplierFields on ComponentSupplierRelatedData {
 
 fragment showStandardShortFields on ShowStandardShort {
   uuid
-  classifier
   name
   description
-  specifiedTolerance
   publicationAt
   imageFile {
     ...downloadFileFields
@@ -537,6 +547,7 @@ fragment companyShortFields on ShowCompanyShort {
   }
   isSupplier
   isFollowed
+  createdAt
   updatedAt
 }
 
@@ -591,6 +602,7 @@ fragment showComponentShortFields on ShowComponentShort {
   }
   isFollowed
   isBase
+  createdAt
   updatedAt
   licenses {
     ...licenseFields

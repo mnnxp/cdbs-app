@@ -40,8 +40,13 @@ impl Component for GoToUser {
         true
     }
 
-    fn change(&mut self, _: Self::Properties) -> ShouldRender {
-      false
+    fn change(&mut self, props: Self::Properties) -> ShouldRender {
+      if self.props.data.uuid == props.data.uuid {
+        false
+      } else {
+        self.props = props;
+        true
+      }
     }
 
     fn view(&self) -> Html {

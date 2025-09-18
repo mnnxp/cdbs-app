@@ -1,4 +1,5 @@
 use yew::{html, classes, Component, ComponentLink, Html, ShouldRender};
+use crate::services::content_adapter::Markdownable;
 use crate::services::{set_lang, get_lang};
 use crate::services::get_value_field;
 
@@ -55,16 +56,19 @@ impl Component for Footer {
     }
 
     fn view(&self) -> Html {
-        let current_info = "© CADBase";
+        let current_info = get_value_field(&258);
+        let version_number = "0.3.0";
         let onclick_lang_en = self.link.callback(|_| Msg::ChangeLanguage(1));
         let onclick_lang_ru = self.link.callback(|_| Msg::ChangeLanguage(2));
         let onclick_show_terms = self.link.callback(|_| Msg::ShowTerms);
         let onclick_show_about = self.link.callback(|_| Msg::ShowAbout);
-
-        let (button_en, button_ru, privacy_notice_url) = match self.current_lang {
-            2 => (classes!("button"), classes!("button", "is-info"), "https://cadbase.rs/ru/privacy-notice.html"),
-            _ => (classes!("button", "is-info"), classes!("button"), "https://cadbase.rs/privacy-notice.html"),
+        let (button_en, button_ru, base_url) = match self.current_lang {
+            2 => (classes!("button"), classes!("button", "is-info"), "https://cadbase.rs/ru/"),
+            _ => (classes!("button", "is-info"), classes!("button"), "https://cadbase.rs/"),
         };
+        let privacy_notice_url = format!("{}privacy-notice.html", base_url, );
+        let self_hosted_url = format!("{}self-hosted.html", base_url, );
+        let news_url = format!("{}#overviews", base_url, );
 
         html!{
             <footer class="footer">
@@ -101,6 +105,17 @@ impl Component for Footer {
                     </div>
                     // 1 center footer
                     <div class="column">
+                        <a href={news_url} >
+                            {get_value_field(&256)}
+                        </a>
+                        <br/>
+                        <a href="https://docs.cadbase.rs/" >
+                            {get_value_field(&12)}
+                        </a>
+                        <br/>
+                        <a href={self_hosted_url} >
+                            {get_value_field(&259)}
+                        </a>
                     </div>
                     // 2 center footer
                     <div class="column">
@@ -115,14 +130,11 @@ impl Component for Footer {
                         <a href={privacy_notice_url} >
                             {get_value_field(&269)}
                         </a>
-                        <br/>
-                        <a href="https://docs.cadbase.rs/" >
-                            {get_value_field(&12)}
-                        </a>
                     </div>
                     // right footer
                     <div class="column">
                         <h4>{current_info}</h4>
+                        <p class="help">{get_value_field(&257)}{version_number}</p>
                     </div>
                 </div>
             </footer>
@@ -174,17 +186,13 @@ impl Footer {
               <div class="modal-background" onclick={onclick_show_about.clone()} />
               <div class="modal-card">
                 <header class="modal-card-head">
-                  <p class="modal-card-title">{get_value_field(&11)}</p> // About us
+                  <p class="modal-card-title">{get_value_field(&254)}</p>
                   <button class="delete" aria-label="close" onclick={onclick_show_about} />
                 </header>
                 <section class="modal-card-body">
                     <div class="content">
-                        <h1>{get_value_field(&254)}</h1>
-                        <p>{get_value_field(&255)}</p>
-                        <p>{get_value_field(&256)}</p>
-                        <p>{get_value_field(&257)}</p>
-                        <p>{get_value_field(&258)}</p>
-                        <p>{get_value_field(&259)}</p>
+                        <h1>{get_value_field(&11)}</h1>
+                        <p>{get_value_field(&255).to_markdown()}</p>
                         <p>{get_value_field(&253)} <a href="mailto:info@cadbase.rs" title="Email">{"info@cadbase.rs"}</a></p>
                         <h4>{get_value_field(&260)}</h4>
                     </div>

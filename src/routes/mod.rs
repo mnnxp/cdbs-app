@@ -5,6 +5,7 @@ pub mod user;
 pub mod component;
 pub mod company;
 pub mod standard;
+pub mod supplier_service;
 
 pub use user::{
     login,
@@ -55,10 +56,18 @@ pub enum AppRoute {
     CreateStandard,
     #[to = "#/standard/{uuid}"]
     ShowStandard(String),
+    #[to = "#/service/create"]
+    CreateService,
+    #[to = "#/service/settings/{uuid}"]
+    ServiceSettings(String),
+    #[to = "#/service/{uuid}"]
+    ShowService(String),
     // #[to = "#/users"]
     // CatalogUsers,
     #[to = "#/@{username}"]
     Profile(String),
+    #[to = "#/search"]
+    SearchPage,
     #[to = "#/"]
     Home,
 }

@@ -1,5 +1,7 @@
 use regex::Regex;
 
+use crate::types::UUID;
+
 /// Returns extension derived from filename
 /// Extension with dot in ascii and lower case
 pub(crate) fn ext_str(filename: &str) -> String {
@@ -55,6 +57,30 @@ pub(crate) fn url_decode(text: &str) -> String {
     }
     append_frag(&mut output, &mut encoded_ch);
     output
+}
+
+/// Prepares a username by removing leading special characters and decoding URL-encoded characters.
+/// This function takes a raw username as input, removes start `#/@` characters, and then decodes URL-encoded characters.
+pub(crate) fn prepare_username(raw_username: &str) -> String {
+    url_decode(raw_username.trim_start_matches("#/@"))
+}
+
+/// Compares UUIDs wrapped in option
+pub(crate) fn compare_op_uuid(first_uuid: &Option<UUID>, second_uuid: &Option<UUID>) -> bool {
+    match (first_uuid, second_uuid) {
+        (None, None) => true,
+        (Some(_), None) => false,
+        (None, Some(_)) => false,
+        (Some(f_uuid), Some(s_uuid)) => f_uuid == s_uuid,
+    }
+}
+
+/// Wraps a string in Option and returns None if it is empty.
+pub(crate) fn wraps_text(text: String) -> Option<String> {
+    match text.is_empty() {
+        true => None,
+        false => Some(text),
+    }
 }
 
 #[cfg(test)]

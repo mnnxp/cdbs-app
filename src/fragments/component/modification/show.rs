@@ -5,9 +5,8 @@ use log::debug;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::paginate::Paginate;
-use crate::fragments::buttons::ft_back_btn;
 use crate::services::content_adapter::{DateDisplay, Markdownable};
-use crate::services::{get_value_field, resp_parsing};
+use crate::services::{get_value_field, resp_parsing, set_focus};
 use crate::types::{UUID, ComponentModificationInfo, PaginateSet};
 use crate::routes::other_component::modification::ImportModificationsData;
 use crate::gqls::make_query;
@@ -44,6 +43,7 @@ pub enum Msg {
     CallOfChange,
     ShowModificationCard,
     ChangePaginate(PaginateSet),
+    Focuser,
     ClearError,
 }
 
@@ -59,7 +59,7 @@ impl Component for ModificationsTableCard {
             link,
             component_uuid,
             select_modification_uuid: String::new(),
-            open_modification_card: false,
+            open_modification_card: true,
             modifications: Vec::new(),
             skip_change_page: false,
             page_set: PaginateSet::new(),
@@ -136,7 +136,12 @@ impl Component for ModificationsTableCard {
                     select_modification.emit(self.select_modification_uuid.clone());
                 }
             },
-            Msg::ShowModificationCard => self.open_modification_card = !self.open_modification_card,
+            Msg::ShowModificationCard => {
+                self.open_modification_card = !self.open_modification_card;
+                if self.open_modification_card {
+                    self.link.send_message(Msg::Focuser);
+                }
+            },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::ChangePaginate(page_set) => {
                 debug!("Change page_set, old: {:?}, new: {:?} (Show modifications)", self.page_set, page_set);
@@ -151,6 +156,7 @@ impl Component for ModificationsTableCard {
                 self.page_set = page_set;
                 self.link.send_message(Msg::RequestComponentModificationsData);
             },
+            Msg::Focuser => set_focus("show-modification-card"),
             Msg::ClearError => self.error = None,
         }
         true
@@ -169,21 +175,13 @@ impl Component for ModificationsTableCard {
 
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
-        let onclick_modification_card = self.link.callback(|_| Msg::ShowModificationCard);
         let callback_finish_import = self.link.callback(|_| Msg::RequestComponentModificationsData);
-        html!{
+        html!{<>
             <div class="card">
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
                 <header class="card-header">
-                    {match &self.open_modification_card {
-                        true => html!{
-                            <div class="m-1">
-                                {ft_back_btn("open-modifications", onclick_modification_card, get_value_field(&42))}
-                            </div>
-                        },
-                        false => html!{<p class="card-header-title">{get_value_field(&100)}</p>}, // Modifications
-                    }}
-                    {match self.props.user_owner && !self.open_modification_card {
+                    <p class="card-header-title">{get_value_field(&100)}</p> // Modifications
+                    {match self.props.user_owner {
                         true => html!{
                             <div class="right-side mt-1">
                                 <ImportModificationsData
@@ -196,12 +194,13 @@ impl Component for ModificationsTableCard {
                     }}
                 </header>
                 {self.show_modifications_table()}
-                {match self.open_modification_card {
-                    true => self.show_modification_card(),
-                    false => html!{},
-                }}
             </div>
-        }
+            <br/>
+            {match self.open_modification_card {
+                true => self.show_modification_card(),
+                false => html!{},
+            }}
+        </>}
     }
 }
 
@@ -215,6 +214,7 @@ impl ModificationsTableCard {
                     modifications={self.modifications.clone()}
                     select_modification_uuid={self.select_modification_uuid.clone()}
                     callback_select_modification={onclick_select_modification}
+                    open_modification_card={self.open_modification_card}
                     numero_offset={self.page_set.numero_offset()}
                 />
                 <Paginate
@@ -231,40 +231,42 @@ impl ModificationsTableCard {
     fn show_modification_card(&self) -> Html {
         let modification_data = self.modifications.iter().find(|x| x.uuid == self.select_modification_uuid);
         match modification_data {
-            Some(mod_data) => html!{<>
-                <header class={"card-header has-background-info-light"}>
-                    <p class={"card-header-title"}>{get_value_field(&353)}</p>
-                </header>
-                <div class="card-content" style="padding-top: 0px;">
-                    <div class="content">
-                        <div class="column" title={get_value_field(&176)}>
-                            <p class="overflow-title has-text-weight-bold">
-                                {mod_data.modification_name.clone()}
-                            </p>
-                        </div>
-                        <div class="column">
-                        <div class="columns">
-                            <div class="column" title={get_value_field(&96)}>
-                                {get_value_field(&159)}{": "}
-                                {&mod_data.actual_status.name}
+            Some(mod_data) => html!{
+                <div id="show-modification-card" class="card">
+                    <header class="card-header has-background-info-light">
+                        <p class="card-header-title">{get_value_field(&353)}</p>
+                    </header>
+                    <div class="card-content" style="padding-top: 0px;">
+                        <div class="content">
+                            <div class="column" title={get_value_field(&176)}>
+                                <p class="overflow-title has-text-weight-bold">
+                                    {mod_data.modification_name.clone()}
+                                </p>
                             </div>
-                            <div class="column is-4">
-                                {get_value_field(&30)}
-                                {mod_data.updated_at.date_to_display()}
+                            <div class="column">
+                            <div class="columns">
+                                <div class="column" title={get_value_field(&96)}>
+                                    {get_value_field(&159)}{": "}
+                                    {&mod_data.actual_status.name}
+                                </div>
+                                <div class="column is-4">
+                                    {get_value_field(&30)}
+                                    {mod_data.updated_at.date_to_display()}
+                                </div>
+                            </div>
+                            </div>
+                            <div class="column" title={{get_value_field(&61)}}> // Description
+                                <p>{mod_data.description.to_markdown()}</p>
                             </div>
                         </div>
-                        </div>
-                        <div class="column" title={{get_value_field(&61)}}> // Description
-                            <p>{mod_data.description.to_markdown()}</p>
-                        </div>
+                        <ModificationFilesTableCard
+                            show_download_btn={true}
+                            modification_uuid={self.select_modification_uuid.clone()}
+                            files_count={mod_data.files_count}
+                        />
                     </div>
-                    <ModificationFilesTableCard
-                        show_download_btn={true}
-                        modification_uuid={self.select_modification_uuid.clone()}
-                        files_count={mod_data.files_count}
-                    />
                 </div>
-            </>},
+            },
             None => html!{},
         }
     }

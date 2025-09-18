@@ -45,13 +45,13 @@ pub fn ft_download_full_btn(download_url: String) -> Html {
 }
 
 /// Returns a VNode with Html code of a button for the "Show more" or "Show less" action
-pub fn ft_see_btn(show_full_files_btn: Callback<MouseEvent>, show_full_files: bool) -> Html {
-    let (title_text, class_icon) = match show_full_files {
+pub fn ft_see_btn(onclick_btn: Callback<MouseEvent>, show_full: bool) -> Html {
+    let (title_text, class_icon) = match show_full {
         true => (get_value_field(&99), "fas fa-caret-up"),
         false => (get_value_field(&98), "fas fa-caret-down"),
     };
     html!{
-        <button class={classes!("button", "is-white", "is-fullwidth")} onclick={show_full_files_btn}>
+        <button class={classes!("button", "is-white", "is-fullwidth")} onclick={onclick_btn}>
           {title_text}
           <span class={"icon"} style={"color: #1872f0; padding-left: 1rem;"}>
               <i class={class_icon} aria-hidden={"true"}></i>
@@ -102,15 +102,27 @@ pub fn ft_delete_btn(
     confirm: bool,
     disabled: bool,
 ) -> Html {
+    ft_delete_class_btn(id_btn, trigger_btn, confirm, disabled, classes!("is-fullwidth"))
+}
+
+/// Returns a VNode with the Html code of the delete button with confirmation and extensible style classes
+pub fn ft_delete_class_btn(
+    id_btn: &str,
+    trigger_btn: Callback<MouseEvent>,
+    confirm: bool,
+    disabled: bool,
+    add_classes: Classes,
+) -> Html {
     let title_text = match confirm {
         true => get_value_field(&220),
         false => get_value_field(&135),
     };
-
+    let mut set_classes = classes!("button", "is-danger");
+    set_classes.extend(add_classes);
     html!{
         <button
             id={id_btn.to_string()}
-            class="button is-danger is-fullwidth"
+            class={set_classes}
             disabled={disabled}
             onclick={trigger_btn}
             title={title_text}>

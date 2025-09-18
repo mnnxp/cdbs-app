@@ -4,6 +4,19 @@ query SearchSpecs($iptSearchSpecArg: IptSearchSpecArg!) {
   }
 }
 
+query GetSpecs($iptSpecArg: IptSpecArg, $iptPaginate: IptPaginate) {
+  specs(args: $iptSpecArg, paginate: $iptPaginate) {
+    specId
+    langId
+    spec
+    parentSpec {
+      specId
+      langId
+      spec
+    }
+  }
+}
+
 query GetSpecsPaths($iptSpecPathArg: IptSpecPathArg) {
   specsPaths(args: $iptSpecPathArg) {
     ...specPathFields

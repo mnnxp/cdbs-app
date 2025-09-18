@@ -18,7 +18,6 @@ use crate::gqls::company::{
 pub struct Props {
     pub certificate: CompanyCertificate,
     pub show_cert_btn: bool,
-    pub download_btn: bool,
     pub manage_btn: bool,
     pub callback_delete_cert: Callback<UUID>,
 }
@@ -148,7 +147,6 @@ impl Component for CompanyCertificateItem {
             <CertificateItem
                 certificate={Certificate::from(self.props.certificate.clone())}
                 show_cert_btn={self.props.show_cert_btn}
-                download_btn={self.props.download_btn}
                 manage_btn={self.props.manage_btn}
                 get_result_update={self.get_result_update}
                 get_result_delete={self.get_result_delete}

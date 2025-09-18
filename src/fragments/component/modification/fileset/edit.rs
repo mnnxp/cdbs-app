@@ -32,7 +32,7 @@ pub struct ManageModificationFilesets {
     request_fileset_program_id: usize,
     props: Props,
     link: ComponentLink<Self>,
-    filesets_program: Vec<(UUID, String)>,
+    filesets: Vec<FilesetProgramInfo>,
     select_fileset_uuid: UUID,
     upload_files: usize,
     programs: Vec<Program>,
@@ -72,7 +72,7 @@ impl Component for ManageModificationFilesets {
             request_fileset_program_id: 1,
             props,
             link,
-            filesets_program: Vec::new(),
+            filesets: Vec::new(),
             select_fileset_uuid: String::new(),
             upload_files: 0,
             programs: Vec::new(),
@@ -95,7 +95,7 @@ impl Component for ManageModificationFilesets {
         match msg {
             Msg::RequestComponentModificationFilesetsData => {
                 debug!("Request filesets for modification uuid: {:?}", self.props.select_modification_uuid);
-                self.filesets_program.clear(); // fix for bug with displaying old files
+                self.filesets.clear(); // clear old filesets
                 if self.props.select_modification_uuid.len() == 36 {
                     let ipt_fileset_program_arg = component_modification_filesets::IptFilesetProgramArg{
                         modificationUuid: self.props.select_modification_uuid.clone(),
@@ -152,7 +152,6 @@ impl Component for ManageModificationFilesets {
                 if self.select_fileset_uuid.len() != 36 || filenames.is_empty() {
                     return false
                 }
-                self.upload_files = 0;
                 let fileset_uuid = self.select_fileset_uuid.clone();
                 let commit_msg = self.commit_msg.clone();
                 spawn_local(async move {
@@ -173,13 +172,11 @@ impl Component for ManageModificationFilesets {
                     Ok(filesets) => {
                         debug!("Update modification filesets list");
                         for fileset in &filesets {
-                            self.filesets_program.push((fileset.uuid.clone(), fileset.program.name.clone()));
+                            self.filesets.push(fileset.clone());
                         }
-                        if let Some((ft_uuid, _)) = self.filesets_program.first() {
-                            self.select_fileset_uuid = match ft_uuid.len() == 36 {
-                                true => ft_uuid.clone(),
-                                false => String::new(),
-                            }
+                        self.select_fileset_uuid = match self.filesets.first() {
+                            Some(ft) => ft.uuid.clone(),
+                            None => String::new(),
                         }
                     },
                     Err(err) => link.send_message(Msg::ResponseError(err)),
@@ -191,7 +188,7 @@ impl Component for ManageModificationFilesets {
                         // debug!("programs: {:?}", result);
                         self.programs.clear();
                         for x in result.iter() {
-                            if let None = self.filesets_program.iter().find(|(_, program_name)| program_name == &x.name) {
+                            if let None = self.filesets.iter().find(|fileset| &fileset.program.name == &x.name) {
                                 self.programs.push(x.clone());
                                 continue;
                             }
@@ -210,11 +207,15 @@ impl Component for ManageModificationFilesets {
                         debug!("registerModificationFileset: {:?}", self.select_fileset_uuid);
                         self.upload_files = 0;
                         if let Some(program) = self.programs.iter().find(|x| x.id == self.request_fileset_program_id) {
-                            if let None = self.filesets_program.iter().find(|(_, p_name)| p_name == &program.name) {
-                                self.filesets_program.push((
-                                    self.select_fileset_uuid.clone(),
-                                    program.name.clone(),
-                                ));
+                            if let None = self.filesets.iter().find(|fileset| &fileset.program.name == &program.name) {
+                                self.filesets.push(
+                                    FilesetProgramInfo{
+                                        uuid: self.select_fileset_uuid.clone(),
+                                        modification_uuid: self.props.select_modification_uuid.clone(),
+                                        program: program.clone(),
+                                        files_count: 0,
+                                    }
+                                );
                             }
                         }
                         self.open_add_fileset_card = false;
@@ -229,18 +230,18 @@ impl Component for ManageModificationFilesets {
                         if !result {
                             return false
                         }
-                        let mut update_filesets: Vec<(UUID, String)> = Vec::new();
+                        let mut update_filesets: Vec<FilesetProgramInfo> = Vec::new();
                         // for set next item after delete
                         let delete_fileset_uuid = self.select_fileset_uuid.clone();
                         self.select_fileset_uuid = String::new();
                         let mut flag_delete = false;
-                        for x in self.filesets_program.iter() {
+                        for fileset in self.filesets.iter() {
                             if flag_delete {
-                                self.select_fileset_uuid = x.0.clone();
+                                self.select_fileset_uuid = fileset.uuid.clone();
                                 flag_delete = false;
                             }
-                            if x.0 != delete_fileset_uuid {
-                                update_filesets.push(x.clone());
+                            if fileset.uuid != delete_fileset_uuid {
+                                update_filesets.push(fileset.clone());
                             } else {
                                 flag_delete = true;
                             }
@@ -248,16 +249,17 @@ impl Component for ManageModificationFilesets {
                         if self.select_fileset_uuid.is_empty() {
                             self.select_fileset_uuid = update_filesets
                                 .first()
-                                .map(|(fileset_uuid, _)| fileset_uuid.clone())
+                                .map(|fileset| fileset.uuid.clone())
                                 .unwrap_or_default();
                         }
-                        self.filesets_program = update_filesets;
+                        self.filesets = update_filesets;
                         // self.link.send_message(Msg::RequestFilesOfFileset);
                     },
                     Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
             Msg::GetUploadData(res) => {
+                self.upload_files = 0;
                 match resp_parsing(res, "uploadFilesToFileset") {
                     Ok(result) => {
                         self.request_upload_data = result;
@@ -307,11 +309,28 @@ impl Component for ManageModificationFilesets {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         html!{<>
             <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
+            <p class={"subtitle is-size-5"}>{get_value_field(&401)}</p>
             {match &self.open_add_fileset_card {
                 true => self.add_fileset_block(),
                 false => html!{<>
                     {self.show_manage()}
-                    {self.fileset_block()}
+                    {match self.select_fileset_uuid.is_empty() {
+                        true => html!{
+                            <div class={"column"}>
+                                <div class={"notification is-light is-warning"}>
+                                    <p class={"subtitle"}>{get_value_field(&114)}</p>
+                                    <p>{get_value_field(&402)}</p>
+                                </div>
+                                <p class={"has-text-weight-bold"}>{get_value_field(&403)}</p>
+                                <ol>
+                                    <li>{get_value_field(&404)}</li>
+                                    <li>{get_value_field(&405)}</li>
+                                    <li>{get_value_field(&406)}</li>
+                                </ol>
+                            </div>
+                        },
+                        false => self.fileset_block(),
+                    }}
                 </>},
             }}
         </>}
@@ -334,11 +353,11 @@ impl ManageModificationFilesets {
                             id="select-fileset-program-edit"
                             select={self.select_fileset_uuid.clone()}
                             onchange={onchange_select_fileset_btn} >
-                        {for self.filesets_program.iter().map(|(fileset_uuid, program_name)|
+                        {for self.filesets.iter().map(|fileset|
                             html!{
-                                <option value={fileset_uuid.to_string()}
-                                        selected={fileset_uuid == &self.select_fileset_uuid} >
-                                    {program_name}
+                                <option value={fileset.uuid.to_string()}
+                                        selected={&fileset.uuid == &self.select_fileset_uuid} >
+                                    {fileset.program.name.clone()}
                                 </option>
                             }
                         )}
@@ -384,11 +403,16 @@ impl ManageModificationFilesets {
                 </div>
                 <div class="column">
                     <p class={"title is-5"}>{get_value_field(&198)}</p> // Files of fileset
-                    <FilesetFilesBlock
-                        upload_files={self.upload_files}
-                        show_delete_btn={true}
-                        select_fileset_uuid={self.select_fileset_uuid.clone()}
-                    />
+                    {match self.filesets.iter().find(|sf| sf.uuid == self.select_fileset_uuid) {
+                        Some(f) => html!{
+                            <FilesetFilesBlock
+                                upload_files={self.upload_files}
+                                show_delete_btn={true}
+                                select_fileset={f.clone()}
+                            />
+                        },
+                        None => html!{<p>{get_value_field(&204)}</p>},
+                    }}
                 </div>
             </div>
         }

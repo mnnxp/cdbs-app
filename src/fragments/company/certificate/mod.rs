@@ -15,7 +15,6 @@ use crate::types::{UUID, CompanyCertificate};
 pub struct Props {
     pub certificates: Vec<CompanyCertificate>,
     pub show_cert_btn: bool,
-    pub download_btn: bool,
     pub manage_btn: bool,
 }
 
@@ -75,7 +74,6 @@ impl Component for CompanyCertificatesCard {
                     <CompanyCertificateItem
                         certificate={certificate.clone()}
                         show_cert_btn={self.props.show_cert_btn}
-                        download_btn={self.props.download_btn}
                         manage_btn={self.props.manage_btn}
                         callback_delete_cert={callback_delete_cert.clone()}
                     />

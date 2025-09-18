@@ -5,10 +5,10 @@
     <img src="data/logo_min.svg" alt="Logo" width="80">
   </a>
 
-  <h3>Frontend for CADBase Platform</h3>
+  <h3>CADBase Platform Frontend</h3>
 
   <p>
-    CADBase is a digital platform for sharing 3D models and drawings!
+    CADBase is a digital platform for sharing 3D models, drawings, and engineering data. This frontend provides an interface for exploring, managing, and interacting with engineering components and companies.
     <br />
     <a href="https://cadbase.rs">View site</a>
     ·
@@ -66,17 +66,28 @@
 
 [![Page Component Screen Shot][product-screenshot]](https://cadbase.rs)
 
-This is a digital platform for sharing 3D models, drawings and other engineering data.
+This platform facilitates the sharing and versioning of parts, while offering API access and seamless integration options.
 
-At first glance, it may seem that all the challenges of exchanging 3D models, drawings and other engineering data with regard to their versioning and availability have already been solved by existing solutions.
+There are many solutions for sharing 3D models, drawings and other engineering data. However, the CADBase platform has a number of distinctive features that improve product data management by offering an effective solution for both individual use and collaborative work in engineering and design.
 
-Mechanical engineers and other inventors can already take advantage of this platform and gain the following benefits:
-* Specific data dependencies may interact, such as file sets for component modifications, facilitating work with various computer-aided design (CAD), CAE, CAM, and other systems
-* All users of the platform have access to the API functionality, and each user can connect to the server using their authorization token
-* The ability to integrate the platform with various computer-aided design systems and other solutions provides platform users with a wide range of opportunities for workflow automation
-* File versioning support allows you to return files to the state they were in before the changes, review the changes, and find out who last changed something and caused the problem
+### Key Features & Improvements
 
-We have an ambitious goal: to create a design data exchange solution that is suitable for most engineers.
+- **Discussion & Commenting:** Comment on components, companies, and services to foster community engagement and quick feedback, enhancing collaboration.  
+- **Import/Export:** Import component parameters and modifications directly through the website from Excel sheets to save time and reduce manual errors. Additionally, utilize APIs to efficiently handle large-scale bulk imports and exports of data.  
+- **Markdown & UI:** Edit with Markdown and preview during the editing process, making content creation easier and providing clearer, well-formatted descriptions for documentation.  
+- **Integrations:** Pre-built open-source integrations let you easily create add-ons and connect with other tools, streamlining workflows. No licensing fees for API access make expansion and customization simple and cost-effective.  
+- **Self-hosted:** Deploying the platform yourself grants full control over its infrastructure, enabling you to tailor and optimize it precisely to meet your specific requirements.  
+- **Login-Free Access:** Browse component pages without login for quick and hassle-free access to information.
+
+### Benefits for Individual Users
+
+Mechanical engineers and inventors can now leverage this platform to enhance their workflows with the following features:
+* Manage complex data dependencies, such as file sets for component modifications, to streamline work across CAD, CAE, CAM, and other systems
+* Access API functionalities and connect securely to the server using personal authorization tokens
+* Integrate seamlessly with various design and engineering tools, enabling extensive workflow automation
+* Utilize file versioning to revert to previous states, review changes
+
+Our goal is to develop a versatile solution that enables efficient project management and seamless data sharing within engineering workflows, tailored to meet the needs of most engineers and creators. 
 
 If you're interested, we're also on YouTube <a href="https://www.youtube.com/channel/UC-dHiTHBGV88ScxFKSC3srw">CADBase Platform</a>.
 
@@ -94,17 +105,21 @@ Solutions for integration with CADBase platform with our support:
  - [CADBase Library (GitHub)](https://github.com/mnnxp/cadbaselibrary-freecad/) workbench for **FreeCAD** parametric 3D modeler
  - [CADBase Library (Blender Extensions)](https://extensions.blender.org/add-ons/cadbase-library/) add-on for **Blender** 3D computer graphics program
 
-We also welcome participation from stakeholders and developers and hope that the list of integration solutions will grow as the platform grows in popularity.
+We welcome contributions to new integrations!
 
 <div align="right">(<a href="#about-the-project">back to top</a>)</div>
 
 
 ### Built With
 
-For the creation of this part of the project, the following solutions have been used
-<a href="https://yew.rs"><img src="https://yew.rs/img/logo.svg" alt="Yew" width="40"/></a>  <a href="https://bulma.io"><img src="https://github.com/jgthms/bulma/blob/main/docs/assets/images/bulma-icon.png?raw=true" alt="Bulma" width="45"></a>  <a href="https://threejs.org" alt="Three.js"><img src="https://github.com/mrdoob/three.js/blob/dev/icon.png?raw=true" alt="Three.js" width="50"></a>
+<div align="center">
+<img src="https://yew.rs/img/logo.svg" alt="Yew Logo" width="40">
+<img src="https://github.com/jgthms/bulma/blob/main/docs/assets/images/bulma-icon.png?raw=true" alt="Bulma Logo" width="40">
+<img src="https://github.com/mrdoob/three.js/blob/dev/icon.png?raw=true" alt="Three.js Logo" width="40">
+</div>
 
-| Libraries used |
+
+| Other libraries |
 | ------------- |
 | [![router][router]][router-url] [![yewtil][yewtil]][yewtil-url] [![bindgen][bindgen]][bindgen-url] [![logger][logger]][logger-url] [![instant][instant]][instant-url] [![lipsum][lipsum]][lipsum-url] [![log][log]][log-url] [![getrandom][getrandom]][getrandom-url] [![rand][rand]][rand-url] [![chrono][chrono]][chrono-url] [![dotenv_codegen][dotenv_codegen]][dotenv_codegen-url] [![lazy_static][lazy_static]][lazy_static-url] [![parking_lot][parking_lot]][parking_lot-url] [![cmark][cmark]][cmark-url] [![serde][serde]][serde-url] [![regex][regex]][regex-url] [![serde_json][serde_json]][serde_json-url] [![thiserror][thiserror]][thiserror-url] [![graphql_client][graphql_client]][graphql_client-url] [![wee_alloc][wee_alloc]][wee_alloc-url] [![web-sys][web-sys]][web-sys-url] [![wasm-bindgen-test][wasm-bindgen-test]][wasm-bindgen-test-url] [![toml][toml]][toml-url] [![js-sys][js-sys]][js-sys-url] [![console_error_panic_hook][console_error_panic_hook]][console_error_panic_hook-url] [![anyhow][anyhow]][anyhow-url] |
 
@@ -161,7 +176,7 @@ Note: Before performing step 2, check the correct settings of the environment in
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-We haven't yet opened the backend to a high-profile audience. But since the primary server API is available to all users, you can use these settings:
+Configure API endpoints in `.env`:
 
 ```
   API_BACKEND=https://api.cadbase.rs
@@ -203,11 +218,11 @@ This example will run a login test that will be performed using the Firefox brow
 <!-- ROADMAP -->
 ## Roadmap
 
-- [ ] Add instructions for site users
+- [ ] Add Guidance and Manuals
 - [x] Add versioning support for files
 - [x] Add 3D Viewer STL (via [Three.js](https://github.com/mrdoob/three.js))
 - [ ] Add a more useful 3D Viewer (still looking for a solution)
-- [ ] Search page
+- [x] Search page
 - [ ] Multi-language Support
     - [x] English
     - [x] Russian

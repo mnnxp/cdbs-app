@@ -9,6 +9,7 @@ use log::debug;
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
+use crate::fragments::discussion::DiscussionCommentsBlock;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{
@@ -26,8 +27,8 @@ use crate::fragments::{
     clipboard::ShareLinkBtn,
 };
 use crate::services::content_adapter::{DateDisplay, Markdownable};
-use crate::services::{get_classes_table, get_logged_user, get_value_field, resp_parsing, set_history_back, title_changer, Counter};
-use crate::types::{ComponentInfo, DownloadFile, Pathname, SlimUser, UUID};
+use crate::services::{get_classes_table, get_logged_user, get_value_field, resp_parsing, set_focus, set_history_back, title_changer, Counter};
+use crate::types::{ComponentInfo, FilesetProgramInfo, DownloadFile, ObjectType, Pathname, SlimUser, ToObject, UUID};
 use crate::gqls::make_query;
 use crate::gqls::component::{
     ComponentFiles, component_files,
@@ -55,10 +56,11 @@ pub struct ShowComponent {
     is_followed: bool,
     select_modification_uuid: UUID,
     modification_filesets: HashMap<UUID, Vec<(UUID, String)>>,
-    select_fileset_uuid: UUID,
+    select_fileset: Option<FilesetProgramInfo>,
     current_filesets_program: Vec<(UUID, String)>,
     show_full_description: bool,
     open_fileset_files_card: bool,
+    open_discussion_card: bool,
     show_related_standards: bool,
     file_arr: Vec<DownloadFile>,
     show_three_view: bool,
@@ -78,7 +80,7 @@ pub struct Props {
 }
 
 pub enum Msg {
-    SelectFileset(UUID),
+    SelectFileset(FilesetProgramInfo),
     SelectModification(UUID),
     Follow,
     AddFollow(String),
@@ -89,10 +91,12 @@ pub enum Msg {
     ShowDescription,
     ShowStandardsList,
     ShowFilesetFilesBlock(bool),
+    OpenDiscussionBlock,
     OpenComponentSetting,
     GetDownloadFileResult(String),
     Show3D,
     ChangeActiveTab(ActiveTab),
+    Focuser,
     ClearError,
     Ignore,
 }
@@ -114,10 +118,11 @@ impl Component for ShowComponent {
             is_followed: false,
             select_modification_uuid: String::new(),
             modification_filesets: HashMap::new(),
-            select_fileset_uuid: String::new(),
+            select_fileset: None,
             current_filesets_program: Vec::new(),
             show_full_description: false,
             open_fileset_files_card: false,
+            open_discussion_card: false,
             show_related_standards: false,
             file_arr: Vec::new(),
             show_three_view: false,
@@ -126,11 +131,9 @@ impl Component for ShowComponent {
     }
 
     fn rendered(&mut self, first_render: bool) {
-        if let None = get_logged_user() {
+        if get_logged_user().is_none() {
             set_history_back(Some(String::new()));
-            // route to login page if not found token
-            self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
-        };
+        }
 
         // get component uuid for request component data
         let route_service: RouteService<()> = RouteService::new();
@@ -159,7 +162,7 @@ impl Component for ShowComponent {
                 self.current_user_owner = false;
                 self.select_modification_uuid = String::new();
                 self.modification_filesets = HashMap::new();
-                self.select_fileset_uuid = String::new();
+                self.select_fileset = None;
                 self.current_filesets_program.clear();
                 self.file_arr.clear();
             }
@@ -196,7 +199,7 @@ impl Component for ShowComponent {
         let link = self.link.clone();
 
         match msg {
-            Msg::SelectFileset(fileset_uuid) => self.select_fileset_uuid = fileset_uuid,
+            Msg::SelectFileset(fileset) => self.select_fileset = Some(fileset),
             Msg::SelectModification(modification_uuid) => self.select_modification_uuid = modification_uuid,
             Msg::Follow => {
                 let component_uuid = self.component.as_ref().unwrap().uuid.clone();
@@ -256,7 +259,14 @@ impl Component for ShowComponent {
                         self.file_arr.push(component_data.image_file.clone());
                         self.component = Some(component_data);
                     },
-                    Err(err) => link.send_message(Msg::ResponseError(err)),
+                    Err(err) => {
+                        link.send_message(Msg::ResponseError(err));
+                        if let None = get_logged_user() {
+                            set_history_back(Some(String::new()));
+                            // route to login page if not found token
+                            self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
+                        };
+                    },
                 }
             },
             Msg::GetDownloadFileResult(res) => {
@@ -278,6 +288,12 @@ impl Component for ShowComponent {
             Msg::ShowDescription => self.show_full_description = !self.show_full_description,
             Msg::ShowStandardsList => self.show_related_standards = !self.show_related_standards,
             Msg::ShowFilesetFilesBlock(value) => self.open_fileset_files_card = value,
+            Msg::OpenDiscussionBlock => {
+                self.open_discussion_card = !self.open_discussion_card;
+                if self.open_discussion_card {
+                    link.send_message(Msg::Focuser)
+                }
+            },
             Msg::OpenComponentSetting => {
                 if let Some(component_data) = &self.component {
                     // Redirect to page for change and update component
@@ -288,6 +304,7 @@ impl Component for ShowComponent {
             },
             Msg::Show3D => self.show_three_view = !self.show_three_view,
             Msg::ChangeActiveTab(set_tab) => self.active_tab = set_tab,
+            Msg::Focuser => set_focus("show-component-discussion"),
             Msg::ClearError => self.error = None,
             Msg::Ignore => {},
         }
@@ -315,12 +332,18 @@ impl Component for ShowComponent {
                             <div class="card column">
                               {self.show_main_card(component_data)}
                             </div>
-                            <FilesOfFilesetCard
-                                show_card={self.open_fileset_files_card}
-                                show_download_btn={true}
-                                select_fileset_uuid={self.select_fileset_uuid.clone()}
-                                />
+                            {match &self.select_fileset {
+                                Some(sf) => html!{
+                                    <FilesOfFilesetCard
+                                        show_card={self.open_fileset_files_card}
+                                        show_download_btn={true}
+                                        select_fileset={sf.clone()}
+                                    />
+                                },
+                                None => html!{},
+                            }}
                             <br/>
+                            {self.show_component_discussion()}
                             {self.show_modifications_table(component_data.modifications_count)}
                             <br/>
                             <div class="columns">
@@ -355,7 +378,7 @@ impl Component for ShowComponent {
 impl ShowComponent {
     fn show_main_card(&self, component_data: &ComponentInfo) -> Html {
         let show_description_btn = self.link.callback(|_| Msg::ShowDescription);
-        let callback_select_fileset_uuid = self.link.callback(|value: UUID| Msg::SelectFileset(value));
+        let callback_select_fileset = self.link.callback(|value: FilesetProgramInfo| Msg::SelectFileset(value));
         let callback_open_fileset = self.link.callback(|value: bool| Msg::ShowFilesetFilesBlock(value));
 
         html!{<>
@@ -363,7 +386,7 @@ impl ShowComponent {
                 {match self.show_three_view {
                     true => html!{
                         <ThreeShowcase
-                            fileset_uuid={self.select_fileset_uuid.clone()}
+                            fileset_uuid={self.select_fileset.as_ref().map(|f| f.uuid.clone()).unwrap_or_default()}
                         />
                     },
                     false => html!{
@@ -382,8 +405,9 @@ impl ShowComponent {
                     {self.show_three_btn()}
                     <ModificationFilesetsCard
                         modification_uuid={self.select_modification_uuid.clone()}
-                        callback_select_fileset_uuid={callback_select_fileset_uuid}
+                        callback_select_fileset={callback_select_fileset}
                         callback_open_fileset={callback_open_fileset} />
+                    {self.show_discussion_btn()}
                     {self.show_setting_btn()}
                     {self.show_followers_btn()}
                     <ShareLinkBtn />
@@ -397,7 +421,7 @@ impl ShowComponent {
             </div>
             {match self.show_full_description && component_data.description.len() > 249 {
                 true => html!{
-                    <div class="column">
+                    <div class="content component-description">
                         {component_data.description.to_markdown()}
                         {ft_see_btn(show_description_btn, self.show_full_description)}
                     </div>
@@ -449,10 +473,7 @@ impl ShowComponent {
                     {get_value_field(&159)}{": "}
                     {component_data.actual_status.name.clone()}
                 </div>
-                <div class="column">
-                    {get_value_field(&58)}{": "}
-                    {component_data.type_access.get_with_icon()}
-                </div>
+                <div class="column">{component_data.type_access.get_with_icon()}</div>
                 <div class="column is-narrow" title={get_value_field(&141)}>
                     <span class="icon is-small">
                         <i class={classes!("fa", "fa-user")}></i>
@@ -462,7 +483,7 @@ impl ShowComponent {
                 </div>
                 <div class="column is-narrow" title={get_value_field(&95)}>
                     <span class="icon is-small">
-                        <i class={classes!("fa", "fa-sync")}></i>
+                        <i class={classes!("fa", "fa-edit")}></i>
                     </span>
                     {" "}
                     <span class="id-box">
@@ -484,17 +505,17 @@ impl ShowComponent {
         };
         let show_description_btn = self.link.callback(|_| Msg::ShowDescription);
         html!{<>
-            <div class="tabs">
+            <div class="tabs mb-1">
                 <ul>
                     <li class={at.0} onclick={onclick_tab_description}><a>{get_value_field(&61)}</a></li>
                     <li class={at.1} onclick={onclick_tab_characteristics}><a>{get_value_field(&101)}</a></li>
                     <li class={at.2} onclick={onclick_tab_component_files}><a>{get_value_field(&102)}</a></li>
                 </ul>
             </div>
-            <div class="card-content">
-                {match self.active_tab {
-                    ActiveTab::Description => html!{
-                        <div class="content">
+            <div class="card-content p-0">
+                <div class="content">
+                    {match self.active_tab {
+                        ActiveTab::Description => html!{
                             <div class="component-description">
                                 {match component_data.description.len() {
                                     250.. => match self.show_full_description {
@@ -507,28 +528,24 @@ impl ShowComponent {
                                     _ => component_data.description.to_markdown(),
                                 }}
                             </div>
-                        </div>
-                    },
-                    ActiveTab::Characteristics => html!{
-                        <div class="content">
+                        },
+                        ActiveTab::Characteristics => html!{
                             <ComponentParamsTags
                                 show_manage_btn={false}
                                 component_uuid={self.current_component_uuid.clone()}
                                 params_count={component_data.params_count}
                                 />
-                        </div>
-                    },
-                    ActiveTab::ComponentFiles => html!{
-                        <div class="content">
+                        },
+                        ActiveTab::ComponentFiles => html!{
                             <ComponentFilesBlock
                                 show_download_btn={true}
                                 show_delete_btn={false}
                                 component_uuid={component_data.uuid.clone()}
                                 files_count={component_data.files_count}
                                 />
-                        </div>
-                    },
-                }}
+                        },
+                    }}
+                </div>
             </div>
         </>}
     }
@@ -598,8 +615,7 @@ impl ShowComponent {
                         <table class={classes_table}>
                             <thead>
                             <tr>
-                                <th>{get_value_field(&112)}</th> // Classifier
-                                <th>{get_value_field(&113)}</th> // Specified tolerance
+                                <th>{get_value_field(&110)}</th> // Name
                                 <th>{get_value_field(&111)}</th> // Action
                             </tr>
                             </thead>
@@ -652,7 +668,7 @@ impl ShowComponent {
         let mut class_btn = classes!("button");
         let show_btn = match self.show_three_view {
             true => {
-                class_btn.push("is-focused");
+                class_btn.push("is-active");
                 get_value_field(&301)
             },
             false => get_value_field(&300),
@@ -670,5 +686,42 @@ impl ShowComponent {
               <span>{show_btn}</span>
             </button>
         </>}
+    }
+
+    fn show_discussion_btn(&self) -> Html {
+        let onclick_open_discussion_btn =
+            self.link.callback(|_| Msg::OpenDiscussionBlock);
+        let class_discussion_btn = match self.open_discussion_card {
+            true => "button is-light is-info is-active",
+            false => "button is-info",
+        };
+        html!{
+            <button
+            class={class_discussion_btn}
+            onclick={onclick_open_discussion_btn}>
+                <span class={"icon is-small"}><i class={"far fa-comments"}></i></span>
+                <span>{get_value_field(&380)}</span>
+            </button>
+        }
+    }
+
+    fn show_component_discussion(&self) -> Html {
+        match self.open_discussion_card {
+            true => html!{<>
+                <div id="show-component-discussion" class="card">
+                    <header class="card-header has-background-info-light">
+                        <p class="card-header-title">{get_value_field(&380)}</p>
+                    </header>
+                    <div class="card-content">
+                        <DiscussionCommentsBlock
+                            discussion_uuid={None}
+                            object_type={ObjectType::new(self.current_component_uuid.clone(), ToObject::COMPONENT)}
+                        />
+                    </div>
+                </div>
+                <br/>
+            </>},
+            false => html!{},
+        }
     }
 }

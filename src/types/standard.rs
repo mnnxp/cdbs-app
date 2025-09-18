@@ -1,7 +1,7 @@
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use super::{
-    UUID, ShowUserShort, ShowCompanyShort, Region, TypeAccessInfo,
+    UUID, ShowUserShort, ShowCompanyShort, TypeAccessInfo,
     ShowFileInfo, DownloadFile, Spec, Keyword,
 };
 
@@ -10,21 +10,16 @@ use super::{
 pub struct StandardInfo {
     pub uuid: UUID,
     pub parent_standard_uuid: UUID,
-    pub classifier: String,
     pub name: String,
     pub description: String,
-    pub specified_tolerance: String,
-    pub technical_committee: String,
     pub publication_at: NaiveDateTime,
     pub image_file: DownloadFile,
     pub owner_user: ShowUserShort,
     pub owner_company: ShowCompanyShort,
     pub type_access: TypeAccessInfo,
     pub standard_status: StandardStatus,
-    pub region: Region,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
-    // related data
     pub standard_files: Vec<ShowFileInfo>, // <-- documentation files, etc.
     pub standard_specs: Vec<Spec>,
     pub standard_keywords: Vec<Keyword>,
@@ -38,32 +33,24 @@ pub struct StandardInfo {
 #[serde(rename_all = "camelCase")]
 pub struct StandardCreateData {
     pub parent_standard_uuid: Option<UUID>,
-    pub classifier: String,
     pub name: String,
     pub description: String,
-    pub specified_tolerance: String,
-    pub technical_committee: String,
     pub publication_at: NaiveDateTime,
     pub company_uuid: UUID,
     pub type_access_id: usize,
     pub standard_status_id: usize,
-    pub region_id: usize,
 }
 
 impl StandardCreateData {
     pub fn new() -> Self {
         Self{
             parent_standard_uuid: None,
-            classifier: String::default(),
             name: String::default(),
             description: String::default(),
-            specified_tolerance: String::default(),
-            technical_committee: String::default(),
             publication_at: NaiveDateTime::from_timestamp(1_000_000_000, 0),
             company_uuid: String::default(),
             type_access_id: 1,
             standard_status_id: 1,
-            region_id: 1,
         }
     }
 }
@@ -72,10 +59,8 @@ impl StandardCreateData {
 #[serde(rename_all = "camelCase")]
 pub struct ShowStandardShort {
     pub uuid: UUID,
-    pub classifier: String,
     pub name: String,
     pub description: String,
-    pub specified_tolerance: String,
     pub publication_at: NaiveDateTime,
     pub image_file: DownloadFile,
     pub owner_company: ShowCompanyShort,
@@ -96,29 +81,21 @@ pub struct StandardStatus{
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct StandardUpdatePreData {
-    pub classifier: String,
     pub name: String,
     pub description: String,
-    pub specified_tolerance: String,
-    pub technical_committee: String,
     pub publication_at: Option<NaiveDateTime>,
     pub company_uuid: UUID,
     pub standard_status_id: usize,
-    pub region_id: usize,
 }
 
 impl From<StandardInfo> for StandardUpdatePreData {
     fn from(data: StandardInfo) -> Self {
         Self {
-            classifier: data.classifier,
             name: data.name,
             description: data.description,
-            specified_tolerance: data.specified_tolerance,
-            technical_committee: data.technical_committee,
             publication_at: Some(data.publication_at),
             company_uuid: data.owner_company.uuid,
             standard_status_id: data.standard_status.standard_status_id,
-            region_id: data.region.region_id,
         }
     }
 }
@@ -126,29 +103,21 @@ impl From<StandardInfo> for StandardUpdatePreData {
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct StandardUpdateData {
-    pub classifier: Option<String>,
     pub name: Option<String>,
     pub description: Option<String>,
-    pub specified_tolerance: Option<String>,
-    pub technical_committee: Option<String>,
     pub publication_at: Option<NaiveDateTime>,
     pub company_uuid: Option<UUID>,
     pub standard_status_id: Option<i64>,
-    pub region_id: Option<i64>,
 }
 
 impl From<&StandardUpdatePreData> for StandardUpdateData {
     fn from(new_data: &StandardUpdatePreData) -> Self {
         Self {
-            classifier: Some(new_data.classifier.clone()),
             name: Some(new_data.name.clone()),
             description: Some(new_data.description.clone()),
-            specified_tolerance: Some(new_data.specified_tolerance.clone()),
-            technical_committee: Some(new_data.technical_committee.clone()),
             publication_at: new_data.publication_at.clone(),
             company_uuid: Some(new_data.company_uuid.clone()),
             standard_status_id: Some(new_data.standard_status_id as i64),
-            region_id: Some(new_data.region_id as i64),
         }
     }
 }

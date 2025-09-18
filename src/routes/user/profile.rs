@@ -9,6 +9,7 @@ use graphql_client::GraphQLQuery;
 use log::debug;
 use wasm_bindgen_futures::spawn_local;
 
+use crate::fragments::responsive::resizer;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{
@@ -18,14 +19,15 @@ use crate::fragments::{
     list_errors::ListErrors,
     list_empty::ListEmpty,
     side_menu::{MenuItem, SideMenu},
+    supplier_service::CatalogServices,
     standard::CatalogStandards,
     user::CatalogUsers,
     user::UserCertificatesCard,
 };
 use crate::services::{Counter, get_logged_user, get_value_field, resp_parsing, title_changer};
 use crate::types::{
-    UserDataCard, CompaniesQueryArg, ComponentsQueryArg, SelfUserInfo, SlimUser,
-    StandardsQueryArg, UserCertificate, UserInfo, UsersQueryArg, UUID,
+    UserDataCard, CompaniesQueryArg, ComponentsQueryArg, ServicesQueryArg, SelfUserInfo, SlimUser,
+    StandardsQueryArg, UserCertificate, UserInfo, UsersQueryArg, UUID, Region
 };
 use crate::gqls::make_query;
 use crate::gqls::user::{
@@ -34,7 +36,7 @@ use crate::gqls::user::{
     GetSelfData, get_self_data,
     GetUserData, get_user_data,
 };
-use crate::services::url_decode;
+use crate::services::prepare_username;
 
 /// Profile user with relate data
 pub struct Profile {
@@ -85,6 +87,7 @@ pub enum ProfileTab {
     Certificates,
     Components,
     Companies,
+    Services,
     FavoriteComponents,
     FavoriteCompanies,
     FavoriteStandards,
@@ -126,7 +129,7 @@ impl Component for Profile {
         // get username for request user data
         let route_service: RouteService<()> = RouteService::new();
         // get and decode target user from route
-        let target_username = url_decode(route_service.get_fragment().trim_start_matches("#/@"));
+        let target_username = prepare_username(&route_service.get_fragment());
 
         // get flag changing current profile in route
         let not_matches_username = target_username != self.current_username;
@@ -307,7 +310,7 @@ impl Profile {
                                     { self.view_user_info(
                                         self_data.description.as_str(),
                                         self_data.position.as_str(),
-                                        self_data.region.region.as_str(),
+                                        &self_data.region,
                                         self_data.program.name.as_str(),
                                     ) }
                                 </div>
@@ -324,15 +327,16 @@ impl Profile {
         &self,
         self_data: &SelfUserInfo,
     ) -> Html {
-        html!{<div class="card">
+        html!{<div id={"card-list"} class="card">
             <div class="columns is-mobile">
                 <div class="column is-flex">
                     { self.show_profile_action() }
-                    <div class="card-relate-data">
+                    <div id={"card-list-items"} class="card-relate-data" style={resizer("card-list", 5)}>
                         {match self.profile_tab {
                             ProfileTab::Certificates => self.view_certificates(self_data.certificates.clone()),
                             ProfileTab::Components => self.view_components(&self_data.uuid),
                             ProfileTab::Companies => self.view_companies(&self_data.uuid),
+                            ProfileTab::Services => self.view_self_services(&self_data.uuid),
                             ProfileTab::FavoriteComponents => self.view_favorite_components(None),
                             ProfileTab::FavoriteCompanies => self.view_favorite_companies(None),
                             ProfileTab::FavoriteStandards => self.view_favorite_standards(),
@@ -359,7 +363,7 @@ impl Profile {
                                     { self.view_user_info(
                                         user_data.description.as_str(),
                                         user_data.position.as_str(),
-                                        user_data.region.region.as_str(),
+                                        &user_data.region,
                                         user_data.program.name.as_str(),
                                     ) }
                                 </div>
@@ -376,15 +380,16 @@ impl Profile {
         &self,
         user_data: &UserInfo,
     ) -> Html {
-        html!{<div class="card">
+        html!{<div id={"other-card-list"} class="card">
             <div class="columns is-mobile">
                 <div class="column is-flex">
                   { self.show_profile_action() }
-                  <div class="card-relate-data">
+                  <div id={"other-card-list-items"} class="card-relate-data" style={resizer("other-card-list", 5)}>
                       {match self.profile_tab {
                           ProfileTab::Certificates => self.view_certificates(user_data.certificates.clone()),
                           ProfileTab::Components => self.view_components(&user_data.uuid),
                           ProfileTab::Companies => self.view_companies(&user_data.uuid),
+                          ProfileTab::Services => self.view_self_services(&user_data.uuid),
                           ProfileTab::FavoriteComponents => self.view_favorite_components(Some(user_data.uuid.clone())),
                           ProfileTab::FavoriteCompanies => self.view_favorite_companies(Some(user_data.uuid.clone())),
                           _ => html!{},
@@ -509,6 +514,15 @@ impl Profile {
                 is_active: self.profile_tab == ProfileTab::FavoriteComponents,
                 is_extend: self.check_extend(&ProfileTab::FavoriteComponents),
             },
+            MenuItem {
+                title: get_value_field(&379).to_string(),
+                action: self.cb_generator(ProfileTab::Services),
+                count: self.get_number_of_items(&ProfileTab::Services),
+                item_class: classes!("has-background-white"),
+                icon_classes: vec![classes!("fas", "fa-ticket-alt")],
+                is_active: self.profile_tab == ProfileTab::Services,
+                is_extend: self.check_extend(&ProfileTab::Services),
+            },
             // company MenuItem
             MenuItem {
                 title: get_value_field(&35).to_string(),
@@ -535,7 +549,7 @@ impl Profile {
                 action: self.cb_generator(ProfileTab::FavoriteStandards),
                 count: self.get_number_of_items(&ProfileTab::FavoriteStandards),
                 item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-cube"), classes!("fas", "fa-bookmark")],
+                icon_classes: vec![classes!("fas", "fa-book"), classes!("fas", "fa-bookmark")],
                 is_active: self.profile_tab == ProfileTab::FavoriteStandards,
                 is_extend: self.check_extend(&ProfileTab::FavoriteStandards),
             },
@@ -562,7 +576,7 @@ impl Profile {
         &self,
         description: &str,
         position: &str,
-        region: &str,
+        region: &Region,
         program: &str,
     ) -> Html {
         let onclick_change_full_show =
@@ -582,10 +596,10 @@ impl Profile {
                             <span>{get_value_field(&39)}</span>
                             <span class="overflow-title has-text-weight-bold">{position}</span>
                         </div>
-                        <div id="region">
+                        <div id="region" hidden={region.region_id == 8}>
                             <span class="icon is-small"><i class="fas fa-map-marker-alt" /></span>
                             <span>{get_value_field(&40)}</span>
-                            <span class="overflow-title has-text-weight-bold">{region}</span>
+                            <span class="overflow-title has-text-weight-bold">{&region.region}</span>
                         </div>
                         <div id="program" hidden={program == "Unknown"}>
                             <span class="icon is-small"><i class="fas fa-drafting-compass" /></span>
@@ -619,11 +633,18 @@ impl Profile {
                         user_uuid={self.current_user_uuid.clone()}
                         certificates={certificates}
                         show_cert_btn={false}
-                        download_btn={false}
                         manage_btn={false}
                     />
                 </div>
             }
+        }
+    }
+
+    fn view_self_services(&self, user_uuid: &UUID) -> Html {
+        html! {
+            <CatalogServices
+                arguments={ServicesQueryArg::set_user_uuid(user_uuid)}
+            />
         }
     }
 
@@ -677,6 +698,7 @@ impl Profile {
             Some( ref res) =>  match tab {
               ProfileTab::Certificates => res.certificates.len(),
               ProfileTab::Components => res.components_count,
+              ProfileTab::Services => 0,
               ProfileTab::FavoriteComponents => res.fav_components_count,
               ProfileTab::Companies => res.companies_count,
               ProfileTab::FavoriteCompanies => res.fav_companies_count,

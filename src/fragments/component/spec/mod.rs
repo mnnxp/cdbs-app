@@ -51,7 +51,7 @@ impl Component for SpecsTags {
             false => html!{
                 <div class="card">
                     <header class="card-header">
-                        <p class="card-header-title">{get_value_field(&104)}</p> // Catalogs
+                        <p class="card-header-title">{get_value_field(&104)}</p>
                     </header>
                     <div class="card-content">
                         <div class="content">
