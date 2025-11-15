@@ -33,10 +33,10 @@ pub enum ToObject {
 /// # Example usage
 ///
 /// ```rust
-/// let to_object = get_gpl_to_object!(ToObject::COMPANY, crate::gqls::discussion::get_discussions::ToObject);
+/// let to_object = get_gql_to_object!(ToObject::COMPANY, crate::gqls::discussion::get_discussions::ToObject);
 /// ```
 #[macro_export]
-macro_rules! get_gpl_to_object {
+macro_rules! get_gql_to_object {
     ($value:expr, $target_type:ty) => {
         match $value {
             ToObject::COMPANY => <$target_type>::COMPANY,

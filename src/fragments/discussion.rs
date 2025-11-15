@@ -11,7 +11,7 @@ use crate::fragments::user::GoToUser;
 use crate::services::content_adapter::{DateDisplay, Markdownable};
 use crate::services::{get_logged_user, get_value_field, resp_parsing};
 use crate::types::{DiscussionCommentData, DiscussionInfo, ObjectType, ShowUserShort, SlimUser, ToObject, UUID};
-use crate::get_gpl_to_object;
+use crate::get_gql_to_object;
 use crate::gqls::make_query;
 use crate::gqls::discussion::{
     RegisterDiscussionComment, register_discussion_comment,
@@ -103,7 +103,7 @@ impl Component for DiscussionCommentsBlock {
                 // Request for comments discussion
                 let ipt_object_discussions_arg = get_discussions::IptObjectDiscussionsArg{
                     objectUuid: self.props.object_type.uuid.clone(),
-                    toObject: get_gpl_to_object!(self.props.object_type.object_type, get_discussions::ToObject),
+                    toObject: get_gql_to_object!(self.props.object_type.object_type, get_discussions::ToObject),
                     filterByUuids: None,
                 };
                 let ipt_sort = Some(get_discussions::IptSort {
@@ -170,7 +170,7 @@ impl Component for DiscussionCommentsBlock {
                 let ipt_discussion_comment_data = register_discussion_comment::IptDiscussionCommentData{
                     objectDiscussion: register_discussion_comment::IptDiscussionArg{
                         objectUuid: self.props.object_type.uuid.clone(),
-                        toObject: get_gpl_to_object!(self.props.object_type.object_type, register_discussion_comment::ToObject),
+                        toObject: get_gql_to_object!(self.props.object_type.object_type, register_discussion_comment::ToObject),
                     },
                     discussionUuid: None, // self.discussion_uuid.clone()
                     parentCommentUuid: self.parent_comment_uuid.clone(),
