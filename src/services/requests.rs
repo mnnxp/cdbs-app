@@ -1,4 +1,3 @@
-use dotenv_codegen::dotenv;
 use log::debug;
 use serde::{Deserialize, Serialize};
 use yew::callback::Callback;
@@ -6,10 +5,8 @@ use yew::format::{Json, Nothing, Text, Binary};
 use yew::services::fetch::{FetchService, FetchTask, Request, Response};
 
 use crate::error::Error;
-use crate::services::get_token;
+use crate::services::{get_server_locations, get_token};
 use crate::types::ErrorInfo;
-
-const API_BACKEND: &str = dotenv!("API_BACKEND");
 
 /// Http request
 #[derive(Default, Debug, Clone)]
@@ -64,7 +61,7 @@ impl Requests {
             }
         };
 
-        let url = format!("{}{}", API_BACKEND, url);
+        let url = format!("{}{}", get_server_locations().0, url);
         debug!("complect url: {}", url);
         let mut builder = Request::builder()
             .method(method)

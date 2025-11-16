@@ -418,5 +418,10 @@ lazy_static! {
             (411, " data cannot be recovered."),
             (412, "This action can lead to data loss. To prevent accidental actions we ask you to confirm your intention."),
             (413, "Enter the following to confirm:"),
+            (414, "SERVER LOCATION"),
+            (415, "🇳🇱 Netherlands"),
+            (416, "🇷🇺 Russia"),
+            (417, "🇨🇳 China"),
+            (418, "🌐 Custom Server"),
         ]);
 }

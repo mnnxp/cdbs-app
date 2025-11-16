@@ -5,12 +5,9 @@ use std::{
 use wasm_bindgen::{prelude::*, JsCast};
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{Request, RequestInit, RequestMode, Response};
-use dotenv_codegen::dotenv;
 use serde::Serialize;
 // use log::debug;
-use crate::services::{get_token, get_lang};
-
-const API_GPL: &str = dotenv!("API_GPL");
+use crate::services::{get_lang, get_server_locations, get_token};
 
 /// Something wrong has occurred while fetching an external resource.
 #[derive(Debug, Clone, PartialEq)]
@@ -41,7 +38,8 @@ where
     opts.body(Some(&JsValue::from_str(query.to_string().as_str())));
     opts.mode(RequestMode::Cors);
 
-    let request = Request::new_with_str_and_init(API_GPL, &opts)?;
+    let gql_server_location = get_server_locations().1;
+    let request = Request::new_with_str_and_init(&gql_server_location, &opts)?;
 
     if let Some(token) = get_token() {
         request.headers().set("Authorization", format!("Bearer {}", token).as_str()).unwrap();

@@ -1,19 +1,18 @@
-use yew::{html, classes, Component, ComponentLink, Html, ShouldRender};
+use yew::{html, Component, ComponentLink, Html, ShouldRender, ChangeData};
 use crate::services::content_adapter::Markdownable;
-use crate::services::{set_lang, get_lang};
-use crate::services::get_value_field;
+use crate::services::{get_lang, get_server_location_id, get_value_field, set_server_locations};
 
 pub struct Footer {
     link: ComponentLink<Self>,
     show_terms: bool,
     show_about: bool,
-    current_lang: u8,
+    server_location_id: usize,
 }
 
 pub enum Msg {
     ShowTerms,
     ShowAbout,
-    ChangeLanguage(u8),
+    UpdateServerLocationId(String),
 }
 
 impl Component for Footer {
@@ -21,18 +20,16 @@ impl Component for Footer {
     type Properties = ();
 
     fn create(_props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        let current_lang = get_lang().map(|lang|
-            match lang.as_str() {
-                "ru" => 2,
-                _ => 1,
-            }
-        ).unwrap_or(1);
-
+        let mut server_location_id = get_server_location_id();
+        if server_location_id == 0 {
+            set_server_locations(None);
+            server_location_id = get_server_location_id();
+        }
         Footer {
             link,
             show_terms: false,
             show_about: false,
-            current_lang,
+            server_location_id,
         }
     }
 
@@ -40,12 +37,10 @@ impl Component for Footer {
         match msg {
             Msg::ShowTerms => self.show_terms = !self.show_terms,
             Msg::ShowAbout => self.show_about = !self.show_about,
-            Msg::ChangeLanguage(lang_id) => {
-                match lang_id {
-                    2 => set_lang(Some(String::from("ru"))),
-                    _ => set_lang(Some(String::from("en"))),
-                }
-                self.current_lang = lang_id;
+            Msg::UpdateServerLocationId(value) => {
+                let location_id = value.parse::<usize>().unwrap_or(1);
+                set_server_locations(Some(location_id));
+                self.server_location_id = get_server_location_id();
             },
         }
         true
@@ -57,14 +52,13 @@ impl Component for Footer {
 
     fn view(&self) -> Html {
         let current_info = get_value_field(&258);
-        let version_number = "0.3.0";
-        let onclick_lang_en = self.link.callback(|_| Msg::ChangeLanguage(1));
-        let onclick_lang_ru = self.link.callback(|_| Msg::ChangeLanguage(2));
+        let version_number = "0.3.1";
         let onclick_show_terms = self.link.callback(|_| Msg::ShowTerms);
         let onclick_show_about = self.link.callback(|_| Msg::ShowAbout);
-        let (button_en, button_ru, base_url) = match self.current_lang {
-            2 => (classes!("button"), classes!("button", "is-info"), "https://cadbase.rs/ru/"),
-            _ => (classes!("button", "is-info"), classes!("button"), "https://cadbase.rs/"),
+        let (base_url, docs_url) = match get_lang().as_deref() {
+            // Some("zh") => ("https://cadbase.org/zh/", "https://docs.cadbase.org/zh/"),
+            Some("ru") => ("https://cadbase.ru/ru/", "https://docs.cadbase.ru/ru/"),
+            _ => ("https://cadbase.rs/en/", "https://docs.cadbase.rs/en/"),
         };
         let privacy_notice_url = format!("{}privacy-notice.html", base_url, );
         let self_hosted_url = format!("{}self-hosted.html", base_url, );
@@ -77,7 +71,7 @@ impl Component for Footer {
                 <div class="columns">
                     // left footer
                     <div class="column">
-                        <div class="tags">
+                        <div class="tags mb-0">
                             <div class="tag is-white is-medium">
                                 <a class={vec!("social-network")} href="mailto:info@cadbase.rs" title="Email"  style="margin-right: 0.1rem;">
                                     <i class={vec!("fas", "fa-lg", "fa-envelope")}></i>
@@ -94,14 +88,7 @@ impl Component for Footer {
                                 </a>
                             </div>
                         </div>
-                        <div class="buttons">
-                            <a class={button_en} onclick={onclick_lang_en}>
-                                {get_value_field(&8)}
-                            </a>
-                            <a class={button_ru} onclick={onclick_lang_ru}>
-                                {get_value_field(&9)}
-                            </a>
-                        </div>
+                        {self.selector_server_location()}
                     </div>
                     // 1 center footer
                     <div class="column">
@@ -109,7 +96,7 @@ impl Component for Footer {
                             {get_value_field(&256)}
                         </a>
                         <br/>
-                        <a href="https://docs.cadbase.rs/" >
+                        <a href={docs_url} >
                             {get_value_field(&12)}
                         </a>
                         <br/>
@@ -198,6 +185,43 @@ impl Footer {
                     </div>
                 </section>
               </div>
+            </div>
+        }
+    }
+
+    fn selector_server_location(&self) -> Html {
+        let oninput_server_location =
+            self.link.callback(|ev: ChangeData| Msg::UpdateServerLocationId(match ev {
+              ChangeData::Select(el) => el.value(),
+              _ => "1".to_string(),
+            }));
+        let server_location = [
+            (1, get_value_field(&415)),
+            (2, get_value_field(&416)),
+            (3, get_value_field(&417)),
+            (4, get_value_field(&418)),
+        ];
+
+        html!{
+            <div class="server-selector ml-3">
+                <div class="is-flex is-align-items-center">
+                    <span class="is-size-7 has-text-weight-semibold mr-2">{get_value_field(&414)}</span>
+                    <div class="select is-small">
+                    <select
+                        id="select_server_location"
+                        select={self.server_location_id.to_string()}
+                        onchange={oninput_server_location}
+                        >
+                        { for server_location.iter().map(|(id, name)|
+                            html!{
+                                <option value={id.to_string()} selected={id == &self.server_location_id} >
+                                    {&name}
+                                </option>
+                            }
+                        )}
+                    </select>
+                    </div>
+                </div>
             </div>
         }
     }
