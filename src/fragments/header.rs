@@ -158,7 +158,7 @@ impl Component for Header {
             },
             Msg::ChangeLanguage(lang_id) => {
                 match lang_id {
-                    // 3 => set_lang(Some(String::from("zh"))),
+                    3 => set_lang(Some(String::from("zh"))),
                     2 => set_lang(Some(String::from("ru"))),
                     _ => set_lang(Some(String::from("en"))),
                 }
