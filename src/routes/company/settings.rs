@@ -428,7 +428,7 @@ impl CompanySettings {
             },
             // Favicon MenuItem
             MenuItem {
-                title: get_value_field(&78).to_string(), // Favicon
+                title: get_value_field(&91).to_string(), // Logo
                 action: self.cb_generator(Menu::UpdateFavicon),
                 item_class: classes!("has-background-white"),
                 icon_classes: vec![classes!("fas", "fa-image")],
@@ -701,7 +701,7 @@ impl CompanySettings {
         let callback_update_favicon = self.link.callback(|_| Msg::ReguestCompanyData);
 
         html!{<>
-            <h4 id="updated-favicon-company" class="title is-4">{get_value_field(&78)}</h4> // Favicon
+            <h4 id="updated-favicon-company" class="title is-4">{get_value_field(&91)}</h4> // Logo
             <UpdateFaviconBlock
                 company_uuid={self.company_uuid.clone()}
                 callback={callback_update_favicon}
