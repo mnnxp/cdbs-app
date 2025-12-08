@@ -8,17 +8,17 @@ use log::debug;
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
-use crate::fragments::clipboard::ShareLinkBtn;
-use crate::fragments::discussion::DiscussionCommentsBlock;
-use crate::fragments::supplier_service::ServiceParamsTags;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{
-    switch_icon::res_btn,
+    buttons::res_settings_btn,
     list_errors::ListErrors,
     component::CatalogComponents,
     supplier_service::{ServiceFilesCard, SpecsTags, KeywordsTags},
     img_showcase::ImgShowcase,
+    clipboard::ShareLinkBtn,
+    discussion::DiscussionCommentsBlock,
+    supplier_service::ServiceParamsTags,
 };
 use crate::services::content_adapter::Markdownable;
 use crate::services::{get_logged_user, get_value_field, resp_parsing, set_history_back, title_changer};
@@ -374,11 +374,8 @@ impl ShowService {
     fn show_setting_btn(&self) -> Html {
         let onclick_setting_service_btn = self.link.callback(|_| Msg::OpenServiceSetting);
         match &self.current_user_owner {
-            true => {res_btn(
-                classes!("fa", "fa-tools"),
+            true => {res_settings_btn(
                 onclick_setting_service_btn,
-                String::new(),
-                get_value_field(&16),
                 Pathname::ServiceSetting(self.current_service_uuid.clone())
             )},
             false => html!{},

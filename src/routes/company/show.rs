@@ -12,10 +12,8 @@ use wasm_bindgen_futures::spawn_local;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{
-    buttons::ft_follow_btn,
+    buttons::{ft_follow_btn, res_settings_btn},
     clipboard::ShareLinkBtn,
-    // user::GoToUser,
-    switch_icon::res_btn,
     list_errors::ListErrors,
     side_menu::{MenuItem, SideMenu},
     company::diamond_svg,
@@ -285,11 +283,8 @@ impl ShowCompany {
                 <div class="column">
                     <div class="buttons flexBox mb-0" >
                       {match &self.current_user_owner {
-                        true => {res_btn(
-                            classes!("fa", "fa-tools"),
+                        true => {res_settings_btn(
                             onclick_setting_company_btn,
-                            String::new(),
-                            get_value_field(&16),
                             Pathname::CompanySetting(self.current_company_uuid.clone())
                         )},
                         false => html!{},

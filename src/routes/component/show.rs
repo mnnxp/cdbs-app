@@ -13,8 +13,7 @@ use crate::fragments::discussion::DiscussionCommentsBlock;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{
-    buttons::{ft_see_btn, ft_follow_btn},
-    switch_icon::res_btn,
+    buttons::{ft_see_btn, ft_follow_btn, res_settings_btn},
     list_errors::ListErrors,
     user::GoToUser,
     component::{
@@ -639,11 +638,8 @@ impl ShowComponent {
     fn show_setting_btn(&self) -> Html {
         let onclick_setting_component_btn = self.link.callback(|_| Msg::OpenComponentSetting);
         match &self.current_user_owner {
-            true => {res_btn(
-                classes!("fa", "fa-tools"),
+            true => {res_settings_btn(
                 onclick_setting_component_btn,
-                String::new(),
-                get_value_field(&16),
                 Pathname::ComponentSetting(self.current_component_uuid.clone())
             )},
             false => html!{},
