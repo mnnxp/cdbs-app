@@ -55,10 +55,10 @@ impl Component for ListItem {
                 // debug!("OpenComponent");
             },
             Msg::TriggerFav => {
-                if !self.props.data.is_followed {
-                    self.props.add_fav.emit(String::new());
+                if self.props.data.is_followed {
+                    self.props.del_fav.emit(self.props.data.uuid.clone());
                 } else {
-                    self.props.del_fav.emit(String::new());
+                    self.props.add_fav.emit(self.props.data.uuid.clone());
                 }
             },
             Msg::Ignore => (),

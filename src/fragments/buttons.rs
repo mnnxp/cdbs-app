@@ -80,7 +80,7 @@ pub fn ft_follow_btn(
 
     html!{
         <button
-        id={"following-button"}
+        // id={"following-button"}
         class={"button"}
         onclick={trigger_btn}
         title={title}>
