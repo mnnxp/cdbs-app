@@ -331,3 +331,8 @@ pub fn ft_import_btn(
         </button>
     }
 }
+
+/// Returns a VNode with the specified URL and text
+pub fn simple_link(url: String, label: &str) -> Html {
+    html!{<a href={url} target={"_blank"} rel={"noopener noreferrer"}>{label}</a>}
+}

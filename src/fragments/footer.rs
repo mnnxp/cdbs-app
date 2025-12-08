@@ -1,17 +1,13 @@
 use yew::{html, Component, ComponentLink, Html, ShouldRender, ChangeData};
-use crate::services::content_adapter::Markdownable;
 use crate::services::{get_lang, get_server_location_id, get_value_field, set_server_locations};
+use crate::fragments::buttons::simple_link;
 
 pub struct Footer {
     link: ComponentLink<Self>,
-    show_terms: bool,
-    show_about: bool,
     server_location_id: usize,
 }
 
 pub enum Msg {
-    ShowTerms,
-    ShowAbout,
     UpdateServerLocationId(String),
 }
 
@@ -27,16 +23,12 @@ impl Component for Footer {
         }
         Footer {
             link,
-            show_terms: false,
-            show_about: false,
             server_location_id,
         }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
-            Msg::ShowTerms => self.show_terms = !self.show_terms,
-            Msg::ShowAbout => self.show_about = !self.show_about,
             Msg::UpdateServerLocationId(value) => {
                 let location_id = value.parse::<usize>().unwrap_or(1);
                 set_server_locations(Some(location_id));
@@ -53,27 +45,25 @@ impl Component for Footer {
     fn view(&self) -> Html {
         let current_info = get_value_field(&258);
         let version_number = "0.3.1";
-        let onclick_show_terms = self.link.callback(|_| Msg::ShowTerms);
-        let onclick_show_about = self.link.callback(|_| Msg::ShowAbout);
         let (base_url, docs_url) = match get_lang().as_deref() {
-            // Some("zh") => ("https://cadbase.org/zh/", "https://docs.cadbase.org/zh/"),
-            Some("ru") => ("https://cadbase.ru/ru/", "https://docs.cadbase.ru/ru/"),
-            _ => ("https://cadbase.rs/en/", "https://docs.cadbase.rs/en/"),
+            Some("zh") => ("https://cadbase.org/zh/", String::from("https://docs.cadbase.org/")),
+            Some("ru") => ("https://cadbase.ru/ru/", String::from("https://docs.cadbase.ru/")),
+            _ => ("https://cadbase.rs/en/", String::from("https://docs.cadbase.rs/")),
         };
-        let privacy_notice_url = format!("{}privacy-notice.html", base_url, );
-        let self_hosted_url = format!("{}self-hosted.html", base_url, );
-        let news_url = format!("{}#overviews", base_url, );
+        let about_url = format!("{}overviews/platform-for-creators-and-engineers/", base_url);
+        let terms_url = format!("{}terms/", base_url);
+        let privacy_notice_url = format!("{}privacy-notice/", base_url);
+        let news_url = format!("{}#overviews", base_url);
+        let glossary_url = format!("{}glossary/", base_url);
 
         html!{
             <footer class="footer">
-                {self.modal_terms()}
-                {self.modal_about_us()}
                 <div class="columns">
                     // left footer
                     <div class="column">
                         <div class="tags mb-0">
                             <div class="tag is-white is-medium">
-                                <a class={vec!("social-network")} href="mailto:info@cadbase.rs" title="Email"  style="margin-right: 0.1rem;">
+                                <a class={vec!("social-network")} href="mailto:info@cadbase.rs" title="Email" style="margin-right: 0.1rem;">
                                     <i class={vec!("fas", "fa-lg", "fa-envelope")}></i>
                                 </a>
                             </div>
@@ -92,31 +82,19 @@ impl Component for Footer {
                     </div>
                     // 1 center footer
                     <div class="column">
-                        <a href={news_url} >
-                            {get_value_field(&256)}
-                        </a>
+                        {simple_link(news_url, get_value_field(&256))}
                         <br/>
-                        <a href={docs_url} >
-                            {get_value_field(&12)}
-                        </a>
+                        {simple_link(docs_url, get_value_field(&12))}
                         <br/>
-                        <a href={self_hosted_url} >
-                            {get_value_field(&259)}
-                        </a>
+                        {simple_link(glossary_url, get_value_field(&259))}
                     </div>
                     // 2 center footer
                     <div class="column">
-                        <a onclick={onclick_show_about} >
-                            {get_value_field(&11)}
-                        </a>
+                        {simple_link(about_url, get_value_field(&11))}
                         <br/>
-                        <a onclick={onclick_show_terms} >
-                            {get_value_field(&10)}
-                        </a>
+                        {simple_link(terms_url, get_value_field(&10))}
                         <br/>
-                        <a href={privacy_notice_url} >
-                            {get_value_field(&269)}
-                        </a>
+                        {simple_link(privacy_notice_url, get_value_field(&269))}
                     </div>
                     // right footer
                     <div class="column">
@@ -130,65 +108,6 @@ impl Component for Footer {
 }
 
 impl Footer {
-    fn modal_terms(&self) -> Html {
-        let onclick_show_terms = self.link.callback(|_| Msg::ShowTerms);
-
-        let class_modal = match &self.show_terms {
-            true => "modal is-active",
-            false => "modal",
-        };
-
-        html!{
-            <div class={class_modal}>
-              <div class="modal-background" onclick={onclick_show_terms.clone()} />
-              <div class="modal-card">
-                <header class="modal-card-head">
-                  <p class="modal-card-title">{get_value_field(&248)}</p> // Terms CADBase
-                  <button class="delete" aria-label="close" onclick={onclick_show_terms} />
-                </header>
-                <section class="modal-card-body">
-                    <div class="content">
-                        <h1>{get_value_field(&249)}</h1> // Thank you for using CADBase
-                        <p>{get_value_field(&250)}</p>
-                        <blockquote>{get_value_field(&251)}</blockquote>
-                        <p>{get_value_field(&252)}</p>
-                        <p>{get_value_field(&253)} <a href="mailto:support@cadbase.rs" title="Email">{"support@cadbase.rs"}</a></p>
-                    </div>
-                </section>
-              </div>
-            </div>
-        }
-    }
-
-    fn modal_about_us(&self) -> Html {
-        let onclick_show_about = self.link.callback(|_| Msg::ShowAbout);
-
-        let class_modal = match &self.show_about {
-            true => "modal is-active",
-            false => "modal",
-        };
-
-        html!{
-            <div class={class_modal}>
-              <div class="modal-background" onclick={onclick_show_about.clone()} />
-              <div class="modal-card">
-                <header class="modal-card-head">
-                  <p class="modal-card-title">{get_value_field(&254)}</p>
-                  <button class="delete" aria-label="close" onclick={onclick_show_about} />
-                </header>
-                <section class="modal-card-body">
-                    <div class="content">
-                        <h1>{get_value_field(&11)}</h1>
-                        <p>{get_value_field(&255).to_markdown()}</p>
-                        <p>{get_value_field(&253)} <a href="mailto:info@cadbase.rs" title="Email">{"info@cadbase.rs"}</a></p>
-                        <h4>{get_value_field(&260)}</h4>
-                    </div>
-                </section>
-              </div>
-            </div>
-        }
-    }
-
     fn selector_server_location(&self) -> Html {
         let oninput_server_location =
             self.link.callback(|ev: ChangeData| Msg::UpdateServerLocationId(match ev {
