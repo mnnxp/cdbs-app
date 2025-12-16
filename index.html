@@ -33,5 +33,72 @@
     <link data-trunk rel="copy-dir" href="assets/webfonts"/>
     <link data-trunk rel="copy-dir" href="assets/js/three"/>
   </head>
-  <body></body>
+  <body>
+    <div id="cdbs-loading">
+      <div class="logo-spinner">
+         <img src="/icons/favicon.svg" alt="Logo" class="logo" />
+        <div class="spinner-ring"></div>
+      </div>
+    </div>
+    <style>
+      #cdbs-loading {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: white;
+        z-index: 99999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+      .logo-spinner {
+        position: relative;
+        width: 150px;
+        height: 150px;
+        margin-bottom: 20px;
+      }
+      .logo-spinner svg {
+        position: absolute;
+        width: 80px;
+        height: 80px;
+        top: 35px;
+        left: 35px;
+      }
+      .spinner-ring {
+        position: absolute;
+        width: 150px;
+        height: 150px;
+        border: 3px solid transparent;
+        border-top-color: #1872f0;
+        border-right-color: #b2bbcc;
+        border-radius: 50%;
+        animation: spin 1.2s cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      .loading-text {
+        margin-top: 20px;
+        color: #333;
+        font-size: 16px;
+      }
+      #cdbs-loading.loaded {
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.5s, visibility 0.5s;
+      }
+    </style>
+    <script>
+      const hideLoading = () => {
+        const loading = document.getElementById('cdbs-loading');
+        if (!loading) return;
+        loading.classList.add('loaded');
+        setTimeout(() => loading.remove(), 200);
+      };
+      window.addEventListener('wasm-loaded', hideLoading, { once: true });
+      setTimeout(hideLoading, 15000);
+    </script>
+  </body>
 </html>
