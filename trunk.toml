@@ -6,6 +6,8 @@ release = true
 dist = "dist"
 # The public URL from which assets are to be served.
 public_url = "/"
+# Brotli compression for wasm
+compress = ["br", "gzip"]
 
 [serve]
 # The address to serve on.

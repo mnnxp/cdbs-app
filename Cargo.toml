@@ -65,3 +65,11 @@ version = "0.3.60"
 [dev-dependencies]
 wasm-bindgen-futures = "0.4.10"
 wasm-bindgen-test = "0.3.10"
+
+[profile.release]
+lto = true
+codegen-units = 1
+opt-level = 'z'
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = ["-Oz", "--strip-debug"]
