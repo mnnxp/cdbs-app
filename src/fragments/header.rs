@@ -62,7 +62,7 @@ impl Component for Header {
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
         let current_lang = match get_lang().as_deref() {
-            // Some("zh") => 3,
+            Some("zh") => 3,
             Some("ru") => 2,
             _ => 1,
         };
