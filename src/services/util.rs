@@ -23,11 +23,6 @@ pub(crate) fn image_detector(filename: &str) -> bool {
     )
 }
 
-/// Search for a file to display a 3D object
-pub(crate) fn three_detector(filename: &str) -> bool {
-    matches!(ext_str(filename).as_str(), ".stl")
-}
-
 fn append_frag(text: &mut String, frag: &mut String) {
     if !frag.is_empty() {
         let encoded = frag.chars()
