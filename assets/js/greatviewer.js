@@ -1,5 +1,4 @@
 import * as THREE from '../../../../three/three.webgpu.min.js';
-// import { WebGPURenderer } from '../../../../three/webgpu/WebGPURenderer.js';
 import { STLLoader } from '../../../../three/loaders/STLLoader.js';
 import { GLTFLoader } from '../../../../three/loaders/GLTFLoader.js';
 import { DRACOLoader } from '../../../../three/loaders/DRACOLoader.js';
@@ -158,6 +157,12 @@ export class GreatViewer {
             this.controls?.reset();
             return;
         }
+        if (e.code === 'KeyW') {
+            this.isWireframe = !this.isWireframe;
+            if (this.isWireframe) this.useCustomMaterial = true;
+            this.updateMaterial();
+            return;
+        }
         const keyMap = {
             'Digit1': this.labels.view_top, 'Numpad1': this.labels.view_top,
             'Digit2': this.labels.view_front, 'Numpad2': this.labels.view_front,
@@ -178,13 +183,11 @@ export class GreatViewer {
     }
 
     async _starterInternal() {
-        // Get a reference to the container element that will hold our scene
         const sceneHull = document.querySelector('scene-hull');
         if (sceneHull) {
             ['a-container', 'b-container'].forEach(tag => {
                 const container = sceneHull.querySelector(tag);
                 if (container && container.children.length > 0) {
-                    // console.log(`Quick clean for ${container.tagName}`);
                     container.textContent = '';
                 }
             });
@@ -211,10 +214,6 @@ export class GreatViewer {
         this.scene.add(this.directionalLight);
 
         this.axesHelper = new THREE.AxesHelper(30);
-
-        // const light = new THREE.SpotLight();
-        // light.position.set(50, 50, 50);
-        // this.scene.add(light);
 
         // Set the background color
         this.scene.background = new THREE.Color(backgroundColor);
@@ -261,8 +260,12 @@ export class GreatViewer {
             // Show only in full screen mode
             this.container.appendChild(this.stats.dom); // Show statistics
         }
-
         // Use ResizeObserver to track size changes
+        this.setupResizeObserver(clientWidth, clientHeight)
+        this.startAnimation();
+    }
+
+    setupResizeObserver(clientWidth, clientHeight) {
         this.resizeObserver = new ResizeObserver((entries) => {
             for (let entry of entries) {
                 const { width, height } = entry.contentRect;
@@ -276,17 +279,11 @@ export class GreatViewer {
             }
         });
         this.resizeObserver.observe(this.container);
-
-        this.startAnimation();
     }
 
     async createRenderer() {
         if (!navigator.gpu) {
             console.log('WebGPU not available, using WebGL');
-            return new THREE.WebGLRenderer({
-                alpha: true,
-                antialias: true
-            });
         }
         const renderer = new THREE.WebGPURenderer({
             alpha: true,
@@ -336,7 +333,6 @@ export class GreatViewer {
 
     onProgress(xhr) {
         let loadedProgress = (xhr.loaded / xhr.total) * 100;
-        // console.log(loadedProgress.toFixed(1) + '% loaded');
         if (this.infoMessage) {
             this.infoMessage.innerHTML = loadedProgress.toFixed(1) + '%';
         }
@@ -345,7 +341,7 @@ export class GreatViewer {
     onError(error) {
         console.warn(error);
         if (this.infoMessage) {
-            this.infoMessage.innerHTML = this.labels.model_load_failed + ': ' + error.message;
+            this.infoMessage.innerHTML = this.labels.failed_to_load_model + ': ' + error.message;
         }
     }
 
@@ -369,12 +365,15 @@ export class GreatViewer {
                 `  Heap memory:    ${usedMB} MiB`
             );
         }
-        if (!this.sizeFlag) return;
+        if (!this.sizeFlag) {
+            this.updateViewPreset(this.labels.view_isometric);
+            return;
+        }
         this.setControlsGui();
         if (!this.stats) return;
         this.container.appendChild(this.stats.dom);
         if (this.modelFormat == 'GCode') {
-            this.updateViewPreset('Top (XY)');
+            this.updateViewPreset(this.labels.view_top);
             this.updateGCodeLayers();
         }
     }
@@ -384,20 +383,12 @@ export class GreatViewer {
         console.log('Model format:', this.modelFormat);
         console.log('Resource mapping count:', this.resourceMapping?.length || 0);
         console.log('Model path:', this.model.url);
-        // fetch(this.model.url, { method: 'HEAD' })
-        //     .then(res => {
-        //         const contentType = res.headers.get('content-type');
-        //         const isBinary = contentType.includes('model/gltf-binary') ||
-        //                         this.model.url.includes('.glb');
-        //         console.log(`isBinary: ${isBinary}`);
-        //     });
         switch (this.modelFormat) {
             case 'STL':
                 const stlLoader = new STLLoader();
                 stlLoader.load(
                     this.model.url,
                     (geometry) => {
-                        this.checkAndLog(geometry);
                         this.mesh = new THREE.Mesh(geometry, this.material);
                         this.scene.add(this.mesh);
                         geometry.center();
@@ -409,11 +400,6 @@ export class GreatViewer {
                 break;
             // GLTF and GLB use GLTFLoader
             case 'GLTF':
-                // if (this.resourceMapping && this.resourceMapping.length > 0) {
-                //     this.resourceMapping.forEach(item => {
-                //         console.log(`  ${item.filename}`);
-                //     });
-                // }
                 const gltfResources = this.createGLTFLoaderWithDraco();
                 // If no resources, load directly
                 if (this.resourceMapping.length === 0) {
@@ -443,11 +429,8 @@ export class GreatViewer {
                         this.store_animations(glb);
                         // Apply material to all meshes
                         this.mesh.traverse((child) => {
-                            // this.checkAndLog(glb, child);
                             if (child.isMesh) {
                                 child.material = this.material;
-                                // child.material.color.setHex(COLORS[i % COLORS.length]);
-                                // child.material.color.setHex(Math.random() * 0xffffff);
                             }
                         });
                         this.scene.add(this.mesh);
@@ -502,17 +485,6 @@ export class GreatViewer {
                 }
                 break;
         }
-    }
-
-    checkAndLog(modelData, child = null) {
-        console.log('Buffers count:', modelData.buffers?.length || 0);
-        console.log('Images count:', modelData.images?.length || 0);
-        // if (child && child.geometry?.index){
-        //     console.log(`Сhild vertex count: ${child.geometry.attributes.position.count}`);
-        //     console.log(`Mesh ${child.name || child.uuid}:`);
-        //     console.log(`- Draw mode: ${child.material.wireframe ? 'LINES' : 'TRIANGLES'}`);
-        //     console.log(`- Attributes:`, Object.keys(child.geometry.attributes));
-        // }
     }
 
     setControlsGui() {
@@ -712,7 +684,7 @@ export class GreatViewer {
     updateViewPreset(viewName) {
         console.log(`Control view: ${viewName}`);
         if (!this.mesh) return;
-        this.viewModeController = viewName
+        this.viewModeController = viewName;
         const preset = this.viewPresets[viewName];
         const box = new THREE.Box3().setFromObject(this.mesh);
         const center = box.getCenter(new THREE.Vector3());
@@ -757,12 +729,6 @@ export class GreatViewer {
         const box = new THREE.Box3().setFromObject(object);
         const center = box.getCenter(new THREE.Vector3());
         object.position.sub(center);
-        // Create layers
-        // this.gcodeLayers = object.children.map((child, i) => ({
-            // index: i,
-            // object: child,  // Reference to the actual object
-            // visible: this.getLayerVisibility(i)  // Determine initial visibility
-        // }));
         this.gcodeLayers = object.children.map((child, i) => {
             const layerInfo = this.parsedLayers?.[i];
             return {
@@ -773,7 +739,6 @@ export class GreatViewer {
                 z: layerInfo?.z || i * 0.2 // Function to get the height Z
             };
         });
-        // console.log(`Created ${this.gcodeLayers.length} layers from ${object.children.length} children`);
         this.onComplete();
     }
 
@@ -846,11 +811,6 @@ export class GreatViewer {
     }
 
     parseGCodeLayers(t) {
-        // const parts = t.split(/(;LAYER:\d+\n)/);
-        // return parts.reduce((acc, part, i) => {
-            // if (i % 2 === 1) acc.push(parts[i] + (parts[i+1] || ''));
-            // return acc;
-        // }, []).filter(Boolean);
         const layers = [];
         let currentLayer = null;
         let currentText = '';
@@ -891,13 +851,11 @@ export class GreatViewer {
     createGLTFLoaderWithDraco() {
         const gltfLoader = new GLTFLoader();
         const dracoLoader = new DRACOLoader();
-        // Specify the path to Draco files (they should be in the three/ folder)
         dracoLoader.setDecoderPath('../../../../three/draco/');
-        dracoLoader.setDecoderConfig({ type: 'js' }); // 'js'/'wasm'
+        dracoLoader.setDecoderConfig({ type: 'wasm' }); // 'js'/'wasm'
         gltfLoader.setDRACOLoader(dracoLoader);
         return {
             loader: gltfLoader,
-            // dracoLoader: dracoLoader,
             // Helper function for cleanup
             dispose: () => dracoLoader.dispose()
         };
@@ -916,21 +874,7 @@ export class GreatViewer {
                 this.resourceMapping.forEach(item => {
                     resourceMap.set(item.filename, item.download_url);
                 });
-                // console.log('=== RESOURCE MAPPING ===');
-                // this.resourceMapping.forEach((item, i) => {
-                //     console.log(`${i}: ${item.filename} → ${item.download_url.substring(0, 80)}...`);
-                // });
-                // Update resource URIs to full URLs
                 this.updateGltfResourceUris(gltfData, resourceMap);
-                // const allGltfUris = [];
-                // if (gltfData.buffers) gltfData.buffers.forEach(b => b.uri && allGltfUris.push(b.uri));
-                // if (gltfData.images) gltfData.images.forEach(i => i.uri && allGltfUris.push(i.uri));
-                // console.log('Looking for these URIs in mapping:');
-                // allGltfUris.forEach(uri => {
-                //     const found = resourceMap.has(uri);
-                //     console.log(`  ${uri} → ${found ? 'FOUND' : 'NOT FOUND'}`);
-                // });
-                // Create blob for modified GLTF
                 const blob = new Blob([JSON.stringify(gltfData)], { type: 'model/gltf+json' });
                 const blobUrl = URL.createObjectURL(blob);
                 gltfResources.loader.load(
@@ -984,7 +928,6 @@ export class GreatViewer {
         this.originalMaterials.clear();
         this.store_animations(object);
         this.mesh.traverse((child) => {
-            this.checkAndLog(object, child);
             if (child.isMesh && child.material) {
                 this.hasTextures = true;
                 this.originalMaterials.set(child.uuid, child.material.clone());
@@ -1037,7 +980,16 @@ export class GreatViewer {
         this.gui?.destroy();
         // Clearing Three.js objects
         this.controls?.dispose();
-        this.renderer?.dispose();
+        if (this.renderer) {
+            try {
+                this.renderer.forceContextLoss();
+            } catch (e) {
+                console.warn('Error during forceContextLoss:', e);
+            }
+            this.renderer.dispose();
+            this.renderer.domElement = null;
+            this.renderer = null;
+        }
         this.mixer?.stopAllAction();
         // Clearing DOM
         this.container && (this.container.textContent = '');
