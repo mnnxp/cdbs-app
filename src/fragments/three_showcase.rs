@@ -167,7 +167,7 @@ impl Component for ThreeShowcase {
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         let onclick_full_screen = self.link.callback(|_| Msg::ChangeTypeShow);
-        let mut container_style = "display: block; width: 100%; height: 100%; min-height: 25vh";
+        let mut container_style = "display: block; width: 100%; height: 100%; min-height: 25vh; overflow: hidden;";
         let mut b_container_style = "";
         // let mut scene_hull_class = classes!("column", "is-one-quarter");
         let scene_hull_class = classes!("column", "main");
