@@ -1,10 +1,9 @@
-// import * as THREE from '../../../../three/three.module.min.js';
 import * as THREE from '../../../../three/three.webgpu.min.js';
 // import { WebGPURenderer } from '../../../../three/webgpu/WebGPURenderer.js';
-import { STLLoader } from '../../../../three/STLLoader.js';
-import { GLTFLoader } from '../../../../three/GLTFLoader.js';
-import { DRACOLoader } from '../../../../three/DRACOLoader.js';
-import { GCodeLoader } from '../../../../three/GCodeLoader.js';
+import { STLLoader } from '../../../../three/loaders/STLLoader.js';
+import { GLTFLoader } from '../../../../three/loaders/GLTFLoader.js';
+import { DRACOLoader } from '../../../../three/loaders/DRACOLoader.js';
+import { GCodeLoader } from '../../../../three/loaders/GCodeLoader.js';
 import { OrbitControls } from '../../../../three/OrbitControls.js';
 import Stats from '../../../../three/stats.module.js';
 import { GUI } from '../../../../three/lil-gui.esm.min.js';
