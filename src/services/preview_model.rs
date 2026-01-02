@@ -24,6 +24,7 @@ pub(crate) enum ModelFormat {
     GLTF,
     GLB,
     GCode,
+    IFC,
     Unknown,
 }
 
@@ -34,6 +35,7 @@ impl ModelFormat {
             ".gltf" => Self::GLTF,
             ".glb" => Self::GLB,
             ".gcode" => Self::GCode,
+            ".ifc" => Self::IFC,
             _ => Self::Unknown,
         }
     }
@@ -61,6 +63,7 @@ pub(crate) struct ShowModel {
     pub(crate) filename: String,
     pub(crate) url: String,
     pub(crate) size: String,
+    pub(crate) content_length: usize,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -126,12 +129,24 @@ extern "C" {
     async fn starter(this: &GreatViewer);
 }
 
+#[wasm_bindgen(module = "/assets/js/greatviewer-ifc.js")]
+extern "C" {
+    type GreatViewerIFC;
+
+    #[wasm_bindgen(constructor)]
+    fn new(config: JsValue) -> GreatViewerIFC;
+
+    #[wasm_bindgen(method)]
+    async fn starter(this: &GreatViewerIFC);
+}
+
 #[wasm_bindgen]
 pub enum JsModelFormat {
     STL,
     GLTF,
     GLB,
     GCode,
+    IFC,
     Unknown,
 }
 
@@ -142,6 +157,7 @@ impl From<ModelFormat> for JsModelFormat {
             ModelFormat::GLTF => Self::GLTF,
             ModelFormat::GLB => Self::GLB,
             ModelFormat::GCode => Self::GCode,
+            ModelFormat::IFC => Self::IFC,
             ModelFormat::Unknown => Self::Unknown,
         }
     }
@@ -150,16 +166,41 @@ impl From<ModelFormat> for JsModelFormat {
 pub(crate) fn preview_model(
     model_file: &DownloadFile,
     model_format: ModelFormat,
-    // suitable_files: Vec<(DownloadFile, ModelFormat)>,
     resource_mapping: Vec<ResourceMapping>,
+    // suitable_files: Vec<(DownloadFile, ModelFormat)>,
     size_flag: bool
 ) {
     debug!("viewer");
+    let Some(config_js) = get_js_value(model_file, model_format, resource_mapping, size_flag) else {
+        debug!("Failed to create viewer config");
+        return
+    };
+    spawn_local(async move {
+        match model_format {
+            ModelFormat::IFC => {
+                let viewer = GreatViewerIFC::new(config_js);
+                viewer.starter().await;
+            },
+            _ => {
+                let viewer = GreatViewer::new(config_js);
+                viewer.starter().await;
+            },
+        };
+    });
+}
+
+fn get_js_value(
+    model_file: &DownloadFile,
+    model_format: ModelFormat,
+    resource_mapping: Vec<ResourceMapping>,
+    size_flag: bool
+) -> Option<JsValue> {
     let config = ViewerConfig {
         model: ShowModel {
             filename: model_file.filename.clone(),
             url: model_file.download_url.clone(),
             size: model_file.show_size(),
+            content_length: model_file.filesize,
         },
         model_format,
         resource_mapping,
@@ -209,13 +250,5 @@ pub(crate) fn preview_model(
             view_isometric: get_value_field(&448).to_string(),
         },
     };
-    let config_js = to_value(&config).unwrap();
-    spawn_local(async move {
-        show_it_async(config_js).await;
-    });
-}
-
-async fn show_it_async(config: JsValue) {
-    let viewer = GreatViewer::new(config);
-    viewer.starter().await;
+    to_value(&config).map(|v| Some(v)).unwrap_or_default()
 }
