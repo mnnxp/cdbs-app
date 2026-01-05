@@ -92,7 +92,6 @@ impl Component for CatalogSpec {
                         debug!("get specs: {:?}", get_specs);
                         self.final_section = get_specs.is_empty();
                         self.props.callback_select_spec.emit(self.current_spec_id);
-                        
                         if !self.final_section {
                             let new_nodes: Vec<SpecNode> = get_specs.into_iter()
                                 .filter(|s| s.spec_id != 1)
@@ -105,7 +104,6 @@ impl Component for CatalogSpec {
                                     loading: false,
                                 })
                                 .collect();
-                            
                             if self.spec_tree.is_empty() {
                                 self.spec_tree = new_nodes;
                             } else {
@@ -182,7 +180,6 @@ impl CatalogSpec {
             }
             false
         }
-        
         add_children_recursive(&mut self.spec_tree, parent_id, children);
     }
 
@@ -204,9 +201,8 @@ impl CatalogSpec {
 
     fn render_spec_node(&self, node: &SpecNode) -> Html {
         let spec_id = node.spec_id;
-        let mut p_class = classes!("is-7");
-        let mut a_class = classes!("overflow-title", "is-flex-grow-1");
-        
+        let mut p_class = classes!("is-size-6");
+        let mut a_class = classes!("catalog-title", "is-flex-grow-1");
         if self.final_section && node.spec_id == self.current_spec_id {
             p_class.push("has-text-weight-bold");
         }
@@ -218,7 +214,7 @@ impl CatalogSpec {
         html!{
             <li>
                 <div class={p_class}>
-                    <div class="icon-text is-flex-direction-row	is-align-items-center	">
+                    <div class="icon-text is-flex-direction-row is-align-items-center">
                         <span class="icon is-small" onclick={self.link.callback(move |_| Msg::ToggleExpand(spec_id))}>
                             {if node.loading {
                                 html!{<i class="fas fa-spinner fa-pulse"></i>}
@@ -228,7 +224,7 @@ impl CatalogSpec {
                                 html!{<i class="fas fa-minus"></i>}
                             }}
                         </span>
-                        <a class={a_class} style="flex: 1;" onclick={self.link.callback(move |_| Msg::ChangeSpec(spec_id))}>
+                        <a class={a_class} onclick={self.link.callback(move |_| Msg::ChangeSpec(spec_id))}>
                             {format!{"{}", node.spec}}
                         </a>
                     </div>
@@ -246,7 +242,7 @@ impl CatalogSpec {
         // todo!(make filter by catalogs (search specs))
         html!{
             <button
-                class={"button is-white is-small overflow-title"}
+                class={"button is-white is-small catalog-title is-fullwidth"}
                 disabled={self.current_spec_id == 1}
                 onclick={self.link.callback(move |_| Msg::ChangeSpec(1))} >
                 {get_value_field(&395)}

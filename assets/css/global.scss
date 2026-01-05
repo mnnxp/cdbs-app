@@ -494,6 +494,13 @@ scene-hull {
   white-space: nowrap;
 }
 
+.catalog-title {
+  word-wrap: break-word;
+  word-break: break-word;
+  flex: 1;
+  vertical-align: middle;
+}
+
 .boxItem {
   padding: 20px;
   background: #ffffff;
