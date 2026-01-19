@@ -227,7 +227,7 @@ impl SearchBar {
         html! {
             <div class={bar_class}>
                 <div class={classes!("control", "has-icons-left", "has-icons-right", is_loading)} style={"width: 100%;"}>
-                <input class={"input"} style={"width: 100%;"}
+                <input id={"input-search-bar"} class={"input"} style={"width: 100%;"}
                     oninput={self.link.callback(|ev: InputData| Msg::InputSearch(ev.value))}
                     onfocus={self.link.callback(|_| Msg::SetFocus(true))}
                     onblur={self.link.callback(|_| Msg::SetFocus(false))}
