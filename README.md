@@ -23,37 +23,13 @@
 <details>
   <summary>Table of Contents</summary>
   <ol>
-    <li>
-      <a href="#about-the-project">About The Project</a>
-      <ul>
-        <li><a href="#integrations-and-additions">Integrations and additions</a></li>
-        <li><a href="#built-with">Built With</a></li>
-      </ul>
-    </li>
-    <li>
-      <a href="#getting-started">Getting Started</a>
-      <ul>
-        <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#installation">Installation</a></li>
-      </ul>
-    </li>
+    <li><a href="#about-the-project">About The Project</a></li>
+    <li><a href="#getting-started">Getting Started</a></li>
     <li><a href="#usage">Usage</a></li>
-    <li>
-      <a href="#test">Test</a>
-      <ul>
-        <li><a href="#preparing">Preparing</a></li>
-        <li><a href="#run">Run</a></li>
-      </ul>
-    </li>
+    <li><a href="#test">Test</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#contributing">Contributing</a></li>
-    <li>
-      <a href="#repositories">Repositories</a>
-      <ul>
-        <li><a href="#main">Main</a></li>
-        <li><a href="#mirrors">Mirrors</a></li>
-      </ul>
-    </li>
+    <li><a href="#repositories">Repositories</a></li>
     <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
     <li><a href="#acknowledgments">Acknowledgments</a></li>
@@ -70,6 +46,12 @@ This platform facilitates the sharing and versioning of parts, while offering AP
 
 There are many solutions for sharing 3D models, drawings and other engineering data. However, the CADBase platform has a number of distinctive features that improve product data management by offering an effective solution for both individual use and collaborative work in engineering and design.
 
+### Additional Description
+
+Since 2018, our platform has grown and evolved through the valuable contributions of Ivan Nosovsky, Xia TianHao (夏添豪), Julia Gerasimova, and several other contributors. Our mission is to cultivate a collaborative community that drives innovation and turns ideas into quality engineering and design solutions.
+
+We hope you enjoy using CADBase. We're currently seeking manufacturers interested in partnering with us and sharing valuable feedback to help us improve and grow together.
+
 ### Key Features & Improvements
 
 - **Discussion & Commenting:** Comment on components, companies, and services to foster community engagement and quick feedback, enhancing collaboration.  
@@ -81,7 +63,7 @@ There are many solutions for sharing 3D models, drawings and other engineering d
 
 ### Benefits for Individual Users
 
-Mechanical engineers and inventors can now leverage this platform to enhance their workflows with the following features:
+Mechanical engineers and inventors can leverage this platform to enhance their workflows with the following features:
 * Manage complex data dependencies, such as file sets for component modifications, to streamline work across CAD, CAE, CAM, and other systems
 * Access API functionalities and connect securely to the server using personal authorization tokens
 * Integrate seamlessly with various design and engineering tools, enabling extensive workflow automation
@@ -91,14 +73,22 @@ Our goal is to develop a versatile solution that enables efficient project manag
 
 If you're interested, we're also on YouTube <a href="https://www.youtube.com/channel/UC-dHiTHBGV88ScxFKSC3srw">CADBase Platform</a>.
 
-And if you're not interested in this site and its functionality, you can try to profit from the code base of this site. In any case, have peace and goodwill ;)
+And if you're not interested in this site and its functionality, you can try to use the code base for your own projects. In any case, have peace and goodwill ;)
 
 <div align="right">(<a href="#about-the-project">back to top</a>)</div>
 
-<!-- INTEGRATIONS AND ADDITIONS -->
-### Integrations and additions
+<!-- INTEGRATION FRAMEWORK -->
+### Integration Framework
 
-Extending software functionality through integration is an important feature of this platform.
+Creating an ecosystem-agnostic environment to:
+- Bridge compatibility gaps between engineering tools
+- Enable seamless CAD, PLM, ERP, and supply chain interoperability
+- Eliminate manual conversion and vendor lock-in
+
+<div align="right">(<a href="#about-the-project">back to top</a>)</div>
+
+<!-- AVAILABLE INTEGRATIONS -->
+### Available Integrations
 
 Solutions for integration with CADBase platform with our support:
 
@@ -173,44 +163,40 @@ Note: Before performing step 2, check the correct settings of the environment in
 <div align="right">(<a href="#about-the-project">back to top</a>)</div>
 
 
-<!-- USAGE EXAMPLES -->
+<!-- USAGE -->
 ## Usage
 
-Configure API endpoints in `.env`:
+Open app at `http://localhost:8080`.
 
-```
-  API_BACKEND=https://api.cadbase.rs
-  API_GPL=https://api.cadbase.rs/graphql
-```
-
-_Also please refer to the [API Reference](https://docs.cadbase.rs) if you want make more about API CADBase_
+For API details: [docs.cadbase.rs](https://docs.cadbase.rs)
 
 <div align="right">(<a href="#about-the-project">back to top</a>)</div>
 
-
-<!-- RUN TESTS -->
+<!-- TEST -->
 ## Test
 
 If you want to run tests, a few tests are located in the 'tests' folder.
 
-### Preparing
+### Prerequisites
 
-To run the tests, you will need to install the framework [TestCafe](https://testcafe.io/documentation).
-
-```sh
-  npm i testcafe
-  # or (if you prefer yarn)
-  yarn add testcafe
-```
-
-### Run
-
-This example will run a login test that will be performed using the Firefox browser.
+To run the tests, you will need to install the Playwright testing framework and its dependencies.
 
 ```sh
-  npm testcafe firefox tests/login_test.js
-  # or (if you prefer yarn)
-  yarn testcafe firefox tests/login_test.js
+# Install Playwright
+npm init playwright@latest
+# Install browser binaries
+npx playwright install
+# Run tests
+npx playwright test tests/slogan.spec.js
+
+# or (if you prefer yarn)
+
+# Install Playwright
+yarn create playwright
+# Install browser binaries
+yarn playwright install
+# Run tests
+yarn playwright test tests/slogan.spec.js
 ```
 
 <div align="right">(<a href="#about-the-project">back to top</a>)</div>
@@ -220,13 +206,12 @@ This example will run a login test that will be performed using the Firefox brow
 
 - [ ] Add Guidance and Manuals
 - [x] Add versioning support for files
-- [x] Add 3D Viewer STL (via [Three.js](https://github.com/mrdoob/three.js))
-- [ ] Add a more useful 3D Viewer (still looking for a solution)
+- [x] Add 3D Viewer STL, GCODE, GLTF/GLB and IFC (via [Three.js](https://github.com/mrdoob/three.js))
 - [x] Search page
 - [ ] Multi-language Support
     - [x] English
     - [x] Russian
-    - [ ] Chinese
+    - [x] Chinese
     - [ ] Spanish
 
 See the [open issues](https://gitlab.com/cadbase/cdbs-app/issues) for a full list of proposed features (and known issues).
