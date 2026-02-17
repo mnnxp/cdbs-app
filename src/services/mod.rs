@@ -24,7 +24,7 @@ pub use local_storage::{
 pub(crate) use preview_model::preview_model;
 pub use requests::Requests;
 pub use set_classes::get_classes_table;
-pub use upload_file::{PutUploadFile, UploadData};
+pub(crate) use upload_file::{put_file, UploadData};
 pub(crate) use util::{ext_str, image_detector, three_detector, prepare_username, compare_op_uuid, wraps_text};
 pub(crate) use response_parsing::{
     resp_parsing, resp_parsing_two_level, get_value_response, get_from_value

@@ -47,6 +47,9 @@ toml = "0.5.8"
 
 [dependencies.web-sys]
 features = [
+  "XmlHttpRequest",
+  "XmlHttpRequestUpload",
+  "ProgressEvent",
   "CanvasRenderingContext2d",
   "Document",
   "Element",

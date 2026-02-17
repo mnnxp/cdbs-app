@@ -2,14 +2,12 @@ use dotenv_codegen::dotenv;
 use log::debug;
 use serde::{Deserialize, Serialize};
 use yew::callback::Callback;
-use yew::format::{Json, Nothing, Text, Binary};
+use yew::format::{Json, Nothing, Text};
 use yew::services::fetch::{FetchService, FetchTask, Request, Response};
 
 use crate::error::Error;
 use crate::services::get_token;
 use crate::types::ErrorInfo;
-
-use super::UploadData;
 
 const API_BACKEND: &str = dotenv!("API_BACKEND");
 
@@ -125,65 +123,5 @@ impl Requests {
     {
         let body: Text = Json(&body).into();
         self.builder("PUT", url, body, callback)
-    }
-
-    /// Put request for send file to storage
-    pub fn put_f<T>(
-        &mut self,
-        upload_data: UploadData,
-        callback: Callback<Result<Option<T>, Error>>,
-        _progress_callback: Callback<(Option<String>, f32)>,
-    ) -> FetchTask
-    where
-        for<'de> T: Deserialize<'de> + 'static + std::fmt::Debug,
-    {
-        let handler = move |response: Response<Binary>| {
-            if let (meta, Ok(data)) = response.into_parts() {
-                debug!("Response: {:?}", data);
-                debug!("Meta status: {:?}", meta.status.is_success());
-                if meta.status.is_success() {
-                    debug!("Data: {:?}", data);
-                    if data.is_empty() {
-                        callback.emit(Ok(None))
-                    } else {
-                        callback.emit(Err(Error::InternalServerError))
-                    }
-                } else {
-                    match meta.status.as_u16() {
-                        401 => callback.emit(Err(Error::Unauthorized)),
-                        403 => callback.emit(Err(Error::Forbidden)),
-                        404 => callback.emit(Err(Error::NotFound)),
-                        500 => callback.emit(Err(Error::InternalServerError)),
-                        422 => {
-                            let data: Result<ErrorInfo, _> = serde_json::from_slice(&data);
-                            if let Ok(data) = data {
-                                callback.emit(Err(Error::UnprocessableEntity(data)))
-                            } else {
-                                callback.emit(Err(Error::DeserializeError))
-                            }
-                        }
-                        _ => callback.emit(Err(Error::RequestError)),
-                    }
-                }
-            } else {
-                callback.emit(Err(Error::RequestError))
-            }
-        };
-
-        let body: Binary = Ok(upload_data.file_data);
-
-        let builder = Request::builder()
-            .method("PUT")
-            .uri(upload_data.upload_url.as_str());
-
-        let request = builder.body(body).unwrap();
-        debug!("Request: {:?}", request);
-
-        // loading progress is sent from here to be displayed on the page
-        // progress_cb = progress_callback.clone();
-        // let progress = (upload_len / total_len) as f32;
-        // progress_cb.emit((Some(upload_data.filename.clone()), progress));
-
-        FetchService::fetch_binary(request, handler.into()).unwrap()
     }
 }
