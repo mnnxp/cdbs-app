@@ -6,11 +6,9 @@ pub fn commit_msg_field(commit_msg: String, oninput_commit_msg: Callback<InputDa
     let label_commit_msg = get_value_field(&340);
     html!{
         <div class={"column"}>
-            <div class={"columns"}>
-                <div class={"column is-narrow"}>
-                    <p class={"title is-6 select-title"}>{get_value_field(&338)}</p>
-                </div>
-                <div class={"column"}>
+            <div class={"field mb-5"}>
+                <label class={"label"} for={"text-commit-msg"}>{get_value_field(&338)}</label>
+                <div class={"control"}>
                     <input
                         id={"text-commit-msg"}
                         class={"input is-fullwidth"}
@@ -20,8 +18,8 @@ pub fn commit_msg_field(commit_msg: String, oninput_commit_msg: Callback<InputDa
                         title={label_commit_msg}
                         value={commit_msg}
                         oninput={oninput_commit_msg} />
-                    <p class={"help"}>{get_value_field(&339)}</p>
                 </div>
+                <p class={"help"}>{get_value_field(&339)}</p>
             </div>
         </div>
     }
