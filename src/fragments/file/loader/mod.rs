@@ -373,7 +373,7 @@ impl UploaderFiles {
                         <i class="fas fa-cloud-upload-alt fa-3x has-text-info"></i>
                     </div>
                     <div style="pointer-events: none;">
-                        <h3 class="title is-4 mb-5">{"Drag here or click to select"}</h3> // Todo!(I18N)
+                        <h3 class="title is-4 mb-5">{get_value_field(&449)}</h3> // Drag here or click to select
                         <p class="subtitle is-6 has-text-grey">{get_value_field(&self.props.text_choose_files)}</p>
                         {self.accept_image()}
                     </div>
@@ -403,7 +403,7 @@ impl UploaderFiles {
             },
             false => html!{<>
                 <div class="is-flex is-justify-content-space-between is-align-items-center mb-4 pb-3" style="border-bottom: 1px solid #eee;">
-                    <h4 class="title is-5 mb-0">{"Selected Files"}</h4> // Todo!(I18N)
+                    <h4 class="title is-5 mb-0">{get_value_field(&450)}</h4> // Selected Files
                     <span class="tag is-white">{format!("{} files", self.files.len())}</span>
                 </div>
                 // <hr />
@@ -439,25 +439,25 @@ impl UploaderFiles {
                 "has-border-warning has-background-warning-light",
                 "has-text-warning",
                 "fas fa-clock",
-                "Pending" // Todo!(I18N)
+                get_value_field(&451) // Pending
             ),
             UploadStatus::Uploading => (
                 "has-border-primary has-background-primary-light",
                 "has-text-primary",
                 "fas fa-spinner fa-spin",
-                "Uploading" // Todo!(I18N)
+                get_value_field(&452) // Uploading
             ),
             UploadStatus::Completed => (
                 "has-border-success has-background-success-light",
                 "has-text-success",
                 "fas fa-check-circle",
-                "Completed" // Todo!(I18N)
+                get_value_field(&453) // Completed
             ),
             UploadStatus::Failed(_) => (
                 "has-border-danger has-background-danger-light",
                 "has-text-danger",
                 "fas fa-exclamation-circle",
-                "Failed" // Todo!(I18N)
+                get_value_field(&454) // Failed
             ),
         };
         let onclick_remove = self.link.callback(move |_| Msg::RemoveFile(filename_owned.clone()));
@@ -507,9 +507,10 @@ impl UploaderFiles {
                         html!{
                             <div class="is-flex is-align-items-center mb-2">
                                 <i class="fas fa-check-circle has-text-success mr-2"></i>
-                                <span class="has-text-success">
-                                    {format!("{} files uploaded successfully", self.upload_success_count)} // Todo!(I18N)
-                                </span>
+                                <div class="has-text-success">
+                                    <span>{self.upload_success_count}</span>
+                                    <span>{get_value_field(&455)}</span> // files uploaded successfully
+                                </div>
                             </div>
                         }
                     } else {
@@ -519,9 +520,10 @@ impl UploaderFiles {
                         html!{
                             <div class="is-flex is-align-items-center">
                                 <i class="fas fa-exclamation-circle has-text-danger mr-2"></i>
-                                <span class="has-text-danger">
-                                    {format!("{} files failed to upload", self.upload_failed_count)} // Todo!(I18N)
-                                </span>
+                                <div class="has-text-danger">
+                                    <span>{self.upload_failed_count}</span>
+                                    <span>{get_value_field(&456)}</span> // files failed to upload
+                                </div>
                             </div>
                         }
                     } else {
