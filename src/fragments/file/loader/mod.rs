@@ -362,8 +362,7 @@ impl UploaderFiles {
         }
 
         html!{<>
-            <div class={classes!("box", "has-text-centered", drag_classes)}
-                 style="border: 2px dashed #dbdbdb; border-radius: 6px; padding: 2rem;"
+            <div class={classes!("box", "has-text-centered", "upload-dropbox", drag_classes)}
                  ondrop={ondrop_upload_files}
                  ondragover={ondragover_upload_files}
                  ondragenter={ondragenter}
@@ -378,8 +377,7 @@ impl UploaderFiles {
                         {self.accept_image()}
                     </div>
                     <input id="file-input"
-                           class="is-absolute"
-                           style="top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;"
+                           class="absolute-overlay"
                            type="file"
                            accept={self.props.accept.clone()}
                            onchange={onchange_upload_files}
@@ -463,7 +461,7 @@ impl UploaderFiles {
         let onclick_remove = self.link.callback(move |_| Msg::RemoveFile(filename_owned.clone()));
 
         html!{
-            <div class={classes!("box", "p-3", status_classes)} style="overflow-wrap: anywhere; hyphens: auto; min-width: 0;">
+            <div class={classes!("box", "p-3", status_classes, "text-wrap-anywhere")}>
                 <div class="is-flex is-align-items-center mb-2">
                     <div class={classes!("mr-3", icon_color)}>
                         <i class={format!("{} is-size-5", status_icon)} />
