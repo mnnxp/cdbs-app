@@ -39,3 +39,9 @@ impl Size for DownloadFile {
         self.filesize
     }
 }
+
+impl Size for f64 {
+    fn filesize(&self) -> usize {
+        *self as usize
+    }
+}

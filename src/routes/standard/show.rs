@@ -13,8 +13,7 @@ use crate::fragments::company::ListItemCompany;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{
-    buttons::{ft_see_btn, ft_follow_btn},
-    switch_icon::res_btn,
+    buttons::{ft_see_btn, ft_follow_btn, res_settings_btn},
     list_errors::ListErrors,
     component::CatalogComponents,
     standard::{StandardFilesCard, SpecsTags, KeywordsTags},
@@ -432,11 +431,8 @@ impl ShowStandard {
     fn show_setting_btn(&self) -> Html {
         let onclick_setting_standard_btn = self.link.callback(|_| Msg::OpenStandardSetting);
         match &self.current_user_owner {
-            true => {res_btn(
-                classes!("fa", "fa-tools"),
+            true => {res_settings_btn(
                 onclick_setting_standard_btn,
-                String::new(),
-                get_value_field(&16),
                 Pathname::StandardSetting(self.current_standard_uuid.clone())
             )},
             false => html!{},

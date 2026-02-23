@@ -1,6 +1,14 @@
 {
-  "devDependencies": {},
-  "dependencies": {
-    "testcafe": "^1.16.1"
-  }
+  "name": "cadbase-tests",
+  "version": "0.0.1",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.1"
+  },
+  "dependencies": {}
 }

@@ -230,40 +230,11 @@ impl ModificationEdit {
     fn show_modification_card(&self) -> Html {
         let oninput_modification_name = self.link.callback(|ev: InputData| Msg::UpdateEditName(ev.value));
         let oninput_modification_description = self.link.callback(|ev: InputData| Msg::UpdateEditDescription(ev.value));
-        let onchange_modification_actual_status_id =
-            self.link.callback(|ev: ChangeData| Msg::UpdateEditActualStatusId(match ev {
-              ChangeData::Select(el) => el.value(),
-              _ => "1".to_string(),
-          }));
         let onclick_delete_component_modification = self.link.callback(|_| Msg::RequestDeleteModificationData);
         let onclick_component_modification_update = self.link.callback(|_| Msg::RequestUpdateModificationData);
         html!{<>
                 <div class={"content"}>
-                    <div class={"column"}>
-                    <div class={"columns"}>
-                        <div class={"column is-narrow"}>
-                            <p class={"title is-5 select-title"}>{get_value_field(&96)}</p>
-                        </div>
-                        <div class={"column"}>
-                            <div class={"select"}>
-                            <select
-                                id={"update-modification-actual-status"}
-                                select={self.props.modification.actual_status.actual_status_id.to_string()}
-                                onchange={onchange_modification_actual_status_id}
-                                >
-                                {for self.props.actual_statuses.iter().map(|x|
-                                    html!{
-                                        <option value={x.actual_status_id.to_string()}
-                                            selected={x.actual_status_id == self.request_edit_modification.actual_status_id} >
-                                            {&x.name}
-                                        </option>
-                                    }
-                                )}
-                            </select>
-                            </div>
-                        </div>
-                    </div>
-                    </div>
+                    {self.actual_status_block()}
                     <div class={"column"}>
                         <label class={"title is-5"} for="add-modification-name">{get_value_field(&176)}</label>
                         <input
@@ -301,6 +272,41 @@ impl ModificationEdit {
                     </div>
                 </div>
             </>
+        }
+    }
+
+    fn actual_status_block(&self) -> Html {
+        let onchange_modification_actual_status_id =
+            self.link.callback(|ev: ChangeData| Msg::UpdateEditActualStatusId(match ev {
+              ChangeData::Select(el) => el.value(),
+              _ => "1".to_string(),
+          }));
+        html!{
+            <div class={"column"}>
+            <div class={"columns"}>
+                <div class={"column is-narrow"}>
+                    <p class={"title is-5 select-title"}>{get_value_field(&96)}</p>
+                </div>
+                <div class={"column"}>
+                    <div class={"select"}>
+                    <select
+                        id={"update-modification-actual-status"}
+                        select={self.props.modification.actual_status.actual_status_id.to_string()}
+                        onchange={onchange_modification_actual_status_id}
+                        >
+                        {for self.props.actual_statuses.iter().map(|x|
+                            html!{
+                                <option value={x.actual_status_id.to_string()}
+                                    selected={x.actual_status_id == self.request_edit_modification.actual_status_id} >
+                                    {&x.name}
+                                </option>
+                            }
+                        )}
+                    </select>
+                    </div>
+                </div>
+            </div>
+            </div>
         }
     }
 }

@@ -1,11 +1,13 @@
 use dotenv_codegen::dotenv;
 use lazy_static::lazy_static;
-// use log::debug;
 use parking_lot::RwLock;
 use yew::services::storage::{Area, StorageService};
 
 use crate::types::SlimUser;
 
+// Environment variables
+const API_BACKEND: &str = dotenv!("API_BACKEND");
+const API_GQL: &str = dotenv!("API_GQL");
 const TOKEN_KEY: &str = dotenv!("TOKEN_KEY");
 const LOGGED_USER_KEY: &str = dotenv!("LOGGED_USER_KEY");
 const ACCEPT_LANGUAGE: &str = dotenv!("ACCEPT_LANGUAGE");
@@ -14,7 +16,27 @@ const HISTORY_BACK: &str = dotenv!("HISTORY_BACK");
 const HISTORY_SEARCH: &str = dotenv!("HISTORY_SEARCH");
 
 lazy_static! {
-    /// Jwt token read from local storage.
+    /// REST API server location setting
+    pub static ref SERVER: RwLock<Option<String>> = {
+        let storage = StorageService::new(Area::Local).expect("storage was disabled by the user");
+        if let Ok(server_location) = storage.restore(API_BACKEND) {
+            RwLock::new(Some(server_location))
+        } else {
+            RwLock::new(None)
+        }
+    };
+
+    /// GraphQL API server location setting
+    pub static ref SERVER_GQL: RwLock<Option<String>> = {
+        let storage = StorageService::new(Area::Local).expect("storage was disabled by the user");
+        if let Ok(server_location_gql) = storage.restore(API_GQL) {
+            RwLock::new(Some(server_location_gql))
+        } else {
+            RwLock::new(None)
+        }
+    };
+
+    /// JWT authentication token
     pub static ref TOKEN: RwLock<Option<String>> = {
         let storage = StorageService::new(Area::Local).expect("storage was disabled by the user");
         if let Ok(token) = storage.restore(TOKEN_KEY) {
@@ -24,7 +46,7 @@ lazy_static! {
         }
     };
 
-    /// Read SlimUser data from local storage.
+    /// Current logged in user data
     pub static ref LOGGED_USER: RwLock<Option<String>> = {
         let storage = StorageService::new(Area::Local).expect("storage was disabled by the user");
         if let Ok(logged_user) = storage.restore(LOGGED_USER_KEY) {
@@ -34,7 +56,7 @@ lazy_static! {
         }
     };
 
-    /// Read accept language data from local storage.
+    /// User language preference
     pub static ref LANGUAGE: RwLock<Option<String>> = {
         let storage = StorageService::new(Area::Local).expect("storage was disabled by the user");
         if let Ok(accept_language) = storage.restore(ACCEPT_LANGUAGE) {
@@ -44,7 +66,7 @@ lazy_static! {
         }
     };
 
-    /// Read list view type from local storage.
+    /// List view display type preference
     pub static ref LISTVIEWTYPE: RwLock<Option<String>> = {
         let storage = StorageService::new(Area::Local).expect("storage was disabled by the user");
         if let Ok(list_view) = storage.restore(LIST_VIEW_TYPE) {
@@ -54,7 +76,7 @@ lazy_static! {
         }
     };
 
-    /// Read flag of need to return to previous page
+    /// Flag indicating need to return to previous page after auth
     pub static ref HISTORYBACK: RwLock<Option<String>> = {
         let storage = StorageService::new(Area::Local).expect("storage was disabled by the user");
         if let Ok(history_back) = storage.restore(HISTORY_BACK) {
@@ -64,7 +86,7 @@ lazy_static! {
         }
     };
 
-    /// Read the search history. It is used to store the search query between threads.
+    /// Search query history for persistence between pages
     pub static ref HISTORYSEARCH: RwLock<Option<String>> = {
         let storage = StorageService::new(Area::Local).expect("storage was disabled by the user");
         if let Ok(history_search) = storage.restore(HISTORY_SEARCH) {
@@ -75,118 +97,111 @@ lazy_static! {
     };
 }
 
-/// Set jwt token to local storage.
-pub fn set_token(token: Option<String>) {
+// Generic storage helper functions, saves value to storage
+fn set_storage(key: &str, value: Option<String>, target: &RwLock<Option<String>>) {
     let mut storage = StorageService::new(Area::Local).expect("storage was disabled by the user");
-    if let Some(t) = token.clone() {
-        storage.store(TOKEN_KEY, Ok(t));
-    } else {
-        storage.remove(TOKEN_KEY);
+
+    match &value {
+        Some(v) => storage.store(key, Ok(v.clone())),
+        None => storage.remove(key),
     }
-    let mut token_lock = TOKEN.write();
-    *token_lock = token;
+
+    *target.write() = value;
 }
 
-/// Get jwt token from lazy static.
+/// Retrieves value from in-memory cache
+fn get_storage(source: &RwLock<Option<String>>) -> Option<String> {
+    source.read().clone()
+}
+
+// Token management
+/// Sets the JWT authentication token in local storage
+pub fn set_token(token: Option<String>) {
+    set_storage(TOKEN_KEY, token, &TOKEN);
+}
+
+/// Retrieves the current JWT authentication token
 pub fn get_token() -> Option<String> {
-    let token_lock = TOKEN.read();
-    token_lock.clone()
+    get_storage(&TOKEN)
 }
 
-/// Check if current user is authenticated.
+/// Checks if user is authenticated (has valid token)
 pub fn is_authenticated() -> bool {
     get_token().is_some()
 }
 
-/// Set current user to local storage.
+// User management
+/// Saves logged user data to local storage
 pub fn set_logged_user(logged_user: Option<String>) {
-    let mut storage = StorageService::new(Area::Local).expect("storage was disabled by the user");
-    if let Some(u) = logged_user.clone() {
-        storage.store(LOGGED_USER_KEY, Ok(u));
-    } else {
-        storage.remove(LOGGED_USER_KEY);
-    }
-    let mut logged_user_lock = LOGGED_USER.write();
-    *logged_user_lock = logged_user;
+    set_storage(LOGGED_USER_KEY, logged_user, &LOGGED_USER);
 }
 
-/// Get authenticated user from browser storage
+/// Retrieves the current logged user data
 pub fn get_logged_user() -> Option<SlimUser> {
-    let logged_user_lock = LOGGED_USER.read();
-    let logged_user_lock: Option<SlimUser> = serde_json::from_str(
-        &logged_user_lock.clone().unwrap_or_default()
-      ).unwrap_or_default();
-    logged_user_lock.clone()
+    get_storage(&LOGGED_USER)
+        .and_then(|user_str| serde_json::from_str(&user_str).ok())
 }
 
-/// Set language to local storage.
+// Language settings
+/// Sets user language preference in local storage
 pub fn set_lang(lang: Option<String>) {
-    let mut storage = StorageService::new(Area::Local).expect("storage was disabled by the user");
-    if let Some(l) = lang.clone() {
-        storage.store(ACCEPT_LANGUAGE, Ok(l));
-    } else {
-        storage.remove(ACCEPT_LANGUAGE);
-    }
-    let mut lang_lock = LANGUAGE.write();
-    *lang_lock = lang;
+    set_storage(ACCEPT_LANGUAGE, lang, &LANGUAGE);
 }
 
-/// Get set language for Accept-Language
+/// Gets current user language preference
 pub fn get_lang() -> Option<String> {
-    let lang_lock = LANGUAGE.read();
-    lang_lock.clone()
+    get_storage(&LANGUAGE)
 }
 
-/// Set list view type to local storage.
+// UI preferences
+/// Saves list view type preference to local storage
 pub fn set_list_view(list_view: Option<String>) {
-    let mut storage = StorageService::new(Area::Local).expect("storage was disabled by the user");
-    if let Some(l) = list_view.clone() {
-        storage.store(LIST_VIEW_TYPE, Ok(l));
-    } else {
-        storage.remove(LIST_VIEW_TYPE);
-    }
-    let mut list_view_lock = LISTVIEWTYPE.write();
-    *list_view_lock = list_view;
+    set_storage(LIST_VIEW_TYPE, list_view, &LISTVIEWTYPE);
 }
 
-/// Get list view type
+/// Retrieves current list view type preference
 pub fn get_list_view() -> Option<String> {
-    let list_view_lock = LISTVIEWTYPE.read();
-    list_view_lock.clone()
+    get_storage(&LISTVIEWTYPE)
 }
 
-/// Sets flag of need to return to previous page after authorization
+// Navigation history
+/// Sets flag indicating need to return to previous page after authorization
 pub fn set_history_back(history_back: Option<String>) {
-    let mut storage = StorageService::new(Area::Local).expect("storage was disabled by the user");
-    if let Some(h) = history_back.clone() {
-        storage.store(HISTORY_BACK, Ok(h));
-    } else {
-        storage.remove(HISTORY_BACK);
-    }
-    let mut history_back_lock = HISTORYBACK.write();
-    *history_back_lock = history_back;
+    set_storage(HISTORY_BACK, history_back, &HISTORYBACK);
 }
 
-/// Gets flag of need to return to previous page after authorization
+/// Gets flag indicating need to return to previous page after authorization
 pub fn get_history_back() -> Option<String> {
-    let history_back_lock = HISTORYBACK.read();
-    history_back_lock.clone()
+    get_storage(&HISTORYBACK)
 }
 
-/// Set value for search history
+/// Saves search query to history in local storage
 pub fn set_history_search(history_search: Option<String>) {
-    let mut storage = StorageService::new(Area::Local).expect("storage was disabled by the user");
-    if let Some(h) = history_search.clone() {
-        storage.store(HISTORY_SEARCH, Ok(h));
-    } else {
-        storage.remove(HISTORY_SEARCH);
-    }
-    let mut history_search_lock = HISTORYSEARCH.write();
-    *history_search_lock = history_search;
+    set_storage(HISTORY_SEARCH, history_search, &HISTORYSEARCH);
 }
 
-/// Gets value from search history
+/// Retrieves last search query from history
 pub fn get_history_search() -> Option<String> {
-    let history_search_lock = HISTORYSEARCH.read();
-    history_search_lock.clone()
+    get_storage(&HISTORYSEARCH)
+}
+
+// Server location settings
+/// Sets the REST API server location in local storage
+pub fn set_server_location(server: Option<String>) {
+    set_storage(API_BACKEND, server, &SERVER);
+}
+
+/// Gets the currently configured REST API server location
+pub fn get_server_location() -> Option<String> {
+    get_storage(&SERVER)
+}
+
+/// Sets the GraphQL API server location in local storage
+pub fn set_gql_server_location(server: Option<String>) {
+    set_storage(API_GQL, server, &SERVER_GQL);
+}
+
+/// Gets the currently configured GraphQL API server location
+pub fn get_gql_server_location() -> Option<String> {
+    get_storage(&SERVER_GQL)
 }

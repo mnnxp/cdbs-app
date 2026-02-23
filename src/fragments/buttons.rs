@@ -1,5 +1,5 @@
 use yew::{html, Html, classes, Classes, Callback, MouseEvent};
-use crate::services::get_value_field;
+use crate::{services::get_value_field, types::Pathname};
 
 /// Returns a VNode with Html code of button to download url in the <a> tag
 /// (the button is not active if the link is empty)
@@ -80,7 +80,7 @@ pub fn ft_follow_btn(
 
     html!{
         <button
-        id={"following-button"}
+        // id={"following-button"}
         class={"button"}
         onclick={trigger_btn}
         title={title}>
@@ -329,5 +329,23 @@ pub fn ft_import_btn(
             }}
             <span>{get_value_field(&347)}</span>
         </button>
+    }
+}
+
+/// Returns a VNode with the specified URL and text
+pub fn simple_link(url: String, label: &str) -> Html {
+    html!{<a href={url} target={"_blank"} rel={"noopener noreferrer"}>{label}</a>}
+}
+
+/// Returns a VNode with a styled button with an icon and the title "Settings"
+pub fn res_settings_btn(onclick: Callback<MouseEvent>, pathname: Pathname) -> Html {
+    let title = get_value_field(&16);
+    html!{
+      <a class={"button"} onclick={onclick} href={pathname.get_pathname()} title={title}>
+        <span class={"icon is-small"} >
+          <i class={classes!("fa", "fa-tools")}></i>
+        </span>
+        <span>{title}</span>
+      </a>
     }
 }

@@ -162,6 +162,7 @@ impl Component for Login {
                                     placeholder={get_value_field(&19)}
                                     value={self.request.username.clone()}
                                     oninput={oninput_username}
+                                    autocomplete={"on"}
                                     />
                                 <span class="icon is-small is-left">
                                   <i class="fas fa-user"></i>
@@ -179,6 +180,7 @@ impl Component for Login {
                                     placeholder={get_value_field(&20)}
                                     value={self.request.password.clone()}
                                     oninput={oninput_password}
+                                    autocomplete={"on"}
                                     />
                                 <span class="icon is-small is-left">
                                   <i class="fas fa-lock"></i>

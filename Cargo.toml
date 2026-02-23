@@ -2,7 +2,7 @@
 authors = ["mnnxp <mananaxep@gmail.com>"]
 edition = "2018"
 name = "cdbs-app"
-version = "0.3.0"
+version = "0.3.1"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -19,6 +19,7 @@ yewtil = "0.3.2"
 console_error_panic_hook = "0.1.7"
 wasm-bindgen = "0.2.92"
 wasm-bindgen-futures = "0.4.42"
+serde-wasm-bindgen = "0.6.5"
 wasm-logger = "0.2.0"
 wee_alloc = "0.4.5"
 js-sys = "0.3.69"
@@ -47,6 +48,9 @@ toml = "0.5.8"
 
 [dependencies.web-sys]
 features = [
+  "XmlHttpRequest",
+  "XmlHttpRequestUpload",
+  "ProgressEvent",
   "CanvasRenderingContext2d",
   "Document",
   "Element",
@@ -65,3 +69,11 @@ version = "0.3.60"
 [dev-dependencies]
 wasm-bindgen-futures = "0.4.10"
 wasm-bindgen-test = "0.3.10"
+
+[profile.release]
+lto = true
+codegen-units = 1
+opt-level = 'z'
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = ["-Oz", "--strip-debug"]

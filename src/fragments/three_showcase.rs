@@ -3,25 +3,28 @@ use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use log::debug;
 use crate::fragments::list_errors::ListErrors;
-use crate::services::{three_detector, preview_model, get_value_field, resp_parsing};
+use crate::services::{get_value_field, is_gltf_resource, preview_model, resp_parsing, ModelFormat, ResourceMapping};
 use crate::error::Error;
-use crate::types::{DownloadFile, UUID};
+use crate::types::{DownloadFile, PaginateSet, UUID};
 use crate::gqls::make_query;
 use crate::gqls::component::{ComModFilesetFiles, com_mod_fileset_files};
 
-// 1. Получаем UUID набора файлов
-// 2. Запрашиваем файлы из набора файлов (если набор подходит)
-// 3. Выбираем подходящий для отображения файл
-// 4. Активируем кнопку просмотра
-// 5. Запускаем просмотр (при нажатии кнопки)
+// 1. Get the UUID of the file set
+// 2. Request files from the file set (if the set is suitable)
+// 3. Select the files and resources suitable for display
+// 4. Activate the view button
+// 5. Start viewing (when the button is clicked)
 
 pub struct ThreeShowcase {
     props: Props,
     link: ComponentLink<Self>,
     error: Option<Error>,
-    selected_file: Option<DownloadFile>,
+    page_set: PaginateSet,
     full_screen: bool,
     file_arr: Vec<DownloadFile>,
+    selected_file: Option<(DownloadFile, ModelFormat)>,
+    suitable_files: Vec<(DownloadFile, ModelFormat)>,
+    resource_files: Vec<DownloadFile>,
 }
 
 #[derive(PartialEq, Clone, Debug, Properties)]
@@ -50,9 +53,12 @@ impl Component for ThreeShowcase {
             props,
             link,
             error: None,
-            selected_file: None,
+            page_set: PaginateSet::set(Some(1), Some(50)),
             full_screen: false,
             file_arr: Vec::new(),
+            selected_file: None,
+            suitable_files: Vec::new(),
+            resource_files: Vec::new(),
         }
     }
 
@@ -67,10 +73,6 @@ impl Component for ThreeShowcase {
 
         match msg {
             Msg::RequestDownloadFilesetFiles => {
-                // if fileset without STL
-                // if self.props.program_id != 38 {
-                //     return false;
-                // }
                 debug!("Select fileset: {:?}", self.props.fileset_uuid);
                 if self.props.fileset_uuid.len() == 36 {
                     // set active loading button
@@ -78,9 +80,14 @@ impl Component for ThreeShowcase {
                         filesetUuid: self.props.fileset_uuid.clone(),
                         fileUuids: None,
                     };
+                    let ipt_paginate = Some(com_mod_fileset_files::IptPaginate {
+                        currentPage: self.page_set.current_page,
+                        perPage: self.page_set.per_page,
+                    });
                     spawn_local(async move {
                         let res = make_query(ComModFilesetFiles::build_query(com_mod_fileset_files::Variables {
-                            ipt_file_of_fileset_arg
+                            ipt_file_of_fileset_arg,
+                            ipt_paginate
                         })).await.unwrap();
 
                         link.send_message(Msg::GetDownloadFilesetFilesResult(res));
@@ -92,16 +99,24 @@ impl Component for ThreeShowcase {
                 match resp_parsing(res, "componentModificationFilesetFiles") {
                     Ok(result) => {
                         self.file_arr = result;
+                        self.suitable_files.clear();
+                        self.resource_files.clear();
                         debug!("componentModificationFilesetFiles: {:?}", self.file_arr);
                         for file in self.file_arr.iter() {
-                            if three_detector(&file.filename) {
-                                self.selected_file = Some(file.clone());
-                                debug!("Found file for show: {:?}", self.selected_file);
-                                break;
+                            let model_format = ModelFormat::from_filename(&file.filename);
+                            if model_format.is_3d_format() {
+                                self.suitable_files.push((file.clone(), model_format));
                             }
                         }
-                        if self.selected_file.is_some() {
-                            link.send_message(Msg::ShowThree)
+                        if let Some((file, model_format)) = self.suitable_files.first() {
+                            self.selected_file = Some((file.clone(), *model_format));
+                            debug!("Found {} files for show, selected: {:?}", self.suitable_files.len(), self.selected_file);
+                            if model_format == &ModelFormat::GLTF {
+                                debug!("{:?} is ModelFormat::GLTF", model_format);
+                                self.reassemble_resources();
+                            }
+                            debug!("Resource files: {:?}", self.resource_files);
+                            link.send_message(Msg::ShowThree);
                         }
                     },
                     Err(err) => link.send_message(Msg::ResponseError(err)),
@@ -112,8 +127,20 @@ impl Component for ThreeShowcase {
                 link.send_message(Msg::ShowThree);
             },
             Msg::ShowThree => {
-                let patch_to_model = self.selected_file.as_ref().map(|f| f.download_url.as_str()).unwrap_or_default();
-                preview_model(patch_to_model, self.full_screen); // Starting 3D View
+                if let Some((df, model_format)) = &self.selected_file {
+                    preview_model(
+                        df,
+                        *model_format,
+                        self.resource_files
+                            .iter()
+                            .map(|rf| ResourceMapping {
+                                filename: rf.filename.clone(),
+                                download_url: rf.download_url.clone(),
+                            })
+                            .collect(),
+                        self.full_screen
+                    );
+                }
             },
             Msg::ClearError => self.error = None,
         };
@@ -129,6 +156,8 @@ impl Component for ThreeShowcase {
             self.file_arr.clear();
             self.full_screen = false;
             self.selected_file = None;
+            self.suitable_files.clear();
+            self.resource_files.clear();
             self.link.send_message(Msg::RequestDownloadFilesetFiles);
             debug!("change: {:?}", self.props.fileset_uuid);
             true
@@ -138,7 +167,7 @@ impl Component for ThreeShowcase {
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         let onclick_full_screen = self.link.callback(|_| Msg::ChangeTypeShow);
-        let mut container_style = "display: block; width: 100%; height: 100%; min-height: 25vh";
+        let mut container_style = "display: block; width: 100%; height: 100%; min-height: 25vh; overflow: hidden;";
         let mut b_container_style = "";
         // let mut scene_hull_class = classes!("column", "is-one-quarter");
         let scene_hull_class = classes!("column", "main");
@@ -182,7 +211,7 @@ impl Component for ThreeShowcase {
                           <span class="icon is-small">
                             <i class={class_icon} style="color: #1872f0;"></i>
                           </span>
-                        //   <span>{text_full_screen}</span>
+                          <span class="help has-text-grey is-pulled-right mr-2 mt-2">{get_value_field(&436)}</span> // F: fullscreen | 1-5: views
                         </button>
                     },
                 }}
@@ -190,11 +219,12 @@ impl Component for ThreeShowcase {
                 <a-container style={container_style}></a-container>
                 <div class={class_modal}>
                     <div class="modal-background" onclick={onclick_full_screen.clone()}></div>
-                    <div class="modal-content" style="width: 90%; height: 90%; min-height: 50vh;">
+                    <div class="modal-content" style="width: 80vw; height: 80vh; min-height: 50vh;">
                         <b-container style={b_container_style}></b-container>
                     </div>
                     // <button class="modal-close is-large" aria-label="close"></button>
                     <button
+                        id={"three-modal-close-btn"}
                         class={"button is-ghost modal-close"}
                         onclick={onclick_full_screen}
                         // style={"position: absolute;"}
@@ -207,5 +237,21 @@ impl Component for ThreeShowcase {
                 </div>
             </scene-hull>
         </>}
+    }
+}
+
+impl ThreeShowcase {
+    fn reassemble_resources(&mut self) {
+        if let Some((select_df, _select_mf)) = &self.selected_file {
+            let base_name = select_df.filename.split('.').next().unwrap_or("");
+            self.resource_files = self.file_arr
+                .iter()
+                .filter(|res|
+                    base_name != res.filename &&
+                    is_gltf_resource(&res.filename)
+                )
+                .cloned()
+                .collect();
+        }
     }
 }

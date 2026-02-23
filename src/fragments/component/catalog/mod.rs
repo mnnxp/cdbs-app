@@ -272,18 +272,12 @@ impl CatalogComponents {
     }
 
     fn show_card(&self, show_comp: &ShowComponentShort) -> Html {
-        let target_uuid_add = show_comp.uuid.clone();
-        let target_uuid_del = show_comp.uuid.clone();
-        let onclick_add_fav =
-            self.link.callback(move |_| Msg::AddFav(target_uuid_add.clone()));
-        let onclick_del_fav =
-            self.link.callback(move |_| Msg::DelFav(target_uuid_del.clone()));
-
+        let onclick_add_fav = self.link.callback(|target_uuid| Msg::AddFav(target_uuid));
+        let onclick_del_fav = self.link.callback(|target_uuid| Msg::DelFav(target_uuid));
         html! {
             <ListItem
                 data={show_comp.clone()}
                 show_list={self.show_type == ListState::List}
-                // triggerFav={triggerFav}
                 add_fav={onclick_add_fav}
                 del_fav={onclick_del_fav}
                 />

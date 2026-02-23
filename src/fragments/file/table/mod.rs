@@ -42,7 +42,7 @@ impl Component for FileHeadersShow {
             <th>{"\u{2116}"}</th> // Numero sign
             <th>{get_value_field(&120)}</th> // Filename
             <th><abbr title={get_value_field(&308)}>{get_value_field(&309)}</abbr></th> // Revision
-            // <th>{get_value_field(&121)}</th> // Content
+            // <th>{get_value_field(&121)}</th>
             <th>{get_value_field(&122)}</th> // Filesize
             <th><abbr title={get_value_field(&338)}>{get_value_field(&341)}</abbr></th> // Message
             // <th>{get_value_field(&26) </th> // Program

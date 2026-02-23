@@ -199,10 +199,9 @@ impl Component for ManageModificationFilesCard {
         html!{<>
             <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
             <p class={"subtitle is-size-5"}>{get_value_field(&407)}</p>
-            <div class="columns">
                 <div class="column">
                     <p class={"title is-5"}>{get_value_field(&202)}</p> // Upload modification files
-                    {commit_msg_field(self.commit_msg.clone(), oninput_commit_msg.clone())}
+                    {commit_msg_field(self.props.modification_uuid.clone(), self.commit_msg.clone(), oninput_commit_msg.clone())}
                     <UploaderFiles
                         text_choose_files={201} // Choose modification files…
                         callback_upload_filenames={callback_upload_filenames}
@@ -234,7 +233,6 @@ impl Component for ManageModificationFilesCard {
                         total_items={self.total_items}
                         />
                 </div>
-            </div>
         </>}
     }
 }

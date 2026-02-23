@@ -116,12 +116,11 @@ impl Component for ManageComponentFilesCard {
             false => Some(self.request_upload_data.clone()),
         };
         let callback_upload_confirm = self.link.callback(|confirmations| Msg::UploadConfirm(confirmations));
-        html!{
-            <div class={"columns"}>
+        html!{<>
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
                 <div class={"column"}>
                     <p class={"title is-5"}>{get_value_field(&186)}</p> // Upload component files
-                    {commit_msg_field(self.commit_msg.clone(), oninput_commit_msg.clone())}
+                    {commit_msg_field(self.props.component_uuid.clone(), self.commit_msg.clone(), oninput_commit_msg.clone())}
                     <UploaderFiles
                         text_choose_files={200} // Choose component files…
                         callback_upload_filenames={callback_upload_filenames}
@@ -138,7 +137,6 @@ impl Component for ManageComponentFilesCard {
                         files_count={self.total_items}
                         />
                 </div>
-            </div>
-        }
+        </>}
     }
 }

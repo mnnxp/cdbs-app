@@ -10,10 +10,9 @@ use yew_router::{
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
 
-use crate::services::{get_logged_user, get_value_field, logout, prepare_username, set_logged_user, set_token, title_changer};
+use crate::services::{get_logged_user, get_value_field, logout, prepare_username, set_logged_user, set_token, title_changer, set_lang, get_lang};
 use crate::routes::AppRoute;
 use crate::types::SlimUser;
-
 use crate::fragments::search::SearchBar;
 
 pub enum CurrentPage {
@@ -36,6 +35,7 @@ pub struct Header {
     open_page: CurrentPage,
     is_active: bool,
     style_color: String,
+    current_lang: u8,
 }
 
 #[derive(Properties, Clone)]
@@ -45,14 +45,15 @@ pub struct Props {
 }
 
 pub enum Msg {
-  Logout,
-  LogoutComplete(String),
-  TriggerMenu,
-  CheckPath,
-  SetActive(bool),
-  SetTitle,
-  ChangePointTo(CurrentPage),
-  Ignore,
+    Logout,
+    LogoutComplete(String),
+    TriggerMenu,
+    CheckPath,
+    SetActive(bool),
+    SetTitle,
+    ChangePointTo(CurrentPage),
+    ChangeLanguage(u8),
+    Ignore,
 }
 
 impl Component for Header {
@@ -60,6 +61,12 @@ impl Component for Header {
     type Properties = Props;
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+        let current_lang = match get_lang().as_deref() {
+            Some("zh") => 3,
+            Some("ru") => 2,
+            _ => 1,
+        };
+
         Header {
             props,
             router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
@@ -69,6 +76,7 @@ impl Component for Header {
             open_page: CurrentPage::Unknown,
             is_active: false,
             style_color: String::from("color: #1872f0;"),
+            current_lang,
         }
     }
 
@@ -84,72 +92,79 @@ impl Component for Header {
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
-          Msg::Logout => {
-              let link = self.link.clone();
-              spawn_local(async move {
-                  let res = logout().await;
-                  link.send_message(Msg::LogoutComplete(res))
-              })
-          },
-          Msg::LogoutComplete(res) => {
-              debug!("logout: {:?}", res);
-              // Clear global token and logged user after logged out
-              set_token(None);
-              set_logged_user(None);
-              self.current_user = None;
-              // Notify app to clear current user info
-              self.props.callback.emit(());
-              // Redirect to home page
-              self.router_agent.send(ChangeRoute(AppRoute::Home.into()));
-          },
-          Msg::TriggerMenu => self.is_active = !self.is_active,
-          Msg::SetActive(active) => self.is_active = active,
-          Msg::CheckPath => {
-              // debug!("route_service: {:?}", route_service.get_fragment().as_str());
-              // get current url
-              let route_service: RouteService<()> = RouteService::new();
-              self.open_page = match route_service.get_fragment().as_str() {
-                path if path.len() < 3 => CurrentPage::Home,
-                "#/register" => CurrentPage::Register,
-                "#/login" => CurrentPage::Login,
-                "#/notifications" => CurrentPage::Notifications,
-                "#/search" => CurrentPage::Search,
-                "#/settings" => CurrentPage::Settings,
-                path => {
-                    let mut set_page = CurrentPage::Unknown;
-                    if path.starts_with("#/@") {
-                        self.current_user.as_ref().map(|cu| {
-                            if cu.username == prepare_username(path) {
-                                set_page = CurrentPage::SelfProfile
-                            }
-                        });
-                    }
-                    set_page
-                },
-              };
-              self.link.send_message(Msg::SetTitle);
-          },
-          Msg::SetTitle => {
-            match self.open_page {
-                CurrentPage::Notifications => title_changer::set_title(get_value_field(&284)),
-                CurrentPage::Search => title_changer::set_title(get_value_field(&349)),
-                _ => (),
-            }
-          },
-          Msg::ChangePointTo(go_to) => {
-            match go_to {
-                CurrentPage::Notifications => self.router_agent.send(ChangeRoute(AppRoute::Notifications.into())),
-                CurrentPage::Settings => self.router_agent.send(ChangeRoute(AppRoute::Settings.into())),
-                CurrentPage::SelfProfile => {
-                    if let Some(cu) = &self.current_user {
-                        self.router_agent.send(ChangeRoute(AppRoute::Profile(cu.username.clone()).into()))
-                    }
-                },
-                // CurrentPage::Search => {},
-                _ => (),
-            }
-          }
-          Msg::Ignore => {}
+            Msg::Logout => {
+                let link = self.link.clone();
+                spawn_local(async move {
+                    let res = logout().await;
+                    link.send_message(Msg::LogoutComplete(res))
+                })
+            },
+            Msg::LogoutComplete(res) => {
+                debug!("logout: {:?}", res);
+                // Clear global token and logged user after logged out
+                set_token(None);
+                set_logged_user(None);
+                self.current_user = None;
+                // Notify app to clear current user info
+                self.props.callback.emit(());
+                // Redirect to home page
+                self.router_agent.send(ChangeRoute(AppRoute::Home.into()));
+            },
+            Msg::TriggerMenu => self.is_active = !self.is_active,
+            Msg::SetActive(active) => self.is_active = active,
+            Msg::CheckPath => {
+                // debug!("route_service: {:?}", route_service.get_fragment().as_str());
+                // get current url
+                let route_service: RouteService<()> = RouteService::new();
+                self.open_page = match route_service.get_fragment().as_str() {
+                    path if path.len() < 3 => CurrentPage::Home,
+                    "#/register" => CurrentPage::Register,
+                    "#/login" => CurrentPage::Login,
+                    "#/notifications" => CurrentPage::Notifications,
+                    "#/search" => CurrentPage::Search,
+                    "#/settings" => CurrentPage::Settings,
+                    path => {
+                        let mut set_page = CurrentPage::Unknown;
+                        if path.starts_with("#/@") {
+                            self.current_user.as_ref().map(|cu| {
+                                if cu.username == prepare_username(path) {
+                                    set_page = CurrentPage::SelfProfile
+                                }
+                            });
+                        }
+                        set_page
+                    },
+                };
+                self.link.send_message(Msg::SetTitle);
+            },
+            Msg::SetTitle => {
+                match self.open_page {
+                    CurrentPage::Notifications => title_changer::set_title(get_value_field(&284)),
+                    CurrentPage::Search => title_changer::set_title(get_value_field(&349)),
+                    _ => (),
+                }
+            },
+            Msg::ChangePointTo(go_to) => {
+                match go_to {
+                    CurrentPage::Notifications => self.router_agent.send(ChangeRoute(AppRoute::Notifications.into())),
+                    CurrentPage::Settings => self.router_agent.send(ChangeRoute(AppRoute::Settings.into())),
+                    CurrentPage::SelfProfile => {
+                        if let Some(cu) = &self.current_user {
+                            self.router_agent.send(ChangeRoute(AppRoute::Profile(cu.username.clone()).into()))
+                        }
+                    },
+                    _ => (),
+                }
+            },
+            Msg::ChangeLanguage(lang_id) => {
+                match lang_id {
+                    3 => set_lang(Some(String::from("zh"))),
+                    2 => set_lang(Some(String::from("ru"))),
+                    _ => set_lang(Some(String::from("en"))),
+                }
+                self.current_lang = lang_id;
+            },
+            Msg::Ignore => {}
         }
 
         true
@@ -208,6 +223,7 @@ impl Component for Header {
                     </div>
                 </div>
                 <div class={classes!("navbar-menu", active_menu)}>
+                    {self.lang_dropdown()}
                     <div class="navbar-start"></div>
                     {match self.open_page {
                         CurrentPage::Search | CurrentPage::Home => html!{},
@@ -352,6 +368,42 @@ impl Header {
                     <span class="icon"><i class="fas fa-user-cog" style={self.style_color.clone()}></i></span>
                 </button>
             },
+        }
+    }
+
+    fn lang_dropdown(&self) -> Html {
+        let languages = [
+            (1, "English", self.current_lang == 1, self.link.callback(|_| Msg::ChangeLanguage(1))),
+            (2, "Русский", self.current_lang == 2, self.link.callback(|_| Msg::ChangeLanguage(2))),
+            (3, "中文", self.current_lang == 3, self.link.callback(|_| Msg::ChangeLanguage(3))),
+        ];
+
+        html!{
+            <div class="navbar-item has-dropdown is-hoverable">
+                <a class="navbar-link">
+                    <span class="icon">
+                        <i class="fas fa-language"></i>
+                    </span>
+                </a>
+                <div class="navbar-dropdown is-right">
+                    {for languages.iter().map(|(id, name, show_strong, onclick)| {
+                        html! {<>
+                            {if *id == 1 {
+                                html!{}
+                            } else {
+                                html!{<hr class="navbar-divider" />}
+                            }}
+                            <a class="navbar-item" onclick={onclick}>
+                                {if *show_strong {
+                                    html! { <strong>{name}</strong> }
+                                } else {
+                                    html! { <span>{name}</span> }
+                                }}
+                            </a>
+                        </>}
+                    })}
+                </div>
+            </div>
         }
     }
 }
