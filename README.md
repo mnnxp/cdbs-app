@@ -46,11 +46,13 @@ This platform facilitates the sharing and versioning of parts, while offering AP
 
 There are many solutions for sharing 3D models, drawings and other engineering data. However, the CADBase platform has a number of distinctive features that improve product data management by offering an effective solution for both individual use and collaborative work in engineering and design.
 
-### Additional Description
+### Team
 
-Since 2018, our platform has grown and evolved through the valuable contributions of Ivan Nosovsky, Xia TianHao (夏添豪), Julia Gerasimova, and several other contributors. Our mission is to cultivate a collaborative community that drives innovation and turns ideas into quality engineering and design solutions.
+Since 2018, our platform has grown and evolved through the valuable contributions of Ivan Nosovsky, Xia TianHao (夏添豪), Julia Gerasimova, and several other contributors.
 
-We hope you enjoy using CADBase. We're currently seeking manufacturers interested in partnering with us and sharing valuable feedback to help us improve and grow together.
+Our mission is to cultivate a collaborative community that drives innovation and turns ideas into quality engineering and design solutions.
+
+> We hope you enjoy using CADBase. We're currently seeking manufacturers interested in partnering with us and sharing valuable feedback to help us improve and grow together.
 
 ### Key Features & Improvements
 
@@ -142,9 +144,6 @@ This is an example of how to list things you need to use the software and how to
   wget -qO- https://github.com/thedodd/trunk/releases/download/${VERSION}/trunk-x86_64-unknown-linux-gnu.tar.gz | tar -xzf-
   # Install via cargo.
   cargo install --locked trunk
-  # Until wasm-bindgen has pre-built binaries for Apple M1, M1 users will
-  # need to install wasm-bindgen manually.
-  cargo install --locked wasm-bindgen-cli
   ```
 
 ### Installation
@@ -204,15 +203,18 @@ yarn playwright test tests/slogan.spec.js
 <!-- ROADMAP -->
 ## Roadmap
 
-- [ ] Add Guidance and Manuals
-- [x] Add versioning support for files
-- [x] Add 3D Viewer STL, GCODE, GLTF/GLB and IFC (via [Three.js](https://github.com/mrdoob/three.js))
-- [x] Search page
-- [ ] Multi-language Support
-    - [x] English
-    - [x] Russian
-    - [x] Chinese
-    - [ ] Spanish
+### Current State
+- File versioning system
+- 3D Viewer (STL, GCODE, GLTF/GLB, IFC via Three.js)
+- Search functionality
+- Multi-language support (English, Russian, Chinese)
+
+### In Progress
+- User guides, API examples, and integration tutorials
+- Performance optimizations and additional formats
+- Cleaner interface, improved navigation, and consistent design system
+
+**For software developers** — Integrate your products with CADBase and offer your customers seamless on-premise engineering data management. *Let's discuss this:* in@cadbase.rs
 
 See the [open issues](https://gitlab.com/cadbase/cdbs-app/issues) for a full list of proposed features (and known issues).
 
@@ -269,7 +271,7 @@ Distributed under the MIT License. See [LICENSE](/LICENSE) for more information.
 
 Ivan Nosovsky - in@cadbase.rs
 
-Xia TianHao - xth@cadbase.rs or [Sansx](https://github.com/sansx) (GitHub)
+Xia TianHao - [Sansx](https://github.com/sansx) (GitHub)
 
 <div align="right">(<a href="#about-the-project">back to top</a>)</div>
 
