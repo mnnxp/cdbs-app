@@ -632,7 +632,6 @@ impl StandardSettings {
                 </header>
                 <div class="card-content">
                     <div class="content">
-                        <div class="columns">
                             <div class="column">
                                 <h3 class="has-text-weight-bold">{get_value_field(&225)}</h3> // Files stadndard
                                 <StandardFilesCard
@@ -650,7 +649,6 @@ impl StandardSettings {
                                     callback_upload_confirm={callback_upload_confirm}
                                 />
                             </div>
-                        </div>
                     </div>
                 </div>
             </div>

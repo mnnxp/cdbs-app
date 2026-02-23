@@ -4,13 +4,14 @@ use crate::{services::get_value_field, types::UUID};
 /// Returns a VNode (html code) with an input field to enter a comment on upload files
 pub fn commit_msg_field(object_uuid: UUID, commit_msg: String, oninput_commit_msg: Callback<InputData>) -> Html {
     let label_commit_msg = get_value_field(&340);
+    let tag_id = format!("text-commit-msg-{}", object_uuid);
     html!{
         <div class={"column"}>
             <div class={"field mb-5"}>
-                <label class={"label"} for={"text-commit-msg"}>{get_value_field(&338)}</label>
+                <label class={"label"} for={tag_id.clone()}>{get_value_field(&338)}</label>
                 <div class={"control"}>
                     <input
-                        id={format!("text-commit-msg-{}", object_uuid)}
+                        id={tag_id}
                         class={"input is-fullwidth"}
                         type={"text"}
                         maxlength={"225"}

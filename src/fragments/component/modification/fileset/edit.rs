@@ -389,8 +389,7 @@ impl ManageModificationFilesets {
             false => Some(self.request_upload_data.clone()),
         };
         let callback_upload_confirm = self.link.callback(|confirmations| Msg::UploadConfirm(confirmations));
-        html!{
-            <div class="columns">
+        html!{<>
                 <div class="column">
                     <p class={"title is-5"}>{get_value_field(&197)}</p> // Upload files for fileset
                     {commit_msg_field(self.select_fileset_uuid.clone(), self.commit_msg.clone(), oninput_commit_msg.clone())}
@@ -414,8 +413,7 @@ impl ManageModificationFilesets {
                         None => html!{<p>{get_value_field(&204)}</p>},
                     }}
                 </div>
-            </div>
-        }
+        </>}
     }
 
     fn add_fileset_block(&self) -> Html {

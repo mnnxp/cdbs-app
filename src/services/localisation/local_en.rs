@@ -454,12 +454,13 @@ lazy_static! {
             (447, "Right"),
             (448, "Isometric"),
             (449, "Drag here or click to select"),
-            (450, "Selected Files"),
+            (450, "Files to upload"),
             (451, "Pending"),
             (452, "Uploading"),
             (453, "Completed"),
             (454, "Failed"),
             (455, " file(s) uploaded successfully"),
             (456, " file(s) failed to upload"),
+            (457, "Upload URL not found"),
         ]);
 }

@@ -10,7 +10,7 @@ use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 use web_sys::FileList;
 
-use crate::services::{put_file, UploadData, get_value_field, resp_parsing, image_detector};
+use crate::services::{get_value_field, image_detector, put_file, resp_parsing, Size, UploadData};
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 // use crate::fragments::switch_icon::res_file_btn;
@@ -22,7 +22,7 @@ type FileName = String;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum UploadStatus {
-    Pending,
+    Pending(f64),
     Uploading,
     Completed,
     Failed(String),
@@ -120,14 +120,10 @@ impl Component for UploaderFiles {
             Msg::UploadFiles => {
                 let mut filenames = Vec::new();
                 for file in &self.files {
-                    filenames.push(file.name().clone());
+                    filenames.push(file.name());
                 }
                 if filenames.is_empty() {
                     return false
-                }
-                // Initialize file statuses
-                for filename in &filenames {
-                    self.file_statuses.insert(filename.clone(), UploadStatus::Pending);
                 }
                 self.upload_success_count = 0;
                 self.upload_failed_count = 0;
@@ -153,7 +149,7 @@ impl Component for UploaderFiles {
                 }
                 debug!("files: {:#?}", self.files);
                 for file in &self.files {
-                    let file_name = file.name().clone();
+                    let file_name = file.name();
                     debug!("file name: {:?}", file_name);
                     // Update file status to uploading
                     self.file_statuses.insert(file_name.clone(), UploadStatus::Uploading);
@@ -186,9 +182,9 @@ impl Component for UploaderFiles {
                         self.request_upload_confirm.push(file_data.file_uuid.clone());
                     },
                     None => {
-                        debug!("not found pre-signed url for upload the file: {:?}", filename);
+                        debug!("Not found pre-signed url for upload the file: {:?}", filename);
                         // Update file status to failed
-                        self.file_statuses.insert(filename, UploadStatus::Failed("Presigned URL not found".to_string()));
+                        self.file_statuses.insert(filename, UploadStatus::Failed(get_value_field(&457).to_string()));
                         self.upload_failed_count += 1;
                     },
                 }
@@ -256,7 +252,10 @@ impl Component for UploaderFiles {
                     }
                     temp_index += 1;
                     self.files.push(file.clone());
-                    self.label_filenames.push(file.name().clone());
+                    self.label_filenames.push(file.name());
+                    debug!("Файл {} размер {}", file.name(), file.size());
+                    // Initialize file statuses
+                    self.file_statuses.insert(file.name(), UploadStatus::Pending(file.size()));
                 }
                 self.files_index += temp_index;
                 debug!("files_index: {:?}", self.files_index);
@@ -314,11 +313,15 @@ impl Component for UploaderFiles {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         html!{<>
             <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
-            {self.show_frame_upload_files()}
-            <div class="buttons">
-                {self.show_clear_btn()}
-                {self.show_upload_files_btn()}
+            <div class={"columns"}>
+                <div class={"column"}>
+                    {self.show_frame_upload_files()}
+                </div>
+                <div class={"column"}>
+                    {self.select_files()}
+                </div>
             </div>
+            {self.show_control_btn()}
         </>}
     }
 }
@@ -347,11 +350,9 @@ impl UploaderFiles {
         let ondragenter = self.link.callback(|_: DragEvent| Msg::SetDragState(true));
         let ondragleave = self.link.callback(|_: DragEvent| Msg::SetDragState(false));
 
-        let is_clickable = true;
-
-        let drag_classes = match (self.is_dragging, is_clickable) {
-            (true, true) => "has-background-primary-light is-clickable",
-            (false, true) => "has-background-white-ter is-clickable",
+        let drag_classes = match (self.is_dragging, self.active_loading_files_btn) {
+            (true, false) => "has-background-primary-light is-clickable",
+            (false, false) => "has-background-white-ter is-clickable",
             _ => "has-background-grey-lighter is-disabled",
         };
 
@@ -361,7 +362,7 @@ impl UploaderFiles {
             ondragover_upload_files = self.link.callback(|_: DragEvent| Msg::Ignore);
         }
 
-        html!{<>
+        html!{
             <div class={classes!("box", "has-text-centered", "upload-dropbox", drag_classes)}
                  ondrop={ondrop_upload_files}
                  ondragover={ondragover_upload_files}
@@ -385,10 +386,7 @@ impl UploaderFiles {
                            multiple={self.props.multiple} />
                 </div>
             </div>
-            <div class="mt-5">
-                {self.select_files()}
-            </div>
-        </>}
+        }
     }
 
     fn select_files(&self) -> Html {
@@ -401,47 +399,35 @@ impl UploaderFiles {
             },
             false => html!{<>
                 <div class="is-flex is-justify-content-space-between is-align-items-center mb-4 pb-3" style="border-bottom: 1px solid #eee;">
-                    <h4 class="title is-5 mb-0">{get_value_field(&450)}</h4> // Selected Files
-                    <span class="tag is-white">{format!("{} files", self.files.len())}</span>
-                </div>
-                // <hr />
-                <div class="columns is-multiline is-variable is-3 mb-5">
-                    {for self.label_filenames.chunks(2).map(|chunk| {
-                        html!{
-                            <div class="column is-6">
-                                <div class="columns is-multiline is-mobile">
-                                    {for chunk.iter().map(|f_name| {
-                                        html!{
-                                            <div class="column is-12">
-                                                {self.render_file_item(f_name)}
-                                            </div>
-                                        }
-                                    })}
-                                </div>
-                            </div>
-                        }
-                    })}
+                    <span class="is-size-5">{get_value_field(&450)}</span> // Selected Files
+                    <span class="has-text-weight-bold is-size-5">{self.files.len()}</span>
                 </div>
                 {self.show_upload_summary()}
+                <div class={classes!("table-container", "p-2")}
+                    style="max-height: 250px; overflow-y: auto; border: 1px solid #ededed; border-radius: 4px;">
+                    <div class="upload-grid-layout">
+                        {for self.label_filenames.iter().map(|f| self.render_file_item(f))}
+                    </div>
+                </div>
             </>}
         }
     }
 
     fn render_file_item(&self, filename: &str) -> Html {
         let filename_owned = filename.to_string();
-        let file_status = self.file_statuses.get(filename).unwrap_or(&UploadStatus::Pending);
+        let file_status = self.file_statuses.get(filename).unwrap_or(&UploadStatus::Pending(0.0));
         let progress = self.progress_indicator.get(filename).unwrap_or(&0.0);
 
         let (status_classes, icon_color, status_icon, status_text) = match file_status {
-            UploadStatus::Pending => (
+            UploadStatus::Pending(_) => (
                 "has-border-warning has-background-warning-light",
                 "has-text-warning",
                 "fas fa-clock",
                 get_value_field(&451) // Pending
             ),
             UploadStatus::Uploading => (
-                "has-border-primary has-background-primary-light",
-                "has-text-primary",
+                "has-border-info has-background-info-light",
+                "has-text-info",
                 "fas fa-spinner fa-spin",
                 get_value_field(&452) // Uploading
             ),
@@ -461,33 +447,39 @@ impl UploaderFiles {
         let onclick_remove = self.link.callback(move |_| Msg::RemoveFile(filename_owned.clone()));
 
         html!{
-            <div class={classes!("box", "p-3", status_classes, "text-wrap-anywhere")}>
-                <div class="is-flex is-align-items-center mb-2">
-                    <div class={classes!("mr-3", icon_color)}>
-                        <i class={format!("{} is-size-5", status_icon)} />
+            <div class=classes!("p-2", "mb-1", "is-radius-small", "upload-file-row-item", status_classes)>
+                <div class="is-flex is-align-items-start">
+                    <div class={classes!("mr-2", "mt-1", icon_color)} style="flex: 0 0 20px;">
+                        <i class={classes!("is-size-6", status_icon)} />
                     </div>
-                    <div class="is-flex-grow-1 mr-2 text-break-all">
-                        <div class="is-size-7 has-text-weight-semibold mb-1">{filename}</div>
-                        <div class="is-size-7 has-text-grey">
+                    <div style="flex: 1 1 auto; min-width: 0;" class="mr-2">
+                        <div class="is-size-7 has-text-weight-bold" style="word-break: break-all; line-height: 1.2;">
+                            {filename}
+                        </div>
+                        <div class="is-size-7 has-text-grey mt-1">
                             {status_text}
                             {match file_status {
-                                UploadStatus::Uploading => format!(" {:.2}%", progress * 100.0),
+                                UploadStatus::Pending(size) => format!(" • {}", size.show_size()),
+                                UploadStatus::Uploading => format!(" • {:.2}%", progress * 100.0),
                                 _ => String::new(),
                             }}
                         </div>
                     </div>
                     {match file_status {
-                        UploadStatus::Pending => html!{<button class="delete is-small" onclick={onclick_remove} />},
+                        UploadStatus::Pending(_) => html!{
+                            <div style="flex: 0 0 auto;" class="mt-1">
+                                <button class="delete is-small mt-1" onclick={onclick_remove} />
+                            </div>
+                        },
                         _ => html!{},
                     }}
                 </div>
-
                 {match file_status {
                     UploadStatus::Uploading | UploadStatus::Completed =>
-                        html!{<progress class="progress is-small is-primary" value={progress.to_string()} max="1"></progress>},
+                        html!{<progress class="progress is-small is-primary mt-2" value={progress.to_string()} max="1" style="height: 4px;"></progress>},
                     UploadStatus::Failed(error) => html!{
-                        <div class="is-flex is-align-items-center mt-2">
-                            <i class="fas fa-exclamation-triangle has-text-danger mr-2"></i>
+                        <div class="is-flex is-align-items-center mt-1">
+                            <i class="fas fa-exclamation-triangle has-text-danger is-size-7 mr-1"></i>
                             <span class="is-size-7 has-text-danger">{error}</span>
                         </div>
                     },
@@ -500,10 +492,10 @@ impl UploaderFiles {
     fn show_upload_summary(&self) -> Html {
         if self.upload_success_count > 0 || self.upload_failed_count > 0 {
             html!{
-                <div class="notification is-white mb-2">
+                <div class="mb-2">
                     {if self.upload_success_count > 0 {
                         html!{
-                            <div class="is-flex is-align-items-center mb-2">
+                            <div class="is-flex is-align-items-center mb-3">
                                 <i class="fas fa-check-circle has-text-success mr-2"></i>
                                 <div class="has-text-success">
                                     <span>{self.upload_success_count}</span>
@@ -546,33 +538,35 @@ impl UploaderFiles {
         }
     }
 
-    fn show_clear_btn(&self) -> Html {
+    fn show_control_btn(&self) -> Html {
         let onclick_clear_boxed = self.link.callback(|_| Msg::ClearFilesBoxed);
-        html!{
-            <button
-              class="button is-fullwidth is-warning"
-              onclick={onclick_clear_boxed}
-              disabled={self.files.is_empty() || self.active_loading_files_btn} >
-                <span class="icon"><i class="fas fa-trash"></i></span>
-                <span>{get_value_field(&88)}</span>
-            </button>
-        }
-    }
-
-    fn show_upload_files_btn(&self) -> Html {
         let onclick_upload_files = self.link.callback(|_| Msg::UploadFiles);
+        let shared_classes= "button is-fullwidth";
         let class_upload_btn = match self.active_loading_files_btn {
-            true => "button is-fullwidth is-success is-loading",
-            false => "button is-fullwidth is-success",
+            true => "button is-success is-loading",
+            false => "button is-success",
         };
         html!{
-            <button
-              class={class_upload_btn}
-              disabled={self.files.is_empty()}
-              onclick={onclick_upload_files} >
-                <span class="icon"><i class="fas fa-upload"></i></span>
-                <span>{get_value_field(&87)}</span>
-            </button>
+            <div class="columns is-mobile">
+                <div class="column is-one-third">
+                    <button
+                    class={classes!(shared_classes, "is-warning")}
+                    onclick={onclick_clear_boxed}
+                    disabled={self.files.is_empty() || self.active_loading_files_btn} >
+                        <span class="icon"><i class="fas fa-trash"></i></span>
+                        <span>{get_value_field(&88)}</span>
+                    </button>
+                </div>
+                <div class="column is-two-thirds">
+                    <button
+                    class={classes!(shared_classes, class_upload_btn)}
+                    disabled={self.files.is_empty()}
+                    onclick={onclick_upload_files} >
+                        <span class="icon"><i class="fas fa-upload"></i></span>
+                        <span>{get_value_field(&87)}</span>
+                    </button>
+                </div>
+            </div>
         }
     }
 }

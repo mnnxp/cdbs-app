@@ -489,9 +489,25 @@ scene-hull {
 }
 
 .upload-dropbox {
-  border: 2px dashed #dbdbdb;
+  border: 2px dashed #edf1fb;
   border-radius: 6px;
   padding: 2rem;
+}
+
+.upload-dropbox.is-clickable:hover {
+  border-color: #1872f0 !important;
+  background: #fff !important;
+}
+
+.upload-grid-layout {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 0 15px;
+}
+
+.upload-file-row-item {
+    border-bottom: 1px solid #edf1fb;
+    border-radius: 4px !important;
 }
 
 .absolute-overlay {
