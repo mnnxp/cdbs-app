@@ -1,16 +1,11 @@
-use yew::{agent::Bridged, classes, html, Bridge, Callback, Component, ComponentLink, Html, Properties, ShouldRender};
-use yew_router::{
-    service::RouteService,
-    agent::RouteRequest::ChangeRoute,
-    prelude::RouteAgent,
-};
+use yew::{classes, html, Callback, Component, ComponentLink, Html, Properties, ShouldRender};
+use yew_router::service::RouteService;
 use web_sys::MouseEvent;
 use graphql_client::GraphQLQuery;
 use log::debug;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::fragments::responsive::resizer;
-use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{
     buttons::ft_follow_btn,
@@ -45,7 +40,6 @@ pub struct Profile {
     profile: Option<UserInfo>,
     current_user_uuid: UUID,
     current_username: String,
-    router_agent: Box<dyn Bridge<RouteAgent>>,
     props: Props,
     link: ComponentLink<Self>,
     subscribers: usize,
@@ -105,7 +99,6 @@ impl Component for Profile {
             profile: None,
             current_user_uuid: String::new(),
             current_username: String::new(),
-            router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             props,
             link,
             subscribers: 0,
@@ -119,11 +112,7 @@ impl Component for Profile {
     fn rendered(&mut self, first_render: bool) {
         let logged_username = match get_logged_user() {
             Some(cu) => cu.username,
-            None => {
-                // route to login page if not found token
-                self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
-                String::new()
-            },
+            None => String::new(),
         };
 
         // get username for request user data
