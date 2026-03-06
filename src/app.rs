@@ -26,7 +26,7 @@ use crate::routes::{
     standard::{ShowStandard, StandardSettings, CreateStandard},
     AppRoute,
 };
-use crate::services::{is_authenticated, get_current_user, get_value_field, title_changer};
+use crate::services::{get_current_user, get_lang, get_server_location_id, get_value_field, is_authenticated, set_lang, set_server_locations, title_changer};
 use crate::types::SlimUser;
 
 /// The root app component
@@ -56,6 +56,7 @@ impl Component for App {
         let route_service: RouteService = RouteService::new();
         let mut route = route_service.get_route();
         fix_fragment_routes(&mut route);
+        configure_server_and_language();
         App {
             // auth: Auth::new(),
             current_route: AppRoute::switch(route),
@@ -177,6 +178,19 @@ impl Component for App {
                 }
                 <Footer />
             </>
+        }
+    }
+}
+
+/// Configures server location and language settings based on the current location ID
+fn configure_server_and_language() {
+    debug!("Server location: {:?}", get_server_location_id());
+    if get_server_location_id() == 0 && get_lang().is_none() {
+        set_server_locations(None);
+        match get_server_location_id() {
+            // 3 => set_lang(Some(String::from("zh"))),
+            2 => set_lang(Some(String::from("ru"))),
+            _ => set_lang(Some(String::from("en"))),
         }
     }
 }
