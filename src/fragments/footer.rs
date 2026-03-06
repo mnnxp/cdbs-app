@@ -44,7 +44,7 @@ impl Component for Footer {
 
     fn view(&self) -> Html {
         let current_info = get_value_field(&258);
-        let version_number = "0.3.1";
+        let version_number = "0.3.2";
         let (base_url, docs_url) = match get_lang().as_deref() {
             Some("zh") => ("https://cadbase.org/zh/", String::from("https://docs.cadbase.org/")),
             Some("ru") => ("https://cadbase.ru/ru/", String::from("https://docs.cadbase.ru/")),
