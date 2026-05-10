@@ -106,6 +106,8 @@ impl Component for CreateService {
                                 userUuid: None,
                                 favorite: None,
                                 supplier: Some(true),
+                                search: None,
+                                excludeUuids: None,
                             };
                             let res = make_query(GetServiceDataOpt::build_query(get_service_data_opt::Variables {
                                 ipt_companies_arg

@@ -172,6 +172,8 @@ impl Component for StandardSettings {
                     userUuid: Some(logged_user_uuid),
                     favorite: None,
                     supplier: None,
+                    search: None,
+                    excludeUuids: None,
                 };
                 let res = make_query(GetUpdateStandardDataOpt::build_query(get_update_standard_data_opt::Variables {
                     standard_uuid: target_standard_uuid,

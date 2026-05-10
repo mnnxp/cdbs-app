@@ -3,6 +3,20 @@ schema {
   mutation: MutationRoot
 }
 
+type AccessCheckResult {
+  hasAccess: Boolean!
+  accessLevel: Int
+  source: AccessSource!
+}
+
+enum AccessSource {
+  OWNER
+  DIRECT_ACCESS
+  COMPANY_ROLE
+  PUBLIC
+  NONE
+}
+
 type ActualStatusTranslateList {
   actualStatusId: Int!
   langId: Int!
@@ -44,12 +58,10 @@ input ChangeTypeAccessStandard {
   newTypeAccessId: Int!
 }
 
-scalar Char
-
 type Claims {
   iss: String!
   username: String!
-  sub: String!
+  sub: UUID!
   iat: String!
   exp: String!
   programId: Int!
@@ -57,8 +69,8 @@ type Claims {
 
 type CompanyAccessComponentAndRelatedData {
   componentUuid: UUID!
-  companyUuid: UUID!
-  typeAccess: TypeAccessTranslateList!
+  company: ShowCompanyShort!
+  permission: PermissionTranslateList!
   isEnabled: Boolean!
   createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!
@@ -66,8 +78,8 @@ type CompanyAccessComponentAndRelatedData {
 
 type CompanyAccessServiceAndRelatedData {
   serviceUuid: UUID!
-  companyUuid: UUID!
-  typeAccess: TypeAccessTranslateList!
+  company: ShowCompanyShort!
+  permission: PermissionTranslateList!
   isEnabled: Boolean!
   createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!
@@ -75,8 +87,8 @@ type CompanyAccessServiceAndRelatedData {
 
 type CompanyAccessStandardAndRelatedData {
   standardUuid: UUID!
-  companyUuid: UUID!
-  typeAccess: TypeAccessTranslateList!
+  company: ShowCompanyShort!
+  permission: PermissionTranslateList!
   isEnabled: Boolean!
   createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!
@@ -117,8 +129,8 @@ type CompanyCertificateAndFile {
 
 type CompanyMemberAndRelatedData {
   companyUuid: UUID!
-  userUuid: UUID!
-  role: RoleMemberAndRelatedData!
+  user: ShowUserShort!
+  companyRole: RoleMemberAndRelatedData!
   isEnabled: Boolean!
   createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!
@@ -397,6 +409,8 @@ input IptCompaniesArg {
   userUuid: UUID
   favorite: Boolean
   supplier: Boolean
+  search: String
+  excludeUuids: [UUID!]
 }
 
 input IptCompanyAccessComponentData {
@@ -933,6 +947,8 @@ input IptUsersArg {
   usersUuids: [UUID!]
   subscribers: Boolean
   favorite: Boolean
+  search: String
+  excludeUuids: [UUID!]
 }
 
 type Keyword {
@@ -1090,8 +1106,8 @@ type MutationRoot {
   deleteCompanyMember(args: DelCompanyMemberData!): Boolean!
   registerCompanyRole(args: IptRoleMemberData!): Int!
   changeNameRoleCompany(args: IptUpdateNameRoleData!): Boolean!
-  deleteCompanyRole(args: DelRoleMemberData!): Int!
-  addAccessRole(args: IptRoleAccessData!): Boolean!
+  deleteCompanyRole(args: DelRoleMemberData!): Boolean!
+  addAccessRole(args: IptRoleAccessData!): Int!
   deleteAccessRole(args: DelRoleAccessData!): Int!
   addComponentSupplier(args: IptSupplierComponentData!): Boolean!
   setCompanyOwnerSupplier(args: IptSupplierComponentData!): Boolean!
@@ -1121,6 +1137,12 @@ type ParamTranslateList {
   paramname: String!
 }
 
+type PermissionTranslateList {
+  typeAccessId: Int!
+  langId: Int!
+  name: String!
+}
+
 type Program {
   id: Int!
   name: String!
@@ -1141,6 +1163,10 @@ type QueryRoot {
     notificationIds: [Int!]
     paginate: IptPaginate
   ): [ShowNotification!]!
+  myAccessToComponent(componentUuid: UUID!): AccessCheckResult!
+  myAccessToStandard(standardUuid: UUID!): AccessCheckResult!
+  myAccessToService(serviceUuid: UUID!): AccessCheckResult!
+  myAccessToCompany(companyUuid: UUID!): AccessCheckResult!
   searchByComponents(
     args: IptSearchArg!
     sort: IptSort
@@ -1282,6 +1308,10 @@ type QueryRoot {
     typeAccessIds: [Int!]
     paginate: IptPaginate
   ): [TypeAccessTranslateList!]!
+  permissions(
+    permissionIds: [Int!]
+    paginate: IptPaginate
+  ): [PermissionTranslateList!]!
 }
 
 type RegionTranslateList {
@@ -1298,7 +1328,7 @@ type RepresentationTypeTranslateList {
 
 type RoleMemberAndRelatedData {
   role: RoleMemberTranslateList!
-  access: [TypeAccessTranslateList!]!
+  permissions: [PermissionTranslateList!]!
 }
 
 type RoleMemberTranslateList {
@@ -1462,6 +1492,7 @@ type SpecPath {
   specId: Int!
   langId: Int!
   path: String!
+  depth: Int!
 }
 
 type SpecTranslateList {
@@ -1523,8 +1554,8 @@ type UploadFile {
 
 type UserAccessComponentAndRelatedData {
   componentUuid: UUID!
-  userUuid: UUID!
-  typeAccess: TypeAccessTranslateList!
+  user: ShowUserShort!
+  permission: PermissionTranslateList!
   isEnabled: Boolean!
   createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!
@@ -1532,8 +1563,8 @@ type UserAccessComponentAndRelatedData {
 
 type UserAccessServiceAndRelatedData {
   serviceUuid: UUID!
-  userUuid: UUID!
-  typeAccess: TypeAccessTranslateList!
+  user: ShowUserShort!
+  permission: PermissionTranslateList!
   isEnabled: Boolean!
   createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!
@@ -1541,8 +1572,8 @@ type UserAccessServiceAndRelatedData {
 
 type UserAccessStandardAndRelatedData {
   standardUuid: UUID!
-  userUuid: UUID!
-  typeAccess: TypeAccessTranslateList!
+  user: ShowUserShort!
+  permission: PermissionTranslateList!
   isEnabled: Boolean!
   createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!

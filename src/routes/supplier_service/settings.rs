@@ -141,6 +141,8 @@ impl Component for ServiceSettings {
                     userUuid: Some(logged_user_uuid),
                     favorite: None,
                     supplier: Some(true),
+                    search: None,
+                    excludeUuids: None,
                 };
                 let res = make_query(GetUpdateServiceDataOpt::build_query(get_update_service_data_opt::Variables {
                     service_uuid: target_service_uuid,
