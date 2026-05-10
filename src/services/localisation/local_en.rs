@@ -459,7 +459,7 @@ lazy_static! {
             (452, "Uploading"),
             (453, "Completed"),
             (454, "Failed"),
-            (455, " file(s) uploaded successfully"),
+            (455, " file(s) are in storage and awaiting confirmation"),
             (456, " file(s) failed to upload"),
             (457, "Upload URL not found"),
         ]);

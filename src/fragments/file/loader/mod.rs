@@ -496,10 +496,10 @@ impl UploaderFiles {
                     {if self.upload_success_count > 0 {
                         html!{
                             <div class="is-flex is-align-items-center mb-3">
-                                <i class="fas fa-check-circle has-text-success mr-2"></i>
-                                <div class="has-text-success">
+                                <i class="fas fa-check-circle has-text-warning mr-2"></i>
+                                <div class="has-text-warning">
                                     <span>{self.upload_success_count}</span>
-                                    <span>{get_value_field(&455)}</span> // files uploaded successfully
+                                    <span>{get_value_field(&455)}</span> // files are in storage and awaiting confirmation
                                 </div>
                             </div>
                         }
