@@ -15,7 +15,7 @@ query GetStandardDataOpt($iptCompaniesArg: IptCompaniesArg!) {
     ...regionFields
   }
 
-  typesAccess {
+  typesAccess(typeAccessIds: [1,3]) {
     ...typeAccessFields
   }
 }
@@ -51,7 +51,7 @@ query GetUpdateStandardDataOpt($standardUuid: UUID!, $iptCompaniesArg: IptCompan
     ...regionFields
   }
 
-  typesAccess {
+  typesAccess(typeAccessIds: [1,3]) {
     ...typeAccessFields
   }
 }

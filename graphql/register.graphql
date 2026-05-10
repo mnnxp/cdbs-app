@@ -4,7 +4,7 @@ query RegisterOpt {
     name
   }
 
-  typesAccess {
+  typesAccess(typeAccessIds: [1,3]) {
     typeAccessId
     langId
     name
