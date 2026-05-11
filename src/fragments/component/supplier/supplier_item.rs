@@ -79,6 +79,8 @@ impl Component for ComponentSupplierItem {
                     userUuid: None,
                     favorite: None,
                     supplier: None,
+                    search: None,
+                    excludeUuids: None,
                 });
                 let ipt_paginate = Some(get_companies_short_list::IptPaginate {
                     currentPage: 1,

@@ -21,7 +21,7 @@ use crate::fragments::{
     list_errors::ListErrors,
     notification::show_notification,
     component::{
-        ComponentStandardsCard, ComponentSuppliersCard, ComponentParamsTags, UpdateComponentFaviconCard,
+        ComponentAccessBlock, ComponentStandardsCard, ComponentSuppliersCard, ComponentParamsTags, UpdateComponentFaviconCard,
         ModificationsTableEdit, ManageComponentFilesCard, SearchSpecsTags, AddKeywordsTags
     },
 };
@@ -42,7 +42,8 @@ pub enum ActiveTab {
     Data,
     ImagePreview,
     Characteristics,
-    ComponentFiles
+    ComponentFiles,
+    Access
 }
 
 pub struct ComponentSettings {
@@ -208,15 +209,11 @@ impl Component for ComponentSettings {
                 if self.update_component {
                     self.link.send_message(Msg::RequestUpdateComponentData)
                 }
-                if self.update_component_access {
-                    self.link.send_message(Msg::RequestChangeAccess)
-                }
                 self.update_component = false;
                 self.update_component_access = false;
                 self.update_component_supplier = false;
                 self.disable_save_changes_btn = true;
                 self.get_result_component_data = 0;
-                self.get_result_access = false;
             },
             Msg::RequestUpdateComponentData => {
                 let component_uuid = self.current_component_uuid.clone();
@@ -314,9 +311,10 @@ impl Component for ComponentSettings {
                 }
             },
             Msg::UpdateTypeAccessId(data) => {
+                self.get_result_access = false;
                 self.request_access = data as i64;
                 self.update_component_access = true;
-                self.disable_save_changes_btn = false;
+                self.link.send_message(Msg::RequestChangeAccess)
             },
             Msg::UpdateActualStatusId(data) => {
                 self.request_component.actual_status_id = data.parse::<usize>().unwrap_or_default();
@@ -434,11 +432,13 @@ impl ComponentSettings {
         let onclick_tab_image_preview = self.link.callback(|_| Msg::ChangeActiveTab(ActiveTab::ImagePreview));
         let onclick_tab_characteristics = self.link.callback(|_| Msg::ChangeActiveTab(ActiveTab::Characteristics));
         let onclick_tab_component_files = self.link.callback(|_| Msg::ChangeActiveTab(ActiveTab::ComponentFiles));
+        let onclick_tab_access = self.link.callback(|_| Msg::ChangeActiveTab(ActiveTab::Access));
         let at = match self.active_tab {
-            ActiveTab::Data => ("is-active","","",""),
-            ActiveTab::ImagePreview => ("","is-active","",""),
-            ActiveTab::Characteristics => ("","","is-active",""),
-            ActiveTab::ComponentFiles => ("","","","is-active"),
+            ActiveTab::Data => ("is-active","","","",""),
+            ActiveTab::ImagePreview => ("","is-active","","",""),
+            ActiveTab::Characteristics => ("","","is-active","",""),
+            ActiveTab::ComponentFiles => ("","","","is-active",""),
+            ActiveTab::Access => ("","","","","is-active"),
         };
         let callback_update_favicon = self.link.callback(|_| Msg::Ignore);
         html!{
@@ -453,14 +453,11 @@ impl ComponentSettings {
                     <li class={at.1} onclick={onclick_tab_image_preview}><a>{get_value_field(&184)}</a></li>
                     <li class={at.2} onclick={onclick_tab_characteristics}><a>{get_value_field(&101)}</a></li>
                     <li class={at.3} onclick={onclick_tab_component_files}><a>{get_value_field(&102)}</a></li>
+                    <li class={at.4} onclick={onclick_tab_access}><a>{get_value_field(&65)}</a></li>
                 </ul>
             </div>
                 {match self.active_tab {
-                    ActiveTab::Data => html!{
-                        <div class="content">
-                            {self.show_main_card()}
-                        </div>
-                    },
+                    ActiveTab::Data => self.show_main_card(),
                     ActiveTab::ImagePreview => html!{
                         <div class="content">
                             <UpdateComponentFaviconCard
@@ -487,6 +484,7 @@ impl ComponentSettings {
                                 />
                         </div>
                     },
+                    ActiveTab::Access => self.access_block(),
                 }}
                 </div>
             </div>
@@ -498,7 +496,8 @@ impl ComponentSettings {
         let oninput_description = self.link.callback(|ev: InputData| Msg::UpdateDescription(ev.value));
         let onclick_save_changes = self.link.callback(|_| Msg::RequestManager);
 
-        html!{<>
+        html!{
+        <div class="content">
             <div class="content">
                 <div class="column">
                     <label class="title is-5" for="setting-component-update-name">{get_value_field(&110)}</label>
@@ -517,9 +516,7 @@ impl ComponentSettings {
                     raw_text={self.request_component.description.clone()}
                     oninput_text={oninput_description}
                     />
-                <div class="column">
-                    {self.show_component_info()}
-                </div>
+                {self.show_component_info()}
             </div>
             <footer class="card-footer">
                 {ft_save_btn(
@@ -529,7 +526,8 @@ impl ComponentSettings {
                     self.disable_save_changes_btn
                 )}
             </footer>
-        </>}
+        </div>
+        }
     }
 
     fn show_component_info(&self) -> Html {
@@ -537,11 +535,9 @@ impl ComponentSettings {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
-        let onchange_type_access = self.link.callback(|value| Msg::UpdateTypeAccessId(value));
 
         html!{
-            <div class="columns">
-                <div class="column">
+            <div class="column">
                     <label class="label" for="setting-component-actual-status">{get_value_field(&96)}</label>
                     <div class="select is-fullwidth">
                         <select
@@ -559,16 +555,6 @@ impl ComponentSettings {
                           )}
                         </select>
                     </div>
-                </div>
-                <div class="column">
-                    <label class="label" for="type-access-block">{get_value_field(&58)}</label>
-                    <TypeAccessBlock
-                        change_cb={onchange_type_access}
-                        types={self.types_access.clone()}
-                        selected={self.request_access as usize}
-                        preset={self.current_component.as_ref().map(|data| data.type_access.type_access_id)}
-                    />
-                </div>
             </div>
         }
     }
@@ -603,5 +589,29 @@ impl ComponentSettings {
             self.hide_delete_modal,
             self.disable_delete_component_btn,
         )
+    }
+
+    fn access_block(&self) -> Html {
+        let onchange_type_access = self.link.callback(|value| Msg::UpdateTypeAccessId(value));
+        html!{
+            <div class="content">
+                <h4 id={"component-access-global"} class={"title is-4"}>{get_value_field(&58)}</h4>
+                <div class="column">
+                    <TypeAccessBlock
+                        change_cb={onchange_type_access}
+                        types={self.types_access.clone()}
+                        selected={self.request_access as usize}
+                        preset={self.current_component.as_ref().map(|data| data.type_access.type_access_id)}
+                    />
+                </div>
+                <h4 id="component-access-direct" class="title is-4">{get_value_field(&65)}</h4> // Access
+                <div class="column">
+                    <ComponentAccessBlock
+                        component_uuid={self.current_component_uuid.clone()}
+                        owner_info={self.current_component.as_ref().map(|data| data.owner_user.clone()).unwrap_or_default()}
+                    />
+                </div>
+            </div>
+        }
     }
 }

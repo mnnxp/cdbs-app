@@ -1378,6 +1378,7 @@ type ShowCompanyShort {
   imageFile: DownloadFile!
   region: RegionTranslateList!
   companyType: CompanyTypeTranslateList!
+  typeAccess: TypeAccessTranslateList!
   isSupplier: Boolean!
   isFollowed: Boolean!
   createdAt: NaiveDateTime!

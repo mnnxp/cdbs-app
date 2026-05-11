@@ -90,3 +90,13 @@ pub fn res_file_btn(onclick: Callback<MouseEvent>, filename: String) -> Html {
     </div>
   }
 }
+
+pub fn res_loading_state() -> Html {
+    html! {
+        <div class="has-text-centered">
+            <span class="icon is-large">
+                <i class="fas fa-spinner fa-pulse fa-2x"></i>
+            </span>
+        </div>
+    }
+}

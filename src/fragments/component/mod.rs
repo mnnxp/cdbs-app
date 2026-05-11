@@ -1,3 +1,4 @@
+mod access;
 mod catalog;
 mod file;
 mod keyword;
@@ -9,6 +10,7 @@ mod supplier;
 mod standard;
 mod update_favicon;
 
+pub(crate) use access::ComponentAccessBlock;
 pub use catalog::{CatalogComponents, ListItem};
 pub use file::{ComponentFileItem, ComponentFilesBlock, ManageComponentFilesCard};
 pub use keyword::{KeywordsTags, KeywordTagItem, AddKeywordsTags};

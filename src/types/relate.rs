@@ -142,13 +142,16 @@ impl From<super::UserCertificate> for Certificate {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Default, Debug)]
+#[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct TypeAccessInfo {
     pub lang_id: usize,
     pub name: String,
     pub type_access_id: usize,
 }
+
+/// RBAC permission level (Manage/Read)
+pub type PermissionLevel = TypeAccessInfo;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]

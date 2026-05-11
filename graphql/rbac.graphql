@@ -1,0 +1,345 @@
+# ============================================================================
+# RBAC
+# ============================================================================
+
+query GetPermissions {
+  permissions(permissionIds: [1,3]) {
+    typeAccessId
+    langId
+    name
+  }
+}
+
+# ============================================================================
+# COMPONENT RBAC
+# ============================================================================
+
+query GetComponentAccessList($componentUuid: UUID!) {
+  getUsersListAccessComponent(componentUuid: $componentUuid) {
+    user {
+      uuid
+      firstname
+      lastname
+      username
+      imageFile {
+        uuid
+        filename
+        filesize
+        downloadUrl
+      }
+    }
+    permission {
+      typeAccessId
+      langId
+      name
+    }
+    isEnabled
+    createdAt
+    updatedAt
+  }
+  getCompaniesListAccessComponent(componentUuid: $componentUuid) {
+    company {
+      uuid
+      shortname
+      inn
+      imageFile {
+        uuid
+        filename
+        filesize
+        downloadUrl
+      }
+    }
+    permission {
+      typeAccessId
+      langId
+      name
+    }
+    isEnabled
+    createdAt
+    updatedAt
+  }
+}
+
+mutation SetUserAccessComponent($varSetUserAccessComponent: IptUserAccessComponentData!) {
+  setUserAccessComponent(args: $varSetUserAccessComponent)
+}
+
+mutation DeleteUserAccessComponent($varDeleteUserAccessComponent: DelUserAccessComponentData!) {
+  deleteUserAccessComponent(args: $varDeleteUserAccessComponent)
+}
+
+mutation SetCompanyAccessComponent($varSetCompanyAccessComponent: IptCompanyAccessComponentData!) {
+  setCompanyAccessComponent(args: $varSetCompanyAccessComponent)
+}
+
+mutation DeleteCompanyAccessComponent($varDeleteCompanyAccessComponent: DelCompanyAccessComponentData!) {
+  deleteCompanyAccessComponent(args: $varDeleteCompanyAccessComponent)
+}
+
+# ============================================================================
+# STANDARD RBAC
+# ============================================================================
+
+query GetStandardAccessList($standardUuid: UUID!) {
+  getUsersListAccessStandard(standardUuid: $standardUuid) {
+    user {
+      uuid
+      firstname
+      lastname
+      username
+      imageFile {
+        uuid
+        filename
+        filesize
+        downloadUrl
+      }
+    }
+    permission {
+      typeAccessId
+      langId
+      name
+    }
+    isEnabled
+    createdAt
+    updatedAt
+  }
+  getCompaniesListAccessStandard(standardUuid: $standardUuid) {
+    company {
+      uuid
+      shortname
+      inn
+      imageFile {
+        uuid
+        filename
+        filesize
+        downloadUrl
+      }
+    }
+    permission {
+      typeAccessId
+      langId
+      name
+    }
+    isEnabled
+    createdAt
+    updatedAt
+  }
+}
+
+mutation SetUserAccessStandard($varSetUserAccessStandard: IptUserAccessStandardData!) {
+  setUserAccessStandard(args: $varSetUserAccessStandard)
+}
+
+mutation DeleteUserAccessStandard($varDeleteUserAccessStandard: DelUserAccessStandardData!) {
+  deleteUserAccessStandard(args: $varDeleteUserAccessStandard)
+}
+
+mutation SetCompanyAccessStandard($varSetCompanyAccessStandard: IptCompanyAccessStandardData!) {
+  setCompanyAccessStandard(args: $varSetCompanyAccessStandard)
+}
+
+mutation DeleteCompanyAccessStandard($varDeleteCompanyAccessStandard: DelCompanyAccessStandardData!) {
+  deleteCompanyAccessStandard(args: $varDeleteCompanyAccessStandard)
+}
+
+# ============================================================================
+# SERVICE RBAC
+# ============================================================================
+
+query GetServiceAccessList($serviceUuid: UUID!) {
+  getUsersListAccessService(serviceUuid: $serviceUuid) {
+    user {
+      uuid
+      firstname
+      lastname
+      username
+      imageFile {
+        uuid
+        filename
+        filesize
+        downloadUrl
+      }
+    }
+    permission {
+      typeAccessId
+      langId
+      name
+    }
+    isEnabled
+    createdAt
+    updatedAt
+  }
+  getCompaniesListAccessService(serviceUuid: $serviceUuid) {
+    company {
+      uuid
+      shortname
+      inn
+      imageFile {
+        uuid
+        filename
+        filesize
+        downloadUrl
+      }
+    }
+    permission {
+      typeAccessId
+      langId
+      name
+    }
+    isEnabled
+    createdAt
+    updatedAt
+  }
+}
+
+mutation SetUserAccessService($varSetUserAccessService: IptUserAccessServiceData!) {
+  setUserAccessService(args: $varSetUserAccessService)
+}
+
+mutation DeleteUserAccessService($varDeleteUserAccessService: DelUserAccessServiceData!) {
+  deleteUserAccessService(args: $varDeleteUserAccessService)
+}
+
+mutation SetCompanyAccessService($varSetCompanyAccessService: IptCompanyAccessServiceData!) {
+  setCompanyAccessService(args: $varSetCompanyAccessService)
+}
+
+mutation DeleteCompanyAccessService($varDeleteCompanyAccessService: DelCompanyAccessServiceData!) {
+  deleteCompanyAccessService(args: $varDeleteCompanyAccessService)
+}
+
+# ============================================================================
+# COMPANY RBAC (through members & roles)
+# ============================================================================
+
+query GetCompanyMembers($companyUuid: UUID!) {
+  companyMembers(companyUuid: $companyUuid) {
+    user {
+      uuid
+      firstname
+      lastname
+      username
+      imageFile {
+        uuid
+        filename
+        filesize
+        downloadUrl
+      }
+    }
+    companyRole {
+      role {
+        roleMemberId
+        name
+      }
+      permissions {
+        typeAccessId
+        langId
+        name
+      }
+    }
+    isEnabled
+    createdAt
+    updatedAt
+  }
+}
+
+query GetCompanyRoles($companyUuid: UUID!) {
+  companyRoles(companyUuid: $companyUuid) {
+    role {
+      roleMemberId
+      name
+    }
+    permissions {
+      typeAccessId
+      langId
+      name
+    }
+  }
+}
+
+# Add member to company
+mutation AddCompanyMember($varAddCompanyMember: IptCompanyMemberData!) {
+  addCompanyMember(args: $varAddCompanyMember)
+}
+
+# Change member role
+mutation ChangeRoleMember($varChangeRoleMember: IptCompanyMemberData!) {
+  changeRoleMember(args: $varChangeRoleMember)
+}
+
+# Remove member from company
+mutation DeleteCompanyMember($varDeleteCompanyMember: DelCompanyMemberData!) {
+  deleteCompanyMember(args: $varDeleteCompanyMember)
+}
+
+# Create a new company role
+mutation RegisterCompanyRole($varRegisterCompanyRole: IptRoleMemberData!) {
+  registerCompanyRole(args: $varRegisterCompanyRole)
+}
+
+# Update company role name
+mutation ChangeNameRoleCompany($varChangeNameRoleCompany: IptUpdateNameRoleData!) {
+  changeNameRoleCompany(args: $varChangeNameRoleCompany)
+}
+
+# Delete a company role
+mutation DeleteCompanyRole($varDeleteCompanyRole: DelRoleMemberData!) {
+  deleteCompanyRole(args: $varDeleteCompanyRole)
+}
+
+# Add access permissions to a role
+mutation AddAccessRole($varAddAccessRole: IptRoleAccessData!) {
+  addAccessRole(args: $varAddAccessRole)
+}
+
+# Remove access permissions from a role
+mutation DeleteAccessRole($varDeleteAccessRole: DelRoleAccessData!) {
+  deleteAccessRole(args: $varDeleteAccessRole)
+}
+
+# ============================================================================
+# SHARED SEARCH QUERIES
+# ============================================================================
+
+query SearchUsersForAccess(
+    $search: String!,
+    $excludeUuids: [UUID!],
+    $IptPaginate: IptPaginate
+  ) {
+  users(args: {
+    search: $search,
+    excludeUuids: $excludeUuids
+  }, paginate: $IptPaginate) {
+    uuid
+    username
+    firstname
+    lastname
+    imageFile {
+      uuid
+      filename
+      filesize
+      downloadUrl
+    }
+  }
+}
+
+query SearchCompaniesForAccess(
+    $search: String!,
+    $excludeUuids: [UUID!],
+    $IptPaginate: IptPaginate
+  ) {
+  companies(args: {
+    search: $search,
+    excludeUuids: $excludeUuids
+  }, paginate: $IptPaginate) {
+    uuid
+    shortname
+    inn
+    imageFile {
+      uuid
+      filename
+      filesize
+      downloadUrl
+    }
+  }
+}

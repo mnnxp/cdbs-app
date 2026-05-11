@@ -434,7 +434,8 @@ impl ManageModificationFilesets {
                 <div class="buttons">
                     {ft_cancel_btn(
                         "close-add-fileset-program",
-                        close_add_fileset_block
+                        close_add_fileset_block,
+                        classes!(""),
                     )}
                     {ft_save_btn(
                         "add-modification-fileset",

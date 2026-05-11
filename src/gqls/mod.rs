@@ -2,6 +2,7 @@ pub mod query;
 pub(crate) mod company;
 pub(crate) mod component;
 pub(crate) mod discussion;
+pub(crate) mod rbac;
 pub(crate) mod relate;
 pub(crate) mod standard;
 pub(crate) mod supplier_service;

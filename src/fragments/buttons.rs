@@ -113,12 +113,14 @@ pub fn ft_delete_class_btn(
     disabled: bool,
     add_classes: Classes,
 ) -> Html {
+    let mut set_classes = classes!("button", "is-danger", add_classes);
     let title_text = match confirm {
         true => get_value_field(&220),
-        false => get_value_field(&135),
+        false => {
+            set_classes.push("is-light");
+            get_value_field(&135)
+        },
     };
-    let mut set_classes = classes!("button", "is-danger");
-    set_classes.extend(add_classes);
     html!{
         <button
             id={id_btn.to_string()}
@@ -131,6 +133,31 @@ pub fn ft_delete_class_btn(
             </span>
             <span>{title_text}</span>
         </button>
+    }
+}
+
+/// Returns a pair of buttons (Confirm/Cancel) for delete confirmation
+pub fn ft_delete_pair_btn(
+    id_btn: &str,
+    on_action: Callback<bool>,
+    confirm: bool,
+    disabled: bool,
+    add_classes: Classes,
+) -> Html {
+    let on_confirm = on_action.reform(|_| true);
+    let on_cancel = on_action.reform(|_| false);
+
+    if confirm {
+    html! {
+        <div class="buttons is-fullwidth">
+            {ft_delete_class_btn(id_btn, on_confirm, confirm, disabled, classes!("is-fullwidth", add_classes.clone()))}
+            {ft_cancel_btn(&format!("{}-cancel", id_btn), on_cancel, add_classes)}
+        </div>
+        }
+    } else {
+        html!{
+            ft_delete_class_btn(id_btn, on_confirm, confirm, disabled, classes!("is-fullwidth", add_classes))
+        }
     }
 }
 
@@ -255,17 +282,43 @@ pub fn ft_create_btn(
     }
 }
 
+/// Returns a VNode with Html code of a custom button
+pub fn ft_custom_btn(
+    id_btn: &str,
+    title_text: &str,
+    class_btn: Classes,
+    class_icon: &str,
+    trigger_btn: Callback<MouseEvent>,
+    disabled: bool,
+) -> Html {
+    let class_btn = classes!("button", class_btn);
+    html!{
+        <button
+            id={id_btn.to_string()}
+            class={class_btn}
+            disabled={disabled}
+            onclick={trigger_btn}
+            title={title_text.to_string()}>
+            <span class="icon">
+                <i class={class_icon.to_string()} aria-hidden="true"></i>
+            </span>
+            <span>{title_text.to_string()}</span>
+        </button>
+    }
+}
+
 /// Returns a VNode with Html code of a cancel button
 pub fn ft_cancel_btn(
     id_btn: &str,
     trigger_btn: Callback<MouseEvent>,
+    add_classes: Classes,
 ) -> Html {
     let title_text = get_value_field(&221);
 
     html!{
         <button
             id={id_btn.to_string()}
-            class={classes!("button", "is-warning", "is-fullwidth")}
+            class={classes!("button", "is-warning", "is-fullwidth", add_classes)}
             onclick={trigger_btn}
             title={title_text.to_string()}>
             <span class="icon">

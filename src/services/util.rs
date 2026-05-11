@@ -78,6 +78,15 @@ pub(crate) fn wraps_text(text: String) -> Option<String> {
     }
 }
 
+/// Helper function for truncating UUID
+pub(crate) fn truncate_uuid(uuid: &str) -> String {
+    if uuid.len() > 12 {
+        format!("{}...{}", &uuid[0..8], &uuid[uuid.len()-4..])
+    } else {
+        uuid.to_string()
+    }
+}
+
 #[cfg(test)]
 mod test_utils {
     use super::*;

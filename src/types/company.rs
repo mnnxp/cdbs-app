@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::profiles::ShowUserShort;
 use super::file::DownloadFile;
 use super::relate::{Region, Spec, TypeAccessInfo};
-use super::UUID;
+use super::{PermissionLevel, UUID};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -200,4 +200,31 @@ pub struct CompanyUpdateInfo {
     pub time_zone: Option<String>,
     pub region_id: Option<i64>,
     pub company_type_id: Option<i64>,
+}
+
+/// Company member role information
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct RoleInfo {
+    pub role_member_id: i64,
+    pub name: String,
+}
+
+/// Company role with access levels
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct CompanyRole {
+    pub role: RoleInfo,
+    pub permissions: Vec<PermissionLevel>,
+}
+
+/// Company member entry
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct CompanyMember {
+    pub user: ShowUserShort,
+    pub company_role: CompanyRole,
+    pub is_enabled: bool,
+    pub created_at: NaiveDateTime,
+    pub updated_at: NaiveDateTime,
 }
