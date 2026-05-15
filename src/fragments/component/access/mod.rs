@@ -64,8 +64,8 @@ impl Component for ComponentAccessBlock {
 
     fn rendered(&mut self, first_render: bool) {
         if first_render {
-            self.link.send_message(Msg::RefreshAccessData);
             self.link.send_message(Msg::GetPermissions);
+            self.link.send_message(Msg::RefreshAccessData);
         }
     }
 
@@ -131,7 +131,7 @@ impl Component for ComponentAccessBlock {
         let callback_refresh_data = self.link.callback(|_| Msg::RefreshAccessData);
         html!{<>
             <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
-            {if self.loading {
+            {if self.loading || self.permissions.is_empty() {
                 res_loading_state()
             } else {
                 html!{
