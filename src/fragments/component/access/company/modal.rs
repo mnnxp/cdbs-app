@@ -20,7 +20,6 @@ use crate::gqls::rbac::{
 /// Add company access modal component
 pub(crate) struct AddCompanyAccessModal {
     error: Option<Error>,
-    component_uuid: UUID,
     props: Props,
     link: ComponentLink<Self>,
     search_text: String,
@@ -63,7 +62,6 @@ impl Component for AddCompanyAccessModal {
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
         Self {
             error: None,
-            component_uuid: props.component_uuid.clone(),
             props,
             link,
             search_text: String::new(),
@@ -140,7 +138,7 @@ impl Component for AddCompanyAccessModal {
                 if let Some(company_uuid) = &self.selected_company_uuid {
                     self.adding = true;
                     let var_set_company_access_component = set_company_access_component::IptCompanyAccessComponentData {
-                        componentUuid: self.component_uuid.clone(),
+                        componentUuid: self.props.component_uuid.clone(),
                         companyUuid: company_uuid.clone(),
                         typeAccessId: self.selected_level as i64,
                     };
@@ -172,7 +170,7 @@ impl Component for AddCompanyAccessModal {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.component_uuid == props.component_uuid && self.props.is_active == props.is_active {
+        if self.props.component_uuid == props.component_uuid && self.props.is_active == props.is_active {
             false
         } else {
             self.props = props;
