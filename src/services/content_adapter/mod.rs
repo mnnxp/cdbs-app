@@ -13,6 +13,31 @@ pub(crate) trait ContentDisplay {
     fn to_display(&self) -> Html;
 }
 
+/// Trait providing a unified way to display a truncated username.
+pub(crate) trait UsernameDisplay {
+    /// Returns the raw username string from the implementing type.
+    fn get_username(&self) -> &str;
+
+    /// Returns a formatted and truncated username prefixed with '@'.
+    ///
+    /// If the username exceeds `max_chars`, it safely truncates it
+    /// based on Unicode character boundaries to prevent UTF-8 slicing panics
+    /// and appends an ellipsis (`...`).
+    ///
+    /// # Arguments
+    /// * `max_chars` - The maximum number of Unicode characters allowed before truncation.
+    fn display_username(&self, max_chars: usize) -> String {
+        let username = self.get_username();
+        let char_count = username.chars().count();
+        if char_count > max_chars {
+            let truncated: String = username.chars().take(max_chars).collect();
+            format!("@{}...", truncated)
+        } else {
+            format!("@{}", username)
+        }
+    }
+}
+
 pub(crate) trait Markdownable {
     /// Returns a result of converting a text as Markdown content into Html code
     fn to_markdown(&self) -> Html;

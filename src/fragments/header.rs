@@ -10,6 +10,7 @@ use yew_router::{
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
 
+use crate::services::content_adapter::UsernameDisplay;
 use crate::services::{get_logged_user, get_value_field, logout, prepare_username, set_logged_user, set_token, title_changer, set_lang, get_lang};
 use crate::routes::AppRoute;
 use crate::types::SlimUser;
@@ -59,7 +60,6 @@ pub struct Header {
     current_path: String,
     current_user: Option<SlimUser>,
     open_page: CurrentPage,
-    is_active: bool,
     style_color: String,
     current_lang: u8,
 }
@@ -73,9 +73,7 @@ pub struct Props {
 pub enum Msg {
     Logout,
     LogoutComplete(String),
-    TriggerMenu,
     CheckPath,
-    SetActive(bool),
     SetTitle,
     ChangePointTo(CurrentPage),
     ChangeLanguage(u8),
@@ -100,7 +98,6 @@ impl Component for Header {
             current_path: String::new(),
             current_user: None,
             open_page: CurrentPage::Unknown,
-            is_active: false,
             style_color: String::from("color: #1872f0;"),
             current_lang,
         }
@@ -136,8 +133,6 @@ impl Component for Header {
                 // Redirect to home page
                 self.router_agent.send(ChangeRoute(AppRoute::Home.into()));
             },
-            Msg::TriggerMenu => self.is_active = !self.is_active,
-            Msg::SetActive(active) => self.is_active = active,
             Msg::CheckPath => {
                 // debug!("route_service: {:?}", route_service.get_fragment().as_str());
                 // get current url
@@ -183,9 +178,6 @@ impl Component for Header {
         if self.current_path == current_path {
             false
         } else {
-            if self.is_active {
-              self.link.send_message(Msg::TriggerMenu)
-            }
             // update current path
             self.current_path = current_path;
             // get current user data from storage
@@ -198,55 +190,41 @@ impl Component for Header {
 
     fn view(&self) -> Html {
         let onclick : Callback<MouseEvent> = self.link.callback(|_| Msg::Logout);
-        let triggrt_menu : Callback<MouseEvent> = self.link.callback(|_| Msg::TriggerMenu);
         let mut logo_classes = classes!("navbar-item", "is-size-3", "header-logo");
         match self.open_page {
             CurrentPage::Home => logo_classes.push("logo-bookmark"),
             _ => logo_classes.push("logo-full"),
         }
-        let active_menu = if self.is_active { "is-active" } else { "" };
-
-        html!{
-            <nav class="navbar" role="navigation" aria-label="main navigation">
-                <div class="navbar-brand">
-                    <h1 class={logo_classes}>
-                        {match &self.current_user {
-                            Some(_) => html!{
-                                <RouterAnchor<AppRoute> classes="is-flex" route={AppRoute::SearchPage}>
-                                    {self.show_logo()}
-                                </RouterAnchor<AppRoute>>
-                            },
-                            None => html!{
-                                <RouterAnchor<AppRoute> route={AppRoute::Home}>
-                                    {self.show_logo()}
-                                </RouterAnchor<AppRoute>>
-                            },
-                        }}
-                    </h1>
-                    <div role="button" class={classes!("navbar-burger", active_menu)} onclick={triggrt_menu} aria-label="menu" aria-expanded="false">
-                        <span aria-hidden="true"></span>
-                        <span aria-hidden="true"></span>
-                        <span aria-hidden="true"></span>
-                    </div>
+        // Render the center search section
+        let search_bar_view = match self.open_page {
+            CurrentPage::Search | CurrentPage::Home => html! {},
+            _ => html! {
+                <div class="search-wrapper">
+                    <SearchBar />
                 </div>
-                <div class={classes!("navbar-menu", active_menu)}>
-                    {self.lang_dropdown()}
-                    <div class="navbar-start"></div>
-                    {match self.open_page {
-                        CurrentPage::Search | CurrentPage::Home => html!{},
-                        _ => html!{
-                            <div class="navbar-item is-flex-grow-1">
-                                <div style="width: 100%; max-width: 400px; margin: 0 auto;">
-                                    <SearchBar />
-                                </div>
-                            </div>
-                        },
-                    }}
-                    <div class="navbar-end">
-                        {match &self.current_user {
-                            Some(user_info) => self.logged_in_view(&user_info, onclick),
-                            None => self.logged_out_view(),
-                        }}
+            },
+        };
+        // Render the left link and right action buttons section
+        let (target_route, user_actions_view) = match &self.current_user {
+            Some(user_info) => (AppRoute::SearchPage, self.logged_in_view(&user_info, onclick)),
+            None => (AppRoute::Home, self.logged_out_view()),
+        };
+        html! {
+            <nav class="navbar px-2 navbar-custom" role="navigation" aria-label="main navigation">
+                <div class="navbar-brand header-container">
+                    <div class="nav-left">
+                        <h1 class={classes!(logo_classes, "mb-0", "mr-1")}>
+                            <RouterAnchor<AppRoute> classes="is-flex is-align-items-center" route={target_route}>
+                                {self.show_logo()}
+                            </RouterAnchor<AppRoute>>
+                        </h1>
+                        {self.lang_dropdown()}
+                    </div>
+                    <div class="is-flex is-justify-content-center is-hidden-mobile nav-center">
+                        {search_bar_view}
+                    </div>
+                    <div class="is-flex is-align-items-center is-justify-content-flex-end nav-right">
+                        {user_actions_view}
                     </div>
                 </div>
             </nav>
@@ -301,20 +279,20 @@ impl Header {
         };
 
         html!{
-          <div class="navbar-item">
+          <>
             <RouterAnchor<AppRoute> route={AppRoute::Login} classes={class_login_btn}>
                 <span class={"icon"}>
                     <i class={"fas fa-sign-in-alt"} aria-hidden={"true"} style={self.style_color.clone()}></i>
                 </span>
-                <span>{get_value_field(&13)}</span>
+                <span class={"is-hidden-mobile"}>{get_value_field(&13)}</span>
             </RouterAnchor<AppRoute>>
             <RouterAnchor<AppRoute> route={AppRoute::Register} classes={class_register_btn}>
                 <span class={"icon"}>
                     <i class={"fa fa-user-plus"} aria-hidden={"true"} style={self.style_color.clone()}></i>
                 </span>
-                <span>{get_value_field(&14)}</span>
+                <span class={"is-hidden-mobile"}>{get_value_field(&14)}</span>
             </RouterAnchor<AppRoute>>
-          </div>
+          </>
         }
     }
 
@@ -323,24 +301,22 @@ impl Header {
         user_info: &SlimUser,
         logout: Callback<MouseEvent>,
     ) -> Html {
-        let active_menu = if self.is_active { "is-active" } else { "" };
-        let triggrt_menu : Callback<MouseEvent> = self.link.callback(|_| Msg::SetActive(true));
-        let out_menu : Callback<MouseEvent> = self.link.callback(|_| Msg::SetActive(false));
-
         html!{
-            <div class="buttons navbar-item">
+            <div class={"buttons"}>
                 {self.notification_btn()}
-                {self.profile_btn(user_info.username.clone())}
-                <button id="header-logout" class="button" onclick={logout} title={{get_value_field(&17)}} >
-                    <span class={"icon"}>
-                        <i class={"fas fa-sign-out-alt"} aria-hidden={"true"} style={self.style_color.clone()}></i>
-                    </span>
-                </button>
-                <div class={classes!("navbar-item", "has-dropdown", active_menu)} onmouseover={triggrt_menu} onmouseout={out_menu} >
-                <div class="navbar-dropdown is-boxed is-right" id="dropdown-menu" role="menu">
-                </div>
-                </div>
+                {self.profile_btn(user_info.display_username(10))}
+                {self.logout_btn(logout)}
             </div>
+        }
+    }
+
+    fn logout_btn(&self, logout: Callback<MouseEvent>) -> Html {
+        html!{
+            <button id="header-logout" class="button is-light is-danger" onclick={logout} title={{get_value_field(&17)}} >
+                <span class={"icon"}>
+                    <i class={"fas fa-sign-out-alt"} aria-hidden={"true"} style={self.style_color.clone()}></i>
+                </span>
+            </button>
         }
     }
 
@@ -367,7 +343,7 @@ impl Header {
             true => html!{
                 <button id="header-profile" class={"button"} onclick={onclick_btn} >
                     <span class="icon"><i class="fas fa-user" style={self.style_color.clone()}></i></span>
-                    {if show_username {html!{<span>{"@"}{username}</span>}} else {html!{}}}
+                    {if show_username {html!{<span>{username}</span>}} else {html!{}}}
                 </button>
             },
             false => html!{
@@ -386,21 +362,19 @@ impl Header {
         ];
 
         html!{
-            <div class="navbar-item has-dropdown is-hoverable">
-                <a class="navbar-link">
-                    <span class="icon">
-                        <i class="fas fa-language"></i>
-                    </span>
-                </a>
-                <div class="navbar-dropdown is-right">
-                    {for languages.iter().map(|(id, name, show_strong, onclick)| {
+            <div class="dropdown is-hoverable">
+                <div class="dropdown-trigger">
+                    <button class="button is-small is-text px-1 lang-dropdown-btn" aria-haspopup="true" aria-controls="lang-menu">
+                        <span class="icon is-small">
+                            <i class="fas fa-language"></i>
+                        </span>
+                    </button>
+                </div>
+                <div class="dropdown-menu" id="lang-menu" role="menu" style="min-width: 7rem; position: absolute;">
+                    <div class="dropdown-content">
+                    {for languages.iter().map(|(id, name, show_strong, onclick)|
                         html! {<>
-                            {if *id == 1 {
-                                html!{}
-                            } else {
-                                html!{<hr class="navbar-divider" />}
-                            }}
-                            <a class="navbar-item" onclick={onclick}>
+                            <a id={format!("lang-{}", id)} class="dropdown-item" onclick={onclick}>
                                 {if *show_strong {
                                     html! { <strong>{name}</strong> }
                                 } else {
@@ -408,7 +382,8 @@ impl Header {
                                 }}
                             </a>
                         </>}
-                    })}
+                    )}
+                    </div>
                 </div>
             </div>
         }

@@ -30,7 +30,7 @@ pub use requests::Requests;
 pub(crate) use server_location::{set_server_locations, get_server_locations, get_server_location_id};
 pub use set_classes::get_classes_table;
 pub(crate) use upload_file::{put_file, UploadData};
-pub(crate) use util::{ext_str, image_detector, prepare_username, compare_op_uuid, wraps_text, truncate_uuid};
+pub(crate) use util::{ext_str, image_detector, prepare_username, compare_op_uuid, wraps_text, truncate_uuid, unique_id};
 pub(crate) use response_parsing::{
     resp_parsing, resp_parsing_two_level, get_value_response, get_from_value, get_single_from_value
 };

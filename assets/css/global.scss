@@ -28,6 +28,7 @@ body {
   top: -2vh;
 }
 
+/* Global Navbar overrides */
 .navbar {
   background-color: #fafafa;
 }
@@ -38,6 +39,71 @@ body {
 
 .navbar-item > .button:first-child {
   margin-right: 12px;
+}
+
+/* Custom scope for the main header navigation */
+.navbar.navbar-custom {
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Master container inside the navbar-brand */
+.navbar-custom .header-container {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100%;
+}
+
+/* Left side (Logo + Lang selector) */
+.navbar-custom .nav-left {
+  display: flex !important;
+  align-items: center !important;
+  flex-shrink: 0 !important;
+  min-width: max-content !important;
+}
+
+/* Center column (Search layout) */
+.navbar-custom .nav-center {
+  flex-grow: 1 !important;
+  flex-shrink: 1 !important;
+  margin: 0 16px !important;
+  min-width: 50px !important;
+}
+
+/* Inner search input constraint */
+.navbar-custom .search-wrapper {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+/* Right side (Action buttons / Profile) */
+.navbar-custom .nav-right {
+  flex-shrink: 0 !important;
+  min-width: max-content !important;
+  gap: 4px; /* Space between buttons */
+}
+
+/* Left side Lang selector button reset */
+.button.lang-dropdown-btn {
+  text-decoration: none !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Gray icon state by default */
+.button.lang-dropdown-btn .icon i {
+  color: #7a7a7a;
+  font-size: 1.1rem;
+  transition: color 0.15s ease-in-out;
+}
+
+/* Feedback on hover/focus */
+.button.lang-dropdown-btn:hover .icon i,
+.button.lang-dropdown-btn:focus .icon i {
+  color: #4a4a4a !important;
 }
 
 .side-menu {

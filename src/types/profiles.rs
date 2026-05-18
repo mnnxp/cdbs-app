@@ -1,7 +1,7 @@
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use yew::virtual_dom::VNode;
-use crate::services::content_adapter::DateDisplay;
+use crate::services::content_adapter::{DateDisplay, UsernameDisplay};
 use super::file::DownloadFile;
 use super::relate::{Region, Program, TypeAccessInfo};
 use super::UUID;
@@ -83,6 +83,26 @@ pub struct UserDataCard{
     pub lastname: String,
     pub username: String,
     pub updated_at: VNode,
+}
+
+impl UsernameDisplay for SelfUserInfo {
+    fn get_username(&self) -> &str { &self.username }
+}
+
+impl UsernameDisplay for UserInfo {
+    fn get_username(&self) -> &str { &self.username }
+}
+
+impl UsernameDisplay for ShowUserShort {
+    fn get_username(&self) -> &str { &self.username }
+}
+
+impl UsernameDisplay for SlimUser {
+    fn get_username(&self) -> &str { &self.username }
+}
+
+impl UsernameDisplay for UserDataCard {
+    fn get_username(&self) -> &str { &self.username }
 }
 
 impl From<&SelfUserInfo> for UserDataCard {
