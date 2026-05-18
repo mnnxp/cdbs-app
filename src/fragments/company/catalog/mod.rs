@@ -75,6 +75,8 @@ impl Component for CatalogCompanies {
                         userUuid: arg.user_uuid.to_owned(),
                         favorite: arg.favorite,
                         supplier: arg.supplier,
+                        search: None,
+                        excludeUuids: None,
                     }),
                     None => None,
                 };

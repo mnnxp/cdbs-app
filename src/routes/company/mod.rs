@@ -14,7 +14,21 @@ use yew::{classes, html, Classes, Html};
 use crate::fragments::company::SpecsTags;
 use crate::services::content_adapter::{ContentDisplay, ContactDisplay, SpecDisplay};
 use crate::services::{get_lang, get_value_field};
-use crate::types::{CompanyInfo, CompanyType};
+use crate::types::{CompanyInfo, CompanyType, ShowCompanyShort};
+
+impl ContentDisplay for ShowCompanyShort {
+    /// Returns a company name and type of the company, the sequence depends on the localization
+    fn to_display(&self) -> Html {
+        let company_name_short = html!{
+            <span id="title-orgname" class="title is-6">{self.shortname.clone()}</span>
+        };
+        if self.company_type.company_type_id == 10 {
+            // Do not show if set "Other legal entity"
+            return html!{<p>{company_name_short}</p>}
+        }
+        html!{self.company_type.to_dispaly_order(classes!("is-6"), company_name_short)}
+    }
+}
 
 impl ContentDisplay for CompanyInfo {
     /// Returns a company name and type of the company, the sequence depends on the localization

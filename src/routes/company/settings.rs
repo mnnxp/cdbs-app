@@ -11,6 +11,7 @@ use graphql_client::GraphQLQuery;
 use log::debug;
 use wasm_bindgen_futures::spawn_local;
 
+use crate::fragments::company::CompanyAccessBlock;
 use crate::fragments::type_access::TypeAccessBlock;
 use crate::gqls::make_query;
 use crate::routes::AppRoute;
@@ -68,6 +69,7 @@ pub enum Menu {
     Spec,
     Access,
     RemoveCompany,
+    Member,
 }
 
 /// Update settings of the author or logout
@@ -462,6 +464,15 @@ impl CompanySettings {
                 is_active: self.select_menu == Menu::Spec,
                 ..Default::default()
             },
+            // Members MenuItem
+            MenuItem {
+                title: get_value_field(&286).to_string(), // Members Company
+                action: self.cb_generator(Menu::Member),
+                item_class: classes!("has-background-white"),
+                icon_classes: vec![classes!("fas", "fa-users")],
+                is_active: self.select_menu == Menu::Member,
+                ..Default::default()
+            },
             // Access MenuItem
             MenuItem {
                 title: get_value_field(&65).to_string(), // Access
@@ -515,6 +526,10 @@ impl CompanySettings {
             Menu::Access => self.manage_access_block(),
             // Show interface for remove company
             Menu::RemoveCompany => self.remove_company_block(),
+            // Show interface for member company
+            Menu::Member => html! {
+                <CompanyAccessBlock company_uuid={self.company_uuid.clone()} />
+            },
         }
     }
 

@@ -1,3 +1,4 @@
+mod access;
 mod catalog;
 mod certificate;
 mod represent;
@@ -7,6 +8,7 @@ mod menu_block;
 pub(crate) use menu_block::{view_content, view_certificates, view_represents, view_components, view_standards, view_services, view_discussion};
 pub use catalog::{CatalogCompanies, ListItemCompany};
 pub use certificate::{CompanyCertificatesCard, CompanyCertificateItem, AddCompanyCertificateCard};
+pub(crate) use access::CompanyAccessBlock;
 pub use represent::{CompanyRepresents, AddCompanyRepresentCard};
 pub use spec::{SpecsTags, SpecTagItem, SearchSpecsTags};
 
