@@ -182,6 +182,19 @@ pub fn ft_delete_small_btn(
     }
 }
 
+/// Returns a pair of buttons (Cancel/Save) for modal forms
+pub fn ft_modal_cancel_save_btn(
+    id_btn: &str,
+    on_cancel: Callback<MouseEvent>,
+    on_save: Callback<MouseEvent>,
+    disabled: bool,
+) -> Html {
+    html! {<>
+        {ft_cancel_btn(&format!("{}-cancel", id_btn), on_cancel, classes!(""))}
+        {ft_save_btn(&format!("{}-save", id_btn), on_save, true, disabled)}
+    </>}
+}
+
 /// Returns a VNode with Html code of a save button
 pub fn ft_save_btn(
     id_btn: &str,

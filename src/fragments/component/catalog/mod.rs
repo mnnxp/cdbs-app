@@ -114,7 +114,7 @@ impl Component for CatalogComponents {
                     ))
                     .await
                     .unwrap();
-                    debug!("GetList res: {:?}", res);
+                    // debug!("GetList res: {:?}", res);
                     link.send_message(Msg::UpdateList(res));
                 });
             },

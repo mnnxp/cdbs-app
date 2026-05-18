@@ -1,12 +1,12 @@
-use yew::{classes, html, Callback, Component, ComponentLink, Html, InputData, Properties, ShouldRender};
+use yew::{html, Callback, Component, ComponentLink, Html, InputData, Properties, ShouldRender};
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
 
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
-use crate::fragments::buttons::{ft_cancel_btn, ft_save_btn};
-use crate::services::{get_value_field, resp_parsing};
+use crate::fragments::buttons::ft_modal_cancel_save_btn;
+use crate::services::{get_value_field, resp_parsing, unique_id};
 use crate::types::UUID;
 use crate::gqls::make_query;
 use crate::gqls::rbac::{
@@ -134,15 +134,10 @@ impl Component for CreateCompanyRoleModal {
                         </div>
                     </section>
                     <footer class="modal-card-foot">
-                        {ft_cancel_btn(
-                            &format!("delete-role-cancel-id-{}", self.props.company_uuid),
+                        {ft_modal_cancel_save_btn(
+                            &unique_id("create-role"),
                             close_modal,
-                            classes!(""),
-                        )}
-                        {ft_save_btn(
-                            &format!("create-member-role-{}", self.props.company_uuid),
                             self.link.callback(|_| Msg::CreateRole),
-                            true,
                             self.request_name.is_empty() || self.creating,
                         )}
                     </footer>

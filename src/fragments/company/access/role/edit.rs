@@ -4,9 +4,9 @@ use wasm_bindgen_futures::spawn_local;
 use log::debug;
 
 use crate::error::Error;
-use crate::fragments::buttons::{ft_cancel_btn, ft_custom_btn, ft_save_btn};
+use crate::fragments::buttons::{ft_custom_btn, ft_modal_cancel_save_btn};
 use crate::fragments::list_errors::ListErrors;
-use crate::services::{get_value_field, resp_parsing};
+use crate::services::{get_value_field, resp_parsing, unique_id};
 use crate::types::{CompanyRole, PermissionLevel, UUID};
 use crate::gqls::make_query;
 use crate::gqls::rbac::{
@@ -289,15 +289,10 @@ impl EditCompanyRoleModal {
                         }}
                     </section>
                     <footer class="modal-card-foot">
-                        {ft_cancel_btn(
-                            &format!("cancel-edit-role-{}", self.props.company_uuid),
+                        {ft_modal_cancel_save_btn(
+                            &unique_id("edit-role"),
                             onclick_close,
-                            classes!(""),
-                        )}
-                        {ft_save_btn(
-                            &format!("save-role-permissions-{}", self.props.company_uuid),
                             self.link.callback(|_| Msg::Submit),
-                            true,
                             self.submitting,
                         )}
                     </footer>

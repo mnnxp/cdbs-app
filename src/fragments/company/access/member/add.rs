@@ -7,10 +7,10 @@ use log::debug;
 
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
-use crate::fragments::buttons::{ft_cancel_btn, ft_save_btn};
+use crate::fragments::buttons::ft_modal_cancel_save_btn;
 use crate::fragments::switch_icon::res_loading_state;
 use crate::services::content_adapter::ContentDisplay;
-use crate::services::{get_value_field, resp_parsing, truncate_uuid};
+use crate::services::{get_value_field, resp_parsing, truncate_uuid, unique_id};
 use crate::types::{UUID, UserInfoForMember, CompanyRole};
 use crate::gqls::make_query;
 use crate::gqls::rbac::{
@@ -153,7 +153,6 @@ impl Component for AddCompanyMemberModal {
                             self.search_results.clear();
                             self.selected_user_uuid = None;
                             self.props.on_success.emit(());
-                            self.props.on_close.emit(());
                         }
                     },
                     Err(err) => link.send_message(Msg::ResponseError(err)),
@@ -249,15 +248,10 @@ impl Component for AddCompanyMemberModal {
                     </div>
                     </section>
                     <footer class="modal-card-foot">
-                        {ft_cancel_btn(
-                            &format!("cancel-add-member-{}", self.props.company_uuid),
+                        {ft_modal_cancel_save_btn(
+                            &unique_id("add-member"),
                             close_modal,
-                            classes!(""),
-                        )}
-                        {ft_save_btn(
-                            &format!("add-member-{}", self.props.company_uuid),
                             self.link.callback(|_| Msg::AddMember),
-                            true,
                             self.selected_user_uuid.is_none() || self.adding,
                         )}
                     </footer>

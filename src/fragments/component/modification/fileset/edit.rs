@@ -431,18 +431,22 @@ impl ManageModificationFilesets {
                     </div>
                 </div>
                 <hr/>
-                <div class="buttons">
-                    {ft_cancel_btn(
-                        "close-add-fileset-program",
-                        close_add_fileset_block,
-                        classes!(""),
-                    )}
-                    {ft_save_btn(
-                        "add-modification-fileset",
-                        onclick_add_fileset_btn,
-                        true,
-                        self.props.select_modification_uuid.is_empty()
-                    )}
+                <div class="field is-grouped is-grouped-right mt-5">
+                    <p class="control">
+                        {ft_cancel_btn(
+                            "close-add-fileset-program",
+                            close_add_fileset_block,
+                            classes!(""),
+                        )}
+                    </p>
+                    <p class="control">
+                        {ft_save_btn(
+                            "add-modification-fileset",
+                            onclick_add_fileset_btn,
+                            true,
+                            self.props.select_modification_uuid.is_empty()
+                        )}
+                    </p>
                 </div>
             </div>
         }

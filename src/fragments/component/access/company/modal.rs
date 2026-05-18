@@ -7,9 +7,9 @@ use log::debug;
 
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
-use crate::fragments::buttons::{ft_cancel_btn, ft_save_btn};
+use crate::fragments::buttons::ft_modal_cancel_save_btn;
 use crate::fragments::permission::PermissionLevelBlock;
-use crate::services::{get_value_field, resp_parsing, truncate_uuid};
+use crate::services::{get_value_field, resp_parsing, truncate_uuid, unique_id};
 use crate::types::{CompanySearchResult, PermissionLevel, UUID};
 use crate::gqls::make_query;
 use crate::gqls::rbac::{
@@ -245,11 +245,10 @@ impl Component for AddCompanyAccessModal {
                         </div>
                     </section>
                     <footer class="modal-card-foot">
-                        {ft_cancel_btn(&format!("cancel-add-company-{}", self.props.component_uuid), close_modal.clone(), classes!(""))}
-                        {ft_save_btn(
-                            &format!("add-company-access-{}", self.props.component_uuid),
+                        {ft_modal_cancel_save_btn(
+                            &unique_id("add-company"),
+                            close_modal.clone(),
                             self.link.callback(|_| Msg::AddAccess),
-                            true,
                             self.selected_company_uuid.is_none() || self.adding,
                         )}
                     </footer>
