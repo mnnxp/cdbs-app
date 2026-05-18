@@ -22,6 +22,7 @@ pub mod switch_icon;
 pub mod side_menu;
 pub mod upload_favicon;
 pub mod img_showcase;
+pub mod token_manager;
 pub mod type_access;
 pub mod permission;
 pub mod three_showcase;

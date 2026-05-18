@@ -1,5 +1,16 @@
 mutation Logout { logout }
 
+mutation GetToken {
+  getToken {
+    bearer
+  }
+}
+
+query CheckToken {
+  isTokenValid
+  tokenDaysUntilExpiry
+}
+
 query GetMySelf {
   myself {
     uuid

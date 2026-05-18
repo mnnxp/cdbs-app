@@ -1001,6 +1001,10 @@ type MutationRoot {
   deleteUserFav(userUuid: UUID!): Boolean!
   readNotifications(notificationsIds: [Int!]!): Int!
   deleteNotifications(notificationsIds: [Int!]!): Int!
+  getToken: Token!
+  updateToken: Token!
+  deleteToken(token: String!): Boolean!
+  deleteAllTokens: Int!
   logout: String!
   registerComponent(args: IptComponentData!): UUID!
   transferComponentOwnership(args: ChangeOwnerComponent!): Boolean!
@@ -1154,11 +1158,9 @@ type QueryRoot {
   myself: SlimUser!
   selfData: UserAndRelatedData!
   showTokens: [UserToken!]!
-  getToken: Token!
-  updateToken: Token!
   decodeToken: Claims!
-  deleteToken(token: String!): Boolean!
-  deleteAllTokens: Int!
+  isTokenValid: Boolean!
+  tokenDaysUntilExpiry: Int!
   notifications(
     notificationIds: [Int!]
     paginate: IptPaginate

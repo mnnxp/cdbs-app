@@ -32,7 +32,7 @@ pub use set_classes::get_classes_table;
 pub(crate) use upload_file::{put_file, UploadData};
 pub(crate) use util::{ext_str, image_detector, prepare_username, compare_op_uuid, wraps_text, truncate_uuid};
 pub(crate) use response_parsing::{
-    resp_parsing, resp_parsing_two_level, get_value_response, get_from_value
+    resp_parsing, resp_parsing_two_level, get_value_response, get_from_value, get_single_from_value
 };
 pub(crate) use subscribers::Counter;
 pub(crate) use clipboard::set_clipboard;

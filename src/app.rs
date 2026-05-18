@@ -3,11 +3,12 @@
 use yew::services::fetch::FetchTask;
 use yew::{agent::Bridged, html, Bridge, Component, ComponentLink, Html, ShouldRender};
 use yew_router::prelude::*;
-
+use yew_router::agent::RouteRequest::ChangeRoute;
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
 
 use crate::error::Error;
+use crate::fragments::token_manager::TokenManager;
 use crate::fragments::{
     footer::Footer,
     header::Header,
@@ -44,6 +45,7 @@ pub enum Msg {
     CurrentUserResponse(Result<SlimUser, Error>),
     Route(Route),
     Authenticated(SlimUser),
+    RedirectToLogin,
     Logout,
 }
 
@@ -100,6 +102,10 @@ impl Component for App {
             Msg::Authenticated(slim_user) => {
                 self.current_user = Some(slim_user);
             }
+            Msg::RedirectToLogin => {
+                self.current_user = None;
+                self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
+            },
             Msg::Logout => {
                 self.current_user = None;
             }
@@ -114,6 +120,7 @@ impl Component for App {
     fn view(&self) -> Html {
         let callback_login = self.link.callback(Msg::Authenticated);
         // let callback_register = self.link.callback(Msg::Authenticated);
+        let callback_to_login = self.link.callback(|_| Msg::RedirectToLogin);
         let callback_logout = self.link.callback(|_| Msg::Logout);
 
         // old title purge
@@ -177,6 +184,7 @@ impl Component for App {
                     }
                 }
                 <Footer />
+                <TokenManager on_expired={callback_to_login} />
             </>
         }
     }
