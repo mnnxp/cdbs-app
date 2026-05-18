@@ -26,6 +26,32 @@ pub enum CurrentPage {
     Unknown,
 }
 
+impl CurrentPage {
+    /// Determines the current page based on route fragment and authenticated user
+    pub(crate) fn from_route(current_user: Option<&SlimUser>) -> Self {
+        let route_service: RouteService<()> = RouteService::new();
+        match route_service.get_fragment().as_str() {
+            path if path.len() < 3 => CurrentPage::Home,
+            "#/register" => CurrentPage::Register,
+            "#/login" => CurrentPage::Login,
+            "#/notifications" => CurrentPage::Notifications,
+            "#/search" => CurrentPage::Search,
+            "#/settings" => CurrentPage::Settings,
+            path => {
+                let mut set_page = CurrentPage::Unknown;
+                if path.starts_with("#/@") {
+                    current_user.map(|cu| {
+                        if cu.username == prepare_username(path) {
+                            set_page = CurrentPage::SelfProfile
+                        }
+                    });
+                }
+                set_page
+            },
+        }
+    }
+}
+
 pub struct Header {
     props: Props,
     router_agent: Box<dyn Bridge<RouteAgent>>,
@@ -115,26 +141,7 @@ impl Component for Header {
             Msg::CheckPath => {
                 // debug!("route_service: {:?}", route_service.get_fragment().as_str());
                 // get current url
-                let route_service: RouteService<()> = RouteService::new();
-                self.open_page = match route_service.get_fragment().as_str() {
-                    path if path.len() < 3 => CurrentPage::Home,
-                    "#/register" => CurrentPage::Register,
-                    "#/login" => CurrentPage::Login,
-                    "#/notifications" => CurrentPage::Notifications,
-                    "#/search" => CurrentPage::Search,
-                    "#/settings" => CurrentPage::Settings,
-                    path => {
-                        let mut set_page = CurrentPage::Unknown;
-                        if path.starts_with("#/@") {
-                            self.current_user.as_ref().map(|cu| {
-                                if cu.username == prepare_username(path) {
-                                    set_page = CurrentPage::SelfProfile
-                                }
-                            });
-                        }
-                        set_page
-                    },
-                };
+                self.open_page = CurrentPage::from_route(self.current_user.as_ref());
                 self.link.send_message(Msg::SetTitle);
             },
             Msg::SetTitle => {
