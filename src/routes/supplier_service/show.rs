@@ -205,7 +205,7 @@ impl Component for ShowService {
             Some(service_data) => html!{
                 <div class="service-page">
                     <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
-                    <div class="container page">
+                    <div class={"container is-fluid page"}>
                         <div class="row">
                             <div class="card column">
                               {self.show_main_card(service_data)}

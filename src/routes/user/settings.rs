@@ -349,12 +349,12 @@ impl Component for Settings {
         html!{
             <div class="settings-page">
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
-                <div class="container page">
+                <div class={"container is-fluid page pl-0"}>
                     <div class="row">
                         <div class="columns">
-                            <div class="column is-flex">
+                            <div class="column is-flex side-menu-content-fix">
                                 {self.view_menu()}
-                                <div class="card is-flex-grow-1" >
+                                <div class="card is-flex-grow-1 side-menu-content-fix">
                                   <div class="card-content">
                                     {match self.select_menu {
                                         // Show interface for change profile data
@@ -550,9 +550,7 @@ impl Settings {
         ];
 
         html! {
-          <div style="margin-right: 18px;z-index: 1;" >
-              <SideMenu menu_arr={menu_arr} />
-          </div>
+            <SideMenu menu_arr={menu_arr} />
         }
     }
 

@@ -202,7 +202,7 @@ impl Component for CreateCompany {
         html!{
             <div class="settings-page">
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
-                <div class="container page">
+                <div class={"container is-fluid page"}>
                     <div class="row">
                         <h1 class="title">{get_value_field(&289)}</h1>
                         <div class="card column">

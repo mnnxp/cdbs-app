@@ -106,6 +106,18 @@ body {
   color: #4a4a4a !important;
 }
 
+.side-menu-content-fix {
+  min-width: 0;
+  width: 100%;
+}
+
+.side-menu-wrapper {
+  margin-right: 18px;
+  z-index: 1;
+  flex-shrink: 0;
+  left: -10em;
+}
+
 .side-menu {
   // width: 14em;
   position: sticky;
@@ -175,6 +187,7 @@ body {
 .side-menu ul li:hover {
   background-color: #fff;
   border-radius: 0 8px 8px 0;
+  z-index: 10;
 }
 
 .side-menu .active {
@@ -513,8 +526,8 @@ scene-hull {
 }
 
 .right-side {
-  position: absolute;
-  right: 1em;
+  margin-left: auto;
+  padding-left: 1em;
 }
 
 .itemsBox {

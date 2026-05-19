@@ -144,7 +144,7 @@ impl Component for Register {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         let onclick_signup_btn = self.link.callback(|_| Msg::Request);
 
-        html!{<div class="container page">
+        html!{<div class={"container is-fluid page"}>
             <div class="auth-page">
                 <h1 class="title">{get_value_field(&14)}</h1>
                 <h2 class="subtitle">

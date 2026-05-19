@@ -141,7 +141,7 @@ impl Component for Login {
         let oninput_password =
             self.link.callback(|ev: InputData| Msg::UpdatePassword(ev.value));
 
-        html!{<div class="container page">
+        html!{<div class={"container is-fluid page"}>
             <div class="auth-page">
                 <h1 class="title">{get_value_field(&13)}</h1>
                 <h2 class="subtitle">

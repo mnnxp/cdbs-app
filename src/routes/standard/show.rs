@@ -268,7 +268,7 @@ impl Component for ShowStandard {
             Some(standard_data) => html!{
                 <div class="standard-page">
                     <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
-                    <div class="container page">
+                    <div class={"container is-fluid page"}>
                         <div class="row">
                             <div class="card column">
                               {self.show_main_card(standard_data)}

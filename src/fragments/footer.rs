@@ -123,9 +123,8 @@ impl Footer {
 
         html!{
             <div class="server-selector ml-3">
-                <div class="is-flex is-align-items-center">
-                    <span class="is-size-7 has-text-weight-semibold mr-2">{get_value_field(&414)}</span>
-                    <div class="select is-small">
+                <span class="is-size-7 has-text-weight-semibold mr-2">{get_value_field(&414)}</span>
+                <div class="select is-small is-narrow">
                     <select
                         id="select_server_location"
                         select={self.server_location_id.to_string()}
@@ -139,7 +138,6 @@ impl Footer {
                             }
                         )}
                     </select>
-                    </div>
                 </div>
             </div>
         }

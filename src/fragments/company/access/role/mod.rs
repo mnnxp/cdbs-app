@@ -71,11 +71,9 @@ impl Component for CompanyMemberRoleCard {
             <div class="card">
                 <header class="card-header">
                     <div class="card-header-title">
-                        <div class="is-flex is-align-items-center">
-                            <p class="is-size-5 has-text-weight-semibold">
-                                {get_value_field(&462)}
-                            </p>
-                        </div>
+                        <p class="is-size-5 has-text-weight-semibold">
+                            {get_value_field(&462)}
+                        </p>
                         {if self.props.company_roles.is_empty() {
                             html!{}
                         } else {

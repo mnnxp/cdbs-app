@@ -366,7 +366,7 @@ impl Component for ComponentSettings {
 
         html!{
             <div class="component-page">
-                <div class="container page">
+                <div class={"container is-fluid page"}>
                     <div class="row">
                         <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
                         {show_notification(

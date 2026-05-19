@@ -317,7 +317,7 @@ impl Component for CreateService {
 
         html!{
             <div class="service-page">
-                <div class="container page">
+                <div class={"container is-fluid page"}>
                     <div class="row">
                         <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
                         <h1 class="title">{get_value_field(&364)}</h1>

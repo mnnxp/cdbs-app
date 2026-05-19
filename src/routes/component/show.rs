@@ -326,7 +326,7 @@ impl Component for ShowComponent {
             Some(component_data) => html!{
                 <div class="component-page">
                     <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
-                    <div class="container page">
+                    <div class={"container is-fluid page"}>
                         <div class="row">
                             <div class="card column">
                               {self.show_main_card(component_data)}
@@ -466,28 +466,28 @@ impl ShowComponent {
     }
 
     fn show_component_info(&self, component_data: &ComponentInfo) -> Html {
+        let class_item = "is-flex is-align-items-center mr-3";
+        let class_icon = "icon is-small mr-1";
         html!{
-            <div class="columns is-mobile is-multiline">
-                <div class="column">
+            <div class="is-flex is-flex-wrap-wrap is-align-items-center is-gap-3 mb-2">
+                <div class={class_item}>
                     {get_value_field(&159)}{": "}
                     {component_data.actual_status.name.clone()}
                 </div>
-                <div class="column">{component_data.type_access.get_with_icon()}</div>
-                <div class="column is-narrow" title={get_value_field(&141)}>
-                    <span class="icon is-small">
+                <div class={class_item}>
+                    {component_data.type_access.get_with_icon()}
+                </div>
+                <div title={get_value_field(&141)} class={class_item}>
+                    <span class={class_icon}>
                         <i class={classes!("fa", "fa-user")}></i>
                     </span>
-                    {" "}
                     <GoToUser data = {component_data.owner_user.clone()} />
                 </div>
-                <div class="column is-narrow" title={get_value_field(&95)}>
-                    <span class="icon is-small">
+                <div title={get_value_field(&95)} class={class_item}>
+                    <span class={class_icon}>
                         <i class={classes!("fa", "fa-edit")}></i>
                     </span>
-                    {" "}
-                    <span class="id-box">
-                        {component_data.updated_at.date_to_display()}
-                    </span>
+                    {component_data.updated_at.date_to_display()}
                 </div>
             </div>
         }

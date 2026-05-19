@@ -290,7 +290,7 @@ impl Profile {
     ) -> Html {
         html! {
             <div class="profile-page">
-                <div class="container page">
+                <div class={"container is-fluid page"}>
                     <div class="row">
                         <div class="card">
                             <div class="card-content">
@@ -343,7 +343,7 @@ impl Profile {
     ) -> Html {
         html! {
             <div class="profile-page">
-                <div class="container page">
+                <div class={"container is-fluid page"}>
                     <div class="row">
                         <div class="card">
                             <div class="card-content">
@@ -555,9 +555,7 @@ impl Profile {
         ];
 
         html! {
-            <div style="margin-right: 18px;z-index: 1;" >
-                <SideMenu menu_arr={menu_arr} />
-            </div>
+            <SideMenu menu_arr={menu_arr} />
         }
     }
 

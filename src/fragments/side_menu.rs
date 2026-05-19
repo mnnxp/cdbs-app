@@ -77,13 +77,15 @@ impl Component for SideMenu {
 
     fn view(&self) -> Html {
         html! {
-          <nav class="side-menu">
-            <ul>
-              {for self.props.menu_arr.as_ref().unwrap().iter().map(|x|
-                  self.li_generator(x)
-              )}
-            </ul>
-          </nav>
+            <div class="side-menu-wrapper">
+                <nav class="side-menu">
+                    <ul>
+                    {for self.props.menu_arr.as_ref().unwrap().iter().map(|x|
+                        self.li_generator(x)
+                    )}
+                    </ul>
+                </nav>
+            </div>
         }
     }
 }

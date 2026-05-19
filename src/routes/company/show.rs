@@ -243,7 +243,7 @@ impl Component for ShowCompany {
             Some(company_data) => html!{
                 <div class="company-page">
                     <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
-                    <div class="container page">
+                    <div class={"container is-fluid page"}>
                         <div class="row">
                             <div class="card">
                               <div class="card-content">
@@ -431,9 +431,7 @@ impl ShowCompany {
         ];
 
         html! {
-            <div style="margin-right: 18px;z-index: 1;" >
-                <SideMenu menu_arr={menu_arr} />
-            </div>
+            <SideMenu menu_arr={menu_arr} />
         }
     }
 
