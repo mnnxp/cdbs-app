@@ -300,9 +300,7 @@ impl EditCompanyRoleModal {
             </div>
         }
     }
-}
 
-impl EditCompanyRoleModal {
     fn show_access_level_item(
         &self,
         permission: &PermissionLevel,
