@@ -7,6 +7,7 @@ use graphql_client::GraphQLQuery;
 // use log::debug;
 
 use crate::error::Error;
+use crate::fragments::buttons::ft_change_view_btn;
 use crate::fragments::{list_errors::ListErrors, list_empty::ListEmpty};
 use crate::types::{ShowServiceShort, ServicesQueryArg};
 use crate::services::resp_parsing;
@@ -104,10 +105,6 @@ impl Component for CatalogServices {
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         let onclick_change_view = self.link.callback(|_|Msg::SwitchShowType);
-        let (class_for_icon, class_for_list) = match self.show_type {
-            ListState::Box => ("fas fa-bars", "flex-box"),
-            ListState::List => ("fas fa-th-large", ""),
-        };
 
         html!{
             <div id={"services-box"} class="itemsBox" >
@@ -117,18 +114,14 @@ impl Component for CatalogServices {
                 </div>
                 <div class="level-right">
                     <div class="buttons">
-                        <button class="button" onclick={onclick_change_view} >
-                          <span class={"icon is-small"}>
-                            <i class={class_for_icon}></i>
-                          </span>
-                        </button>
+                        {ft_change_view_btn(onclick_change_view, &self.show_type)}
                     </div>
                 </div>
               </div>
               {if self.list.is_empty() {
                 html!{<ListEmpty />}
               } else { html!{
-                <div class={class_for_list}>
+                <div class={self.show_type.get_container_class()}>
                   {for self.list.iter().map(|x| self.show_card(&x))}
                 </div>
               }}}

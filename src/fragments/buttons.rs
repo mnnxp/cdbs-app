@@ -1,6 +1,8 @@
 use yew::{html, Html, classes, Classes, Callback, MouseEvent};
 use crate::{services::get_value_field, types::Pathname};
 
+use super::ListState;
+
 /// Returns a VNode with Html code of button to download url in the <a> tag
 /// (the button is not active if the link is empty)
 pub fn ft_download_btn(download_url: String, as_button: bool) -> Html {
@@ -56,6 +58,16 @@ pub fn ft_see_btn(onclick_btn: Callback<MouseEvent>, show_full: bool) -> Html {
           <span class={"icon"} style={"color: #1872f0; padding-left: 1rem;"}>
               <i class={class_icon} aria-hidden={"true"}></i>
           </span>
+        </button>
+    }
+}
+
+pub(crate) fn ft_change_view_btn(onclick_btn: Callback<MouseEvent>, show_type: &ListState) -> Html {
+    html!{
+        <button class={"button"} onclick={onclick_btn}>
+            <span class={"icon is-small"}>
+                <i class={show_type.get_icon_class()}></i>
+            </span>
         </button>
     }
 }

@@ -6,6 +6,7 @@ use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use log::debug;
 use crate::error::Error;
+use crate::fragments::buttons::ft_change_view_btn;
 use crate::fragments::{ListState, list_errors::ListErrors, list_empty::ListEmpty};
 use crate::services::resp_parsing;
 use crate::types::{ShowUserShort, UsersQueryArg};
@@ -106,15 +107,6 @@ impl Component for CatalogUsers {
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         let onclick_change_view = self.link.callback(|_|Msg::SwitchShowType);
-        let class_for_icon: &str;
-        let mut class_for_list = "";
-        match self.show_type {
-            ListState::Box => {
-                class_for_icon = "fas fa-bars";
-                class_for_list = "flex-box";
-            },
-            ListState::List => class_for_icon = "fas fa-th-large",
-        };
 
         html!{
             <div id={"users-box"} class="itemsBox" >
@@ -123,17 +115,13 @@ impl Component for CatalogUsers {
                 <div class="level-left ">
                 </div>
                 <div class="level-right">
-                  <button class="button" onclick={onclick_change_view} >
-                    <span class={"icon is-small"}>
-                      <i class={class_for_icon}></i>
-                    </span>
-                  </button>
+                  {ft_change_view_btn(onclick_change_view, &self.show_type)}
                 </div>
               </div>
               {if self.list.is_empty() {
                 html!{<ListEmpty />}
               } else { html!{
-                <div class={class_for_list}>
+                <div class={self.show_type.get_container_class()}>
                   {for self.list.iter().map(|x| self.show_card(&x))}
                 </div>
               }}}
