@@ -10,6 +10,7 @@ pub mod file;
 pub mod clipboard;
 pub mod conditions;
 pub mod footer;
+pub mod form_input;
 pub mod header;
 pub mod list_empty;
 pub mod list_errors;

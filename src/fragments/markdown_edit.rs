@@ -1,5 +1,5 @@
 use yew::{Callback, html, Properties, Component, ComponentLink, Html, ShouldRender, InputData};
-use crate::services::get_value_field;
+use crate::services::{get_value_field, unique_id};
 use crate::services::content_adapter::Markdownable;
 
 pub struct MarkdownEditCard {
@@ -55,9 +55,10 @@ impl Component for MarkdownEditCard {
             true => (get_value_field(&334), "", "display: none;"),
             false => (get_value_field(&335), "display: none;", ""),
         };
+        let textarea_id = unique_id("markdown-raw");
         html!{
-            <div id={format!("md-edit-{}", self.props.id_tag)} class={"column"}>
-                <label class={"title is-5"} for="markdown-raw">{self.props.title.clone()}</label>
+            <div id={unique_id(&self.props.id_tag)}>
+                <label class={"label"} for={textarea_id.clone()}>{self.props.title.clone()}</label>
                 <div class="card is-shadowless" style="border: 1px solid #dbdbdb">
                     <header class="card-header">
                         <button class="card-footer-item button is-white is-small" onclick={self.link.callback(|_| Msg::PreviewDescription)}>{text_btn}</button>
@@ -68,7 +69,7 @@ impl Component for MarkdownEditCard {
                                 {self.props.raw_text.to_markdown()}
                             </div>
                             <textarea
-                                id={"markdown-raw"}
+                                id={textarea_id}
                                 class={"textarea is-fullwidth"}
                                 style={style_raw}
                                 type={"text"}

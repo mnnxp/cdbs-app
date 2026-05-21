@@ -12,6 +12,7 @@ use log::debug;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::fragments::company::CompanyAccessBlock;
+use crate::fragments::form_input::InputConfig;
 use crate::fragments::type_access::TypeAccessBlock;
 use crate::gqls::make_query;
 use crate::routes::AppRoute;
@@ -21,7 +22,7 @@ use crate::fragments::{
     notification::show_notification,
     company::{
         CompanyCertificatesCard, AddCompanyCertificateCard,
-        AddCompanyRepresentCard, CompanyRepresents, SearchSpecsTags
+        CompanyRepresents, SearchSpecsTags
     },
     list_errors::ListErrors,
     side_menu::{MenuItem, SideMenu},
@@ -88,6 +89,7 @@ pub struct CompanySettings {
     get_result_update: usize,
     get_result_access: bool,
     get_result_remove_company: bool,
+    loading: bool,
     get_confirm: UUID,
     select_menu: Menu,
 }
@@ -147,6 +149,7 @@ impl Component for CompanySettings {
             get_result_update: 0,
             get_result_access: false,
             get_result_remove_company: false,
+            loading: false,
             get_confirm: String::new(),
             select_menu: Menu::Company,
         }
@@ -196,6 +199,7 @@ impl Component for CompanySettings {
                 }
             },
             Msg::RequestUpdateCompany => {
+                self.loading = true;
                 let company_uuid = self.company_uuid.clone();
                 let ipt_update_company_data = company_update::IptUpdateCompanyData {
                     orgname: self.request_company.orgname.clone(),
@@ -219,6 +223,7 @@ impl Component for CompanySettings {
                 })
             },
             Msg::RequestChangeAccess => {
+                self.loading = true;
                 let company_uuid = self.company_uuid.clone();
                 let new_type_access = self.request_access.clone();
                 spawn_local(async move {
@@ -234,6 +239,7 @@ impl Component for CompanySettings {
                 })
             },
             Msg::RequestRemoveCompany => {
+                self.loading = true;
                 let delete_company_uuid = self.company_uuid.clone();
                 if self.get_confirm == delete_company_uuid {
                     spawn_local(async move {
@@ -257,6 +263,7 @@ impl Component for CompanySettings {
             },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetUpdateAccessResult(res) => {
+                self.loading = false;
                 match resp_parsing(res, "changeCompanyAccess") {
                     Ok(result) => self.get_result_access = result,
                     Err(err) => link.send_message(Msg::ResponseError(err)),
@@ -264,6 +271,7 @@ impl Component for CompanySettings {
                 debug!("Change company access: {:?}", self.get_result_access);
             },
             Msg::GetCompanyDataResult(res) => {
+                self.loading = false;
                 match resp_parsing::<CompanyInfo>(res, "company") {
                     Ok(company_data) => {
                         debug!("Company data: {:?}", company_data);
@@ -275,6 +283,7 @@ impl Component for CompanySettings {
                 }
             },
             Msg::GetUpdateListResult(res) => {
+                self.loading = false;
                 match get_value_response(res) {
                     Ok(ref value) => {
                         self.regions = get_from_value(value, "regions").unwrap_or_default();
@@ -285,6 +294,7 @@ impl Component for CompanySettings {
                 }
             },
             Msg::GetRemoveCompanyResult(res) => {
+                self.loading = false;
                 match resp_parsing::<UUID>(res, "deleteCompany") {
                     Ok(delete_company_uuid) => {
                         debug!("Delete company: {:?}", delete_company_uuid);
@@ -299,6 +309,7 @@ impl Component for CompanySettings {
                 }
             },
             Msg::GetUpdateCompanyResult(res) => {
+                self.loading = false;
                 match resp_parsing(res, "putCompanyUpdate") {
                     Ok(result) => {
                         self.get_result_update = result;
@@ -370,40 +381,6 @@ impl Component for CompanySettings {
 }
 
 impl CompanySettings {
-    fn fileset_generator(
-        &self,
-        id: &str,
-        label: &str,
-        // placeholder: &str,
-        value: String,
-        oninput: Callback<InputData>,
-    ) -> Html {
-        let placeholder = label;
-        let mut class = "input";
-        let (input_tag, input_type) = match id {
-            "email" => ("input", "email"),
-            "description" => {
-                class = "textarea";
-                ("textarea", "text")
-            },
-            "password" => ("input", "password"),
-            _ => ("input", "text"),
-        };
-
-        html!{
-            <fieldset class="field">
-                <label class="label">{label.to_string()}</label>
-                <@{input_tag}
-                    id={id.to_string()}
-                    class={class}
-                    type={input_type}
-                    placeholder={placeholder.to_string()}
-                    value={value}
-                    oninput={oninput} ></@>
-            </fieldset>
-        }
-    }
-
     fn cb_generator(&self, cb: Menu) -> Callback<MouseEvent> {
         self.link.callback(move |_| Msg::SelectMenu(cb.clone()))
     }
@@ -493,7 +470,7 @@ impl CompanySettings {
             },
         ];
 
-        html! {
+        html!{
             <SideMenu menu_arr={menu_arr} />
         }
     }
@@ -505,12 +482,7 @@ impl CompanySettings {
             // Show interface for change favicon company
             Menu::UpdateFavicon => self.update_favicon_block(),
             // Show interface for add and update Represents
-            Menu::Represent => html!{<>
-                <h4 id="updated-represents" class="title is-4">{get_value_field(&266)}</h4> // Represents
-                <AddCompanyRepresentCard company_uuid={self.company_uuid.clone()} />
-                <br/>
-                {self.represents_block()}
-            </>},
+            Menu::Represent => self.represents_block(),
             // Show interface for add and update Certificates
             Menu::Certificates => html!{<>
                 <h4 id="updated-certificates" class="title is-4">{get_value_field(&64)}</h4> // Certificates
@@ -525,7 +497,7 @@ impl CompanySettings {
             // Show interface for remove company
             Menu::RemoveCompany => self.remove_company_block(),
             // Show interface for member company
-            Menu::Member => html! {
+            Menu::Member => html!{
                 <CompanyAccessBlock company_uuid={self.company_uuid.clone()} />
             },
         }
@@ -559,7 +531,7 @@ impl CompanySettings {
             </div>
             <form onsubmit={onsubmit_update_company} >
                 {self.fieldset_company()}
-                {ft_submit_btn("update-settings")}
+                <div class={"mt-5"}>{ft_submit_btn("update-settings")}</div>
             </form>
         </>}
     }
@@ -589,125 +561,106 @@ impl CompanySettings {
                 })
             });
 
-        html!{<>
-            // first column
-            {self.fileset_generator(
-                "orgname", get_value_field(&170), // Orgname
-                self.request_company.orgname.as_ref().map(|x| x.to_string()).unwrap_or_default(),
-                oninput_orgname.clone()
-            )}
+            let current_type_id = self.request_company.company_type_id.unwrap_or_default();
+            let current_region_id = self.request_company.region_id.unwrap_or_default();
 
-            // second column
-            <div class="columns">
-                <div class="column">
-                    {self.fileset_generator(
-                        "shortname", get_value_field(&171), // Shortname
-                        self.request_company.shortname.as_ref().map(|x| x.to_string()).unwrap_or_default(),
-                        oninput_shortname.clone()
-                    )}
-                </div>
-                <div class="column">
-                    {self.fileset_generator(
-                        "inn", get_value_field(&163),
-                        self.request_company.inn.as_ref().map(|x| x.to_string()).unwrap_or_default(),
-                        oninput_inn.clone()
-                    )}
-                </div>
-            </div>
-
-            // third column
-            <div class="columns">
-                <div class="column">
-                    <fieldset class="field">
-                        <label class="label">{get_value_field(&51)}</label>
-                        <div class="control">
-                            <div class="select">
-                              <select
-                                  id="company_type"
-                                  select={self.request_company.company_type_id.unwrap_or_default().to_string()}
-                                  onchange={onchange_company_type_id}
-                                  >
-                                {for self.company_types.iter().map(|x|
-                                    html!{
-                                        <option value={x.company_type_id.to_string()}
-                                              selected={x.company_type_id as i64 == self.request_company.company_type_id.unwrap_or_default()} >
-                                            {&x.name}
-                                        </option>
-                                    }
-                                )}
-                              </select>
+            html!{
+                <div class="settings-company-fields">
+                    <div class="box mb-5">
+                        <h5 class="title is-6 has-text-grey mb-4">
+                            <span class="icon"><i class="fas fa-building"></i></span>
+                        </h5>
+                        <div class="field mb-4">
+                            {InputConfig::company_input("orgname", &170, self.request_company.orgname.as_ref(), oninput_orgname, self.loading)}
+                        </div>
+                        <div class="columns is-desktop mb-0">
+                            <div class="column">
+                                {InputConfig::company_input("shortname", &171, self.request_company.shortname.as_ref(), oninput_shortname, self.loading)}
+                            </div>
+                            <div class="column">
+                                {InputConfig::company_input("inn", &163, self.request_company.inn.as_ref(), oninput_inn, self.loading)}
                             </div>
                         </div>
-                    </fieldset>
-                </div>
-                <div class="column">
-                    {self.fileset_generator(
-                        "site_url", get_value_field(&66), // Site
-                        self.request_company.site_url.as_ref().map(|x| x.to_string()).unwrap_or_default(),
-                        oninput_site_url.clone()
-                    )}
-                </div>
-            </div>
-
-            // fourth column
-            <div class="columns">
-                <div class="column">
-                    {self.fileset_generator(
-                        "email", get_value_field(&22), // Email
-                        self.request_company.email.as_ref().map(|x| x.to_string()).unwrap_or_default(),
-                        oninput_email.clone()
-                    )}
-                </div>
-                <div class="column">
-                    {self.fileset_generator(
-                        "phone", get_value_field(&56), // Phone
-                        self.request_company.phone.as_ref().map(|x| x.to_string()).unwrap_or_default(),
-                        oninput_phone.clone()
-                    )}
-                </div>
-            </div>
-
-            // fifth column
-            <div class="columns">
-                <div class="column">
-                    <fieldset class="field">
-                        <label class="label">{get_value_field(&27)}</label>
-                        <div class="control">
-                            <div class="select">
-                              <select
-                                  id="region"
-                                  select={self.request_company.region_id.unwrap_or_default().to_string()}
-                                  onchange={onchange_region_id}
-                                  >
-                                {for self.regions.iter().map(|x|
-                                    html!{
-                                        <option value={x.region_id.to_string()}
-                                              selected={x.region_id as i64 == self.request_company.region_id.unwrap_or_default()} >
-                                            {&x.region}
-                                        </option>
-                                    }
-                                )}
-                              </select>
+                        <div class="columns is-desktop mb-0">
+                            <div class="column">
+                                <div class="field">
+                                    <label class="label">{get_value_field(&51)}</label>
+                                    <div class="control">
+                                        <div class="select is-fullwidth">
+                                            <select
+                                                id="company_type"
+                                                disabled={self.loading}
+                                                onchange={onchange_company_type_id}
+                                                value={current_type_id.to_string()}
+                                            >
+                                                {for self.company_types.iter().map(|x| html!{
+                                                    <option
+                                                        value={x.company_type_id.to_string()}
+                                                        selected={x.company_type_id as i64 == current_type_id}
+                                                    >
+                                                        {&x.name}
+                                                    </option>
+                                                })}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="column">
+                                {InputConfig::company_input("site_url", &66, self.request_company.site_url.as_ref(), oninput_site_url, self.loading)}
                             </div>
                         </div>
-                    </fieldset>
+                    </div>
+                    <div class="box mb-5">
+                        <h5 class="title is-6 has-text-grey mb-4">
+                            <span class="icon"><i class="fas fa-address-book"></i></span>
+                        </h5>
+                        <div class="columns is-desktop mb-0">
+                            <div class="column">
+                                {InputConfig::company_input("email", &22, self.request_company.email.as_ref(), oninput_email, self.loading)}
+                            </div>
+                            <div class="column">
+                                {InputConfig::company_input("tel", &56, self.request_company.phone.as_ref(), oninput_phone, self.loading)}
+                            </div>
+                        </div>
+                        <div class="columns is-desktop mb-0">
+                            <div class="column is-4-desktop">
+                                <div class="field">
+                                    <label class="label">{get_value_field(&27)}</label>
+                                    <div class="control">
+                                        <div class="select is-fullwidth">
+                                            <select
+                                                id="region"
+                                                disabled={self.loading}
+                                                onchange={onchange_region_id}
+                                                value={current_region_id.to_string()}
+                                            >
+                                                {for self.regions.iter().map(|x| html!{
+                                                    <option
+                                                        value={x.region_id.to_string()}
+                                                        selected={x.region_id as i64 == current_region_id}
+                                                    >
+                                                        {&x.region}
+                                                    </option>
+                                                })}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="column is-8-desktop">
+                                {InputConfig::company_input("address", &57, self.request_company.address.as_ref(), oninput_address, self.loading)}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="box mb-0">
+                        <h5 class="title is-6 has-text-grey mb-4">
+                            <span class="icon"><i class="fas fa-align-left"></i></span>
+                        </h5>
+                        {InputConfig::company_input("description", &61, self.request_company.description.as_ref(), oninput_description, self.loading)}
+                    </div>
                 </div>
-                <div class="column">
-                    {self.fileset_generator(
-                        "address", get_value_field(&57), // Address
-                        self.request_company.address.as_ref().map(|x| x.to_string()).unwrap_or_default(),
-                        oninput_address.clone()
-                    )}
-                </div>
-            </div>
-
-            // sixth column
-            {self.fileset_generator(
-                "description", get_value_field(&61), // Description
-                self.request_company.description.as_ref().map(|x| x.to_string()).unwrap_or_default(),
-                oninput_description.clone()
-            )}
-        </>}
+            }
     }
 
     fn update_favicon_block(&self) -> Html {

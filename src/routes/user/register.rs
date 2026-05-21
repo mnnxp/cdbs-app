@@ -1,9 +1,10 @@
-use yew::{agent::Bridged, html, Bridge, Callback, Component, ComponentLink, Html, InputData, ChangeData, ShouldRender};
+use yew::{agent::Bridged, html, Bridge, Component, ComponentLink, Html, InputData, ChangeData, ShouldRender};
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
 
+use crate::fragments::form_input::InputConfig;
 use crate::fragments::type_access::TypeAccessBlock;
 use crate::routes::AppRoute;
 use crate::error::Error;
@@ -27,6 +28,7 @@ pub struct Register {
     programs: Vec<Program>,
     types_access: Vec<TypeAccessInfo>,
     link: ComponentLink<Self>,
+    loading: bool,
 }
 
 pub enum Msg {
@@ -56,6 +58,7 @@ impl Component for Register {
             link,
             programs: Vec::new(),
             types_access: Vec::new(),
+            loading: false,
         }
     }
 
@@ -65,9 +68,7 @@ impl Component for Register {
                 // route to profile page if user already logged
                 self.router_agent.send(ChangeRoute(AppRoute::Profile(user.username).into()));
             };
-
             let link = self.link.clone();
-
             spawn_local(async move {
                 let res = make_query(RegisterOpt::build_query(
                     register_opt::Variables
@@ -81,6 +82,7 @@ impl Component for Register {
         let link = self.link.clone();
         match msg {
             Msg::Request => {
+                self.loading = true;
                 let ipt_user_data = reg_user::IptUserData {
                     email: self.request.email.clone(),
                     username: self.request.username.clone(),
@@ -122,6 +124,7 @@ impl Component for Register {
                     },
                     Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
+                self.loading = false;
             },
             Msg::UpdateEmail(email) => self.request.email = email,
             Msg::UpdatePassword(password) => self.request.password = password,
@@ -144,37 +147,38 @@ impl Component for Register {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         let onclick_signup_btn = self.link.callback(|_| Msg::Request);
 
-        html!{<div class={"container is-fluid page"}>
-            <div class="auth-page">
-                <h1 class="title">{get_value_field(&14)}</h1>
-                <h2 class="subtitle">
-                    <RouterAnchor<AppRoute> route={AppRoute::Login}>
-                        {get_value_field(&21)}
-                    </RouterAnchor<AppRoute>>
-                </h2>
+        html!{
+            <div class="container is-fluid page">
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
-                <div class="card column">
-                    {self.fieldset_profile()}
-                    <div class="columns">
-                        <div class="column">
-                            {ft_create_btn(
-                                "signup-button",
-                                "is-large".into(),
-                                onclick_signup_btn,
-                                self.request.username.is_empty() ||
-                                    self.request.email.is_empty() ||
-                                    self.request.password.is_empty(),
-                            )}
-                        </div>
-                        <div class="column">
-                            <div class="column is-flex is-vcentered">
+                <div class="auth-page">
+                    <h1 class="title is-spaced mb-3">{get_value_field(&14)}</h1>
+                    <h2 class="subtitle mt-0 mb-4">
+                        <RouterAnchor<AppRoute> route={AppRoute::Login}>
+                            {get_value_field(&21)}
+                        </RouterAnchor<AppRoute>>
+                    </h2>
+                    <div class="box p-5">
+                        { self.fieldset_profile() }
+                        <div class="columns is-desktop is-vcentered mt-4">
+                            <div class="column is-12-mobile is-8-desktop">
+                                {ft_create_btn(
+                                    "signup-button",
+                                    "is-large is-fullwidth".into(),
+                                    onclick_signup_btn,
+                                    self.loading ||
+                                        self.request.username.is_empty() ||
+                                        self.request.email.is_empty() ||
+                                        self.request.password.is_empty(),
+                                )}
+                            </div>
+                            <div class="column is-12-mobile is-4-desktop is-flex is-vcentered pt-2">
                                 <ConditionsBlock />
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>}
+        }
     }
 }
 
@@ -189,113 +193,81 @@ impl Register {
               _ => "1".to_string(),
             }));
         let onchange_type_access = self.link.callback(|value| Msg::UpdateTypeAccessId(value));
+        let current_program_id = self.request.program_id;
 
-        html! {<>
-            // first columns (username, email)
-            <div class="columns">
-                <div class="column">
-                    {self.fileset_generator(
-                        "username", get_value_field(&19), // "Username",
-                        "fas fa-user",
-                        self.request.username.clone(),
-                        oninput_username
+        html! {
+            <>
+                <div class="columns is-desktop mb-0">
+                    <div class="column">
+                        {InputConfig::profile_input(
+                            "username",
+                            &19,
+                            Some(self.request.username.clone()),
+                            oninput_username,
+                            Some("fas fa-user"),
+                            self.loading,
+                            false,
+                        )}
+                    </div>
+                    <div class="column">
+                        {InputConfig::profile_input(
+                            "email",
+                            &22,
+                            Some(self.request.email.clone()),
+                            oninput_email,
+                            Some("fas fa-envelope"),
+                            self.loading,
+                            false,
+                        )}
+                    </div>
+                </div>
+                <div class="field mb-4">
+                    {InputConfig::profile_input(
+                        "password",
+                        &20,
+                        Some(self.request.password.clone()),
+                        oninput_password,
+                        Some("fas fa-lock"),
+                        self.loading,
+                        false,
                     )}
                 </div>
-                <div class="column">
-                    {self.fileset_generator(
-                        "email", get_value_field(&22), // "Email",
-                        "fas fa-envelope",
-                        self.request.email.clone(),
-                        oninput_email
-                    )}
-                </div>
-            </div>
-
-            // third columns (password)
-            {self.fileset_generator(
-                "password", get_value_field(&20), // "Password",
-                "fas fa-lock",
-                self.request.password.clone(),
-                oninput_password
-            )}
-
-            // fourth columns (program, access)
-            <div class="columns">
-                <div class="column">
-                    <label class="label">{get_value_field(&26)}</label>
-                    <div class="control">
-                        <div class="select">
-                          <select
-                              id="program"
-                              select={self.request.program_id.to_string()}
-                              onchange={oninput_program_id}
-                              >
-                            { for self.programs.iter().map(|x| html!{
-                              <option value={x.id.to_string()} >{&x.name}</option>
-                            }) }
-                          </select>
+                <div class="columns is-desktop mb-0">
+                    <div class="column">
+                        <div class="field">
+                            <label class="label">{get_value_field(&26)}</label>
+                            <div class="control">
+                                <div class="select is-fullwidth">
+                                <select
+                                    id="program"
+                                    onchange={oninput_program_id}
+                                    value={current_program_id.to_string()}
+                                >
+                                    { for self.programs.iter().map(|x| html! {
+                                        <option
+                                            value={x.id.to_string()}
+                                            selected={x.id == current_program_id}
+                                        >
+                                            {&x.name}
+                                        </option>
+                                    }) }
+                                </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="column">
+                        <div class="field">
+                            <label class="label">{get_value_field(&58)}</label>
+                            <TypeAccessBlock
+                                change_cb={onchange_type_access}
+                                types={self.types_access.clone()}
+                                selected={self.request.type_access_id}
+                            />
                         </div>
                     </div>
                 </div>
-                <div class="column">
-                    <label class="label">{get_value_field(&58)}</label> // "Type Access"
-                    <TypeAccessBlock
-                        change_cb={onchange_type_access}
-                        types={self.types_access.clone()}
-                        selected={self.request.type_access_id}
-                    />
-                </div>
-            </div>
-        </>}
-    }
-
-    fn fileset_generator(
-        &self,
-        id: &str,
-        label: &str,
-        // placeholder: &str,
-        icon_left: &str,
-        value: String,
-        oninput: Callback<InputData>,
-    ) -> Html {
-        let placeholder = label;
-        let (input_type, input_autocomplete) = match id {
-            "email" => ("email", "on"),
-            "password" => ("password", "new-password"),
-            _ => ("text", "on"),
-        };
-
-        html!{
-            <fieldset class="field">
-                <label class="label">{label.to_string()}</label>
-                {match icon_left.is_empty() {
-                    true => html!{
-                        <input
-                            id={id.to_string()}
-                            class="input"
-                            type={input_type}
-                            placeholder={placeholder.to_string()}
-                            value={value}
-                            autocomplete={input_autocomplete}
-                            oninput={oninput} />
-                    },
-                    false => html!{
-                        <div class="control has-icons-left">
-                            <input
-                                id={id.to_string()}
-                                class="input"
-                                type={input_type}
-                                placeholder={placeholder.to_string()}
-                                value={value}
-                                autocomplete={input_autocomplete}
-                                oninput={oninput} />
-                            <span class="icon is-small is-left">
-                              <i class={icon_left.to_string()}></i>
-                            </span>
-                        </div>
-                    },
-                }}
-            </fieldset>
+            </>
         }
     }
 }

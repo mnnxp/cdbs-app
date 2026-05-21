@@ -1,5 +1,5 @@
 use yew::{
-    agent::Bridged, html, Bridge, Callback, Component, ComponentLink,
+    agent::Bridged, html, Bridge, Component, ComponentLink,
     Html, InputData, ChangeData, Properties, ShouldRender,
 };
 use yew_router::{
@@ -10,6 +10,7 @@ use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
 
+use crate::fragments::form_input::InputConfig;
 use crate::fragments::type_access::TypeAccessBlock;
 use crate::routes::AppRoute;
 use crate::error::Error;
@@ -33,7 +34,7 @@ pub struct CreateCompany {
     regions: Vec<Region>,
     company_types: Vec<CompanyType>,
     types_access: Vec<TypeAccessInfo>,
-    disable_create_btn: bool,
+    loading: bool,
 }
 
 #[derive(Properties, Clone)]
@@ -76,17 +77,16 @@ impl Component for CreateCompany {
             regions: Vec::new(),
             company_types: Vec::new(),
             types_access: Vec::new(),
-            disable_create_btn: false,
+            loading: false,
         }
     }
 
     fn rendered(&mut self, first_render: bool) {
-        if let None = get_logged_user() {
-            // route to login page if not found token
-            self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
-        };
-
         if first_render {
+            if let None = get_logged_user() {
+                // route to login page if not found token
+                self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
+            };
             let link = self.link.clone();
 
             spawn_local(async move {
@@ -103,7 +103,7 @@ impl Component for CreateCompany {
 
         match msg {
             Msg::RequestCreateCompany => {
-                self.disable_create_btn = true;
+                self.loading = true;
                 let request_company = self.request_company.clone();
                 spawn_local(async move {
                     let CompanyCreateInfo {
@@ -197,24 +197,28 @@ impl Component for CreateCompany {
 
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
-        let onclick_create_company =
-            self.link.callback(|_| Msg::RequestCreateCompany);
+        let onclick_create_company = self.link.callback(|_| Msg::RequestCreateCompany);
+
         html!{
             <div class="settings-page">
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
-                <div class={"container is-fluid page"}>
-                    <div class="row">
-                        <h1 class="title">{get_value_field(&289)}</h1>
-                        <div class="card column">
-                            {self.fieldset_company()}
+                <div class="container is-fluid page">
+                    <div class="box p-5">
+                        <h1 class="title is-3 mb-4">
+                            // <span class="icon mr-3"><i class="fas fa-building"></i></span>
+                            {get_value_field(&289)}
+                        </h1>
+                        {self.fieldset_company()}
+                        <div class="field mt-5">
+                            <div class="control">
+                                {ft_create_btn(
+                                    "create-company",
+                                    "is-medium".into(),
+                                    onclick_create_company,
+                                    self.loading,
+                                )}
+                            </div>
                         </div>
-                        <br/>
-                        {ft_create_btn(
-                            "create-company",
-                            "is-medium".into(),
-                            onclick_create_company,
-                            self.disable_create_btn,
-                        )}
                     </div>
                 </div>
             </div>
@@ -223,54 +227,6 @@ impl Component for CreateCompany {
 }
 
 impl CreateCompany {
-    fn fileset_generator(
-        &self,
-        id: &str,
-        label: &str,
-        // placeholder: &str,
-        icon_left: &str,
-        value: String,
-        oninput: Callback<InputData>,
-    ) -> Html {
-        let placeholder = label;
-        let input_type = match id {
-            "email" => "email",
-            "password" => "password",
-            _ => "text",
-        };
-
-        html!{
-            <fieldset class="field">
-                <label class="label">{label.to_string()}</label>
-                {match icon_left.is_empty() {
-                    true => html!{
-                        <input
-                            id={id.to_string()}
-                            class="input"
-                            type={input_type}
-                            placeholder={placeholder.to_string()}
-                            value={value}
-                            oninput={oninput} />
-                    },
-                    false => html!{
-                        <div class="control has-icons-left">
-                            <input
-                                id={id.to_string()}
-                                class="input"
-                                type={input_type}
-                                placeholder={placeholder.to_string()}
-                                value={value}
-                                oninput={oninput} />
-                            <span class="icon is-small is-left">
-                              <i class={icon_left.to_string()}></i>
-                            </span>
-                        </div>
-                    },
-                }}
-            </fieldset>
-        }
-    }
-
     fn fieldset_company(&self) -> Html {
         let oninput_orgname =
             self.link.callback(|ev: InputData| Msg::UpdateOrgname(ev.value));
@@ -298,142 +254,106 @@ impl CreateCompany {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
             }));
-        let onchange_type_access =
-            self.link.callback(|value| Msg::UpdateTypeAccessId(value));
+        let onchange_type_access = self.link.callback(|value| Msg::UpdateTypeAccessId(value));
 
-        html!{<>
-            <div class="columns">
-                <div class="column">
-                    {self.fileset_generator(
-                        "orgname", get_value_field(&170), // Orgname
-                        "",
-                        self.request_company.orgname.clone(),
-                        oninput_orgname
-                    )}
+        let current_type_id = self.request_company.company_type_id;
+        let current_region_id = self.request_company.region_id;
+
+        html!{
+            <div class="create-company-page">
+                <div class="columns is-desktop mb-0">
+                    <div class="column">
+                        {InputConfig::company_input("orgname", &170, Some(&self.request_company.orgname), oninput_orgname, self.loading)}
+                    </div>
+                    <div class="column">
+                        {InputConfig::company_input("shortname", &171, Some(&self.request_company.shortname), oninput_shortname, self.loading)}
+                    </div>
                 </div>
-                <div class="column">
-                    {self.fileset_generator(
-                        "shortname", get_value_field(&171), // Shortname
-                        "",
-                        self.request_company.shortname.clone(),
-                        oninput_shortname
-                    )}
-                </div>
-            </div>
-            <div class="columns">
-                <div class="column">
-                    {self.fileset_generator(
-                        "inn", get_value_field(&163),
-                        "",
-                        self.request_company.inn.clone(),
-                        oninput_inn
-                    )}
-                </div>
-                <div class="column">
-                    <fieldset class="field">
-                        <label class="label">{get_value_field(&51)}</label> // Company type
-                        <div class="control">
-                            <div class="select">
-                              <select
-                                  id="company_type"
-                                  select={self.request_company.company_type_id.to_string()}
-                                  onchange={onchange_company_type_id}
-                                  >
-                                {for self.company_types.iter().map(|x|
-                                    html!{
-                                        <option value={x.company_type_id.to_string()}
-                                              selected={x.company_type_id as i64 == self.request_company.company_type_id} >
-                                            {&x.name}
-                                        </option>
-                                    }
-                                )}
-                              </select>
+                <div class="columns is-desktop mb-0">
+                    <div class="column">
+                        {InputConfig::company_input("inn", &163, Some(&self.request_company.inn), oninput_inn, self.loading)}
+                    </div>
+                    <div class="column">
+                        <div class="field">
+                            <label class="label">{get_value_field(&51)}</label>
+                            <div class="control">
+                                <div class="select is-fullwidth">
+                                    <select
+                                        id="company_type"
+                                        disabled={self.loading}
+                                        onchange={onchange_company_type_id}
+                                        value={current_type_id.to_string()}
+                                    >
+                                        {for self.company_types.iter().map(|x| html!{
+                                            <option
+                                                value={x.company_type_id.to_string()}
+                                                selected={x.company_type_id as i64 == current_type_id}
+                                            >
+                                                {&x.name}
+                                            </option>
+                                        })}
+                                    </select>
+                                </div>
                             </div>
                         </div>
-                    </fieldset>
+                    </div>
                 </div>
-            </div>
-            <div class="columns">
-                <div class="column">
-                    {self.fileset_generator(
-                        "email", get_value_field(&22), // Email
-                        "fas fa-at",
-                        self.request_company.email.clone(),
-                        oninput_email
-                    )}
+                <div class="columns is-desktop mb-0">
+                    <div class="column">
+                        {InputConfig::company_input("email", &22, Some(&self.request_company.email), oninput_email, self.loading)}
+                    </div>
+                    <div class="column">
+                        {InputConfig::company_input("tel", &56, Some(&self.request_company.phone), oninput_phone, self.loading)}
+                    </div>
                 </div>
-                <div class="column">
-                    {self.fileset_generator(
-                        "phone", get_value_field(&56), // Phone
-                        "fas fa-phone",
-                        self.request_company.phone.clone(),
-                        oninput_phone
-                    )}
-                </div>
-            </div>
-            <div class="columns">
-                <div class="column">
-                    <fieldset class="field">
-                        <label class="label">{get_value_field(&27)}</label> // Region
-                        <div class="control">
-                            <div class="select">
-                              <select
-                                  id="region"
-                                  select={self.request_company.region_id.to_string()}
-                                  onchange={onchange_region_id}
-                                  >
-                                {for self.regions.iter().map(|x|
-                                    html!{
-                                        <option value={x.region_id.to_string()}
-                                              selected={x.region_id as i64 == self.request_company.region_id} >
-                                            {&x.region}
-                                        </option>
-                                    }
-                                )}
-                              </select>
+                <div class="columns is-desktop mb-0">
+                    <div class="column is-4-desktop">
+                        <div class="field">
+                            <label class="label">{get_value_field(&27)}</label>
+                            <div class="control">
+                                <div class="select is-fullwidth">
+                                    <select
+                                        id="region"
+                                        disabled={self.loading}
+                                        onchange={onchange_region_id}
+                                        value={current_region_id.to_string()}
+                                    >
+                                        {for self.regions.iter().map(|x| html!{
+                                            <option
+                                                value={x.region_id.to_string()}
+                                                selected={x.region_id as i64 == current_region_id}
+                                            >
+                                                {&x.region}
+                                            </option>
+                                        })}
+                                    </select>
+                                </div>
                             </div>
                         </div>
-                    </fieldset>
+                    </div>
+                    <div class="column is-8-desktop">
+                        {InputConfig::company_input("address", &57, Some(&self.request_company.address), oninput_address, self.loading)}
+                    </div>
                 </div>
-                <div class="column">
-                    {self.fileset_generator(
-                        "address", get_value_field(&57), // Address
-                        "fas fa-map-marker-alt",
-                        self.request_company.address.clone(),
-                        oninput_address
-                    )}
+                <div class="columns is-desktop is-align-items-flex-start mb-4">
+                    <div class="column">
+                        {InputConfig::company_input("site_url", &66, Some(&self.request_company.site_url), oninput_site_url, self.loading)}
+                    </div>
+                    <div class="column">
+                        <div class="field">
+                            <label class="label">{get_value_field(&58)}</label>
+                            <TypeAccessBlock
+                                change_cb={onchange_type_access}
+                                types={self.types_access.clone()}
+                                selected={self.request_company.type_access_id as usize}
+                            />
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="columns">
-                <div class="column">
-                    {self.fileset_generator(
-                        "site_url", get_value_field(&66), // Site
-                        "fas fa-link",
-                        self.request_company.site_url.clone(),
-                        oninput_site_url
-                    )}
-                </div>
-                <div class="column">
-                    <fieldset class="field">
-                        <label class="label">{get_value_field(&58)}</label> // Type access
-                        <TypeAccessBlock
-                            change_cb={onchange_type_access}
-                            types={self.types_access.clone()}
-                            selected={self.request_company.type_access_id as usize}
-                        />
-                    </fieldset>
+                <div class="field">
+                    {InputConfig::company_input("description", &61, Some(&self.request_company.description), oninput_description, self.loading)}
                 </div>
             </div>
-            <fieldset class="field">
-                <label class="label">{get_value_field(&61)}</label>
-                <textarea
-                    id="description"
-                    class="textarea"
-                    type="text"
-                    placeholder={get_value_field(&61)}
-                    value={self.request_company.description.clone()}
-                    oninput={oninput_description} />
-            </fieldset>
-        </>}
+        }
     }
 }

@@ -11,6 +11,7 @@ use log::debug;
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
+use crate::fragments::form_input::InputConfig;
 use crate::fragments::markdown_edit::MarkdownEditCard;
 use crate::fragments::type_access::TypeAccessBlock;
 use crate::routes::AppRoute;
@@ -38,7 +39,7 @@ pub struct CreateStandard {
     company_list: Vec<ShowCompanyShort>,
     standard_statuses: Vec<StandardStatus>,
     types_access: Vec<TypeAccessInfo>,
-    disable_create_btn: bool,
+    loading: bool,
 }
 
 #[derive(Properties, Clone)]
@@ -77,7 +78,7 @@ impl Component for CreateStandard {
             company_list: Vec::new(),
             standard_statuses: Vec::new(),
             types_access: Vec::new(),
-            disable_create_btn: false,
+            loading: false,
         }
     }
 
@@ -142,6 +143,7 @@ impl Component for CreateStandard {
                 }
             },
             Msg::RequestCreateStandardData => {
+                self.loading = true;
                 let request_standard: StandardCreateData = self.request_standard.clone();
 
                 spawn_local(async move {
@@ -180,6 +182,7 @@ impl Component for CreateStandard {
                 }
             },
             Msg::GetCreateStandardResult(res) => {
+                self.loading = false;
                 match resp_parsing::<UUID>(res, "registerStandard") {
                     Ok(result) => {
                         debug!("registerStandard: {:?}", result);
@@ -230,12 +233,18 @@ impl Component for CreateStandard {
         html!{
             <div class="standard-page">
                 <div class={"container is-fluid page"}>
-                    <div class="row">
-                        <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
-                        <h1 class="title">{get_value_field(&291)}</h1>
+                    <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
+                    <div class="box p-5">
+                        <h1 class="title is-3 mb-4">
+                            // <span class="icon mr-3"><i class=""></i></span>
+                            {get_value_field(&291)}
+                        </h1>
                         {self.show_main_card()}
-                        <br/>
-                        {self.show_manage_btn()}
+                        <div class="field mt-5">
+                            <div class="control">
+                                {self.show_manage_btn()}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -249,16 +258,17 @@ impl CreateStandard {
         let oninput_description = self.link.callback(|ev: InputData| Msg::UpdateDescription(ev.value));
 
         html!{
-            <div class="card">
-              <div class="column">
-                <label class="title is-5" for="create-standard-name">{get_value_field(&110)}</label>
-                <input
-                    id="create-standard-name"
-                    class="input"
-                    type="text"
-                    placeholder={get_value_field(&110)}
-                    value={self.request_standard.name.clone()}
-                    oninput={oninput_name} />
+            <>
+                <div class="field mb-4">
+                    {InputConfig::profile_input(
+                        "create-standard-name",
+                        &110,
+                        Some(self.request_standard.name.clone()),
+                        oninput_name,
+                        None,
+                        self.loading,
+                        false,
+                    )}
                 </div>
                 <MarkdownEditCard
                     id_tag={"create-standard-description"}
@@ -267,10 +277,10 @@ impl CreateStandard {
                     raw_text={self.request_standard.description.clone()}
                     oninput_text={oninput_description}
                     />
-                <div class="column">
+                <div class="block mt-5">
                     {self.show_standard_params()}
                 </div>
-            </div>
+            </>
         }
     }
 
@@ -288,24 +298,27 @@ impl CreateStandard {
               _ => String::new(),
             }));
         let onchange_type_access = self.link.callback(|value| Msg::UpdateTypeAccessId(value));
+        let current_status_id = self.request_standard.standard_status_id;
+        let current_company_uuid = self.request_standard.company_uuid.clone();
         html!{
-            <div class="columns">
+            <div class="columns is-desktop mb-0">
                 <div class="column">
-                    <div class="columns">
+                    <div class="columns is-desktop mb-0">
                         <div class="column">
-                            <label class="label" for="create-standard-publication-at">{get_value_field(&155)}</label>
-                            <input
-                                id="create-standard-publication-at"
-                                class="input"
-                                type="date"
-                                placeholder={get_value_field(&155)}
-                                value={format!("{:.*}", 10, self.request_standard.publication_at.to_string())}
-                                oninput={oninput_publication_at}
-                            />
+                            {InputConfig::profile_input(
+                                "date",
+                                &155,
+                                Some(format!("{:.*}", 10, self.request_standard.publication_at.to_string())),
+                                oninput_publication_at,
+                                None,
+                                self.loading,
+                                false,
+                            )}
                         </div>
                         <div class="column">
+                            <div class="field">
                             <label class="label" for="create-standard-status-id">{get_value_field(&96)}</label>
-                            <div class="select">
+                            <div class="select is-fullwidth">
                                 <select
                                     id="create-standard-status-id"
                                     select={self.request_standard.standard_status_id.to_string()}
@@ -314,15 +327,17 @@ impl CreateStandard {
                                     { for self.standard_statuses.iter().map(|x|
                                         html!{
                                             <option value={x.standard_status_id.to_string()}
-                                                selected={x.standard_status_id == self.request_standard.standard_status_id} >
+                                                selected={x.standard_status_id == current_status_id} >
                                                 {&x.name}
                                             </option>
                                         }
                                     )}
                                 </select>
                             </div>
+                            </div>
                         </div>
                     </div>
+                    <div class="field mb-0">
                     <label class="label" for="create-set-owner-company">{get_value_field(&223)}</label> // Owner company
                     <div class="select is-fullwidth">
                         <select
@@ -333,21 +348,24 @@ impl CreateStandard {
                         {for self.company_list.iter().map(|x|
                             html!{
                                 <option value={x.uuid.to_string()}
-                                        selected={x.uuid == self.request_standard.company_uuid} >
+                                        selected={x.uuid == current_company_uuid} >
                                     {&x.shortname}
                                 </option>
                             }
                         )}
                         </select>
+                        </div>
                     </div>
-                </div>
-                <div class="column">
-                    <label class="label" for="type-access-block">{get_value_field(&58)}</label>
-                    <TypeAccessBlock
-                        change_cb={onchange_type_access}
-                        types={self.types_access.clone()}
-                        selected={self.request_standard.type_access_id}
-                    />
+                    <div class="column">
+                        <div class="field">
+                            <label class="label" for="type-access-block">{get_value_field(&58)}</label>
+                            <TypeAccessBlock
+                                change_cb={onchange_type_access}
+                                types={self.types_access.clone()}
+                                selected={self.request_standard.type_access_id}
+                            />
+                        </div>
+                    </div>
                 </div>
             </div>
         }
@@ -362,7 +380,7 @@ impl CreateStandard {
                 "create-standard",
                 "is-medium".into(),
                 onclick_create_changes,
-                self.disable_create_btn,
+                self.loading,
             ),
         }}
     }

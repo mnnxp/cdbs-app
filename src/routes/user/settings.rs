@@ -6,6 +6,7 @@ use log::debug;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::error::Error;
+use crate::fragments::form_input::{render_form_input, InputConfig};
 use crate::fragments::type_access::TypeAccessBlock;
 use crate::fragments::{
     buttons::{ft_delete_btn, ft_submit_btn},
@@ -58,6 +59,7 @@ pub struct Settings {
     get_result_access: bool,
     get_result_pwd: bool,
     get_result_remove_profile: bool,
+    loading: bool,
     get_confirm: String,
     select_menu: Menu,
 }
@@ -121,6 +123,7 @@ impl Component for Settings {
             get_result_access: false,
             get_result_pwd: false,
             get_result_remove_profile: false,
+            loading: false,
             get_confirm: String::new(),
             select_menu: Menu::Profile,
         }
@@ -159,6 +162,7 @@ impl Component for Settings {
                 }
             },
             Msg::RequestCurrentData => {
+                self.loading = true;
                 spawn_local(async move {
                     let res = make_query(GetSelfData::build_query(
                         get_self_data::Variables
@@ -167,6 +171,7 @@ impl Component for Settings {
                 })
             },
             Msg::RequestUpdateProfile => {
+                self.loading = true;
                 let username =
                     match matches!(
                         &self.request_profile.username,
@@ -198,6 +203,7 @@ impl Component for Settings {
                 })
             },
             Msg::RequestChangeAccess => {
+                self.loading = true;
                 let new_type_access = self.request_access.clone();
                 spawn_local(async move {
                     let res = make_query(ChangeTypeAccessUser::build_query(
@@ -207,6 +213,7 @@ impl Component for Settings {
                 })
             },
             Msg::RequestUpdatePassword => {
+                self.loading = true;
                 let ipt_update_password = put_update_password::IptUpdatePassword {
                     oldPassword: self.request_password.old_password.clone(),
                     newPassword: self.request_password.new_password.clone(),
@@ -220,6 +227,7 @@ impl Component for Settings {
             },
             Msg::RequestRemoveProfile => {
                 if self.get_confirm == self.current_username {
+                    self.loading = true;
                     let user_password = self.request_user_password.clone();
                     spawn_local(async move {
                         let res = make_query(DeleteUserData::build_query(delete_user_data::Variables{
@@ -233,6 +241,7 @@ impl Component for Settings {
             },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::GetUpdateAccessResult(res) => {
+                self.loading = false;
                 match resp_parsing(res, "changeTypeAccessUser") {
                     Ok(result) => self.get_result_access = result,
                     Err(err) => link.send_message(Msg::ResponseError(err)),
@@ -240,6 +249,7 @@ impl Component for Settings {
                 debug!("changeTypeAccessUser: {:?}", self.get_result_access);
             },
             Msg::GetUpdatePwdResult(res) => {
+                self.loading = false;
                 match resp_parsing(res, "putUpdatePassword") {
                     Ok(result) => self.get_result_pwd = result,
                     Err(err) => link.send_message(Msg::ResponseError(err)),
@@ -247,6 +257,7 @@ impl Component for Settings {
                 debug!("putUpdatePassword: {:?}", self.get_result_pwd);
             },
             Msg::GetProfileDataResult(res) => {
+                self.loading = false;
                 match resp_parsing::<SelfUserInfo>(res, "selfData") {
                     Ok(user_data) => {
                         self.current_data = Some(user_data.clone());
@@ -258,6 +269,7 @@ impl Component for Settings {
                 }
             },
             Msg::GetUpdateListResult(res) => {
+                self.loading = false;
                 match get_value_response(res) {
                     Ok(ref value) => {
                         self.regions = get_from_value(value, "regions").unwrap_or_default();
@@ -268,6 +280,7 @@ impl Component for Settings {
                 }
             },
             Msg::GetUpdateProfileResult(res) => {
+                self.loading = false;
                 match resp_parsing(res, "putUserUpdate") {
                     Ok(result) => {
                         self.get_result_profile = result;
@@ -284,6 +297,7 @@ impl Component for Settings {
                 }
             },
             Msg::GetRemoveProfileResult(res) => {
+                self.loading = false;
                 match resp_parsing(res, "deleteUserData") {
                     Ok(result) => {
                         self.get_result_remove_profile = result;
@@ -363,7 +377,7 @@ impl Component for Settings {
                                             {self.show_update_profile_info()}
                                             <form onsubmit={onsubmit_update_profile}>
                                                 {self.change_profile_card()}
-                                                {ft_submit_btn("update-settings")}
+                                                <div class={"mt-5"}>{ft_submit_btn("update-settings")}</div>
                                             </form>
                                         </>},
                                         // Show interface for change favicon user
@@ -384,7 +398,7 @@ impl Component for Settings {
                                             )}
                                             <form onsubmit={onsubmit_update_access}>
                                                 {self.change_access_card()}
-                                                {ft_submit_btn("update-access")}
+                                                <div class={"mt-5"}>{ft_submit_btn("update-access")}</div>
                                             </form>
                                             // todo!(tasks:)
                                             // show Tokens
@@ -403,7 +417,7 @@ impl Component for Settings {
                                             )}
                                             <form onsubmit={onsubmit_update_password}>
                                                 {self.update_password_card()}
-                                                {ft_submit_btn("update-password")}
+                                                <div class={"mt-5"}>{ft_submit_btn("update-password")}</div>
                                             </form>
                                         </>},
                                         // Show interface for remove profile
@@ -421,40 +435,6 @@ impl Component for Settings {
 }
 
 impl Settings {
-    fn fileset_generator(
-        &self,
-        id: &str,
-        label: &str,
-        // placeholder: &str,
-        value: String,
-        oninput: Callback<InputData>,
-    ) -> Html {
-        let placeholder = label;
-        let mut class = "input";
-        let (input_tag, input_type) = match id {
-            "email" => ("input", "email"),
-            "description" => {
-                class = "textarea";
-                ("textarea", "text")
-            },
-            "password" => ("input", "password"),
-            _ => ("input", "text"),
-        };
-
-        html!{
-            <fieldset class="field">
-                <label class="label">{label.to_string()}</label>
-                <@{input_tag}
-                    id={id.to_string()}
-                    class={class}
-                    type={input_type}
-                    placeholder={placeholder.to_string()}
-                    value={value}
-                    oninput={oninput} ></@>
-            </fieldset>
-        }
-    }
-
     fn show_update_profile_info(&self) -> Html {
         html!{
             <div class="columns">
@@ -549,7 +529,7 @@ impl Settings {
             },
         ];
 
-        html! {
+        html!{
             <SideMenu menu_arr={menu_arr} />
         }
     }
@@ -557,7 +537,7 @@ impl Settings {
     fn update_favicon_card(&self) -> Html {
         let callback_update_favicon = self.link.callback(|_| Msg::RequestCurrentData);
 
-        html! {
+        html!{
             <UpdateFaviconBlock
                 company_uuid={None}
                 callback={callback_update_favicon}
@@ -567,7 +547,7 @@ impl Settings {
 
     fn change_certificates_card(&self) -> Html {
         match &self.current_data {
-            Some(current_data) => html! {
+            Some(current_data) => html!{
                 <UserCertificatesCard
                     user_uuid={self.current_data.as_ref().map(|x| x.uuid.clone()).unwrap_or_default()}
                     certificates={current_data.certificates.clone()}
@@ -575,7 +555,7 @@ impl Settings {
                     manage_btn={true}
                 />
             },
-            None => html! {<span class={classes!("tag", "is-info", "is-light")}>{get_value_field(&74)}</span>}, // "Not fount certificates"
+            None => html!{<span class={classes!("tag", "is-info", "is-light")}>{get_value_field(&74)}</span>}, // "Not fount certificates"
         }
     }
 
@@ -588,7 +568,7 @@ impl Settings {
 
         let callback_upload_cert = self.link.callback(|_| Msg::RequestCurrentData);
 
-        html! {
+        html!{
             <AddUserCertificateCard
                 user_uuid={user_uuid}
                 callback={callback_upload_cert}
@@ -598,7 +578,7 @@ impl Settings {
 
     fn change_access_card(&self) -> Html {
         let onchange_type_access = self.link.callback(|value| Msg::UpdateTypeAccessId(value));
-        html! {
+        html!{
             <div class="column">
                 <label class="label">{get_value_field(&58)}</label> // "Type Access"
                 <TypeAccessBlock
@@ -615,22 +595,31 @@ impl Settings {
         let oninput_old_password = self.link.callback(|ev: InputData| Msg::UpdateOldPassword(ev.value));
         let oninput_new_password = self.link.callback(|ev: InputData| Msg::UpdateNewPassword(ev.value));
 
-        html! {
-            <fieldset class="columns">
-                // first column
-                <fieldset class="column">
-                    {self.fileset_generator(
-                        "password", get_value_field(&48), // "Old password"
-                        self.request_password.old_password.to_string(),
-                        oninput_old_password
-                    )}
-                    {self.fileset_generator(
-                        "password", get_value_field(&49), // "New password"
-                        self.request_password.new_password.to_string(),
-                        oninput_new_password
-                    )}
-                </fieldset>
-            </fieldset>
+        html!{
+            <div class="columns is-desktop">
+                <div class="column">
+                    {render_form_input(InputConfig {
+                        id: "password",
+                        label: get_value_field(&48), // "Old password"
+                        value: self.request_password.old_password.to_string(),
+                        oninput: oninput_old_password,
+                        is_disabled: self.loading,
+                        icon: Some("fas fa-lock"),
+                        add_classes: classes!(""),
+                        is_danger: false,
+                    })}
+                    {render_form_input(InputConfig {
+                        id: "password",
+                        label: get_value_field(&49), // "New password"
+                        value: self.request_password.new_password.to_string(),
+                        oninput: oninput_new_password,
+                        is_disabled: self.loading,
+                        icon: Some("fas fa-key"),
+                        add_classes: classes!(""),
+                        is_danger: false,
+                    })}
+                </div>
+            </div>
         }
     }
 
@@ -657,129 +646,114 @@ impl Settings {
             })
         });
 
-        html! {<>
-            // first columns (username, email)
-            <div class="columns">
-                <div class="column">
-                    {self.fileset_generator(
-                        "username", get_value_field(&50), // "Username"
-                        self.request_profile.username.as_ref().map(|x| x.clone()).unwrap_or_default(),
-                        oninput_username
-                    )}
-                </div>
-                <div class="column">
-                    {self.fileset_generator(
-                        "email", get_value_field(&22), // "Email"
-                        self.request_profile.email.as_ref().map(|x| x.clone()).unwrap_or_default(),
-                        oninput_email
-                    )}
-                </div>
-            </div>
-
-            // second columns (fio)
-            <div class="columns">
-                <div class="column">
-                    {self.fileset_generator(
-                        "firstname", get_value_field(&52), // "Firstname"
-                        self.request_profile.firstname.as_ref().map(|x| x.clone()).unwrap_or_default(),
-                        oninput_firstname
-                    )}
-                </div>
-                <div class="column">
-                    {self.fileset_generator(
-                        "lastname", get_value_field(&53), // "Lastname"
-                        self.request_profile.lastname.as_ref().map(|x| x.clone()).unwrap_or_default(),
-                        oninput_lastname
-                    )}
-                </div>
-                <div class="column">
-                    {self.fileset_generator(
-                        "secondname", get_value_field(&54), // "Secondname"
-                        self.request_profile.secondname.as_ref().map(|x| x.clone()).unwrap_or_default(),
-                        oninput_secondname
-                    )}
-                </div>
-            </div>
-
-            // third columns (position, phone, address)
-            <div class="columns">
-                <div class="column">
-                    {self.fileset_generator(
-                        "position", get_value_field(&55), // "Position"
-                        self.request_profile.position.as_ref().map(|x| x.clone()).unwrap_or_default(),
-                        oninput_position
-                    )}
-                </div>
-                <div class="column">
-                    {self.fileset_generator(
-                        "phone", get_value_field(&56), // "Phone"
-                        self.request_profile.phone.as_ref().map(|x| x.clone()).unwrap_or_default(),
-                        oninput_phone
-                    )}
-                </div>
-                <div class="column">
-                    {self.fileset_generator(
-                        "address", get_value_field(&57), // "Address"
-                        self.request_profile.address.as_ref().map(|x| x.clone()).unwrap_or_default(),
-                        oninput_address
-                    )}
-                </div>
-            </div>
-
-            // fourth columns (program, region)
-            <div class="columns">
-                <div class="column">
-                    <label class="label">{get_value_field(&26)}</label> // "Program"
-                    <div class="control">
-                        <div class="select">
-                          <select
-                              id="program"
-                              select={self.request_profile.program_id.unwrap_or_default().to_string()}
-                              onchange={oninput_program_id}
-                              >
-                            {for self.programs.iter().map(|x|
-                                html!{
-                                    <option value={x.id.to_string()}
-                                        selected={x.id as i64 == self.request_profile.program_id.unwrap_or_default()} >
-                                        {&x.name}
-                                    </option>
-                                }
-                            )}
-                          </select>
+        html!{
+            <div class="settings-profile-fields">
+                <div class="box mb-5">
+                    <h5 class="title is-6 has-text-grey mb-4 is-uppercase has-text-weight-bold">
+                        <span class="icon mr-2"><i class="fas fa-id-card"></i></span>
+                    </h5>
+                    <div class="columns is-desktop">
+                        <div class="column">
+                            {InputConfig::profile_input("username", &50, self.request_profile.username.clone(), oninput_username, Some("fas fa-user"), self.loading, false)}
+                        </div>
+                        <div class="column">
+                            {InputConfig::profile_input("email", &22, self.request_profile.email.clone(), oninput_email, Some("fas fa-envelope"), self.loading, false)}
                         </div>
                     </div>
                 </div>
-                <div class="column">
-                    <label class="label">{get_value_field(&27)}</label> // "Region"
-                    <div class="control">
-                        <div class="select">
-                          <select
-                              id="region"
-                              select={self.request_profile.region_id.unwrap_or_default().to_string()}
-                              onchange={onchange_region_id}
-                              >
-                            {for self.regions.iter().map(|x|
-                                html!{
-                                    <option value={x.region_id.to_string()}
-                                          selected={x.region_id as i64 == self.request_profile.region_id.unwrap_or_default()} >
-                                        {&x.region}
-                                    </option>
-                                }
-                            )}
-                          </select>
+                <div class="box mb-5">
+                    <h5 class="title is-6 has-text-grey mb-4 is-uppercase has-text-weight-bold">
+                        <span class="icon mr-2"><i class="fas fa-user-circle"></i></span>
+                    </h5>
+                    <div class="columns is-desktop">
+                        <div class="column">
+                            {InputConfig::profile_input("lastname", &53, self.request_profile.lastname.clone(), oninput_lastname, None, self.loading, false)}
+                        </div>
+                        <div class="column">
+                            {InputConfig::profile_input("firstname", &52, self.request_profile.firstname.clone(), oninput_firstname, None, self.loading, false)}
+                        </div>
+                        <div class="column">
+                            {InputConfig::profile_input("secondname", &54, self.request_profile.secondname.clone(), oninput_secondname, None, self.loading, false)}
                         </div>
                     </div>
                 </div>
+                <div class="box mb-5">
+                    <h5 class="title is-6 has-text-grey mb-4 is-uppercase has-text-weight-bold">
+                        <span class="icon mr-2"><i class="fas fa-briefcase"></i></span>
+                    </h5>
+                    <div class="columns is-desktop">
+                        <div class="column">
+                            {InputConfig::profile_input("position", &55, self.request_profile.position.clone(), oninput_position, Some("fas fa-id-badge"), self.loading, false)}
+                        </div>
+                        <div class="column">
+                            <div class="field">
+                                <label class="label">{get_value_field(&26)}</label>
+                                <div class="control is-expanded">
+                                    <div class="select is-fullwidth">
+                                        <select
+                                            id="program"
+                                            disabled={self.loading}
+                                            onchange={oninput_program_id}
+                                            value={self.request_profile.program_id.unwrap_or_default().to_string()}
+                                        >
+                                            {for self.programs.iter().map(|x| html!{
+                                                <option value={x.id.to_string()}
+                                                    selected={x.id as i64 == self.request_profile.program_id.unwrap_or_default()}
+                                                >
+                                                    {&x.name}
+                                                </option>
+                                            })}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="column">
+                            <div class="field">
+                                <label class="label">{get_value_field(&27)}</label>
+                                <div class="control is-expanded">
+                                    <div class="select is-fullwidth">
+                                        <select
+                                            id="region"
+                                            disabled={self.loading}
+                                            onchange={onchange_region_id}
+                                            value={self.request_profile.region_id.unwrap_or_default().to_string()}
+                                        >
+                                            {for self.regions.iter().map(|x| html!{
+                                                <option value={x.region_id.to_string()}
+                                                    selected={x.region_id as i64 == self.request_profile.region_id.unwrap_or_default()}
+                                                >
+                                                    {&x.region}
+                                                </option>
+                                            })}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="box mb-5">
+                    <h5 class="title is-6 has-text-grey mb-4 is-uppercase has-text-weight-bold">
+                        <span class="icon mr-2"><i class="fas fa-address-book"></i></span>
+                    </h5>
+                    <div class="columns is-desktop">
+                        <div class="column is-3-desktop">
+                            {InputConfig::profile_input("tel", &56, self.request_profile.phone.clone(), oninput_phone, Some("fas fa-phone"), self.loading, false)}
+                        </div>
+                        <div class="column">
+                            {InputConfig::profile_input("address", &57, self.request_profile.address.clone(), oninput_address, Some("fas fa-map-marker-alt"), self.loading, false)}
+                        </div>
+                    </div>
+                </div>
+                <div class="box">
+                    <h5 class="title is-6 has-text-grey mb-4 is-uppercase has-text-weight-bold">
+                        <span class="icon mr-2"><i class="fas fa-align-left"></i></span>
+                    </h5>
+                    {InputConfig::profile_input("description", &61, self.request_profile.description.clone(), oninput_description, None, self.loading, false)}
+                </div>
             </div>
-
-            // fifth column (only description)
-            {self.fileset_generator(
-                "description", get_value_field(&61), // "Description"
-                self.request_profile.description.as_ref().map(|x| x.clone()).unwrap_or_default(),
-                oninput_description
-            )}
-            <br/>
-        </>}
+        }
     }
 
     fn remove_profile_card(&self) -> Html {
@@ -791,10 +765,14 @@ impl Settings {
             <div class="content is-medium">
                 <p><strong>{get_value_field(&272)}</strong> {get_value_field(&71)}</p>
             </div>
-            {self.fileset_generator(
-                "password", get_value_field(&62), // "your password"
-                self.request_user_password.to_string(),
+            {InputConfig::profile_input(
+                "password",
+                &62,
+                Some(self.request_user_password.clone()),
                 oninput_user_password,
+                Some("fas fa-lock"),
+                self.loading,
+                false
             )}
             {ft_delete_btn(
                 "button-remove-profile",

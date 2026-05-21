@@ -11,6 +11,7 @@ use log::debug;
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
+use crate::fragments::form_input::InputConfig;
 use crate::fragments::markdown_edit::MarkdownEditCard;
 use crate::routes::AppRoute;
 use crate::error::Error;
@@ -52,6 +53,7 @@ pub struct ServiceSettings {
     files_list: Vec<ShowFileInfo>,
     disable_save_changes_btn: bool,
     get_result_service_data: usize,
+    loading: bool,
 }
 
 #[derive(Properties, Clone)]
@@ -102,6 +104,7 @@ impl Component for ServiceSettings {
             files_list: Vec::new(),
             disable_save_changes_btn: true,
             get_result_service_data: 0,
+            loading: false,
         }
     }
 
@@ -132,6 +135,7 @@ impl Component for ServiceSettings {
             self.request_service = ServiceUpdatePreData::default();
         }
         if first_render || not_matches_service_uuid {
+            self.loading = true;
             let link = self.link.clone();
             // update current_service_uuid for checking change service in route
             self.current_service_uuid = target_service_uuid.clone();
@@ -237,6 +241,7 @@ impl Component for ServiceSettings {
                 debug!("uploadServiceFiles {:?}", self.request_upload_data.len());
             },
             Msg::GetServiceData(res) => {
+                self.loading = false;
                 match resp_parsing::<ServiceInfo>(res, "service") {
                     Ok(service_data) => {
                         debug!("Service data: {:?}", service_data);
@@ -359,15 +364,17 @@ impl ServiceSettings {
                 <div class="card-content">
                     <div class="content">
                         <div class="column">
-                            <label class="title is-5" for="update-service-name">{get_value_field(&110)}</label>
-                            <input
-                                id="update-service-name"
-                                class="input"
-                                type="text"
-                                placeholder={get_value_field(&110)}
-                                value={self.request_service.name.clone()}
-                                oninput={oninput_name} />
+                            {InputConfig::profile_input(
+                                "update-service-name",
+                                &110,
+                                Some(self.request_service.name.clone()),
+                                oninput_name,
+                                None,
+                                self.loading,
+                                false,
+                            )}
                         </div>
+                        <div class="column">
                         <MarkdownEditCard
                             id_tag={"update-service-description"}
                             title={get_value_field(&61)}
@@ -375,6 +382,7 @@ impl ServiceSettings {
                             raw_text={self.request_service.description.clone()}
                             oninput_text={oninput_description}
                             />
+                        </div>
                     </div>
                     <footer class="card-footer">
                         {ft_save_btn(

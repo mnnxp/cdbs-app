@@ -4,6 +4,7 @@ use log::debug;
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
+use crate::fragments::form_input::InputConfig;
 use crate::fragments::markdown_edit::MarkdownEditCard;
 use crate::routes::AppRoute;
 use crate::error::Error;
@@ -35,6 +36,7 @@ pub struct CreateService {
     disable_create_btn: bool,
     click_create_btn: bool,
     user_entry: bool,
+    loading: bool,
 }
 
 #[derive(Properties, Clone, PartialEq)]
@@ -83,6 +85,7 @@ impl Component for CreateService {
             disable_create_btn: false,
             click_create_btn: false,
             user_entry: is_authenticated(),
+            loading: false,
         }
     }
 
@@ -164,6 +167,7 @@ impl Component for CreateService {
                 }
             },
             Msg::RequestCreateServiceData => {
+                self.loading = true;
                 let ipt_service_data = service_request::IptServiceData {
                     name: self.request_service.name.clone(),
                     description: self.request_service.description.clone(),
@@ -241,6 +245,7 @@ impl Component for CreateService {
                 );
             },
             Msg::GetCreateServiceResult(res) => {
+                self.loading = false;
                 match resp_parsing::<UUID>(res, "serviceRequest") {
                     Ok(result) => {
                         debug!("serviceRequest: {:?}", result);
@@ -317,19 +322,27 @@ impl Component for CreateService {
 
         html!{
             <div class="service-page">
+                <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
                 <div class={"container is-fluid page"}>
-                    <div class="row">
-                        <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
-                        <h1 class="title">{get_value_field(&364)}</h1>
-                        <div class="card">
-                            {self.show_main_card()}
-                            {match self.user_entry {
-                                true => html!{},
-                                false => self.show_user_data(),
-                            }}
+                    <div class="block mb-5">
+                        <h2 class="title is-4 mb-4">
+                            // <span class="icon mr-3"><i class=""></i></span>
+                            {get_value_field(&364)}
+                        </h2>
+                        {self.show_main_card()}
+                        {match self.user_entry {
+                            true => html! {},
+                            false => html! {
+                                <div class="mt-5 pt-4" style="border-top: 1px solid #f0f0f0;">
+                                    { self.show_user_data() }
+                                </div>
+                            },
+                        }}
+                        <div class="field mt-5">
+                            <div class="control">
+                                { self.show_manage_btn() }
+                            </div>
                         </div>
-                        <br/>
-                        {self.show_manage_btn()}
                     </div>
                 </div>
             </div>
@@ -340,32 +353,20 @@ impl Component for CreateService {
 impl CreateService {
     fn show_main_card(&self) -> Html {
         let oninput_name = self.link.callback(|ev: InputData| Msg::UpdateName(ev.value));
-        let class_name = match self.request_service.name.is_empty() && self.click_create_btn {
-            true => "input is-danger",
-            false => "input",
-        };
+        let name_has_error = self.request_service.name.is_empty() && self.click_create_btn;
         let oninput_description = self.link.callback(|ev: InputData| Msg::UpdateDescription(ev.value));
         html!{
-            <div>
-                <div class={"column"}>
-                    <label class="title is-5" for="create-service-name">{get_value_field(&110)}</label>
-                    <div class={"control has-icons-right"}>
-                        <input
-                            id={"create-service-name"}
-                            class={class_name}
-                            type={"text"}
-                            placeholder={get_value_field(&110)}
-                            value={self.request_service.name.clone()}
-                            oninput={oninput_name} />
-                            {match self.request_service.name.is_empty() && self.click_create_btn {
-                                true => html!{
-                                    <span class="icon is-small is-right">
-                                        <i class="fas fa-exclamation-triangle"></i>
-                                    </span>
-                                },
-                                false => html!{},
-                            }}
-                    </div>
+            <div class="box mb-5">
+                <div class="field mb-4">
+                    {InputConfig::profile_input(
+                        "create-service-name",
+                        &110,
+                        Some(self.request_service.name.clone()),
+                        oninput_name,
+                        None,
+                        self.loading,
+                        name_has_error
+                    )}
                 </div>
                 <MarkdownEditCard
                     id_tag={"create-service-description"}
@@ -380,141 +381,83 @@ impl CreateService {
 
     fn show_user_data(&self) -> Html {
         let oninput_email = self.link.callback(|ev: InputData| Msg::UpdateEmail(ev.value));
-        let class_email = match self.request_user.email.is_empty() && self.click_create_btn {
-            true => "input is-danger",
-            false => "input",
-        };
+        let email_error = self.request_user.email.is_empty() && self.click_create_btn;
         let oninput_tel = self.link.callback(|ev: InputData| Msg::UpdateTel(ev.value));
-        let class_tel = match self.request_user.phone.is_empty() && self.click_create_btn {
-            true => "input is-danger",
-            false => "input",
-        };
+        let phone_error = self.request_user.phone.is_empty() && self.click_create_btn;
         let oninput_username = self.link.callback(|ev: InputData| Msg::UpdateUsername(ev.value));
-        let class_username = match self.request_user.username.is_empty() && self.click_create_btn {
-            true => "input is-danger",
-            false => "input",
-        };
+        let username_error = self.request_user.username.is_empty() && self.click_create_btn;
         let oninput_password = self.link.callback(|ev: InputData| Msg::UpdatePassword(ev.value));
-        let class_password = match self.request_user.phone.is_empty() && self.click_create_btn {
-            true => "input is-danger",
-            false => "input",
-        };
+        let password_error = self.request_user.password.is_empty() && self.click_create_btn;
         html!{
-            <div class={"column"}>
-            <div class={"columns"}>
-            <div class={"column"}>
-                <label class={"label"} for={"create-service-email"}>{get_value_field(&22)}</label>
-                <div class={"control has-icons-left has-icons-right"}>
-                <input
-                    id={"create-service-email"}
-                    class={class_email}
-                    type={"email"}
-                    oninput={oninput_email}
-                    value={self.request_user.email.clone()}
-                    autocomplete={"on"}
-                    />
-                <span class={"icon is-small is-left"}>
-                    <i class={"fas fa-envelope"}></i>
-                </span>
-                {match self.request_user.email.is_empty() && self.click_create_btn {
-                    true => html!{
-                        <span class="icon is-small is-right">
-                            <i class="fas fa-exclamation-triangle"></i>
-                        </span>
-                    },
-                    false => html!{},
-                }}
+            <div class="box mb-5">
+                <div class="columns is-desktop mb-0">
+                    <div class="column">
+                        {InputConfig::profile_input(
+                            "email",
+                            &22,
+                            Some(self.request_user.email.clone()),
+                            oninput_email,
+                            Some("fas fa-envelope"),
+                            self.loading,
+                            email_error
+                        )}
+                    </div>
+                    <div class="column">
+                        {InputConfig::profile_input(
+                            "tel",
+                            &56,
+                            Some(self.request_user.phone.clone()),
+                            oninput_tel,
+                            Some("fas fa-phone"),
+                            self.loading,
+                            phone_error
+                        )}
+                    </div>
                 </div>
-            </div>
-            <div class={"column"}>
-                <label class={"label"} for={"create-service-phone"}>{get_value_field(&56)}</label>
-                <div class={"control has-icons-left has-icons-right"}>
-                <input
-                    id={"create-service-phone"}
-                    class={class_tel}
-                    type={"tel"}
-                    oninput={oninput_tel}
-                    value={self.request_user.phone.clone()}
-                    autocomplete={"tel"}
-                    />
-                <span class={"icon is-small is-left"}>
-                    <i class={"fas fa-phone"}></i>
-                </span>
-                {match self.request_user.phone.is_empty() && self.click_create_btn {
-                    true => html!{
-                        <span class="icon is-small is-right">
-                            <i class="fas fa-exclamation-triangle"></i>
-                        </span>
-                    },
-                    false => html!{},
-                }}
+                <div class="columns is-desktop mb-4">
+                    <div class="column">
+                        {InputConfig::profile_input(
+                            "username",
+                            &50,
+                            Some(self.request_user.username.clone()),
+                            oninput_username,
+                            Some("fas fa-user"),
+                            self.loading,
+                            username_error
+                        )}
+                    </div>
+                    <div class="column">
+                        {InputConfig::profile_input(
+                            "password",
+                            &20,
+                            Some(self.request_user.password.clone()),
+                            oninput_password,
+                            Some("fas fa-lock"),
+                            self.loading,
+                            password_error
+                        )}
+                    </div>
                 </div>
-            </div>
-            </div>
-            <div class={"columns"}>
-            <div class={"column"}>
-                <label class={"label"} for={"create-service-username"}>{get_value_field(&50)}</label>
-                <div class={"control has-icons-left has-icons-right"}>
-                <input
-                    id={"create-service-username"}
-                    class={class_username}
-                    type={"username"}
-                    oninput={oninput_username}
-                    value={self.request_user.username.clone()}
-                    autocomplete={"username"}
-                    />
-                <span class={"icon is-small is-left"}>
-                    <i class={"fas fa-user"}></i>
-                </span>
-                {match self.request_user.username.is_empty() && self.click_create_btn {
-                    true => html!{
-                        <span class="icon is-small is-right">
-                            <i class="fas fa-exclamation-triangle"></i>
-                        </span>
-                    },
-                    false => html!{},
-                }}
+                <div class="block pt-2">
+                    <ConditionsBlock />
                 </div>
-            </div>
-            <div class={"column"}>
-                <label class={"label"} for={"create-service-password"}>{get_value_field(&20)}</label>
-                <div class={"control has-icons-left has-icons-right"}>
-                <input
-                    id={"create-service-password"}
-                    class={class_password}
-                    type={"password"}
-                    oninput={oninput_password}
-                    value={self.request_user.password.clone()}
-                    autocomplete={"new-password"}
-                    />
-                <span class={"icon is-small is-left"}>
-                    <i class={"fas fa-lock"}></i>
-                </span>
-                {match self.request_user.phone.is_empty() && self.click_create_btn {
-                    true => html!{
-                        <span class="icon is-small is-right">
-                            <i class="fas fa-exclamation-triangle"></i>
-                        </span>
-                    },
-                    false => html!{},
-                }}
-                </div>
-            </div>
-            </div>
-            <div class="column is-flex is-vcentered">
-                <ConditionsBlock />
-            </div>
             </div>
         }
     }
 
     fn show_manage_btn(&self) -> Html {
         let onclick_create_changes = self.link.callback(|_| Msg::RequestManager);
-        ft_create_btn(
-            "create-service",
-            "is-medium".into(),
-            onclick_create_changes,
-            self.disable_create_btn,
-        )
+        html!{
+            <div class="field">
+                <div class="control">
+                    {ft_create_btn(
+                        "create-service",
+                        "is-medium".into(),
+                        onclick_create_changes,
+                        self.disable_create_btn,
+                    )}
+                </div>
+            </div>
+        }
     }
 }

@@ -9,7 +9,7 @@ use crate::error::Error;
 use crate::fragments::buttons::{ft_delete_btn, ft_save_btn};
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::markdown_edit::MarkdownEditCard;
-use crate::services::{get_value_field, resp_parsing};
+use crate::services::{get_value_field, resp_parsing, unique_id};
 use crate::types::{UUID, ComponentModificationInfo, ActualStatus, ModificationUpdatePreData};
 use crate::gqls::make_query;
 use crate::gqls::component::{
@@ -232,19 +232,21 @@ impl ModificationEdit {
         let oninput_modification_description = self.link.callback(|ev: InputData| Msg::UpdateEditDescription(ev.value));
         let onclick_delete_component_modification = self.link.callback(|_| Msg::RequestDeleteModificationData);
         let onclick_component_modification_update = self.link.callback(|_| Msg::RequestUpdateModificationData);
+        let name_id = unique_id("add-modification-name");
         html!{<>
                 <div class={"content"}>
                     {self.actual_status_block()}
                     <div class={"column"}>
-                        <label class={"title is-5"} for="add-modification-name">{get_value_field(&176)}</label>
+                        <label class={"label"} for={name_id.clone()}>{get_value_field(&176)}</label>
                         <input
-                            id={"add-modification-name"}
+                            id={name_id}
                             class={"input is-fullwidth"}
                             type={"text"}
                             placeholder={self.props.modification.modification_name.clone()}
                             value={self.request_edit_modification.modification_name.clone()}
                             oninput={oninput_modification_name} />
                     </div>
+                    <div class={"column"}>
                     <MarkdownEditCard
                         id_tag={"modification-description"}
                         title={get_value_field(&61)}
@@ -252,6 +254,7 @@ impl ModificationEdit {
                         raw_text={self.request_edit_modification.description.clone()}
                         oninput_text={oninput_modification_description}
                         />
+                    </div>
                 </div>
                 <div class="columns">
                     <div class="column">
@@ -281,16 +284,16 @@ impl ModificationEdit {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
+        let status_id = unique_id("modification-actual-status");
         html!{
             <div class={"column"}>
             <div class={"columns"}>
-                <div class={"column is-narrow"}>
-                    <p class={"title is-5 select-title"}>{get_value_field(&96)}</p>
-                </div>
                 <div class={"column"}>
+                    <div class="field">
+                    <label class="label" for={status_id.clone()}>{get_value_field(&96)}</label>
                     <div class={"select"}>
                     <select
-                        id={"update-modification-actual-status"}
+                        id={status_id}
                         select={self.props.modification.actual_status.actual_status_id.to_string()}
                         onchange={onchange_modification_actual_status_id}
                         >
@@ -303,6 +306,7 @@ impl ModificationEdit {
                             }
                         )}
                     </select>
+                    </div>
                     </div>
                 </div>
             </div>

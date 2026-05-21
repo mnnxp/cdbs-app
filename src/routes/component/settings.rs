@@ -12,6 +12,7 @@ use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::fragments::delete_card::ft_delete_card;
+use crate::fragments::form_input::InputConfig;
 use crate::fragments::markdown_edit::MarkdownEditCard;
 use crate::fragments::type_access::TypeAccessBlock;
 use crate::routes::AppRoute;
@@ -71,6 +72,7 @@ pub struct ComponentSettings {
     get_result_component_data: usize,
     get_result_access: bool,
     active_tab: ActiveTab,
+    loading: bool,
 }
 
 #[derive(Properties, Clone)]
@@ -134,6 +136,7 @@ impl Component for ComponentSettings {
             get_result_component_data: 0,
             get_result_access: false,
             active_tab: ActiveTab::Data,
+            loading: false,
         }
     }
 
@@ -170,6 +173,7 @@ impl Component for ComponentSettings {
         }
 
         if first_render || not_matches_component_uuid {
+            self.loading = true;
             let link = self.link.clone();
 
             // update current_component_uuid for checking change component in route
@@ -265,6 +269,7 @@ impl Component for ComponentSettings {
                 })
             },
             Msg::GetComponentData(res) => {
+                self.loading = false;
                 match resp_parsing::<ComponentInfo>(res, "component") {
                     Ok(component_data) => {
                         self.current_component_uuid = component_data.uuid.clone();
@@ -500,15 +505,17 @@ impl ComponentSettings {
         <div class="content">
             <div class="content">
                 <div class="column">
-                    <label class="title is-5" for="setting-component-update-name">{get_value_field(&110)}</label>
-                    <input
-                        id="setting-component-update-name"
-                        class="input"
-                        type="text"
-                        placeholder={get_value_field(&110)}
-                        value={self.request_component.name.clone()}
-                        oninput={oninput_name} />
+                    {InputConfig::profile_input(
+                        "setting-component-update-name",
+                        &110,
+                        Some(self.request_component.name.clone()),
+                        oninput_name,
+                        None,
+                        self.loading,
+                        false,
+                    )}
                 </div>
+                <div class="column">
                 <MarkdownEditCard
                     id_tag={"setting-component-description"}
                     title={get_value_field(&61)}
@@ -516,6 +523,7 @@ impl ComponentSettings {
                     raw_text={self.request_component.description.clone()}
                     oninput_text={oninput_description}
                     />
+                </div>
                 {self.show_component_info()}
             </div>
             <footer class="card-footer">
