@@ -106,6 +106,27 @@ body {
   color: #4a4a4a !important;
 }
 
+.modal.is-isolated-modal {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 50 !important;
+  text-align: left !important;
+}
+
+.modal.is-isolated-modal.is-active {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.modal.is-isolated-modal .modal-card {
+  margin: 0 auto !important;
+  max-height: calc(100vh - 40px);
+}
+
 .side-menu-content-fix {
   min-width: 0;
   width: 100%;
