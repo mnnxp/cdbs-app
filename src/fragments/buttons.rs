@@ -158,17 +158,17 @@ pub fn ft_delete_pair_btn(
 ) -> Html {
     let on_confirm = on_action.reform(|_| true);
     let on_cancel = on_action.reform(|_| false);
-
+    let extended_classes = classes!("is-fullwidth", add_classes.clone());
     if confirm {
     html! {
         <div class="buttons is-fullwidth">
-            {ft_delete_class_btn(id_btn, on_confirm, confirm, disabled, classes!("is-fullwidth", add_classes.clone()))}
             {ft_cancel_btn(&format!("{}-cancel", id_btn), on_cancel, add_classes)}
+            {ft_delete_class_btn(id_btn, on_confirm, confirm, disabled, extended_classes.clone())}
         </div>
         }
     } else {
         html!{
-            ft_delete_class_btn(id_btn, on_confirm, confirm, disabled, classes!("is-fullwidth", add_classes))
+            ft_delete_class_btn(id_btn, on_confirm, confirm, disabled, extended_classes)
         }
     }
 }
