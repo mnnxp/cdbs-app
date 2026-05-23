@@ -116,7 +116,7 @@ impl Component for ManageFilesOfFilesetBlock {
                 title={get_value_field(&106)}
                 disabled={self.select_fileset_uuid.is_empty()} >
                     <span class={"icon is-small"}><i class={"fa fa-list"}></i></span>
-                    <span>{get_value_field(&198)}</span>
+                    <span class="is-hidden-mobile">{get_value_field(&198)}</span>
                 </button>
             </div>
         }

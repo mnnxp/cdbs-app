@@ -284,13 +284,13 @@ impl Header {
                 <span class={"icon"}>
                     <i class={"fas fa-sign-in-alt"} aria-hidden={"true"} style={self.style_color.clone()}></i>
                 </span>
-                <span class={"is-hidden-mobile"}>{get_value_field(&13)}</span>
+                <span class="is-hidden-mobile">{get_value_field(&13)}</span>
             </RouterAnchor<AppRoute>>
             <RouterAnchor<AppRoute> route={AppRoute::Register} classes={class_register_btn}>
                 <span class={"icon"}>
                     <i class={"fa fa-user-plus"} aria-hidden={"true"} style={self.style_color.clone()}></i>
                 </span>
-                <span class={"is-hidden-mobile"}>{get_value_field(&14)}</span>
+                <span class="is-hidden-mobile">{get_value_field(&14)}</span>
             </RouterAnchor<AppRoute>>
           </>
         }
@@ -343,7 +343,11 @@ impl Header {
             true => html!{
                 <button id="header-profile" class={"button"} onclick={onclick_btn} >
                     <span class="icon"><i class="fas fa-user" style={self.style_color.clone()}></i></span>
-                    {if show_username {html!{<span>{username}</span>}} else {html!{}}}
+                    {if show_username {
+                        html!{<span class="is-hidden-mobile">{username}</span>}
+                    } else {
+                        html!{}
+                    }}
                 </button>
             },
             false => html!{

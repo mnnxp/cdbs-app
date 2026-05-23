@@ -1,5 +1,6 @@
 use yew::{html, Html, classes, Classes, Callback, MouseEvent};
-use crate::{services::get_value_field, types::Pathname};
+use crate::services::{get_value_field, unique_id};
+use crate::types::Pathname;
 
 use super::ListState;
 
@@ -103,6 +104,33 @@ pub fn ft_follow_btn(
                 true => html!{},
                 false => html!{<span>{subscribers}</span>},
             }}
+        </button>
+    }
+}
+
+/// Generates a standardized discussion button with a comment icon.
+/// The text label automatically hides on mobile viewports for tighter layouts.
+pub fn ft_discussion_btn(
+    id_btn: &str,
+    onclick_action: Callback<MouseEvent>,
+    is_active: bool,
+) -> Html {
+    let active_classes = match is_active {
+        true => "button is-info is-light is-active",
+        false => "button is-info",
+    };
+    let title_text = get_value_field(&380);
+    html! {
+        <button
+            id={unique_id(id_btn)}
+            class={active_classes}
+            onclick={onclick_action}
+            title={title_text}
+        >
+            <span class="icon is-small">
+                <i class="far fa-comments" aria-hidden="true"></i>
+            </span>
+            <span class="is-hidden-mobile">{title_text}</span>
         </button>
     }
 }
@@ -280,7 +308,7 @@ pub fn ft_add_btn(
             <span class="icon">
                 <i class="fas fa-plus" aria-hidden="true"></i>
             </span>
-            <span>{title_text.to_string()}</span>
+            <span class="is-hidden-mobile">{title_text.to_string()}</span>
         </button>
     }
 }
@@ -327,7 +355,7 @@ pub fn ft_custom_btn(
             <span class="icon">
                 <i class={class_icon.to_string()} aria-hidden="true"></i>
             </span>
-            <span>{title_text.to_string()}</span>
+            <span class="is-hidden-mobile">{title_text.to_string()}</span>
         </button>
     }
 }
@@ -405,7 +433,7 @@ pub fn ft_import_btn(
                     </span>
                 },
             }}
-            <span>{get_value_field(&347)}</span>
+            <span class="is-hidden-mobile">{get_value_field(&347)}</span>
         </button>
     }
 }
@@ -423,7 +451,7 @@ pub fn res_settings_btn(onclick: Callback<MouseEvent>, pathname: Pathname) -> Ht
         <span class={"icon is-small"} >
           <i class={classes!("fa", "fa-tools")}></i>
         </span>
-        <span>{title}</span>
+        <span class="is-hidden-mobile">{title}</span>
       </a>
     }
 }

@@ -8,6 +8,7 @@ use log::debug;
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
+use crate::fragments::buttons::ft_discussion_btn;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{
@@ -383,20 +384,12 @@ impl ShowService {
     }
 
     fn show_discussion_btn(&self) -> Html {
-        let onclick_open_discussion_btn =
-            self.link.callback(|_| Msg::OpenDiscussionBlock);
-        let class_discussion_btn = match self.open_discussion_card {
-            true => "button is-light is-info is-active",
-            false => "button is-info",
-        };
-        html!{
-            <button
-            class={class_discussion_btn}
-            onclick={onclick_open_discussion_btn}>
-                <span class={"icon is-small"}><i class={"far fa-comments"}></i></span>
-                <span>{get_value_field(&380)}</span>
-            </button>
-        }
+        let onclick_discussion_btn = self.link.callback(|_| Msg::OpenDiscussionBlock);
+        ft_discussion_btn(
+            "service-discussion-btn",
+            onclick_discussion_btn,
+            self.open_discussion_card
+        )
     }
 
     fn show_service_discussion(&self) -> Html {
