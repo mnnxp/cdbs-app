@@ -1,104 +1,94 @@
-use yew::{html, Component, Callback, ComponentLink, Html, InputData, ChangeData, Properties, ShouldRender};
+use yew::{classes, html, Callback, ChangeData, Component, ComponentLink, Html, InputData, Properties, ShouldRender};
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
 
-use crate::services::{is_authenticated, get_value_field, resp_parsing, get_value_response, get_from_value};
-use crate::fragments::list_errors::ListErrors;
-use crate::fragments::buttons::{ft_delete_btn, ft_save_btn};
-use crate::fragments::notification::show_notification;
 use crate::error::Error;
-use crate::types::{UUID, Region, RepresentationType, CompanyRepresentInfo, CompanyRepresentUpdateInfo};
+use crate::fragments::list_errors::ListErrors;
+use crate::services::{get_value_field, resp_parsing, unique_id};
+use crate::fragments::buttons::{ft_custom_btn, ft_modal_cancel_save_btn};
+use crate::fragments::notification::show_notification;
+use crate::types::{Region, RepresentationType, CompanyRepresentInfo, CompanyRepresentUpdateInfo};
 use crate::gqls::make_query;
 use crate::gqls::company::{
-    GetRepresentDataOpt, get_represent_data_opt,
     UpdateCompanyRepresent, update_company_represent,
-    DeleteCompanyRepresent, delete_company_represent,
 };
 
-pub enum Msg {
+use super::represent_form::{render_represent_form, FormCallbacks};
+
+pub(crate) enum Msg {
+    ShowEditCompanyRepresent,
+    PrepareData,
     RequestUpdateRepresent,
-    RequestDeleteRepresent,
     GetUpdateResult(String),
-    GetDeleteRepresentResult(String),
     UpdateRegionId(String),
     UpdateRepresentationTypeId(String),
     UpdateName(String),
     UpdateAddress(String),
     UpdatePhone(String),
-    UpdateList(String),
     ResponseError(Error),
+    ClearData,
     ClearError,
 }
 
-#[derive(Clone, Debug, Properties)]
-pub struct Props {
-    pub data: CompanyRepresentInfo,
+#[derive(Clone, Debug, Properties, PartialEq)]
+pub(crate) struct Props {
+    pub(crate) data: CompanyRepresentInfo,
+    pub(crate) regions: Vec<Region>,
+    pub(crate) represent_types: Vec<RepresentationType>,
+    pub(crate) on_update: Callback<CompanyRepresentInfo>,
 }
 
-pub struct ChangeItem {
+pub(crate) struct EditCompanyRepresentModal {
     error: Option<Error>,
-    company_uuid: UUID,
-    company_represent_uuid: UUID,
     request_update: CompanyRepresentUpdateInfo,
     props: Props,
     link: ComponentLink<Self>,
     get_result_update: usize,
-    regions: Vec<Region>,
-    represent_types: Vec<RepresentationType>,
-    get_result_delete: bool,
-    get_confirm: UUID,
+    is_active: bool,
+    loading: bool,
 }
 
-impl Component for ChangeItem {
+impl Component for EditCompanyRepresentModal {
     type Message = Msg;
     type Properties = Props;
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
         Self {
             error: None,
-            company_uuid: props.data.company_uuid.clone(),
-            company_represent_uuid: props.data.uuid.clone(),
             request_update: CompanyRepresentUpdateInfo::default(),
             props,
             link,
             get_result_update: 0,
-            regions: Vec::new(),
-            represent_types: Vec::new(),
-            get_result_delete: false,
-            get_confirm: String::new(),
-        }
-    }
-
-    fn rendered(&mut self, first_render: bool) {
-        let link = self.link.clone();
-
-        if first_render && is_authenticated() && !self.company_uuid.is_empty() {
-            self.request_update = CompanyRepresentUpdateInfo {
-                region_id: Some(self.props.data.region.region_id as i64),
-                representation_type_id: Some(self.props.data.representation_type.representation_type_id as i64),
-                name: Some(self.props.data.name.clone()),
-                address: Some(self.props.data.address.clone()),
-                phone: Some(self.props.data.phone.clone()),
-            };
-
-            spawn_local(async move {
-                let res = make_query(GetRepresentDataOpt::build_query(
-                    get_represent_data_opt::Variables
-                )).await.unwrap();
-                link.send_message(Msg::UpdateList(res));
-            })
+            is_active: false,
+            loading: false,
         }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         let link = self.link.clone();
-
         match msg {
+            Msg::ShowEditCompanyRepresent => {
+                self.is_active = !self.is_active;
+                if self.is_active {
+                    self.link.send_message(Msg::PrepareData);
+                }
+            },
+            Msg::PrepareData => {
+                debug!("Prepare represent data: {:?}", self.props.data.name);
+                self.request_update = CompanyRepresentUpdateInfo {
+                    region_id: Some(self.props.data.region.region_id as i64),
+                    representation_type_id: Some(self.props.data.representation_type.representation_type_id as i64),
+                    name: Some(self.props.data.name.clone()),
+                    address: Some(self.props.data.address.clone()),
+                    phone: Some(self.props.data.phone.clone()),
+                };
+            },
             Msg::RequestUpdateRepresent => {
+                self.loading = true;
                 debug!("Update company represent: {:?}", &self.request_update);
-                let company_uuid = self.company_uuid.clone();
-                let company_represent_uuid = self.company_represent_uuid.clone();
+                let company_uuid = self.props.data.company_uuid.clone();
+                let company_represent_uuid = self.props.data.uuid.clone();
                 let ipt_update_company_represent_data = update_company_represent::IptUpdateCompanyRepresentData {
                     regionId: self.request_update.region_id.clone(),
                     representationTypeId: self.request_update.representation_type_id.clone(),
@@ -117,37 +107,41 @@ impl Component for ChangeItem {
                     link.send_message(Msg::GetUpdateResult(res));
                 })
             },
-            Msg::RequestDeleteRepresent => {
-                if self.get_confirm == self.company_represent_uuid {
-                    debug!("Update company represent: {:?}", &self.request_update);
-                    let company_uuid = self.company_uuid.clone();
-                    let company_represent_uuid = self.company_represent_uuid.clone();
-                    spawn_local(async move {
-                        let res = make_query(DeleteCompanyRepresent::build_query(
-                            delete_company_represent::Variables {
-                                company_uuid,
-                                company_represent_uuid,
-                            }
-                        )).await.unwrap();
-                        link.send_message(Msg::GetDeleteRepresentResult(res));
-                    })
-                } else {
-                    self.get_confirm = self.company_represent_uuid.clone();
-                }
-            },
             Msg::GetUpdateResult(res) => {
                 match resp_parsing(res, "updateCompanyRepresent") {
-                    Ok(result) => self.get_result_update = result,
+                    Ok(result) => {
+                        self.get_result_update = result;
+                        if self.get_result_update <= 0 {
+                            return true
+                        }
+                        let data_region_id = self.request_update.region_id.unwrap_or(self.props.data.region.region_id as i64);
+                        let data_type_id = self.request_update.representation_type_id.unwrap_or(self.props.data.representation_type.representation_type_id as i64);
+                        let new_region = self.props.regions
+                            .iter()
+                            .find(|r| r.region_id == data_region_id as usize)
+                            .cloned()
+                            .unwrap_or_default();
+                        let new_type = self.props.represent_types
+                            .iter()
+                            .find(|t| t.representation_type_id == data_type_id as usize)
+                            .cloned()
+                            .unwrap_or_default();
+                        let updated_info = self.request_update.to_info(
+                            self.props.data.uuid.clone(),
+                            self.props.data.company_uuid.clone(),
+                            new_region,
+                            new_type,
+                            self.props.data.name.clone(),
+                            self.props.data.address.clone(),
+                            self.props.data.phone.clone(),
+                        );
+                        self.props.on_update.emit(updated_info);
+                        self.is_active = false;
+                    },
                     Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
+                self.loading = false;
                 debug!("Update company represent: {:?}", self.get_result_update);
-            },
-            Msg::GetDeleteRepresentResult(res) => {
-                match resp_parsing(res, "deleteCompanyRepresent") {
-                    Ok(result) => self.get_result_delete = result,
-                    Err(err) => link.send_message(Msg::ResponseError(err)),
-                }
-                debug!("Delete company represent: {:?}", self.get_result_delete);
             },
             Msg::UpdateRegionId(region_id) =>
                 self.request_update.region_id = Some(region_id.parse::<i64>().unwrap_or_default()),
@@ -156,194 +150,117 @@ impl Component for ChangeItem {
             Msg::UpdateName(name) => self.request_update.name = Some(name),
             Msg::UpdateAddress(address) => self.request_update.address = Some(address),
             Msg::UpdatePhone(phone) => self.request_update.phone = Some(phone),
-            Msg::UpdateList(res) => {
-                match get_value_response(res) {
-                    Ok(ref value) => {
-                        self.regions = get_from_value(value, "regions").unwrap_or_default();
-                        self.represent_types = get_from_value(value, "companyRepresentTypes").unwrap_or_default();
-                    },
-                    Err(err) => link.send_message(Msg::ResponseError(err)),
-                }
-            },
             Msg::ResponseError(err) => self.error = Some(err),
+            Msg::ClearData => {
+                self.error = None;
+                self.is_active = false;
+                self.get_result_update = 0;
+                self.loading = false;
+                self.request_update = CompanyRepresentUpdateInfo::default();
+            },
             Msg::ClearError => self.error = None,
         }
         true
     }
 
-    fn change(&mut self, _props: Self::Properties) -> ShouldRender {
-        // self.props = props;
-        false
+    fn change(&mut self, props: Self::Properties) -> ShouldRender {
+        if self.props == props {
+            false
+        } else {
+            self.props = props;
+            true
+        }
     }
 
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+        let callback_event_edit_represent = self.link.callback(|_| Msg::ShowEditCompanyRepresent);
 
         html!{<>
-            <br/>
-            <div class="card">
-                <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
-                {match &self.get_result_delete {
-                    true => html!{
-                        <article class="message is-success">
-                          <div class="message-header">
-                            <p>{get_value_field(&89)}</p>
-                          </div>
-                          <div class="message-body">
-                            {get_value_field(&292)}
-                          </div>
-                        </article>
-                    },
-                    false => html!{<div class="column">
-                        <label class="label">{get_value_field(&215)}</label> // Change represent
-                        {show_notification(
-                            &format!("{} {}", get_value_field(&213), self.get_result_update),
-                            "is-success",
-                            self.get_result_update > 0,
-                        )}
-                        {self.change_represent_block()}
-                        {self.show_manage_buttons()}
-                    </div>}
-                }}
-            </div>
+            <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()} />
+            {show_notification(
+                &format!("{} {}", get_value_field(&213), self.get_result_update),
+                "is-success",
+                self.get_result_update > 0,
+            )}
+            {ft_custom_btn(
+                &unique_id("edit-represent-btn"),
+                get_value_field(&127),
+                classes!("button", "is-info", "is-light", "is-fullwidth", "is-small"),
+                "fas fa-pencil-alt",
+                callback_event_edit_represent,
+                false
+            )}
+            {self.modal_card()}
         </>}
     }
 }
 
-impl ChangeItem {
-    fn fileset_generator(
-        &self,
-        id: &str,
-        label: &str,
-        value: String,
-        oninput: Callback<InputData>,
-    ) -> Html {
-        let placeholder = label;
-        let input_tag = "input";
+impl EditCompanyRepresentModal {
+    fn modal_card(&self) -> Html {
+        let onclick_close = self.link.callback(|_| Msg::ShowEditCompanyRepresent);
+        let modal_classes = classes!(
+            "modal",
+            "is-isolated-modal",
+            if self.is_active { Some("is-active") } else { None }
+        );
+        let onclick_clear_data = self.link.callback(|_| Msg::ClearData);
+        let onclick_update_represent = self.link.callback(|_| Msg::RequestUpdateRepresent);
 
         html!{
-            <fieldset class="field">
-                <label class="label">{label.to_string()}</label>
-                <@{input_tag}
-                    id={id.to_string()}
-                    class={input_tag}
-                    type={"text"}
-                    placeholder={placeholder.to_string()}
-                    value={value}
-                    oninput={oninput} ></@>
-            </fieldset>
+            <div class={modal_classes}>
+                <div class="modal-background" onclick={onclick_close.clone()} />
+                <div class="modal-card">
+                    <header class="modal-card-head">
+                        <p class="modal-card-title">{get_value_field(&215)}</p>
+                    </header>
+                    <section class="modal-card-body">
+                        {self.edit_represent_block()}
+                    </section>
+                    <footer class="modal-card-foot">
+                        {ft_modal_cancel_save_btn(
+                            &unique_id("edit-represent"),
+                            onclick_clear_data,
+                            onclick_update_represent,
+                            self.loading,
+                        )}
+                    </footer>
+                </div>
+            </div>
         }
     }
 
-    fn change_represent_block(&self) -> Html {
-        let oninput_region_id =
+    fn edit_represent_block(&self) -> Html {
+        let onchange_region =
             self.link.callback(|ev: ChangeData| Msg::UpdateRegionId(match ev {
-              ChangeData::Select(el) => el.value(),
-              _ => "1".to_string(),
+                ChangeData::Select(el) => el.value(),
+                _ => "1".to_string(),
             }));
-        let oninput_representation_type_id =
+        let onchange_type =
             self.link.callback(|ev: ChangeData| Msg::UpdateRepresentationTypeId(match ev {
-              ChangeData::Select(el) => el.value(),
-              _ => "1".to_string(),
+                ChangeData::Select(el) => el.value(),
+                _ => "1".to_string(),
             }));
         let oninput_name = self.link.callback(|ev: InputData| Msg::UpdateName(ev.value));
         let oninput_address = self.link.callback(|ev: InputData| Msg::UpdateAddress(ev.value));
         let oninput_phone = self.link.callback(|ev: InputData| Msg::UpdatePhone(ev.value));
 
-        html!{<>
-            {self.fileset_generator(
-                "name", get_value_field(&110), // Name
-                self.request_update.name.as_ref().map(|x| x.to_string()).unwrap_or_default(),
-                oninput_name
-            )}
-            <div class="columns">
-                <div class="column">
-                    {self.fileset_generator(
-                        "phone", get_value_field(&56), // Phone
-                        self.request_update.phone.as_ref().map(|x| x.to_string()).unwrap_or_default(),
-                        oninput_phone
-                    )}
-                </div>
-                <div class="column">
-                    <fieldset class="field">
-                        <label class="label">{get_value_field(&216)}</label> // Representation type
-                        <div class="control">
-                            <div class="select">
-                              <select
-                                  id="representation_type_id"
-                                  select={self.props.data.representation_type.representation_type_id.to_string()}
-                                  onchange={oninput_representation_type_id}
-                                  >
-                                { for self.represent_types.iter().map(|x|
-                                    html!{
-                                        <option value={x.representation_type_id.to_string()}
-                                              selected={x.representation_type_id == self.props.data.representation_type.representation_type_id} >
-                                            {&x.representation_type}
-                                        </option>
-                                    }
-                                )}
-                              </select>
-                            </div>
-                        </div>
-                    </fieldset>
-                </div>
-            </div>
-            <div class="columns">
-                <div class="column">
-                <fieldset class="field">
-                    <label class="label">{get_value_field(&27)}</label> // Region
-                    <div class="control">
-                        <div class="select">
-                          <select
-                              id="region_id"
-                              select={self.props.data.region.region_id.to_string()}
-                              onchange={oninput_region_id}
-                              >
-                            { for self.regions.iter().map(|x|
-                                html!{
-                                    <option value={x.region_id.to_string()}
-                                          selected={x.region_id == self.props.data.region.region_id} >
-                                        {&x.region}
-                                    </option>
-                                }
-                            )}
-                          </select>
-                        </div>
-                    </div>
-                </fieldset>
-                </div>
-                <div class="column">
-                    {self.fileset_generator(
-                        "address", get_value_field(&57), // Address
-                        self.request_update.address.as_ref().map(|x| x.to_string()).unwrap_or_default(),
-                        oninput_address
-                    )}
-                </div>
-            </div>
-        </>}
-    }
+        let callbacks = FormCallbacks {
+            oninput_name,
+            oninput_phone,
+            oninput_address,
+            onchange_region,
+            onchange_type,
+        };
 
-    fn show_manage_buttons(&self) -> Html {
-        let onclick_change_represent = self.link.callback(|_| Msg::RequestUpdateRepresent);
-        let onclick_delete_represent = self.link.callback(|_| Msg::RequestDeleteRepresent);
-
-        html!{<div class="columns">
-            <div class="column">
-                {ft_delete_btn(
-                    "btn-delete-represent",
-                    onclick_delete_represent,
-                    self.get_confirm == self.company_represent_uuid,
-                    false
-                )}
-            </div>
-            <div class="column">
-                {ft_save_btn(
-                    "btn-change-represent",
-                    onclick_change_represent,
-                    true,
-                    false
-                )}
-            </div>
-        </div>}
+        render_represent_form(
+            &self.request_update,
+            callbacks,
+            &self.props.regions,
+            self.props.data.region.region_id,
+            &self.props.represent_types,
+            self.props.data.representation_type.representation_type_id,
+            self.loading,
+        )
     }
 }

@@ -725,18 +725,12 @@ impl CompanySettings {
     }
 
     fn represents_block(&self) -> Html {
-        match self.current_data {
-            Some(ref data) => html!{
-                <CompanyRepresents
-                    show_manage_btn={true}
-                    list={data.company_represents.clone()}
+        html!{
+            <CompanyRepresents
+                company_uuid={self.company_uuid.clone()}
+                list={self.current_data.as_ref().map(|cd| cd.company_represents.clone()).unwrap_or_default()}
+                show_manage_btn={true}
                 />
-            },
-            None => html!{
-                <div class="notification is-info">
-                    <span>{get_value_field(&270)}</span>
-                </div>
-            },
         }
     }
 

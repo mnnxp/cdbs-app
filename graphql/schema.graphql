@@ -1095,7 +1095,7 @@ type MutationRoot {
   deleteCompanyCertificate(args: DelCompanyCertificateData!): Boolean!
   addCompanySpecs(args: IptCompanySpecsData!): Int!
   deleteCompanySpecs(args: IptCompanySpecsData!): Int!
-  registerCompanyRepresent(args: IptCompanyRepresentData!): Boolean!
+  registerCompanyRepresent(args: IptCompanyRepresentData!): UUID!
   updateCompanyRepresent(
     companyUuid: UUID!
     companyRepresentUuid: UUID!

@@ -9,7 +9,7 @@ pub(crate) use menu_block::{view_content, view_certificates, view_represents, vi
 pub use catalog::{CatalogCompanies, ListItemCompany};
 pub use certificate::{CompanyCertificatesCard, CompanyCertificateItem, AddCompanyCertificateCard};
 pub(crate) use access::CompanyAccessBlock;
-pub use represent::{CompanyRepresents, AddCompanyRepresentCard};
+pub(crate) use represent::CompanyRepresents;
 pub use spec::{SpecsTags, SpecTagItem, SearchSpecsTags};
 
 use yew::{html, Html};
