@@ -319,9 +319,9 @@ impl Component for UploaderFiles {
                 </div>
                 <div class={"column"}>
                     {self.select_files()}
+                    {self.show_control_btn()}
                 </div>
             </div>
-            {self.show_control_btn()}
         </>}
     }
 }
@@ -548,7 +548,7 @@ impl UploaderFiles {
         };
         html!{
             <div class="columns is-mobile">
-                <div class="column is-one-third">
+                <div class="column">
                     <button
                     class={classes!(shared_classes, "is-warning")}
                     onclick={onclick_clear_boxed}
@@ -557,7 +557,7 @@ impl UploaderFiles {
                         <span>{get_value_field(&88)}</span>
                     </button>
                 </div>
-                <div class="column is-two-thirds">
+                <div class="column">
                     <button
                     class={classes!(shared_classes, class_upload_btn)}
                     disabled={self.files.is_empty()}
