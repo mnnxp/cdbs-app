@@ -280,7 +280,7 @@ impl ShowCompany {
                         {diamond_svg(company_data.is_supplier, "25")}
                     </abbr>
                 </div>
-                <div class="column">
+                <div class="column m-0 p-0">
                     <div class="buttons flexBox mb-0" >
                       {match &self.current_user_owner {
                         true => {res_settings_btn(

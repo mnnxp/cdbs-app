@@ -248,7 +248,7 @@ impl ShowSupplierCompany {
                 </abbr>
                   {company_data.to_display()}
                 </div>
-                <div class="column">
+                <div class="column m-0 p-0">
                   <div class="buttons flexBox" >
                     {self.show_favorite_btn()}
                     <ShareLinkBtn />
