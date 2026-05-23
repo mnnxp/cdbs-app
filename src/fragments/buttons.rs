@@ -93,7 +93,7 @@ pub fn ft_follow_btn(
 
     html!{
         <button
-        // id={"following-button"}
+        id={unique_id("following-button")}
         class={"button"}
         onclick={trigger_btn}
         title={title}>
@@ -163,7 +163,7 @@ pub fn ft_delete_class_btn(
     };
     html!{
         <button
-            id={id_btn.to_string()}
+            id={unique_id(id_btn)}
             class={set_classes}
             disabled={disabled}
             onclick={trigger_btn}
@@ -213,7 +213,7 @@ pub fn ft_delete_small_btn(
     };
 
     html!{
-        <a id={id_btn.to_string()} onclick={trigger_btn} title={get_value_field(&135)}>
+        <a id={unique_id(id_btn)} onclick={trigger_btn} title={get_value_field(&135)}>
             <span class="icon" >
                 <i class="fa fa-trash" aria-hidden="true" style="color: #f14668;"></i>
             </span>
@@ -253,7 +253,7 @@ pub fn ft_save_btn(
 
     html!{
         <button
-            id={id_btn.to_string()}
+            id={unique_id(id_btn)}
             class={class_btn}
             disabled={disabled}
             onclick={trigger_btn}
@@ -272,7 +272,7 @@ pub fn ft_submit_btn(id_btn: &str) -> Html {
 
     html!{
         <button
-            id={id_btn.to_string()}
+            id={unique_id(id_btn)}
             class={classes!("button", "is-link", "is-fullwidth")}
             type={"submit"}
             disabled={false}
@@ -300,7 +300,7 @@ pub fn ft_add_btn(
 
     html!{
         <button
-            id={id_btn.to_string()}
+            id={unique_id(id_btn)}
             class={class_btn}
             disabled={disabled}
             onclick={trigger_btn}
@@ -325,7 +325,7 @@ pub fn ft_create_btn(
 
     html!{
         <button
-            id={id_btn.to_string()}
+            id={unique_id(id_btn)}
             class={class_btn}
             disabled={disabled}
             onclick={trigger_btn}
@@ -347,7 +347,7 @@ pub fn ft_custom_btn(
     let class_btn = classes!("button", class_btn);
     html!{
         <button
-            id={id_btn.to_string()}
+            id={unique_id(id_btn)}
             class={class_btn}
             disabled={disabled}
             onclick={trigger_btn}
@@ -370,7 +370,7 @@ pub fn ft_cancel_btn(
 
     html!{
         <button
-            id={id_btn.to_string()}
+            id={unique_id(id_btn)}
             class={classes!("button", "is-warning", "is-fullwidth", add_classes)}
             onclick={trigger_btn}
             title={title_text.to_string()}>
@@ -390,7 +390,7 @@ pub fn ft_back_btn(
 ) -> Html {
     html!{
         <button
-            id={id_btn.to_string()}
+            id={unique_id(id_btn)}
             class={"button"}
             onclick={trigger_btn}
             title={title_text.to_string()}>
@@ -416,7 +416,7 @@ pub fn ft_import_btn(
     };
     html!{
         <button
-            id={id_btn.to_string()}
+            id={unique_id(id_btn)}
             class={class_btn}
             disabled={disabled}
             onclick={trigger_btn}
