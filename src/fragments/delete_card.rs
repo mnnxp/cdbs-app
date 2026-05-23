@@ -92,8 +92,7 @@ fn modal_delete(
                             <div id="confirm-danger-modal-content">
                                 <div class="column has-background-danger-light">
                                     <span>{get_value_field(&408)}</span>
-                                    <span>
-                                        {" "}
+                                    <span class="ml-3">
                                         {get_value_field(&410)}
                                         <strong>{object_name}</strong>
                                         {get_value_field(&411)}

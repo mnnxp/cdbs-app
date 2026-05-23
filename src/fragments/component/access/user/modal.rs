@@ -262,8 +262,7 @@ impl AddUserAccessModal {
     fn show_search_results(&self) -> Html {
         html!{<>
                 <p class="help is-info">
-                    <span>{get_value_field(&493)}</span>
-                    <span>{" "}</span>
+                    <span class="mr-3">{get_value_field(&493)}</span>
                     <span>{self.search_results.len()}</span>
                 </p>
                 {for self.search_results.iter().map(|user|

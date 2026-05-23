@@ -70,7 +70,7 @@ impl Component for ListErrors {
                                 html!{<tr>
                                     { key }
                                     {for value.iter().map(|e| {
-                                        html!{<>{" "} {e}</>}
+                                        html!{<span class="ml-3">{e}</span>}
                                     })}
                                 </tr>}
                             })}

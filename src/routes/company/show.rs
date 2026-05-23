@@ -299,7 +299,7 @@ impl ShowCompany {
                       }}
                     </div>
                     <div id="company-on-since">
-                      <span>{get_value_field(&231)}{" "}</span> // On the platform since
+                      <span class="mr-3">{get_value_field(&231)}</span> // On the platform since
                       <span>{company_data.created_at.date_to_display()}</span>
                     </div>
                 </div>

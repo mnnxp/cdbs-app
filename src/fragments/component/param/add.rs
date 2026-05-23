@@ -125,7 +125,10 @@ impl RegisterParamnameBlock {
         html!{<>
             <div class="column">
                 <label class="label">{get_value_field(&178)}</label>
-                <p class="help">{get_value_field(&336)}<span>{" "}</span>{get_value_field(&337)}</p>
+                <p class="help">
+                    <span class="mr-1">{get_value_field(&336)}</span>
+                    <span>{get_value_field(&337)}</span>
+                </p>
                 <input
                     id="paramname"
                     class="input is-fullwidth"

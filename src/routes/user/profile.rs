@@ -426,16 +426,14 @@ impl Profile {
                     {match &self.profile {
                         Some(_) => html!{<>
                             <p class="subtitle is-6 has-text-right">
-                                {get_value_field(&30)}
-                                {" "}
+                                <span class="mr-3">{get_value_field(&30)}</span>
                                 {updated_at}
                             </p>
                             {self.show_favorite_btn()}
                         </>},
                         None => html!{
                             <div class="subtitle is-6 has-text-right">
-                                {get_value_field(&30)}
-                                {" "}
+                                <span class="mr-3">{get_value_field(&30)}</span>
                                 {updated_at}
                                 <p>
                                     <span>{get_value_field(&31)}</span>

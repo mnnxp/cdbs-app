@@ -64,8 +64,18 @@ impl CompanyType {
         };
         let lang = get_lang().unwrap_or(String::new());
         match lang.as_str() {
-            "ru" => html!{<p>{company_type_short}<span>{" "}</span>{name}</p>},
-            _ => html!{<p>{name}<span>{" "}</span>{company_type_short}</p>}
+            "ru" => html!{
+                <p>
+                    <span class="mr-3">{company_type_short}</span>
+                    <span>{name}</span>
+                </p>
+            },
+            _ => html!{
+                <p>
+                    <span class="mr-3">{name}</span>
+                    <span>{company_type_short}</span>
+                </p>
+            },
         }
     }
 }
@@ -116,8 +126,8 @@ impl SpecDisplay for CompanyInfo {
             false => html!{
                 <div id={"company-related-catalogs"} class={"column p-0"}>
                     <p class={"title is-6"}>
-                        <span class={"icon is-small"}><i class={"fas fa-cubes"}></i></span>
-                        <span>{" "}{get_value_field(&283)}</span>
+                        <span class={"icon is-small mr-3"}><i class={"fas fa-cubes"}></i></span>
+                        <span>{get_value_field(&283)}</span>
                     </p> // Sphere of activity
                     <SpecsTags
                         show_manage_btn={false}

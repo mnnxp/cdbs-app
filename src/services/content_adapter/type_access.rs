@@ -10,8 +10,8 @@ impl TypeAccessInfo {
             _ => "fas fa-shield-alt",
         };
         html!{<>
-            <span class="icon is-small"><i class={class_icon}></i></span>
-            {" "}{self.name.clone()}
+            <span class="icon is-small mr-1"><i class={class_icon}></i></span>
+            {self.name.clone()}
         </>}
     }
 }
@@ -20,8 +20,8 @@ impl PermissionLevel  {
     /// Renders a single access level in span with appropriate icon (icon+name)
     pub(crate) fn render_access_level_icon(&self) -> Html {
         html!{<>
-            <span class="icon is-small"><i class={self.get_icon_for_level()}></i></span>
-            {" "}{self.name.clone()}
+            <span class="icon is-small mr-1"><i class={self.get_icon_for_level()}></i></span>
+            {self.name.clone()}
         </>}
     }
 
@@ -32,7 +32,7 @@ impl PermissionLevel  {
                 <span class="icon is-small mr-1">
                     <i class={self.get_icon_for_level()} />
                 </span>
-                {" "}{self.name.clone()}
+                {self.name.clone()}
             </span>
         }
     }

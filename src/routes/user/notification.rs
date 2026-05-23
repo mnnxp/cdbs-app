@@ -242,8 +242,7 @@ impl Notifications {
                     <div class="media">
                         <div class="media-left">
                             <span class="content is-small">
-                                {get_value_field(&276)}
-                                {" "}
+                                <span class="mr-3">{get_value_field(&276)}</span>
                                 {created_at.date_to_display()}
                                 {format!(" ({})", degree)}
                             </span>

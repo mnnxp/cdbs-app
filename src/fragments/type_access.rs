@@ -70,7 +70,7 @@ impl Component for TypeAccessBlock {
                                 _ => x.type_access_id == self.props.selected,
                               }}
                           />
-                          <span>{" "}{x.get_with_icon()}{": "}<em>{get_value_field(&(397+x.type_access_id))}</em></span>
+                          <span class="ml-3">{x.get_with_icon()}{": "}<em>{get_value_field(&(397+x.type_access_id))}</em></span>
                       </label>
                       </div>
                     }

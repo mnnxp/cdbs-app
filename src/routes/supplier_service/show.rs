@@ -277,9 +277,8 @@ impl ShowService {
                 </div>
                 // <div class="column is-narrow" title={get_value_field(&141)}>
                 //     <span class="icon is-small">
-                //         <i class={classes!("fa", "fa-user")}></i>
+                //         <i class={classes!("fa", "fa-user", "mr-3")}></i>
                 //     </span>
-                //     {" "}
                 //     <GoToUser data = {service_data.owner_user.clone()} />
                 // </div>
                 <div class="buttons flexBox">

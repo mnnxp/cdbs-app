@@ -77,8 +77,8 @@ impl PermissionLevelBlock {
                     onchange={onchange_permission_level}
                     checked={is_checked}
                 />
-                <span onclick={onclick_permission_level}>
-                    {" "}{permission.render_access_level_icon()}
+                <span class="ml-3" onclick={onclick_permission_level}>
+                    {permission.render_access_level_icon()}
                 </span>
             </div>
         }

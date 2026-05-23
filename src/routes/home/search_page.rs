@@ -156,19 +156,19 @@ impl SearchPage {
                         <>
                             <label class="column pt-0 mt-0 checkbox">
                                 <input type="checkbox" checked={self.search_arg.by_params} onclick={onclick_by_params}/>
-                                {" "}{get_value_field(&385)}
+                                <span class="ml-3">{get_value_field(&385)}</span>
                             </label>
                             <label class="column pt-0 mt-0 checkbox">
                                 <input type="checkbox" checked={self.search_arg.by_specs} onclick={onclick_by_specs}/>
-                                {" "}{get_value_field(&386)}
+                                <span class="ml-3">{get_value_field(&386)}</span>
                             </label>
                             <label class="column pt-0 mt-0 checkbox">
                                 <input type="checkbox" checked={self.search_arg.by_keywords} onclick={onclick_by_keywords}/>
-                                {" "}{get_value_field(&387)}
+                                <span class="ml-3">{get_value_field(&387)}</span>
                             </label>
                             <label class="column pt-0 mt-0 checkbox">
                                 <input type="checkbox" checked={self.search_arg.favorite} onclick={onclick_only_favorite}/>
-                                {" "}{get_value_field(&388)}
+                                <span class="ml-3">{get_value_field(&388)}</span>
                             </label>
                         </>
                     }

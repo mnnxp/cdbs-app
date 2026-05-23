@@ -65,8 +65,7 @@ impl Component for RoleRow {
                             <span>{self.props.company_role.role.name.clone()}</span>
                         </div>
                         <div class="is-size-7 has-text-grey mt-1">
-                            <span>{get_value_field(&246)}</span>
-                            <span>{" "}</span>
+                            <span class="mr-3">{get_value_field(&246)}</span>
                             <span>{self.props.company_role.role.role_member_id}</span>
                         </div>
                     </td>

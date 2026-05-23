@@ -261,8 +261,7 @@ impl EditCompanyRoleModal {
                                 />
                             </div>
                             <p class="help">
-                                <span>{get_value_field(&474)}</span>
-                                <span>{" "}</span>
+                                <span class="mr-3">{get_value_field(&474)}</span>
                                 <span>{self.props.company_role.role.role_member_id}</span>
                             </p>
                         </div>

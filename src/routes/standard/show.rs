@@ -326,10 +326,9 @@ impl ShowStandard {
                         {standard_data.type_access.get_with_icon()}
                     </div>
                     <div class="column is-narrow" title={get_value_field(&159)}>
-                        <span class="icon is-small">
+                        <span class="icon is-small mr-3">
                             <i class={classes!("fa", "fa-edit")}></i>
                         </span>
-                        {" "}
                         <span class="id-box">
                             {standard_data.publication_at.date_to_display()}
                         </span>
@@ -447,7 +446,7 @@ impl ShowStandard {
         };
 
         html!{<>
-            {get_value_field(&109)}{" "}
+            <span class="mr-3">{get_value_field(&109)}</span>
             <a class={"has-text-grey-light has-text-weight-bold"} onclick={onclick_company_data_info.clone()} >
                 {standard_data.owner_company.shortname.clone()}
             </a>
