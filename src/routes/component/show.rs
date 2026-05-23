@@ -561,6 +561,7 @@ impl ShowComponent {
                     <p class={"card-header-title"}>{table_label}</p>
                 </header>
                 <div class={"card-content"}>
+                <div class={"table-container"}>
                     <div class={"content"}>
                         <table class={classes_table}>
                             <thead>
@@ -597,6 +598,7 @@ impl ShowComponent {
                             </tbody>
                         </table>
                     </div>
+                    </div>
                 </div>
             </div>
         }
@@ -610,6 +612,7 @@ impl ShowComponent {
                     <p class={"card-header-title"}>{get_value_field(&103)}</p> // Standards
                 </header>
                 <div class={"card-content"}>
+                <div class={"table-container"}>
                     <div class={"content"}>
                         <table class={classes_table}>
                             <thead>
@@ -630,6 +633,7 @@ impl ShowComponent {
                             </tbody>
                         </table>
                     </div>
+                </div>
                 </div>
             </div>
         }

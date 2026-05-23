@@ -225,6 +225,8 @@ impl ComponentSuppliersCard {
             self.link.callback(|value: UUID| Msg::DeleteComponentCompany(value));
 
         html!{
+        <div class={"table-container"}>
+        <div class={"content"}>
           <table class="table is-fullwidth">
             <thead>
             <tr>
@@ -251,6 +253,8 @@ impl ComponentSuppliersCard {
                })}
             </tbody>
           </table>
+        </div>
+        </div>
         }
     }
 

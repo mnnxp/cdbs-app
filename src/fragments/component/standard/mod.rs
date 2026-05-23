@@ -224,9 +224,12 @@ impl ComponentStandardsCard {
             self.link.callback(|value: UUID| Msg::DeleteComponentStandard(value));
 
         html!{
+        <div class={"table-container"}>
+        <div class={"content"}>
           <table class="table is-fullwidth">
             <thead>
             <tr>
+                <th>{get_value_field(&110)}</th> // Name
                 <th>{get_value_field(&111)}</th> // Action
                 {match self.props.show_delete_btn {
                     true => html!{<th>{get_value_field(&135)}</th>},
@@ -248,6 +251,8 @@ impl ComponentStandardsCard {
                })}
             </tbody>
           </table>
+        </div>
+        </div>
         }
     }
 
