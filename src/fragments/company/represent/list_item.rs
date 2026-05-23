@@ -5,7 +5,7 @@ use wasm_bindgen_futures::spawn_local;
 
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
-use crate::fragments::company::represent::change_item::EditCompanyRepresentModal;
+use crate::fragments::company::represent::edit::EditCompanyRepresentModal;
 use crate::services::{resp_parsing, unique_id};
 use crate::fragments::buttons::ft_delete_pair_btn;
 use crate::fragments::notification::show_notification;
