@@ -5,10 +5,11 @@ use wasm_bindgen_futures::spawn_local;
 
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
-use crate::fragments::buttons::{ft_save_btn, ft_delete_small_btn};
+use crate::fragments::buttons::ft_delete_small_btn;
+use crate::fragments::modal::ModalBlock;
 use crate::services::content_adapter::Markdownable;
 use crate::types::{UUID, ComponentParam};
-use crate::services::{get_value_field, resp_parsing};
+use crate::services::{get_value_field, resp_parsing, unique_id};
 use crate::gqls::make_query;
 use crate::gqls::component::{
     PutComponentParams, put_component_params,
@@ -197,48 +198,33 @@ impl ComponentParamTag {
     }
 
     fn modal_change_param_value(&self) -> Html {
-        let onclick_change_param_value = self.link.callback(|_| Msg::RequestChangeValue);
         let onclick_hide_modal = self.link.callback(|_| Msg::ChangeParamValue);
         let oninput_set_param_value = self.link.callback(|ev: InputData| Msg::UpdateParamValue(ev.value));
-        let class_modal = match &self.hide_edit_param_value {
-            true => "modal",
-            false => "modal is-active",
-        };
-
-        html!{
-            <div class={class_modal}>
-              <div class="modal-background" onclick={onclick_hide_modal.clone()} />
-                <div class="modal-content">
-                  <div class="card">
-                    <header class="modal-card-head">
-                      <p class="modal-card-title">{get_value_field(&211)}</p> // Changing the parameter value
-                      <button class="delete" aria-label="close" onclick={onclick_hide_modal.clone()} />
-                    </header>
-                    <section class="modal-card-body">
-                        <div class="column">
-                            <label class="label">{get_value_field(&133)}</label> // Set a value
-                            <input
-                                id="param-value"
-                                class="input is-fullwidth"
-                                type="text"
-                                placeholder={get_value_field(&133)}
-                                value={self.request_set_param_value.clone()}
-                                oninput={oninput_set_param_value}
-                                />
-                        </div>
-                        <div class="column">
-                            {ft_save_btn(
-                                "save-param-value",
-                                onclick_change_param_value,
-                                true,
-                                self.request_set_param_value.is_empty() ||
-                                    self.current_param_value == self.request_set_param_value
-                            )}
-                        </div>
-                      </section>
-                  </div>
+        let modal_input_id = unique_id("param-value");
+        html! {
+            <ModalBlock
+                modal_id="change-param-value"
+                title={get_value_field(&211)}
+                is_active={!self.hide_edit_param_value}
+                on_close={onclick_hide_modal}
+                on_save={Some(self.link.callback(|_| Msg::RequestChangeValue))}
+                save_disabled={
+                    self.request_set_param_value.is_empty() ||
+                    self.current_param_value == self.request_set_param_value
+                }
+            >
+                <div class="column">
+                    <label for={modal_input_id.clone()} class="label">{get_value_field(&133)}</label> // Set a value
+                    <input
+                        id={modal_input_id}
+                        class="input is-fullwidth"
+                        type="text"
+                        placeholder={get_value_field(&133)}
+                        value={self.request_set_param_value.clone()}
+                        oninput={oninput_set_param_value}
+                    />
                 </div>
-              </div>
+            </ModalBlock>
         }
     }
 }

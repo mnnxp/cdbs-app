@@ -8,10 +8,11 @@ use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::error::Error;
-use crate::fragments::buttons::{ft_add_btn, ft_save_btn};
+use crate::fragments::buttons::ft_add_btn;
 use crate::fragments::list_errors::ListErrors;
+use crate::fragments::modal::ModalBlock;
 use crate::types::{UUID, Supplier, ShowCompanyShort};
-use crate::services::{get_value_field, resp_parsing};
+use crate::services::{get_value_field, resp_parsing, unique_id};
 use crate::gqls::make_query;
 use crate::gqls::component::{
     SetCompanyOwnerSupplier, set_company_owner_supplier,
@@ -211,8 +212,8 @@ impl Component for ComponentSuppliersCard {
                     </footer>
                 </div>
                 {match self.props.is_base {
-                    true => self.modal_add_supplier(),
-                    false => self.modal_set_owner_supplier(),
+                    true => self.supplier_modal_form(123, 79, "add-supplier", Msg::RequestAddSupplier),
+                    false => self.supplier_modal_form(167, 168, "set-owner-supplier", Msg::RequestChangeOwnerSupplier),
                 }}
             </div>
         }
@@ -258,130 +259,56 @@ impl ComponentSuppliersCard {
         }
     }
 
-    fn modal_set_owner_supplier(&self) -> Html {
-        let onclick_set_owner_supplier = self.link.callback(|_| Msg::RequestChangeOwnerSupplier);
+    fn supplier_modal_form(&self, title_id: usize, label_id: usize, modal_id: &'static str, on_save_msg: Msg) -> Html {
         let onclick_hide_modal = self.link.callback(|_| Msg::ChangeHideSetSupplier);
-        let onchange_select_set_supplier =
-            self.link.callback(|ev: ChangeData| Msg::UpdateSetSupplier(match ev {
-              ChangeData::Select(el) => el.value(),
-              _ => String::new(),
-          }));
+        let onchange_select_set_supplier = self.link.callback(|ev: ChangeData| {
+            Msg::UpdateSetSupplier(match ev {
+                ChangeData::Select(el) => el.value(),
+                _ => String::new(),
+            })
+        });
         let oninput_supplier_description = self.link.callback(|ev: InputData| Msg::UpdateSupplierDescription(ev.value));
-        let class_modal = match &self.hide_set_supplier_modal {
-            true => "modal",
-            false => "modal is-active",
-        };
-
-        html!{
-            <div class={class_modal}>
-              <div class="modal-background" onclick={onclick_hide_modal.clone()} />
-                <div class="modal-content">
-                  <div class="card">
-                    <header class="modal-card-head">
-                      <p class="modal-card-title">{get_value_field(&167)}</p> // Set owner supplier
-                      <button class="delete" aria-label="close" onclick={onclick_hide_modal.clone()} />
-                    </header>
-                    <section class="modal-card-body">
-                        <label class="label">{get_value_field(&168)}</label> // Select supplier
-                        <div class="select">
-                          <select
-                              id="set-main-supplier"
-                              select={self.request_set_supplier_uuid.clone()}
-                              onchange={onchange_select_set_supplier}
-                            >
-                          { for self.props.supplier_list.iter().map(|x|
-                              html!{
-                                  <option value={x.uuid.to_string()}
-                                        selected={x.uuid == self.request_set_supplier_uuid} >
-                                      {&x.shortname}
-                                  </option>
-                              }
-                          )}
-                          </select>
+        let select_id = unique_id("set-main-supplier");
+        let description_id = unique_id("update-description");
+        html! {
+            <ModalBlock
+                modal_id={modal_id}
+                title={get_value_field(&title_id)}
+                is_active={!self.hide_set_supplier_modal}
+                on_close={onclick_hide_modal}
+                on_save={Some(self.link.callback(move |_| on_save_msg.clone()))}
+                save_disabled={self.request_set_supplier_uuid.is_empty()}
+            >
+                <div class="field">
+                    <label for={select_id.clone()} class="label">{get_value_field(&label_id)}</label>
+                    <div class="control">
+                        <div class="select is-fullwidth">
+                            <select id={select_id} onchange={onchange_select_set_supplier}>
+                                { for self.props.supplier_list.iter().map(|x| {
+                                    html! {
+                                        <option value={x.uuid.to_string()}
+                                                selected={x.uuid == self.request_set_supplier_uuid} >
+                                            { x.shortname.clone() }
+                                        </option>
+                                    }
+                                })}
+                            </select>
                         </div>
-                        <br/>
-                        <label class="label">{get_value_field(&169)}</label> // Supplier description
+                    </div>
+                </div>
+                <div class="field">
+                    <label for={description_id.clone()} class="label">{get_value_field(&169)}</label>
+                    <div class="control">
                         <textarea
-                            id="update-description"
+                            id={description_id}
                             class="textarea"
-                            type="text"
                             placeholder={get_value_field(&169)}
                             value={self.request_set_supplier_description.clone()}
                             oninput={oninput_supplier_description}
-                            />
-                        <br/>
-                        {ft_save_btn(
-                            "save-new-supplier-component",
-                            onclick_set_owner_supplier,
-                            true,
-                            self.request_set_supplier_uuid.is_empty()
-                        )}
-                    </section>
-                  </div>
+                        />
+                    </div>
                 </div>
-              </div>
-        }
-    }
-
-    fn modal_add_supplier(&self) -> Html {
-        let onclick_add_supplier = self.link.callback(|_| Msg::RequestAddSupplier);
-        let onclick_hide_modal = self.link.callback(|_| Msg::ChangeHideSetSupplier);
-        let onchange_select_add_supplier =
-            self.link.callback(|ev: ChangeData| Msg::UpdateSetSupplier(match ev {
-              ChangeData::Select(el) => el.value(),
-              _ => String::new(),
-          }));
-        let oninput_supplier_description = self.link.callback(|ev: InputData| Msg::UpdateSupplierDescription(ev.value));
-        let class_modal = match &self.hide_set_supplier_modal {
-            true => "modal",
-            false => "modal is-active",
-        };
-
-        html!{
-            <div class={class_modal}>
-              <div class="modal-background" onclick={onclick_hide_modal.clone()} />
-                <div class="modal-content">
-                  <div class="card">
-                    <header class="modal-card-head">
-                      <p class="modal-card-title">{get_value_field(&123)}</p> // Add a supplier for the component
-                      <button class="delete" aria-label="close" onclick={onclick_hide_modal.clone()} />
-                    </header>
-                    <section class="modal-card-body">
-                        <label class="label">{get_value_field(&79)}</label> // Select a supplier
-                        <div class="select">
-                          <select
-                              id="set-main-supplier"
-                              select={self.request_set_supplier_uuid.clone()}
-                              onchange={onchange_select_add_supplier}
-                            >
-                          { for self.props.supplier_list.iter().map(|x|
-                              html!{
-                                  <option value={x.uuid.to_string()}
-                                        selected={x.uuid == self.request_set_supplier_uuid} >
-                                      {&x.shortname}
-                                  </option>
-                              }
-                          )}
-                          </select>
-                        </div>
-                    </section>
-                    <textarea
-                        id="update-description"
-                        class="textarea"
-                        // rows="10"
-                        type="text"
-                        placeholder={get_value_field(&169)}
-                        value={self.request_set_supplier_description.clone()}
-                        oninput={oninput_supplier_description} />
-                    {ft_save_btn(
-                        "supplier-component",
-                        onclick_add_supplier,
-                        true,
-                        self.request_set_supplier_uuid.is_empty()
-                    )}
-                  </div>
-                </div>
-              </div>
+            </ModalBlock>
         }
     }
 }

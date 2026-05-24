@@ -7,10 +7,10 @@ use log::debug;
 
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
-use crate::fragments::buttons::ft_modal_cancel_save_btn;
+use crate::fragments::modal::ModalBlock;
 use crate::fragments::switch_icon::res_loading_state;
 use crate::services::content_adapter::ContentDisplay;
-use crate::services::{get_value_field, resp_parsing, truncate_uuid, unique_id};
+use crate::services::{get_value_field, resp_parsing, truncate_uuid};
 use crate::types::{UUID, UserInfoForMember, CompanyRole};
 use crate::gqls::make_query;
 use crate::gqls::rbac::{
@@ -178,9 +178,24 @@ impl Component for AddCompanyMemberModal {
     }
 
     fn view(&self) -> Html {
+        html! {
+            <ModalBlock
+                modal_id="add-member"
+                title={get_value_field(&490)}
+                is_active={self.props.is_active}
+                on_close={self.link.callback(|_| Msg::Close)}
+                on_save={Some(self.link.callback(|_| Msg::AddMember))}
+                save_disabled={self.selected_user_uuid.is_none() || self.adding}
+            >
+                { self.modal_content() }
+            </ModalBlock>
+        }
+    }
+}
+
+impl AddCompanyMemberModal {
+    fn modal_content(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
-        let close_modal = self.link.callback(|_| Msg::Close);
-        let class_modal = if self.props.is_active { "modal is-active" } else { "modal" };
         let onchange_role_member = self.link.callback(|ev: ChangeData| {
             if let ChangeData::Select(el) = ev {
                 Msg::UpdateRole(el.value().parse().unwrap_or(0))
@@ -192,76 +207,55 @@ impl Component for AddCompanyMemberModal {
         if self.search_loading {
             class_input.push("is-loading");
         };
-
-        html!{
-            <div class={class_modal}>
-                <div class="modal-background" onclick={close_modal.clone()} />
-                <div class="modal-card">
-                    <header class="modal-card-head">
-                        <p class="modal-card-title">{get_value_field(&490)}</p>
-                    </header>
-                    <section class="modal-card-body">
-                        <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()} />
-                        <div class={"columns"}>
-                            <div class={"column"}>
-                            <div class="field">
-                                <label class="label">{get_value_field(&486)}</label>
-                                <div class={class_input}>
-                                    <input
-                                        class="input"
-                                        type="text"
-                                        placeholder={get_value_field(&481)}
-                                        value={self.search_text.clone()}
-                                        oninput={self.link.callback(|ev: InputData| Msg::UpdateSearch(ev.value))}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                        <div class={"column"}>
-                        <div class="field">
-                            <label class="label">{get_value_field(&471)}</label>
-                            <div class="control">
-                                <div class="select">
-                                    <select
-                                        value={self.selected_role_id.to_string()}
-                                        onchange={onchange_role_member}
-                                    >
-                                        {for self.props.company_roles.iter().map(|rl| {
-                                            let role_id = rl.role.role_member_id;
-                                            html!{
-                                                <option value={role_id.to_string()}>
-                                                    {rl.role.name.clone()}
-                                                </option>
-                                            }
-                                        })}
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        </div>
+        html!{<>
+            <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()} />
+            <div class={"columns"}>
+                <div class={"column"}>
+                <div class="field">
+                    <label class="label">{get_value_field(&486)}</label>
+                    <div class={class_input}>
+                        <input
+                            class="input"
+                            type="text"
+                            placeholder={get_value_field(&481)}
+                            value={self.search_text.clone()}
+                            oninput={self.link.callback(|ev: InputData| Msg::UpdateSearch(ev.value))}
+                        />
                     </div>
-                    <div class={"column"}>
-                        {match self.search_results.is_empty() {
-                            true => self.no_users_found(),
-                            false => self.show_search_results(),
-                        }}
-                    </div>
-                    </section>
-                    <footer class="modal-card-foot">
-                        {ft_modal_cancel_save_btn(
-                            &unique_id("add-member"),
-                            close_modal,
-                            self.link.callback(|_| Msg::AddMember),
-                            self.selected_user_uuid.is_none() || self.adding,
-                        )}
-                    </footer>
                 </div>
             </div>
-        }
+            <div class={"column"}>
+            <div class="field">
+                <label class="label">{get_value_field(&471)}</label>
+                <div class="control">
+                    <div class="select">
+                        <select
+                            value={self.selected_role_id.to_string()}
+                            onchange={onchange_role_member}
+                        >
+                            {for self.props.company_roles.iter().map(|rl| {
+                                let role_id = rl.role.role_member_id;
+                                html!{
+                                    <option value={role_id.to_string()}>
+                                        {rl.role.name.clone()}
+                                    </option>
+                                }
+                            })}
+                        </select>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class={"column"}>
+            {match self.search_results.is_empty() {
+                true => self.no_users_found(),
+                false => self.show_search_results(),
+            }}
+        </div>
+        </>}
     }
-}
 
-impl AddCompanyMemberModal {
     fn no_users_found(&self) -> Html {
         match self.search_text.is_empty() {
             true => html!{},

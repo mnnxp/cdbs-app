@@ -7,11 +7,11 @@ use log::debug;
 
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
-use crate::fragments::buttons::ft_modal_cancel_save_btn;
+use crate::fragments::modal::ModalBlock;
 use crate::fragments::permission::PermissionLevelBlock;
 use crate::fragments::switch_icon::res_loading_state;
 use crate::services::content_adapter::ContentDisplay;
-use crate::services::{get_value_field, resp_parsing, truncate_uuid, unique_id};
+use crate::services::{get_value_field, resp_parsing, truncate_uuid};
 use crate::types::{PermissionLevel, UserSearchResult, UUID};
 use crate::gqls::make_query;
 use crate::gqls::rbac::{
@@ -185,72 +185,66 @@ impl Component for AddUserAccessModal {
     }
 
     fn view(&self) -> Html {
-        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
-        let close_modal = self.link.callback(|_| Msg::Close);
-        let class_modal = if self.props.is_active { "modal is-active" } else { "modal" };
-        let mut class_input = classes!("control");
-        if self.search_loading {
-            class_input.push("is-loading");
-        };
-
         html! {
-            <div class={class_modal}>
-                <div class="modal-background" onclick={close_modal.clone()} />
-                <div class="modal-card">
-                    <header class="modal-card-head">
-                        <p class="modal-card-title">{get_value_field(&485)}</p>
-                    </header>
-                    <section class="modal-card-body">
-                        <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()} />
-                        <div class={"columns"}>
-                            <div class={"column"}>
-                                <div class="field">
-                                    <label class="label">{get_value_field(&486)}</label>
-                                    <div class={class_input}>
-                                        <input
-                                            class="input"
-                                            type="text"
-                                            placeholder={get_value_field(&481)}
-                                            value={self.search_text.clone()}
-                                            oninput={self.link.callback(|ev: InputData| Msg::UpdateSearch(ev.value))}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                            <div class={"column"}>
-                                <div class="field">
-                                    <label class="label">{get_value_field(&487)}</label>
-                                    <PermissionLevelBlock
-                                        change_cb={self.link.callback(|id| Msg::UpdateLevel(id))}
-                                        permissions={self.props.permissions.clone()}
-                                        selected={self.selected_level}
-                                        preset={self.selected_level}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                        <div class={"column"}>
-                            {match self.search_results.is_empty() {
-                                true => self.no_users_found(),
-                                false => self.show_search_results(),
-                            }}
-                        </div>
-                    </section>
-                    <footer class="modal-card-foot">
-                        {ft_modal_cancel_save_btn(
-                            &unique_id("add-user"),
-                            close_modal.clone(),
-                            self.link.callback(|_| Msg::AddAccess),
-                            self.selected_user_uuid.is_none() || self.adding,
-                        )}
-                    </footer>
-                </div>
-            </div>
+            <ModalBlock
+                modal_id="add-user"
+                title={get_value_field(&485)}
+                is_active={self.props.is_active}
+                on_close={self.link.callback(|_| Msg::Close)}
+                on_save={Some(self.link.callback(|_| Msg::AddAccess))}
+                save_disabled={self.selected_user_uuid.is_none() || self.adding}
+            >
+                { self.modal_content() }
+            </ModalBlock>
         }
     }
 }
 
 impl AddUserAccessModal {
+    fn modal_content(&self) -> Html {
+        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+        let mut class_input = classes!("control");
+        if self.search_loading {
+            class_input.push("is-loading");
+        };
+        html! {<>
+            <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()} />
+            <div class={"columns"}>
+                <div class={"column"}>
+                    <div class="field">
+                        <label class="label">{get_value_field(&486)}</label>
+                        <div class={class_input}>
+                            <input
+                                class="input"
+                                type="text"
+                                placeholder={get_value_field(&481)}
+                                value={self.search_text.clone()}
+                                oninput={self.link.callback(|ev: InputData| Msg::UpdateSearch(ev.value))}
+                            />
+                        </div>
+                    </div>
+                </div>
+                <div class={"column"}>
+                    <div class="field">
+                        <label class="label">{get_value_field(&487)}</label>
+                        <PermissionLevelBlock
+                            change_cb={self.link.callback(|id| Msg::UpdateLevel(id))}
+                            permissions={self.props.permissions.clone()}
+                            selected={self.selected_level}
+                            preset={self.selected_level}
+                        />
+                    </div>
+                </div>
+            </div>
+            <div class={"column"}>
+                {match self.search_results.is_empty() {
+                    true => self.no_users_found(),
+                    false => self.show_search_results(),
+                }}
+            </div>
+        </>}
+    }
+
     fn no_users_found(&self) -> Html {
         match self.search_text.is_empty() {
             true => html!{},

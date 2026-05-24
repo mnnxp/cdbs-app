@@ -7,6 +7,7 @@ use log::debug;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::buttons::{ft_download_btn, ft_download_full_btn};
+use crate::fragments::modal::ModalBlock;
 use crate::types::{ShowFileInfo, UUID};
 use crate::services::content_adapter::{ContentDisplay, DateDisplay};
 use crate::services::{Size, get_value_field, resp_parsing};
@@ -154,26 +155,26 @@ impl Component for FileShowcase {
     }
 
     fn view(&self) -> Html {
-      let onclick_file_info = self.link.callback(|_| Msg::ClickFileInfo);
-      let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
-      let class_modal = match &self.props.open_modal_frame {
-        true => "modal is-active",
-        false => "modal",
-      };
-
-      html!{
-        <div class={class_modal}>
-          <div class="modal-background" onclick={onclick_file_info.clone()} />
-          <div class="modal-content box">
-            <ListErrors error={self.error.clone()} clear_error={onclick_clear_error}/>
-            {match self.props.show_revisions {
-              true => self.show_revisions(),
-              false => self.show_info_card(self.props.file_info.uuid.clone()),
-            }}
-          </div>
-          <button class="modal-close is-large" aria-label="close" onclick={onclick_file_info} />
-        </div>
-      }
+        let onclick_file_info = self.link.callback(|_| Msg::ClickFileInfo);
+        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+        html! {
+            <ModalBlock
+                modal_id="file-frame"
+                title={""}
+                is_active={self.props.open_modal_frame}
+                on_close={onclick_file_info}
+                on_save={None}
+                save_disabled={false}
+            >
+                <div class="box">
+                    <ListErrors error={self.error.clone()} clear_error={onclick_clear_error}/>
+                    {match self.props.show_revisions {
+                      true => self.show_revisions(),
+                      false => self.show_info_card(self.props.file_info.uuid.clone()),
+                    }}
+                </div>
+            </ModalBlock>
+        }
     }
 }
 

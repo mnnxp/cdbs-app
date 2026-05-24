@@ -4,6 +4,7 @@ use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::error::Error;
+use crate::fragments::modal::ModalBlock;
 use crate::fragments::{
     buttons::ft_delete_small_btn,
     list_errors::ListErrors,
@@ -150,24 +151,23 @@ impl ComponentStandardItem {
             </tr>
         </>}
     }
+
     fn show_modal_standard_info(&self) -> Html {
         let onclick_standard_data_info = self.link.callback(|_| Msg::ShowStandardCard);
-        let class_modal = match &self.open_standard_info {
-            true => "modal is-active",
-            false => "modal",
-        };
-
-        html!{<div class={class_modal}>
-          <div class="modal-background" onclick={onclick_standard_data_info.clone()} />
-            // <div class="modal-content">
-              <div class="card">
+        html! {
+            <ModalBlock
+                modal_id="standard-info"
+                title={""}
+                is_active={self.open_standard_info}
+                on_close={onclick_standard_data_info}
+                on_save={None}
+                save_disabled={false}
+            >
                 <ListItemStandard
                     data={self.props.standard_data.clone()}
                     show_list={true}
-                  />
-              </div>
-            // </div>
-          <button class="modal-close is-large" aria-label="close" onclick={onclick_standard_data_info} />
-        </div>}
+                />
+            </ModalBlock>
+        }
     }
 }

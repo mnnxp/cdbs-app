@@ -5,8 +5,8 @@ use log::debug;
 
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
-use crate::fragments::buttons::ft_modal_cancel_save_btn;
-use crate::services::{get_value_field, resp_parsing, unique_id};
+use crate::fragments::modal::ModalBlock;
+use crate::services::{get_value_field, resp_parsing};
 use crate::types::UUID;
 use crate::gqls::make_query;
 use crate::gqls::rbac::{
@@ -107,42 +107,40 @@ impl Component for CreateCompanyRoleModal {
     }
 
     fn view(&self) -> Html {
-        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
-        let close_modal = self.link.callback(|_| Msg::Close);
-        let class_modal = if self.props.is_active { "modal is-active" } else { "modal" };
+        html! {
+            <ModalBlock
+                modal_id="create-role"
+                title={get_value_field(&470)}
+                is_active={self.props.is_active}
+                on_close={self.link.callback(|_| Msg::Close)}
+                on_save={Some(self.link.callback(|_| Msg::CreateRole))}
+                save_disabled={self.request_name.is_empty() || self.creating}
+            >
+                { self.modal_content() }
+            </ModalBlock>
+        }
+    }
+}
 
-        html!{
-            <div class={class_modal}>
-                <div class="modal-background" onclick={close_modal.clone()} />
-                <div class="modal-card">
-                    <header class="modal-card-head">
-                        <p class="modal-card-title">{get_value_field(&470)}</p>
-                    </header>
-                    <section class="modal-card-body">
-                        <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()} />
-                        <div class="field">
-                            <label class="label">{get_value_field(&467)}</label>
-                            <div class="control">
-                                <input
-                                    class="input"
-                                    type="text"
-                                    placeholder={get_value_field(&472)}
-                                    value={self.request_name.clone()}
-                                    oninput={self.link.callback(|ev: InputData| Msg::UpdateRoleName(ev.value))}
-                                />
-                            </div>
-                        </div>
-                    </section>
-                    <footer class="modal-card-foot">
-                        {ft_modal_cancel_save_btn(
-                            &unique_id("create-role"),
-                            close_modal,
-                            self.link.callback(|_| Msg::CreateRole),
-                            self.request_name.is_empty() || self.creating,
-                        )}
-                    </footer>
+impl CreateCompanyRoleModal {
+    fn modal_content(&self) -> Html {
+        let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
+        html! {
+            <>
+                <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
+                <div class="field">
+                    <label class="label">{get_value_field(&467)}</label>
+                    <div class="control">
+                        <input
+                            class="input"
+                            type="text"
+                            placeholder={get_value_field(&472)}
+                            value={self.request_name.clone()}
+                            oninput={self.link.callback(|ev: InputData| Msg::UpdateRoleName(ev.value))}
+                        />
+                    </div>
                 </div>
-            </div>
+            </>
         }
     }
 }

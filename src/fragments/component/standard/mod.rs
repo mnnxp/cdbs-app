@@ -8,10 +8,11 @@ use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::error::Error;
-use crate::fragments::buttons::{ft_add_btn, ft_save_btn};
+use crate::fragments::buttons::ft_add_btn;
 use crate::fragments::list_errors::ListErrors;
+use crate::fragments::modal::ModalBlock;
 use crate::types::{UUID, ShowStandardShort};
-use crate::services::{get_value_field, resp_parsing, resp_parsing_two_level};
+use crate::services::{get_value_field, resp_parsing, resp_parsing_two_level, unique_id};
 use crate::gqls::{
     make_query,
     component::{
@@ -257,61 +258,47 @@ impl ComponentStandardsCard {
     }
 
     fn modal_add_standard(&self) -> Html {
-        let onclick_add_standard = self.link.callback(|_| Msg::RequestAddStandard);
         let onclick_hide_modal = self.link.callback(|_| Msg::ChangeHideAddStandard);
-        let onchange_select_add_standard =
-            self.link.callback(|ev: ChangeData| Msg::UpdateSelectStandard(match ev {
-              ChangeData::Select(el) => el.value(),
-              _ => String::new(),
-          }));
-        let class_modal = match &self.hide_add_standard_modal {
-            true => "modal",
-            false => "modal is-active",
-        };
-
-        html!{
-            <div class={class_modal}>
-              <div class="modal-background" onclick={onclick_hide_modal.clone()} />
-                <div class="modal-content">
-                  <div class="card">
-                    <header class="modal-card-head">
-                      <p class="modal-card-title">{get_value_field(&263)}</p> // Add a standard to the component
-                      <button class="delete" aria-label="close" onclick={onclick_hide_modal.clone()} />
-                    </header>
-                    <section class="modal-card-body">
-                        <div class="column">
-                            <label class="label">{get_value_field(&212)}</label> // Select standard
-                        </div>
-                        <div class="column">
-                            <div class="select">
-                                <select
-                                    id="add-standard"
-                                    select={self.request_add_standard_uuid.clone()}
-                                    onchange={onchange_select_add_standard}
-                                >
-                                { for self.standard_list.iter().map(|x|
+        let onchange_select_add_standard = self.link.callback(|ev: ChangeData| {
+            Msg::UpdateSelectStandard(match ev {
+                ChangeData::Select(el) => el.value(),
+                _ => String::new(),
+            })
+        });
+        let select_id = unique_id("add-standard");
+        html! {
+            <ModalBlock
+                modal_id="add-standard"
+                title={get_value_field(&263)}
+                is_active={!self.hide_add_standard_modal}
+                on_close={onclick_hide_modal}
+                on_save={Some(self.link.callback(|_| Msg::RequestAddStandard))}
+                save_disabled={self.request_add_standard_uuid.is_empty()}
+            >
+                <div class="field">
+                    <label for={select_id.clone()} class="label">{get_value_field(&212)}</label>
+                    <div class="control">
+                        <div class="select is-fullwidth">
+                            <select
+                                id={select_id}
+                                onchange={onchange_select_add_standard}
+                            >
+                                { for self.standard_list.iter().map(|x| {
                                     match self.standard_uuids.get(&x.uuid) {
-                                        Some(_) => html!{}, // this standard already has
-                                        None => html!{
-                                            <option value={x.uuid.clone()}>{x.name.clone()}</option>
+                                        Some(_) => html! {},
+                                        None => html! {
+                                            <option value={x.uuid.clone()}
+                                                    selected={x.uuid == self.request_add_standard_uuid}>
+                                                { x.name.clone() }
+                                            </option>
                                         },
                                     }
-                                )}
-                                </select>
-                            </div>
+                                })}
+                            </select>
                         </div>
-                        <div class="column">
-                            {ft_save_btn(
-                                "standard-component",
-                                onclick_add_standard,
-                                true,
-                                self.request_add_standard_uuid.is_empty()
-                            )}
-                        </div>
-                    </section>
-                  </div>
+                    </div>
                 </div>
-              </div>
+            </ModalBlock>
         }
     }
 }

@@ -190,8 +190,8 @@ pub fn ft_delete_pair_btn(
     if confirm {
     html! {
         <div class="buttons is-fullwidth">
-            {ft_cancel_btn(&format!("{}-cancel", id_btn), on_cancel, add_classes)}
-            {ft_delete_class_btn(id_btn, on_confirm, confirm, disabled, extended_classes.clone())}
+            {ft_cancel_btn(&format!("{}-cancel", id_btn), on_cancel, extended_classes.clone())}
+            {ft_delete_class_btn(id_btn, on_confirm, confirm, disabled, extended_classes)}
         </div>
         }
     } else {
@@ -227,11 +227,16 @@ pub fn ft_modal_cancel_save_btn(
     id_btn: &str,
     on_cancel: Callback<MouseEvent>,
     on_save: Callback<MouseEvent>,
+    is_fullwidth: bool,
     disabled: bool,
 ) -> Html {
+    let cancel_classes = match is_fullwidth {
+        true => classes!("is-fullwidth"),
+        false => classes!(""),
+    };
     html! {<>
-        {ft_cancel_btn(&format!("{}-cancel", id_btn), on_cancel, classes!(""))}
-        {ft_save_btn(&format!("{}-save", id_btn), on_save, true, disabled)}
+        {ft_cancel_btn(&format!("{}-cancel", id_btn), on_cancel, cancel_classes)}
+        {ft_save_btn(&format!("{}-save", id_btn), on_save, is_fullwidth, disabled)}
     </>}
 }
 
@@ -371,7 +376,7 @@ pub fn ft_cancel_btn(
     html!{
         <button
             id={unique_id(id_btn)}
-            class={classes!("button", "is-warning", "is-fullwidth", add_classes)}
+            class={classes!("button", "is-warning", add_classes)}
             onclick={trigger_btn}
             title={title_text.to_string()}>
             <span class="icon">

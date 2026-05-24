@@ -436,7 +436,7 @@ impl ManageModificationFilesets {
                         {ft_cancel_btn(
                             "close-add-fileset-program",
                             close_add_fileset_block,
-                            classes!(""),
+                            classes!("is-fullwidth"),
                         )}
                     </p>
                     <p class="control">

@@ -6,12 +6,10 @@ use wasm_bindgen_futures::spawn_local;
 
 use super::ModificationTableItemModule;
 use crate::error::Error;
-use crate::fragments::{
-    buttons::{ft_delete_btn, ft_save_btn},
-    list_errors::ListErrors,
-    component::param::RegisterParamnameBlock,
-};
-use crate::services::{get_value_field, resp_parsing};
+use crate::fragments::list_errors::ListErrors;
+use crate::fragments::modal::ModalBlock;
+use crate::fragments::component::param::RegisterParamnameBlock;
+use crate::services::{get_value_field, resp_parsing, unique_id};
 use crate::types::{UUID, Param, ParamValue};
 use crate::gqls::{
     make_query,
@@ -443,75 +441,60 @@ impl ModificationTableItem {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         let onclick_add_new_param = self.link.callback(|pv| Msg::RequestAddNewParam(pv));
         let onclick_close_param_card = self.link.callback(|_| Msg::ShowNewParamCard);
-        let class_modal = match &self.open_new_param_card {
-            true => "modal is-active",
-            false => "modal",
-        };
-
-        html!{<div class={class_modal}>
-          <div class="modal-background" onclick={onclick_close_param_card.clone()} />
-          <div class="card">
-            <div class="modal-content">
-                <header class="modal-card-head">
-                    <p class="modal-card-title">{get_value_field(&130)}</p> // Add new parameter name
-                    <button class="delete" aria-label="close" onclick={onclick_close_param_card} />
-                </header>
-                <div class="box itemBox">
-                  <article class="media center-media">
-                      <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
-                      <div class="media-content">
-                          <RegisterParamnameBlock callback_add_param={onclick_add_new_param.clone()} />
-                      </div>
-                  </article>
-                </div>
-              </div>
-          </div>
-        </div>}
+        html! {
+            <ModalBlock
+                modal_id="add-new-parameter"
+                title={get_value_field(&130)}
+                is_active={self.open_new_param_card}
+                on_close={onclick_close_param_card}
+                on_save={None}
+                save_disabled={false}
+            >
+                <article class="media center-media">
+                    <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
+                    <div class="media-content">
+                        <RegisterParamnameBlock callback_add_param={onclick_add_new_param} />
+                    </div>
+                </article>
+            </ModalBlock>
+        }
     }
+
 
     fn modal_add_value(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         let oninput_param_value = self.link.callback(|ev: InputData| Msg::UpdateValue(ev.value));
         let onclick_close_add_param = self.link.callback(|_| Msg::ShowAddParamCard(0));
-        let onclick_param_add = self.link.callback(|_| Msg::RequestAddParamData);
-        let class_modal = match &self.open_add_param_card {
-            true => "modal is-active",
-            false => "modal",
-        };
-
-        html!{<div class={class_modal}>
-          <div class="modal-background" onclick={onclick_close_add_param.clone()} />
-          <div class="card">
-            <div class="modal-content">
-                <header class="modal-card-head">
-                    <p class="modal-card-title">{get_value_field(&131)}</p> // Add a parameter to modification
-                    <button class="delete" aria-label="close" onclick={onclick_close_add_param} />
-                </header>
-                <div class="box itemBox">
-                  <article class="media center-media">
-                      <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
-                      <div class="media-content">
-                          <label class="label">{get_value_field(&133)}</label> // Set a value
-                          <input
-                              id="change-modification-param-value"
-                              class="input is-fullwidth"
-                              type="text"
-                              placeholder={get_value_field(&133)}
-                              value={self.request_add_param.value.clone()}
-                              oninput={oninput_param_value} />
-                      <br/>
-                      {ft_save_btn(
-                        "update-modification-param",
-                        onclick_param_add,
-                        true,
-                        !self.update_add_param
-                      )}
+        let input_id = unique_id("change-modification-param-value");
+        html! {
+            <ModalBlock
+                modal_id="add-param-value"
+                title={get_value_field(&131)}
+                is_active={self.open_add_param_card}
+                on_close={onclick_close_add_param}
+                on_save={Some(self.link.callback(|_| Msg::RequestAddParamData))}
+                save_disabled={!self.update_add_param}
+            >
+                <article class="media center-media">
+                    <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
+                    <div class="media-content">
+                        <div class="field">
+                            <label for={input_id.clone()} class="label">{get_value_field(&133)}</label> // Set a value
+                            <div class="control">
+                                <input
+                                    id={input_id}
+                                    class="input is-fullwidth"
+                                    type="text"
+                                    placeholder={get_value_field(&133)}
+                                    value={self.request_add_param.value.clone()}
+                                    oninput={oninput_param_value}
+                                />
+                            </div>
+                        </div>
                     </div>
-                  </article>
-                </div>
-              </div>
-          </div>
-        </div>}
+                </article>
+            </ModalBlock>
+        }
     }
 
     fn modal_change_value(&self) -> Html {
@@ -519,56 +502,39 @@ impl ModificationTableItem {
         let oninput_param_value = self.link.callback(|ev: InputData| Msg::UpdateValue(ev.value));
         let onclick_edit_param_card = self.link.callback(|_| Msg::ShowEditParamCard(0));
         let onclick_param_update = self.link.callback(|_| Msg::RequestUpdateParamData);
-        let onclick_delete_param = self.link.callback(|_| Msg::RequestDeleteParamData);
-        let class_modal = match &self.open_edit_param_card {
-            true => "modal is-active",
-            false => "modal",
-        };
-
-        html!{<div class={class_modal}>
-          <div class="modal-background" onclick={onclick_edit_param_card.clone()} />
-          <div class="card">
-            <div class="modal-content">
-                <header class="modal-card-head">
-                    <p class="modal-card-title">{get_value_field(&132)}</p> // Change the value
-                    <button class="delete" aria-label="close" onclick={onclick_edit_param_card} />
-                </header>
-                <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
-                <div class="box itemBox">
-                  <article class="media center-media">
-                      <div class="media-content">
-                          <label class="label">{get_value_field(&134)}</label> // Change value
-                          <input
-                              id="change-modification-param-value"
-                              class="input is-fullwidth"
-                              type="text"
-                              placeholder={get_value_field(&134)}
-                              value={self.request_edit_param.value.clone()}
-                              oninput={oninput_param_value} />
-                      <br/>
-                      <div class="columns">
-                        <div class="column">
-                          {ft_delete_btn(
-                              "delete-modification-param",
-                              onclick_delete_param,
-                              self.get_confirm == self.request_edit_param.param_id,
-                              false
-                          )}
+        let onclick_delete_param = self.link.callback(|_is_confirmed: bool| Msg::RequestDeleteParamData);
+        let input_id = unique_id("change-modification-param-value");
+        html! {
+            <ModalBlock
+                modal_id="change-param-value"
+                title={get_value_field(&132)}
+                is_active={self.open_edit_param_card}
+                on_close={onclick_edit_param_card}
+                on_save={Some(onclick_param_update)}
+                save_disabled={!self.update_edit_param}
+                on_delete={Some(onclick_delete_param)}
+                delete_confirm={self.get_confirm == self.request_edit_param.param_id}
+                delete_disabled={false}
+            >
+                <article class="media center-media">
+                    <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
+                    <div class="media-content">
+                        <div class="field">
+                            <label for={input_id.clone()} class="label">{get_value_field(&134)}</label> // Change value
+                            <div class="control">
+                                <input
+                                    id={input_id}
+                                    class="input is-fullwidth"
+                                    type="text"
+                                    placeholder={get_value_field(&134)}
+                                    value={self.request_edit_param.value.clone()}
+                                    oninput={oninput_param_value}
+                                />
+                            </div>
                         </div>
-                        <div class="column">
-                          {ft_save_btn(
-                            "update-modification-param",
-                            onclick_param_update,
-                            true,
-                            !self.update_edit_param
-                          )}
-                        </div>
-                      </div>
                     </div>
-                  </article>
-                </div>
-              </div>
-          </div>
-        </div>}
+                </article>
+            </ModalBlock>
+        }
     }
 }

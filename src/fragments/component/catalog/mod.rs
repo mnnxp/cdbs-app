@@ -9,6 +9,7 @@ use wasm_bindgen_futures::spawn_local;
 
 use crate::error::Error;
 use crate::fragments::buttons::ft_change_view_btn;
+use crate::fragments::modal::ModalBlock;
 use crate::fragments::{list_errors::ListErrors, list_empty::ListEmpty};
 use crate::routes::component::CreateComponent;
 use crate::routes::AppRoute;
@@ -243,21 +244,19 @@ impl CatalogComponents {
 
     fn modal_add_component(&self) -> Html {
         let onclick_show_add_component = self.link.callback(|_| Msg::ShowAddComponentCard);
-        let class_modal = match &self.show_add_component {
-            true => "modal is-active",
-            false => "modal",
-        };
-
-        html!{
-            <div class={class_modal}>
-                <div class="modal-background" onclick={onclick_show_add_component.clone()} />
-                <div class="modal-card">
-                <div class="box">
+        html! {
+            <ModalBlock
+                modal_id="add-component"
+                title={get_value_field(&150)}
+                is_active={self.show_add_component}
+                on_close={onclick_show_add_component}
+                on_save={None}
+                save_disabled={false}
+            >
+                <div class="box mb-0">
                     <CreateComponent company_uuid={self.company_uuid.clone()} />
                 </div>
-                </div>
-                <button class="modal-close is-large" aria-label="close" onclick={onclick_show_add_component} />
-            </div>
+            </ModalBlock>
         }
     }
 

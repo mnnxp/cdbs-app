@@ -1,8 +1,8 @@
-use yew::{html, Component, ComponentLink, Html, ShouldRender, MouseEvent, Callback, Properties};
+use yew::{html, Component, ComponentLink, Html, ShouldRender, Properties};
 use web_sys;
 use rand;
 
-use crate::services::{set_clipboard, get_value_field};
+use crate::{fragments::modal::ModalBlock, services::{get_value_field, set_clipboard}};
 
 
 pub struct ShareLinkBtn {
@@ -84,34 +84,47 @@ impl Component for ShareLinkBtn {
 }
 
 impl ShareLinkBtn {
-    fn share_window(&self) -> Html {
-        let onclick_share_btn = self.link.callback(|_| Msg::ShowShare);
-        let class_modal = match &self.open_window {
-            true => "modal is-active",
-            false => "modal",
-        };
-
-        let oncopyed: Callback<MouseEvent> = self.link.callback(|_| Msg::Copyed(true));
-
-        html!{
-            <div class={class_modal}>
-              <div class="modal-background" onclick={onclick_share_btn.clone()} />
-              <div class="modal-content">
-                <div class="card column">
+  fn share_window(&self) -> Html {
+      let onclick_share_btn = self.link.callback(|_| Msg::ShowShare);
+      let oncopyed = self.link.callback(|_| Msg::Copyed(true));
+      html! {
+          <ModalBlock
+              modal_id="share-window"
+              title={""}
+              is_active={self.open_window}
+              on_close={onclick_share_btn}
+              on_save={None}
+              save_disabled={false}
+          >
+              <div class="box mb-0">
                   <div class="clipboardBox">
-                        <input id={self.input_id.clone()} type="text" class="input is-link inputBox" readonly={true} value={self.share_link.clone()} />
-                        <button class={format!("btn button is-info {}", self.input_id.clone())} onclick={oncopyed} data-clipboard-target={format!("#{}", self.input_id)} style="margin-bottom: 0;">
-                          {if self.copyed { html!{
-                            <>
-                            {get_value_field(&323)}<i class="copyIcon fas fa-check"></i>
-                            </>
-                          }} else { html!{{get_value_field(&322)}} }}
-                        </button>
-                      </div>
-                </div>
+                      <input
+                          id={self.input_id.clone()}
+                          type="text"
+                          class="input is-link inputBox"
+                          readonly={true}
+                          value={self.share_link.clone()}
+                      />
+                      <button
+                          class={format!("btn button is-info {}", self.input_id.clone())}
+                          onclick={oncopyed}
+                          data-clipboard-target={format!("#{}", self.input_id)}
+                          style="margin-bottom: 0;"
+                      >
+                          { if self.copyed {
+                              html! {
+                                  <>
+                                      {get_value_field(&323)}
+                                      <i class="copyIcon fas fa-check"></i>
+                                  </>
+                              }
+                          } else {
+                              html! { {get_value_field(&322)} }
+                          }}
+                      </button>
+                  </div>
               </div>
-              <button class="modal-close is-large" aria-label="close" onclick={onclick_share_btn} />
-            </div>
-        }
-    }
+          </ModalBlock>
+      }
+  }
 }

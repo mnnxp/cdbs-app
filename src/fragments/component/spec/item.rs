@@ -8,6 +8,7 @@ use wasm_bindgen_futures::spawn_local;
 
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
+use crate::fragments::modal::ModalBlock;
 use crate::types::{UUID, Spec, SpecPathInfo};
 use crate::services::{get_value_field, resp_parsing};
 use crate::gqls::{
@@ -233,38 +234,36 @@ impl SpecTagItem {
     }
 
     fn show_spec_info(&self) -> Html {
-        let onclick_spec_info =
-            self.link.callback(|_| Msg::ClickSpecInfo);
-
-        let class_modal = match &self.open_spec_info {
-            true => "modal is-active",
-            false => "modal",
-        };
-
+        let onclick_spec_info = self.link.callback(|_| Msg::ClickSpecInfo);
         match &self.spec_data {
-            Some(data) => html!{
-                <div class={class_modal}>
-                  <div class="modal-background" onclick={onclick_spec_info.clone()} />
-                  <div class="modal-content">
-                      <div class="card column">
-                        <table class="table is-fullwidth">
-                          <tbody>
-                            <tr>
-                              <td>{get_value_field(&246)}</td>
-                              <td>{data.spec_id.to_string()}</td>
-                            </tr>
-                            <tr>
-                              <td>{get_value_field(&247)}</td>
-                              <td>{data.path.clone()}</td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                  </div>
-                  <button class="modal-close is-large" aria-label="close" onclick={onclick_spec_info} />
-                </div>
+            Some(data) => html! {
+                <ModalBlock
+                    modal_id="spec-info"
+                    title={""}
+                    is_active={self.open_spec_info}
+                    on_close={onclick_spec_info}
+                    on_save={None}
+                    save_disabled={false}
+                >
+                    <div class="table-container box">
+                        <div class="content">
+                            <table class="table is-fullwidth">
+                                <tbody>
+                                    <tr>
+                                        <td>{get_value_field(&246)}</td>
+                                        <td>{data.spec_id.to_string()}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>{get_value_field(&247)}</td>
+                                        <td>{data.path.clone()}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </ModalBlock>
             },
-            None => html!{},
+            None => html! {},
         }
     }
 }

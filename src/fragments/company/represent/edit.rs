@@ -5,8 +5,9 @@ use log::debug;
 
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
+use crate::fragments::modal::ModalBlock;
 use crate::services::{get_value_field, resp_parsing, unique_id};
-use crate::fragments::buttons::{ft_custom_btn, ft_modal_cancel_save_btn};
+use crate::fragments::buttons::ft_custom_btn;
 use crate::fragments::notification::show_notification;
 use crate::types::{Region, RepresentationType, CompanyRepresentInfo, CompanyRepresentUpdateInfo};
 use crate::gqls::make_query;
@@ -198,35 +199,18 @@ impl Component for EditCompanyRepresentModal {
 
 impl EditCompanyRepresentModal {
     fn modal_card(&self) -> Html {
-        let onclick_close = self.link.callback(|_| Msg::ShowEditCompanyRepresent);
-        let modal_classes = classes!(
-            "modal",
-            "is-isolated-modal",
-            if self.is_active { Some("is-active") } else { None }
-        );
-        let onclick_clear_data = self.link.callback(|_| Msg::ClearData);
-        let onclick_update_represent = self.link.callback(|_| Msg::RequestUpdateRepresent);
-
-        html!{
-            <div class={modal_classes}>
-                <div class="modal-background" onclick={onclick_close.clone()} />
-                <div class="modal-card">
-                    <header class="modal-card-head">
-                        <p class="modal-card-title">{get_value_field(&215)}</p>
-                    </header>
-                    <section class="modal-card-body">
-                        {self.edit_represent_block()}
-                    </section>
-                    <footer class="modal-card-foot">
-                        {ft_modal_cancel_save_btn(
-                            &unique_id("edit-represent"),
-                            onclick_clear_data,
-                            onclick_update_represent,
-                            self.loading,
-                        )}
-                    </footer>
-                </div>
-            </div>
+        html! {
+            <ModalBlock
+                modal_id="edit-represent"
+                title={get_value_field(&215)}
+                is_active={self.is_active}
+                on_close={self.link.callback(|_| Msg::ShowEditCompanyRepresent)}
+                on_cancel={self.link.callback(|_| Msg::ClearData)}
+                on_save={Some(self.link.callback(|_| Msg::RequestUpdateRepresent))}
+                save_disabled={self.loading}
+            >
+                { self.edit_represent_block() }
+            </ModalBlock>
         }
     }
 

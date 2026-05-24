@@ -4,9 +4,10 @@ use wasm_bindgen_futures::spawn_local;
 use log::debug;
 
 use crate::error::Error;
-use crate::fragments::buttons::{ft_custom_btn, ft_modal_cancel_save_btn};
+use crate::fragments::buttons::ft_custom_btn;
 use crate::fragments::list_errors::ListErrors;
-use crate::services::{get_value_field, resp_parsing, unique_id};
+use crate::fragments::modal::ModalBlock;
+use crate::services::{get_value_field, resp_parsing};
 use crate::types::{CompanyRole, PermissionLevel, UUID};
 use crate::gqls::make_query;
 use crate::gqls::rbac::{
@@ -232,72 +233,60 @@ impl Component for EditCompanyRoleModal {
                 callback_event_edit_role,
                 false
             )}
-            {self.modal_card()}
+            <ModalBlock
+                modal_id="edit-role"
+                title={get_value_field(&473)}
+                is_active={self.is_active}
+                on_close={self.link.callback(|_| Msg::ShowEditAccessRoleModal)}
+                on_save={Some(self.link.callback(|_| Msg::Submit))}
+                save_disabled={self.submitting}
+            >
+                { self.modal_content() }
+            </ModalBlock>
         </>}
     }
 }
 
 impl EditCompanyRoleModal {
-    fn modal_card(&self) -> Html {
-        let onclick_close = self.link.callback(|_| Msg::ShowEditAccessRoleModal);
-        let class_modal = if self.is_active { "modal is-active" } else { "modal" };
-
-        html!{
-            <div class={class_modal}>
-                <div class="modal-background" onclick={onclick_close.clone()} />
-                <div class="modal-card">
-                    <header class="modal-card-head">
-                        <p class="modal-card-title">{get_value_field(&473)}</p>
-                    </header>
-                    <section class="modal-card-body">
-                        <div class="field">
-                            <label class="label">{get_value_field(&467)}</label>
-                            <div class="control">
-                                <input
-                                    class="input"
-                                    type="text"
-                                    value={self.props.company_role.role.name.clone()}
-                                    disabled={true}
-                                />
-                            </div>
-                            <p class="help">
-                                <span class="mr-3">{get_value_field(&474)}</span>
-                                <span>{self.props.company_role.role.role_member_id}</span>
-                            </p>
-                        </div>
-                        <div class="field mt-5">
-                            <label class="label">{get_value_field(&468)}</label>
-                            <p class="help mb-3">{get_value_field(&475)}</p>
-                            <div class="box has-background-light">
-                                {for self.props.permissions.iter().map(|permission| {
-                                    self.show_access_level_item(permission)
-                                })}
-                            </div>
-                        </div>
-                        {if self.selected_access_ids.is_empty() {
-                            html!{
-                                <div class="notification is-warning is-light">
-                                    <span class="icon">
-                                        <i class="fas fa-exclamation-triangle"></i>
-                                    </span>
-                                    {get_value_field(&476)}
-                                </div>
-                            }
-                        } else {
-                            html!{}
-                        }}
-                    </section>
-                    <footer class="modal-card-foot">
-                        {ft_modal_cancel_save_btn(
-                            &unique_id("edit-role"),
-                            onclick_close,
-                            self.link.callback(|_| Msg::Submit),
-                            self.submitting,
-                        )}
-                    </footer>
+    fn modal_content(&self) -> Html {
+        html!{<>
+            <div class="field">
+                <label class="label">{get_value_field(&467)}</label>
+                <div class="control">
+                    <input
+                        class="input"
+                        type="text"
+                        value={self.props.company_role.role.name.clone()}
+                        disabled={true}
+                    />
+                </div>
+                <p class="help">
+                    <span class="mr-3">{get_value_field(&474)}</span>
+                    <span>{self.props.company_role.role.role_member_id}</span>
+                </p>
+            </div>
+            <div class="field mt-5">
+                <label class="label">{get_value_field(&468)}</label>
+                <p class="help mb-3">{get_value_field(&475)}</p>
+                <div class="box has-background-light">
+                    {for self.props.permissions.iter().map(|permission| {
+                        self.show_access_level_item(permission)
+                    })}
                 </div>
             </div>
-        }
+            {if self.selected_access_ids.is_empty() {
+                html!{
+                    <div class="notification is-warning is-light">
+                        <span class="icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </span>
+                        {get_value_field(&476)}
+                    </div>
+                }
+            } else {
+                html!{}
+            }}
+        </>}
     }
 
     fn show_access_level_item(

@@ -10,6 +10,7 @@ use wasm_bindgen_futures::spawn_local;
 
 use crate::fragments::clipboard::ShareLinkBtn;
 use crate::fragments::company::ListItemCompany;
+use crate::fragments::modal::ModalBlock;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{
@@ -440,26 +441,25 @@ impl ShowStandard {
 
     fn show_modal_company_info(&self, standard_data: &StandardInfo) -> Html {
         let onclick_company_data_info = self.link.callback(|_| Msg::ShowCompanyCard);
-        let class_modal = match &self.show_owner_company {
-            true => "modal is-active",
-            false => "modal",
-        };
-
-        html!{<>
+        let callback_company_data_info = self.link.callback(|_| Msg::ShowCompanyCard);
+        html! {<>
             <span class="mr-3">{get_value_field(&109)}</span>
-            <a class={"has-text-grey-light has-text-weight-bold"} onclick={onclick_company_data_info.clone()} >
+            <a class="has-text-grey-light has-text-weight-bold" onclick={onclick_company_data_info}>
                 {standard_data.owner_company.shortname.clone()}
             </a>
-            <div class={class_modal}>
-              <div class="modal-background" onclick={onclick_company_data_info.clone()} />
-                <div class="card">
-                    <ListItemCompany
-                        data={standard_data.owner_company.clone()}
-                        show_list={true}
-                    />
-                </div>
-              <button class="modal-close is-large" aria-label="close" onclick={onclick_company_data_info} />
-            </div>
+            <ModalBlock
+                modal_id="company-info"
+                title={""}
+                is_active={self.show_owner_company}
+                on_close={callback_company_data_info}
+                on_save={None}
+                save_disabled={false}
+            >
+                <ListItemCompany
+                    data={standard_data.owner_company.clone()}
+                    show_list={true}
+                />
+            </ModalBlock>
         </>}
     }
 }

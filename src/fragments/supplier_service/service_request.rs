@@ -1,4 +1,4 @@
-use yew::{html, Component, ComponentLink, Html, ShouldRender, Properties};
+use yew::{classes, html, Component, ComponentLink, Html, Properties, ShouldRender};
 use crate::{services::get_value_field, types::{PreServiceRequestData, UUID}};
 use crate::routes::supplier_service::CreateService;
 
@@ -65,18 +65,17 @@ impl Component for ServiceRequestBtn {
 impl ServiceRequestBtn {
     fn service_req_window(&self) -> Html {
         let onclick_share_btn = self.link.callback(|_| Msg::ShowModal);
-        let class_modal = match &self.open_window {
-            true => "modal is-active",
-            false => "modal",
-        };
+        let modal_classes = classes!(
+            "modal",
+            "is-isolated-modal",
+            if self.open_window { Some("is-active") } else { None }
+        );
         html!{
-            <div class={class_modal}>
+            <div class={modal_classes}>
               <div class="modal-background" onclick={onclick_share_btn.clone()} />
               <div class="modal-content">
                 <div class="card column">
-                  <div class="">
                     <CreateService pre_service_req={self.pre_request_data.clone()} />
-                  </div>
                 </div>
               </div>
               <button class="modal-close is-large" aria-label="close" onclick={onclick_share_btn} />

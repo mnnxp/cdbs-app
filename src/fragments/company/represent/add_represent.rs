@@ -1,13 +1,14 @@
-use yew::{classes, html, Callback, ChangeData, Component, ComponentLink, Html, InputData, Properties, ShouldRender};
+use yew::{html, Callback, ChangeData, Component, ComponentLink, Html, InputData, Properties, ShouldRender};
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
 
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
+use crate::fragments::modal::ModalBlock;
 use crate::fragments::notification::show_notification;
 use crate::services::{get_value_field, resp_parsing, unique_id};
-use crate::fragments::buttons::{ft_add_btn, ft_modal_cancel_save_btn};
+use crate::fragments::buttons::ft_add_btn;
 use crate::types::{UUID, CompanyRepresentInfo, Region, RegisterCompanyRepresentInfo, RepresentationType};
 use crate::gqls::make_query;
 use crate::gqls::company::{
@@ -68,7 +69,12 @@ impl Component for AddCompanyRepresentModal {
         let link = self.link.clone();
 
         match msg {
-            Msg::ShowAddCompanyRepresent => self.is_active = !self.is_active,
+            Msg::ShowAddCompanyRepresent => {
+                self.is_active = !self.is_active;
+                if !self.is_active {
+                    self.link.send_message(Msg::ClearData);
+                }
+            },
             Msg::RequestRegisterRepresent => {
                 self.loading = true;
                 debug!("Register company represent: {:?}", &self.request_register);
@@ -171,35 +177,18 @@ impl Component for AddCompanyRepresentModal {
 
 impl AddCompanyRepresentModal {
     fn modal_card(&self) -> Html {
-        let onclick_close = self.link.callback(|_| Msg::ShowAddCompanyRepresent);
-        let modal_classes = classes!(
-            "modal",
-            "is-isolated-modal",
-            if self.is_active { Some("is-active") } else { None }
-        );
-        let onclick_clear_data = self.link.callback(|_| Msg::ClearData);
-        let onclick_create_represent = self.link.callback(|_| Msg::RequestRegisterRepresent);
-
-        html!{
-            <div class={modal_classes}>
-                <div class="modal-background" onclick={onclick_close.clone()} />
-                <div class="modal-card">
-                    <header class="modal-card-head">
-                        <p class="modal-card-title">{get_value_field(&230)}</p>
-                    </header>
-                    <section class="modal-card-body">
-                        {self.new_represent_block()}
-                    </section>
-                    <footer class="modal-card-foot">
-                        {ft_modal_cancel_save_btn(
-                            &unique_id("new-represent"),
-                            onclick_clear_data,
-                            onclick_create_represent,
-                            false,
-                        )}
-                    </footer>
-                </div>
-            </div>
+        html! {
+            <ModalBlock
+                modal_id="new-represent"
+                title={get_value_field(&230)}
+                is_active={self.is_active}
+                on_close={self.link.callback(|_| Msg::ShowAddCompanyRepresent)}
+                on_cancel={Some(self.link.callback(|_| Msg::ClearData))}
+                on_save={Some(self.link.callback(|_| Msg::RequestRegisterRepresent))}
+                save_disabled={false}
+            >
+                { self.new_represent_block() }
+            </ModalBlock>
         }
     }
 

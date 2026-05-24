@@ -172,7 +172,7 @@ impl Component for ThreeShowcase {
         // let mut scene_hull_class = classes!("column", "is-one-quarter");
         let scene_hull_class = classes!("column", "main");
         let mut class_icon = classes!("fas");
-        let mut class_modal = classes!("modal");
+        let mut class_modal = classes!("modal", "is-isolated-modal");
         if self.selected_file.is_none() {
             container_style = "padding-left: 0.75rem;";
         }

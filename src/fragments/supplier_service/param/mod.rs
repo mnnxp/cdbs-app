@@ -13,6 +13,7 @@ use wasm_bindgen_futures::spawn_local;
 use crate::error::Error;
 use crate::fragments::buttons::ft_add_btn;
 use crate::fragments::list_errors::ListErrors;
+use crate::fragments::modal::ModalBlock;
 use crate::fragments::paginate::Paginate;
 use crate::types::{ServiceParam, PaginateSet, Param, UUID};
 use crate::services::{get_classes_table, get_value_field, resp_parsing, resp_parsing_two_level};
@@ -305,26 +306,18 @@ impl ServiceParamsTags {
         let onclick_add_param =
             self.link.callback(|(param_id, param_value)| Msg::RequestAddParam(param_id, param_value));
         let onclick_hide_modal = self.link.callback(|_| Msg::ChangeHideAddParam);
-        let class_modal = match &self.hide_add_param_modal {
-            true => "modal",
-            false => "modal is-active",
-        };
-
-        html!{
-            <div class={class_modal}>
-              <div class="modal-background" onclick={onclick_hide_modal.clone()} />
-                <div class="modal-content">
-                  <div class="card">
-                    <header class="modal-card-head">
-                      <p class="modal-card-title">{get_value_field(&181)}</p> // Add a parameter to service
-                      <button class="delete" aria-label="close" onclick={onclick_hide_modal.clone()} />
-                    </header>
-                    <section class="modal-card-body">
-                        <RegisterParamnameBlock callback_add_param={onclick_add_param.clone()} />
-                    </section>
-                  </div>
-                </div>
-              </div>
+        html! {
+            <ModalBlock
+                modal_id="add-param"
+                title={get_value_field(&181)}
+                is_active={!self.hide_add_param_modal}
+                on_close={onclick_hide_modal}
+                on_save={None}
+                save_disabled={false}
+            >
+                <RegisterParamnameBlock callback_add_param={onclick_add_param} />
+            </ModalBlock>
         }
     }
+
 }

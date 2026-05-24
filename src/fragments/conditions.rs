@@ -1,5 +1,5 @@
 use yew::{html, Component, ComponentLink, Html, ShouldRender};
-use crate::services::get_value_field;
+use crate::{fragments::modal::ModalBlock, services::get_value_field};
 
 pub struct ConditionsBlock {
     link: ComponentLink<Self>,
@@ -46,32 +46,28 @@ impl Component for ConditionsBlock {
 
 impl ConditionsBlock {
     fn modal_conditions(&self) -> Html {
+        let callback_show_conditions = self.link.callback(|_| Msg::ShowConditions);
         let onclick_show_conditions = self.link.callback(|_| Msg::ShowConditions);
-
-        let class_modal = match &self.show_conditions {
-            true => "modal is-active",
-            false => "modal",
-        };
-
-        html!{<div class={class_modal}>
-          <div class="modal-background" onclick={onclick_show_conditions.clone()} />
-          <div class="modal-card">
-            <header class="modal-card-head">
-              <p class="modal-card-title">{get_value_field(&285)}</p>
-              <button class="delete" aria-label="close" onclick={onclick_show_conditions.clone()} />
-            </header>
-            <section class="modal-card-body">
-              <span>{get_value_field(&251)}</span>
-              <br/>
-              <span class="has-text-weight-bold">{get_value_field(&287)}</span>
-              <a href="mailto:support@cadbase.rs">{"support@cadbase.rs"}</a>
-            </section>
-            <footer class="modal-card-foot">
-              <button class="button is-fullwidth is-large" onclick={onclick_show_conditions}>
-                {get_value_field(&288)}
-              </button>
-            </footer>
-          </div>
-        </div>}
+        html! {
+            <ModalBlock
+                modal_id="conditions"
+                title={get_value_field(&285)}
+                is_active={self.show_conditions}
+                on_close={callback_show_conditions}
+                on_save={None}
+                save_disabled={false}
+            >
+                <div class="content">
+                    <span>{get_value_field(&251)}</span>
+                    <br/>
+                    <span class="has-text-weight-bold">{get_value_field(&287)} </span>
+                    <a href="mailto:support@cadbase.rs">{"support@cadbase.rs"}</a>
+                    <br/><br/>
+                    <button class="button is-fullwidth is-large is-info" onclick={onclick_show_conditions}>
+                        {get_value_field(&288)}
+                    </button>
+                </div>
+            </ModalBlock>
+        }
     }
 }

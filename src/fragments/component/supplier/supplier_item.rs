@@ -3,6 +3,7 @@ use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use log::debug;
 use crate::error::Error;
+use crate::fragments::modal::ModalBlock;
 use crate::fragments::notification::show_notification;
 use crate::fragments::{
     buttons::ft_delete_small_btn,
@@ -189,25 +190,23 @@ impl Component for ComponentSupplierItem {
 impl ComponentSupplierItem {
     fn show_modal_company_info(&self) -> Html {
         let onclick_company_data_info = self.link.callback(|_| Msg::ShowCompanyCard);
-        let class_modal = match &self.open_company_info {
-            true => "modal is-active",
-            false => "modal",
-        };
-
         match &self.company_data {
-            Some(data) => html!{<div class={class_modal}>
-              <div class="modal-background" onclick={onclick_company_data_info.clone()} />
-              // <div class="modal-content">
-                  <div class="card">
+            Some(data) => html! {
+                <ModalBlock
+                    modal_id="company-detail"
+                    title={""}
+                    is_active={self.open_company_info}
+                    on_close={onclick_company_data_info}
+                    on_save={None}
+                    save_disabled={false}
+                >
                     <ListItemCompany
                         data={data.clone()}
                         show_list={true}
-                      />
-                  </div>
-              // </div>
-              <button class="modal-close is-large" aria-label="close" onclick={onclick_company_data_info} />
-            </div>},
-            None => html!{},
+                    />
+                </ModalBlock>
+            },
+            None => html! {},
         }
     }
 }

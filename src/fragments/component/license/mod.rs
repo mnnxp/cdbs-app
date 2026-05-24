@@ -8,10 +8,10 @@ use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::error::Error;
-use crate::fragments::buttons::ft_save_btn;
 use crate::fragments::list_errors::ListErrors;
+use crate::fragments::modal::ModalBlock;
 use crate::types::{UUID, LicenseInfo};
-use crate::services::{get_value_field, resp_parsing_two_level, resp_parsing};
+use crate::services::{get_value_field, resp_parsing, resp_parsing_two_level, unique_id};
 use crate::gqls::{
     make_query,
     relate::{GetLicenses, get_licenses},
@@ -246,63 +246,47 @@ impl ComponentLicensesTags {
     }
 
     fn modal_add_license(&self) -> Html {
-        let onclick_add_license =
-            self.link.callback(|_| Msg::RequestAddLicense);
-        let onclick_hide_modal =
-            self.link.callback(|_| Msg::ChangeHideAddLicense);
-        let onchange_select_add_license =
-            self.link.callback(|ev: ChangeData| Msg::UpdateSelectLicense(match ev {
-              ChangeData::Select(el) => el.value(),
-              _ => String::new(),
-            }));
-        let class_modal = match &self.hide_add_license_modal {
-            true => "modal",
-            false => "modal is-active",
-        };
-
-        html!{
-            <div class={class_modal}>
-              <div class="modal-background" onclick={onclick_hide_modal.clone()} />
-                <div class="modal-content">
-                  <div class="card">
-                    <header class="modal-card-head">
-                      <p class="modal-card-title">{get_value_field(&244)}</p> // Add a license for a component
-                      <button class="delete" aria-label="close" onclick={onclick_hide_modal.clone()} />
-                    </header>
-                    <section class="modal-card-body">
-                        <label class="label">{get_value_field(&245)}</label> // Select a license
-                        <div class="columns">
-                            <div class="column">
-                                <div class="select">
-                                  <select
-                                      id="add-license"
-                                      select={self.request_add_license_id.to_string()}
-                                      onchange={onchange_select_add_license}
-                                    >
-                                  { for self.license_list.iter().map(|x|
-                                      match self.license_ids.get(&x.id) {
-                                          Some(_) => html!{}, // this license already has
-                                          None => html!{<option value={x.id.to_string()}>{
-                                              format!("{} ({})", &x.name, &x.keyword)
-                                          }</option>},
-                                      }
-                                  )}
-                                  </select>
-                                </div>
-                            </div>
-                            <div class="column">
-                                {ft_save_btn(
-                                    "add-license-component",
-                                    onclick_add_license,
-                                    true,
-                                    self.request_add_license_id == 0
-                                )}
-                            </div>
+        let onclick_hide_modal = self.link.callback(|_| Msg::ChangeHideAddLicense);
+        let onchange_select_add_license = self.link.callback(|ev: ChangeData| {
+            Msg::UpdateSelectLicense(match ev {
+                ChangeData::Select(el) => el.value(),
+                _ => String::new(),
+            })
+        });
+        let select_id = unique_id("add-license");
+        html! {
+            <ModalBlock
+                modal_id="add-license"
+                title={get_value_field(&244)}
+                is_active={!self.hide_add_license_modal}
+                on_close={onclick_hide_modal}
+                on_save={Some(self.link.callback(|_| Msg::RequestAddLicense))}
+                save_disabled={self.request_add_license_id == 0}
+            >
+                <div class="field">
+                    <label for={select_id.clone()} class="label">{get_value_field(&245)}</label> // Select a license
+                    <div class="control">
+                        <div class="select is-fullwidth">
+                            <select
+                                id={select_id}
+                                onchange={onchange_select_add_license}
+                            >
+                                { for self.license_list.iter().map(|x| {
+                                    match self.license_ids.get(&x.id) {
+                                        Some(_) => html! {}, // Эта лицензия уже добавлена, пропускаем
+                                        None => html! {
+                                            <option value={x.id.to_string()}
+                                                    selected={x.id == self.request_add_license_id}>
+                                                { format!("{} ({})", x.name, x.keyword) }
+                                            </option>
+                                        },
+                                    }
+                                })}
+                            </select>
                         </div>
-                    </section>
-                  </div>
+                    </div>
                 </div>
-              </div>
+            </ModalBlock>
         }
     }
 }

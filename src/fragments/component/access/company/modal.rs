@@ -7,9 +7,9 @@ use log::debug;
 
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
-use crate::fragments::buttons::ft_modal_cancel_save_btn;
+use crate::fragments::modal::ModalBlock;
 use crate::fragments::permission::PermissionLevelBlock;
-use crate::services::{get_value_field, resp_parsing, truncate_uuid, unique_id};
+use crate::services::{get_value_field, resp_parsing, truncate_uuid};
 use crate::types::{CompanySearchResult, PermissionLevel, UUID};
 use crate::gqls::make_query;
 use crate::gqls::rbac::{
@@ -181,84 +181,79 @@ impl Component for AddCompanyAccessModal {
         }
     }
 
-    fn view(&self) -> Html {
+fn view(&self) -> Html {
+    html! {
+        <ModalBlock
+            modal_id="add-company"
+            title={get_value_field(&488)}
+            is_active={self.props.is_active}
+            on_close={self.link.callback(|_| Msg::Close)}
+            on_save={Some(self.link.callback(|_| Msg::AddAccess))}
+            save_disabled={self.selected_company_uuid.is_none() || self.adding}
+        >
+            { self.modal_content() }
+        </ModalBlock>
+    }
+}
+
+}
+
+impl AddCompanyAccessModal {
+    fn modal_content(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
-        let close_modal = self.link.callback(|_| Msg::Close);
-        let class_modal = if self.props.is_active { "modal is-active" } else { "modal" };
         let mut class_input = classes!("control");
         if self.search_loading {
             class_input.push("is-loading");
         };
-
-        html! {
-            <div class={class_modal}>
-                <div class="modal-background" onclick={close_modal.clone()} />
-                <div class="modal-card">
-                    <header class="modal-card-head">
-                        <p class="modal-card-title">{get_value_field(&488)}</p>
-                    </header>
-                    <section class="modal-card-body">
-                        <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()} />
-                        <div class="columns is-multiline">
-                            <div class="column is-half">
-                                <div class="field">
-                                    <label class="label">{get_value_field(&489)}</label>
-                                    <div class={class_input}>
-                                        <input
-                                            class="input"
-                                            type="text"
-                                            placeholder={get_value_field(&482)}
-                                            value={self.search_text.clone()}
-                                            oninput={self.link.callback(|ev: InputData| Msg::UpdateSearch(ev.value))}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="column is-half">
-                                <div class="field">
-                                    <label class="label">{get_value_field(&487)}</label>
-                                    <PermissionLevelBlock
-                                        change_cb={self.link.callback(|id| Msg::UpdateLevel(id))}
-                                        permissions={self.props.permissions.clone()}
-                                        selected={self.selected_level}
-                                        preset={self.selected_level}
-                                    />
-                                </div>
-                            </div>
+        html!{<>
+            <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()} />
+            <div class="columns is-multiline">
+                <div class="column is-half">
+                    <div class="field">
+                        <label class="label">{get_value_field(&489)}</label>
+                        <div class={class_input}>
+                            <input
+                                class="input"
+                                type="text"
+                                placeholder={get_value_field(&482)}
+                                value={self.search_text.clone()}
+                                oninput={self.link.callback(|ev: InputData| Msg::UpdateSearch(ev.value))}
+                            />
                         </div>
-                        <div class={"column"}>
-                            {if !self.search_results.is_empty() {
-                                html! {
-                                    <div class="">
-                                        {for self.search_results.iter().map(|company| {
-                                            self.show_item(company.clone())
-                                        })}
-                                    </div>
-                                }
-                            } else if !self.search_text.is_empty() && !self.search_loading {
-                                html! {
-                                    <p class="help is-info">{get_value_field(&496)}</p>
-                                }
-                            } else {
-                                html! {}
-                            }}
-                        </div>
-                    </section>
-                    <footer class="modal-card-foot">
-                        {ft_modal_cancel_save_btn(
-                            &unique_id("add-company"),
-                            close_modal.clone(),
-                            self.link.callback(|_| Msg::AddAccess),
-                            self.selected_company_uuid.is_none() || self.adding,
-                        )}
-                    </footer>
+                    </div>
+                </div>
+                <div class="column is-half">
+                    <div class="field">
+                        <label class="label">{get_value_field(&487)}</label>
+                        <PermissionLevelBlock
+                            change_cb={self.link.callback(|id| Msg::UpdateLevel(id))}
+                            permissions={self.props.permissions.clone()}
+                            selected={self.selected_level}
+                            preset={self.selected_level}
+                        />
+                    </div>
                 </div>
             </div>
-        }
+            <div class={"column"}>
+                {if !self.search_results.is_empty() {
+                    html! {
+                        <div class="">
+                            {for self.search_results.iter().map(|company| {
+                                self.show_item(company.clone())
+                            })}
+                        </div>
+                    }
+                } else if !self.search_text.is_empty() && !self.search_loading {
+                    html! {
+                        <p class="help is-info">{get_value_field(&496)}</p>
+                    }
+                } else {
+                    html! {}
+                }}
+            </div>
+        </>}
     }
-}
 
-impl AddCompanyAccessModal {
     fn show_item(&self, company: CompanySearchResult) -> Html {
         let company_uuid = company.uuid.clone();
         let onclick_company_item = self.link.callback(move |_| Msg::SelectCompany(company_uuid.clone()));
