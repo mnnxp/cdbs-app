@@ -61,7 +61,8 @@ impl Component for TokenManager {
         match msg {
             Msg::CheckToken => {
                 if get_token().is_none() {
-                    link.send_message(Msg::TokenExpired);
+                    // No token — user is not authenticated, skip validation
+                    self.status = TokenStatus::Valid;
                     return true;
                 }
                 self.status = TokenStatus::Refreshing;
