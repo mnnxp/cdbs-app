@@ -131,7 +131,7 @@ pub(crate) fn render_form_input(config: InputConfig) -> Html {
 
     html! {
         <div class={"field"}>
-            <label class={"label"} for={field_id.clone()}>{config.label.clone()}</label>
+            <label class={"label"} for={field_id.clone()}>{config.label}</label>
             <div class={control_class}>
                 <@{input_tag}
                     id={field_id}
