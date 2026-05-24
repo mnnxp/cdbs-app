@@ -7,24 +7,18 @@ pub(crate) trait RepresentFormValues {
     fn name(&self) -> String;
     fn phone(&self) -> String;
     fn address(&self) -> String;
-    fn region_id(&self) -> usize;
-    fn representation_type_id(&self) -> usize;
 }
 
 impl RepresentFormValues for RegisterCompanyRepresentInfo {
     fn name(&self) -> String { self.name.clone() }
     fn phone(&self) -> String { self.phone.clone() }
     fn address(&self) -> String { self.address.clone() }
-    fn region_id(&self) -> usize { self.region_id }
-    fn representation_type_id(&self) -> usize { self.representation_type_id }
 }
 
 impl RepresentFormValues for CompanyRepresentUpdateInfo {
     fn name(&self) -> String { self.name.clone().unwrap_or_default() }
     fn phone(&self) -> String { self.phone.clone().unwrap_or_default() }
     fn address(&self) -> String { self.address.clone().unwrap_or_default() }
-    fn region_id(&self) -> usize { self.region_id.unwrap_or(1) as usize }
-    fn representation_type_id(&self) -> usize { self.representation_type_id.unwrap_or(1) as usize }
 }
 
 pub(crate) struct FormCallbacks {
