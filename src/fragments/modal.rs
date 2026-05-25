@@ -69,7 +69,7 @@ impl Component for ModalBlock {
             Msg::OnDelete(is_confirmed) => {
                 debug!("ModalBlock [{}] Delete is_confirmed: {}, props confirm: {}", self.props.modal_id, is_confirmed, self.props.delete_confirm);
                 if let Some(on_delete) = &self.props.on_delete {
-                    on_delete.emit(self.props.delete_confirm);
+                    on_delete.emit(is_confirmed);
                 }
             }
         }

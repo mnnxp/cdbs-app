@@ -1,4 +1,4 @@
-use yew::{Component, ComponentLink, Callback, Html, Properties, ShouldRender, html, InputData, ChangeData};
+use yew::{classes, html, Callback, ChangeData, Component, ComponentLink, Html, InputData, Properties, ShouldRender};
 use log::debug;
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
@@ -6,7 +6,7 @@ use wasm_bindgen_futures::spawn_local;
 use super::file::ManageModificationFilesCard;
 use super::fileset::ManageModificationFilesets;
 use crate::error::Error;
-use crate::fragments::buttons::{ft_delete_btn, ft_save_btn};
+use crate::fragments::buttons::{ft_delete_pair_btn, ft_save_btn};
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::markdown_edit::MarkdownEditCard;
 use crate::services::{get_value_field, resp_parsing, unique_id};
@@ -42,7 +42,7 @@ pub struct ModificationEdit {
 
 pub enum Msg {
     RequestUpdateModificationData,
-    RequestDeleteModificationData,
+    RequestDeleteModificationData(bool),
     GetUpdateModificationResult(String),
     GetDeleteModificationResult(String),
     ResponseError(Error),
@@ -102,7 +102,11 @@ impl Component for ModificationEdit {
                     link.send_message(Msg::GetUpdateModificationResult(res));
                 })
             },
-            Msg::RequestDeleteModificationData => {
+            Msg::RequestDeleteModificationData(is_confirmed) => {
+                if !is_confirmed {
+                    self.get_confirm.clear();
+                    return true;
+                }
                 if self.get_confirm == self.props.modification.uuid {
                     let del_component_modification_data = delete_component_modification::DelComponentModificationData{
                         componentUuid: self.props.modification.component_uuid.clone(),
@@ -115,7 +119,8 @@ impl Component for ModificationEdit {
                             }
                         )).await.unwrap();
                         link.send_message(Msg::GetDeleteModificationResult(res));
-                    })
+                    });
+                    self.get_confirm.clear();
                 } else {
                     self.get_confirm = self.props.modification.uuid.clone();
                 }
@@ -230,7 +235,7 @@ impl ModificationEdit {
     fn show_modification_card(&self) -> Html {
         let oninput_modification_name = self.link.callback(|ev: InputData| Msg::UpdateEditName(ev.value));
         let oninput_modification_description = self.link.callback(|ev: InputData| Msg::UpdateEditDescription(ev.value));
-        let onclick_delete_component_modification = self.link.callback(|_| Msg::RequestDeleteModificationData);
+        let onclick_delete_component_modification = self.link.callback(|is_confirmed| Msg::RequestDeleteModificationData(is_confirmed));
         let onclick_component_modification_update = self.link.callback(|_| Msg::RequestUpdateModificationData);
         let name_id = unique_id("add-modification-name");
         html!{<>
@@ -258,11 +263,12 @@ impl ModificationEdit {
                 </div>
                 <div class="columns">
                     <div class="column">
-                        {ft_delete_btn(
+                        {ft_delete_pair_btn(
                             "delete-component-modification",
                             onclick_delete_component_modification,
                             self.get_confirm == self.props.modification.uuid,
-                            false
+                            false,
+                            classes!(""),
                         )}
                     </div>
                     <div class="column">
