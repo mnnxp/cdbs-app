@@ -18,7 +18,7 @@ use crate::gqls::make_query;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{
-    buttons::{ft_save_btn, ft_submit_btn, ft_delete_btn},
+    buttons::{ft_save_btn, ft_submit_btn, ft_delete_class_btn},
     notification::show_notification,
     company::{
         CompanyCertificatesCard, AddCompanyCertificateCard,
@@ -776,12 +776,15 @@ impl CompanySettings {
             <div class="content is-medium">
                 <p><strong>{get_value_field(&272)}</strong> {get_value_field(&273)}</p>
             </div>
-            {ft_delete_btn(
+            <div class="column is-half right-side">
+            {ft_delete_class_btn(
                 "button-delete-company",
                 onclick_delete_company,
                 self.get_confirm == self.company_uuid,
-                false
+                false,
+                classes!("is-fullwidth")
             )}
+            </div>
         </>}
     }
 }

@@ -276,7 +276,7 @@ lazy_static! {
             (270, "Company don't have representations"),
             (271, "Update access"),
             (272, "Warning: "),
-            (273, "this removed all data related with company, it cannot be canceled!"),
+            (273, "All company-related data will be permanently deleted with no possibility of recovery!"),
             (274, "Company delete"),
             (275, " supplier"),
             (276, "Created at"),

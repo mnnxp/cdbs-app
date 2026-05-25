@@ -9,7 +9,7 @@ use crate::error::Error;
 use crate::fragments::form_input::{render_form_input, InputConfig};
 use crate::fragments::type_access::TypeAccessBlock;
 use crate::fragments::{
-    buttons::{ft_delete_btn, ft_submit_btn},
+    buttons::{ft_delete_class_btn, ft_submit_btn},
     notification::show_notification,
     list_errors::ListErrors,
     side_menu::{MenuItem, SideMenu},
@@ -774,12 +774,15 @@ impl Settings {
                 self.loading,
                 false
             )}
-            {ft_delete_btn(
+            <div class="column is-half right-side">
+            {ft_delete_class_btn(
                 "button-remove-profile",
                 onclick_remove_profile,
                 self.get_confirm == self.current_username,
-                false
+                false,
+                classes!("is-fullwidth")
             )}
+            </div>
         </>}
     }
 }
