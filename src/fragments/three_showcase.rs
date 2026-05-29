@@ -1,4 +1,4 @@
-use yew::{html, Component, ComponentLink, Html, Properties, ShouldRender, classes};
+use yew::{classes, html, Callback, Component, ComponentLink, Html, Properties, ShouldRender};
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use log::debug;
@@ -31,7 +31,7 @@ pub struct ThreeShowcase {
 pub struct Props {
     pub fileset_uuid: UUID,
     // pub program_id: usize,
-    // pub callback_three_view: Callback<bool>,
+    pub on_exit_fullscreen: Callback<()>,
 }
 
 #[derive(Clone)]
@@ -124,7 +124,12 @@ impl Component for ThreeShowcase {
             },
             Msg::ChangeTypeShow => {
                 self.full_screen = !self.full_screen;
-                link.send_message(Msg::ShowThree);
+                if self.full_screen {
+                    link.send_message(Msg::ShowThree);
+                } else {
+                    // hide 3D view to stop unnecessary rendering
+                    self.props.on_exit_fullscreen.emit(());
+                }
             },
             Msg::ShowThree => {
                 if let Some((df, model_format)) = &self.selected_file {

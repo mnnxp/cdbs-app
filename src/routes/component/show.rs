@@ -380,6 +380,7 @@ impl ShowComponent {
         let show_description_btn = self.link.callback(|_| Msg::ShowDescription);
         let callback_select_fileset = self.link.callback(|value: FilesetProgramInfo| Msg::SelectFileset(value));
         let callback_open_fileset = self.link.callback(|value: bool| Msg::ShowFilesetFilesBlock(value));
+        let callback_exit_fullscreen = self.link.callback(|_| Msg::Show3D);
 
         html!{<>
             <div class="columns">
@@ -387,6 +388,7 @@ impl ShowComponent {
                     true => html!{
                         <ThreeShowcase
                             fileset_uuid={self.select_fileset.as_ref().map(|f| f.uuid.clone()).unwrap_or_default()}
+                            on_exit_fullscreen={callback_exit_fullscreen}
                         />
                     },
                     false => html!{
