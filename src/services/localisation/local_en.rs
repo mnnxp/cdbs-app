@@ -209,7 +209,7 @@ lazy_static! {
             (203, "Files for modification"),
             (204, "Files not found"),
             (205, "Set a paramname (letter case has matter)"),
-            (206, "Adding a set of files for the selected modification"),
+            (206, "Adding a set of files"),
             (207, "Select a set of files"),
             (208, "Paste the copied table data here."),
             (209, "Importing component parameters"),
@@ -407,8 +407,8 @@ lazy_static! {
             (400, "Available to all users"),
             (401, "A file set (fileset) is a logical group of files linked to a specific component modification. It is used to organize and categorize files by the type of software or the format in which they were created."),
             (402, "For the selected component modification a file set is missing, so file upload is currently unavailable."),
-            (403, "How to create a file set?"),
-            (404, "Click the “Add fileset” button."),
+            (403, "No filesets"),
+            (404, "Filesets"),
             (405, "Choose a name for the set (for example, “FreeCAD”, “Blender”, “GLTF”, etc.)."),
             (406, "Save the set – after that you will be able to upload files to it."),
             (407, "A component modification is an individual variant or version of a component that captures specific parameters, material, dimensions, configuration, and other product characteristics; each modification is linked to its own file sets, enabling the management of different product variants, maintaining their change history, and providing quick access to the corresponding drawings, models, and documentation."),
@@ -503,5 +503,8 @@ lazy_static! {
             (496, "No companies found"),
             (497, "No companies have access to this component."),
             (498, "Customize roles to control what team members can do within your company."),
+            (499, "Select fileset"),
+            (500, "Start typing name..."),
+            (501, "Saving selection..."),
         ]);
 }

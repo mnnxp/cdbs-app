@@ -1,6 +1,7 @@
 mod file;
 mod edit;
 mod download_block;
+mod modal;
 mod show;
 
 pub use file::FilesetFilesBlock;
