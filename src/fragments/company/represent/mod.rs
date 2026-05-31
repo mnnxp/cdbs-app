@@ -199,7 +199,6 @@ impl CompanyRepresents {
                             />
                     }
                 )}
-                {ListState::render_phantom_columns()}
             </div>
         }
     }

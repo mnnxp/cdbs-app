@@ -1,5 +1,3 @@
-use yew::{html, Html};
-
 use crate::services::{set_list_view, get_list_view};
 
 #[derive(PartialEq, Eq)]
@@ -9,18 +7,6 @@ pub(crate) enum ListState {
 }
 
 impl ListState {
-    /// Generates hidden phantom columns to preserve correct item spacing
-    /// within Flexbox layouts utilizing the 'space-between' property.
-    pub(crate) fn render_phantom_columns() -> Html {
-        html! {
-            <>
-                <div class="column is-12-mobile is-6-tablet is-4-desktop is-3-widescreen py-0" style="height: 0;"></div>
-                <div class="column is-12-mobile is-6-tablet is-4-desktop is-3-widescreen py-0" style="height: 0;"></div>
-                <div class="column is-12-mobile is-6-tablet is-4-desktop is-3-widescreen py-0" style="height: 0;"></div>
-            </>
-        }
-    }
-
     pub(crate) fn get_container_class(&self) -> &'static str {
         match self {
             ListState::Box => "flex-box",
