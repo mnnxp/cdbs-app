@@ -15,7 +15,7 @@ use crate::fragments::{
     buttons::{ft_follow_btn, res_settings_btn},
     clipboard::ShareLinkBtn,
     list_errors::ListErrors,
-    side_menu::{MenuItem, SideMenu},
+    side_menu::{MenuBuilder, MenuItemTemplate},
     company::diamond_svg,
     supplier_service::ServiceRequestBtn,
     company::{view_certificates, view_components, view_content, view_represents, view_services, view_standards, view_discussion},
@@ -30,6 +30,29 @@ use crate::gqls::company::{
     AddCompanyFav, add_company_fav,
     DeleteCompanyFav, delete_company_fav,
 };
+
+impl MenuBuilder for ShowCompany {
+    type TabType = CompanyTab;
+
+    fn menu_config() -> &'static [MenuItemTemplate<CompanyTab>] {
+        use CompanyTab::*;
+        &[
+            MenuItemTemplate { title_key: 232, icon_classes: &[&["fas", "fa-info"]], tab: Info, custom_class: None },
+            MenuItemTemplate { title_key: 32, icon_classes: &[&["fas", "fa-certificate"]], tab: Certificates, custom_class: None },
+            MenuItemTemplate { title_key: 266, icon_classes: &[&["fas", "fa-industry"]], tab: Represent, custom_class: None },
+            MenuItemTemplate { title_key: 154, icon_classes: &[&["fas", "fa-cogs"]], tab: Components, custom_class: None },
+            MenuItemTemplate { title_key: 379, icon_classes: &[&["fas", "fa-ticket-alt"]], tab: Services, custom_class: None },
+            MenuItemTemplate { title_key: 103, icon_classes: &[&["fas", "fa-book"]], tab: Standards, custom_class: None },
+            MenuItemTemplate { title_key: 380, icon_classes: &[&["far", "fa-comments"]], tab: Discussion, custom_class: None },
+            // MenuItemTemplate { title_key: 286, icon_classes: &[&["fas", "fa-user"]], tab: Members, custom_class: None }, // закомментирован
+        ]
+    }
+
+    fn is_active(&self, tab: &CompanyTab) -> bool { self.company_tab == *tab }
+    fn get_count(&self, tab: &CompanyTab) -> usize { self.get_number_of_items(tab) }
+    fn is_extend(&self, tab: &CompanyTab) -> bool { self.check_extend(tab) }
+    fn get_action(&self, tab: &CompanyTab) -> Callback<MouseEvent> { self.cb_generator(tab.clone()) }
+}
 
 /// Company with relate data
 pub struct ShowCompany {
@@ -243,7 +266,7 @@ impl Component for ShowCompany {
             Some(company_data) => html!{
                 <div class="company-page">
                     <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
-                    <div class={"container is-fluid page"}>
+                    <div class="container is-fluid page">
                         <div class="row">
                             <div class="card">
                               <div class="card-content">
@@ -328,7 +351,7 @@ impl ShowCompany {
         html!{<div id={"company-card-list"} class="card">
             <div class="columns is-mobile">
                 <div class="column is-flex">
-                    { self.show_company_action() }
+                    {self.render_menu()}
                     <div id={"company-card-list-items"} class="card-relate-data" style={resizer("company-card-list", 5)}>
                         {match self.company_tab {
                             CompanyTab::Info => view_content(&company_data),
@@ -344,95 +367,6 @@ impl ShowCompany {
                 </div>
             </div>
         </div>}
-    }
-
-    fn show_company_action(&self) -> Html {
-        let menu_arr: Vec<MenuItem> = vec![
-            // company info MenuItem
-            MenuItem {
-                title: get_value_field(&232).to_string(), // INFO
-                action: self.cb_generator(CompanyTab::Info),
-                count: self.get_number_of_items(&CompanyTab::Info),
-                item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-info")],
-                is_active: self.company_tab == CompanyTab::Info,
-                is_extend: self.check_extend(&CompanyTab::Info),
-            },
-            // certificates MenuItem
-            MenuItem {
-                title: get_value_field(&32).to_string(), // CERTIFICATES
-                action: self.cb_generator(CompanyTab::Certificates),
-                count: self.get_number_of_items(&CompanyTab::Certificates),
-                item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-certificate")],
-                is_active: self.company_tab == CompanyTab::Certificates,
-                is_extend: self.check_extend(&CompanyTab::Certificates),
-            },
-            // representations MenuItem
-            MenuItem {
-                title: get_value_field(&266).to_string(), // REPRESENTATIONS
-                action: self.cb_generator(CompanyTab::Represent),
-                count: self.get_number_of_items(&CompanyTab::Represent),
-                item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-industry")],
-                is_active: self.company_tab == CompanyTab::Represent,
-                is_extend: self.check_extend(&CompanyTab::Represent),
-            },
-            // components MenuItem
-            MenuItem {
-                title: get_value_field(&154).to_string(), // COMPONENTS
-                action: self.cb_generator(CompanyTab::Components),
-                count: self.get_number_of_items(&CompanyTab::Components),
-                item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-cogs")],
-                is_active: self.company_tab == CompanyTab::Components,
-                is_extend: self.check_extend(&CompanyTab::Components),
-            },
-            // services MenuItem
-            MenuItem {
-                title: get_value_field(&379).to_string(), // SERVICES
-                action: self.cb_generator(CompanyTab::Services),
-                count: self.get_number_of_items(&CompanyTab::Services),
-                item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-ticket-alt")],
-                is_active: self.company_tab == CompanyTab::Services,
-                is_extend: self.check_extend(&CompanyTab::Services),
-            },
-            // standards MenuItem
-            MenuItem {
-                title: get_value_field(&103).to_string(), // STANDARDS
-                action: self.cb_generator(CompanyTab::Standards),
-                count: self.get_number_of_items(&CompanyTab::Standards),
-                item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-book")],
-                is_active: self.company_tab == CompanyTab::Standards,
-                is_extend: self.check_extend(&CompanyTab::Standards),
-            },
-            // discussion MenuItem
-            MenuItem {
-                title: get_value_field(&380).to_string(), // DISCUSSION
-                action: self.cb_generator(CompanyTab::Discussion),
-                count: self.get_number_of_items(&CompanyTab::Discussion),
-                item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("far", "fa-comments")],
-                is_active: self.company_tab == CompanyTab::Discussion,
-                is_extend: self.check_extend(&CompanyTab::Discussion),
-            },
-            // memebers MenuItem
-            // MenuItem {
-            //     title: get_value_field(&286).to_string(), // MEMBERS
-            //     action: self.cb_generator(CompanyTab::Members),
-            //     count: self.get_number_of_items(&CompanyTab::Members),
-            //     item_class: classes!("has-background-white"),
-            //     icon_classes: vec![classes!("fas", "fa-user")],
-            //     is_active: self.company_tab == CompanyTab::Members,
-            //     is_extend: self.check_extend(&CompanyTab::Members),
-            // },
-        ];
-
-        html! {
-            <SideMenu menu_arr={menu_arr} />
-        }
     }
 
     fn cb_generator(&self, cb: CompanyTab) -> Callback<MouseEvent> {

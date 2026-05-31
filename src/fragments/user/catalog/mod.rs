@@ -109,7 +109,7 @@ impl Component for CatalogUsers {
         let onclick_change_view = self.link.callback(|_|Msg::SwitchShowType);
 
         html!{
-            <div id={"users-box"} class="itemsBox" >
+            <div id="users-box">
               <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
               <div class="level" >
                 <div class="level-left ">

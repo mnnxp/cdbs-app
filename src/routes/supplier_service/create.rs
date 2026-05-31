@@ -323,7 +323,7 @@ impl Component for CreateService {
         html!{
             <div class="service-page">
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
-                <div class={"container is-fluid page"}>
+                <div class="container is-fluid page">
                     <div class="block mb-5">
                         <h2 class="title is-4 mb-4">
                             // <span class="icon mr-3"><i class=""></i></span>

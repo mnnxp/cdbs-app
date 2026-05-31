@@ -12,7 +12,7 @@ use crate::fragments::{
     buttons::{ft_delete_class_btn, ft_submit_btn},
     notification::show_notification,
     list_errors::ListErrors,
-    side_menu::{MenuItem, SideMenu},
+    side_menu::{MenuBuilder, MenuItemTemplate},
     upload_favicon::UpdateFaviconBlock,
     user::{AddUserCertificateCard, UserCertificatesCard},
 };
@@ -30,8 +30,37 @@ use crate::gqls::user::{
     DeleteUserData, delete_user_data,
 };
 
+impl MenuBuilder for Settings {
+    type TabType = Menu;
+
+    fn menu_config() -> &'static [MenuItemTemplate<Menu>] {
+        use Menu::*;
+        &[
+            MenuItemTemplate { title_key: 76, icon_classes: &[&["fas", "fa-angle-double-left"]], tab: OpenProfile, custom_class: None },
+            MenuItemTemplate { title_key: 77, icon_classes: &[&["fas", "fa-address-card"]], tab: Profile, custom_class: None },
+            MenuItemTemplate { title_key: 78, icon_classes: &[&["fas", "fa-image"]], tab: UpdateFavicon, custom_class: None },
+            MenuItemTemplate { title_key: 64, icon_classes: &[&["fas", "fa-certificate"]], tab: Certificates, custom_class: None },
+            MenuItemTemplate { title_key: 80, icon_classes: &[&["fas", "fa-low-vision"]], tab: Access, custom_class: None },
+            MenuItemTemplate { title_key: 20, icon_classes: &[&["fas", "fa-key"]], tab: Password, custom_class: None },
+            MenuItemTemplate { title_key: 82, icon_classes: &[&["fas", "fa-trash"]], tab: RemoveProfile, custom_class: Some("has-background-danger-light") },
+        ]
+    }
+
+    fn is_active(&self, tab: &Menu) -> bool { self.select_menu == *tab }
+    fn get_count(&self, _tab: &Menu) -> usize { 0 }
+    fn is_extend(&self, _tab: &Menu) -> bool { false }
+    fn get_action(&self, tab: &Menu) -> Callback<MouseEvent> {
+        if *tab == Menu::OpenProfile {
+            self.link.callback(|_| Msg::OpenProfile)
+        } else {
+            self.cb_generator(tab.clone())
+        }
+    }
+}
+
 #[derive(Clone, PartialEq)]
 pub enum Menu {
+    OpenProfile,
     Profile,
     UpdateFavicon,
     Certificates,
@@ -367,10 +396,11 @@ impl Component for Settings {
                     <div class="row">
                         <div class="columns">
                             <div class="column is-flex side-menu-content-fix">
-                                {self.view_menu()}
+                                {self.render_menu()}
                                 <div class="card is-flex-grow-1 side-menu-content-fix">
                                   <div class="card-content">
                                     {match self.select_menu {
+                                        Menu::OpenProfile => html!{},
                                         // Show interface for change profile data
                                         Menu::Profile => html!{<>
                                             <h4 id="change-profile" class="title is-4">{get_value_field(&63)}</h4> // "Profile"
@@ -460,78 +490,6 @@ impl Settings {
 
     fn cb_generator(&self, cb: Menu) -> Callback<MouseEvent> {
         self.link.callback(move |_| Msg::SelectMenu(cb.clone()))
-    }
-
-    fn view_menu(&self) -> Html {
-        let menu_arr: Vec<MenuItem> = vec![
-            // return profile page MenuItem
-            MenuItem {
-                title: get_value_field(&76).to_string(),
-                action: self.link.callback(|_| Msg::OpenProfile),
-                item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-angle-double-left")],
-                is_active: false,
-                ..Default::default()
-            },
-            // profile MenuItem
-            MenuItem {
-                title: get_value_field(&77).to_string(),
-                action: self.cb_generator(Menu::Profile),
-                item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-address-card")],
-                is_active: self.select_menu == Menu::Profile,
-                ..Default::default()
-            },
-            // favicon MenuItem
-            MenuItem {
-                title: get_value_field(&78).to_string(),
-                action: self.cb_generator(Menu::UpdateFavicon),
-                item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-image")],
-                is_active: self.select_menu == Menu::UpdateFavicon,
-                ..Default::default()
-            },
-            // certificates MenuItem
-            MenuItem {
-                title: get_value_field(&64).to_string(),
-                action: self.cb_generator(Menu::Certificates),
-                item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-certificate")],
-                is_active: self.select_menu == Menu::Certificates,
-                ..Default::default()
-            },
-            // access MenuItem
-            MenuItem {
-                title: get_value_field(&80).to_string(),
-                action: self.cb_generator(Menu::Access),
-                item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-low-vision")],
-                is_active: self.select_menu == Menu::Access,
-                ..Default::default()
-            },
-            // password MenuItem
-            MenuItem {
-                title: get_value_field(&20).to_string(),
-                action: self.cb_generator(Menu::Password),
-                item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-key")],
-                is_active: self.select_menu == Menu::Password,
-                ..Default::default()
-            },
-            // remove profile MenuItem
-            MenuItem {
-                title: get_value_field(&82).to_string(),
-                action: self.cb_generator(Menu::RemoveProfile),
-                item_class: classes!("has-background-danger-light"),
-                icon_classes: vec![classes!("fas", "fa-trash")],
-                is_active: self.select_menu == Menu::RemoveProfile,
-                ..Default::default()
-            },
-        ];
-
-        html!{
-            <SideMenu menu_arr={menu_arr} />
-        }
     }
 
     fn update_favicon_card(&self) -> Html {

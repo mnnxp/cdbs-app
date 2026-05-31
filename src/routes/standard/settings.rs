@@ -430,7 +430,7 @@ impl Component for StandardSettings {
 
         html!{
             <div class="standard-page">
-                <div class={"container is-fluid page"}>
+                <div class="container is-fluid page">
                     <div class="row">
                         <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
                         {show_notification(

@@ -327,7 +327,7 @@ impl Component for ShowComponent {
             Some(component_data) => html!{
                 <div class="component-page">
                     <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
-                    <div class={"container is-fluid page"}>
+                    <div class="container is-fluid page">
                         <div class="row">
                             <div class="card column">
                               {self.show_main_card(component_data)}

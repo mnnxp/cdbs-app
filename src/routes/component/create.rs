@@ -214,7 +214,7 @@ impl Component for CreateComponent {
         html!{
             <div class="component-page">
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
-                <div class={"container is-fluid page"}>
+                <div class="container is-fluid page">
                     <div class="box p-5">
                         <h1 class="title is-3 mb-4">
                             // <span class="icon mr-3"><i class="fas fa-building"></i></span>

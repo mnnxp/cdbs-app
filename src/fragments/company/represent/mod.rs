@@ -128,7 +128,7 @@ impl Component for CompanyRepresents {
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         html!{
-            <div id={"represents-box"} class="itemsBox">
+            <div id="represents-box">
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()} />
                 <div class="is-flex is-align-items-center is-justify-content-between mb-4">
                     {match self.props.show_manage_btn {

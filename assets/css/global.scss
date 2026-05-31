@@ -153,6 +153,8 @@ body {
   top: 20px;
   bottom: 0;
   left: -10em;
+  /* to prevent menu shift when switching tabs with small or no content */
+  margin-top: 20px;
 }
 .side-menu ul {
   list-style: none;
@@ -185,25 +187,9 @@ body {
   color: #1872f0;
 }
 
-/*the colors of the different columns*/
-// .side-menu ul li:nth-child(1) {
-//   background-color: rgba(0, 172, 237, 0.8);
-// }
-// .side-menu ul li:nth-child(2) {
-//   background-color: rgba(59, 89, 152, 0.8);
-// }
-// .side-menu ul li:nth-child(3) {
-//   background-color: rgba(0, 163, 0, 0.8);
-// }
-// .side-menu ul li:nth-child(4) {
-//   background-color: rgba(30, 113, 69, 0.8);
-// }
-// .side-menu ul li:nth-child(5) {
-//   background-color: rgba(255, 196, 13, 0.8);
-// }
-// .side-menu ul li:nth-child(6) {
-//   background-color: rgba(203, 32, 39, 0.8);
-// }
+.side-menu ul li a i {
+  margin-right: 0.1rem;
+}
 
 .side-menu ul li:hover {
   background-color: #fff;
@@ -370,36 +356,30 @@ body {
 }
 
 .imgBox {
-  // width: 240px;
-  // height: 240px;
+  width: 100%;
+  max-height: 240px;
+  max-width: 240px;
   display: inline-flex;
   position: relative;
   justify-content: center;
-  .image {
-    display: inline-flex;
-    justify-content: center;
-  }
-}
-
-.imgBox {
-  width: 240px;
-  height: 240px;
-  display: inline-flex;
-  position: relative;
-  .certificate-image {
-    width: max-content;
-    height: max-content;
-    max-width: 240px;
+  align-items: center;
+  margin: 0 auto;
+  img, .image, .certificate-image {
     max-height: 240px;
+    max-width: 240px;
     margin: auto;
+    object-fit: contain;
+    display: block;
   }
 }
 
-.imgBox > img {
-  // height: 100%;
-  height: auto;
-  width: 100%;
-  object-fit: contain;
+@media screen and (max-width: 480px) {
+  .imgBox {
+    img, .image, .certificate-image {
+      max-width: 140px;
+      max-height: 140px;
+    }
+  }
 }
 
 .notification.custom-notif {
@@ -549,22 +529,6 @@ scene-hull {
 .right-side {
   margin-left: auto;
   padding-left: 1em;
-}
-
-.itemsBox {
-  .itemBox {
-    border: 1px solid #edf1fb;
-    border-radius: 8px;
-    box-shadow: none;
-    transition: box-shadow 0.2s ease-in-out;
-    &:hover {
-      box-shadow: 0 0.5em 1em -0.125em #0a0a0a1a, 0 0 0 1px #0a0a0a05;
-    }
-    .media-content {
-      width: 100rem;
-    }
-  }
-  margin-bottom: 80px;
 }
 
 .flexBox {

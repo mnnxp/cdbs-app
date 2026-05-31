@@ -232,7 +232,7 @@ impl Component for CreateStandard {
 
         html!{
             <div class="standard-page">
-                <div class={"container is-fluid page"}>
+                <div class="container is-fluid page">
                     <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
                     <div class="box p-5">
                         <h1 class="title is-3 mb-4">

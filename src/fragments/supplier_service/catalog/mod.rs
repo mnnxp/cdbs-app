@@ -107,7 +107,7 @@ impl Component for CatalogServices {
         let onclick_change_view = self.link.callback(|_|Msg::SwitchShowType);
 
         html!{
-            <div id={"services-box"} class="itemsBox" >
+            <div id="services-box">
               <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
               <div class="level" >
                 <div class="level-left">

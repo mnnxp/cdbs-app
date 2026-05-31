@@ -13,7 +13,7 @@ use crate::fragments::{
     component::CatalogComponents,
     list_errors::ListErrors,
     list_empty::ListEmpty,
-    side_menu::{MenuItem, SideMenu},
+    side_menu::{MenuBuilder, MenuItemTemplate},
     supplier_service::CatalogServices,
     standard::CatalogStandards,
     user::CatalogUsers,
@@ -33,6 +33,35 @@ use crate::gqls::user::{
 };
 use crate::services::prepare_username;
 
+impl MenuBuilder for Profile {
+    type TabType = ProfileTab;
+
+    fn menu_config() -> &'static [MenuItemTemplate<ProfileTab>] {
+        use ProfileTab::*;
+        &[
+            MenuItemTemplate { title_key: 32, icon_classes: &[&["fas", "fa-certificate"]], tab: Certificates, custom_class: None },
+            MenuItemTemplate { title_key: 33, icon_classes: &[&["fas", "fa-cogs"]], tab: Components, custom_class: None },
+            MenuItemTemplate { title_key: 34, icon_classes: &[&["fas", "fa-cogs"], &["fas", "fa-bookmark"]], tab: FavoriteComponents, custom_class: None },
+            MenuItemTemplate { title_key: 379, icon_classes: &[&["fas", "fa-ticket-alt"]], tab: Services, custom_class: None },
+            MenuItemTemplate { title_key: 35, icon_classes: &[&["fas", "fa-building"]], tab: Companies, custom_class: None },
+            MenuItemTemplate { title_key: 36, icon_classes: &[&["fas", "fa-building"], &["fas", "fa-bookmark"]], tab: FavoriteCompanies, custom_class: None },
+            MenuItemTemplate { title_key: 37, icon_classes: &[&["fas", "fa-book"], &["fas", "fa-bookmark"]], tab: FavoriteStandards, custom_class: None },
+            MenuItemTemplate { title_key: 38, icon_classes: &[&["fas", "fa-user"], &["fas", "fa-bookmark"]], tab: FavoriteUsers, custom_class: None },
+        ]
+    }
+
+    fn is_active(&self, tab: &ProfileTab) -> bool { self.profile_tab == *tab }
+    fn get_count(&self, tab: &ProfileTab) -> usize { self.get_number_of_items(tab) }
+    fn is_extend(&self, tab: &ProfileTab) -> bool { self.check_extend(tab) }
+    fn get_action(&self, tab: &ProfileTab) -> Callback<MouseEvent> { self.cb_generator(tab.clone()) }
+}
+
+impl Counter for Profile {
+    fn quantity(&self) -> usize {
+        self.subscribers
+    }
+}
+
 /// Profile user with relate data
 pub struct Profile {
     error: Option<Error>,
@@ -47,12 +76,6 @@ pub struct Profile {
     profile_tab: ProfileTab,
     extend_tab: Option<ProfileTab>,
     show_full_user_info: bool,
-}
-
-impl Counter for Profile {
-    fn quantity(&self) -> usize {
-        self.subscribers
-    }
 }
 
 #[derive(Properties, Clone)]
@@ -290,7 +313,7 @@ impl Profile {
     ) -> Html {
         html! {
             <div class="profile-page">
-                <div class={"container is-fluid page"}>
+                <div class="container is-fluid page">
                     <div class="row">
                         <div class="card">
                             <div class="card-content">
@@ -319,7 +342,7 @@ impl Profile {
         html!{<div id={"card-list"} class="card">
             <div class="columns is-mobile">
                 <div class="column is-flex">
-                    { self.show_profile_action() }
+                    {self.render_menu()}
                     <div id={"card-list-items"} class="card-relate-data" style={resizer("card-list", 5)}>
                         {match self.profile_tab {
                             ProfileTab::Certificates => self.view_certificates(self_data.certificates.clone()),
@@ -343,7 +366,7 @@ impl Profile {
     ) -> Html {
         html! {
             <div class="profile-page">
-                <div class={"container is-fluid page"}>
+                <div class="container is-fluid page">
                     <div class="row">
                         <div class="card">
                             <div class="card-content">
@@ -372,7 +395,7 @@ impl Profile {
         html!{<div id={"other-card-list"} class="card">
             <div class="columns is-mobile">
                 <div class="column is-flex">
-                  { self.show_profile_action() }
+                  {self.render_menu()}
                   <div id={"other-card-list-items"} class="card-relate-data" style={resizer("other-card-list", 5)}>
                       {match self.profile_tab {
                           ProfileTab::Certificates => self.view_certificates(user_data.certificates.clone()),
@@ -469,91 +492,6 @@ impl Profile {
             self.extend_tab.clone().unwrap() == tab.clone()
         } else {
             false
-        }
-    }
-
-    fn show_profile_action(&self) -> Html {
-        let menu_arr: Vec<MenuItem> = vec![
-            MenuItem {
-                title: get_value_field(&32).to_string(),
-                action: self.cb_generator(ProfileTab::Certificates),
-                count: self.get_number_of_items(&ProfileTab::Certificates),
-                item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-certificate")],
-                is_active: self.profile_tab == ProfileTab::Certificates,
-                is_extend: self.check_extend(&ProfileTab::Certificates),
-            },
-            MenuItem {
-                title: get_value_field(&33).to_string(),
-                action: self.cb_generator(ProfileTab::Components),
-                count: self.get_number_of_items(&ProfileTab::Components),
-                item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-cogs")],
-                is_active: self.profile_tab == ProfileTab::Components,
-                is_extend: self.check_extend(&ProfileTab::Components),
-            },
-            MenuItem {
-                title: get_value_field(&34).to_string(),
-                action: self.cb_generator(ProfileTab::FavoriteComponents),
-                count: self.get_number_of_items(&ProfileTab::FavoriteComponents),
-                item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-cogs"), classes!("fas", "fa-bookmark")],
-                is_active: self.profile_tab == ProfileTab::FavoriteComponents,
-                is_extend: self.check_extend(&ProfileTab::FavoriteComponents),
-            },
-            MenuItem {
-                title: get_value_field(&379).to_string(),
-                action: self.cb_generator(ProfileTab::Services),
-                count: self.get_number_of_items(&ProfileTab::Services),
-                item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-ticket-alt")],
-                is_active: self.profile_tab == ProfileTab::Services,
-                is_extend: self.check_extend(&ProfileTab::Services),
-            },
-            // company MenuItem
-            MenuItem {
-                title: get_value_field(&35).to_string(),
-                action: self.cb_generator(ProfileTab::Companies),
-                count: self.get_number_of_items(&ProfileTab::Companies),
-                item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-building")],
-                is_active: self.profile_tab == ProfileTab::Companies,
-                is_extend: self.check_extend(&ProfileTab::Companies),
-            },
-            // company fav MenuItem
-            MenuItem {
-                title: get_value_field(&36).to_string(),
-                action: self.cb_generator(ProfileTab::FavoriteCompanies),
-                count: self.get_number_of_items(&ProfileTab::FavoriteCompanies),
-                item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-building"), classes!("fas", "fa-bookmark")],
-                is_active: self.profile_tab == ProfileTab::FavoriteCompanies,
-                is_extend: self.check_extend(&ProfileTab::FavoriteCompanies),
-            },
-            // standards MenuItem
-            MenuItem {
-                title: get_value_field(&37).to_string(),
-                action: self.cb_generator(ProfileTab::FavoriteStandards),
-                count: self.get_number_of_items(&ProfileTab::FavoriteStandards),
-                item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-book"), classes!("fas", "fa-bookmark")],
-                is_active: self.profile_tab == ProfileTab::FavoriteStandards,
-                is_extend: self.check_extend(&ProfileTab::FavoriteStandards),
-            },
-            // user fav MenuItem
-            MenuItem {
-                title: get_value_field(&38).to_string(),
-                action: self.cb_generator(ProfileTab::FavoriteUsers),
-                count: self.get_number_of_items(&ProfileTab::FavoriteUsers),
-                item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-user"), classes!("fas", "fa-bookmark")],
-                is_active: self.profile_tab == ProfileTab::FavoriteUsers,
-                is_extend: self.check_extend(&ProfileTab::FavoriteUsers),
-            },
-        ];
-
-        html! {
-            <SideMenu menu_arr={menu_arr} />
         }
     }
 

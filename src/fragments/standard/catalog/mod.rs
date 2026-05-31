@@ -108,7 +108,7 @@ impl Component for CatalogStandards {
         let onclick_change_view = self.link.callback(|_|Msg::SwitchShowType);
 
         html!{
-            <div id={"standards-box"} class="itemsBox" >
+            <div id="standards-box">
               <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
               <div class="level" >
                 <div class="level-left">

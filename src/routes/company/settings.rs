@@ -25,7 +25,7 @@ use crate::fragments::{
         CompanyRepresents, SearchSpecsTags
     },
     list_errors::ListErrors,
-    side_menu::{MenuItem, SideMenu},
+    side_menu::{MenuBuilder, MenuItemTemplate},
     upload_favicon::UpdateFaviconBlock,
 };
 use crate::services::content_adapter::DateDisplay;
@@ -41,6 +41,36 @@ use crate::gqls::company::{
     ChangeCompanyAccess, change_company_access,
     DeleteCompany, delete_company,
 };
+
+impl MenuBuilder for CompanySettings {
+    type TabType = Menu;
+
+    fn menu_config() -> &'static [MenuItemTemplate<Menu>] {
+        use Menu::*;
+        &[
+            MenuItemTemplate { title_key: 265, icon_classes: &[&["fas", "fa-angle-double-left"]], tab: OpenCompany, custom_class: None },
+            MenuItemTemplate { title_key: 109, icon_classes: &[&["fas", "fa-building"]], tab: Company, custom_class: None },
+            MenuItemTemplate { title_key: 91, icon_classes: &[&["fas", "fa-image"]], tab: UpdateFavicon, custom_class: None },
+            MenuItemTemplate { title_key: 266, icon_classes: &[&["fas", "fa-industry"]], tab: Represent, custom_class: None },
+            MenuItemTemplate { title_key: 64, icon_classes: &[&["fas", "fa-certificate"]], tab: Certificates, custom_class: None },
+            MenuItemTemplate { title_key: 283, icon_classes: &[&["fas", "fa-paperclip"]], tab: Spec, custom_class: None },
+            MenuItemTemplate { title_key: 286, icon_classes: &[&["fas", "fa-users"]], tab: Member, custom_class: None },
+            MenuItemTemplate { title_key: 65, icon_classes: &[&["fas", "fa-low-vision"]], tab: Access, custom_class: None },
+            MenuItemTemplate { title_key: 267, icon_classes: &[&["fas", "fa-trash"]], tab: RemoveCompany, custom_class: Some("has-background-danger-light") },
+        ]
+    }
+
+    fn is_active(&self, tab: &Menu) -> bool { self.select_menu == *tab }
+    fn get_count(&self, _tab: &Menu) -> usize { 0 }
+    fn is_extend(&self, _tab: &Menu) -> bool { false }
+    fn get_action(&self, tab: &Menu) -> Callback<MouseEvent> {
+        if *tab == Menu::OpenCompany {
+            self.link.callback(|_| Msg::OpenCompany)
+        } else {
+            self.cb_generator(tab.clone())
+        }
+    }
+}
 
 /// Get data current company
 impl From<CompanyInfo> for CompanyUpdateInfo {
@@ -63,6 +93,7 @@ impl From<CompanyInfo> for CompanyUpdateInfo {
 
 #[derive(Clone, PartialEq)]
 pub enum Menu {
+    OpenCompany,
     Company,
     UpdateFavicon,
     Represent,
@@ -365,7 +396,7 @@ impl Component for CompanySettings {
                     <div class="row">
                         <div class="columns">
                             <div class="column is-flex side-menu-content-fix">
-                                {self.view_menu()}
+                                {self.render_menu()}
                                 <div class="card is-flex-grow-1 side-menu-content-fix">
                                     <div class="card-content">
                                         {self.select_content()}
@@ -385,98 +416,9 @@ impl CompanySettings {
         self.link.callback(move |_| Msg::SelectMenu(cb.clone()))
     }
 
-    fn view_menu(&self) -> Html {
-        let menu_arr: Vec<MenuItem> = vec![
-            // return company page MenuItem
-            MenuItem {
-                title: get_value_field(&265).to_string(), // Open company
-                action: self.link.callback(|_| Msg::OpenCompany),
-                item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-angle-double-left")],
-                is_active: false,
-                ..Default::default()
-            },
-            // Company MenuItem
-            MenuItem {
-                title: get_value_field(&109).to_string(), // Company
-                action: self.cb_generator(Menu::Company),
-                item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-building")],
-                is_active: self.select_menu == Menu::Company,
-                ..Default::default()
-            },
-            // Favicon MenuItem
-            MenuItem {
-                title: get_value_field(&91).to_string(), // Logo
-                action: self.cb_generator(Menu::UpdateFavicon),
-                item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-image")],
-                is_active: self.select_menu == Menu::UpdateFavicon,
-                ..Default::default()
-            },
-            // Represent MenuItem
-            MenuItem {
-                title: get_value_field(&266).to_string(), // Representations
-                action: self.cb_generator(Menu::Represent),
-                item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-industry")],
-                is_active: self.select_menu == Menu::Represent,
-                ..Default::default()
-            },
-            // Certificates MenuItem
-            MenuItem {
-                title: get_value_field(&64).to_string(), // Certificates
-                action: self.cb_generator(Menu::Certificates),
-                item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-certificate")],
-                is_active: self.select_menu == Menu::Certificates,
-                ..Default::default()
-            },
-            // Spec MenuItem
-            MenuItem {
-                title: get_value_field(&283).to_string(), // Sphere of activity
-                action: self.cb_generator(Menu::Spec),
-                item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-paperclip")],
-                is_active: self.select_menu == Menu::Spec,
-                ..Default::default()
-            },
-            // Members MenuItem
-            MenuItem {
-                title: get_value_field(&286).to_string(), // Members Company
-                action: self.cb_generator(Menu::Member),
-                item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-users")],
-                is_active: self.select_menu == Menu::Member,
-                ..Default::default()
-            },
-            // Access MenuItem
-            MenuItem {
-                title: get_value_field(&65).to_string(), // Access
-                action: self.cb_generator(Menu::Access),
-                item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-low-vision")],
-                is_active: self.select_menu == Menu::Access,
-                ..Default::default()
-            },
-            // RemoveCompany MenuItem
-            MenuItem {
-                title: get_value_field(&267).to_string(), // Remove Company
-                action: self.cb_generator(Menu::RemoveCompany),
-                item_class: classes!("has-background-danger-light"),
-                icon_classes: vec![classes!("fas", "fa-trash")],
-                is_active: self.select_menu == Menu::RemoveCompany,
-                ..Default::default()
-            },
-        ];
-
-        html!{
-            <SideMenu menu_arr={menu_arr} />
-        }
-    }
-
     fn select_content(&self) -> Html {
         match self.select_menu {
+            Menu::OpenCompany => html!{},
             // Show interface for change company data
             Menu::Company => self.manage_master_data(),
             // Show interface for change favicon company
