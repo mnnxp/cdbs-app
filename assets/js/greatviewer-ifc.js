@@ -1,4 +1,4 @@
-import * as THREE from '../../../../three/three.module.min.js';
+import * as THREE from '../../../../three/three.webgpu.min.js';
 import * as OBC from '../../../../three/ifc/components.es.js';
 import Stats from '../../../../three/stats.module.js';
 
@@ -51,7 +51,7 @@ export class GreatViewerIFC {
             return;
         }
         if (e.code === 'KeyR') {
-            this?.centerModel();
+            this.centerModel();
             return;
         }
         const keyMap = {
@@ -130,7 +130,7 @@ export class GreatViewerIFC {
 
     async loadIFC() {
         if (this.infoMessage) this.infoMessage.innerHTML = this.svgLoading;
-        const response = await fetch(this.model.url);
+        const response = await fetch(this.model.url, { cache: 'default' });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const reader = response.body.getReader();
         let loadedBytes = 0;
@@ -149,7 +149,6 @@ export class GreatViewerIFC {
             data.set(chunk, position);
             position += chunk.length;
         }
-        // console.log('Data length:', data.length);
         if (this.infoMessage) this.infoMessage.innerHTML = this.svgLoading;
         await this.loadModel(data);
     }
@@ -169,7 +168,7 @@ export class GreatViewerIFC {
                     absolute: true,
                 },
             });
-            await this?.initializeFragmentsManager();
+            await this.initializeFragmentsManager();
             await ifcLoader.load(buffer, false, this.model.filename, {
                 processData: {includeProperties: false, fast: true}
             });
@@ -190,7 +189,7 @@ export class GreatViewerIFC {
             this.modelGroup = model.object;
         });
         const updateCore = () => {
-            if (this.container.clientHeight === 0) return;
+            if (!this.isInitialized || this.container?.clientHeight === 0) return;
             fragments.core.update(true);
             this.requestRender();
         };

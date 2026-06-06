@@ -1,16 +1,19 @@
-// use serde_json::json;
 use serde::{Serialize, Deserialize};
 use wasm_bindgen::prelude::*;
-// use wasm_bindgen::{JsCast, JsValue};
 use wasm_bindgen_futures::spawn_local;
-use wasm_bindgen::JsValue;
 use serde_wasm_bindgen::to_value;
 use log::debug;
+use std::collections::HashMap;
+use std::cell::RefCell;
 use crate::services::{Size, get_value_field, ext_str};
 use crate::types::DownloadFile;
 
-/// Array of file extensions used as resources in GLTF
-const GLTF_RESOURCE_EXTS: &[&str] = &[".bin", ".png", ".jpg", ".jpeg",  ".webp", ".hdr", ".exr", ".ktx", ".ktx2", ".basis"];
+/// Array of file extensions used as resources
+const GLTF_RESOURCE_EXTS: &[&str] = &[".bin", ".png", ".jpg", ".jpeg", ".webp", ".hdr", ".exr", ".ktx", ".ktx2", ".basis"];
+
+thread_local! {
+    static MODEL_CACHE: RefCell<HashMap<String, JsValue>> = RefCell::new(HashMap::new());
+}
 
 /// Checks if the filename has a resource extension for GLTF
 pub(crate) fn is_gltf_resource(filename: &str) -> bool {
@@ -41,29 +44,8 @@ impl ModelFormat {
     }
 
     pub(crate) fn is_3d_format(&self) -> bool {
-        match self {
-            // Self::STL | Self::GLTF | Self::GLB | Self::GCode => true,
-            Self::Unknown => false,
-            _ => true,
-        }
+        !matches!(self, Self::Unknown)
     }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub(crate) struct ViewerConfig {
-    pub(crate) model: ShowModel,
-    pub(crate) model_format: ModelFormat,
-    pub(crate) resource_mapping: Vec<ResourceMapping>,
-    pub(crate) size_flag: bool,
-    pub(crate) labels: ViewerLabels,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub(crate) struct ShowModel {
-    pub(crate) filename: String,
-    pub(crate) url: String,
-    pub(crate) size: String,
-    pub(crate) content_length: usize,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -73,49 +55,66 @@ pub(crate) struct ResourceMapping {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub(crate) struct ViewerLabels {
-    pub(crate) controls: String,
-    pub(crate) material_folder: String,
-    pub(crate) lighting_folder: String,
-    pub(crate) model_info_folder: String,
-    pub(crate) axes: String,
-    pub(crate) rotation: String,
-    pub(crate) wireframe: String,
-    pub(crate) original_textures: String,
-    pub(crate) model_color: String,
-    pub(crate) background_color: String,
-    pub(crate) model_scale: String,
-    pub(crate) failed_to_load_model: String,
-    pub(crate) format_not_supported: String,
-    pub(crate) view: String,
-    pub(crate) active_layer: String,
-    pub(crate) hide_travel_moves: String,
-    pub(crate) display: String,
-    pub(crate) play: String,
-    pub(crate) speed: String,
-    pub(crate) select: String,
-    pub(crate) metalness: String,
-    pub(crate) roughness: String,
-    pub(crate) env_intensity: String,
-    pub(crate) clearcoat: String,
-    pub(crate) clearcoat_rough: String,
-    pub(crate) ambient: String,
-    pub(crate) directional: String,
-    pub(crate) light: String,
-    pub(crate) file: String,
-    pub(crate) size: String,
-    pub(crate) hide_textures: String,
-    pub(crate) display_all: String,
-    pub(crate) display_up_to_current: String,
-    pub(crate) display_current_only: String,
-    pub(crate) view_perspective: String,
-    pub(crate) view_top: String,
-    pub(crate) view_bottom: String,
-    pub(crate) view_front: String,
-    pub(crate) view_back: String,
-    pub(crate) view_left: String,
-    pub(crate) view_right: String,
-    pub(crate) view_isometric: String,
+struct ViewerConfig {
+    model: ShowModel,
+    model_format: ModelFormat,
+    resource_mapping: Vec<ResourceMapping>,
+    size_flag: bool,
+    labels: ViewerLabels,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct ShowModel {
+    filename: String,
+    url: String,
+    size: String,
+    content_length: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct ViewerLabels {
+    controls: String,
+    material_folder: String,
+    lighting_folder: String,
+    model_info_folder: String,
+    axes: String,
+    rotation: String,
+    wireframe: String,
+    original_textures: String,
+    model_color: String,
+    background_color: String,
+    model_scale: String,
+    failed_to_load_model: String,
+    format_not_supported: String,
+    view: String,
+    active_layer: String,
+    hide_travel_moves: String,
+    display: String,
+    play: String,
+    speed: String,
+    select: String,
+    metalness: String,
+    roughness: String,
+    env_intensity: String,
+    clearcoat: String,
+    clearcoat_rough: String,
+    ambient: String,
+    directional: String,
+    light: String,
+    file: String,
+    size: String,
+    hide_textures: String,
+    display_all: String,
+    display_up_to_current: String,
+    display_current_only: String,
+    view_perspective: String,
+    view_top: String,
+    view_bottom: String,
+    view_front: String,
+    view_back: String,
+    view_left: String,
+    view_right: String,
+    view_isometric: String,
 }
 
 #[wasm_bindgen(module = "/assets/js/greatviewer.js")]
@@ -140,41 +139,42 @@ extern "C" {
     async fn starter(this: &GreatViewerIFC);
 }
 
-#[wasm_bindgen]
-pub enum JsModelFormat {
-    STL,
-    GLTF,
-    GLB,
-    GCode,
-    IFC,
-    Unknown,
-}
-
-impl From<ModelFormat> for JsModelFormat {
-    fn from(model_format: ModelFormat) -> Self {
-        match model_format {
-            ModelFormat::STL => Self::STL,
-            ModelFormat::GLTF => Self::GLTF,
-            ModelFormat::GLB => Self::GLB,
-            ModelFormat::GCode => Self::GCode,
-            ModelFormat::IFC => Self::IFC,
-            ModelFormat::Unknown => Self::Unknown,
-        }
-    }
-}
-
 pub(crate) fn preview_model(
     model_file: &DownloadFile,
     model_format: ModelFormat,
     resource_mapping: Vec<ResourceMapping>,
-    // suitable_files: Vec<(DownloadFile, ModelFormat)>,
     size_flag: bool
 ) {
     debug!("viewer");
+    let cache_key = format!("{}_{}_{}", model_file.download_url, size_flag, model_format as u8);
+    let cached_config = MODEL_CACHE.with(|cache| {
+        cache.borrow().get(&cache_key).cloned()
+    });
+    if let Some(config_js) = cached_config {
+        spawn_local(async move {
+            match model_format {
+                ModelFormat::IFC => {
+                    let viewer = GreatViewerIFC::new(config_js);
+                    viewer.starter().await;
+                },
+                _ => {
+                    let viewer = GreatViewer::new(config_js);
+                    viewer.starter().await;
+                },
+            };
+        });
+        return;
+    }
+
     let Some(config_js) = get_js_value(model_file, model_format, resource_mapping, size_flag) else {
         debug!("Failed to create viewer config");
         return
     };
+
+    MODEL_CACHE.with(|cache| {
+        cache.borrow_mut().insert(cache_key, config_js.clone());
+    });
+
     spawn_local(async move {
         match model_format {
             ModelFormat::IFC => {

@@ -30,7 +30,6 @@ pub struct ThreeShowcase {
 #[derive(PartialEq, Clone, Debug, Properties)]
 pub struct Props {
     pub fileset_uuid: UUID,
-    // pub program_id: usize,
     pub on_exit_fullscreen: Callback<()>,
 }
 
@@ -111,8 +110,8 @@ impl Component for ThreeShowcase {
                         if let Some((file, model_format)) = self.suitable_files.first() {
                             self.selected_file = Some((file.clone(), *model_format));
                             debug!("Found {} files for show, selected: {:?}", self.suitable_files.len(), self.selected_file);
-                            if model_format == &ModelFormat::GLTF {
-                                debug!("{:?} is ModelFormat::GLTF", model_format);
+                            if matches!(model_format, ModelFormat::GLTF | ModelFormat::GLB) {
+                                debug!("{:?} needs resources", model_format);
                                 self.reassemble_resources();
                             }
                             debug!("Resource files: {:?}", self.resource_files);
@@ -174,7 +173,6 @@ impl Component for ThreeShowcase {
         let onclick_full_screen = self.link.callback(|_| Msg::ChangeTypeShow);
         let mut container_style = "display: block; width: 100%; height: 100%; min-height: 25vh; overflow: hidden;";
         let mut b_container_style = "";
-        // let mut scene_hull_class = classes!("column", "is-one-quarter");
         let scene_hull_class = classes!("column", "main");
         let mut class_icon = classes!("fas");
         let mut class_modal = classes!("modal", "is-isolated-modal");
@@ -183,7 +181,6 @@ impl Component for ThreeShowcase {
         }
         let text_full_screen = match self.full_screen {
             true => {
-                // scene_hull_class.push("main");
                 b_container_style = container_style;
                 container_style = "padding-left: 0.75rem;";
                 class_modal.push("is-active");
@@ -191,7 +188,6 @@ impl Component for ThreeShowcase {
                 get_value_field(&299)
             },
             false => {
-                // scene_hull_class.push("is-one-quarter");
                 class_icon.push("fa-expand-alt");
                 get_value_field(&298)
             },
@@ -220,24 +216,20 @@ impl Component for ThreeShowcase {
                         </button>
                     },
                 }}
-                // <PreviewModel/>
                 <a-container style={container_style}></a-container>
                 <div class={class_modal}>
                     <div class="modal-background" onclick={onclick_full_screen.clone()}></div>
                     <div class="modal-content" style="width: 80vw; height: 80vh; min-height: 50vh;">
                         <b-container style={b_container_style}></b-container>
                     </div>
-                    // <button class="modal-close is-large" aria-label="close"></button>
                     <button
                         id={"three-modal-close-btn"}
                         class={"button is-ghost modal-close"}
                         onclick={onclick_full_screen}
-                        // style={"position: absolute;"}
                         aria-label={text_full_screen} >
                       <span class="icon is-small">
                         <i class={"fas fa-compress-alt"} style="color: #1872f0;"></i>
                       </span>
-                    //   <span>{text_full_screen}</span>
                     </button>
                 </div>
             </scene-hull>
@@ -247,16 +239,19 @@ impl Component for ThreeShowcase {
 
 impl ThreeShowcase {
     fn reassemble_resources(&mut self) {
-        if let Some((select_df, _select_mf)) = &self.selected_file {
+        if let Some((select_df, select_mf)) = &self.selected_file {
             let base_name = select_df.filename.split('.').next().unwrap_or("");
-            self.resource_files = self.file_arr
-                .iter()
-                .filter(|res|
-                    base_name != res.filename &&
-                    is_gltf_resource(&res.filename)
-                )
-                .cloned()
-                .collect();
+            let needs_resources = matches!(select_mf, ModelFormat::GLTF | ModelFormat::GLB);
+            if needs_resources {
+                self.resource_files = self.file_arr
+                    .iter()
+                    .filter(|res|
+                        base_name != res.filename &&
+                        is_gltf_resource(&res.filename)
+                    )
+                    .cloned()
+                    .collect();
+            }
         }
     }
 }
