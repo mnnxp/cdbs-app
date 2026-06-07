@@ -3,10 +3,12 @@ import { STLLoader } from '../../../../three/loaders/STLLoader.js';
 import { GLTFLoader } from '../../../../three/loaders/GLTFLoader.js';
 import { DRACOLoader } from '../../../../three/loaders/DRACOLoader.js';
 import { GCodeLoader } from '../../../../three/loaders/GCodeLoader.js';
-import { OrbitControls } from '../../../../three/OrbitControls.js';
+import { OrbitControls } from '../../../../three/controls/OrbitControls.js';
 import Stats from '../../../../three/stats.module.js';
 import { GUI } from '../../../../three/lil-gui.esm.min.js';
+import { fetchWithCache, clearModelCache } from '../../../../three/model-cache.js';
 
+// Environment texture constants
 const ENV_TEXTURES = {
     nxImg: `data:image/gif;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAIAAABMXPacAAAAyUlEQVR42u3RMREAMAgAsVKb3DHiXwIyYMhL+ERXPu31LQAAQAAACAAAAQAgAAAEAIAAABAAAAIAQAAACAAAAQAgAAAEAIAAABAAAAIAQAAACAAAAQAgAAAEAIAAABAAAAIAQAAACAAAAQAgAAAEAIAAABAAAAAEAIAAABAAAAIAQAAACAAAAQAgAAAEAIAAABAAAAIAQAAACAAAAQAgAAAEAIAAABAAAAIAQAAACAAAAQAgAAAEAIAAABAAAAIAQAAACAAAAbjQAOAVAh/Yww3UAAAAAElFTkSuQmCC`,
     nyImg: `data:image/gif;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAIAAABMXPacAAAAx0lEQVR42u3RMQEAMAjAsDGf8ODfAzLgSCU0UdlPe30LAAAQAAACAEAAAAgAAAEAIAAABACAAAAQAAACAEAAAAgAAAEAIAAABACAAAAQAAACAEAAAAgAAAEAIAAABACAAAAQAAACAEAAAAgAAAEAIAAABAAAAAEAIAAABACAAAAQAAACAEAAAAgAAAEAIAAABACAAAAQAAACAEAAAAgAAAEAIAAABACAAAAQAAACAEAAAAgAAAEAIAAABACAAAAQAAACAEAALjQfhwIey0nZ0AAAAABJRU5ErkJggg==`,
@@ -182,35 +184,6 @@ export class GreatViewer {
         }
     }
 
-    async fetchWithCache(url) {
-        if (modelCache.has(url)) {
-            return modelCache.get(url);
-        }
-        const response = await fetch(url, { cache: 'default' });
-        const total = parseInt(response.headers.get('Content-Length'), 10);
-        const reader = response.body.getReader();
-        const chunks = [];
-        let loaded = 0;
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            chunks.push(value);
-            loaded += value.length;
-            if (this.infoMessage && total) {
-                const percent = (loaded / total) * 100;
-                this.infoMessage.innerHTML = percent.toFixed(1) + '%';
-            }
-        }
-        const buffer = new Uint8Array(loaded);
-        let position = 0;
-        for (const chunk of chunks) {
-            buffer.set(chunk, position);
-            position += chunk.length;
-        }
-        modelCache.set(url, buffer.buffer);
-        return buffer.buffer;
-    }
-
     setQuality(level) {
         this.quality = level;
         let pixelRatio = window.devicePixelRatio;
@@ -358,32 +331,25 @@ export class GreatViewer {
 
     /**
      * Initializes the unified WebGPURenderer with an automatic WebGL2 fallback.
-     * Validated for Three.js r184.
      * @returns {Promise<THREE.WebGPURenderer>} The initialized renderer instance.
      */
     async createRenderer() {
-        // Check initial API presence for precise logging
         const isWebGPUSupported = !!(navigator.gpu && navigator.gpu.requestAdapter);
         if (!isWebGPUSupported) {
             console.warn('CADBase Viewer: WebGPU API is missing in this browser. Falling back to WebGL2.');
         }
-
-        // Parameters strictly matching the r184 WebGPURenderer configuration specification
         const renderer = new THREE.WebGPURenderer({
-            alpha: true,         // Required for overlay controls and transparent canvas backgrounds
-            depth: true,         // Critical for CAD/BIM depth buffering and geometry clipping
-            stencil: false,      // Disabled by default to save VRAM unless specialized stencils are needed
-            antialias: true      // Essential for smooth line rendering (EdgesGeometry) in engineering viewports
+            alpha: true,
+            depth: true,
+            stencil: false,
+            antialias: true
         });
-
         try {
-            // Essential asynchronous initialization call introduced in modern Three.js architecture
             await renderer.init();
-            // Log the active rendering pipeline context to verify fallback behavior
             console.log(`CADBase Viewer: Renderer successfully initialized on backend: "${renderer.backend.name}"`);
         } catch (error) {
             console.error('CADBase Viewer: Critical error during renderer initialization:', error);
-            throw error; // Propagate the error so the main module can display a user-friendly UI fallback
+            throw error;
         }
 
         return renderer;
@@ -484,7 +450,7 @@ export class GreatViewer {
         console.log('Model path:', this.model.url);
         switch (this.modelFormat) {
             case 'STL':
-                this.fetchWithCache(this.model.url)
+                fetchWithCache(this.model.url, (percent) => { this.infoMessage.innerHTML = percent.toFixed(1) + '%'; })
                     .then(buffer => {
                         const stlLoader = new STLLoader();
                         const geometry = stlLoader.parse(buffer);
@@ -500,7 +466,7 @@ export class GreatViewer {
             case 'GLTF':
                 const gltfResources = this.createGLTFLoaderWithDraco();
                 if (this.resourceMapping.length === 0) {
-                    this.fetchWithCache(this.model.url)
+                    fetchWithCache(this.model.url, (percent) => { this.infoMessage.innerHTML = percent.toFixed(1) + '%'; })
                         .then(buffer => {
                             gltfResources.loader.parse(
                                 buffer,
@@ -526,7 +492,7 @@ export class GreatViewer {
                 break;
             case 'GLB':
                 const glbResources = this.createGLTFLoaderWithDraco();
-                this.fetchWithCache(this.model.url)
+                fetchWithCache(this.model.url, (percent) => { this.infoMessage.innerHTML = percent.toFixed(1) + '%'; })
                     .then(buffer => {
                         glbResources.loader.parse(
                             buffer,
@@ -554,7 +520,7 @@ export class GreatViewer {
                 break;
             case 'GCode':
                 if (this.sizeFlag) {
-                    this.fetchWithCache(this.model.url)
+                    fetchWithCache(this.model.url, (percent) => { this.infoMessage.innerHTML = percent.toFixed(1) + '%'; })
                         .then(buffer => {
                             const decoder = new TextDecoder();
                             const text = decoder.decode(buffer);
@@ -574,7 +540,7 @@ export class GreatViewer {
                         })
                         .catch(error => this.onError(error));
                 } else {
-                    this.fetchWithCache(this.model.url)
+                    fetchWithCache(this.model.url, (percent) => { this.infoMessage.innerHTML = percent.toFixed(1) + '%'; })
                         .then(buffer => {
                             const decoder = new TextDecoder();
                             const text = decoder.decode(buffer);
@@ -592,6 +558,14 @@ export class GreatViewer {
                 }
                 break;
         }
+    }
+
+    addVector3Controls(folder, obj, name, min = -50, max = 50, step = 1) {
+        const controls = folder.addFolder(name);
+        controls.close();
+        controls.add(obj, 'x', min, max, step).name('X');
+        controls.add(obj, 'y', min, max, step).name('Y');
+        controls.add(obj, 'z', min, max, step).name('Z');
     }
 
     setControlsGui() {
@@ -764,33 +738,23 @@ export class GreatViewer {
         const lightFolder = this.gui.addFolder(this.labels.lighting_folder);
         lightFolder.close();
         lightFolder.add(this.lightParams, 'ambientIntensity', 0, 1, 0.01)
-            .name('Ambient').onChange(v => this.ambientLight.intensity = v);
+            .name(this.labels.ambient || 'Ambient')
+            .onChange(v => this.ambientLight.intensity = v);
         lightFolder.add(this.lightParams, 'hemisphereIntensity', 0, 1, 0.01)
-            .name('Hemisphere').onChange(v => this.hemisphereLight.intensity = v);
+            .name(this.labels.hemisphere || 'Hemisphere')
+            .onChange(v => this.hemisphereLight.intensity = v);
         lightFolder.add(this.lightParams, 'keyIntensity', 0, 2, 0.01)
-            .name('Key Light').onChange(v => this.keyLight.intensity = v);
+            .name(this.labels.key_light || 'Key Light')
+            .onChange(v => this.keyLight.intensity = v);
         lightFolder.add(this.lightParams, 'fillIntensity', 0, 1.5, 0.01)
-            .name('Fill Light').onChange(v => this.fillLight.intensity = v);
+            .name(this.labels.fill_light || 'Fill Light')
+            .onChange(v => this.fillLight.intensity = v);
         lightFolder.add(this.lightParams, 'rimIntensity', 0, 1, 0.01)
-            .name('Rim Light').onChange(v => this.rimLight.intensity = v);
-        lightFolder.add(this.lightParams.keyPosition, 'x', -50, 50, 1)
-            .name('Key X').onChange(v => this.keyLight.position.x = v);
-        lightFolder.add(this.lightParams.keyPosition, 'y', -50, 50, 1)
-            .name('Key Y').onChange(v => this.keyLight.position.y = v);
-        lightFolder.add(this.lightParams.keyPosition, 'z', -50, 50, 1)
-            .name('Key Z').onChange(v => this.keyLight.position.z = v);
-        lightFolder.add(this.lightParams.fillPosition, 'x', -50, 50, 1)
-            .name('Fill X').onChange(v => this.fillLight.position.x = v);
-        lightFolder.add(this.lightParams.fillPosition, 'y', -50, 50, 1)
-            .name('Fill Y').onChange(v => this.fillLight.position.y = v);
-        lightFolder.add(this.lightParams.fillPosition, 'z', -50, 50, 1)
-            .name('Fill Z').onChange(v => this.fillLight.position.z = v);
-        lightFolder.add(this.lightParams.rimPosition, 'x', -50, 50, 1)
-            .name('Rim X').onChange(v => this.rimLight.position.x = v);
-        lightFolder.add(this.lightParams.rimPosition, 'y', -50, 50, 1)
-            .name('Rim Y').onChange(v => this.rimLight.position.y = v);
-        lightFolder.add(this.lightParams.rimPosition, 'z', -50, 50, 1)
-            .name('Rim Z').onChange(v => this.rimLight.position.z = v);
+            .name(this.labels.rim_light || 'Rim Light')
+            .onChange(v => this.rimLight.intensity = v);
+        this.addVector3Controls(lightFolder, this.lightParams.keyPosition, this.labels.key_light_position || 'Key Light Position');
+        this.addVector3Controls(lightFolder, this.lightParams.fillPosition, this.labels.fill_light_position || 'Fill Light Position');
+        this.addVector3Controls(lightFolder, this.lightParams.rimPosition, this.labels.rim_light_position || 'Rim Light Position');
         // Info folder
         const infoFolder = this.gui.addFolder(this.labels.model_info_folder);
         infoFolder.close();
@@ -812,21 +776,24 @@ export class GreatViewer {
         if (!this.mesh) return;
         this.viewModeController = viewName;
         const preset = this.viewPresets[viewName];
+        if (!preset || !preset.pos) return;
         const box = new THREE.Box3().setFromObject(this.mesh);
         const center = box.getCenter(new THREE.Vector3());
         const size = box.getSize(new THREE.Vector3());
         const maxSize = Math.max(size.x, size.y, size.z);
-        const distance = maxSize * 2;
+        const distance = maxSize * 1.5;
         const [x, y, z] = preset.pos;
-        this.camera.position.set(
-            center.x + x * distance,
-            center.y + y * distance,
-            center.z + z * distance
-        );
-        this.camera.lookAt(center);
-        this.controls.enableRotate = preset.rot;
-        this.controls.target.copy(center);
-        this.controls.update();
+        const newPosX = center.x + x * distance;
+        const newPosY = center.y + y * distance;
+        const newPosZ = center.z + z * distance;
+        this.camera.position.set(newPosX, newPosY, newPosZ);
+        if (this.controls) {
+            this.controls.target.copy(center);
+            this.controls.enableRotate = !!preset.rot;
+            this.controls.update();
+        } else {
+            this.camera.lookAt(center);
+        }
         if (this.gui) {
             const viewCtrl = this.gui.controllers.find(c => c.property === 'viewModeController');
             if (viewCtrl) viewCtrl.updateDisplay();

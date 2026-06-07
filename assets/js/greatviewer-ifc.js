@@ -1,6 +1,7 @@
 import * as THREE from '../../../../three/three.webgpu.min.js';
 import * as OBC from '../../../../three/ifc/components.es.js';
 import Stats from '../../../../three/stats.module.js';
+import { fetchWithCache, clearModelCache } from '../../../../three/model-cache.js';
 
 export class GreatViewerIFC {
     constructor(config) {
@@ -112,43 +113,61 @@ export class GreatViewerIFC {
         setTimeout(() => this.printDiagnostics(), 600);
     }
 
+    resize() {
+        if (!this.container || !this.renderer || !this.world?.camera) return;
+        const width = this.container.clientWidth;
+        const height = this.container.clientHeight;
+        this.renderer.setSize(width, height, false);
+        const camera = this.world.camera;
+        if (camera.three) {
+            camera.three.aspect = width / height;
+            if (camera.three.isOrthographicCamera) {
+                const frustumSize = camera.frustumSize || 45;
+                const aspect = width / height;
+                camera.three.left = (-frustumSize * aspect) / 2;
+                camera.three.right = (frustumSize * aspect) / 2;
+                camera.three.top = frustumSize / 2;
+                camera.three.bottom = -frustumSize / 2;
+            }
+            camera.three.updateProjectionMatrix();
+        }
+        this.requestRender();
+    }
+
     async initializeWorld() {
         const worlds = this.components.get(OBC.Worlds);
         this.world = worlds.create();
         this.world.scene = new OBC.SimpleScene(this.components);
         this.world.scene.setup();
         if (!this.sizeFlag) this.world.scene.three.background = new THREE.Color(0xffffff);
-        this.world.renderer = new OBC.SimpleRenderer(this.components, this.container);
+        const customRenderer = new THREE.WebGPURenderer({ alpha: true, depth: true, antialias: true });
+        await customRenderer.init();
+        this.renderer = customRenderer;
+        this.world.renderer = new OBC.SimpleRenderer(this.components, this.container, this.renderer);
         this.world.camera = new OBC.OrthoPerspectiveCamera(this.components);
         this.components.init();
+        const ifcLoader = this.components.get(OBC.IfcLoader);
+        await ifcLoader.setup({
+            autoSetWasm: false,
+            wasm: {
+                path: this.ifcPath,
+                absolute: true,
+            },
+        });
         if (this.sizeFlag) {
             const grids = this.components.get(OBC.Grids);
             grids.create(this.world);
             await this.initializeAdvancedFeatures();
         }
+        this.resize()
     }
 
     async loadIFC() {
         if (this.infoMessage) this.infoMessage.innerHTML = this.svgLoading;
-        const response = await fetch(this.model.url, { cache: 'default' });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const reader = response.body.getReader();
-        let loadedBytes = 0;
-        const chunks = [];
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            chunks.push(value);
-            loadedBytes += value.length;
-            const loadedProgress = (loadedBytes / this.model.content_length) * 100;
-            this.infoMessage.innerHTML = loadedProgress.toFixed(1) + '%';
-        }
-        const data = new Uint8Array(loadedBytes);
-        let position = 0;
-        for (const chunk of chunks) {
-            data.set(chunk, position);
-            position += chunk.length;
-        }
+        const buffer = await fetchWithCache(this.model.url, (percent) => {
+            if (this.infoMessage) this.infoMessage.innerHTML = percent.toFixed(1) + '%';
+        });
+        const data = new Uint8Array(buffer);
         if (this.infoMessage) this.infoMessage.innerHTML = this.svgLoading;
         await this.loadModel(data);
     }
@@ -160,15 +179,8 @@ export class GreatViewerIFC {
             return;
         }
         try {
-            const ifcLoader = this.components.get(OBC.IfcLoader);
-            await ifcLoader.setup({
-                autoSetWasm: false,
-                wasm: {
-                    path: this.ifcPath,
-                    absolute: true,
-                },
-            });
             await this.initializeFragmentsManager();
+            const ifcLoader = this.components.get(OBC.IfcLoader);
             await ifcLoader.load(buffer, false, this.model.filename, {
                 processData: {includeProperties: false, fast: true}
             });
@@ -224,18 +236,24 @@ export class GreatViewerIFC {
         this.world.camera.controls.setLookAt(0, cameraDistance, cameraDistance, 0, 0, 0, true);
     }
 
-    updateViewPreset(viewName) {
+    async updateViewPreset(viewName) {
         if (!this.modelGroup || !this.world?.camera) return;
         console.log(`Control view: ${viewName}`);
         this.viewModeController = viewName;
+        const preset = this.viewPresets[viewName];
+        if (!preset || !preset.pos) return;
         const box = new THREE.Box3().setFromObject(this.modelGroup);
         const size = box.getSize(new THREE.Vector3());
         const center = box.getCenter(new THREE.Vector3());
         const maxSize = Math.max(size.x, size.y, size.z);
         const cameraDistance = maxSize * 2.2;
-        const [x, y, z] = this.viewPresets[viewName].pos;
-        if (this.world && this.world.camera && this.world.camera.controls) {
-            this.world.camera.controls.setLookAt(
+        const [x, y, z] = preset.pos;
+        if (this.world?.camera?.controls) {
+            if (preset.projection && this.world.camera.projection !== preset.projection) {
+                this.world.camera.projection = preset.projection;
+            }
+            this.world.camera.controls.isRotateable = !!preset.rot;
+            await this.world.camera.controls.setLookAt(
                 center.x + x * cameraDistance,
                 center.y + y * cameraDistance,
                 center.z + z * cameraDistance,
@@ -243,6 +261,10 @@ export class GreatViewerIFC {
                 true
             );
             this.requestRender();
+        }
+        if (this.gui) {
+            const viewCtrl = this.gui.controllers.find(c => c.property === 'viewModeController');
+            if (viewCtrl) viewCtrl.updateDisplay();
         }
     }
 

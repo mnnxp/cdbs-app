@@ -506,5 +506,14 @@ lazy_static! {
             (499, "Select fileset"),
             (500, "Start typing name..."),
             (501, "Saving selection..."),
+            (502, "Hemisphere"),
+            (503, "Key Light"),
+            (504, "Fill Light"),
+            (505, "Rim Light"),
+            (506, "Key Light Position"),
+            (507, "Fill Light Position"),
+            (508, "Rim Light Position"),
+            (509, "Intensities"),
+            (510, "Positions"),
         ]);
 }
