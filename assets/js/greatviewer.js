@@ -162,7 +162,7 @@ export class GreatViewer {
             this.toggleSlicerAnimation(!this.isPlayingAnimation);
             return;
         }
-        if (e.code === 'KeyR') {
+        if (e.code === 'KeyH' || e.code === 'Digit0' || e.code === 'Numpad0') {
             this.controls?.reset();
             return;
         }

@@ -51,7 +51,7 @@ export class GreatViewerIFC {
             document.querySelector('#three-modal-close-btn')?.click();
             return;
         }
-        if (e.code === 'KeyR') {
+        if (e.code === 'KeyH' || e.code === 'Digit0' || e.code === 'Numpad0') {
             this.centerModel();
             return;
         }
