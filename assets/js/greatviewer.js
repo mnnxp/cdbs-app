@@ -166,7 +166,7 @@ export class GreatViewer {
             this.controls?.reset();
             return;
         }
-        if (e.code === 'KeyW') {
+        if (e.code === 'KeyZ') {
             this.isWireframe = !this.isWireframe;
             if (this.isWireframe) this.useCustomMaterial = true;
             this.updateMaterial();
