@@ -1,9 +1,11 @@
 use yew::{classes, html, Callback, Component, ComponentLink, Html, Properties, ShouldRender};
+use wasm_bindgen::closure::Closure;
+use wasm_bindgen::{JsCast, JsValue};
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use log::debug;
 use crate::fragments::list_errors::ListErrors;
-use crate::services::{get_value_field, is_gltf_resource, preview_model, resp_parsing, ModelFormat, ResourceMapping};
+use crate::services::{get_value_field, is_gltf_resource, preview_model, resp_parsing, KeyboardGuard, ModelFormat, ResourceMapping};
 use crate::error::Error;
 use crate::types::{DownloadFile, PaginateSet, UUID};
 use crate::gqls::make_query;
@@ -25,6 +27,8 @@ pub struct ThreeShowcase {
     selected_file: Option<(DownloadFile, ModelFormat)>,
     suitable_files: Vec<(DownloadFile, ModelFormat)>,
     resource_files: Vec<DownloadFile>,
+    viewer: Option<JsValue>,
+    _key_guard: Option<KeyboardGuard>,
 }
 
 #[derive(PartialEq, Clone, Debug, Properties)]
@@ -38,6 +42,7 @@ pub enum Msg {
     RequestDownloadFilesetFiles,
     ResponseError(Error),
     GetDownloadFilesetFilesResult(String),
+    ViewerReady(JsValue),
     ChangeTypeShow,
     ShowThree,
     ClearError,
@@ -58,12 +63,17 @@ impl Component for ThreeShowcase {
             selected_file: None,
             suitable_files: Vec::new(),
             resource_files: Vec::new(),
+            viewer: None,
+            _key_guard: None,
         }
     }
 
     fn rendered(&mut self, first_render: bool) {
         if first_render {
             self.link.send_message(Msg::RequestDownloadFilesetFiles);
+            // hotkey listener
+            let link = self.link.clone();
+            self.setup_global_hotkeys(link);
         }
     }
 
@@ -121,7 +131,16 @@ impl Component for ThreeShowcase {
                     Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
+            Msg::ViewerReady(viewer_instance) => self.viewer = Some(viewer_instance),
             Msg::ChangeTypeShow => {
+                if let Some(js_value) = self.viewer.take() {
+                    if let Ok(func_value) = js_sys::Reflect::get(&js_value, &JsValue::from_str("destroy")) {
+                        if let Ok(func) = func_value.dyn_into::<js_sys::Function>() {
+                            let _ = js_sys::Reflect::apply(&func, &js_value, &js_sys::Array::new());
+                            debug!("WebGL/IFC context released cleanly via duck typing");
+                        }
+                    }
+                }
                 self.full_screen = !self.full_screen;
                 if self.full_screen {
                     link.send_message(Msg::ShowThree);
@@ -132,18 +151,23 @@ impl Component for ThreeShowcase {
             },
             Msg::ShowThree => {
                 if let Some((df, model_format)) = &self.selected_file {
-                    preview_model(
-                        df,
-                        *model_format,
-                        self.resource_files
-                            .iter()
-                            .map(|rf| ResourceMapping {
-                                filename: rf.filename.clone(),
-                                download_url: rf.download_url.clone(),
-                            })
-                            .collect(),
-                        self.full_screen
-                    );
+                    let df_clone = df.clone();
+                    let format_clone = *model_format;
+                    let size_clone = self.full_screen;
+                    let resources: Vec<ResourceMapping> = self.resource_files
+                        .iter()
+                        .map(|rf| ResourceMapping {
+                            filename: rf.filename.clone(),
+                            download_url: rf.download_url.clone(),
+                        })
+                        .collect();
+                    let link_clone = link.clone();
+                    spawn_local(async move {
+                        let viewer_instance_op = preview_model(&df_clone, format_clone, resources, size_clone).await;
+                        if let Some(viewer_instance) = viewer_instance_op {
+                            link_clone.send_message(Msg::ViewerReady(viewer_instance));
+                        }
+                    });
                 }
             },
             Msg::ClearError => self.error = None,
@@ -253,5 +277,19 @@ impl ThreeShowcase {
                     .collect();
             }
         }
+    }
+
+    fn setup_global_hotkeys(&mut self, link: ComponentLink<Self>) {
+        let link_clone = link.clone();
+        let closure = Closure::wrap(Box::new(move |e: web_sys::KeyboardEvent| {
+            if e.code() == "KeyF" {
+                e.prevent_default();
+                link_clone.send_message(Msg::ChangeTypeShow);
+            }
+            if e.code() == "Escape" {
+                link_clone.send_message(Msg::ChangeTypeShow);
+            }
+        }) as Box<dyn FnMut(_)>);
+        self._key_guard = Some(KeyboardGuard::new(closure));
     }
 }

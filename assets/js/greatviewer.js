@@ -4,6 +4,7 @@ import { GLTFLoader } from '../../../../three/loaders/GLTFLoader.js';
 import { DRACOLoader } from '../../../../three/loaders/DRACOLoader.js';
 import { GCodeLoader } from '../../../../three/loaders/GCodeLoader.js';
 import { OrbitControls } from '../../../../three/controls/OrbitControls.js';
+import { TransformControls } from '../../../../three/controls/TransformControls.js';
 import Stats from '../../../../three/stats.module.js';
 import { GUI } from '../../../../three/lil-gui.esm.min.js';
 import { fetchWithCache, clearModelCache } from '../../../../three/model-cache.js';
@@ -28,9 +29,9 @@ const COLORS = {
     magenta: 0xff00ff,      // #ff00ff
     white: 0xffffff,        // #ffffff
     dark: 0x000000,         // #000000
+    bg_dark: 0x212529,  // #212529
+    bg_light: 0xf0f2f5, // #f0f2f5
 };
-
-const modelCache = new Map();
 
 export class GreatViewer {
     constructor(config) {
@@ -97,6 +98,7 @@ export class GreatViewer {
         this.renderer = null;
         this.camera = null;
         this.controls = null;
+        this.transformControls = null;
         this.stats = null;
         this.mesh = null;
         this.resizeObserver = null;
@@ -140,15 +142,12 @@ export class GreatViewer {
 
     handleKeyDown(e) {
         if (!this.isInitialized) return;
-        if (e.code === 'Space' || e.code === 'KeyF') {
+        if (e.code === 'Space') {
             e.preventDefault();
         }
-        if (e.code === 'KeyF' && !this.sizeFlag) {
-            document.querySelector('#three-size-button')?.click();
-            return;
-        }
-        if (e.code === 'Escape' && this.sizeFlag) {
-            document.querySelector('#three-modal-close-btn')?.click();
+        if (e.code === 'Escape' && this.sizeFlag && this.transformControls && this.transformControls.object) {
+            this.detachTransformGizmo();
+            e.stopPropagation(); // Stop event bubbling so Rust doesn't close the fullscreen view
             return;
         }
         if (e.code === 'Space' && this.mixer) {
@@ -181,6 +180,24 @@ export class GreatViewer {
         };
         if (keyMap[e.code]) {
             this.updateViewPreset(keyMap[e.code]);
+            return;
+        }
+        if (this.sizeFlag && this.transformControls) {
+            const isTransformationKey = ['KeyW', 'KeyE', 'KeyR'].includes(e.code);
+            if (isTransformationKey && !this.transformControls.object && this.mesh) {
+                this.attachTransformGizmo(this.mesh);
+            }
+            switch (e.code) {
+                case 'KeyW':
+                    this.transformControls.setMode('translate');
+                    break;
+                case 'KeyE':
+                    this.transformControls.setMode('rotate');
+                    break;
+                case 'KeyR':
+                    this.transformControls.setMode('scale');
+                    break;
+            }
         }
     }
 
@@ -208,10 +225,28 @@ export class GreatViewer {
         const size = box.getSize(new THREE.Vector3());
         const maxDim = Math.max(size.x, size.y, size.z);
         const distance = maxDim * 1.5;
-        this.mesh.position.sub(center);
-        this.camera.position.set(distance, distance, distance);
-        this.controls.target.set(0, 0, 0);
+        this.camera.position.set(
+            center.x + distance,
+            center.y + distance,
+            center.z + distance
+        );
+        this.controls.target.copy(center);
         this.controls.update();
+        this.safeRender();
+    }
+
+    initTransformTools() {
+        if (!this.camera || !this.renderer) return;
+        this.transformControls = new TransformControls(this.camera, this.renderer.domElement);
+        this.scene.add(this.transformControls.getHelper());
+        this.transformControls.addEventListener('dragging-changed', (event) => {
+            if (this.controls) {
+                this.controls.enabled = !event.value;
+            }
+        });
+        this.transformControls.addEventListener('change', () => {
+            this.safeRender();
+        });
     }
 
     async starter() {
@@ -232,7 +267,7 @@ export class GreatViewer {
             });
         }
         let container_tag = 'a-container';
-        let backgroundColor = '#fff';
+        let backgroundColor = this.sizeFlag ? COLORS.bg_dark : COLORS.bg_light;
         console.log(`Full screen mode: ${this.sizeFlag}`);
         if (this.sizeFlag) {
             container_tag = 'b-container';
@@ -294,8 +329,10 @@ export class GreatViewer {
         this.container.append(this.renderer.domElement);
 
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-        this.controls.enableDamping = true;
-
+        this.controls.enableDamping = false;
+        if (this.sizeFlag) {
+            this.initTransformTools();
+        }
         this.infoMessage = document.createElement('div');
         this.infoMessage.classList.add('text-center');
         this.container.appendChild(this.infoMessage);
@@ -355,6 +392,14 @@ export class GreatViewer {
         return renderer;
     }
 
+    safeRender() {
+        if (typeof this.requestRender === 'function') {
+            this.requestRender();
+        } else if (!this.animationFrameId && this.renderer && this.scene && this.camera) {
+            this.renderer.render(this.scene, this.camera);
+        }
+    }
+
     startAnimation() {
         // Cancel existing animation if any
         if (this.animationFrameId) {
@@ -371,6 +416,9 @@ export class GreatViewer {
             if (this.container.clientHeight === 0) {
                 this.destroy();
                 return;
+            }
+            if (this.controls) {
+                this.controls.update();
             }
             this.animationFrameId = requestAnimationFrame(animate);
             // Update light points
@@ -394,6 +442,18 @@ export class GreatViewer {
 
         // Start animation
         animate();
+    }
+
+    attachTransformGizmo(object) {
+        if (!this.transformControls) return;
+        this.transformControls.attach(object);
+        this.safeRender();
+    }
+
+    detachTransformGizmo() {
+        if (!this.transformControls) return;
+        this.transformControls.detach();
+        this.safeRender();
     }
 
     onProgress(xhr) {
@@ -433,6 +493,12 @@ export class GreatViewer {
         if (!this.sizeFlag) {
             this.updateViewPreset(this.labels.view_isometric);
             return;
+        }
+        if (this.mesh) {
+            this.attachTransformGizmo(this.mesh);
+        } else if (this.scene) {
+            const loadedObject = this.scene.children.find(child => child.type === 'Group' || child.type === 'Mesh');
+            if (loadedObject) this.attachTransformGizmo(loadedObject);
         }
         this.setControlsGui();
         if (!this.stats) return;
@@ -1077,6 +1143,10 @@ export class GreatViewer {
     }
 
     destroy() {
+        this.detachTransformGizmo();
+        if (this.transformControls) {
+            this.transformControls.dispose();
+        }
         // Removing GUI
         this.gui?.destroy();
         // Clearing previous model before loading new one
@@ -1092,11 +1162,23 @@ export class GreatViewer {
             cancelAnimationFrame(this.animationFrameId);
             this.animationFrameId = null;
         }
+        if (this.renderer) {
+            if (this.renderer.backend && typeof this.renderer.backend.loseContext === 'function') {
+                this.renderer.backend.loseContext();
+            } else if (typeof this.renderer.getContext === 'function') {
+                const gl = this.renderer.getContext();
+                const ext = gl ? gl.getExtension('WEBGL_lose_context') : null;
+                if (ext) ext.loseContext();
+            }
+            this.renderer.dispose();
+            if (this.renderer.domElement && this.renderer.domElement.parentNode) {
+                this.renderer.domElement.parentNode.removeChild(this.renderer.domElement);
+            }
+            this.renderer = null;
+        }
         this.mixer?.stopAllAction();
         // Clearing materials cache
         this.originalMaterials.clear();
-        // Clearing model cache
-        modelCache.clear();
         if (this.resizeObserver) {
             this.resizeObserver.disconnect();
         }

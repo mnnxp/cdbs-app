@@ -12,6 +12,7 @@ mod util;
 mod response_parsing;
 mod subscribers;
 mod clipboard;
+mod event_guard;
 
 pub(crate) mod content_adapter;
 pub(crate) mod title_changer;
@@ -36,3 +37,4 @@ pub(crate) use response_parsing::{
 };
 pub(crate) use subscribers::Counter;
 pub(crate) use clipboard::set_clipboard;
+pub(crate) use event_guard::KeyboardGuard;

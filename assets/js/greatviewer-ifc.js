@@ -41,16 +41,6 @@ export class GreatViewerIFC {
     }
 
     handleKeyDown(e) {
-        if (e.code === 'KeyF' && !this.sizeFlag) {
-            this.destroy();
-            document.querySelector('#three-size-button')?.click();
-            return;
-        }
-        if (e.code === 'Escape' && this.sizeFlag) {
-            this.destroy();
-            document.querySelector('#three-modal-close-btn')?.click();
-            return;
-        }
         if (e.code === 'KeyH' || e.code === 'Digit0' || e.code === 'Numpad0') {
             this.centerModel();
             return;

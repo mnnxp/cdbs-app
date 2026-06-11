@@ -135,6 +135,9 @@ extern "C" {
 
     #[wasm_bindgen(method)]
     async fn starter(this: &GreatViewer);
+
+    #[wasm_bindgen(method)]
+    fn destroy(this: &GreatViewer);
 }
 
 #[wasm_bindgen(module = "/assets/js/greatviewer-ifc.js")]
@@ -146,14 +149,17 @@ extern "C" {
 
     #[wasm_bindgen(method)]
     async fn starter(this: &GreatViewerIFC);
+
+    #[wasm_bindgen(method)]
+    fn destroy(this: &GreatViewerIFC);
 }
 
-pub(crate) fn preview_model(
+pub(crate) async fn preview_model(
     model_file: &DownloadFile,
     model_format: ModelFormat,
     resource_mapping: Vec<ResourceMapping>,
     size_flag: bool
-) {
+) -> Option<JsValue> {
     debug!("viewer");
     let cache_key = format!("{}_{}_{}", model_file.download_url, size_flag, model_format as u8);
     let cached_config = MODEL_CACHE.with(|cache| {
@@ -172,30 +178,30 @@ pub(crate) fn preview_model(
                 },
             };
         });
-        return;
+        return None;
     }
 
     let Some(config_js) = get_js_value(model_file, model_format, resource_mapping, size_flag) else {
         debug!("Failed to create viewer config");
-        return
+        return None;
     };
 
     MODEL_CACHE.with(|cache| {
         cache.borrow_mut().insert(cache_key, config_js.clone());
     });
 
-    spawn_local(async move {
-        match model_format {
-            ModelFormat::IFC => {
-                let viewer = GreatViewerIFC::new(config_js);
-                viewer.starter().await;
-            },
-            _ => {
-                let viewer = GreatViewer::new(config_js);
-                viewer.starter().await;
-            },
-        };
-    });
+    match model_format {
+        ModelFormat::IFC => {
+            let viewer = GreatViewerIFC::new(config_js);
+            viewer.starter().await;
+            Some(viewer.into())
+        },
+        _ => {
+            let viewer = GreatViewer::new(config_js);
+            viewer.starter().await;
+            Some(viewer.into())
+        },
+    }
 }
 
 fn get_js_value(
