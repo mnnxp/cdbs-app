@@ -1,7 +1,7 @@
 import * as THREE from '../../../../three/three.webgpu.min.js';
 import * as OBC from '../../../../three/ifc/components.es.js';
 import Stats from '../../../../three/stats.module.js';
-import { fetchWithCache, clearModelCache } from '../../../../three/model-cache.js';
+import { fetchWithCache } from '../../../../three/model-cache.js';
 
 export class GreatViewerIFC {
     constructor(config) {

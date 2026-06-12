@@ -7,7 +7,7 @@ import { OrbitControls } from '../../../../three/controls/OrbitControls.js';
 import { TransformControls } from '../../../../three/controls/TransformControls.js';
 import Stats from '../../../../three/stats.module.js';
 import { GUI } from '../../../../three/lil-gui.esm.min.js';
-import { fetchWithCache, clearModelCache } from '../../../../three/model-cache.js';
+import { fetchWithCache } from '../../../../three/model-cache.js';
 
 // Environment texture constants
 const ENV_TEXTURES = {
