@@ -26,14 +26,14 @@ export class GreatViewerIFC {
         this.stats = null;
         this.viewModeController = this.labels.view_perspective;
         this.viewPresets = {
-            [this.labels.view_perspective]: { pos: [0, 0, 1], rot: true },
-            [this.labels.view_top]: { pos: [0, 1, 0], rot: false },
-            [this.labels.view_bottom]: { pos: [0, -1, 0], rot: false },
-            [this.labels.view_front]: { pos: [0, 0, 1], rot: false },
-            [this.labels.view_back]: { pos: [0, 0, -1], rot: false },
-            [this.labels.view_left]: { pos: [-1, 0, 0], rot: false },
-            [this.labels.view_right]: { pos: [1, 0, 0], rot: false },
-            [this.labels.view_isometric]: { pos: [1, 1, 1], rot: true }
+            [this.labels.view_perspective]: { pos: [0, 0, 1], rot: true, projection: 'perspective' },
+            [this.labels.view_top]: { pos: [0, 1, 0], rot: false, projection: 'orthographic' },
+            [this.labels.view_bottom]: { pos: [0, -1, 0], rot: false, projection: 'orthographic' },
+            [this.labels.view_front]: { pos: [0, 0, 1], rot: false, projection: 'orthographic' },
+            [this.labels.view_back]: { pos: [0, 0, -1], rot: false, projection: 'orthographic' },
+            [this.labels.view_left]: { pos: [-1, 0, 0], rot: false, projection: 'orthographic' },
+            [this.labels.view_right]: { pos: [1, 0, 0], rot: false, projection: 'orthographic' },
+            [this.labels.view_isometric]: { pos: [1, 1, 1], rot: true, projection: 'perspective' }
         };
         this.animationFrameId = null;
         this._updateCoreBound = null;
@@ -43,20 +43,29 @@ export class GreatViewerIFC {
     }
 
     handleKeyDown(e) {
-        if (e.code === 'KeyH' || e.code === 'Digit0' || e.code === 'Numpad0') {
+        if (!this.isInitialized) return;
+        if (e.code === 'KeyH') {
             this.centerModel();
             return;
         }
         const keyMap = {
-            'Digit1': this.labels.view_top, 'Numpad1': this.labels.view_top,
-            'Digit2': this.labels.view_front, 'Numpad2': this.labels.view_front,
-            'Digit3': this.labels.view_left, 'Numpad3': this.labels.view_left,
-            'Digit4': this.labels.view_perspective, 'Numpad4': this.labels.view_perspective,
-            'Digit5': this.labels.view_isometric, 'Numpad5': this.labels.view_isometric
+            // Flat views
+            'Digit1': 'front',     'Numpad1': 'front',
+            'Digit3': 'left',      'Numpad3': 'left',
+            'Digit7': 'top',       'Numpad7': 'top',
+            'Digit0': 'isometric', 'Numpad0': 'isometric',
         };
-        if (keyMap[e.code]) {
-            this.updateViewPreset(keyMap[e.code]);
+        const action = keyMap[e.code];
+        if (!action) return; // Ignore unmapped keys
+        const viewPresets = ['front', 'left', 'top', 'isometric'];
+        if (viewPresets.includes(action)) {
+            const labelKey = `view_${action}`;
+            const translatedPreset = this.labels[labelKey];
+            if (translatedPreset) {
+                this.updateViewPreset(translatedPreset);
+            }
         }
+        e.preventDefault();
     }
 
     async starter() {
@@ -164,7 +173,7 @@ export class GreatViewerIFC {
             grids.create(this.world);
             await this.initializeAdvancedFeatures();
         }
-        this.resize()
+        this.resize();
     }
 
     async loadIFC() {

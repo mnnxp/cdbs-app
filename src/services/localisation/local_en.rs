@@ -440,7 +440,7 @@ lazy_static! {
             (433, "Light"),
             (434, "File"),
             (435, "Size"),
-            (436, "F: fullscreen | 1-5: views"),
+            (436, "F: fullscreen | 1,3,7,0: views | 5: camera"),
             (437, "Hide Textures"),
             (438, "all"),
             (439, "up to current"),

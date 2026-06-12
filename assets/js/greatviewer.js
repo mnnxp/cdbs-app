@@ -97,6 +97,7 @@ export class GreatViewer {
         this.scene = null;
         this.renderer = null;
         this.camera = null;
+        this.isOrthographic = false;
         this.controls = null;
         this.transformControls = null;
         this.stats = null;
@@ -161,7 +162,7 @@ export class GreatViewer {
             this.toggleSlicerAnimation(!this.isPlayingAnimation);
             return;
         }
-        if (e.code === 'KeyH' || e.code === 'Digit0' || e.code === 'Numpad0') {
+        if (e.code === 'KeyH') {
             this.controls?.reset();
             return;
         }
@@ -169,17 +170,6 @@ export class GreatViewer {
             this.isWireframe = !this.isWireframe;
             if (this.isWireframe) this.useCustomMaterial = true;
             this.updateMaterial();
-            return;
-        }
-        const keyMap = {
-            'Digit1': this.labels.view_top, 'Numpad1': this.labels.view_top,
-            'Digit2': this.labels.view_front, 'Numpad2': this.labels.view_front,
-            'Digit3': this.labels.view_left, 'Numpad3': this.labels.view_left,
-            'Digit4': this.labels.view_perspective, 'Numpad4': this.labels.view_perspective,
-            'Digit5': this.labels.view_isometric, 'Numpad5': this.labels.view_isometric
-        };
-        if (keyMap[e.code]) {
-            this.updateViewPreset(keyMap[e.code]);
             return;
         }
         if (this.sizeFlag && this.transformControls) {
@@ -199,6 +189,41 @@ export class GreatViewer {
                     break;
             }
         }
+        const keyMap = {
+            // Flat views
+            'Digit1': 'front',     'Numpad1': 'front',
+            'Digit3': 'left',      'Numpad3': 'left',
+            'Digit7': 'top',       'Numpad7': 'top',
+            'Digit0': 'isometric', 'Numpad0': 'isometric',
+            // Rotations
+            'Digit2': 'rotate_down',   'Numpad2': 'rotate_down',
+            'Digit4': 'rotate_left',   'Numpad4': 'rotate_left',
+            'Digit6': 'rotate_right',  'Numpad6': 'rotate_right',
+            'Digit8': 'rotate_up',     'Numpad8': 'rotate_up',
+            // Camera modes
+            'Digit5': 'toggle_camera', 'Numpad5': 'toggle_camera',
+        };
+        const action = keyMap[e.code];
+        if (!action) return; // Ignore unmapped keys
+        const viewPresets = ['front', 'left', 'top', 'isometric'];
+        const rotateActions = ['rotate_up', 'rotate_down', 'rotate_left', 'rotate_right'];
+        if (viewPresets.includes(action)) {
+            const labelKey = `view_${action}`;
+            const translatedPreset = this.labels[labelKey];
+            if (translatedPreset) {
+                this.updateViewPreset(translatedPreset);
+            }
+            // Auto-switch camera mode
+            const shouldBeOrtho = action !== 'isometric';
+            if (this.isOrthographic !== shouldBeOrtho) {
+                this.toggleCameraMode(shouldBeOrtho);
+            }
+        } else if (rotateActions.includes(action)) {
+            this.rotateCameraDiscrete(action);
+        } else if (action === 'toggle_camera') {
+            this.toggleCameraMode();
+        }
+        e.preventDefault();
     }
 
     setQuality(level) {
@@ -231,6 +256,83 @@ export class GreatViewer {
             center.z + distance
         );
         this.controls.target.copy(center);
+        // Update orthographic frustum if active
+        if (this.isOrthographic) {
+            const aspect = this.container.clientWidth / this.container.clientHeight;
+            const viewSize = maxDim * 0.6;
+            this.camera.left = -viewSize * aspect;
+            this.camera.right = viewSize * aspect;
+            this.camera.top = viewSize;
+            this.camera.bottom = -viewSize;
+            this.camera.zoom = 1;
+            this.camera.updateProjectionMatrix();
+        }
+        this.controls.update();
+        this.safeRender();
+    }
+
+    toggleCameraMode(isOrthographic = null) {
+        const targetMode = (isOrthographic === null) ? !this.isOrthographic : isOrthographic;
+        if (this.isOrthographic === targetMode) return;
+        const currentPosition = this.camera.position.clone();
+        const currentTarget = this.controls.target.clone();
+        const aspect = this.container.clientWidth / this.container.clientHeight;
+        let newCamera;
+        if (targetMode) {
+            // Orthographic: calculate frustum size based on current view
+            const distance = currentPosition.distanceTo(currentTarget);
+            const visibleHeight = Math.tan((45 * Math.PI) / 360) * distance * 2;
+            const visibleWidth = visibleHeight * aspect;
+            newCamera = new THREE.OrthographicCamera(
+                -visibleWidth / 2, visibleWidth / 2,
+                visibleHeight / 2, -visibleHeight / 2,
+                0.1, 5000
+            );
+            console.log("Switched to OrthographicCamera");
+        } else {
+            // Perspective
+            newCamera = new THREE.PerspectiveCamera(45, aspect, 0.1, 5000);
+            console.log("Switched to PerspectiveCamera");
+        }
+        newCamera.position.copy(currentPosition);
+        newCamera.quaternion.copy(this.camera.quaternion);
+        newCamera.up.copy(this.camera.up);
+        const oldCamera = this.camera;
+        this.camera = newCamera;
+        this.controls.object = this.camera;
+        this.controls.target.copy(currentTarget);
+        this.controls.update();
+        if (this.transformControls) {
+            this.transformControls.camera = this.camera;
+        }
+        if (oldCamera.dispose) oldCamera.dispose();
+        this.isOrthographic = targetMode;
+        this.safeRender();
+    }
+
+    rotateCameraDiscrete(direction, angleDegrees = 15) {
+        if (!this.controls || !this.camera) return;
+        const angleRadians = (angleDegrees * Math.PI) / 180;
+        const offset = this.camera.position.clone().sub(this.controls.target);
+        switch (direction) {
+            case 'rotate_left':
+                offset.applyAxisAngle(new THREE.Vector3(0, 1, 0), -angleRadians);
+                break;
+            case 'rotate_right':
+                offset.applyAxisAngle(new THREE.Vector3(0, 1, 0), angleRadians);
+                break;
+            case 'rotate_up': {
+                const right = new THREE.Vector3(1, 0, 0).applyQuaternion(this.camera.quaternion);
+                offset.applyAxisAngle(right, -angleRadians);
+                break;
+            }
+            case 'rotate_down': {
+                const right = new THREE.Vector3(1, 0, 0).applyQuaternion(this.camera.quaternion);
+                offset.applyAxisAngle(right, angleRadians);
+                break;
+            }
+        }
+        this.camera.position.copy(this.controls.target).add(offset);
         this.controls.update();
         this.safeRender();
     }
@@ -313,6 +415,7 @@ export class GreatViewer {
         const aspect = clientWidth / clientHeight;
         this.camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
         this.camera.position.set(0, 0, 70);
+        this.isOrthographic = false;
 
         // Create the renderer
         this.renderer = await this.createRenderer();
@@ -675,7 +778,6 @@ export class GreatViewer {
         this.gui.add(controlParams, 'customScale', 0.01, 2)
             .name(this.labels.model_scale)
             .onChange((value) => this.scene.scale.set(value, value, value));
-
         // GCode specific controls
         if (isGCode && this.gcodeLayers && this.gcodeLayers.length > 0) {
             const gcodeFolder = this.gui.addFolder('GCode');
