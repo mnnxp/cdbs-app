@@ -35,6 +35,8 @@ export class GreatViewerIFC {
             [this.labels.view_right]: { pos: [1, 0, 0], rot: false },
             [this.labels.view_isometric]: { pos: [1, 1, 1], rot: true }
         };
+        this.animationFrameId = null;
+        this._updateCoreBound = null;
         // Hotkeys handler
         this.handleKeyDown = this.handleKeyDown.bind(this);
         document.addEventListener('keydown', this.handleKeyDown);
@@ -62,6 +64,19 @@ export class GreatViewerIFC {
         this.startTime = performance.now();
         this.initPromise = this._starterInternal();
         return this.initPromise;
+    }
+
+    startRenderLoop() {
+        if (this.animationFrameId) return;
+        const loop = () => {
+            if (!this.isInitialized) return;
+            const fragments = this.components.get(OBC.FragmentsManager);
+            if (fragments && fragments.core) {
+                fragments.core.update(true);
+            }
+            this.animationFrameId = requestAnimationFrame(loop);
+        };
+        this.animationFrameId = requestAnimationFrame(loop);
     }
 
     async _starterInternal() {
@@ -121,7 +136,7 @@ export class GreatViewerIFC {
             }
             camera.three.updateProjectionMatrix();
         }
-        this.requestRender();
+        this.updateStats();
     }
 
     async initializeWorld() {
@@ -170,8 +185,9 @@ export class GreatViewerIFC {
         }
         try {
             await this.initializeFragmentsManager();
+            this.startRenderLoop();
             const ifcLoader = this.components.get(OBC.IfcLoader);
-            await ifcLoader.load(buffer, false, this.model.filename, {
+            const model = await ifcLoader.load(buffer, false, this.model.filename, {
                 processData: {includeProperties: false, fast: true}
             });
         } catch (error) {
@@ -184,19 +200,34 @@ export class GreatViewerIFC {
         const fragments = this.components.get(OBC.FragmentsManager);
         const workerUrl = this.ifcPath + 'worker.mjs';
         await fragments.init(workerUrl);
+        console.log('[FragmentsManager] Worker initialized');
         fragments.list.onItemSet.add(({ value: model }) => {
+            if (!this.world?.camera?.three) {
+                console.error('[FragmentsManager] Cannot add model - camera not ready');
+                return;
+            }
             model.useCamera(this.world.camera.three);
             this.world.scene.three.add(model.object);
-            fragments.core.update(true);
             this.modelGroup = model.object;
+            try {
+                fragments.core.update(true);
+            } catch (e) {
+                console.warn('[FragmentsManager] Initial render error:', e.message);
+            }
+            console.log('[FragmentsManager] Model added to scene');
         });
-        const updateCore = () => {
+        this._updateCoreBound = () => {
             if (!this.isInitialized || this.container?.clientHeight === 0) return;
-            fragments.core.update(true);
-            this.requestRender();
+            try {
+                fragments.core.update(false);
+            } catch (e) {
+                console.warn('[FragmentsManager] Update error:', e.message);
+            }
         };
-        this.world.camera.controls.addEventListener("update", updateCore);
-        this.world.camera.controls.addEventListener("rest", updateCore);
+        if (this.world?.camera?.controls) {
+            this.world.camera.controls.addEventListener("update", this._updateCoreBound);
+            this.world.camera.controls.addEventListener("rest", this._updateCoreBound);
+        }
     }
 
     async initializeAdvancedFeatures() {
@@ -204,9 +235,8 @@ export class GreatViewerIFC {
         this.container.appendChild(this.stats.dom);
     }
 
-    requestRender() {
+    updateStats() {
         if (!this.container || this.container.clientHeight === 0) {
-            this.destroy();
             return;
         }
         if (!this.world || !this.world.renderer) return;
@@ -250,7 +280,7 @@ export class GreatViewerIFC {
                 center.x, center.y, center.z,
                 true
             );
-            this.requestRender();
+            this.updateStats();
         }
         if (this.gui) {
             const viewCtrl = this.gui.controllers.find(c => c.property === 'viewModeController');
@@ -290,23 +320,102 @@ export class GreatViewerIFC {
     }
 
     destroy() {
-        console.log('Destroying GreatViewerIFC:', this.isInitialized);
-        if (!this.isInitialized) return;
+        if (this._isDestroying) return;
+        this._isDestroying = true;
+        console.log('Destroying GreatViewerIFC. Status was:', this.isInitialized);
         this.isInitialized = false;
+        if (this.animationFrameId) {
+            cancelAnimationFrame(this.animationFrameId);
+            this.animationFrameId = null;
+        }
+        if (this.components) {
+            try {
+                const fragments = this.components.get(OBC.FragmentsManager);
+                if (fragments && fragments.worker) {
+                    fragments.worker.terminate();
+                    fragments.worker = null;
+                    console.log('Worker terminated via FragmentsManager');
+                }
+            } catch (e) {
+                console.error('Failed to terminate via FragmentsManager:', e);
+            }
+        }
+        if (this.modelGroup) {
+            try {
+                this.modelGroup.traverse((obj) => {
+                    if (obj.isMesh) {
+                        if (obj.geometry) obj.geometry.dispose();
+                        if (obj.material) {
+                            if (Array.isArray(obj.material)) {
+                                obj.material.forEach(m => m.dispose());
+                            } else {
+                                obj.material.dispose();
+                            }
+                        }
+                    }
+                });
+                if (this.world?.scene?.three) {
+                    this.world.scene.three.remove(this.modelGroup);
+                }
+            } catch (e) {
+                console.warn('Model cleanup error:', e);
+            }
+            this.modelGroup = null;
+        }
+        if (this.renderer) {
+            try {
+                this.renderer.dispose();
+                if (this.renderer.domElement) {
+                    this.renderer.domElement.remove();
+                }
+            } catch (e) {
+                console.warn('Base renderer disposal error:', e);
+            }
+            this.renderer = null;
+        }
         if (this.world?.renderer) {
             try {
-                this.world.renderer.forceContextLoss();
+                if (typeof this.world.renderer.forceContextLoss === 'function') {
+                    this.world.renderer.forceContextLoss();
+                }
+                this.world.renderer.dispose();
             } catch (e) {
-                console.warn('Error during forceContextLoss:', e);
+                console.warn('World renderer disposal error:', e);
             }
-            this.world.renderer.dispose();
-            this.world.renderer.domElement = null;
             this.world.renderer = null;
         }
-        this.controls?.dispose();
-        this.world?.scene?.dispose();
-        this.world?.camera?.dispose();
-        this.container && (this.container.textContent = '');
+        try {
+            if (this.world) {
+                if (this.world.scene) this.world.scene.dispose();
+                if (this.world.camera) this.world.camera.dispose();
+                this.world = null;
+            }
+        } catch (e) {
+            console.warn('World disposal error:', e);
+        }
+        if (this.components) {
+            try {
+                const ifcLoader = this.components.get(OBC.IfcLoader);
+                if (ifcLoader && typeof ifcLoader.cleanUp === 'function') {
+                    ifcLoader.cleanUp();
+                }
+            } catch (e) {
+                console.warn('IfcLoader cleanup skipped:', e);
+            }
+            try {
+                this.components.dispose();
+                console.log('[OBC] Components core disposed');
+            } catch (e) {
+                console.error('Error disposing components:', e);
+            }
+            this.components = null;
+        }
+        if (this.container) {
+            this.container.textContent = '';
+            this.container = null;
+        }
         document.removeEventListener('keydown', this.handleKeyDown);
+        console.log('GreatViewerIFC destroyed completely without errors');
+        this._isDestroying = false;
     }
 }

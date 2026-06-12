@@ -133,14 +133,7 @@ impl Component for ThreeShowcase {
             },
             Msg::ViewerReady(viewer_instance) => self.viewer = Some(viewer_instance),
             Msg::ChangeTypeShow => {
-                if let Some(js_value) = self.viewer.take() {
-                    if let Ok(func_value) = js_sys::Reflect::get(&js_value, &JsValue::from_str("destroy")) {
-                        if let Ok(func) = func_value.dyn_into::<js_sys::Function>() {
-                            let _ = js_sys::Reflect::apply(&func, &js_value, &js_sys::Array::new());
-                            debug!("WebGL/IFC context released cleanly via duck typing");
-                        }
-                    }
-                }
+                self.destroy_viewer();
                 self.full_screen = !self.full_screen;
                 if self.full_screen {
                     link.send_message(Msg::ShowThree);
@@ -180,6 +173,7 @@ impl Component for ThreeShowcase {
             debug!("no change: {:?}", self.props.fileset_uuid);
             false
         } else {
+            self.destroy_viewer();
             self.props = props;
             self.file_arr.clear();
             self.full_screen = false;
@@ -190,6 +184,11 @@ impl Component for ThreeShowcase {
             debug!("change: {:?}", self.props.fileset_uuid);
             true
         }
+    }
+
+    fn destroy(&mut self) {
+        debug!("Сleaning up viewer");
+        self.destroy_viewer();
     }
 
     fn view(&self) -> Html {
@@ -291,5 +290,16 @@ impl ThreeShowcase {
             }
         }) as Box<dyn FnMut(_)>);
         self._key_guard = Some(KeyboardGuard::new(closure));
+    }
+
+    fn destroy_viewer(&mut self) {
+        if let Some(js_value) = self.viewer.take() {
+            if let Ok(func_value) = js_sys::Reflect::get(&js_value, &JsValue::from_str("destroy")) {
+                if let Ok(func) = func_value.dyn_into::<js_sys::Function>() {
+                    let _ = js_sys::Reflect::apply(&func, &js_value, &js_sys::Array::new());
+                    debug!("WebGL/IFC context released cleanly via duck typing");
+                }
+            }
+        }
     }
 }
