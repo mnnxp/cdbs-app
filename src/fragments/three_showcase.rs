@@ -45,6 +45,7 @@ pub enum Msg {
     ViewerReady(JsValue),
     ChangeTypeShow,
     ShowThree,
+    Close,
     ClearError,
 }
 
@@ -135,12 +136,7 @@ impl Component for ThreeShowcase {
             Msg::ChangeTypeShow => {
                 self.destroy_viewer();
                 self.full_screen = !self.full_screen;
-                if self.full_screen {
-                    link.send_message(Msg::ShowThree);
-                } else {
-                    // hide 3D view to stop unnecessary rendering
-                    self.props.on_exit_fullscreen.emit(());
-                }
+                link.send_message(Msg::ShowThree);
             },
             Msg::ShowThree => {
                 if let Some((df, model_format)) = &self.selected_file {
@@ -162,6 +158,12 @@ impl Component for ThreeShowcase {
                         }
                     });
                 }
+            },
+            Msg::Close => {
+                self.destroy_viewer();
+                self.full_screen = false;
+                // hide 3D view to stop unnecessary rendering
+                self.props.on_exit_fullscreen.emit(());
             },
             Msg::ClearError => self.error = None,
         };
@@ -286,7 +288,7 @@ impl ThreeShowcase {
                 link_clone.send_message(Msg::ChangeTypeShow);
             }
             if e.code() == "Escape" {
-                link_clone.send_message(Msg::ChangeTypeShow);
+                link_clone.send_message(Msg::Close);
             }
         }) as Box<dyn FnMut(_)>);
         self._key_guard = Some(KeyboardGuard::new(closure));
