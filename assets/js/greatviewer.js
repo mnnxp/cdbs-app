@@ -2,6 +2,7 @@ import * as THREE from '../../../../three/three.webgpu.min.js';
 import { STLLoader } from '../../../../three/loaders/STLLoader.js';
 import { GLTFLoader } from '../../../../three/loaders/GLTFLoader.js';
 import { DRACOLoader } from '../../../../three/loaders/DRACOLoader.js';
+import { STEPLoader } from '../../../../three/loaders/STEPLoader.js';
 import { GCodeLoader } from '../../../../three/loaders/GCodeLoader.js';
 import { OrbitControls } from '../../../../three/controls/OrbitControls.js';
 import { TransformControls } from '../../../../three/controls/TransformControls.js';
@@ -46,6 +47,8 @@ export class GreatViewer {
         this.startTime = null;
         this.isInitialized = false;
         this.initPromise = null;
+        // this.isModelLoading = false;
+        this.svgLoading = '<img src="../../../../icons/mini_loading.svg" />';
         // Materials
         this.envTexture = new THREE.CubeTextureLoader().load([
             ENV_TEXTURES.pxImg, //right
@@ -457,7 +460,7 @@ export class GreatViewer {
         this.container.appendChild(this.infoMessage);
 
         // Start loading
-        this.loadModel();
+        await this.loadModel();
 
         if (this.sizeFlag) {
             this.stats = new Stats();
@@ -620,7 +623,7 @@ export class GreatViewer {
         }
     }
 
-    loadModel() {
+    async loadModel() {
         console.log('=== STARTING LOAD ===');
         console.log('Model format:', this.modelFormat);
         console.log('Resource mapping count:', this.resourceMapping?.length || 0);
@@ -694,6 +697,25 @@ export class GreatViewer {
                         this.onError(error);
                         glbResources.dispose();
                     });
+                break;
+            case 'STEP':
+                const stepLoader = new STEPLoader();
+                try {
+                    const buffer = await fetchWithCache(this.model.url, (percent) => {
+                        this.infoMessage.innerHTML = percent.toFixed(1) + '%';
+                    });
+                    this.infoMessage.innerHTML = this.svgLoading;
+                    const group = await stepLoader.loadFromBuffer(buffer);
+                    this.mesh = group;
+                    this.scene.add(this.mesh);
+                    this.centerAndFitCamera();
+                    this.onComplete();
+                } catch (error) {
+                    console.error('[STEP] Error:', error);
+                    this.onError(error);
+                } finally {
+                    stepLoader.terminate();
+                }
                 break;
             case 'GCode':
                 if (this.sizeFlag) {
