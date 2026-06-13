@@ -139,17 +139,14 @@ export class GreatViewer {
         // Hotkeys handler
         this.handleKeyDown = this.handleKeyDown.bind(this);
         document.addEventListener('keydown', this.handleKeyDown);
+        this.handleDoubleClick = this.handleDoubleClick.bind(this);
+        this._isDestroying = false;
     }
 
     handleKeyDown(e) {
         if (!this.isInitialized) return;
         if (e.code === 'Space') {
             e.preventDefault();
-        }
-        if (e.code === 'Escape' && this.sizeFlag && this.transformControls && this.transformControls.object) {
-            this.detachTransformGizmo();
-            e.stopPropagation(); // Stop event bubbling so Rust doesn't close the fullscreen view
-            return;
         }
         if (e.code === 'Space' && this.mixer) {
             this.toggleAnimation(!this.isPlayingAnimation);
@@ -163,13 +160,24 @@ export class GreatViewer {
             return;
         }
         if (e.code === 'KeyH') {
+            e.preventDefault()
             this.controls?.reset();
             return;
         }
         if (e.code === 'KeyZ') {
+            e.preventDefault()
             this.isWireframe = !this.isWireframe;
             if (this.isWireframe) this.useCustomMaterial = true;
             this.updateMaterial();
+            return;
+        }
+        if (e.code === 'KeyT') {
+            e.preventDefault();
+            if (this.transformControls?.object) {
+                this.detachTransformGizmo();
+            } else if (this.mesh) {
+                this.attachTransformGizmo(this.mesh);
+            }
             return;
         }
         if (this.sizeFlag && this.transformControls) {
@@ -188,6 +196,7 @@ export class GreatViewer {
                     this.transformControls.setMode('scale');
                     break;
             }
+            if (isTransformationKey) return;
         }
         const keyMap = {
             // Flat views
@@ -223,6 +232,12 @@ export class GreatViewer {
         } else if (action === 'toggle_camera') {
             this.toggleCameraMode();
         }
+        e.preventDefault();
+    }
+
+    handleDoubleClick(e) {
+        if (!this.isInitialized) return;
+        this.initPivotSelection(e);
         e.preventDefault();
     }
 
@@ -436,6 +451,7 @@ export class GreatViewer {
         if (this.sizeFlag) {
             this.initTransformTools();
         }
+        this.container.addEventListener('dblclick', this.handleDoubleClick);
         this.infoMessage = document.createElement('div');
         this.infoMessage.classList.add('text-center');
         this.container.appendChild(this.infoMessage);
@@ -594,12 +610,6 @@ export class GreatViewer {
         if (!this.sizeFlag) {
             this.updateViewPreset(this.labels.view_isometric);
             return;
-        }
-        if (this.mesh) {
-            this.attachTransformGizmo(this.mesh);
-        } else if (this.scene) {
-            const loadedObject = this.scene.children.find(child => child.type === 'Group' || child.type === 'Mesh');
-            if (loadedObject) this.attachTransformGizmo(loadedObject);
         }
         this.setControlsGui();
         if (!this.stats) return;
@@ -1242,7 +1252,32 @@ export class GreatViewer {
         return false;
     }
 
+    // Initialize double-click focus (pivot point)
+    initPivotSelection(e) {
+        if (this.transformControls?.object) return;
+        const rect = this.renderer.domElement.getBoundingClientRect();
+        const mouse = new THREE.Vector2(
+            ((e.clientX - rect.left) / rect.width) * 2 - 1,
+            -((e.clientY - rect.top) / rect.height) * 2 + 1
+        );
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(mouse, this.camera);
+        // Find intersection with the model
+        const intersects = raycaster.intersectObject(this.mesh, true);
+        if (intersects.length > 0) {
+            const hitPoint = intersects[0].point;
+            // Smoothly update orbit control target
+            this.controls.target.copy(hitPoint);
+            this.controls.update();
+            this.safeRender();
+            console.log(`Pivot set to: ${hitPoint.x.toFixed(2)}, ${hitPoint.y.toFixed(2)}, ${hitPoint.z.toFixed(2)}`);
+        }
+    }
+
     destroy() {
+        if (this._isDestroying) return;
+        this._isDestroying = true;
+        console.log('Destroying GreatViewer. Status was:', this.isInitialized);
         this.detachTransformGizmo();
         if (this.transformControls) {
             this.transformControls.dispose();
@@ -1291,5 +1326,8 @@ export class GreatViewer {
         this.isInitialized = false;
         // Unsubscribing from events
         document.removeEventListener('keydown', this.handleKeyDown);
+        if (this.container && this.handleDoubleClick) {
+            this.container.removeEventListener('dblclick', this.handleDoubleClick);
+        }
     }
 }
