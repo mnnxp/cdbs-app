@@ -792,7 +792,10 @@ export class GreatViewer {
             materialMeshColor: this.material.color.getHex(),
             customScale: 0.5,
         };
-        this.gui.add(controlParams, 'showAxesHelper')
+        // Display controls folder
+        const displayFolder = this.gui.addFolder(this.labels.display);
+        displayFolder.open();
+        displayFolder.add(controlParams, 'showAxesHelper')
             .name(this.labels.axes)
             .onChange((value) => {
                 if (value) {
@@ -802,10 +805,10 @@ export class GreatViewer {
                 }
                 this.showAxesHelper = value;
             });
-        this.gui.add(controlParams, 'sceneRotation')
+        displayFolder.add(controlParams, 'sceneRotation')
             .name(this.labels.rotation)
             .onChange((value) => this.sceneRotation = value);
-        this.gui.add(controlParams, 'customScale', 0.01, 2)
+        displayFolder.add(controlParams, 'customScale', 0.01, 2)
             .name(this.labels.model_scale)
             .onChange((value) => this.scene.scale.set(value, value, value));
         // GCode specific controls
