@@ -141,7 +141,6 @@ export class GreatViewer {
         this.displayMode = this.labels.display_up_to_current;
         // Hotkeys handler
         this.handleKeyDown = this.handleKeyDown.bind(this);
-        document.addEventListener('keydown', this.handleKeyDown);
         this.handleDoubleClick = this.handleDoubleClick.bind(this);
         this._isDestroying = false;
     }
@@ -454,6 +453,7 @@ export class GreatViewer {
         if (this.sizeFlag) {
             this.initTransformTools();
         }
+        this.container.addEventListener('keydown', this.handleKeyDown);
         this.container.addEventListener('dblclick', this.handleDoubleClick);
         this.infoMessage = document.createElement('div');
         this.infoMessage.classList.add('text-center');
@@ -1303,6 +1303,9 @@ export class GreatViewer {
         if (this._isDestroying) return;
         this._isDestroying = true;
         console.log('Destroying GreatViewer. Status was:', this.isInitialized);
+        // Unsubscribing from events
+        this.container?.removeEventListener('keydown', this.handleKeyDown);
+        this.container?.removeEventListener('dblclick', this.handleDoubleClick);
         this.detachTransformGizmo();
         if (this.transformControls) {
             this.transformControls.dispose();
@@ -1349,10 +1352,5 @@ export class GreatViewer {
         }
         // Mark as destroyed
         this.isInitialized = false;
-        // Unsubscribing from events
-        document.removeEventListener('keydown', this.handleKeyDown);
-        if (this.container && this.handleDoubleClick) {
-            this.container.removeEventListener('dblclick', this.handleDoubleClick);
-        }
     }
 }
