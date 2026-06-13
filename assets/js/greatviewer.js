@@ -496,9 +496,7 @@ export class GreatViewer {
     }
 
     safeRender() {
-        if (typeof this.requestRender === 'function') {
-            this.requestRender();
-        } else if (!this.animationFrameId && this.renderer && this.scene && this.camera) {
+        if (!this.animationFrameId && this.renderer && this.scene && this.camera) {
             this.renderer.render(this.scene, this.camera);
         }
     }
