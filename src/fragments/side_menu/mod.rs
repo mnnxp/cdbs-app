@@ -63,12 +63,12 @@ impl SideMenu {
         html! {
             <li class={final_class} onclick={item.action.clone()}>
                 <a>
-                    <span>{item.title.clone()}</span>
+                    <span>{item.title}</span>
                     <div hidden={hide_tag}>
                         <span class="tag is-info is-small">{item.count}</span>
                     </div>
                     {for item.icon_classes.iter().map(|icon_class|
-                        html!{ <i class={icon_class.clone()}></i> }
+                        html!{ <i class={*icon_class}></i> }
                     )}
                 </a>
             </li>
