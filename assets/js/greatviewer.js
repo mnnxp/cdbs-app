@@ -146,7 +146,9 @@ export class GreatViewer {
     }
 
     handleKeyDown(e) {
-        if (!this.isInitialized) return;
+        if (!this.isInitialized || e.target.tagName !== 'CANVAS') {
+            return;
+        }
         if (e.code === 'Space') {
             e.preventDefault();
         }
@@ -447,14 +449,18 @@ export class GreatViewer {
 
         // Add the automatically created <canvas> element to the page
         this.container.append(this.renderer.domElement);
+        this.renderer.domElement.setAttribute('tabindex', '0');
+        this.renderer.domElement.style.outline = 'none';
+        setTimeout(() => { this.renderer.domElement.focus(); }, 100);
+        this.renderer.domElement.addEventListener('keydown', this.handleKeyDown);
+        this.renderer.domElement.addEventListener('dblclick', this.handleDoubleClick);
 
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
         this.controls.enableDamping = false;
         if (this.sizeFlag) {
             this.initTransformTools();
         }
-        this.container.addEventListener('keydown', this.handleKeyDown);
-        this.container.addEventListener('dblclick', this.handleDoubleClick);
+
         this.infoMessage = document.createElement('div');
         this.infoMessage.classList.add('text-center');
         this.container.appendChild(this.infoMessage);
@@ -1304,8 +1310,8 @@ export class GreatViewer {
         this._isDestroying = true;
         console.log('Destroying GreatViewer. Status was:', this.isInitialized);
         // Unsubscribing from events
-        this.container?.removeEventListener('keydown', this.handleKeyDown);
-        this.container?.removeEventListener('dblclick', this.handleDoubleClick);
+        this.renderer?.domElement?.removeEventListener('keydown', this.handleKeyDown);
+        this.renderer?.domElement?.removeEventListener('dblclick', this.handleDoubleClick);
         this.detachTransformGizmo();
         if (this.transformControls) {
             this.transformControls.dispose();
