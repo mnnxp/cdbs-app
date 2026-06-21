@@ -494,29 +494,15 @@ export class GreatViewer {
         this.resizeObserver.observe(this.container);
     }
 
-    /**
-     * Initializes the unified WebGPURenderer with an automatic WebGL2 fallback.
-     * @returns {Promise<THREE.WebGPURenderer>} The initialized renderer instance.
-     */
     async createRenderer() {
-        const isWebGPUSupported = !!(navigator.gpu && navigator.gpu.requestAdapter);
-        if (!isWebGPUSupported) {
-            console.warn('CADBase Viewer: WebGPU API is missing in this browser. Falling back to WebGL2.');
-        }
         const renderer = new THREE.WebGPURenderer({
             alpha: true,
             depth: true,
             stencil: false,
             antialias: true
         });
-        try {
-            await renderer.init();
-            console.log(`CADBase Viewer: Renderer successfully initialized on backend: "${renderer.backend.name}"`);
-        } catch (error) {
-            console.error('CADBase Viewer: Critical error during renderer initialization:', error);
-            throw error;
-        }
-
+        await renderer.init();
+        console.log(`CADBase Viewer: Renderer initialized on backend: "${renderer.backend.name}"`);
         return renderer;
     }
 
