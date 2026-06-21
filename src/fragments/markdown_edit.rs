@@ -18,7 +18,7 @@ pub struct Props {
 }
 
 pub enum Msg {
-  PreviewDescription,
+  SetPreview(bool),
 }
 
 impl Component for MarkdownEditCard {
@@ -35,7 +35,7 @@ impl Component for MarkdownEditCard {
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
-            Msg::PreviewDescription => self.is_preview = !self.is_preview,
+            Msg::SetPreview(state) => self.is_preview = state,
         }
         true
     }
@@ -51,36 +51,62 @@ impl Component for MarkdownEditCard {
     }
 
     fn view(&self) -> Html {
-        let (text_btn, style_preview, style_raw) = match self.is_preview {
-            true => (get_value_field(&334), "", "display: none;"),
-            false => (get_value_field(&335), "display: none;", ""),
-        };
         let textarea_id = unique_id("markdown-raw");
+        let (tab_write_class, tab_preview_class) = match self.is_preview {
+            true => ("", "is-active"),
+            false => ("is-active", ""),
+        };
+
         html!{
             <div id={unique_id(&self.props.id_tag)}>
-                <label class={"label"} for={textarea_id.clone()}>{self.props.title.clone()}</label>
+                <div class="mb-2">
+                    <label class="label mb-0" for={textarea_id.clone()}>
+                        {self.props.title.clone()}
+                    </label>
+                </div>
                 <div class="card is-shadowless card-bordered">
-                    <header class="card-header">
-                        <button class="card-footer-item button is-white is-small" onclick={self.link.callback(|_| Msg::PreviewDescription)}>{text_btn}</button>
+                    <header class="card-header px-3 is-shadowless">
+                        <div class="tabs is-small m-0 p-0">
+                            <ul class="m-0 p-0">
+                                <li class={tab_write_class}>
+                                    <a onclick={self.link.callback(|_| Msg::SetPreview(false))}>
+                                        <span class="icon is-small"><i class="fas fa-edit"></i></span>
+                                        <span>{get_value_field(&334)}</span>
+                                    </a>
+                                </li>
+                                <li class={tab_preview_class}>
+                                    <a onclick={self.link.callback(|_| Msg::SetPreview(true))}>
+                                        <span class="icon is-small"><i class="fas fa-eye"></i></span>
+                                        <span>{get_value_field(&335)}</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
                     </header>
                     <div class="card-content p-0">
-                        <div class="content">
-                            <div id={"markdown-preview"} style={style_preview} class={"p-2"}>
-                                {self.props.raw_text.to_markdown()}
-                            </div>
-                            <textarea
-                                id={textarea_id}
-                                class={"textarea is-fullwidth"}
-                                style={style_raw}
-                                type={"text"}
-                                placeholder={self.props.placeholder.clone()}
-                                value={self.props.raw_text.clone()}
-                                oninput={self.props.oninput_text.clone()} />
-                        </div>
+                        {
+                            if self.is_preview {
+                                html!{
+                                    <div id="markdown-preview" class="content p-4 block">
+                                        {self.props.raw_text.to_markdown()}
+                                    </div>
+                                }
+                            } else {
+                                html!{<>
+                                    <textarea
+                                        id={textarea_id}
+                                        class="textarea is-fullwidth is-shadowless p-4"
+                                        placeholder={self.props.placeholder.clone()}
+                                        value={self.props.raw_text.clone()}
+                                        oninput={self.props.oninput_text.clone()} />
+                                    <div class="help has-text-grey-light ml-1">
+                                        <span class="icon is-small mr-1"><i class="fas fa-info-circle"></i></span>
+                                        <span>{get_value_field(&336)}</span>
+                                    </div>
+                                </>}
+                            }
+                        }
                     </div>
-                    <footer class="card-footer">
-                        <p class="help p-1">{get_value_field(&336)}</p>
-                    </footer>
                 </div>
             </div>
         }
