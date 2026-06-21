@@ -204,10 +204,11 @@ export class GreatViewer {
         }
         const keyMap = {
             // Flat views
+            'Digit0': 'isometric', 'Numpad0': 'isometric',
             'Digit1': 'front',     'Numpad1': 'front',
             'Digit3': 'left',      'Numpad3': 'left',
             'Digit7': 'top',       'Numpad7': 'top',
-            'Digit0': 'isometric', 'Numpad0': 'isometric',
+            'Digit9': 'opposite',  'Numpad9': 'opposite',
             // Rotations
             'Digit2': 'rotate_down',   'Numpad2': 'rotate_down',
             'Digit4': 'rotate_left',   'Numpad4': 'rotate_left',
@@ -235,6 +236,8 @@ export class GreatViewer {
             this.rotateCameraDiscrete(action);
         } else if (action === 'toggle_camera') {
             this.toggleCameraMode();
+        } else if (action === 'opposite') {
+            this.goToOppositeView();
         }
         e.preventDefault();
     }
@@ -326,6 +329,16 @@ export class GreatViewer {
         }
         if (oldCamera.dispose) oldCamera.dispose();
         this.isOrthographic = targetMode;
+        this.safeRender();
+    }
+
+    goToOppositeView() {
+        if (!this.controls || !this.camera) return;
+        // Invert the vector from center to camera
+        const offset = this.camera.position.clone().sub(this.controls.target);
+        offset.negate();
+        this.camera.position.copy(this.controls.target).add(offset);
+        this.controls.update();
         this.safeRender();
     }
 

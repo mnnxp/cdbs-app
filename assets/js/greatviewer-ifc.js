@@ -50,10 +50,11 @@ export class GreatViewerIFC {
         }
         const keyMap = {
             // Flat views
+            'Digit0': 'isometric', 'Numpad0': 'isometric',
             'Digit1': 'front',     'Numpad1': 'front',
             'Digit3': 'left',      'Numpad3': 'left',
             'Digit7': 'top',       'Numpad7': 'top',
-            'Digit0': 'isometric', 'Numpad0': 'isometric',
+            'Digit9': 'opposite',  'Numpad9': 'opposite',
         };
         const action = keyMap[e.code];
         if (!action) return; // Ignore unmapped keys
@@ -64,6 +65,8 @@ export class GreatViewerIFC {
             if (translatedPreset) {
                 this.updateViewPreset(translatedPreset);
             }
+        } else if (action === 'opposite') {
+            this.goToOppositeView();
         }
         e.preventDefault();
     }
@@ -295,6 +298,38 @@ export class GreatViewerIFC {
             const viewCtrl = this.gui.controllers.find(c => c.property === 'viewModeController');
             if (viewCtrl) viewCtrl.updateDisplay();
         }
+    }
+
+    goToOppositeView() {
+        if (!this.world?.camera?.controls || !this.modelGroup) return;
+        const camera = this.world.camera.three;
+        const controls = this.world.camera.controls;
+
+        const box = new THREE.Box3().setFromObject(this.modelGroup);
+        const center = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z);
+
+        const position = camera.position.clone();
+
+        const offset = position.clone().sub(center);
+        offset.negate();
+
+        const minDistance = maxDim * 1.8;
+        const maxDistance = maxDim * 15;
+        const currentDistance = offset.length();
+        if (currentDistance < minDistance) {
+            offset.normalize().multiplyScalar(minDistance);
+        } else if (currentDistance > maxDistance) {
+            offset.normalize().multiplyScalar(maxDistance);
+        }
+        const newPosition = center.clone().add(offset);
+        controls.setLookAt(
+            newPosition.x, newPosition.y, newPosition.z,
+            center.x, center.y, center.z,
+            false
+        );
+        this.updateStats();
     }
 
     printDiagnostics() {
