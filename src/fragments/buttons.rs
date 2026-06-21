@@ -231,7 +231,7 @@ pub fn ft_modal_cancel_save_btn(
     disabled: bool,
 ) -> Html {
     let cancel_classes = match is_fullwidth {
-        true => classes!("is-fullwidth"),
+        true => classes!("is-fullwidth", "mr-3"),
         false => classes!(""),
     };
     html! {<>

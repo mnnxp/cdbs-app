@@ -130,7 +130,7 @@ impl ModalBlock {
                     (Some(_), Some(_)) => html!{
                         <>
                             {self.delete_single_btn()}
-                            <div class="right-side">
+                            <div class="buttons right-side">
                                 {self.cancel_save_btn()}
                             </div>
                         </>

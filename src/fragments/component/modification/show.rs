@@ -180,18 +180,20 @@ impl Component for ModificationsTableCard {
             <div class="card">
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
                 <header class="card-header">
-                    <p class="card-header-title">{get_value_field(&100)}</p> // Modifications
-                    {match self.props.user_owner {
-                        true => html!{
-                            <div class="right-side mt-1">
-                                <ImportModificationsData
-                                    component_uuid={self.props.component_uuid.clone()}
-                                    callback_finish_import={callback_finish_import}
-                                    />
-                            </div>
-                        },
-                        false => html!{}
-                    }}
+                    <div class="card-header-title">
+                        <p>{get_value_field(&100)}</p> // Modifications
+                        {match self.props.user_owner {
+                            true => html!{
+                                <div class="right-side">
+                                    <ImportModificationsData
+                                        component_uuid={self.props.component_uuid.clone()}
+                                        callback_finish_import={callback_finish_import}
+                                        />
+                                </div>
+                            },
+                            false => html!{}
+                        }}
+                    </div>
                 </header>
                 {self.show_modifications_table()}
             </div>

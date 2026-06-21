@@ -59,7 +59,7 @@ impl Component for MarkdownEditCard {
         html!{
             <div id={unique_id(&self.props.id_tag)}>
                 <label class={"label"} for={textarea_id.clone()}>{self.props.title.clone()}</label>
-                <div class="card is-shadowless" style="border: 1px solid #dbdbdb">
+                <div class="card is-shadowless card-bordered">
                     <header class="card-header">
                         <button class="card-footer-item button is-white is-small" onclick={self.link.callback(|_| Msg::PreviewDescription)}>{text_btn}</button>
                     </header>

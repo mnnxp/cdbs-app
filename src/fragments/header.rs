@@ -368,7 +368,7 @@ impl Header {
         html!{
             <div class="dropdown is-hoverable">
                 <div class="dropdown-trigger">
-                    <button class="button is-small is-text px-1 lang-dropdown-btn" aria-haspopup="true" aria-controls="lang-menu">
+                    <button class="button is-small is-text px-1 nav-dropdown-btn" aria-haspopup="true" aria-controls="lang-menu">
                         <span class="icon is-small">
                             <i class="fas fa-language"></i>
                         </span>

@@ -61,22 +61,16 @@ impl Component for Footer {
                 <div class="columns">
                     // left footer
                     <div class="column">
-                        <div class="tags mb-0">
-                            <div class="tag is-white is-medium">
-                                <a class={vec!("social-network")} href="mailto:info@cadbase.rs" title="Email" style="margin-right: 0.1rem;">
-                                    <i class={vec!("fas", "fa-lg", "fa-envelope")}></i>
-                                </a>
-                            </div>
-                            <div class="tag is-white is-medium">
-                                <a class={vec!("social-network")} href="https://www.youtube.com/channel/UC-dHiTHBGV88ScxFKSC3srw" title="Youtube Channel" rel="noreferrer">
-                                    <i class={vec!("fab", "fa-lg", "fa-youtube")}></i>
-                                </a>
-                            </div>
-                            <div class="tag is-white is-medium">
-                                <a class={vec!("social-network")} href="https://gitlab.com/cadbase" title="CADBase Source Codes" rel="noreferrer">
-                                    <i class={vec!("fab", "fa-lg", "fa-brands", "fa-gitlab")}></i>
-                                </a>
-                            </div>
+                        <div class="social-links">
+                            <a class={"social-network"} href="mailto:info@cadbase.rs" title="Email" style="margin-right: 0.1rem;">
+                                <i class={vec!("fas", "fa-lg", "fa-envelope")}></i>
+                            </a>
+                            <a class={"social-network"} href="https://www.youtube.com/channel/UC-dHiTHBGV88ScxFKSC3srw" title="Youtube" rel="noreferrer">
+                                <i class={vec!("fab", "fa-lg", "fa-youtube")}></i>
+                            </a>
+                            <a class={"social-network"} href="https://gitlab.com/cadbase" title="CADBase Source Codes" rel="noreferrer">
+                                <i class={vec!("fab", "fa-lg", "fa-gitlab")}></i>
+                            </a>
                         </div>
                         {self.selector_server_location()}
                     </div>
@@ -122,7 +116,7 @@ impl Footer {
         ];
 
         html!{
-            <div class="server-selector ml-3">
+            <div class="server-selector">
                 <span class="is-size-7 has-text-weight-semibold mr-2">{get_value_field(&414)}</span>
                 <div class="select is-small is-narrow">
                     <select
