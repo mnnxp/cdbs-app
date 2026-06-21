@@ -151,7 +151,8 @@ impl Component for ManageModificationFilesets {
                         self.select_fileset_uuid = match self.filesets.first() {
                             Some(ft) => ft.uuid.clone(),
                             None => String::new(),
-                        }
+                        };
+                        self.update_program_ids();
                     },
                     Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
@@ -199,8 +200,12 @@ impl Component for ManageModificationFilesets {
                 self.get_confirm.clear(); // clear the check flag
             },
             Msg::NewFileset(new_fileset) => {
-                self.filesets.push(new_fileset);
-                self.update_program_ids();
+                self.select_fileset_uuid = new_fileset.uuid.clone();
+                let already_exists = self.filesets.iter().any(|f| f.uuid == new_fileset.uuid);
+                if !already_exists {
+                    self.filesets.push(new_fileset);
+                    self.update_program_ids();
+                }
             },
             Msg::ShowAddFilesetCard => self.open_add_fileset_card = !self.open_add_fileset_card,
             Msg::ResponseError(err) => self.error = Some(err),
