@@ -237,7 +237,7 @@ impl Component for ThreeShowcase {
                           <span class="icon is-small">
                             <i class={class_icon} style="color: #1872f0;"></i>
                           </span>
-                          <span class="help has-text-grey is-pulled-right mr-2 mt-2">{get_value_field(&436)}</span> // F: fullscreen | 1-5: views
+                          <span class="help has-text-grey is-pulled-right is-hidden-mobile mr-2 mt-2">{get_value_field(&436)}</span> // F: fullscreen | 1-5: views
                         </button>
                     },
                 }}
