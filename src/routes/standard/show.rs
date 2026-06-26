@@ -350,7 +350,7 @@ impl ShowStandard {
                         250.. => html!{<>
                             {match self.show_full_description {
                                 true => standard_data.description.to_markdown(),
-                                false => format!("{:.*}", 200, standard_data.description).to_markdown(),
+                                false => standard_data.description.to_markdown_short(),
                             }}
                             {ft_see_btn(show_description_btn, self.show_full_description)}
                         </>},

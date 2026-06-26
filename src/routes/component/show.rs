@@ -523,7 +523,7 @@ impl ShowComponent {
                                     250.. => match self.show_full_description {
                                         true => html!{},
                                         false => html!{<>
-                                            {format!("{:.*}", 200, component_data.description).to_markdown()}
+                                            {component_data.description.to_markdown_short()}
                                             {ft_see_btn(show_description_btn.clone(), self.show_full_description)}
                                         </>},
                                     },
