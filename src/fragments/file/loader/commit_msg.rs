@@ -14,7 +14,7 @@ pub fn commit_msg_field(object_uuid: UUID, commit_msg: String, oninput_commit_ms
                         id={tag_id}
                         class={"input is-fullwidth"}
                         type={"text"}
-                        maxlength={"225"}
+                        maxlength={"500"}
                         placeholder={label_commit_msg}
                         title={label_commit_msg}
                         value={commit_msg}
