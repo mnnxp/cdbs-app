@@ -198,7 +198,6 @@ impl Component for ManageModificationFilesCard {
         let onclick_paginate = self.link.callback(|page_set| Msg::ChangePaginate(page_set));
         html!{<>
             <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
-            <p class={"subtitle is-size-5"}>{get_value_field(&407)}</p>
                 <div class="column">
                     <p class={"title is-5"}>{get_value_field(&202)}</p> // Upload modification files
                     {commit_msg_field(self.props.modification_uuid.clone(), self.commit_msg.clone(), oninput_commit_msg.clone())}

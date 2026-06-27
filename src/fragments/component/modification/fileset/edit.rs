@@ -231,7 +231,6 @@ impl Component for ManageModificationFilesets {
         let callback_open_modal = self.link.callback(|_| Msg::ShowAddFilesetCard);
         html!{<>
             <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
-            <p class="subtitle is-size-5">{get_value_field(&401)}</p>
             {if self.filesets.is_empty() {
                 html!{}
             } else {
