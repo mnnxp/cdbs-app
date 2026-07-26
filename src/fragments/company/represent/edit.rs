@@ -6,7 +6,7 @@ use log::debug;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::modal::ModalBlock;
-use crate::services::{get_value_field, resp_parsing, unique_id};
+use crate::services::{get_value_field, resp_parsing};
 use crate::fragments::buttons::ft_custom_btn;
 use crate::fragments::notification::show_notification;
 use crate::types::{Region, RepresentationType, CompanyRepresentInfo, CompanyRepresentUpdateInfo};
@@ -185,7 +185,7 @@ impl Component for EditCompanyRepresentModal {
                 self.get_result_update > 0,
             )}
             {ft_custom_btn(
-                &unique_id("edit-represent-btn"),
+                "edit-represent-btn",
                 get_value_field(&127),
                 classes!("button", "is-info", "is-light", "is-fullwidth", "is-small"),
                 "fas fa-pencil-alt",
