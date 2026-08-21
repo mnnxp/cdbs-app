@@ -26,7 +26,6 @@
     <li><a href="#about-the-project">About The Project</a></li>
     <li><a href="#getting-started">Getting Started</a></li>
     <li><a href="#usage">Usage</a></li>
-    <li><a href="#test">Test</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#repositories">Repositories</a></li>
@@ -36,7 +35,7 @@
   </ol>
 </details>
 
-
+<a id="about-the-project"></a>
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
@@ -77,8 +76,6 @@ If you're interested, we're also on YouTube <a href="https://www.youtube.com/cha
 
 And if you're not interested in this site and its functionality, you can try to use the code base for your own projects. In any case, have peace and goodwill ;)
 
-<div align="right">(<a href="#about-the-project">back to top</a>)</div>
-
 <!-- INTEGRATION FRAMEWORK -->
 ### Integration Framework
 
@@ -86,8 +83,6 @@ Creating an ecosystem-agnostic environment to:
 - Bridge compatibility gaps between engineering tools
 - Enable seamless CAD, PLM, ERP, and supply chain interoperability
 - Eliminate manual conversion and vendor lock-in
-
-<div align="right">(<a href="#about-the-project">back to top</a>)</div>
 
 <!-- AVAILABLE INTEGRATIONS -->
 ### Available Integrations
@@ -98,9 +93,6 @@ Solutions for integration with CADBase platform with our support:
  - [CADBase Library (Blender Extensions)](https://extensions.blender.org/add-ons/cadbase-library/) add-on for **Blender** 3D computer graphics program
 
 We welcome contributions to new integrations!
-
-<div align="right">(<a href="#about-the-project">back to top</a>)</div>
-
 
 ### Built With
 
@@ -128,7 +120,6 @@ To start the frontend, you must perform the a few steps.
 
 ### Prerequisites
 
-This is an example of how to list things you need to use the software and how to install them.
 * [Rust](https://www.rust-lang.org/learn/get-started)
 
   ```sh
@@ -159,46 +150,12 @@ Note: Before performing step 2, check the correct settings of the environment in
    trunk serve
    ```
 
-<div align="right">(<a href="#about-the-project">back to top</a>)</div>
-
-
 <!-- USAGE -->
 ## Usage
 
 Open app at `http://localhost:8080`.
 
 For API details: [docs.cadbase.rs](https://docs.cadbase.rs)
-
-<div align="right">(<a href="#about-the-project">back to top</a>)</div>
-
-<!-- TEST -->
-## Test
-
-If you want to run tests, a few tests are located in the 'tests' folder.
-
-### Prerequisites
-
-To run the tests, you will need to install the Playwright testing framework and its dependencies.
-
-```sh
-# Install Playwright
-npm init playwright@latest
-# Install browser binaries
-npx playwright install
-# Run tests
-npx playwright test tests/slogan.spec.js
-
-# or (if you prefer yarn)
-
-# Install Playwright
-yarn create playwright
-# Install browser binaries
-yarn playwright install
-# Run tests
-yarn playwright test tests/slogan.spec.js
-```
-
-<div align="right">(<a href="#about-the-project">back to top</a>)</div>
 
 <!-- ROADMAP -->
 ## Roadmap
@@ -235,9 +192,6 @@ Don't forget to give the project a star! Thanks again!
 4. Push to the Branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-<div align="right">(<a href="#about-the-project">back to top</a>)</div>
-
-
 <!-- REPOSITORIES -->
 ## Repositories
 
@@ -255,16 +209,10 @@ Codeberg - https://codeberg.org/mnnxp/cdbs-app
 
 GitHub - https://github.com/mnnxp/cdbs-app
 
-<div align="right">(<a href="#about-the-project">back to top</a>)</div>
-
-
 <!-- LICENSE -->
 ## License
 
 Distributed under the MIT License. See [LICENSE](/LICENSE) for more information.
-
-<div align="right">(<a href="#about-the-project">back to top</a>)</div>
-
 
 <!-- CONTACT -->
 ## Contact
@@ -272,9 +220,6 @@ Distributed under the MIT License. See [LICENSE](/LICENSE) for more information.
 Ivan Nosovsky - in@cadbase.rs
 
 Xia TianHao - [Sansx](https://github.com/sansx) (GitHub)
-
-<div align="right">(<a href="#about-the-project">back to top</a>)</div>
-
 
 <!-- ACKNOWLEDGMENTS -->
 ## Acknowledgments
