@@ -575,7 +575,6 @@ export class GreatViewer {
     }
 
     _requestRender() {
-        console.log(`CADBase Viewer: _renderRequested: "${this._renderRequested}"`);
         if (this._renderRequested) return;
         this._renderRequested = true;
         requestAnimationFrame(() => {
