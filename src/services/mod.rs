@@ -20,7 +20,7 @@ pub(crate) mod title_changer;
 pub use auth::{Auth, get_current_user, logout};
 pub(crate) use localisation::LocaleKey;
 pub use filesize::Size;
-pub use local_storage::{
+pub(crate) use local_storage::{
     get_logged_user, set_logged_user, get_token, is_authenticated, set_lang, get_lang,
     set_server_location, get_server_location, set_gql_server_location, get_gql_server_location,
     set_token, set_list_view, get_list_view, set_history_back, get_history_back, set_history_search, get_history_search,

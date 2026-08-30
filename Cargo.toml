@@ -32,7 +32,6 @@ regex = "1.5.4"
 
 chrono = {version = "0.4.10", features = ["serde"]}
 log = "0.4.8"
-parking_lot = "0.10.0"
 pulldown-cmark = "0.9.6"
 thiserror = "1"
 
@@ -43,7 +42,6 @@ serde_json = "1.0.64"
 
 dotenv_codegen = "0.15.0"
 
-lazy_static = "1.4.0"
 toml = "0.5.8"
 
 [dependencies.web-sys]
