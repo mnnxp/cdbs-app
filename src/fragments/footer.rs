@@ -65,11 +65,14 @@ impl Component for Footer {
                             <a class="social-network" href="mailto:info@cadbase.rs" title="Email" style="margin-right: 0.1rem;">
                                 <i class={vec!("fas", "fa-lg", "fa-envelope")}></i>
                             </a>
-                            <a class="social-network" href="https://www.youtube.com/channel/UC-dHiTHBGV88ScxFKSC3srw" title="Youtube" rel="noreferrer">
+                            <a class="social-network" href="https://www.youtube.com/channel/UC-dHiTHBGV88ScxFKSC3srw" target="_blank" title="Youtube" rel="noopener noreferrer">
                                 <i class={vec!("fab", "fa-lg", "fa-youtube")}></i>
                             </a>
-                            <a class="social-network" href="https://gitlab.com/cadbase" title="CADBase Source Codes" rel="noreferrer">
+                            <a class="social-network" href="https://gitlab.com/cadbase" target="_blank" title="CADBase Source Codes" rel="noopener noreferrer">
                                 <i class={vec!("fab", "fa-lg", "fa-gitlab")}></i>
+                            </a>
+                            <a class="social-network" href="https://hachyderm.io/@cadbase" target="_blank" rel="noopener noreferrer" title="Mastodon">
+                                <i class={vec!("fab", "fa-lg", "fa-mastodon")}></i>
                             </a>
                         </div>
                         {self.selector_server_location()}
