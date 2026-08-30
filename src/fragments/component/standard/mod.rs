@@ -225,8 +225,8 @@ impl ComponentStandardsCard {
             self.link.callback(|value: UUID| Msg::DeleteComponentStandard(value));
 
         html!{
-        <div class={"table-container"}>
-        <div class={"content"}>
+        <div class="table-container">
+        <div class="content">
           <table class="table is-fullwidth">
             <thead>
             <tr>

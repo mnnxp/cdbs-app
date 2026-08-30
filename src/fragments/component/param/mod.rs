@@ -248,10 +248,10 @@ impl Component for ComponentParamsTags {
             {self.modal_add_param()}
             {match self.props.show_manage_btn {
                 true => html!{
-                    <nav id={"card-manage-import-params"} class="level">
+                    <nav id="card-manage-import-params" class="level">
                         <div class="level-left">
                             <div class="level-item">
-                                <p class={"title is-5"}>{LocaleKey::ManageComponentCharacteristics.get_value()}</p>
+                                <p class="title is-5">{LocaleKey::ManageComponentCharacteristics.get_value()}</p>
                             </div>
                         </div>
                         <div class="level-right buttons">
@@ -293,8 +293,8 @@ impl ComponentParamsTags {
         let numero_offset = self.page_set.numero_offset();
 
         html!{
-            <div class={"content"}>
-            <div class={"table-container"}>
+            <div class="content">
+            <div class="table-container">
                 <table class={classes_table}>
                     <thead>
                         <tr>

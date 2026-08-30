@@ -96,7 +96,7 @@ impl Component for ManageFilesOfFilesetBlock {
             <div style="margin-right: .5rem">
                 <div class="select" style="margin-right: .5rem">
                     <select
-                    id={"select-fileset-program-download"}
+                    id="select-fileset-program-download"
                     select={self.select_fileset_uuid.clone()}
                     onchange={onchange_select_fileset_btn}
                     title={LocaleKey::SelectFilesetLabel.get_value()}>
@@ -115,7 +115,7 @@ impl Component for ManageFilesOfFilesetBlock {
                 onclick={onclick_open_fileset_files_list_btn}
                 title={LocaleKey::FilesFromFileset.get_value()}
                 disabled={self.select_fileset_uuid.is_empty()} >
-                    <span class={"icon is-small"}><i class={"fa fa-list"}></i></span>
+                    <span class="icon is-small"><i class="fa fa-list"></i></span>
                     <span class="is-hidden-mobile">{LocaleKey::FilesOfFileset.get_value()}</span>
                 </button>
             </div>

@@ -232,7 +232,7 @@ impl SpecTagItem {
             Some(data) => html! {
                 <ModalBlock
                     modal_id="spec-info"
-                    title={""}
+                    title=""
                     is_active={self.open_spec_info}
                     on_close={onclick_spec_info}
                     on_save={None}

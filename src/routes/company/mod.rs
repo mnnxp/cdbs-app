@@ -124,9 +124,9 @@ impl SpecDisplay for CompanyInfo {
         match self.company_specs.is_empty() {
             true => html!{},
             false => html!{
-                <div id={"company-related-catalogs"} class={"column p-0"}>
-                    <p class={"title is-6"}>
-                        <span class={"icon is-small mr-3"}><i class={"fas fa-cubes"}></i></span>
+                <div id="company-related-catalogs" class="column p-0">
+                    <p class="title is-6">
+                        <span class="icon is-small mr-3"><i class="fas fa-cubes"></i></span>
                         <span>{LocaleKey::SphereOfActivity.get_value()}</span>
                     </p> // Sphere of activity
                     <SpecsTags

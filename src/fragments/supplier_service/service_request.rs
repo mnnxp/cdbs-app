@@ -54,8 +54,8 @@ impl Component for ServiceRequestBtn {
         let onclick_share_btn = self.link.callback(move |_| Msg::ShowModal);
         html!{<>
             {self.service_req_window()}
-            <button id={"service-req-btn"} class={"button"} onclick={onclick_share_btn}>
-              <span class={"icon is-small"} style={"color: #00ff10;"}><i class={"fas fa-clipboard-list"} /></span>
+            <button id="service-req-btn" class="button" onclick={onclick_share_btn}>
+              <span class="icon is-small" style="color: #00ff10;"><i class="fas fa-clipboard-list" /></span>
               <span>{LocaleKey::Request.get_value()}</span>
             </button>
         </>}

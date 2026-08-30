@@ -299,11 +299,11 @@ impl ShowSupplierCompany {
         &self,
         company_data: &CompanyInfo,
     ) -> Html {
-        html!{<div id={"supplier-card-list"} class="card">
+        html!{<div id="supplier-card-list" class="card">
             <div class="columns is-mobile">
                 <div class="column is-flex">
                     {self.render_menu()}
-                    <div id={"supplier-card-list-items"} class="card-relate-data" style={resizer("supplier-card-list", 5)}>
+                    <div id="supplier-card-list-items" class="card-relate-data" style={resizer("supplier-card-list", 5)}>
                         {match self.company_tab {
                             CompanyTab::Info => view_content(&company_data),
                             CompanyTab::Certificates => view_certificates(&company_data),

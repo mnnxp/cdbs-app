@@ -157,7 +157,7 @@ impl ComponentStandardItem {
         html! {
             <ModalBlock
                 modal_id="standard-info"
-                title={""}
+                title=""
                 is_active={self.open_standard_info}
                 on_close={onclick_standard_data_info}
                 on_save={None}

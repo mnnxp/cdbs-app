@@ -392,7 +392,7 @@ impl Component for CompanySettings {
         html!{
             <div class="settings-page">
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
-                <div class={"container is-fluid page pl-0"}>
+                <div class="container is-fluid page pl-0">
                     <div class="row">
                         <div class="columns">
                             <div class="column is-flex side-menu-content-fix">
@@ -473,7 +473,7 @@ impl CompanySettings {
             </div>
             <form onsubmit={onsubmit_update_company} >
                 {self.fieldset_company()}
-                <div class={"mt-5"}>{ft_submit_btn("update-settings")}</div>
+                <div class="mt-5">{ft_submit_btn("update-settings")}</div>
             </form>
         </>}
     }

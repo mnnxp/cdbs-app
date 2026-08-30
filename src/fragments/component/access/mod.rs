@@ -135,8 +135,8 @@ impl Component for ComponentAccessBlock {
                 res_loading_state()
             } else {
                 html!{
-                    <div class={"columns"}>
-                        <div class={"column"}>
+                    <div class="columns">
+                        <div class="column">
                             <UserAccessComponentTable
                                 component_uuid={self.props.component_uuid.clone()}
                                 users={self.access_users.clone()}
@@ -144,7 +144,7 @@ impl Component for ComponentAccessBlock {
                                 need_update={callback_refresh_data.clone()}
                             />
                         </div>
-                        <div class={"column"}>
+                        <div class="column">
                             <CompanyAccessComponentTable
                                 component_uuid={self.props.component_uuid.clone()}
                                 companies={self.access_companies.clone()}

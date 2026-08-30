@@ -234,7 +234,7 @@ impl AddCompanyAccessModal {
                     </div>
                 </div>
             </div>
-            <div class={"column"}>
+            <div class="column">
                 {if !self.search_results.is_empty() {
                     html! {
                         <div class="">

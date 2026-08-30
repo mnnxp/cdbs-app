@@ -118,8 +118,8 @@ impl Component for ManageComponentFilesCard {
         let callback_upload_confirm = self.link.callback(|confirmations| Msg::UploadConfirm(confirmations));
         html!{<>
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
-                <div class={"column"}>
-                    <p class={"title is-5"}>{LocaleKey::UploadComponentFiles.get_value()}</p>
+                <div class="column">
+                    <p class="title is-5">{LocaleKey::UploadComponentFiles.get_value()}</p>
                     {commit_msg_field(self.props.component_uuid.clone(), self.commit_msg.clone(), oninput_commit_msg.clone())}
                     <UploaderFiles
                         label_choose_files={LocaleKey::SelectFilesForComponent}
@@ -128,8 +128,8 @@ impl Component for ManageComponentFilesCard {
                         callback_upload_confirm={callback_upload_confirm}
                         />
                 </div>
-                <div class={"column"}>
-                    <p class={"title is-5"}>{LocaleKey::FilesForComponent.get_value()}</p>
+                <div class="column">
+                    <p class="title is-5">{LocaleKey::FilesForComponent.get_value()}</p>
                     <ComponentFilesBlock
                         show_download_btn={self.props.show_download_btn}
                         show_delete_btn={true}

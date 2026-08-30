@@ -126,7 +126,7 @@ impl ListItemService {
                             </span>
                         </div>
                         <div class="column">
-                          <span class={"icon"} title={LocaleKey::UpdatedAtLabel2.get_value()}>
+                          <span class="icon" title={LocaleKey::UpdatedAtLabel2.get_value()}>
                             <i class="fas fa-edit"></i>
                           </span>
                           {updated_at.date_to_display()}

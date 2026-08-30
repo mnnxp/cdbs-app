@@ -263,8 +263,8 @@ impl ServiceParamsTags {
         let numero_offset = self.page_set.numero_offset();
 
         html!{
-            <div class={"content"}>
-            <div class={"table-container"}>
+            <div class="content">
+            <div class="table-container">
                 <table class={classes_table}>
                     <thead>
                         <tr>

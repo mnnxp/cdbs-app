@@ -156,7 +156,7 @@ impl CompanyAccessComponentTable {
 
         html! {
             <div class="table-container">
-                <div class={"content"}>
+                <div class="content">
                     <table class={classes_table}>
                         <thead>
                             <tr>

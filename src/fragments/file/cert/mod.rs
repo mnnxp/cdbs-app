@@ -140,7 +140,7 @@ impl CertificateItem {
                         <div class="columns">
                             <div class="column">
                                 <input
-                                    id={"cert-description"}
+                                    id="cert-description"
                                     class="input"
                                     type="text"
                                     placeholder={LocaleKey::Description.get_value()}
@@ -181,7 +181,7 @@ impl CertificateItem {
           <div class="innerBox" >
             <div class="imgBox" >
                 <figure class="image" onclick={onclick_show_cert}>
-                    <img class={"certificate-image"} src={self.cert_url.clone()} loading="lazy" />
+                    <img class="certificate-image" src={self.cert_url.clone()} loading="lazy" />
                 </figure>
             </div>
             <div class="overflow-title has-text-weight-bold">{self.props.certificate.description.clone()}</div>

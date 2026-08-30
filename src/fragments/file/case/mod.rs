@@ -160,7 +160,7 @@ impl Component for FileShowcase {
         html! {
             <ModalBlock
                 modal_id="file-frame"
-                title={""}
+                title=""
                 is_active={self.props.open_modal_frame}
                 on_close={onclick_file_info}
                 on_save={None}

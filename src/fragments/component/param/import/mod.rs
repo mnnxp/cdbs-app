@@ -192,7 +192,7 @@ impl ImportParamsData {
                     </div>
                     <p class="help">{self.stat_info.clone()}</p>
                 </div>
-                <div class={"column"}>
+                <div class="column">
                     {ft_import_btn(
                         "import-params-btn",
                         onclick_subbmit,

@@ -144,7 +144,7 @@ impl AddUserCertificateCard {
         html!{<div class="block">
             <label class="label">{LocaleKey::Description.get_value()}</label>
             <input
-                id={"new-cert-description"}
+                id="new-cert-description"
                 class="input"
                 type="text"
                 placeholder={LocaleKey::Description.get_value()}

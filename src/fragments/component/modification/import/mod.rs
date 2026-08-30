@@ -334,7 +334,7 @@ impl ImportModificationsData {
                     </div>
                     <p class="help">{self.stat_info.clone()}</p>
                 </div>
-                <div class={"column"}>
+                <div class="column">
                     {ft_import_btn(
                         "import-modifications-btn",
                         onclick_subbmit,

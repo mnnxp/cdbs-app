@@ -69,7 +69,7 @@ impl Component for ServiceFilesCard {
 
     fn view(&self) -> Html {
         html!{<>
-            <div id="service-files" class={"buttons"}>
+            <div id="service-files" class="buttons">
                 {for self.props.files.iter().enumerate().map(|(index, file)| {
                     match (index >= 3, self.show_full_files) {
                         // show full list

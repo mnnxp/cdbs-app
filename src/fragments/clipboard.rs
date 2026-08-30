@@ -90,7 +90,7 @@ impl ShareLinkBtn {
       html! {
           <ModalBlock
               modal_id="share-window"
-              title={""}
+              title=""
               is_active={self.open_window}
               on_close={onclick_share_btn}
               on_save={None}

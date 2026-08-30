@@ -180,7 +180,7 @@ impl ListItemCompany {
                     <div class="column fix-width mb-0 p-0">
                         {company_type.to_dispaly_order(
                             classes!("is-size-4"),
-                            html!{<span class={"has-text-weight-bold is-size-4"}>{shortname.clone()}</span>}
+                            html!{<span class="has-text-weight-bold is-size-4">{shortname.clone()}</span>}
                         )}
                         <div class="overflow-title">{description.to_markdown_short()}</div>
                     </div>

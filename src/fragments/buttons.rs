@@ -17,9 +17,9 @@ pub fn ft_download_btn(download_url: String, as_button: bool) -> Html {
         href={download_url.clone()}
         disabled={download_url.is_empty()}
         title={title}
-        target={"_blank"}>
-            <span class={"icon"}>
-                <i class={"fas fa-file-download"} style={"color: #1872f0;"} aria-hidden={"true"}></i>
+        target="_blank">
+            <span class="icon">
+                <i class="fas fa-file-download" style="color: #1872f0;" aria-hidden="true"></i>
             </span>
             {match as_button {
                 true => html!{},
@@ -38,9 +38,9 @@ pub fn ft_download_full_btn(download_url: String) -> Html {
         href={download_url.clone()}
         disabled={download_url.is_empty()}
         title={title_text}
-        target={"_blank"}>
-            <span class={"icon"}>
-                <i class={"fas fa-file-download"} aria-hidden={"true"}></i>
+        target="_blank">
+            <span class="icon">
+                <i class="fas fa-file-download" aria-hidden="true"></i>
             </span>
             <span>{title_text}</span>
         </a>
@@ -56,8 +56,8 @@ pub fn ft_see_btn(onclick_btn: Callback<MouseEvent>, show_full: bool) -> Html {
     html!{
         <button class={classes!("button", "is-white", "is-fullwidth")} onclick={onclick_btn}>
           {title_text}
-          <span class={"icon"} style={"color: #1872f0; padding-left: 1rem;"}>
-              <i class={class_icon} aria-hidden={"true"}></i>
+          <span class="icon" style="color: #1872f0; padding-left: 1rem;">
+              <i class={class_icon} aria-hidden="true"></i>
           </span>
         </button>
     }
@@ -65,8 +65,8 @@ pub fn ft_see_btn(onclick_btn: Callback<MouseEvent>, show_full: bool) -> Html {
 
 pub(crate) fn ft_change_view_btn(onclick_btn: Callback<MouseEvent>, show_type: &ListState) -> Html {
     html!{
-        <button class={"button"} onclick={onclick_btn}>
-            <span class={"icon is-small"}>
+        <button class="button" onclick={onclick_btn}>
+            <span class="icon is-small">
                 <i class={show_type.get_icon_class()}></i>
             </span>
         </button>
@@ -94,10 +94,10 @@ pub fn ft_follow_btn(
     html!{
         <button
         id={unique_id("following-button")}
-        class={"button"}
+        class="button"
         onclick={trigger_btn}
         title={title}>
-            <span class="icon is-small" style={"color: #1872f0;"}>
+            <span class="icon is-small" style="color: #1872f0;">
                 <i class={class_fav}></i>
             </span>
             {match subscribers.is_empty() {
@@ -279,11 +279,11 @@ pub fn ft_submit_btn(id_btn: &str) -> Html {
         <button
             id={unique_id(id_btn)}
             class={classes!("button", "is-link", "is-fullwidth")}
-            type={"submit"}
+            type="submit"
             disabled={false}
             title={title_text}>
-            <span class={"icon"}>
-                <i class={"far fa-save"} aria-hidden={"true"}></i>
+            <span class="icon">
+                <i class="far fa-save" aria-hidden="true"></i>
             </span>
             <span>{title_text}</span>
         </button>
@@ -396,11 +396,11 @@ pub fn ft_back_btn(
     html!{
         <button
             id={unique_id(id_btn)}
-            class={"button"}
+            class="button"
             onclick={trigger_btn}
             title={title_text.to_string()}>
-            <span class={"icon is-small"}>
-                <i class={"fas fa-arrow-left"} style={"color: #1872f0;"}></i>
+            <span class="icon is-small">
+                <i class="fas fa-arrow-left" style="color: #1872f0;"></i>
             </span>
             <span>{title_text.to_string()}</span>
         </button>
@@ -428,13 +428,13 @@ pub fn ft_import_btn(
             title={title_text.to_string()}>
             {match is_fullwidth {
                 true => html!{
-                    <span class={"icon is-small"}>
-                        <i class={"far fa-save"} aria-hidden="true"></i>
+                    <span class="icon is-small">
+                        <i class="far fa-save" aria-hidden="true"></i>
                     </span>
                 },
                 false => html!{
-                    <span class={"icon is-small"}>
-                        <i class={"fas fa-upload"} style={"color: #1872f0;"}></i>
+                    <span class="icon is-small">
+                        <i class="fas fa-upload" style="color: #1872f0;"></i>
                     </span>
                 },
             }}
@@ -445,15 +445,15 @@ pub fn ft_import_btn(
 
 /// Returns a VNode with the specified URL and text
 pub fn simple_link(url: String, label: &str) -> Html {
-    html!{<a href={url} target={"_blank"} rel={"noopener noreferrer"}>{label}</a>}
+    html!{<a href={url} target="_blank" rel="noopener noreferrer">{label}</a>}
 }
 
 /// Returns a VNode with a styled button with an icon and the title "Settings"
 pub fn res_settings_btn(onclick: Callback<MouseEvent>, pathname: Pathname) -> Html {
     let title = LocaleKey::Settings.get_value();
     html!{
-      <a class={"button"} onclick={onclick} href={pathname.get_pathname()} title={title}>
-        <span class={"icon is-small"} >
+      <a class="button" onclick={onclick} href={pathname.get_pathname()} title={title}>
+        <span class="icon is-small" >
           <i class={classes!("fa", "fa-tools")}></i>
         </span>
         <span class="is-hidden-mobile">{title}</span>

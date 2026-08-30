@@ -234,7 +234,7 @@ impl CatalogComponents {
                 },
                 false => html!{<>
                     {self.modal_add_component()}
-                    <button class={"button is-info"} onclick={onclick_show_add_component}>
+                    <button class="button is-info" onclick={onclick_show_add_component}>
                         <span>{LocaleKey::CreateComponent.get_value()}</span>
                     </button>
                 </>},

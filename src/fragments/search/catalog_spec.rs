@@ -141,10 +141,10 @@ impl Component for CatalogSpec {
         let onclick_toggle = self.link.callback(|_| Msg::BlockExpand);
 
         html!{
-            <div class={"card"}>
+            <div class="card">
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
-                <div class={"column is-flex is-justify-content-space-between is-align-items-center pointer"} onclick={onclick_toggle}>
-                    <p class={"title is-5 select-title"} style="margin-bottom: 0px;">{LocaleKey::CatalogsLabel.get_value()}</p>
+                <div class="column is-flex is-justify-content-space-between is-align-items-center pointer" onclick={onclick_toggle}>
+                    <p class="title is-5 select-title" style="margin-bottom: 0px;">{LocaleKey::CatalogsLabel.get_value()}</p>
                     <span class="icon is-clickable">
                         <i class={classes!("fas", if self.expanded { "fa-chevron-up" } else { "fa-chevron-down" })}></i>
                     </span>
@@ -153,7 +153,7 @@ impl Component for CatalogSpec {
                   html!{
                       <>
                         {self.filters()}
-                        <div class={"column"}>{self.result_area()}</div>
+                        <div class="column">{self.result_area()}</div>
                       </>
                   }
                 } else {
@@ -185,7 +185,7 @@ impl CatalogSpec {
 
     fn result_area(&self) -> Html {
         html!{
-            <aside class={"menu"}>
+            <aside class="menu">
                 {self.render_spec_tree(&self.spec_tree)}
             </aside>
         }
@@ -193,7 +193,7 @@ impl CatalogSpec {
 
     fn render_spec_tree(&self, nodes: &[SpecNode]) -> Html {
         html!{
-            <ul class={"menu-list"}>
+            <ul class="menu-list">
                 {for nodes.iter().map(|node| self.render_spec_node(node))}
             </ul>
         }
@@ -242,7 +242,7 @@ impl CatalogSpec {
         // todo!(make filter by catalogs (search specs))
         html!{
             <button
-                class={"button is-white is-small catalog-title is-fullwidth"}
+                class="button is-white is-small catalog-title is-fullwidth"
                 disabled={self.current_spec_id == 1}
                 onclick={self.link.callback(move |_| Msg::ChangeSpec(1))} >
                 {LocaleKey::ResetSelection.get_value()}

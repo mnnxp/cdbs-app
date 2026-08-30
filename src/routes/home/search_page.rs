@@ -68,12 +68,12 @@ impl Component for SearchPage {
 
     fn view(&self) -> Html {
         html!{
-            <div id={"search-page"} class={"column"}>
-                // <div class={"column"}></div>
-                <div class={"column"}>
-                    <div class={"columns"}>
-                        <div class={"column is-one-quarter"}>{self.filters()}</div>
-                        <div class={"column"}>
+            <div id="search-page" class="column">
+                // <div class="column"></div>
+                <div class="column">
+                    <div class="columns">
+                        <div class="column is-one-quarter">{self.filters()}</div>
+                        <div class="column">
                             <SearchBar search_arg={self.search_arg.clone()} />
                         </div>
                     </div>
@@ -87,12 +87,12 @@ impl SearchPage {
     fn filters(&self) -> Html {
         let callback_select_spec = self.link.callback(|spec_id| Msg::ChangeSpec(spec_id));
         html!{
-            <div class={"block"}>
-                <div class={"column"}>
+            <div class="block">
+                <div class="column">
                     <CatalogSpec callback_select_spec={callback_select_spec} />
                 </div>
-                <div class={"column"}>{self.checkboxs()}</div>
-                <div class={"column"}>{self.for_objects()}</div>
+                <div class="column">{self.checkboxs()}</div>
+                <div class="column">{self.for_objects()}</div>
             </div>
         }
     }
@@ -105,9 +105,9 @@ impl SearchPage {
         let onclick_toggle = self.link.callback(|_| Msg::ToggleForObjects);
 
         html!{
-            <div class={"card"}>
-                <div class={"column is-flex is-justify-content-space-between is-align-items-center pointer"} onclick={onclick_toggle}>
-                    <p class={"title is-5 select-title"} style="margin-bottom: 0px;">{LocaleKey::SearchByID.get_value()}</p>
+            <div class="card">
+                <div class="column is-flex is-justify-content-space-between is-align-items-center pointer" onclick={onclick_toggle}>
+                    <p class="title is-5 select-title" style="margin-bottom: 0px;">{LocaleKey::SearchByID.get_value()}</p>
                     <span class="icon is-clickable">
                         <i class={classes!("fas", if self.for_objects_expanded { "fa-chevron-up" } else { "fa-chevron-down" })}></i>
                     </span>
@@ -144,9 +144,9 @@ impl SearchPage {
         let onclick_toggle = self.link.callback(|_| Msg::ToggleCheckboxs);
 
         html!{
-            <div class={"card"}>
-                <div class={"column is-flex is-justify-content-space-between is-align-items-center pointer"} onclick={onclick_toggle}>
-                    <p class={"title is-5 select-title"} style="margin-bottom: 0px;">{LocaleKey::RefinementFilters.get_value()}</p>
+            <div class="card">
+                <div class="column is-flex is-justify-content-space-between is-align-items-center pointer" onclick={onclick_toggle}>
+                    <p class="title is-5 select-title" style="margin-bottom: 0px;">{LocaleKey::RefinementFilters.get_value()}</p>
                     <span class="icon is-clickable">
                         <i class={classes!("fas", if self.checkboxs_expanded { "fa-chevron-up" } else { "fa-chevron-down" })}></i>
                     </span>

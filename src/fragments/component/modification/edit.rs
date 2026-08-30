@@ -239,19 +239,19 @@ impl ModificationEdit {
         let onclick_component_modification_update = self.link.callback(|_| Msg::RequestUpdateModificationData);
         let name_id = unique_id("add-modification-name");
         html!{<>
-                <div class={"content"}>
+                <div class="content">
                     {self.actual_status_block()}
-                    <div class={"column"}>
-                        <label class={"label"} for={name_id.clone()}>{LocaleKey::ModificationName.get_value()}</label>
+                    <div class="column">
+                        <label class="label" for={name_id.clone()}>{LocaleKey::ModificationName.get_value()}</label>
                         <input
                             id={name_id}
-                            class={"input is-fullwidth"}
-                            type={"text"}
+                            class="input is-fullwidth"
+                            type="text"
                             placeholder={self.props.modification.modification_name.clone()}
                             value={self.request_edit_modification.modification_name.clone()}
                             oninput={oninput_modification_name} />
                     </div>
-                    <div class={"column"}>
+                    <div class="column">
                     <MarkdownEditCard
                         id_tag={"modification-description"}
                         title={LocaleKey::Description.get_value()}
@@ -292,12 +292,12 @@ impl ModificationEdit {
           }));
         let status_id = unique_id("modification-actual-status");
         html!{
-            <div class={"column"}>
-            <div class={"columns"}>
-                <div class={"column"}>
+            <div class="column">
+            <div class="columns">
+                <div class="column">
                     <div class="field">
                     <label class="label" for={status_id.clone()}>{LocaleKey::LifeCycleStage.get_value()}</label>
-                    <div class={"select"}>
+                    <div class="select">
                     <select
                         id={status_id}
                         select={self.props.modification.actual_status.actual_status_id.to_string()}

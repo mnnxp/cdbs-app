@@ -9,8 +9,8 @@ pub fn res_btn(
   pathname: Pathname,
 ) -> Html {
   html!{
-    <a class={"button"} onclick={onclick} href={pathname.get_pathname()} title={title.to_string()}>
-      <span class={"icon is-small"} style={span_style} >
+    <a class="button" onclick={onclick} href={pathname.get_pathname()} title={title.to_string()}>
+      <span class="icon is-small" style={span_style} >
         <i class={classes_icon}></i>
       </span>
     </a>
@@ -23,7 +23,7 @@ pub fn res_fullwidth_btn(
   pathname: Pathname,
 ) -> Html {
   html!{
-    <a class={"button is-info is-light is-fullwidth has-text-weight-bold"} onclick={onclick} href={pathname.get_pathname()}>
+    <a class="button is-info is-light is-fullwidth has-text-weight-bold" onclick={onclick} href={pathname.get_pathname()}>
       {label.to_string()}
     </a>
   }

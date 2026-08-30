@@ -313,11 +313,11 @@ impl Component for UploaderFiles {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         html!{<>
             <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
-            <div class={"columns"}>
-                <div class={"column"}>
+            <div class="columns">
+                <div class="column">
                     {self.show_frame_upload_files()}
                 </div>
-                <div class={"column"}>
+                <div class="column">
                     {self.select_files()}
                     {self.show_control_btn()}
                 </div>

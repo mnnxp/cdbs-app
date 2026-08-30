@@ -348,11 +348,11 @@ impl ShowCompany {
         &self,
         company_data: &CompanyInfo,
     ) -> Html {
-        html!{<div id={"company-card-list"} class="card">
+        html!{<div id="company-card-list" class="card">
             <div class="columns is-mobile">
                 <div class="column is-flex">
                     {self.render_menu()}
-                    <div id={"company-card-list-items"} class="card-relate-data" style={resizer("company-card-list", 5)}>
+                    <div id="company-card-list-items" class="card-relate-data" style={resizer("company-card-list", 5)}>
                         {match self.company_tab {
                             CompanyTab::Info => view_content(&company_data),
                             CompanyTab::Represent => view_represents(&company_data),

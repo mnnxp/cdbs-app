@@ -132,11 +132,11 @@ impl RegisterParamnameBlock {
                     value={self.request_new_paramname.clone()}
                     oninput={oninput_set_paramname}
                     />
-                    <div class={"columns"}>
-                        <div class={"column is-narrow pr-0"}>
+                    <div class="columns">
+                        <div class="column is-narrow pr-0">
                            <p class="help">{LocaleKey::Preview.get_value()}<span>{":"}</span></p>
                         </div>
-                        <div class={"column is-narrow"}>
+                        <div class="column is-narrow">
                             <p class="help">{self.request_new_paramname.to_markdown()}</p>
                         </div>
                     </div>

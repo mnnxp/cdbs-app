@@ -392,7 +392,7 @@ impl Component for Settings {
         html!{
             <div class="settings-page">
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
-                <div class={"container is-fluid page pl-0"}>
+                <div class="container is-fluid page pl-0">
                     <div class="row">
                         <div class="columns">
                             <div class="column is-flex side-menu-content-fix">
@@ -407,7 +407,7 @@ impl Component for Settings {
                                             {self.show_update_profile_info()}
                                             <form onsubmit={onsubmit_update_profile}>
                                                 {self.change_profile_card()}
-                                                <div class={"mt-5"}>{ft_submit_btn("update-settings")}</div>
+                                                <div class="mt-5">{ft_submit_btn("update-settings")}</div>
                                             </form>
                                         </>},
                                         // Show interface for change favicon user
@@ -428,7 +428,7 @@ impl Component for Settings {
                                             )}
                                             <form onsubmit={onsubmit_update_access}>
                                                 {self.change_access_card()}
-                                                <div class={"mt-5"}>{ft_submit_btn("update-access")}</div>
+                                                <div class="mt-5">{ft_submit_btn("update-access")}</div>
                                             </form>
                                             // todo!(tasks:)
                                             // show Tokens
@@ -447,7 +447,7 @@ impl Component for Settings {
                                             )}
                                             <form onsubmit={onsubmit_update_password}>
                                                 {self.update_password_card()}
-                                                <div class={"mt-5"}>{ft_submit_btn("update-password")}</div>
+                                                <div class="mt-5">{ft_submit_btn("update-password")}</div>
                                             </form>
                                         </>},
                                         // Show interface for remove profile

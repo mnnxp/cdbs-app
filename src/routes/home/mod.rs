@@ -119,7 +119,7 @@ impl Home {
                 <div class="tile is-parent">
                     <form class="field is-relative has-addons column p-0 m-0">
                         <div style="width: 100%;" class="control has-icons-left has-icons-right">
-                            <input id={"input-search-block"} placeholder={LocaleKey::EnterSearchText.get_value()} style="width: 100%;" class="input" oninput={oninput_search_text} />
+                            <input id="input-search-block" placeholder={LocaleKey::EnterSearchText.get_value()} style="width: 100%;" class="input" oninput={oninput_search_text} />
                             <span class="icon is-small is-left">
                                 <i class="fas fa-search fa-xs"></i>
                             </span>

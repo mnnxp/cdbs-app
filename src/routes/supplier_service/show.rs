@@ -252,7 +252,7 @@ impl ShowService {
         class_tag.push(service_data.service_status.get_class_color());
 
         html!{
-            <div class={"columns"}>
+            <div class="columns">
                 <div class={class_tag} >{service_data.service_status.name.to_string()}</div>
               <ImgShowcase
                 object_uuid={self.current_service_uuid.clone()}

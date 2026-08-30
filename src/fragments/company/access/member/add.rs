@@ -209,8 +209,8 @@ impl AddCompanyMemberModal {
         };
         html!{<>
             <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()} />
-            <div class={"columns"}>
-                <div class={"column"}>
+            <div class="columns">
+                <div class="column">
                 <div class="field">
                     <label class="label">{LocaleKey::SearchUser.get_value()}</label>
                     <div class={class_input}>
@@ -224,7 +224,7 @@ impl AddCompanyMemberModal {
                     </div>
                 </div>
             </div>
-            <div class={"column"}>
+            <div class="column">
             <div class="field">
                 <label class="label">{LocaleKey::Role.get_value()}</label>
                 <div class="control">
@@ -247,7 +247,7 @@ impl AddCompanyMemberModal {
             </div>
             </div>
         </div>
-        <div class={"column"}>
+        <div class="column">
             {match self.search_results.is_empty() {
                 true => self.no_users_found(),
                 false => self.show_search_results(),

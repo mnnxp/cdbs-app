@@ -423,8 +423,8 @@ impl DiscussionCommentsBlock {
         match self.replies.get(comment_uuid) {
             Some(_) => html! {<>
                 <button class="button is-small" onclick={onclick_fetch_replies}>
-                    <span class={"icon"} style={"color: #1872f0;"}>
-                        <i class="fas fa-sync" aria-hidden={"true"}></i>
+                    <span class="icon" style="color: #1872f0;">
+                        <i class="fas fa-sync" aria-hidden="true"></i>
                     </span>
                 </button>
                 <button class="button is-small" onclick={onclick_clear_replies}>
@@ -560,8 +560,8 @@ impl DiscussionCommentsBlock {
                         value={self.edit_comment.clone()}
                         oninput={oninput_update_edit_comment}
                     />
-                    <div class={"buttons is-right pt-1"}>
-                        <button class={"button is-small is-primary"} type="submit" style="min-width: 25%;">{ LocaleKey::Save.get_value() }</button>
+                    <div class="buttons is-right pt-1">
+                        <button class="button is-small is-primary" type="submit" style="min-width: 25%;">{ LocaleKey::Save.get_value() }</button>
                         <button class="button is-small is-warning" onclick={onclick_clear_reply}>{ LocaleKey::Cancel.get_value() }</button>
                     </div>
                 </form>

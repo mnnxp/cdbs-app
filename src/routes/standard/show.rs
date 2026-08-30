@@ -345,7 +345,7 @@ impl ShowStandard {
                     {self.show_followers_btn()}
                     <ShareLinkBtn />
                 </div>
-                <div id={"standard-description"} class="pl-5 pr-5">
+                <div id="standard-description" class="pl-5 pr-5">
                     {match standard_data.description.len() {
                         250.. => html!{<>
                             {match self.show_full_description {
@@ -449,7 +449,7 @@ impl ShowStandard {
             </a>
             <ModalBlock
                 modal_id="company-info"
-                title={""}
+                title=""
                 is_active={self.show_owner_company}
                 on_close={callback_company_data_info}
                 on_save={None}

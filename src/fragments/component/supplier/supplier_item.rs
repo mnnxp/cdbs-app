@@ -194,7 +194,7 @@ impl ComponentSupplierItem {
             Some(data) => html! {
                 <ModalBlock
                     modal_id="company-detail"
-                    title={""}
+                    title=""
                     is_active={self.open_company_info}
                     on_close={onclick_company_data_info}
                     on_save={None}

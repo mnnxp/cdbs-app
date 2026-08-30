@@ -143,7 +143,7 @@ impl Component for ComponentFilesBlock {
         let callback_delete_file = self.link.callback(|value: UUID| Msg::RemoveFile(value));
         html!{<>
             <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
-            <div class={"buttons"}>
+            <div class="buttons">
                 {for self.files_list.iter().map(|file| {
                     match self.files_deleted_list.get(&file.uuid) {
                         Some(_) => html!{}, // removed file

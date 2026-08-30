@@ -50,7 +50,7 @@ impl Component for PermissionLevelBlock {
 
     fn view(&self) -> Html {
         html!{
-            <div class={"control"}>
+            <div class="control">
                 {for self.props.permissions.iter().map(|permission| {
                     self.show_permission_item(permission)
                 })}
@@ -69,10 +69,10 @@ impl PermissionLevelBlock {
             _ => permission.type_access_id == self.props.selected,
         };
         html!{
-            <div class={"is-block"}>
+            <div class="is-block">
                 <input
-                    type={"radio"}
-                    name={"permission"}
+                    type="radio"
+                    name="permission"
                     value={permission.type_access_id.to_string()}
                     onchange={onchange_permission_level}
                     checked={is_checked}

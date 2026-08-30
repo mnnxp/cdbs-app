@@ -281,14 +281,14 @@ impl Header {
         html!{
           <>
             <RouterAnchor<AppRoute> route={AppRoute::Login} classes={class_login_btn}>
-                <span class={"icon"}>
-                    <i class={"fas fa-sign-in-alt"} aria-hidden={"true"} style={self.style_color.clone()}></i>
+                <span class="icon">
+                    <i class="fas fa-sign-in-alt" aria-hidden="true" style={self.style_color.clone()}></i>
                 </span>
                 <span class="is-hidden-mobile">{LocaleKey::SignIn.get_value()}</span>
             </RouterAnchor<AppRoute>>
             <RouterAnchor<AppRoute> route={AppRoute::Register} classes={class_register_btn}>
-                <span class={"icon"}>
-                    <i class={"fa fa-user-plus"} aria-hidden={"true"} style={self.style_color.clone()}></i>
+                <span class="icon">
+                    <i class="fa fa-user-plus" aria-hidden="true" style={self.style_color.clone()}></i>
                 </span>
                 <span class="is-hidden-mobile">{LocaleKey::SignUp.get_value()}</span>
             </RouterAnchor<AppRoute>>
@@ -302,7 +302,7 @@ impl Header {
         logout: Callback<MouseEvent>,
     ) -> Html {
         html!{
-            <div class={"buttons"}>
+            <div class="buttons">
                 {self.notification_btn()}
                 {self.profile_btn(user_info.display_username(10))}
                 {self.logout_btn(logout)}
@@ -313,8 +313,8 @@ impl Header {
     fn logout_btn(&self, logout: Callback<MouseEvent>) -> Html {
         html!{
             <button id="header-logout" class="button is-light is-danger" onclick={logout} title={{LocaleKey::Logout.get_value()}} >
-                <span class={"icon"}>
-                    <i class={"fas fa-sign-out-alt"} aria-hidden={"true"} style={self.style_color.clone()}></i>
+                <span class="icon">
+                    <i class="fas fa-sign-out-alt" aria-hidden="true" style={self.style_color.clone()}></i>
                 </span>
             </button>
         }
@@ -341,7 +341,7 @@ impl Header {
         };
         match to_profile {
             true => html!{
-                <button id="header-profile" class={"button"} onclick={onclick_btn} >
+                <button id="header-profile" class="button" onclick={onclick_btn} >
                     <span class="icon"><i class="fas fa-user" style={self.style_color.clone()}></i></span>
                     {if show_username {
                         html!{<span class="is-hidden-mobile">{username}</span>}
@@ -351,7 +351,7 @@ impl Header {
                 </button>
             },
             false => html!{
-                <button id="header-settings" class={"button"} onclick={onclick_btn} >
+                <button id="header-settings" class="button" onclick={onclick_btn} >
                     <span class="icon"><i class="fas fa-user-cog" style={self.style_color.clone()}></i></span>
                 </button>
             },

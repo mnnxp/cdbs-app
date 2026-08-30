@@ -142,12 +142,12 @@ impl Component for FilesOfFilesetCard {
                 <br/>
                 <div id="files-of-fileset-card" class="card">
                     <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
-                    <header class={"card-header has-background-info-light"}>
-                        <p class={"card-header-title"}>{LocaleKey::FilesFromFileset.get_value()}</p>
+                    <header class="card-header has-background-info-light">
+                        <p class="card-header-title">{LocaleKey::FilesFromFileset.get_value()}</p>
                     </header>
-                    <div class={"card-content"}>
-                        <div class={"table-container"}>
-                            <div class={"content"}>
+                    <div class="card-content">
+                        <div class="table-container">
+                            <div class="content">
                                 <table class={classes_table}>
                                     <FileHeadersShow show_download_btn={self.props.show_download_btn} />
                                     <tbody>

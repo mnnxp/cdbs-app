@@ -169,7 +169,7 @@ impl Component for FilesetFilesBlock {
     fn view(&self) -> Html {
         let onclick_paginate = self.link.callback(|page_set| Msg::ChangePaginate(page_set));
         html!{<>
-            <div class={"buttons"}>
+            <div class="buttons">
                 {for self.files.iter().map(|file| self.show_file_info(&file))}
             </div>
             <footer class="card-footer">

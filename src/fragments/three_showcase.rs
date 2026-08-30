@@ -230,9 +230,9 @@ impl Component for ThreeShowcase {
                     false => html!{
                         <button
                             id="three-size-button"
-                            class={"button is-ghost"}
+                            class="button is-ghost"
                             onclick={onclick_full_screen.clone()}
-                            style={"position: absolute;"}
+                            style="position: absolute;"
                             aria-label={text_full_screen} >
                           <span class="icon is-small">
                             <i class={class_icon} style="color: #1872f0;"></i>
@@ -248,12 +248,12 @@ impl Component for ThreeShowcase {
                         <b-container style={b_container_style}></b-container>
                     </div>
                     <button
-                        id={"three-modal-close-btn"}
-                        class={"button is-ghost modal-close"}
+                        id="three-modal-close-btn"
+                        class="button is-ghost modal-close"
                         onclick={onclick_full_screen}
                         aria-label={text_full_screen} >
                       <span class="icon is-small">
-                        <i class={"fas fa-compress-alt"} style="color: #1872f0;"></i>
+                        <i class="fas fa-compress-alt" style="color: #1872f0;"></i>
                       </span>
                     </button>
                 </div>

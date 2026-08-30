@@ -559,13 +559,13 @@ impl ShowComponent {
         };
         let classes_table = get_classes_table(component_data.component_suppliers.len());
         html!{
-            <div class={"card"}>
-                <header class={"card-header"}>
-                    <p class={"card-header-title"}>{table_label}</p>
+            <div class="card">
+                <header class="card-header">
+                    <p class="card-header-title">{table_label}</p>
                 </header>
-                <div class={"card-content"}>
-                <div class={"table-container"}>
-                    <div class={"content"}>
+                <div class="card-content">
+                <div class="table-container">
+                    <div class="content">
                         <table class={classes_table}>
                             <thead>
                             <tr>
@@ -610,13 +610,13 @@ impl ShowComponent {
     fn show_component_standards(&self, component_data: &ComponentInfo) -> Html {
         let classes_table = get_classes_table(component_data.component_standards.len());
         html!{
-            <div class={"card"}>
-                <header class={"card-header"}>
-                    <p class={"card-header-title"}>{LocaleKey::Standards.get_value()}</p>
+            <div class="card">
+                <header class="card-header">
+                    <p class="card-header-title">{LocaleKey::Standards.get_value()}</p>
                 </header>
-                <div class={"card-content"}>
-                <div class={"table-container"}>
-                    <div class={"content"}>
+                <div class="card-content">
+                <div class="table-container">
+                    <div class="content">
                         <table class={classes_table}>
                             <thead>
                             <tr>

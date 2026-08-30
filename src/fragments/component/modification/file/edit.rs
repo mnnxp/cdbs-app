@@ -199,7 +199,7 @@ impl Component for ManageModificationFilesCard {
         html!{<>
             <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
                 <div class="column">
-                    <p class={"title is-5"}>{LocaleKey::UploadModificationFiles.get_value()}</p>
+                    <p class="title is-5">{LocaleKey::UploadModificationFiles.get_value()}</p>
                     {commit_msg_field(self.props.modification_uuid.clone(), self.commit_msg.clone(), oninput_commit_msg.clone())}
                     <UploaderFiles
                         label_choose_files={LocaleKey::SelectFilesForModification}
@@ -209,8 +209,8 @@ impl Component for ManageModificationFilesCard {
                         />
                 </div>
                 <div class="column">
-                    <p class={"title is-5"}>{LocaleKey::FilesForModification.get_value()}</p>
-                    <div class={"buttons"}>
+                    <p class="title is-5">{LocaleKey::FilesForModification.get_value()}</p>
+                    <div class="buttons">
                         {for self.files_list.iter().map(|file| {
                             match self.files_deleted_list.get(&file.uuid) {
                                 Some(_) => html!{}, // removed file

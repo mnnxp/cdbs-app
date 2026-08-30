@@ -204,10 +204,10 @@ impl SearchBar {
             false => (None, Some(self.found_components.clone())),
         };
         html!{
-            <div class={"search-result-list"}>
-                <div class={"columns is-mobile"}>
-                    <div class={"column is-flex"}>
-                        <div id={"search-result-list-items"} class="card-relate-data" style={resizer("search-result-list", 1)}>
+            <div class="search-result-list">
+                <div class="columns is-mobile">
+                    <div class="column is-flex">
+                        <div id="search-result-list-items" class="card-relate-data" style={resizer("search-result-list", 1)}>
                             <CatalogComponents
                                 show_create_btn={false}
                                 arguments={arguments}
@@ -226,8 +226,8 @@ impl SearchBar {
         if self.has_props { bar_class.push(vec!["has-addons", "column", "p-0", "m-0", "is-three-quarters"]); }
         html! {
             <div class={bar_class}>
-                <div class={classes!("control", "has-icons-left", "has-icons-right", is_loading)} style={"width: 100%;"}>
-                <input id={"input-search-bar"} class={"input"} style={"width: 100%;"}
+                <div class={classes!("control", "has-icons-left", "has-icons-right", is_loading)} style="width: 100%;">
+                <input id="input-search-bar" class="input" style="width: 100%;"
                     oninput={self.link.callback(|ev: InputData| Msg::InputSearch(ev.value))}
                     onfocus={self.link.callback(|_| Msg::SetFocus(true))}
                     onblur={self.link.callback(|_| Msg::SetFocus(false))}
@@ -235,13 +235,13 @@ impl SearchBar {
                     placeholder={LocaleKey::EnterSearchText.get_value()}
                     value={self.search_arg.search.clone()}
                     />
-                <span class={"icon is-small is-left"}>
-                    <i class={"fas fa-search fa-xs"}></i>
+                <span class="icon is-small is-left">
+                    <i class="fas fa-search fa-xs"></i>
                 </span>
                 </div>
                 {match self.has_props {
                     true => html!{
-                        <div class={"control"}>
+                        <div class="control">
                             <button class="button is-info search-button" onclick={self.link.callback(|_| Msg::Search)}>
                                 {LocaleKey::Search.get_value()}
                             </button>
@@ -257,15 +257,15 @@ impl SearchBar {
         let show_dropdown = if self.request_status == RequestStatus::Success && self.is_focused { "is-active" } else { "" };
         html! {
             <div class={classes!("dropdown", "is-absolute", show_dropdown)}>
-              <div class={"dropdown-menu"} id={"component-dropdown-menu"} role={"menu"}>
-                <div class={"dropdown-content"}>
+              <div class="dropdown-menu" id="component-dropdown-menu" role="menu">
+                <div class="dropdown-content">
                   {
                     if self.request_status == RequestStatus::Success && self.found_components.is_empty() {
                         html! {
-                            <div class={"dropdown-item has-text-grey"}>
-                                <span class={"icon-text"}>
-                                    <span class={"icon"}>
-                                        <i class={"fas fa-search-minus"}></i>
+                            <div class="dropdown-item has-text-grey">
+                                <span class="icon-text">
+                                    <span class="icon">
+                                        <i class="fas fa-search-minus"></i>
                                     </span>
                                     <span>{LocaleKey::NoResults.get_value()}</span>
                                 </span>

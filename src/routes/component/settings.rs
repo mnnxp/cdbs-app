@@ -603,7 +603,7 @@ impl ComponentSettings {
         let onchange_type_access = self.link.callback(|value| Msg::UpdateTypeAccessId(value));
         html!{
             <div class="content">
-                <h4 id={"component-access-global"} class={"title is-4"}>{LocaleKey::TypeAccess.get_value()}</h4>
+                <h4 id="component-access-global" class="title is-4">{LocaleKey::TypeAccess.get_value()}</h4>
                 <div class="column">
                     <TypeAccessBlock
                         change_cb={onchange_type_access}

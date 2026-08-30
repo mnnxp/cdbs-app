@@ -339,11 +339,11 @@ impl Profile {
         &self,
         self_data: &SelfUserInfo,
     ) -> Html {
-        html!{<div id={"card-list"} class="card">
+        html!{<div id="card-list" class="card">
             <div class="columns is-mobile">
                 <div class="column is-flex">
                     {self.render_menu()}
-                    <div id={"card-list-items"} class="card-relate-data" style={resizer("card-list", 5)}>
+                    <div id="card-list-items" class="card-relate-data" style={resizer("card-list", 5)}>
                         {match self.profile_tab {
                             ProfileTab::Certificates => self.view_certificates(self_data.certificates.clone()),
                             ProfileTab::Components => self.view_components(&self_data.uuid),
@@ -392,11 +392,11 @@ impl Profile {
         &self,
         user_data: &UserInfo,
     ) -> Html {
-        html!{<div id={"other-card-list"} class="card">
+        html!{<div id="other-card-list" class="card">
             <div class="columns is-mobile">
                 <div class="column is-flex">
                   {self.render_menu()}
-                  <div id={"other-card-list-items"} class="card-relate-data" style={resizer("other-card-list", 5)}>
+                  <div id="other-card-list-items" class="card-relate-data" style={resizer("other-card-list", 5)}>
                       {match self.profile_tab {
                           ProfileTab::Certificates => self.view_certificates(user_data.certificates.clone()),
                           ProfileTab::Components => self.view_components(&user_data.uuid),
