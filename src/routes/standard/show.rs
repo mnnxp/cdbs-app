@@ -326,9 +326,9 @@ impl ShowStandard {
                     <div class="column">
                         {standard_data.type_access.get_with_icon()}
                     </div>
-                    <div class="column is-narrow" title={LocaleKey::LCS.get_value()}>
+                    <div class="column is-narrow">
                         <span class="icon is-small mr-3">
-                            <i class={classes!("fa", "fa-edit")}></i>
+                            <i class={classes!("fas", "fa-calendar-day")}></i>
                         </span>
                         <span class="id-box">
                             {standard_data.publication_at.date_to_display()}
