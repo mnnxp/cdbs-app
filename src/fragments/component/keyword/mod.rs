@@ -4,7 +4,7 @@ pub use item::KeywordTagItem;
 pub use add::AddKeywordsTags;
 
 use yew::{Callback, Component, ComponentLink, Html, Properties, ShouldRender, html};
-use crate::services::get_value_field;
+use crate::services::LocaleKey;
 use crate::types::{UUID, Keyword};
 
 #[derive(Clone, Debug, Properties)]
@@ -47,7 +47,7 @@ impl Component for KeywordsTags {
             false => html!{
                 <div class="card">
                     <header class="card-header">
-                        <p class="card-header-title">{get_value_field(&105)}</p> // Keywords
+                        <p class="card-header-title">{LocaleKey::Keywords.get_value()}</p>
                     </header>
                     <div class="card-content">
                         <div class="content">

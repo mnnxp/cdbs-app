@@ -1,5 +1,5 @@
 use yew::{html, Component, ComponentLink, Html, ShouldRender, ChangeData};
-use crate::services::{get_lang, get_server_location_id, get_value_field, set_server_locations};
+use crate::services::{get_lang, get_server_location_id, LocaleKey, set_server_locations};
 use crate::fragments::buttons::simple_link;
 
 pub struct Footer {
@@ -43,7 +43,7 @@ impl Component for Footer {
     }
 
     fn view(&self) -> Html {
-        let current_info = get_value_field(&258);
+        let current_info = LocaleKey::Copyright.get_value();
         let version_number = "0.3.2";
         let (base_url, docs_url) = match get_lang().as_deref() {
             Some("zh") => ("https://cadbase.org/zh/", String::from("https://docs.cadbase.org/")),
@@ -76,24 +76,24 @@ impl Component for Footer {
                     </div>
                     // 1 center footer
                     <div class="column">
-                        {simple_link(news_url, get_value_field(&256))}
+                        {simple_link(news_url, LocaleKey::Overviews.get_value())}
                         <br/>
-                        {simple_link(docs_url, get_value_field(&12))}
+                        {simple_link(docs_url, LocaleKey::ApiReference.get_value())}
                         <br/>
-                        {simple_link(glossary_url, get_value_field(&259))}
+                        {simple_link(glossary_url, LocaleKey::Glossary.get_value())}
                     </div>
                     // 2 center footer
                     <div class="column">
-                        {simple_link(about_url, get_value_field(&11))}
+                        {simple_link(about_url, LocaleKey::WhatIs.get_value())}
                         <br/>
-                        {simple_link(terms_url, get_value_field(&10))}
+                        {simple_link(terms_url, LocaleKey::Terms.get_value())}
                         <br/>
-                        {simple_link(privacy_notice_url, get_value_field(&269))}
+                        {simple_link(privacy_notice_url, LocaleKey::PrivacyNotice.get_value())}
                     </div>
                     // right footer
                     <div class="column">
                         <h4>{current_info}</h4>
-                        <p class="help">{get_value_field(&257)}{version_number}</p>
+                        <p class="help">{LocaleKey::Version.get_value()}{version_number}</p>
                     </div>
                 </div>
             </footer>
@@ -109,15 +109,15 @@ impl Footer {
               _ => "1".to_string(),
             }));
         let server_location = [
-            (1, get_value_field(&415)),
-            (2, get_value_field(&416)),
-            (3, get_value_field(&417)),
-            (4, get_value_field(&418)),
+            (1, LocaleKey::Netherlands.get_value()),
+            (2, LocaleKey::Russia.get_value()),
+            (3, LocaleKey::China.get_value()),
+            (4, LocaleKey::CustomServer.get_value()),
         ];
 
         html!{
             <div class="server-selector">
-                <span class="is-size-7 has-text-weight-semibold mr-2">{get_value_field(&414)}</span>
+                <span class="is-size-7 has-text-weight-semibold mr-2">{LocaleKey::ServerLocation.get_value()}</span>
                 <div class="select is-small is-narrow">
                     <select
                         id="select_server_location"

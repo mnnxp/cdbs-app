@@ -1,7 +1,7 @@
 use yew::{agent::Bridged, html, Bridge, Callback, Component, ComponentLink, Html, Properties, ShouldRender};
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
 use crate::routes::AppRoute;
-use crate::services::get_value_field;
+use crate::services::LocaleKey;
 use crate::error::Error;
 
 use super::header::CurrentPage;
@@ -83,7 +83,7 @@ impl Component for ListErrors {
                     CurrentPage::Login => html!{
                         <div class={vec!("notification", "custom-notif", "is-warning")}>
                             <button class="delete" onclick={onclick_close_error}/>
-                            {get_value_field(&332)}
+                            {LocaleKey::Unauthorized.get_value()}
                         </div>
                     },
                     _ => html!{
@@ -91,11 +91,11 @@ impl Component for ListErrors {
                             <button class="delete" onclick={onclick_close_error}/>
                             <div class="columns">
                                 <div class="column">
-                                    <p>{get_value_field(&332)}</p>
+                                    <p>{LocaleKey::Unauthorized.get_value()}</p>
                                 </div>
                                 <div class="column">
                                     <a class="is-ghost" onclick={onclick_route_to_login}>
-                                        <span>{get_value_field(&333)}</span>
+                                        <span>{LocaleKey::GoToAuthorization.get_value()}</span>
                                     </a>
                                 </div>
                             </div>

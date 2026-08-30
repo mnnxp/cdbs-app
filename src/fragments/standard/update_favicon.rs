@@ -6,7 +6,7 @@ use wasm_bindgen_futures::spawn_local;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::file::UploaderFiles;
-use crate::services::{get_value_field, resp_parsing};
+use crate::services::{LocaleKey, resp_parsing};
 use crate::types::UploadFile;
 use crate::gqls::make_query;
 use crate::gqls::standard::{UploadStandardFavicon, upload_standard_favicon};
@@ -111,7 +111,7 @@ impl Component for UpdateStandardFaviconCard {
               true => html!{self.show_success_upload()},
               false => html!{
                 <UploaderFiles
-                    text_choose_files={182} // Drop preview image here
+                    label_choose_files={LocaleKey::SelectPreviewImage}
                     callback_upload_filenames={callback_upload_filenames}
                     request_upload_files={request_upload_files}
                     callback_upload_confirm={callback_upload_confirm}
@@ -130,10 +130,10 @@ impl UpdateStandardFaviconCard {
         html!{
             <article class="message is-success">
               <div class="message-header">
-                <p>{get_value_field(&89)}</p>
+                <p>{LocaleKey::Success.get_value()}</p>
                 <button class="delete" aria-label="close" onclick={onclick_hide_notification.clone()} />
               </div>
-              <div class="message-body">{get_value_field(&92)}</div>
+              <div class="message-body">{LocaleKey::ImageUpdated.get_value()}</div>
             </article>
         }
     }

@@ -18,7 +18,7 @@ use crate::fragments::{
 };
 use crate::routes::AppRoute;
 use crate::services::content_adapter::DateDisplay;
-use crate::services::{get_current_user, get_from_value, get_logged_user, get_value_field, get_value_response, resp_parsing, set_history_back, set_logged_user, set_token};
+use crate::services::{get_current_user, get_from_value, get_logged_user, LocaleKey, get_value_response, resp_parsing, set_history_back, set_logged_user, set_token};
 use crate::types::{Program, Region, SelfUserInfo, TypeAccessInfo, UpdatePasswordInfo, UserUpdateInfo};
 use crate::gqls::make_query;
 use crate::gqls::user::{
@@ -36,13 +36,13 @@ impl MenuBuilder for Settings {
     fn menu_config() -> &'static [MenuItemTemplate<Menu>] {
         use Menu::*;
         &[
-            MenuItemTemplate { title_key: 76, icon_classes: &[&["fas", "fa-angle-double-left"]], tab: OpenProfile, custom_class: None },
-            MenuItemTemplate { title_key: 77, icon_classes: &[&["fas", "fa-address-card"]], tab: Profile, custom_class: None },
-            MenuItemTemplate { title_key: 78, icon_classes: &[&["fas", "fa-image"]], tab: UpdateFavicon, custom_class: None },
-            MenuItemTemplate { title_key: 64, icon_classes: &[&["fas", "fa-certificate"]], tab: Certificates, custom_class: None },
-            MenuItemTemplate { title_key: 80, icon_classes: &[&["fas", "fa-low-vision"]], tab: Access, custom_class: None },
-            MenuItemTemplate { title_key: 20, icon_classes: &[&["fas", "fa-key"]], tab: Password, custom_class: None },
-            MenuItemTemplate { title_key: 82, icon_classes: &[&["fas", "fa-trash"]], tab: RemoveProfile, custom_class: Some("has-background-danger-light") },
+            MenuItemTemplate { lk_title: LocaleKey::OpenProfile, icon_classes: &[&["fas", "fa-angle-double-left"]], tab: OpenProfile, custom_class: None },
+            MenuItemTemplate { lk_title: LocaleKey::ProfileTitle, icon_classes: &[&["fas", "fa-address-card"]], tab: Profile, custom_class: None },
+            MenuItemTemplate { lk_title: LocaleKey::ProfilePicture, icon_classes: &[&["fas", "fa-image"]], tab: UpdateFavicon, custom_class: None },
+            MenuItemTemplate { lk_title: LocaleKey::CertificatesLabel, icon_classes: &[&["fas", "fa-certificate"]], tab: Certificates, custom_class: None },
+            MenuItemTemplate { lk_title: LocaleKey::AccessPolicy, icon_classes: &[&["fas", "fa-low-vision"]], tab: Access, custom_class: None },
+            MenuItemTemplate { lk_title: LocaleKey::Password, icon_classes: &[&["fas", "fa-key"]], tab: Password, custom_class: None },
+            MenuItemTemplate { lk_title: LocaleKey::RemoveProfileTitle, icon_classes: &[&["fas", "fa-trash"]], tab: RemoveProfile, custom_class: Some("has-background-danger-light") },
         ]
     }
 
@@ -403,7 +403,7 @@ impl Component for Settings {
                                         Menu::OpenProfile => html!{},
                                         // Show interface for change profile data
                                         Menu::Profile => html!{<>
-                                            <h4 id="change-profile" class="title is-4">{get_value_field(&63)}</h4> // "Profile"
+                                            <h4 id="change-profile" class="title is-4">{LocaleKey::ProfileLabel.get_value()}</h4>
                                             {self.show_update_profile_info()}
                                             <form onsubmit={onsubmit_update_profile}>
                                                 {self.change_profile_card()}
@@ -414,15 +414,15 @@ impl Component for Settings {
                                         Menu::UpdateFavicon => {self.update_favicon_card()},
                                         // Show interface for add and update Certificates
                                         Menu::Certificates => html!{<>
-                                            <h4 id="change-certificates" class="title is-4">{get_value_field(&64)}</h4> // "Certificates"
+                                            <h4 id="change-certificates" class="title is-4">{LocaleKey::CertificatesLabel.get_value()}</h4>
                                             {self.add_certificate_card()}
                                             {self.change_certificates_card()}
                                         </>},
                                         // Show interface for change access
                                         Menu::Access => html!{<>
-                                            <h4 id="change-access" class="title is-4">{get_value_field(&65)}</h4> // "Access"
+                                            <h4 id="change-access" class="title is-4">{LocaleKey::Access.get_value()}</h4>
                                             {show_notification(
-                                                &format!("{}: {}", get_value_field(&68), self.get_result_access),
+                                                &format!("{}: {}", LocaleKey::UpdatedAccess.get_value(), self.get_result_access),
                                                 "is-success",
                                                 self.get_result_access,
                                             )}
@@ -439,9 +439,9 @@ impl Component for Settings {
                                         </>},
                                         // Show interface for change password
                                         Menu::Password => html!{<>
-                                            <h4 id="change-password" class="title is-4">{get_value_field(&20)}</h4> // "Password"
+                                            <h4 id="change-password" class="title is-4">{LocaleKey::Password.get_value()}</h4>
                                             {show_notification(
-                                                get_value_field(&69),
+                                                LocaleKey::UpdatedPassword.get_value(),
                                                 "is-success",
                                                 self.get_result_pwd,
                                             )}
@@ -469,19 +469,19 @@ impl Settings {
         html!{
             <div class="columns">
                 {show_notification(
-                    &format!("{} {}", get_value_field(&72), self.get_result_profile),
+                    &format!("{} {}", LocaleKey::UpdatedRows.get_value(), self.get_result_profile),
                     "is-success",
                     self.get_result_profile > 0,
                 )}
                 <div id="updated-date" class="column">
-                    <span class={classes!("overflow-title", "has-text-weight-bold")}>{get_value_field(&73)}</span> // "Last updated: "
+                    <span class={classes!("overflow-title", "has-text-weight-bold")}>{LocaleKey::LastUpdated.get_value()}</span>
                     {match &self.current_data {
                         Some(data) => html!{
                             <span class="overflow-title">
                                 {data.updated_at.date_to_display()}
                             </span>
                         },
-                        None => html!{<span>{get_value_field(&75)}</span>},
+                        None => html!{<span>{LocaleKey::NoData.get_value()}</span>},
                     }}
                 </div>
             </div>
@@ -513,7 +513,7 @@ impl Settings {
                     manage_btn={true}
                 />
             },
-            None => html!{<span class={classes!("tag", "is-info", "is-light")}>{get_value_field(&74)}</span>}, // "Not fount certificates"
+            None => html!{<span class={classes!("tag", "is-info", "is-light")}>{LocaleKey::NoCertificates.get_value()}</span>},
         }
     }
 
@@ -538,7 +538,7 @@ impl Settings {
         let onchange_type_access = self.link.callback(|value| Msg::UpdateTypeAccessId(value));
         html!{
             <div class="column">
-                <label class="label">{get_value_field(&58)}</label> // "Type Access"
+                <label class="label">{LocaleKey::TypeAccess.get_value()}</label>
                 <TypeAccessBlock
                     change_cb={onchange_type_access}
                     types={self.types_access.clone()}
@@ -558,7 +558,7 @@ impl Settings {
                 <div class="column">
                     {render_form_input(InputConfig {
                         id: "password",
-                        label: get_value_field(&48), // "Old password"
+                        label: LocaleKey::OldPassword.get_value(),
                         value: self.request_password.old_password.to_string(),
                         oninput: oninput_old_password,
                         is_disabled: self.loading,
@@ -568,7 +568,7 @@ impl Settings {
                     })}
                     {render_form_input(InputConfig {
                         id: "password",
-                        label: get_value_field(&49), // "New password"
+                        label: LocaleKey::NewPassword.get_value(),
                         value: self.request_password.new_password.to_string(),
                         oninput: oninput_new_password,
                         is_disabled: self.loading,
@@ -612,10 +612,10 @@ impl Settings {
                     </h5>
                     <div class="columns is-desktop">
                         <div class="column">
-                            {InputConfig::profile_input("username", &50, self.request_profile.username.clone(), oninput_username, Some("fas fa-user"), self.loading, false)}
+                            {InputConfig::profile_input("username", LocaleKey::Username, self.request_profile.username.clone(), oninput_username, Some("fas fa-user"), self.loading, false)}
                         </div>
                         <div class="column">
-                            {InputConfig::profile_input("email", &22, self.request_profile.email.clone(), oninput_email, Some("fas fa-envelope"), self.loading, false)}
+                            {InputConfig::profile_input("email", LocaleKey::Email, self.request_profile.email.clone(), oninput_email, Some("fas fa-envelope"), self.loading, false)}
                         </div>
                     </div>
                 </div>
@@ -625,13 +625,13 @@ impl Settings {
                     </h5>
                     <div class="columns is-desktop">
                         <div class="column">
-                            {InputConfig::profile_input("lastname", &53, self.request_profile.lastname.clone(), oninput_lastname, None, self.loading, false)}
+                            {InputConfig::profile_input("lastname", LocaleKey::Lastname, self.request_profile.lastname.clone(), oninput_lastname, None, self.loading, false)}
                         </div>
                         <div class="column">
-                            {InputConfig::profile_input("firstname", &52, self.request_profile.firstname.clone(), oninput_firstname, None, self.loading, false)}
+                            {InputConfig::profile_input("firstname", LocaleKey::Firstname, self.request_profile.firstname.clone(), oninput_firstname, None, self.loading, false)}
                         </div>
                         <div class="column">
-                            {InputConfig::profile_input("secondname", &54, self.request_profile.secondname.clone(), oninput_secondname, None, self.loading, false)}
+                            {InputConfig::profile_input("secondname", LocaleKey::Secondname, self.request_profile.secondname.clone(), oninput_secondname, None, self.loading, false)}
                         </div>
                     </div>
                 </div>
@@ -641,11 +641,11 @@ impl Settings {
                     </h5>
                     <div class="columns is-desktop">
                         <div class="column">
-                            {InputConfig::profile_input("position", &55, self.request_profile.position.clone(), oninput_position, Some("fas fa-id-badge"), self.loading, false)}
+                            {InputConfig::profile_input("position", LocaleKey::Position, self.request_profile.position.clone(), oninput_position, Some("fas fa-id-badge"), self.loading, false)}
                         </div>
                         <div class="column">
                             <div class="field">
-                                <label class="label">{get_value_field(&26)}</label>
+                                <label class="label">{LocaleKey::Program.get_value()}</label>
                                 <div class="control is-expanded">
                                     <div class="select is-fullwidth">
                                         <select
@@ -668,7 +668,7 @@ impl Settings {
                         </div>
                         <div class="column">
                             <div class="field">
-                                <label class="label">{get_value_field(&27)}</label>
+                                <label class="label">{LocaleKey::Region.get_value()}</label>
                                 <div class="control is-expanded">
                                     <div class="select is-fullwidth">
                                         <select
@@ -697,10 +697,10 @@ impl Settings {
                     </h5>
                     <div class="columns is-desktop">
                         <div class="column is-3-desktop">
-                            {InputConfig::profile_input("tel", &56, self.request_profile.phone.clone(), oninput_phone, Some("fas fa-phone"), self.loading, false)}
+                            {InputConfig::profile_input("tel", LocaleKey::Phone, self.request_profile.phone.clone(), oninput_phone, Some("fas fa-phone"), self.loading, false)}
                         </div>
                         <div class="column">
-                            {InputConfig::profile_input("address", &57, self.request_profile.address.clone(), oninput_address, Some("fas fa-map-marker-alt"), self.loading, false)}
+                            {InputConfig::profile_input("address", LocaleKey::Address, self.request_profile.address.clone(), oninput_address, Some("fas fa-map-marker-alt"), self.loading, false)}
                         </div>
                     </div>
                 </div>
@@ -708,7 +708,7 @@ impl Settings {
                     <h5 class="title is-6 has-text-grey mb-4 is-uppercase has-text-weight-bold">
                         <span class="icon mr-2"><i class="fas fa-align-left"></i></span>
                     </h5>
-                    {InputConfig::profile_input("description", &61, self.request_profile.description.clone(), oninput_description, None, self.loading, false)}
+                    {InputConfig::profile_input("description", LocaleKey::Description, self.request_profile.description.clone(), oninput_description, None, self.loading, false)}
                 </div>
             </div>
         }
@@ -719,13 +719,13 @@ impl Settings {
         let oninput_user_password = self.link.callback(|ev: InputData| Msg::UpdateUserPassword(ev.value));
 
         html!{<>
-            <h4 id="remove-profile" class="title is-4">{get_value_field(&67)}</h4> // "Remove profile"
+            <h4 id="remove-profile" class="title is-4">{LocaleKey::RemoveProfile.get_value()}</h4>
             <div class="content is-medium">
-                <p><strong>{get_value_field(&272)}</strong> {get_value_field(&71)}</p>
+                <p><strong>{LocaleKey::Warning.get_value()}</strong> {LocaleKey::ProfileDeleteWarning.get_value()}</p>
             </div>
             {InputConfig::profile_input(
                 "password",
-                &62,
+                LocaleKey::ConfirmDeleteProfile,
                 Some(self.request_user_password.clone()),
                 oninput_user_password,
                 Some("fas fa-lock"),

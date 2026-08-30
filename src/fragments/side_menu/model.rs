@@ -1,5 +1,6 @@
 use web_sys::MouseEvent;
 use yew::{classes, Callback, Classes, Properties};
+use crate::services::LocaleKey;
 
 /// Menu item component properties
 #[derive(Properties, Clone)]
@@ -33,7 +34,7 @@ impl Default for MenuItem {
 
 /// Menu item configuration template
 pub(crate) struct MenuItemTemplate<T> {
-    pub(crate) title_key: usize,
+    pub(crate) lk_title: LocaleKey,
     pub(crate) icon_classes: &'static [&'static [&'static str]],
     pub(crate) tab: T,
     pub(crate) custom_class: Option<&'static str>,

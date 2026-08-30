@@ -1,5 +1,5 @@
 use yew::{html, Html, classes, Classes, Callback, MouseEvent};
-use crate::services::{get_value_field, unique_id};
+use crate::services::{LocaleKey, unique_id};
 use crate::types::Pathname;
 
 use super::ListState;
@@ -7,7 +7,7 @@ use super::ListState;
 /// Returns a VNode with Html code of button to download url in the <a> tag
 /// (the button is not active if the link is empty)
 pub fn ft_download_btn(download_url: String, as_button: bool) -> Html {
-    let title = get_value_field(&126);
+    let title = LocaleKey::Download.get_value();
     let class_btn = match as_button {
         true => classes!("button", "is-white"),
         false => classes!("is-white"),
@@ -32,7 +32,7 @@ pub fn ft_download_btn(download_url: String, as_button: bool) -> Html {
 /// Returns a VNode with Html code of a button with icon and text to download url
 /// in the <a> tag (the button is not active if the link is empty)
 pub fn ft_download_full_btn(download_url: String) -> Html {
-    let title_text = get_value_field(&126);
+    let title_text = LocaleKey::Download.get_value();
     html!{
         <a class={classes!("button", "is-info", "is-fullwidth")}
         href={download_url.clone()}
@@ -50,8 +50,8 @@ pub fn ft_download_full_btn(download_url: String) -> Html {
 /// Returns a VNode with Html code of a button for the "Show more" or "Show less" action
 pub fn ft_see_btn(onclick_btn: Callback<MouseEvent>, show_full: bool) -> Html {
     let (title_text, class_icon) = match show_full {
-        true => (get_value_field(&99), "fas fa-caret-up"),
-        false => (get_value_field(&98), "fas fa-caret-down"),
+        true => (LocaleKey::SeeLess.get_value(), "fas fa-caret-up"),
+        false => (LocaleKey::SeeMore.get_value(), "fas fa-caret-down"),
     };
     html!{
         <button class={classes!("button", "is-white", "is-fullwidth")} onclick={onclick_btn}>
@@ -83,11 +83,11 @@ pub fn ft_follow_btn(
     let title = match is_followed {
         true => {
             class_fav.push("fas");
-            get_value_field(&327)
+            LocaleKey::RemoveFromBookmarks.get_value()
         },
         false => {
             class_fav.push("far");
-            get_value_field(&326)
+            LocaleKey::AddToBookmarks.get_value()
         },
     };
 
@@ -119,7 +119,7 @@ pub fn ft_discussion_btn(
         true => "button is-info is-light is-active",
         false => "button is-info",
     };
-    let title_text = get_value_field(&380);
+    let title_text = LocaleKey::Discussion.get_value();
     html! {
         <button
             id={unique_id(id_btn)}
@@ -155,10 +155,10 @@ pub fn ft_delete_class_btn(
 ) -> Html {
     let mut set_classes = classes!("button", "is-danger", add_classes);
     let title_text = match confirm {
-        true => get_value_field(&220),
+        true => LocaleKey::YesDelete.get_value(),
         false => {
             set_classes.push("is-light");
-            get_value_field(&135)
+            LocaleKey::Delete.get_value()
         },
     };
     html!{
@@ -208,12 +208,12 @@ pub fn ft_delete_small_btn(
     confirm: bool,
 ) -> Html {
     let title_text = match confirm {
-        true => get_value_field(&220),
+        true => LocaleKey::YesDelete.get_value(),
         false => "",
     };
 
     html!{
-        <a id={unique_id(id_btn)} onclick={trigger_btn} title={get_value_field(&135)}>
+        <a id={unique_id(id_btn)} onclick={trigger_btn} title={LocaleKey::Delete.get_value()}>
             <span class="icon" >
                 <i class="fa fa-trash" aria-hidden="true" style="color: #f14668;"></i>
             </span>
@@ -247,7 +247,7 @@ pub fn ft_save_btn(
     is_fullwidth: bool,
     disabled: bool,
 ) -> Html {
-    let title_text = get_value_field(&46);
+    let title_text = LocaleKey::Save.get_value();
     let class_btn = match is_fullwidth {
         true => classes!("button", "is-link", "is-fullwidth"),
         false => classes!("button", "is-link"),
@@ -273,7 +273,7 @@ pub fn ft_save_btn(
 
 /// Returns a VNode with Html code are rendered as a submit button
 pub fn ft_submit_btn(id_btn: &str) -> Html {
-    let title_text = get_value_field(&46);
+    let title_text = LocaleKey::Save.get_value();
 
     html!{
         <button
@@ -325,7 +325,7 @@ pub fn ft_create_btn(
     trigger_btn: Callback<MouseEvent>,
     disabled: bool,
 ) -> Html {
-    let title_text = get_value_field(&45);
+    let title_text = LocaleKey::Create.get_value();
     let class_btn = classes!("button", "is-fullwidth", "is-success", class_btn);
 
     html!{
@@ -371,7 +371,7 @@ pub fn ft_cancel_btn(
     trigger_btn: Callback<MouseEvent>,
     add_classes: Classes,
 ) -> Html {
-    let title_text = get_value_field(&221);
+    let title_text = LocaleKey::Cancel.get_value();
 
     html!{
         <button
@@ -438,7 +438,7 @@ pub fn ft_import_btn(
                     </span>
                 },
             }}
-            <span class="is-hidden-mobile">{get_value_field(&347)}</span>
+            <span class="is-hidden-mobile">{LocaleKey::Import.get_value()}</span>
         </button>
     }
 }
@@ -450,7 +450,7 @@ pub fn simple_link(url: String, label: &str) -> Html {
 
 /// Returns a VNode with a styled button with an icon and the title "Settings"
 pub fn res_settings_btn(onclick: Callback<MouseEvent>, pathname: Pathname) -> Html {
-    let title = get_value_field(&16);
+    let title = LocaleKey::Settings.get_value();
     html!{
       <a class={"button"} onclick={onclick} href={pathname.get_pathname()} title={title}>
         <span class={"icon is-small"} >

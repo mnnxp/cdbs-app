@@ -11,7 +11,7 @@ use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::buttons::ft_create_btn;
 use crate::fragments::conditions::ConditionsBlock;
-use crate::services::{get_logged_user, get_value_field, get_value_response, get_from_value};
+use crate::services::{get_logged_user, LocaleKey, get_value_response, get_from_value};
 use crate::types::{RegisterInfo, Program, TypeAccessInfo};
 use crate::gqls::make_query;
 use crate::gqls::user::{
@@ -151,10 +151,10 @@ impl Component for Register {
             <div class="container is-fluid page">
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
                 <div class="auth-page">
-                    <h1 class="title is-spaced mb-3">{get_value_field(&14)}</h1>
+                    <h1 class="title is-spaced mb-3">{LocaleKey::SignUp.get_value()}</h1>
                     <h2 class="subtitle mt-0 mb-4">
                         <RouterAnchor<AppRoute> route={AppRoute::Login}>
-                            {get_value_field(&21)}
+                            {LocaleKey::HaveAccount.get_value()}
                         </RouterAnchor<AppRoute>>
                     </h2>
                     <div class="box p-5">
@@ -201,7 +201,7 @@ impl Register {
                     <div class="column">
                         {InputConfig::profile_input(
                             "username",
-                            &19,
+                            LocaleKey::Username,
                             Some(self.request.username.clone()),
                             oninput_username,
                             Some("fas fa-user"),
@@ -212,7 +212,7 @@ impl Register {
                     <div class="column">
                         {InputConfig::profile_input(
                             "email",
-                            &22,
+                            LocaleKey::Email,
                             Some(self.request.email.clone()),
                             oninput_email,
                             Some("fas fa-envelope"),
@@ -224,7 +224,7 @@ impl Register {
                 <div class="field mb-4">
                     {InputConfig::profile_input(
                         "password",
-                        &20,
+                        LocaleKey::Password,
                         Some(self.request.password.clone()),
                         oninput_password,
                         Some("fas fa-lock"),
@@ -235,7 +235,7 @@ impl Register {
                 <div class="columns is-desktop mb-0">
                     <div class="column">
                         <div class="field">
-                            <label class="label">{get_value_field(&26)}</label>
+                            <label class="label">{LocaleKey::Program.get_value()}</label>
                             <div class="control">
                                 <div class="select is-fullwidth">
                                 <select
@@ -258,7 +258,7 @@ impl Register {
                     </div>
                     <div class="column">
                         <div class="field">
-                            <label class="label">{get_value_field(&58)}</label>
+                            <label class="label">{LocaleKey::TypeAccess.get_value()}</label>
                             <TypeAccessBlock
                                 change_cb={onchange_type_access}
                                 types={self.types_access.clone()}

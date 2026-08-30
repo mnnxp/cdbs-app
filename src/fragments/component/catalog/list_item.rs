@@ -5,7 +5,7 @@ use yew_router::{
 };
 use crate::fragments::switch_icon::res_fullwidth_btn;
 use crate::services::content_adapter::{DateDisplay, Markdownable};
-use crate::services::get_value_field;
+use crate::services::LocaleKey;
 use crate::routes::AppRoute;
 use crate::fragments::{
     buttons::ft_follow_btn,
@@ -109,12 +109,12 @@ impl ListItem {
                   <div class="columns is-gapless mb-0">
                     <div class="column">{self.show_owner()}</div>
                     <div class="column">
-                      <span class="id-box" title={get_value_field(&96)}>
+                      <span class="id-box" title={LocaleKey::LifeCycleStage.get_value()}>
                         {self.props.data.actual_status.name.clone()}
                       </span>
                     </div>
                     <div class="column">
-                      <span class={"icon"} title={get_value_field(&156)}>
+                      <span class={"icon"} title={LocaleKey::UpdatedAtLabel2.get_value()}>
                         <i class="fas fa-edit"></i>
                       </span>
                       {updated_at.date_to_display()}
@@ -131,7 +131,7 @@ impl ListItem {
                       classes!("far", "fa-folder"),
                       onclick_open_component,
                       String::new(),
-                      get_value_field(&315),
+                      LocaleKey::Show.get_value(),
                       Pathname::Component(self.props.data.uuid.clone())
                     )}
                     {ft_follow_btn(
@@ -162,7 +162,7 @@ impl ListItem {
                 </p>
               </div>
               <div class="btnBox">
-                {res_fullwidth_btn(onclick_open_component, get_value_field(&161), Pathname::Component(self.props.data.uuid.clone()))}
+                {res_fullwidth_btn(onclick_open_component, LocaleKey::Open.get_value(), Pathname::Component(self.props.data.uuid.clone()))}
                 <div style="margin-left: 8px;">
                   {ft_follow_btn(
                       trigger_fav_btn,
@@ -180,13 +180,13 @@ impl ListItem {
         match &self.props.data.component_suppliers.first() {
             Some(x) => html!{<>
                 // supplier / manufactured by
-                <span class="id-box has-text-weight-bold" title={get_value_field(&158)}>
+                <span class="id-box has-text-weight-bold" title={LocaleKey::SupplierLabel.get_value()}>
                   {x.supplier.shortname.clone()}
                 </span>
             </>},
             None => html!{<>
                 // user uploaded
-                <span class="id-box has-text-weight-bold" title={get_value_field(&118)}>
+                <span class="id-box has-text-weight-bold" title={LocaleKey::CreatedByUser.get_value()}>
                   {format!("@{}",&self.props.data.owner_user.username)}
                 </span>
             </>},

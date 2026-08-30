@@ -1,7 +1,7 @@
 use yew::{Component, Callback, ComponentLink, Html, Properties, ShouldRender, html, ChangeData};
 use log::debug;
 use crate::types::{UUID, FilesetProgramInfo};
-use crate::services::{get_value_field, set_focus};
+use crate::services::{LocaleKey, set_focus};
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
@@ -99,7 +99,7 @@ impl Component for ManageFilesOfFilesetBlock {
                     id={"select-fileset-program-download"}
                     select={self.select_fileset_uuid.clone()}
                     onchange={onchange_select_fileset_btn}
-                    title={get_value_field(&207)}>
+                    title={LocaleKey::SelectFilesetLabel.get_value()}>
                         {for self.props.current_filesets_program.iter().map(|fd|
                             html!{
                                 <option value={fd.uuid.to_string()}
@@ -113,10 +113,10 @@ impl Component for ManageFilesOfFilesetBlock {
                 <button
                 class={class_fileset_btn}
                 onclick={onclick_open_fileset_files_list_btn}
-                title={get_value_field(&106)}
+                title={LocaleKey::FilesFromFileset.get_value()}
                 disabled={self.select_fileset_uuid.is_empty()} >
                     <span class={"icon is-small"}><i class={"fa fa-list"}></i></span>
-                    <span class="is-hidden-mobile">{get_value_field(&198)}</span>
+                    <span class="is-hidden-mobile">{LocaleKey::FilesOfFileset.get_value()}</span>
                 </button>
             </div>
         }

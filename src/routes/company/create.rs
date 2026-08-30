@@ -16,7 +16,7 @@ use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::buttons::ft_create_btn;
-use crate::services::{get_logged_user, get_value_field, resp_parsing, get_value_response, get_from_value};
+use crate::services::{get_logged_user, LocaleKey, resp_parsing, get_value_response, get_from_value};
 use crate::types::{UUID, SlimUser, CompanyCreateInfo, Region, CompanyType, TypeAccessInfo};
 use crate::gqls::make_query;
 use crate::gqls::company::{
@@ -206,7 +206,7 @@ impl Component for CreateCompany {
                     <div class="box p-5">
                         <h1 class="title is-3 mb-4">
                             // <span class="icon mr-3"><i class="fas fa-building"></i></span>
-                            {get_value_field(&289)}
+                            {LocaleKey::CreateCompany.get_value()}
                         </h1>
                         {self.fieldset_company()}
                         <div class="field mt-5">
@@ -263,19 +263,19 @@ impl CreateCompany {
             <div class="create-company-page">
                 <div class="columns is-desktop mb-0">
                     <div class="column">
-                        {InputConfig::company_input("orgname", &170, Some(&self.request_company.orgname), oninput_orgname, self.loading)}
+                        {InputConfig::company_input("orgname", LocaleKey::Orgname, Some(&self.request_company.orgname), oninput_orgname, self.loading)}
                     </div>
                     <div class="column">
-                        {InputConfig::company_input("shortname", &171, Some(&self.request_company.shortname), oninput_shortname, self.loading)}
+                        {InputConfig::company_input("shortname", LocaleKey::Shortname, Some(&self.request_company.shortname), oninput_shortname, self.loading)}
                     </div>
                 </div>
                 <div class="columns is-desktop mb-0">
                     <div class="column">
-                        {InputConfig::company_input("inn", &163, Some(&self.request_company.inn), oninput_inn, self.loading)}
+                        {InputConfig::company_input("inn", LocaleKey::RegNumber, Some(&self.request_company.inn), oninput_inn, self.loading)}
                     </div>
                     <div class="column">
                         <div class="field">
-                            <label class="label">{get_value_field(&51)}</label>
+                            <label class="label">{LocaleKey::CompanyType.get_value()}</label>
                             <div class="control">
                                 <div class="select is-fullwidth">
                                     <select
@@ -300,16 +300,16 @@ impl CreateCompany {
                 </div>
                 <div class="columns is-desktop mb-0">
                     <div class="column">
-                        {InputConfig::company_input("email", &22, Some(&self.request_company.email), oninput_email, self.loading)}
+                        {InputConfig::company_input("email", LocaleKey::Email, Some(&self.request_company.email), oninput_email, self.loading)}
                     </div>
                     <div class="column">
-                        {InputConfig::company_input("tel", &56, Some(&self.request_company.phone), oninput_phone, self.loading)}
+                        {InputConfig::company_input("tel", LocaleKey::Phone, Some(&self.request_company.phone), oninput_phone, self.loading)}
                     </div>
                 </div>
                 <div class="columns is-desktop mb-0">
                     <div class="column is-4-desktop">
                         <div class="field">
-                            <label class="label">{get_value_field(&27)}</label>
+                            <label class="label">{LocaleKey::Region.get_value()}</label>
                             <div class="control">
                                 <div class="select is-fullwidth">
                                     <select
@@ -332,16 +332,16 @@ impl CreateCompany {
                         </div>
                     </div>
                     <div class="column is-8-desktop">
-                        {InputConfig::company_input("address", &57, Some(&self.request_company.address), oninput_address, self.loading)}
+                        {InputConfig::company_input("address", LocaleKey::Address, Some(&self.request_company.address), oninput_address, self.loading)}
                     </div>
                 </div>
                 <div class="columns is-desktop is-align-items-flex-start mb-4">
                     <div class="column">
-                        {InputConfig::company_input("site_url", &66, Some(&self.request_company.site_url), oninput_site_url, self.loading)}
+                        {InputConfig::company_input("site_url", LocaleKey::Site, Some(&self.request_company.site_url), oninput_site_url, self.loading)}
                     </div>
                     <div class="column">
                         <div class="field">
-                            <label class="label">{get_value_field(&58)}</label>
+                            <label class="label">{LocaleKey::TypeAccess.get_value()}</label>
                             <TypeAccessBlock
                                 change_cb={onchange_type_access}
                                 types={self.types_access.clone()}
@@ -351,7 +351,7 @@ impl CreateCompany {
                     </div>
                 </div>
                 <div class="field">
-                    {InputConfig::company_input("description", &61, Some(&self.request_company.description), oninput_description, self.loading)}
+                    {InputConfig::company_input("description", LocaleKey::Description, Some(&self.request_company.description), oninput_description, self.loading)}
                 </div>
             </div>
         }

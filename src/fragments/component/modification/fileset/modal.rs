@@ -5,7 +5,7 @@ use log::debug;
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
-use crate::services::{get_value_field, resp_parsing, unique_id};
+use crate::services::{LocaleKey, resp_parsing, unique_id};
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::modal::ModalBlock;
@@ -203,7 +203,7 @@ impl Component for AddModificationFilesetsModal {
             <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
             <ModalBlock
                 modal_id="add-fileset-modal"
-                title={get_value_field(&206)}
+                title={LocaleKey::AddingFileset.get_value()}
                 is_active={self.props.is_active}
                 on_close={self.link.callback(|_| Msg::CloseModal)}
                 on_save={Some(self.link.callback(|_| Msg::RequestNewFileset))}
@@ -228,7 +228,7 @@ impl AddModificationFilesetsModal {
                             id={search_id}
                             class="input"
                             type="text"
-                            placeholder=get_value_field(&500)
+                            placeholder=LocaleKey::StartTypingName.get_value()
                             value={self.search_query.clone()}
                             oninput={on_search}
                             disabled={self.creating}
@@ -241,20 +241,20 @@ impl AddModificationFilesetsModal {
                 </div>
             </div>
             <div class="field">
-                <label class="label">{get_value_field(&499)}</label>
+                <label class="label">{LocaleKey::SelectFilesetLabel2.get_value()}</label>
                 <div class="panel p-2">
                     {if self.loading && self.programs.is_empty() {
                         html!{
                             <div class="panel-block is-justify-content-center has-text-grey py-4">
                                 <span class="icon mr-2"><i class="fas fa-spinner fa-pulse"></i></span>
-                                {get_value_field(&452)}
+                                {LocaleKey::Uploading.get_value()}
                             </div>
                         }
                     } else if self.filtered_programs.is_empty() {
                         html!{
                             <div class="panel-block is-justify-content-center has-text-grey-light py-4">
                                 <span class="icon mr-2"><i class="fas fa-exclamation-triangle"></i></span>
-                                {get_value_field(&324)}
+                                {LocaleKey::NoResult.get_value()}
                             </div>
                         }
                     } else {
@@ -270,7 +270,7 @@ impl AddModificationFilesetsModal {
                 html!{
                     <div class="notification is-small is-info is-light mt-3 py-2 has-text-centered">
                         <span class="icon mr-1"><i class="fas fa-spinner fa-pulse"></i></span>
-                        {get_value_field(&501)}
+                        {LocaleKey::SavingSelection.get_value()}
                     </div>
                 }
             } else {

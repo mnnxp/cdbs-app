@@ -1,5 +1,5 @@
 use yew::{Callback, html, Properties, Component, ComponentLink, Html, ShouldRender, InputData};
-use crate::services::{get_value_field, unique_id};
+use crate::services::{LocaleKey, unique_id};
 use crate::services::content_adapter::Markdownable;
 
 pub struct MarkdownEditCard {
@@ -71,13 +71,13 @@ impl Component for MarkdownEditCard {
                                 <li class={tab_write_class}>
                                     <a onclick={self.link.callback(|_| Msg::SetPreview(false))}>
                                         <span class="icon is-small"><i class="fas fa-edit"></i></span>
-                                        <span>{get_value_field(&334)}</span>
+                                        <span>{LocaleKey::EditLabel.get_value()}</span>
                                     </a>
                                 </li>
                                 <li class={tab_preview_class}>
                                     <a onclick={self.link.callback(|_| Msg::SetPreview(true))}>
                                         <span class="icon is-small"><i class="fas fa-eye"></i></span>
-                                        <span>{get_value_field(&335)}</span>
+                                        <span>{LocaleKey::Preview.get_value()}</span>
                                     </a>
                                 </li>
                             </ul>
@@ -101,7 +101,7 @@ impl Component for MarkdownEditCard {
                                         oninput={self.props.oninput_text.clone()} />
                                     <div class="help has-text-grey-light ml-1">
                                         <span class="icon is-small mr-1"><i class="fas fa-info-circle"></i></span>
-                                        <span>{get_value_field(&336)}</span>
+                                        <span>{LocaleKey::MarkdownSupported.get_value()}</span>
                                     </div>
                                 </>}
                             }

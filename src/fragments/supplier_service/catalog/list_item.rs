@@ -13,7 +13,7 @@ use crate::fragments::{
 };
 use crate::types::{Pathname, ShowServiceShort};
 use crate::services::content_adapter::{DateDisplay, Markdownable};
-use crate::services::get_value_field;
+use crate::services::LocaleKey;
 
 pub enum Msg {
     OpenService,
@@ -114,19 +114,19 @@ impl ListItemService {
                   <div class="media-content" onclick={onclick_open_service.clone()}>
                     <div class="columns is-gapless mb-0">
                         <div class="column">
-                            {get_value_field(&118)}
+                            {LocaleKey::CreatedByUser.get_value()}
                             <span class="id-box has-text-weight-bold">
                                 {format!(" @{}", &owner_user.username)}
                             </span>
                         </div>
                         <div class="column">
-                            {get_value_field(&158)} // provider's
+                            {LocaleKey::SupplierLabel.get_value()}
                             <span class="has-text-weight-bold">
                                 {format!(" {}", &owner_company.shortname)}
                             </span>
                         </div>
                         <div class="column">
-                          <span class={"icon"} title={get_value_field(&156)}>
+                          <span class={"icon"} title={LocaleKey::UpdatedAtLabel2.get_value()}>
                             <i class="fas fa-edit"></i>
                           </span>
                           {updated_at.date_to_display()}
@@ -142,7 +142,7 @@ impl ListItemService {
                       classes!("far", "fa-folder"),
                       onclick_open_service,
                       String::new(),
-                      get_value_field(&378),
+                      LocaleKey::OpenService.get_value(),
                       Pathname::Service(self.props.data.uuid.clone())
                     )}
                   </div>
@@ -170,7 +170,7 @@ impl ListItemService {
               </div>
               <div class="has-text-weight-bold is-size-4">{name}</div>
               <div class="overflow-title">
-                {get_value_field(&141)} // owner
+                {LocaleKey::Owner.get_value()}
                   <span class="has-text-weight-bold">
                     {format!("{} {}",
                       &owner_company.shortname,
@@ -179,7 +179,7 @@ impl ListItemService {
                   </span>
                 </div>
               <div class="btnBox">
-                {res_fullwidth_btn(onclick_open_service, get_value_field(&378), Pathname::Service(self.props.data.uuid.clone()))}
+                {res_fullwidth_btn(onclick_open_service, LocaleKey::OpenService.get_value(), Pathname::Service(self.props.data.uuid.clone()))}
                 <div style="margin-left: 8px;">
                 </div>
               </div>

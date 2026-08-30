@@ -11,7 +11,7 @@ use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::modal::ModalBlock;
 use crate::types::{UUID, LicenseInfo};
-use crate::services::{get_value_field, resp_parsing, resp_parsing_two_level, unique_id};
+use crate::services::{LocaleKey, resp_parsing, resp_parsing_two_level, unique_id};
 use crate::gqls::{
     make_query,
     relate::{GetLicenses, get_licenses},
@@ -257,14 +257,14 @@ impl ComponentLicensesTags {
         html! {
             <ModalBlock
                 modal_id="add-license"
-                title={get_value_field(&244)}
+                title={LocaleKey::AddLicense.get_value()}
                 is_active={!self.hide_add_license_modal}
                 on_close={onclick_hide_modal}
                 on_save={Some(self.link.callback(|_| Msg::RequestAddLicense))}
                 save_disabled={self.request_add_license_id == 0}
             >
                 <div class="field">
-                    <label for={select_id.clone()} class="label">{get_value_field(&245)}</label> // Select a license
+                    <label for={select_id.clone()} class="label">{LocaleKey::SelectLicense.get_value()}</label>
                     <div class="control">
                         <div class="select is-fullwidth">
                             <select

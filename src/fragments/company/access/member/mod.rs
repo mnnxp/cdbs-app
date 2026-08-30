@@ -8,7 +8,7 @@ use yew::{html, Component, ComponentLink, Html, Properties, ShouldRender, Callba
 
 use crate::fragments::buttons::ft_add_btn;
 use crate::fragments::switch_icon::res_loading_state;
-use crate::services::get_value_field;
+use crate::services::LocaleKey;
 use crate::types::{UUID, CompanyMember, CompanyRole};
 
 pub(crate) struct CompanyMembersCard {
@@ -81,12 +81,12 @@ impl Component for CompanyMembersCard {
                 <header class="card-header">
                     <div class="card-header-title">
                         <p class="is-size-5 has-text-weight-semibold">
-                            {get_value_field(&477)}
+                            {LocaleKey::CompanyMembers.get_value()}
                         </p>
                         <div class="buttons right-side">
                             {ft_add_btn(
                                 "add-member",
-                                get_value_field(&478),
+                                LocaleKey::AddMember.get_value(),
                                 onclick_add_member,
                                 false,
                                 self.props.company_roles.is_empty(),
@@ -109,7 +109,7 @@ impl Component for CompanyMembersCard {
                             <span class="icon is-small">
                                 <i class="fas fa-info-circle"></i>
                             </span>
-                            {get_value_field(&479)}
+                            {LocaleKey::ManageTeamMembers.get_value()}
                         </span>
                     </div>
                 </footer>
@@ -131,7 +131,7 @@ impl CompanyMembersCard {
         if self.props.members.is_empty() {
             html! {
                 <div class="notification is-info is-light">
-                    {get_value_field(&480)}
+                    {LocaleKey::NoMembers.get_value()}
                 </div>
             }
         } else {

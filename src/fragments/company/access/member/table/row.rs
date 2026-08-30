@@ -9,7 +9,7 @@ use crate::fragments::buttons::ft_delete_pair_btn;
 use crate::fragments::notification::show_notification;
 use crate::fragments::user::GoToUser;
 use crate::services::content_adapter::DateDisplay;
-use crate::services::{get_value_field, resp_parsing};
+use crate::services::{LocaleKey, resp_parsing};
 use crate::types::{UUID, CompanyMember, CompanyRole};
 use crate::gqls::make_query;
 use crate::gqls::rbac::{
@@ -164,7 +164,7 @@ impl Component for MemberRow {
             <>
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()} />
                 {show_notification(
-                    get_value_field(&214),
+                    LocaleKey::DataUpdated.get_value(),
                     "is-success",
                     self.is_changed,
                 )}

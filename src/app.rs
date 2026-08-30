@@ -27,7 +27,7 @@ use crate::routes::{
     standard::{ShowStandard, StandardSettings, CreateStandard},
     AppRoute,
 };
-use crate::services::{get_current_user, get_lang, get_server_location_id, get_value_field, is_authenticated, set_lang, set_server_locations, title_changer};
+use crate::services::{get_current_user, get_lang, get_server_location_id, LocaleKey, is_authenticated, set_lang, set_server_locations, title_changer};
 use crate::types::SlimUser;
 
 /// The root app component
@@ -180,7 +180,7 @@ impl Component for App {
                         }
                     } else {
                         // 404 when route matches no component
-                        html!{get_value_field(&294)}
+                        html!{LocaleKey::NoChildComponent.get_value()}
                     }
                 }
                 <Footer />

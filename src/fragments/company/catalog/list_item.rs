@@ -15,7 +15,7 @@ use crate::fragments::{
 };
 use crate::services::content_adapter::Markdownable;
 use crate::types::{Pathname, ShowCompanyShort, UUID};
-use crate::services::{get_value_field, resp_parsing};
+use crate::services::{LocaleKey, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::company::{
     AddCompanyFav, add_company_fav,
@@ -172,7 +172,7 @@ impl ListItemCompany {
               <article class="media center-media">
                   <div class="media-left" onclick={onclick_open_company.clone()}>
                     <figure class="image is-96x96">
-                        <div hidden={!is_supplier} class="top-tag" >{get_value_field(&3)}</div> // supplier
+                        <div hidden={!is_supplier} class="top-tag" >{LocaleKey::Supplier.get_value()}</div>
                         <img src={image_file.download_url.clone()} alt="Favicon company" loading="lazy" />
                     </figure>
                   </div>
@@ -188,7 +188,7 @@ impl ListItemCompany {
                         true => html!{},
                         false => html!{
                             <div class="column p-0 mb-0">
-                                {get_value_field(&163)}
+                                {LocaleKey::RegNumber.get_value()}
                                 <span class="id-box has-text-weight-bold">{inn.clone()}</span>
                             </div>
                         },
@@ -199,7 +199,7 @@ impl ListItemCompany {
                           classes!("far", "fa-folder"),
                           onclick_open_company.clone(),
                           String::new(),
-                          get_value_field(&315),
+                          LocaleKey::Show.get_value(),
                           Pathname::Company(self.props.data.uuid.clone())
                       )}
                       {ft_follow_btn(
@@ -230,13 +230,13 @@ impl ListItemCompany {
             <div class="innerBox" >
               <div onclick={onclick_open_company.clone()}>
                 <div class="imgBox">
-                  <div class="top-tag" hidden={!is_supplier} >{get_value_field(&3)}</div> // supplier
+                  <div class="top-tag" hidden={!is_supplier} >{LocaleKey::Supplier.get_value()}</div>
                   <img src={image_file.download_url.to_string()} alt="Favicon profile" loading="lazy" />
                 </div>
                 <p class="overflow-title has-text-weight-bold is-size-4">{shortname}</p>
               </div>
               <div class="btnBox">
-                {res_fullwidth_btn(onclick_open_company, get_value_field(&165), Pathname::Company(uuid))}
+                {res_fullwidth_btn(onclick_open_company, LocaleKey::ShowCompany.get_value(), Pathname::Company(uuid))}
                 <div style="margin-left: 8px;">
                 {ft_follow_btn(
                     trigger_fav_btn,

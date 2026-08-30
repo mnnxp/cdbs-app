@@ -7,7 +7,7 @@ use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::modal::ModalBlock;
 use crate::fragments::notification::show_notification;
-use crate::services::{get_value_field, resp_parsing, unique_id};
+use crate::services::{LocaleKey, resp_parsing, unique_id};
 use crate::fragments::buttons::ft_add_btn;
 use crate::types::{UUID, CompanyRepresentInfo, Region, RegisterCompanyRepresentInfo, RepresentationType};
 use crate::gqls::make_query;
@@ -159,13 +159,13 @@ impl Component for AddCompanyRepresentModal {
         html!{<>
             <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()} />
             {show_notification(
-                get_value_field(&293),
+                LocaleKey::RepresentativeCreated.get_value(),
                 "is-success",
                 !self.get_result_register.is_empty(),
             )}
             {ft_add_btn(
                 &unique_id("new-represent-btn"),
-                get_value_field(&230),
+                LocaleKey::NewRepresentative.get_value(),
                 callback_event_add_represent,
                 false,
                 self.props.represent_types.is_empty(),
@@ -180,7 +180,7 @@ impl AddCompanyRepresentModal {
         html! {
             <ModalBlock
                 modal_id="new-represent"
-                title={get_value_field(&230)}
+                title={LocaleKey::NewRepresentative.get_value()}
                 is_active={self.is_active}
                 on_close={self.link.callback(|_| Msg::ShowAddCompanyRepresent)}
                 on_cancel={Some(self.link.callback(|_| Msg::ClearData))}

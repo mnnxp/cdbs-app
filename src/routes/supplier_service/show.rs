@@ -22,7 +22,7 @@ use crate::fragments::{
     supplier_service::ServiceParamsTags,
 };
 use crate::services::content_adapter::Markdownable;
-use crate::services::{get_logged_user, get_value_field, resp_parsing, set_history_back, title_changer};
+use crate::services::{get_logged_user, LocaleKey, resp_parsing, set_history_back, title_changer};
 use crate::types::{ComponentsQueryArg, DownloadFile, ObjectType, Pathname, ServiceInfo, SlimUser, UUID, ToObject};
 use crate::gqls::make_query;
 use crate::gqls::supplier_service::{
@@ -261,11 +261,11 @@ impl ShowService {
               <div class="column">
                 // <div class="media">
                 //     <div class="media-content">
-                //         {get_value_field(&94)}
+                //         {LocaleKey::UserUploaded.get_value()}
                 //         <GoToUser data = {service_data.owner_user.clone()} />
                 //     </div>
                 //     <div class="media-right" style="margin-right: 1rem">
-                //         {get_value_field(&145)} // type access
+                //         {LocaleKey::TypeAccessLabel.get_value()}
                 //         <span class="id-box has-text-weight-bold">
                 //             {service_data.type_access.name.clone()}
                 //         </span>
@@ -275,7 +275,7 @@ impl ShowService {
                 <div class="has-text-weight-bold is-size-4">
                     {service_data.name.clone()}
                 </div>
-                // <div class="column is-narrow" title={get_value_field(&141)}>
+                // <div class="column is-narrow" title={LocaleKey::Owner.get_value()}>
                 //     <span class="icon is-small">
                 //         <i class={classes!("fa", "fa-user", "mr-3")}></i>
                 //     </span>
@@ -299,7 +299,7 @@ impl ShowService {
         html!{
             <div class="card">
                 <header class="card-header">
-                    <p class="card-header-title">{get_value_field(&101)}</p> // Сharacteristics of the service
+                    <p class="card-header-title">{LocaleKey::Characteristics.get_value()}</p>
                 </header>
                 <div class="card-content">
                     <div class="content">
@@ -318,7 +318,7 @@ impl ShowService {
         html!{
             <div class="card">
                 <header class="card-header">
-                    <p class="card-header-title">{get_value_field(&376)}</p> // Files
+                    <p class="card-header-title">{LocaleKey::ServiceFiles.get_value()}</p>
                 </header>
                 <div class="card-content">
                     <div class="content">
@@ -336,8 +336,8 @@ impl ShowService {
     fn show_related_components_btn(&self) -> Html {
         let onclick_related_components_btn = self.link.callback(|_| Msg::ShowComponentsList);
         let (text_btn, classes_btn) = match &self.show_related_components {
-            true => (get_value_field(&295), "button is-info is-light is-active"),
-            false => (get_value_field(&296), "button is-info"),
+            true => (LocaleKey::HideComponents.get_value(), "button is-info is-light is-active"),
+            false => (LocaleKey::SeeComponents.get_value(), "button is-info"),
         };
 
         html!{
@@ -354,7 +354,7 @@ impl ShowService {
             true => html!{<>
                 <div class="card">
                     <header class="card-header has-background-info-light">
-                        <p class="card-header-title">{get_value_field(&154)}</p> // Components
+                        <p class="card-header-title">{LocaleKey::ComponentsLabel.get_value()}</p>
                     </header>
                     <div class="card-content">
                         <div class="content">
@@ -396,7 +396,7 @@ impl ShowService {
             true => html!{<>
                 <div class="card">
                     <header class="card-header has-background-info-light">
-                        <p class="card-header-title">{get_value_field(&380)}</p>
+                        <p class="card-header-title">{LocaleKey::Discussion.get_value()}</p>
                     </header>
                     <div class="card-content">
                         <DiscussionCommentsBlock

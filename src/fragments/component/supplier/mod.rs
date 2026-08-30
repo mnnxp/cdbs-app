@@ -12,7 +12,7 @@ use crate::fragments::buttons::ft_add_btn;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::modal::ModalBlock;
 use crate::types::{UUID, Supplier, ShowCompanyShort};
-use crate::services::{get_value_field, resp_parsing, unique_id};
+use crate::services::{LocaleKey, resp_parsing, unique_id};
 use crate::gqls::make_query;
 use crate::gqls::component::{
     SetCompanyOwnerSupplier, set_company_owner_supplier,
@@ -195,7 +195,7 @@ impl Component for ComponentSuppliersCard {
             <div class="card">
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
                 <header class="card-header">
-                    <p class="card-header-title">{get_value_field(&190)}</p> // Manage component supplier
+                    <p class="card-header-title">{LocaleKey::ManageComponentSuppliers.get_value()}</p>
                 </header>
                 <div class="card-content">
                     <div class="content">
@@ -204,7 +204,7 @@ impl Component for ComponentSuppliersCard {
                     <footer class="card-footer">
                         {ft_add_btn(
                             "set-supplier-component",
-                            get_value_field(&166),
+                            LocaleKey::AddSupplierForComponentLabel.get_value(),
                             onclick_action_btn,
                             true,
                             false
@@ -212,8 +212,18 @@ impl Component for ComponentSuppliersCard {
                     </footer>
                 </div>
                 {match self.props.is_base {
-                    true => self.supplier_modal_form(123, 79, "add-supplier", Msg::RequestAddSupplier),
-                    false => self.supplier_modal_form(167, 168, "set-owner-supplier", Msg::RequestChangeOwnerSupplier),
+                    true => self.supplier_modal_form(
+                        LocaleKey::AddSupplierForComponent,
+                        LocaleKey::SelectSupplier,
+                        "add-supplier",
+                        Msg::RequestAddSupplier
+                    ),
+                    false => self.supplier_modal_form(
+                        LocaleKey::SetOwnerSupplier,
+                        LocaleKey::SelectSupplierLabel,
+                        "set-owner-supplier",
+                        Msg::RequestChangeOwnerSupplier
+                    ),
                 }}
             </div>
         }
@@ -231,11 +241,11 @@ impl ComponentSuppliersCard {
           <table class="table is-fullwidth">
             <thead>
             <tr>
-                <th>{get_value_field(&109)}</th> // Company
-                <th>{get_value_field(&61)}</th> // Description
-                <th>{get_value_field(&111)}</th> // Action
+                <th>{LocaleKey::Company.get_value()}</th>
+                <th>{LocaleKey::Description.get_value()}</th>
+                <th>{LocaleKey::Action.get_value()}</th>
                 {match self.props.show_delete_btn {
-                    true => html!{<th>{get_value_field(&135)}</th>}, // Delete
+                    true => html!{<th>{LocaleKey::Delete.get_value()}</th>},
                     false => html!{},
                 }}
             </tr>
@@ -259,7 +269,7 @@ impl ComponentSuppliersCard {
         }
     }
 
-    fn supplier_modal_form(&self, title_id: usize, label_id: usize, modal_id: &'static str, on_save_msg: Msg) -> Html {
+    fn supplier_modal_form(&self, lk_title: LocaleKey, lk_label: LocaleKey, modal_id: &'static str, on_save_msg: Msg) -> Html {
         let onclick_hide_modal = self.link.callback(|_| Msg::ChangeHideSetSupplier);
         let onchange_select_set_supplier = self.link.callback(|ev: ChangeData| {
             Msg::UpdateSetSupplier(match ev {
@@ -273,14 +283,14 @@ impl ComponentSuppliersCard {
         html! {
             <ModalBlock
                 modal_id={modal_id}
-                title={get_value_field(&title_id)}
+                title={lk_title.get_value()}
                 is_active={!self.hide_set_supplier_modal}
                 on_close={onclick_hide_modal}
                 on_save={Some(self.link.callback(move |_| on_save_msg.clone()))}
                 save_disabled={self.request_set_supplier_uuid.is_empty()}
             >
                 <div class="field">
-                    <label for={select_id.clone()} class="label">{get_value_field(&label_id)}</label>
+                    <label for={select_id.clone()} class="label">{lk_label.get_value()}</label>
                     <div class="control">
                         <div class="select is-fullwidth">
                             <select id={select_id} onchange={onchange_select_set_supplier}>
@@ -297,12 +307,12 @@ impl ComponentSuppliersCard {
                     </div>
                 </div>
                 <div class="field">
-                    <label for={description_id.clone()} class="label">{get_value_field(&169)}</label>
+                    <label for={description_id.clone()} class="label">{LocaleKey::SupplierDescription.get_value()}</label>
                     <div class="control">
                         <textarea
                             id={description_id}
                             class="textarea"
-                            placeholder={get_value_field(&169)}
+                            placeholder={LocaleKey::SupplierDescription.get_value()}
                             value={self.request_set_supplier_description.clone()}
                             oninput={oninput_supplier_description}
                         />

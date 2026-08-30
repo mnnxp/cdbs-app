@@ -14,7 +14,7 @@ use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::buttons::ft_create_btn;
-use crate::services::{get_from_value, get_logged_user, get_value_field, get_value_response, resp_parsing, set_focus, set_history_back};
+use crate::services::{get_from_value, get_logged_user, LocaleKey, get_value_response, resp_parsing, set_focus, set_history_back};
 use crate::types::{UUID, ComponentCreateData, TypeAccessInfo, ActualStatus};
 use crate::gqls::make_query;
 use crate::gqls::component::{
@@ -218,7 +218,7 @@ impl Component for CreateComponent {
                     <div class="box p-5">
                         <h1 class="title is-3 mb-4">
                             // <span class="icon mr-3"><i class="fas fa-building"></i></span>
-                            {get_value_field(&290)}
+                            {LocaleKey::CreateComponent.get_value()}
                         </h1>
                         {self.show_main_card()}
                         <div class="field mt-5">
@@ -257,7 +257,7 @@ impl CreateComponent {
                 <div class="field mb-4">
                     {InputConfig::profile_input(
                         "create-component-name",
-                        &110,
+                        LocaleKey::Name,
                         Some(self.request_component.name.clone()),
                         oninput_name,
                         None,
@@ -267,7 +267,7 @@ impl CreateComponent {
                 </div>
                 <MarkdownEditCard
                     id_tag={"create-component-description"}
-                    title={get_value_field(&61)}
+                    title={LocaleKey::Description.get_value()}
                     placeholder={String::new()}
                     raw_text={self.request_component.description.clone()}
                     oninput_text={oninput_description}
@@ -275,7 +275,7 @@ impl CreateComponent {
                 <div class="columns is-desktop mb-0 mt-5">
                 <div class="column">
                     <div class="field">
-                        <label class="label" for="create-component-actual-status">{get_value_field(&96)}</label>
+                        <label class="label" for="create-component-actual-status">{LocaleKey::LifeCycleStage.get_value()}</label>
                         <div class="control">
                             <div class="select is-fullwidth">
                               <select
@@ -298,7 +298,7 @@ impl CreateComponent {
                 </div>
                 <div class="column">
                     <div class="field">
-                        <label class="label" for="type-access-block">{get_value_field(&58)}</label>
+                        <label class="label" for="type-access-block">{LocaleKey::TypeAccess.get_value()}</label>
                         <TypeAccessBlock
                             change_cb={onchange_type_access}
                             types={self.types_access.clone()}

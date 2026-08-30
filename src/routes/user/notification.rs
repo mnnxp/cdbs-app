@@ -8,7 +8,7 @@ use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::services::content_adapter::DateDisplay;
-use crate::services::{get_logged_user, get_value_field, resp_parsing, set_history_back};
+use crate::services::{get_logged_user, LocaleKey, resp_parsing, set_history_back};
 use crate::types::{ShowNotification, DegreeImportanceTranslateList};
 use crate::gqls::make_query;
 use crate::gqls::user::{
@@ -179,7 +179,7 @@ impl Component for Notifications {
             <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
                 <div class="container is-fluid page">
                     <div class="row">
-                        <h4 id="show-notifications" class="title is-4">{get_value_field(&284)}</h4>
+                        <h4 id="show-notifications" class="title is-4">{LocaleKey::Notifications.get_value()}</h4>
                         <div class="card">
                             <div class="column">
                                 <>{for self.notifications.iter().rev().map(|notif_data|
@@ -242,7 +242,7 @@ impl Notifications {
                     <div class="media">
                         <div class="media-left">
                             <span class="content is-small">
-                                <span class="mr-3">{get_value_field(&276)}</span>
+                                <span class="mr-3">{LocaleKey::CreatedAtLabel.get_value()}</span>
                                 {created_at.date_to_display()}
                                 {format!(" ({})", degree)}
                             </span>

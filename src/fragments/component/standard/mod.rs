@@ -12,7 +12,7 @@ use crate::fragments::buttons::ft_add_btn;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::modal::ModalBlock;
 use crate::types::{UUID, ShowStandardShort};
-use crate::services::{get_value_field, resp_parsing, resp_parsing_two_level, unique_id};
+use crate::services::{LocaleKey, resp_parsing, resp_parsing_two_level, unique_id};
 use crate::gqls::{
     make_query,
     component::{
@@ -197,7 +197,7 @@ impl Component for ComponentStandardsCard {
             <div class="card">
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
                 <header class="card-header">
-                    <p class="card-header-title">{get_value_field(&189)}</p> // Manage component standards
+                    <p class="card-header-title">{LocaleKey::ManageComponentStandards.get_value()}</p>
                 </header>
                 <div class="card-content">
                     <div class="content">
@@ -206,7 +206,7 @@ impl Component for ComponentStandardsCard {
                     <footer class="card-footer">
                         {ft_add_btn(
                             "add-standard-for-component",
-                            get_value_field(&191),
+                            LocaleKey::AddStandardForComponent.get_value(),
                             onclick_action_btn,
                             true,
                             false
@@ -230,10 +230,10 @@ impl ComponentStandardsCard {
           <table class="table is-fullwidth">
             <thead>
             <tr>
-                <th>{get_value_field(&110)}</th> // Name
-                <th>{get_value_field(&111)}</th> // Action
+                <th>{LocaleKey::Name.get_value()}</th>
+                <th>{LocaleKey::Action.get_value()}</th>
                 {match self.props.show_delete_btn {
-                    true => html!{<th>{get_value_field(&135)}</th>},
+                    true => html!{<th>{LocaleKey::Delete.get_value()}</th>},
                     false => html!{},
                 }}
             </tr>
@@ -269,14 +269,14 @@ impl ComponentStandardsCard {
         html! {
             <ModalBlock
                 modal_id="add-standard"
-                title={get_value_field(&263)}
+                title={LocaleKey::AddingStandardToComponent.get_value()}
                 is_active={!self.hide_add_standard_modal}
                 on_close={onclick_hide_modal}
                 on_save={Some(self.link.callback(|_| Msg::RequestAddStandard))}
                 save_disabled={self.request_add_standard_uuid.is_empty()}
             >
                 <div class="field">
-                    <label for={select_id.clone()} class="label">{get_value_field(&212)}</label>
+                    <label for={select_id.clone()} class="label">{LocaleKey::SelectStandard.get_value()}</label>
                     <div class="control">
                         <div class="select is-fullwidth">
                             <select

@@ -10,7 +10,7 @@ use crate::fragments::{
     list_errors::ListErrors,
     company::ListItemCompany,
 };
-use crate::services::{get_value_field, resp_parsing};
+use crate::services::{LocaleKey, resp_parsing};
 use crate::types::{UUID, Supplier, ShowCompanyShort};
 use crate::gqls::{
     make_query,
@@ -159,7 +159,7 @@ impl Component for ComponentSupplierItem {
         html!{<>
             <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
             {show_notification(
-                get_value_field(&397),
+                LocaleKey::DataNotAvailable.get_value(),
                 "is-warning",
                 self.company_data.is_none() && self.open_company_info
             )}

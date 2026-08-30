@@ -4,7 +4,7 @@ use row::RoleRow;
 
 use yew::{html, Callback, Component, ComponentLink, Html, Properties, ShouldRender};
 
-use crate::services::get_value_field;
+use crate::services::LocaleKey;
 use crate::types::{CompanyRole, PermissionLevel, UUID};
 
 /// Properties for the CompanyMemberRoleTable component
@@ -62,9 +62,9 @@ impl Component for CompanyMemberRoleTable {
                     <thead>
                         <tr>
                             <th>{"\u{2116}"}</th>
-                            <th>{get_value_field(&467)}</th>
-                            <th>{get_value_field(&468)}</th>
-                            <th>{get_value_field(&461)}</th>
+                            <th>{LocaleKey::RoleName.get_value()}</th>
+                            <th>{LocaleKey::AccessPermissions.get_value()}</th>
+                            <th>{LocaleKey::Actions.get_value()}</th>
                         </tr>
                     </thead>
                     <tbody>

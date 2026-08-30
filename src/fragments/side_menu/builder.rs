@@ -1,6 +1,5 @@
 use web_sys::MouseEvent;
 use yew::{classes, html, Callback, Html};
-use crate::services::get_value_field;
 use super::SideMenu;
 use super::model::{MenuItem, MenuItemTemplate};
 
@@ -26,14 +25,14 @@ use super::model::{MenuItem, MenuItemTemplate};
 ///         &[
 ///             // Single icon
 ///             MenuItemTemplate {
-///                 title_key: 100,
+///                 lk_title: LocaleKey::Modifications,
 ///                 icon_classes: &[&["fas", "fa-home"]],
 ///                 tab: MyTab::Home,
 ///                 custom_class: None,
 ///             },
 ///             // Two icons (e.g., regular + bookmark)
 ///             MenuItemTemplate {
-///                 title_key: 101,
+///                 lk_title: LocaleKey::Characteristics,
 ///                 icon_classes: &[&["fas", "fa-star"], &["fas", "fa-bookmark"]],
 ///                 tab: MyTab::Favorites,
 ///                 custom_class: None,
@@ -75,7 +74,7 @@ pub(crate) trait MenuBuilder {
         Self::menu_config()
             .iter()
             .map(|template| MenuItem {
-                title: get_value_field(&template.title_key),
+                title: template.lk_title.get_value(),
                 action: self.get_action(&template.tab),
                 icon_classes: template.icon_classes,
                 count: self.get_count(&template.tab),

@@ -1,6 +1,6 @@
 use yew::{classes, html, Callback, Classes, Html, InputData};
 
-use crate::services::{get_value_field, unique_id};
+use crate::services::{LocaleKey, unique_id};
 
 /// Configuration for custom input fields
 pub(crate) struct InputConfig {
@@ -19,7 +19,7 @@ impl InputConfig {
     ///
     /// # Arguments
     /// * `id` - HTML element ID and field identifier (e.g., "username", "email")
-    /// * `label_id` - Localization key for the field label
+    /// * `lk_label` - Localization key for the field label
     /// * `value` - Optional current value of the field
     /// * `oninput` - Callback triggered when input value changes
     /// * `icon` - Optional FontAwesome icon class (e.g., "fas fa-user")
@@ -29,11 +29,11 @@ impl InputConfig {
     ///
     /// # Example
     /// ```rust
-    /// InputConfig::profile_input("username", &50, self.user.username.clone(), oninput_username, Some("fas fa-user"))
+    /// InputConfig::profile_input("username", LocaleKey::Username, self.user.username.clone(), oninput_username, Some("fas fa-user"))
     /// ```
     pub(crate) fn profile_input(
         id: &'static str,
-        label_id: &usize,
+        lk_label: LocaleKey,
         value: Option<String>,
         oninput: Callback<InputData>,
         icon: Option<&'static str>,
@@ -42,7 +42,7 @@ impl InputConfig {
     ) -> Html {
         render_form_input(InputConfig {
             id,
-            label: get_value_field(label_id),
+            label: lk_label.get_value(),
             value: value.unwrap_or_default(),
             oninput,
             is_disabled: loading,
@@ -56,7 +56,7 @@ impl InputConfig {
     ///
     /// # Arguments
     /// * `id` - HTML element ID and field identifier (supports: "inn", "email", "tel", "address", "site_url")
-    /// * `label_id` - Localization key for the field label
+    /// * `lk_label` - Localization key for the field label
     /// * `value` - Optional reference to current field value
     /// * `oninput` - Callback triggered when input value changes
     ///
@@ -75,11 +75,11 @@ impl InputConfig {
     ///
     /// # Example
     /// ```rust
-    /// InputConfig::company_input("inn", &163, self.company.inn.as_ref(), oninput_inn)
+    /// InputConfig::company_input("inn", LocaleKey::RegNumber, self.company.inn.as_ref(), oninput_inn)
     /// ```
     pub(crate) fn company_input(
         id: &'static str,
-        label_id: &usize,
+        lk_label: LocaleKey,
         value: Option<&String>,
         oninput: Callback<InputData>,
         loading: bool,
@@ -95,7 +95,7 @@ impl InputConfig {
         };
         render_form_input(InputConfig {
             id,
-            label: get_value_field(label_id),
+            label: lk_label.get_value(),
             value: value.cloned().unwrap_or_default(),
             oninput,
             is_disabled: loading,

@@ -26,7 +26,7 @@ use crate::fragments::{
         ModificationsTableEdit, ManageComponentFilesCard, SearchSpecsTags, AddKeywordsTags
     },
 };
-use crate::services::{get_from_value, get_logged_user, get_value_field, get_value_response, resp_parsing, set_history_back};
+use crate::services::{get_from_value, get_logged_user, LocaleKey, get_value_response, resp_parsing, set_history_back};
 use crate::types::{
     UUID, ComponentInfo, SlimUser, TypeAccessInfo, ActualStatus, ComponentUpdatePreData,
     ComponentUpdateData, ShowCompanyShort, ComponentModificationInfo,
@@ -375,7 +375,7 @@ impl Component for ComponentSettings {
                     <div class="row">
                         <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
                         {show_notification(
-                            get_value_field(&214),
+                            LocaleKey::DataUpdated.get_value(),
                             "is-success",
                             self.get_result_component_data > 0 || self.get_result_access
                         )}
@@ -449,16 +449,16 @@ impl ComponentSettings {
         html!{
             <div class="card">
             <header class="card-header">
-                <p class="card-header-title">{get_value_field(&352)}</p>
+                <p class="card-header-title">{LocaleKey::ComponentLabel.get_value()}</p>
             </header>
             <div class="card-content">
             <div class="tabs is-centered is-medium">
                 <ul>
-                    <li class={at.0} onclick={onclick_tab_data}><a>{get_value_field(&116)}</a></li>
-                    <li class={at.1} onclick={onclick_tab_image_preview}><a>{get_value_field(&184)}</a></li>
-                    <li class={at.2} onclick={onclick_tab_characteristics}><a>{get_value_field(&101)}</a></li>
-                    <li class={at.3} onclick={onclick_tab_component_files}><a>{get_value_field(&102)}</a></li>
-                    <li class={at.4} onclick={onclick_tab_access}><a>{get_value_field(&65)}</a></li>
+                    <li class={at.0} onclick={onclick_tab_data}><a>{LocaleKey::BasicInfo.get_value()}</a></li>
+                    <li class={at.1} onclick={onclick_tab_image_preview}><a>{LocaleKey::UpdatePreview.get_value()}</a></li>
+                    <li class={at.2} onclick={onclick_tab_characteristics}><a>{LocaleKey::Characteristics.get_value()}</a></li>
+                    <li class={at.3} onclick={onclick_tab_component_files}><a>{LocaleKey::ComponentFiles.get_value()}</a></li>
+                    <li class={at.4} onclick={onclick_tab_access}><a>{LocaleKey::Access.get_value()}</a></li>
                 </ul>
             </div>
                 {match self.active_tab {
@@ -507,7 +507,7 @@ impl ComponentSettings {
                 <div class="column">
                     {InputConfig::profile_input(
                         "setting-component-update-name",
-                        &110,
+                        LocaleKey::Name,
                         Some(self.request_component.name.clone()),
                         oninput_name,
                         None,
@@ -518,7 +518,7 @@ impl ComponentSettings {
                 <div class="column">
                 <MarkdownEditCard
                     id_tag={"setting-component-description"}
-                    title={get_value_field(&61)}
+                    title={LocaleKey::Description.get_value()}
                     placeholder={String::new()}
                     raw_text={self.request_component.description.clone()}
                     oninput_text={oninput_description}
@@ -546,7 +546,7 @@ impl ComponentSettings {
 
         html!{
             <div class="column">
-                    <label class="label" for="setting-component-actual-status">{get_value_field(&96)}</label>
+                    <label class="label" for="setting-component-actual-status">{LocaleKey::LifeCycleStage.get_value()}</label>
                     <div class="select is-fullwidth">
                         <select
                             id="setting-component-actual-status"
@@ -575,7 +575,7 @@ impl ComponentSettings {
                     {ft_back_btn(
                         "open-standard",
                         onclick_open_component,
-                        get_value_field(&199), // Open component
+                        LocaleKey::OpenComponent.get_value(),
                     )}
                 </div>
                 <div class="column"></div>
@@ -587,7 +587,7 @@ impl ComponentSettings {
         // Delete component
         ft_delete_card(
             "component",
-            get_value_field(&217),
+            LocaleKey::DeleteComponent.get_value(),
             self.request_component.name.clone(),
             self.current_component_uuid.clone(),
             self.confirm_delete_component.clone(),
@@ -603,7 +603,7 @@ impl ComponentSettings {
         let onchange_type_access = self.link.callback(|value| Msg::UpdateTypeAccessId(value));
         html!{
             <div class="content">
-                <h4 id={"component-access-global"} class={"title is-4"}>{get_value_field(&58)}</h4>
+                <h4 id={"component-access-global"} class={"title is-4"}>{LocaleKey::TypeAccess.get_value()}</h4>
                 <div class="column">
                     <TypeAccessBlock
                         change_cb={onchange_type_access}
@@ -612,7 +612,7 @@ impl ComponentSettings {
                         preset={self.current_component.as_ref().map(|data| data.type_access.type_access_id)}
                     />
                 </div>
-                <h4 id="component-access-direct" class="title is-4">{get_value_field(&65)}</h4> // Access
+                <h4 id="component-access-direct" class="title is-4">{LocaleKey::Access.get_value()}</h4>
                 <div class="column">
                     <ComponentAccessBlock
                         component_uuid={self.current_component_uuid.clone()}

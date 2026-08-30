@@ -14,7 +14,7 @@ use crate::error::Error;
 use crate::fragments::buttons::ft_change_view_btn;
 use crate::fragments::{list_errors::ListErrors, list_empty::ListEmpty};
 use crate::fragments::ListState;
-use crate::services::{get_value_field, get_from_value, get_value_response};
+use crate::services::{LocaleKey, get_from_value, get_value_response};
 use crate::types::{CompanyRepresentInfo, Region, RepresentationType, UUID};
 use crate::gqls::make_query;
 use crate::gqls::company::{
@@ -135,7 +135,7 @@ impl Component for CompanyRepresents {
                         true => html!{
                             <div>
                                 <h4 id="updated-represents" class="title is-4 mb-0">
-                                    { get_value_field(&266) }
+                                    { LocaleKey::Representations.get_value() }
                                 </h4>
                             </div>
                         },
@@ -146,7 +146,7 @@ impl Component for CompanyRepresents {
                 {if self.list.is_empty() {
                     html!{<>
                         <p class="subtitle is-6 has-text-grey-light">
-                            {get_value_field(&270)}
+                            {LocaleKey::NoRepresentations.get_value()}
                         </p>
                         <ListEmpty />
                     </>}

@@ -7,7 +7,7 @@ use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::modal::ModalBlock;
 use crate::types::{UUID, Spec, SpecPathInfo};
-use crate::services::{get_value_field, resp_parsing};
+use crate::services::{LocaleKey, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::relate::{GetSpecsPaths, get_specs_paths};
 use crate::gqls::supplier_service::{
@@ -243,11 +243,11 @@ impl SpecTagItem {
                             <table class="table is-fullwidth">
                                 <tbody>
                                     <tr>
-                                        <td>{get_value_field(&246)}</td>
+                                        <td>{LocaleKey::ID.get_value()}</td>
                                         <td>{data.spec_id.to_string()}</td>
                                     </tr>
                                     <tr>
-                                        <td>{get_value_field(&247)}</td>
+                                        <td>{LocaleKey::Patch.get_value()}</td>
                                         <td>{data.path.clone()}</td>
                                     </tr>
                                 </tbody>

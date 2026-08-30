@@ -9,7 +9,7 @@ use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::user::GoToUser;
 use crate::services::content_adapter::{DateDisplay, Markdownable};
-use crate::services::{get_logged_user, get_value_field, resp_parsing};
+use crate::services::{get_logged_user, LocaleKey, resp_parsing};
 use crate::types::{DiscussionCommentData, DiscussionInfo, ObjectType, ShowUserShort, SlimUser, ToObject, UUID};
 use crate::get_gql_to_object;
 use crate::gqls::make_query;
@@ -428,12 +428,12 @@ impl DiscussionCommentsBlock {
                     </span>
                 </button>
                 <button class="button is-small" onclick={onclick_clear_replies}>
-                    { get_value_field(&301) }
+                    { LocaleKey::Close.get_value() }
                 </button>
             </>},
             None if replies_count > &0 => html!{
                 <button class="button is-small is-info" onclick={onclick_fetch_replies}>
-                    { format!{"{} ({})", get_value_field(&383), replies_count} }
+                    { format!{"{} ({})", LocaleKey::ShowAnswers.get_value(), replies_count} }
                 </button>
             },
             None => html!{},
@@ -478,17 +478,17 @@ impl DiscussionCommentsBlock {
                 <form onsubmit={onsubmit_add_comment}>
                     <textarea
                         class="textarea"
-                        placeholder={get_value_field(&384)}
+                        placeholder={LocaleKey::EnterNewComment.get_value()}
                         value={self.new_comment.clone()}
                         oninput={oninput_update_new_comment}
                     />
                     <div class={class_btns}>
                         {match &self.parent_comment_uuid {
                             Some(_) => html!{<>
-                                <button class={class_add_btn} type="submit" style="min-width: 25%;">{ get_value_field(&382) }</button>
-                                <button class="button is-small is-warning" onclick={onclick_clear_reply}>{ get_value_field(&221) }</button>
+                                <button class={class_add_btn} type="submit" style="min-width: 25%;">{ LocaleKey::Reply.get_value() }</button>
+                                <button class="button is-small is-warning" onclick={onclick_clear_reply}>{ LocaleKey::Cancel.get_value() }</button>
                             </>},
-                            None => html!{<button class={class_add_btn} type="submit">{ get_value_field(&381) }</button>},
+                            None => html!{<button class={class_add_btn} type="submit">{ LocaleKey::Post.get_value() }</button>},
                         }}
                     </div>
                 </form>
@@ -512,7 +512,7 @@ impl DiscussionCommentsBlock {
                 <button
                     class="button is-small is-info"
                     onclick={self.link.callback(move |_| Msg::ToReplyComment(comment_uuid.clone()))}>
-                    { get_value_field(&382) }
+                    { LocaleKey::Reply.get_value() }
                 </button>
             },
         }
@@ -538,7 +538,7 @@ impl DiscussionCommentsBlock {
                 <span class="icon">
                 <i aria-hidden="true" class="fas fa-edit"></i>
                 </span>
-                <span>{get_value_field(&334)}</span>
+                <span>{LocaleKey::EditLabel.get_value()}</span>
             </button>
         }
     }
@@ -561,8 +561,8 @@ impl DiscussionCommentsBlock {
                         oninput={oninput_update_edit_comment}
                     />
                     <div class={"buttons is-right pt-1"}>
-                        <button class={"button is-small is-primary"} type="submit" style="min-width: 25%;">{ get_value_field(&46) }</button>
-                        <button class="button is-small is-warning" onclick={onclick_clear_reply}>{ get_value_field(&221) }</button>
+                        <button class={"button is-small is-primary"} type="submit" style="min-width: 25%;">{ LocaleKey::Save.get_value() }</button>
+                        <button class="button is-small is-warning" onclick={onclick_clear_reply}>{ LocaleKey::Cancel.get_value() }</button>
                     </div>
                 </form>
             </div>

@@ -9,7 +9,7 @@ use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::modal::ModalBlock;
 use crate::fragments::component::param::RegisterParamnameBlock;
-use crate::services::{get_value_field, resp_parsing, unique_id};
+use crate::services::{LocaleKey, resp_parsing, unique_id};
 use crate::types::{UUID, Param, ParamValue};
 use crate::gqls::{
     make_query,
@@ -361,11 +361,11 @@ impl ModificationTableItem {
             false => "",
         };
         let (title_text, click_icon, style_btn) = match (&self.props.show_manage_btn, &self.props.select_item, &self.open_modification_card) {
-            (true, true, true) => (get_value_field(&127), "fas fa-pencil-alt", "color: #ED760E;"), // edit
-            (true, true, false) => (get_value_field(&127), "fas fa-pencil-alt", ""), // edit
-            (false, true, true) => (get_value_field(&314), "fas fa-info", "color: #c2c2c2"), // hide
-            (false, true, false) => (get_value_field(&128), "fas fa-info", ""), // info
-            (_, false, _) => (get_value_field(&129), "far fa-hand-pointer", ""), // select
+            (true, true, true) => (LocaleKey::Edit.get_value(), "fas fa-pencil-alt", "color: #ED760E;"), // edit
+            (true, true, false) => (LocaleKey::Edit.get_value(), "fas fa-pencil-alt", ""), // edit
+            (false, true, true) => (LocaleKey::Hide.get_value(), "fas fa-info", "color: #c2c2c2"), // hide
+            (false, true, false) => (LocaleKey::Info.get_value(), "fas fa-info", ""), // info
+            (_, false, _) => (LocaleKey::Select.get_value(), "far fa-hand-pointer", ""), // select
         };
 
         html!{<tr class={class_style}>
@@ -444,7 +444,7 @@ impl ModificationTableItem {
         html! {
             <ModalBlock
                 modal_id="add-new-parameter"
-                title={get_value_field(&130)}
+                title={LocaleKey::AddingParameter.get_value()}
                 is_active={self.open_new_param_card}
                 on_close={onclick_close_param_card}
                 on_save={None}
@@ -469,7 +469,7 @@ impl ModificationTableItem {
         html! {
             <ModalBlock
                 modal_id="add-param-value"
-                title={get_value_field(&131)}
+                title={LocaleKey::AddingModificationParamValue.get_value()}
                 is_active={self.open_add_param_card}
                 on_close={onclick_close_add_param}
                 on_save={Some(self.link.callback(|_| Msg::RequestAddParamData))}
@@ -479,13 +479,13 @@ impl ModificationTableItem {
                     <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
                     <div class="media-content">
                         <div class="field">
-                            <label for={input_id.clone()} class="label">{get_value_field(&133)}</label> // Set a value
+                            <label for={input_id.clone()} class="label">{LocaleKey::SetValue.get_value()}</label>
                             <div class="control">
                                 <input
                                     id={input_id}
                                     class="input is-fullwidth"
                                     type="text"
-                                    placeholder={get_value_field(&133)}
+                                    placeholder={LocaleKey::SetValue.get_value()}
                                     value={self.request_add_param.value.clone()}
                                     oninput={oninput_param_value}
                                 />
@@ -507,7 +507,7 @@ impl ModificationTableItem {
         html! {
             <ModalBlock
                 modal_id="change-param-value"
-                title={get_value_field(&132)}
+                title={LocaleKey::ChangeValue.get_value()}
                 is_active={self.open_edit_param_card}
                 on_close={onclick_edit_param_card}
                 on_save={Some(onclick_param_update)}
@@ -520,13 +520,13 @@ impl ModificationTableItem {
                     <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
                     <div class="media-content">
                         <div class="field">
-                            <label for={input_id.clone()} class="label">{get_value_field(&134)}</label> // Change value
+                            <label for={input_id.clone()} class="label">{LocaleKey::ChangeValueLabel.get_value()}</label>
                             <div class="control">
                                 <input
                                     id={input_id}
                                     class="input is-fullwidth"
                                     type="text"
-                                    placeholder={get_value_field(&134)}
+                                    placeholder={LocaleKey::ChangeValueLabel.get_value()}
                                     value={self.request_edit_param.value.clone()}
                                     oninput={oninput_param_value}
                                 />

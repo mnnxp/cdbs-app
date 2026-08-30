@@ -7,7 +7,7 @@ use crate::error::Error;
 use crate::fragments::file::{commit_msg_field, UploaderFiles};
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{UUID, UploadFile};
-use crate::services::{get_value_field, resp_parsing};
+use crate::services::{LocaleKey, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::component::{UploadComponentFiles, upload_component_files,};
 use super::ComponentFilesBlock;
@@ -119,17 +119,17 @@ impl Component for ManageComponentFilesCard {
         html!{<>
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
                 <div class={"column"}>
-                    <p class={"title is-5"}>{get_value_field(&186)}</p> // Upload component files
+                    <p class={"title is-5"}>{LocaleKey::UploadComponentFiles.get_value()}</p>
                     {commit_msg_field(self.props.component_uuid.clone(), self.commit_msg.clone(), oninput_commit_msg.clone())}
                     <UploaderFiles
-                        text_choose_files={200} // Choose component files…
+                        label_choose_files={LocaleKey::SelectFilesForComponent}
                         callback_upload_filenames={callback_upload_filenames}
                         request_upload_files={request_upload_files}
                         callback_upload_confirm={callback_upload_confirm}
                         />
                 </div>
                 <div class={"column"}>
-                    <p class={"title is-5"}>{get_value_field(&188)}</p> // Files for component
+                    <p class={"title is-5"}>{LocaleKey::FilesForComponent.get_value()}</p>
                     <ComponentFilesBlock
                         show_download_btn={self.props.show_download_btn}
                         show_delete_btn={true}

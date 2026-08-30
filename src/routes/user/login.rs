@@ -14,10 +14,7 @@ use crate::fragments::form_input::InputConfig;
 use crate::fragments::list_errors::ListErrors;
 use crate::error::Error;
 use crate::routes::AppRoute;
-use crate::services::{
-    set_token, Auth, set_logged_user, get_logged_user, get_value_field,
-    set_history_back, get_history_back
-};
+use crate::services::{set_token, Auth, set_logged_user, get_logged_user, LocaleKey, set_history_back, get_history_back};
 use crate::types::{LoginInfo, LoginInfoWrapper, SlimUser, UserToken};
 use crate::gqls::make_query;
 use crate::gqls::user::{GetMySelf, get_my_self};
@@ -149,10 +146,10 @@ impl Component for Login {
             <div class="container is-fluid page">
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
                 <div class="auth-page">
-                    <h1 class="title is-spaced mb-3">{get_value_field(&13)}</h1>
+                    <h1 class="title is-spaced mb-3">{LocaleKey::SignIn.get_value()}</h1>
                     <h2 class="subtitle mt-0 mb-4">
                         <RouterAnchor<AppRoute> route={AppRoute::Register}>
-                            {get_value_field(&18)}
+                            {LocaleKey::NeedAccount.get_value()}
                         </RouterAnchor<AppRoute>>
                     </h2>
                     <form onsubmit={onsubmit}>
@@ -160,26 +157,26 @@ impl Component for Login {
                             <div class="field mb-4">
                                 {InputConfig::profile_input(
                                     "username",
-                                    &19,
+                                    LocaleKey::Username,
                                     Some(self.request.username.clone()),
                                     oninput_username,
                                     Some("fas fa-user"),
                                     false,
                                     false,
                                 )}
-                                <p class="help has-text-grey mt-1">{get_value_field(&81)}</p>
+                                <p class="help has-text-grey mt-1">{LocaleKey::LoginNote.get_value()}</p>
                             </div>
                             <div class="field mb-5">
                                 {InputConfig::profile_input(
                                     "password",
-                                    &20,
+                                    LocaleKey::Password,
                                     Some(self.request.password.clone()),
                                     oninput_password,
                                     Some("fas fa-lock"),
                                     false,
                                     false,
                                 )}
-                                <p class="help has-text-grey mt-1">{get_value_field(&321)}</p>
+                                <p class="help has-text-grey mt-1">{LocaleKey::InputWarning.get_value()}</p>
                             </div>
                             <button
                                 id="submit-button"
@@ -187,7 +184,7 @@ impl Component for Login {
                                 type="submit"
                                 disabled={self.loading}
                             >
-                                {get_value_field(&44)}
+                                {LocaleKey::Login.get_value()}
                             </button>
 
                         </div>

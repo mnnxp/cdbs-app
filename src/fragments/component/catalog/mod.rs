@@ -14,7 +14,7 @@ use crate::fragments::{list_errors::ListErrors, list_empty::ListEmpty};
 use crate::routes::component::CreateComponent;
 use crate::routes::AppRoute;
 use crate::types::{ComponentsQueryArg, ShowComponentShort, UUID};
-use crate::services::{get_value_field, resp_parsing};
+use crate::services::{LocaleKey, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::component::{
     GetComponentsShortList, get_components_short_list,
@@ -229,13 +229,13 @@ impl CatalogComponents {
             {match self.company_uuid.is_none() {
                 true => html!{
                     <RouterAnchor<AppRoute> route={AppRoute::CreateComponent} classes={"button is-info"}>
-                        {get_value_field(&290)} // Create component
+                        {LocaleKey::CreateComponent.get_value()}
                     </RouterAnchor<AppRoute>>
                 },
                 false => html!{<>
                     {self.modal_add_component()}
                     <button class={"button is-info"} onclick={onclick_show_add_component}>
-                        <span>{get_value_field(&290)}</span>
+                        <span>{LocaleKey::CreateComponent.get_value()}</span>
                     </button>
                 </>},
             }}
@@ -247,7 +247,7 @@ impl CatalogComponents {
         html! {
             <ModalBlock
                 modal_id="add-component"
-                title={get_value_field(&150)}
+                title={LocaleKey::StandardStatus.get_value()}
                 is_active={self.show_add_component}
                 on_close={onclick_show_add_component}
                 on_save={None}

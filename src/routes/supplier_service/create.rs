@@ -11,7 +11,7 @@ use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::buttons::ft_create_btn;
 use crate::fragments::conditions::ConditionsBlock;
-use crate::services::{Auth, get_from_value, get_value_field, get_value_response, is_authenticated, resp_parsing, set_token, set_logged_user};
+use crate::services::{Auth, get_from_value, LocaleKey, get_value_response, is_authenticated, resp_parsing, set_token, set_logged_user};
 use crate::types::{LoginInfo, LoginInfoWrapper, PreServiceRequestData, RegisterInfo, ServiceCreateData, ShowCompanyShort, UserToken, UUID};
 use crate::gqls::make_query;
 use crate::gqls::user::{GetMySelf, get_my_self};
@@ -327,7 +327,7 @@ impl Component for CreateService {
                     <div class="block mb-5">
                         <h2 class="title is-4 mb-4">
                             // <span class="icon mr-3"><i class=""></i></span>
-                            {get_value_field(&364)}
+                            {LocaleKey::CreateOrder.get_value()}
                         </h2>
                         {self.show_main_card()}
                         {match self.user_entry {
@@ -360,7 +360,7 @@ impl CreateService {
                 <div class="field mb-4">
                     {InputConfig::profile_input(
                         "create-service-name",
-                        &110,
+                        LocaleKey::Name,
                         Some(self.request_service.name.clone()),
                         oninput_name,
                         None,
@@ -370,7 +370,7 @@ impl CreateService {
                 </div>
                 <MarkdownEditCard
                     id_tag={"create-service-description"}
-                    title={get_value_field(&61)}
+                    title={LocaleKey::Description.get_value()}
                     placeholder={String::new()}
                     raw_text={self.request_service.description.clone()}
                     oninput_text={oninput_description}
@@ -394,7 +394,7 @@ impl CreateService {
                     <div class="column">
                         {InputConfig::profile_input(
                             "email",
-                            &22,
+                            LocaleKey::Email,
                             Some(self.request_user.email.clone()),
                             oninput_email,
                             Some("fas fa-envelope"),
@@ -405,7 +405,7 @@ impl CreateService {
                     <div class="column">
                         {InputConfig::profile_input(
                             "tel",
-                            &56,
+                            LocaleKey::Phone,
                             Some(self.request_user.phone.clone()),
                             oninput_tel,
                             Some("fas fa-phone"),
@@ -418,7 +418,7 @@ impl CreateService {
                     <div class="column">
                         {InputConfig::profile_input(
                             "username",
-                            &50,
+                            LocaleKey::Username,
                             Some(self.request_user.username.clone()),
                             oninput_username,
                             Some("fas fa-user"),
@@ -429,7 +429,7 @@ impl CreateService {
                     <div class="column">
                         {InputConfig::profile_input(
                             "password",
-                            &20,
+                            LocaleKey::Password,
                             Some(self.request_user.password.clone()),
                             oninput_password,
                             Some("fas fa-lock"),

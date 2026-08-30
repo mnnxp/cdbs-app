@@ -7,7 +7,7 @@ use wasm_bindgen_futures::spawn_local;
 
 use super::FilesetFilesBlock;
 use crate::fragments::component::modification::fileset::modal::AddModificationFilesetsModal;
-use crate::services::{get_value_field, resp_parsing};
+use crate::services::{LocaleKey, resp_parsing};
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::buttons::{ft_custom_btn, ft_delete_pair_btn};
@@ -266,9 +266,9 @@ impl ManageModificationFilesets {
                         <i class="fas fa-folder-plus fa-3x"></i>
                     </span>
                 </div>
-                <h4 class="title is-5 has-text-grey mb-2">{get_value_field(&403)}</h4>
+                <h4 class="title is-5 has-text-grey mb-2">{LocaleKey::NoFilesets.get_value()}</h4>
                 <p class="subtitle is-6 has-text-grey-light mb-5" style="max-width: 500px; margin: 0 auto;">
-                    {get_value_field(&402)}
+                    {LocaleKey::NoFilesetForModification.get_value()}
                 </p>
                 {self.show_add_btn()}
             </div>
@@ -280,7 +280,7 @@ impl ManageModificationFilesets {
         html!{
             {ft_custom_btn(
                 &format!("create-first-fileset-{}", self.props.select_modification_uuid),
-                get_value_field(&196),
+                LocaleKey::AddFileset.get_value(),
                 classes!("is-success"),
                 "fas fa-folder-plus",
                 onclick_new_fileset_card,
@@ -293,7 +293,7 @@ impl ManageModificationFilesets {
         html! {
             <div class="column">
                 <div class="is-flex is-justify-content-space-between is-align-items-center mb-3">
-                    <p class="subtitle is-5 has-text-weight-bold mb-1">{get_value_field(&404)}</p>
+                    <p class="subtitle is-5 has-text-weight-bold mb-1">{LocaleKey::FilesetsLabel.get_value()}</p>
                     {self.show_add_btn()}
                 </div>
                 <div class="panel p-2 mb-4" style="max-height: 300px; overflow-y: auto;">
@@ -308,7 +308,7 @@ impl ManageModificationFilesets {
     fn fileset_files(&self) -> Html {
         html!{
             <div class="column">
-                <p class="subtitle is-5 has-text-weight-bold mb-3">{get_value_field(&198)}</p>
+                <p class="subtitle is-5 has-text-weight-bold mb-3">{LocaleKey::FilesOfFileset.get_value()}</p>
                 <div class="box">
                     {match self.filesets.iter().find(|sf| sf.uuid == self.select_fileset_uuid) {
                         Some(f) => html!{
@@ -320,7 +320,7 @@ impl ManageModificationFilesets {
                         },
                         None => html!{
                             <div class="has-text-centered py-5">
-                                <p class="has-text-grey-light">{get_value_field(&204)}</p>
+                                <p class="has-text-grey-light">{LocaleKey::FilesNotFound.get_value()}</p>
                             </div>
                         },
                     }}
@@ -385,12 +385,12 @@ impl ManageModificationFilesets {
 
         html!{
             <div class="column">
-                <p class="subtitle is-5 has-text-weight-bold mb-3">{get_value_field(&197)}</p>
+                <p class="subtitle is-5 has-text-weight-bold mb-3">{LocaleKey::UploadFilesForFileset.get_value()}</p>
                 <div class="mt-4 pt-3" style="border-top: 1px solid #f5f5f5;">
                     {commit_msg_field(self.select_fileset_uuid.clone(), self.commit_msg.clone(), oninput_commit_msg.clone())}
                 </div>
                 <UploaderFiles
-                    text_choose_files={195}
+                    label_choose_files={LocaleKey::SelectFilesForFileset}
                     callback_upload_filenames={callback_upload_filenames}
                     request_upload_files={request_upload_files}
                     callback_upload_confirm={callback_upload_confirm}

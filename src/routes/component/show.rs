@@ -27,7 +27,7 @@ use crate::fragments::{
     clipboard::ShareLinkBtn,
 };
 use crate::services::content_adapter::{DateDisplay, Markdownable};
-use crate::services::{get_classes_table, get_logged_user, get_value_field, resp_parsing, set_focus, set_history_back, title_changer, Counter};
+use crate::services::{get_classes_table, get_logged_user, LocaleKey, resp_parsing, set_focus, set_history_back, title_changer, Counter};
 use crate::types::{ComponentInfo, FilesetProgramInfo, DownloadFile, ObjectType, Pathname, SlimUser, ToObject, UUID};
 use crate::gqls::make_query;
 use crate::gqls::component::{
@@ -474,19 +474,19 @@ impl ShowComponent {
         html!{
             <div class="is-flex is-flex-wrap-wrap is-align-items-center is-gap-3 mb-2">
                 <div class={class_item}>
-                    {get_value_field(&159)}{": "}
+                    {LocaleKey::LCS.get_value()}{": "}
                     {component_data.actual_status.name.clone()}
                 </div>
                 <div class={class_item}>
                     {component_data.type_access.get_with_icon()}
                 </div>
-                <div title={get_value_field(&141)} class={class_item}>
+                <div title={LocaleKey::Owner.get_value()} class={class_item}>
                     <span class={class_icon}>
                         <i class={classes!("fa", "fa-user")}></i>
                     </span>
                     <GoToUser data = {component_data.owner_user.clone()} />
                 </div>
-                <div title={get_value_field(&95)} class={class_item}>
+                <div title={LocaleKey::UpdatedAtLabel.get_value()} class={class_item}>
                     <span class={class_icon}>
                         <i class={classes!("fa", "fa-edit")}></i>
                     </span>
@@ -509,9 +509,9 @@ impl ShowComponent {
         html!{<>
             <div class="tabs mb-1">
                 <ul>
-                    <li class={at.0} onclick={onclick_tab_description}><a>{get_value_field(&61)}</a></li>
-                    <li class={at.1} onclick={onclick_tab_characteristics}><a>{get_value_field(&101)}</a></li>
-                    <li class={at.2} onclick={onclick_tab_component_files}><a>{get_value_field(&102)}</a></li>
+                    <li class={at.0} onclick={onclick_tab_description}><a>{LocaleKey::Description.get_value()}</a></li>
+                    <li class={at.1} onclick={onclick_tab_characteristics}><a>{LocaleKey::Characteristics.get_value()}</a></li>
+                    <li class={at.2} onclick={onclick_tab_component_files}><a>{LocaleKey::ComponentFiles.get_value()}</a></li>
                 </ul>
             </div>
             <div class="card-content p-0">
@@ -554,8 +554,8 @@ impl ShowComponent {
 
     fn show_component_suppliers(&self, component_data: &ComponentInfo) -> Html {
         let table_label = match component_data.is_base {
-            true => get_value_field(&107).to_string(),
-            false => get_value_field(&108).to_string(),
+            true => LocaleKey::Suppliers.get_value().to_string(),
+            false => LocaleKey::MainSupplier.get_value().to_string(),
         };
         let classes_table = get_classes_table(component_data.component_suppliers.len());
         html!{
@@ -569,9 +569,9 @@ impl ShowComponent {
                         <table class={classes_table}>
                             <thead>
                             <tr>
-                                <th>{get_value_field(&109)}</th> // Company
-                                <th>{get_value_field(&61)}</th> // Description
-                                <th>{get_value_field(&111)}</th> // Action
+                                <th>{LocaleKey::Company.get_value()}</th>
+                                <th>{LocaleKey::Description.get_value()}</th>
+                                <th>{LocaleKey::Action.get_value()}</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -612,7 +612,7 @@ impl ShowComponent {
         html!{
             <div class={"card"}>
                 <header class={"card-header"}>
-                    <p class={"card-header-title"}>{get_value_field(&103)}</p> // Standards
+                    <p class={"card-header-title"}>{LocaleKey::Standards.get_value()}</p>
                 </header>
                 <div class={"card-content"}>
                 <div class={"table-container"}>
@@ -620,8 +620,8 @@ impl ShowComponent {
                         <table class={classes_table}>
                             <thead>
                             <tr>
-                                <th>{get_value_field(&110)}</th> // Name
-                                <th>{get_value_field(&111)}</th> // Action
+                                <th>{LocaleKey::Name.get_value()}</th>
+                                <th>{LocaleKey::Action.get_value()}</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -672,9 +672,9 @@ impl ShowComponent {
         let show_btn = match self.show_three_view {
             true => {
                 class_btn.push("is-active");
-                get_value_field(&301)
+                LocaleKey::Close.get_value()
             },
-            false => get_value_field(&300),
+            false => LocaleKey::View.get_value(),
         };
 
         html!{<>
@@ -682,7 +682,7 @@ impl ShowComponent {
             id="three-button"
             class={class_btn}
             onclick={onclick_three_viewer}
-            title={get_value_field(&325)}>
+            title={LocaleKey::Open3DView.get_value()}>
               <span class="icon is-small">
                 <i class={classes!("fa", "fa-cube")} style="color: #1872f0;"></i>
               </span>
@@ -705,7 +705,7 @@ impl ShowComponent {
             true => html!{<>
                 <div id="show-component-discussion" class="card">
                     <header class="card-header has-background-info-light">
-                        <p class="card-header-title">{get_value_field(&380)}</p>
+                        <p class="card-header-title">{LocaleKey::Discussion.get_value()}</p>
                     </header>
                     <div class="card-content">
                         <DiscussionCommentsBlock

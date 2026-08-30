@@ -7,7 +7,7 @@ use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::buttons::ft_delete_pair_btn;
 use crate::fragments::notification::show_notification;
-use crate::services::{get_value_field, resp_parsing};
+use crate::services::{LocaleKey, resp_parsing};
 use crate::services::content_adapter::DateDisplay;
 use crate::types::{CompanyAccess, PermissionLevel, UUID};
 use crate::gqls::make_query;
@@ -156,7 +156,7 @@ impl Component for CompanyAccessRow {
         html!{<>
             <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()} />
             {show_notification(
-                get_value_field(&214),
+                LocaleKey::DataUpdated.get_value(),
                 "is-success",
                 self.is_changed,
             )}

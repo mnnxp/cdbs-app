@@ -11,7 +11,7 @@ use crate::fragments::modal::ModalBlock;
 use crate::fragments::permission::PermissionLevelBlock;
 use crate::fragments::switch_icon::res_loading_state;
 use crate::services::content_adapter::ContentDisplay;
-use crate::services::{get_value_field, resp_parsing, truncate_uuid};
+use crate::services::{LocaleKey, resp_parsing, truncate_uuid};
 use crate::types::{PermissionLevel, UserSearchResult, UUID};
 use crate::gqls::make_query;
 use crate::gqls::rbac::{
@@ -188,7 +188,7 @@ impl Component for AddUserAccessModal {
         html! {
             <ModalBlock
                 modal_id="add-user"
-                title={get_value_field(&485)}
+                title={LocaleKey::AddUserAccess.get_value()}
                 is_active={self.props.is_active}
                 on_close={self.link.callback(|_| Msg::Close)}
                 on_save={Some(self.link.callback(|_| Msg::AddAccess))}
@@ -212,12 +212,12 @@ impl AddUserAccessModal {
             <div class={"columns"}>
                 <div class={"column"}>
                     <div class="field">
-                        <label class="label">{get_value_field(&486)}</label>
+                        <label class="label">{LocaleKey::SearchUser.get_value()}</label>
                         <div class={class_input}>
                             <input
                                 class="input"
                                 type="text"
-                                placeholder={get_value_field(&481)}
+                                placeholder={LocaleKey::SearchUsers.get_value()}
                                 value={self.search_text.clone()}
                                 oninput={self.link.callback(|ev: InputData| Msg::UpdateSearch(ev.value))}
                             />
@@ -226,7 +226,7 @@ impl AddUserAccessModal {
                 </div>
                 <div class={"column"}>
                     <div class="field">
-                        <label class="label">{get_value_field(&487)}</label>
+                        <label class="label">{LocaleKey::AccessLevel.get_value()}</label>
                         <PermissionLevelBlock
                             change_cb={self.link.callback(|id| Msg::UpdateLevel(id))}
                             permissions={self.props.permissions.clone()}
@@ -249,14 +249,14 @@ impl AddUserAccessModal {
         match self.search_text.is_empty() {
             true => html!{},
             false if self.search_loading => res_loading_state(),
-            false => html!{<p>{get_value_field(&492)}</p>}
+            false => html!{<p>{LocaleKey::NoUsersFound.get_value()}</p>}
         }
     }
 
     fn show_search_results(&self) -> Html {
         html!{<>
                 <p class="help is-info">
-                    <span class="mr-3">{get_value_field(&493)}</span>
+                    <span class="mr-3">{LocaleKey::Found.get_value()}</span>
                     <span>{self.search_results.len()}</span>
                 </p>
                 {for self.search_results.iter().map(|user|
@@ -278,7 +278,7 @@ impl AddUserAccessModal {
             <div class={class_item} onclick={onclick_user_item}>
                 <div class="is-flex is-align-items-center">
                     <div class="image is-32x32 mr-2">
-                        <img src={user.image_file.download_url.clone()} alt={get_value_field(&494)} />
+                        <img src={user.image_file.download_url.clone()} alt={LocaleKey::Avatar.get_value()} />
                     </div>
                     <div>
                         <p>{user.to_display()}</p>

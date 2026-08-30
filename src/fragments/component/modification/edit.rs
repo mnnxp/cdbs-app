@@ -9,7 +9,7 @@ use crate::error::Error;
 use crate::fragments::buttons::{ft_delete_pair_btn, ft_save_btn};
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::markdown_edit::MarkdownEditCard;
-use crate::services::{get_value_field, resp_parsing, unique_id};
+use crate::services::{LocaleKey, resp_parsing, unique_id};
 use crate::types::{UUID, ComponentModificationInfo, ActualStatus, ModificationUpdatePreData};
 use crate::gqls::make_query;
 use crate::gqls::component::{
@@ -205,9 +205,9 @@ impl ModificationEdit {
         html!{<>
             <div class="tabs is-centered is-medium">
                 <ul>
-                    <li class={at.0} onclick={onclick_tab_data}><a title={get_value_field(&407)}>{get_value_field(&177)}</a></li>
-                    <li class={at.1} onclick={onclick_tab_files}><a title={get_value_field(&119)}>{get_value_field(&172)}</a></li>
-                    <li class={at.2} onclick={onclick_tab_fileset}><a title={get_value_field(&401)}>{get_value_field(&173)}</a></li>
+                    <li class={at.0} onclick={onclick_tab_data}><a title={LocaleKey::ModificationDescription.get_value()}>{LocaleKey::ModificationData.get_value()}</a></li>
+                    <li class={at.1} onclick={onclick_tab_files}><a title={LocaleKey::SelectedModificationFiles.get_value()}>{LocaleKey::ModificationFiles.get_value()}</a></li>
+                    <li class={at.2} onclick={onclick_tab_fileset}><a title={LocaleKey::FilesetDescription.get_value()}>{LocaleKey::Filesets.get_value()}</a></li>
                 </ul>
             </div>
             <div class="card-content">
@@ -242,7 +242,7 @@ impl ModificationEdit {
                 <div class={"content"}>
                     {self.actual_status_block()}
                     <div class={"column"}>
-                        <label class={"label"} for={name_id.clone()}>{get_value_field(&176)}</label>
+                        <label class={"label"} for={name_id.clone()}>{LocaleKey::ModificationName.get_value()}</label>
                         <input
                             id={name_id}
                             class={"input is-fullwidth"}
@@ -254,7 +254,7 @@ impl ModificationEdit {
                     <div class={"column"}>
                     <MarkdownEditCard
                         id_tag={"modification-description"}
-                        title={get_value_field(&61)}
+                        title={LocaleKey::Description.get_value()}
                         placeholder={self.props.modification.description.clone()}
                         raw_text={self.request_edit_modification.description.clone()}
                         oninput_text={oninput_modification_description}
@@ -296,7 +296,7 @@ impl ModificationEdit {
             <div class={"columns"}>
                 <div class={"column"}>
                     <div class="field">
-                    <label class="label" for={status_id.clone()}>{get_value_field(&96)}</label>
+                    <label class="label" for={status_id.clone()}>{LocaleKey::LifeCycleStage.get_value()}</label>
                     <div class={"select"}>
                     <select
                         id={status_id}

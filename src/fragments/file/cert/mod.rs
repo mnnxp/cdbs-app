@@ -2,7 +2,7 @@ use yew::{html, Component, Callback, ComponentLink, Html, Properties, ShouldRend
 // use log::debug;
 
 use crate::fragments::buttons::{ft_delete_btn, ft_save_btn};
-use crate::services::{image_detector, get_value_field};
+use crate::services::{image_detector, LocaleKey};
 use crate::types::{UUID, Certificate};
 
 #[derive(Debug)]
@@ -127,13 +127,13 @@ impl CertificateItem {
                   </div>
                   <div class="media-content" style="margin-right: 1rem;">
                     <div class="block" style="overflow-wrap: anywhere">
-                        <span class="overflow-title has-text-weight-bold">{get_value_field(&262)}</span>
+                        <span class="overflow-title has-text-weight-bold">{LocaleKey::FilenameLabel2.get_value()}</span>
                         <span class="overflow-title">{self.props.certificate.file.filename.clone()}</span>
                     </div>
                     <div class="block">
                         <div class="columns" style="margin-bottom: 0px">
                             <div class="column">
-                                <label class="label">{get_value_field(&61)}</label>
+                                <label class="label">{LocaleKey::Description.get_value()}</label>
                             </div>
                             {self.show_update_description()}
                         </div>
@@ -143,7 +143,7 @@ impl CertificateItem {
                                     id={"cert-description"}
                                     class="input"
                                     type="text"
-                                    placeholder={get_value_field(&61)}
+                                    placeholder={LocaleKey::Description.get_value()}
                                     value={self.cert_description.clone()}
                                     oninput={oninput_cert_description} />
                             </div>
@@ -192,8 +192,8 @@ impl CertificateItem {
     fn show_delete_certificate(&self) -> Html {
         html!{<div class="card">
             <div class="message is-success">
-              <div class="message-header">{get_value_field(&89)}</div>
-              <div class="message-body">{get_value_field(&139)}</div>
+              <div class="message-header">{LocaleKey::Success.get_value()}</div>
+              <div class="message-body">{LocaleKey::CertificateRemoved.get_value()}</div>
             </div>
         </div>}
     }
@@ -202,7 +202,7 @@ impl CertificateItem {
         match self.props.get_result_update {
             true => html!{<div class="column">
                 <span id="remove-profile" class="tag is-info is-light">
-                    {get_value_field(&140)}
+                    {LocaleKey::DescriptionUpdated.get_value()}
                 </span>
             </div>},
             false => html!{},

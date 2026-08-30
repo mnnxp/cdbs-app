@@ -9,7 +9,7 @@ use crate::fragments::buttons::ft_delete_small_btn;
 use crate::fragments::modal::ModalBlock;
 use crate::services::content_adapter::Markdownable;
 use crate::types::{UUID, ServiceParam};
-use crate::services::{get_value_field, resp_parsing, unique_id};
+use crate::services::{LocaleKey, resp_parsing, unique_id};
 use crate::gqls::make_query;
 use crate::gqls::supplier_service::{
     PutServiceParams, put_service_params,
@@ -178,7 +178,7 @@ impl ServiceParamTag {
             {match self.props.show_manage_btn {
                 true => html!{<>
                     <td>
-                        <a onclick={onclick_change_param} title={get_value_field(&59)}>
+                        <a onclick={onclick_change_param} title={LocaleKey::Change.get_value()}>
                             <span class="icon" >
                                 <i class="fas fa-pencil-alt" aria-hidden="true"></i>
                             </span>
@@ -204,7 +204,7 @@ impl ServiceParamTag {
         html! {
             <ModalBlock
                 modal_id="change-param-value"
-                title={get_value_field(&211)}
+                title={LocaleKey::ChangingParameterValue.get_value()}
                 is_active={!self.hide_edit_param_value}
                 on_close={onclick_hide_modal}
                 on_save={Some(self.link.callback(|_| Msg::RequestChangeValue))}
@@ -214,12 +214,12 @@ impl ServiceParamTag {
                 }
             >
                 <div class="column">
-                    <label for={modal_input_id.clone()} class="label">{get_value_field(&133)}</label>
+                    <label for={modal_input_id.clone()} class="label">{LocaleKey::SetValue.get_value()}</label>
                     <input
                         id={modal_input_id}
                         class="input is-fullwidth"
                         type="text"
-                        placeholder={get_value_field(&133)}
+                        placeholder={LocaleKey::SetValue.get_value()}
                         value={self.request_set_param_value.clone()}
                         oninput={oninput_set_param_value}
                     />

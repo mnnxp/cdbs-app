@@ -7,7 +7,7 @@ use yew::{Component, ComponentLink, Html, Properties, ShouldRender, html};
 // use log::debug;
 use crate::fragments::buttons::ft_see_btn;
 use crate::types::{UUID, ShowFileInfo};
-use crate::services::get_value_field;
+use crate::services::LocaleKey;
 
 #[derive(Clone, Debug, Properties)]
 pub struct Props {
@@ -82,7 +82,7 @@ impl Component for StandardFilesCard {
             </div>
             <footer class="card-footer">
                 {match self.props.files.len() {
-                    0 => html!{<span>{get_value_field(&204)}</span>},
+                    0 => html!{<span>{LocaleKey::FilesNotFound.get_value()}</span>},
                     0..=3 => html!{},
                     _ => self.show_see_btn(),
                 }}

@@ -12,7 +12,7 @@ use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{list_errors::ListErrors, list_empty::ListEmpty};
 use crate::types::{ShowStandardShort, StandardsQueryArg};
-use crate::services::{get_value_field, resp_parsing};
+use crate::services::{LocaleKey, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::standard::{GetStandardsShortList, get_standards_short_list};
 use crate::fragments::ListState;
@@ -118,7 +118,7 @@ impl Component for CatalogStandards {
                         {match &self.props.show_create_btn {
                             true => html!{
                                 <RouterAnchor<AppRoute> route={AppRoute::CreateStandard} classes="button is-info">
-                                    {get_value_field(&291)} // Create standard
+                                    {LocaleKey::CreateStandard.get_value()}
                                 </RouterAnchor<AppRoute>>
                             },
                             false => html!{},

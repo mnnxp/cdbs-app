@@ -29,7 +29,7 @@ use crate::fragments::{
     upload_favicon::UpdateFaviconBlock,
 };
 use crate::services::content_adapter::DateDisplay;
-use crate::services::{get_logged_user, get_value_field, resp_parsing, get_value_response, get_from_value};
+use crate::services::{get_logged_user, LocaleKey, resp_parsing, get_value_response, get_from_value};
 use crate::types::{
     UUID, SlimUser, CompanyUpdateInfo, CompanyInfo, Region,
     CompanyType, TypeAccessInfo
@@ -48,15 +48,15 @@ impl MenuBuilder for CompanySettings {
     fn menu_config() -> &'static [MenuItemTemplate<Menu>] {
         use Menu::*;
         &[
-            MenuItemTemplate { title_key: 265, icon_classes: &[&["fas", "fa-angle-double-left"]], tab: OpenCompany, custom_class: None },
-            MenuItemTemplate { title_key: 109, icon_classes: &[&["fas", "fa-building"]], tab: Company, custom_class: None },
-            MenuItemTemplate { title_key: 91, icon_classes: &[&["fas", "fa-image"]], tab: UpdateFavicon, custom_class: None },
-            MenuItemTemplate { title_key: 266, icon_classes: &[&["fas", "fa-industry"]], tab: Represent, custom_class: None },
-            MenuItemTemplate { title_key: 64, icon_classes: &[&["fas", "fa-certificate"]], tab: Certificates, custom_class: None },
-            MenuItemTemplate { title_key: 283, icon_classes: &[&["fas", "fa-paperclip"]], tab: Spec, custom_class: None },
-            MenuItemTemplate { title_key: 286, icon_classes: &[&["fas", "fa-users"]], tab: Member, custom_class: None },
-            MenuItemTemplate { title_key: 65, icon_classes: &[&["fas", "fa-low-vision"]], tab: Access, custom_class: None },
-            MenuItemTemplate { title_key: 267, icon_classes: &[&["fas", "fa-trash"]], tab: RemoveCompany, custom_class: Some("has-background-danger-light") },
+            MenuItemTemplate { lk_title: LocaleKey::OpenCompanyLabel, icon_classes: &[&["fas", "fa-angle-double-left"]], tab: OpenCompany, custom_class: None },
+            MenuItemTemplate { lk_title: LocaleKey::Company, icon_classes: &[&["fas", "fa-building"]], tab: Company, custom_class: None },
+            MenuItemTemplate { lk_title: LocaleKey::CompanyLogo, icon_classes: &[&["fas", "fa-image"]], tab: UpdateFavicon, custom_class: None },
+            MenuItemTemplate { lk_title: LocaleKey::Representations, icon_classes: &[&["fas", "fa-industry"]], tab: Represent, custom_class: None },
+            MenuItemTemplate { lk_title: LocaleKey::CertificatesLabel, icon_classes: &[&["fas", "fa-certificate"]], tab: Certificates, custom_class: None },
+            MenuItemTemplate { lk_title: LocaleKey::SphereOfActivity, icon_classes: &[&["fas", "fa-paperclip"]], tab: Spec, custom_class: None },
+            MenuItemTemplate { lk_title: LocaleKey::Members, icon_classes: &[&["fas", "fa-users"]], tab: Member, custom_class: None },
+            MenuItemTemplate { lk_title: LocaleKey::Access, icon_classes: &[&["fas", "fa-low-vision"]], tab: Access, custom_class: None },
+            MenuItemTemplate { lk_title: LocaleKey::RemoveCompany, icon_classes: &[&["fas", "fa-trash"]], tab: RemoveCompany, custom_class: Some("has-background-danger-light") },
         ]
     }
 
@@ -427,7 +427,7 @@ impl CompanySettings {
             Menu::Represent => self.represents_block(),
             // Show interface for add and update Certificates
             Menu::Certificates => html!{<>
-                <h4 id="updated-certificates" class="title is-4">{get_value_field(&64)}</h4> // Certificates
+                <h4 id="updated-certificates" class="title is-4">{LocaleKey::CertificatesLabel.get_value()}</h4>
                 {self.add_certificate_block()}
                 <br/>
                 {self.certificates_block()}
@@ -452,22 +452,22 @@ impl CompanySettings {
         });
 
         html!{<>
-            <h4 id="updated-company" class="title is-4">{get_value_field(&109)}</h4> // Company
+            <h4 id="updated-company" class="title is-4">{LocaleKey::Company.get_value()}</h4>
             <div class="columns">
                 {show_notification(
-                    &format!("{} {}", get_value_field(&72), self.get_result_update),
+                    &format!("{} {}", LocaleKey::UpdatedRows.get_value(), self.get_result_update),
                     "is-success",
                     self.get_result_update > 0,
                 )}
                 <div class="column">
-                    <span class={classes!("overflow-title", "has-text-weight-bold")}>{get_value_field(&73)}</span>
+                    <span class={classes!("overflow-title", "has-text-weight-bold")}>{LocaleKey::LastUpdated.get_value()}</span>
                     {match &self.current_data {
                         Some(data) => html!{
                             <span class="overflow-title">
                                 {data.updated_at.date_to_display()}
                             </span>
                         },
-                        None => html!{<span>{get_value_field(&75)}</span>},
+                        None => html!{<span>{LocaleKey::NoData.get_value()}</span>},
                     }}
                 </div>
             </div>
@@ -513,20 +513,20 @@ impl CompanySettings {
                             <span class="icon"><i class="fas fa-building"></i></span>
                         </h5>
                         <div class="field mb-4">
-                            {InputConfig::company_input("orgname", &170, self.request_company.orgname.as_ref(), oninput_orgname, self.loading)}
+                            {InputConfig::company_input("orgname", LocaleKey::Orgname, self.request_company.orgname.as_ref(), oninput_orgname, self.loading)}
                         </div>
                         <div class="columns is-desktop mb-0">
                             <div class="column">
-                                {InputConfig::company_input("shortname", &171, self.request_company.shortname.as_ref(), oninput_shortname, self.loading)}
+                                {InputConfig::company_input("shortname", LocaleKey::Shortname, self.request_company.shortname.as_ref(), oninput_shortname, self.loading)}
                             </div>
                             <div class="column">
-                                {InputConfig::company_input("inn", &163, self.request_company.inn.as_ref(), oninput_inn, self.loading)}
+                                {InputConfig::company_input("inn", LocaleKey::RegNumber, self.request_company.inn.as_ref(), oninput_inn, self.loading)}
                             </div>
                         </div>
                         <div class="columns is-desktop mb-0">
                             <div class="column">
                                 <div class="field">
-                                    <label class="label">{get_value_field(&51)}</label>
+                                    <label class="label">{LocaleKey::CompanyType.get_value()}</label>
                                     <div class="control">
                                         <div class="select is-fullwidth">
                                             <select
@@ -549,7 +549,7 @@ impl CompanySettings {
                                 </div>
                             </div>
                             <div class="column">
-                                {InputConfig::company_input("site_url", &66, self.request_company.site_url.as_ref(), oninput_site_url, self.loading)}
+                                {InputConfig::company_input("site_url", LocaleKey::Site, self.request_company.site_url.as_ref(), oninput_site_url, self.loading)}
                             </div>
                         </div>
                     </div>
@@ -559,16 +559,16 @@ impl CompanySettings {
                         </h5>
                         <div class="columns is-desktop mb-0">
                             <div class="column">
-                                {InputConfig::company_input("email", &22, self.request_company.email.as_ref(), oninput_email, self.loading)}
+                                {InputConfig::company_input("email", LocaleKey::Email, self.request_company.email.as_ref(), oninput_email, self.loading)}
                             </div>
                             <div class="column">
-                                {InputConfig::company_input("tel", &56, self.request_company.phone.as_ref(), oninput_phone, self.loading)}
+                                {InputConfig::company_input("tel", LocaleKey::Phone, self.request_company.phone.as_ref(), oninput_phone, self.loading)}
                             </div>
                         </div>
                         <div class="columns is-desktop mb-0">
                             <div class="column is-4-desktop">
                                 <div class="field">
-                                    <label class="label">{get_value_field(&27)}</label>
+                                    <label class="label">{LocaleKey::Region.get_value()}</label>
                                     <div class="control">
                                         <div class="select is-fullwidth">
                                             <select
@@ -591,7 +591,7 @@ impl CompanySettings {
                                 </div>
                             </div>
                             <div class="column is-8-desktop">
-                                {InputConfig::company_input("address", &57, self.request_company.address.as_ref(), oninput_address, self.loading)}
+                                {InputConfig::company_input("address", LocaleKey::Address, self.request_company.address.as_ref(), oninput_address, self.loading)}
                             </div>
                         </div>
                     </div>
@@ -599,7 +599,7 @@ impl CompanySettings {
                         <h5 class="title is-6 has-text-grey mb-4">
                             <span class="icon"><i class="fas fa-align-left"></i></span>
                         </h5>
-                        {InputConfig::company_input("description", &61, self.request_company.description.as_ref(), oninput_description, self.loading)}
+                        {InputConfig::company_input("description", LocaleKey::Description, self.request_company.description.as_ref(), oninput_description, self.loading)}
                     </div>
                 </div>
             }
@@ -609,7 +609,7 @@ impl CompanySettings {
         let callback_update_favicon = self.link.callback(|_| Msg::ReguestCompanyData);
 
         html!{<>
-            <h4 id="updated-favicon-company" class="title is-4">{get_value_field(&91)}</h4> // Logo
+            <h4 id="updated-favicon-company" class="title is-4">{LocaleKey::CompanyLogo.get_value()}</h4>
             <UpdateFaviconBlock
                 company_uuid={self.company_uuid.clone()}
                 callback={callback_update_favicon}
@@ -628,7 +628,7 @@ impl CompanySettings {
             },
             None => html!{
                 <div class="notification is-info">
-                    <span>{get_value_field(&74)}</span>
+                    <span>{LocaleKey::NoCertificates.get_value()}</span>
                 </div>
             },
         }
@@ -636,7 +636,7 @@ impl CompanySettings {
 
     fn manage_specs_block(&self) -> Html {
         html!{<>
-            <h4 id="updated-company-specs" class="title is-4">{get_value_field(&283)}</h4> // Sphere of activity
+            <h4 id="updated-company-specs" class="title is-4">{LocaleKey::SphereOfActivity.get_value()}</h4>
             {match &self.current_data {
                 Some(current_data) => html!{
                     <SearchSpecsTags
@@ -682,13 +682,13 @@ impl CompanySettings {
 
         html!{<>
             {show_notification(
-                get_value_field(&68), // Updated access
+                LocaleKey::UpdatedAccess.get_value(),
                 "is-success",
                 self.get_result_access,
             )}
-            <h4 id="updated-access" class="title is-4">{get_value_field(&65)}</h4> // Access
+            <h4 id="updated-access" class="title is-4">{LocaleKey::Access.get_value()}</h4>
             <div class="field">
-                <label class="label">{get_value_field(&58)}</label>
+                <label class="label">{LocaleKey::TypeAccess.get_value()}</label>
                 <TypeAccessBlock
                     change_cb={onchange_type_access}
                     types={self.types_access.clone()}
@@ -709,14 +709,14 @@ impl CompanySettings {
         let onclick_delete_company = self.link.callback(|_| Msg::RequestRemoveCompany);
 
         html!{<>
-            <h4 id="remove-company" class="title is-4">{get_value_field(&268)}</h4>
+            <h4 id="remove-company" class="title is-4">{LocaleKey::DeleteCompanyLabel.get_value()}</h4>
             {show_notification(
-                &format!("{}: {}", get_value_field(&274), self.get_result_remove_company),
+                &format!("{}: {}", LocaleKey::CompanyDelete.get_value(), self.get_result_remove_company),
                 "is-success",
                 self.get_result_remove_company,
             )}
             <div class="content is-medium">
-                <p><strong>{get_value_field(&272)}</strong> {get_value_field(&273)}</p>
+                <p><strong>{LocaleKey::Warning.get_value()}</strong> {LocaleKey::CompanyDeleteWarning.get_value()}</p>
             </div>
             <div class="column is-half right-side">
             {ft_delete_class_btn(

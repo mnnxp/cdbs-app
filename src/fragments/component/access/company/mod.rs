@@ -8,7 +8,7 @@ use log::debug;
 
 use crate::fragments::buttons::ft_custom_btn;
 use crate::fragments::paginate::Paginate;
-use crate::services::{get_classes_table, get_value_field};
+use crate::services::{get_classes_table, LocaleKey};
 use crate::types::{CompanyAccess, PaginateSet, PermissionLevel, UUID};
 
 
@@ -102,12 +102,12 @@ impl Component for CompanyAccessComponentTable {
                     <header class="card-header">
                         <div class="card-header-title">
                             <p class="is-size-5 has-text-weight-semibold mb-0">
-                                {get_value_field(&460)}
+                                {LocaleKey::CompaniesAccess.get_value()}
                             </p>
                             <div class="buttons right-side">
                                 {ft_custom_btn(
                                     &format!("add-company-access-{}", self.props.component_uuid),
-                                    {get_value_field(&491)},
+                                    {LocaleKey::AddCompany.get_value()},
                                     classes!("is-success"),
                                     "fas fa-building",
                                     onclick_show_add_company_modal,
@@ -122,7 +122,7 @@ impl Component for CompanyAccessComponentTable {
                         } else {
                             html! {
                                 <div class="notification is-info is-light">
-                                    {get_value_field(&497)}
+                                    {LocaleKey::NoCompaniesAccess.get_value()}
                                 </div>
                             }
                         }}
@@ -161,10 +161,10 @@ impl CompanyAccessComponentTable {
                         <thead>
                             <tr>
                                 <th>{"\u{2116}"}</th>
-                                <th>{get_value_field(&109)}</th>
-                                <th>{get_value_field(&468)}</th>
-                                <th>{get_value_field(&458)}</th>
-                                <th>{get_value_field(&111)}</th>
+                                <th>{LocaleKey::Company.get_value()}</th>
+                                <th>{LocaleKey::AccessPermissions.get_value()}</th>
+                                <th>{LocaleKey::GrantedAt.get_value()}</th>
+                                <th>{LocaleKey::Action.get_value()}</th>
                             </tr>
                         </thead>
                         <tbody>

@@ -18,7 +18,7 @@ pub(crate) mod content_adapter;
 pub(crate) mod title_changer;
 
 pub use auth::{Auth, get_current_user, logout};
-pub use localisation::get_value_field;
+pub(crate) use localisation::LocaleKey;
 pub use filesize::Size;
 pub use local_storage::{
     get_logged_user, set_logged_user, get_token, is_authenticated, set_lang, get_lang,

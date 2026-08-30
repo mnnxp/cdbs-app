@@ -16,7 +16,7 @@ use crate::fragments::list_errors::ListErrors;
 use crate::fragments::modal::ModalBlock;
 use crate::fragments::paginate::Paginate;
 use crate::types::{ServiceParam, PaginateSet, Param, UUID};
-use crate::services::{get_classes_table, get_value_field, resp_parsing, resp_parsing_two_level};
+use crate::services::{get_classes_table, LocaleKey, resp_parsing, resp_parsing_two_level};
 use crate::gqls::{
     make_query,
     relate::{GetParams, get_params},
@@ -240,7 +240,7 @@ impl Component for ServiceParamsTags {
                     <footer class="card-footer">
                         {ft_add_btn(
                             "add-param-service",
-                            get_value_field(&180),
+                            LocaleKey::AddParameter.get_value(),
                             self.link.callback(|_| Msg::ChangeHideAddParam),
                             true,
                             false
@@ -269,12 +269,12 @@ impl ServiceParamsTags {
                     <thead>
                         <tr>
                             <th>{"\u{2116}"}</th> // Numero sign
-                            <th>{get_value_field(&178)}</th> // Param
-                            <th>{get_value_field(&179)}</th> // Value
+                            <th>{LocaleKey::Parameter.get_value()}</th>
+                            <th>{LocaleKey::Value.get_value()}</th>
                             {match self.props.show_manage_btn {
                                 true => html!{<>
-                                    <th>{get_value_field(&59)}</th> // Change
-                                    <th>{get_value_field(&135)}</th> // Delete
+                                    <th>{LocaleKey::Change.get_value()}</th>
+                                    <th>{LocaleKey::Delete.get_value()}</th>
                                 </>},
                                 false => html!{},
                             }}
@@ -309,7 +309,7 @@ impl ServiceParamsTags {
         html! {
             <ModalBlock
                 modal_id="add-param"
-                title={get_value_field(&181)}
+                title={LocaleKey::AddingParameterToComponent.get_value()}
                 is_active={!self.hide_add_param_modal}
                 on_close={onclick_hide_modal}
                 on_save={None}

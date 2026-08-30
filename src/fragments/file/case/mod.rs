@@ -10,7 +10,7 @@ use crate::fragments::buttons::{ft_download_btn, ft_download_full_btn};
 use crate::fragments::modal::ModalBlock;
 use crate::types::{ShowFileInfo, UUID};
 use crate::services::content_adapter::{ContentDisplay, DateDisplay};
-use crate::services::{Size, get_value_field, resp_parsing};
+use crate::services::{Size, LocaleKey, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::relate::{
   ShowFileRevisions, show_file_revisions,
@@ -204,16 +204,16 @@ impl FileShowcase {
   fn set_title(&self) -> Html {
     html!{
       <tr>
-        <th><abbr title={get_value_field(&308)}>{get_value_field(&309)}</abbr></th>
-        // <th>{get_value_field(&236)}</th> // Filename
-        // <th>{get_value_field(&237)}</th> // Content type
-        <th><abbr title={get_value_field(&238)}>{get_value_field(&310)}</abbr></th> // Filesize
-        // <th>{get_value_field(&239)}</th> // Program
-        <th><abbr title={get_value_field(&338)}>{get_value_field(&341)}</abbr></th> // Message to change
-        <th><abbr title={get_value_field(&240)}>{get_value_field(&311)}</abbr></th> // Upload by
-        <th><abbr title={get_value_field(&242)}>{get_value_field(&312)}</abbr></th> // Created at
-        // <th><abbr title={get_value_field(&241)}>{get_value_field(&313)}</abbr></th> // Upload at
-        <th>{get_value_field(&111)}</th>
+        <th><abbr title={LocaleKey::Revision.get_value()}>{LocaleKey::Rev.get_value()}</abbr></th>
+        // <th>{LocaleKey::FilenameLabel.get_value()}</th>
+        // <th>{LocaleKey::ContentType.get_value()}</th>
+        <th><abbr title={LocaleKey::FilesizeLabel.get_value()}>{LocaleKey::Size.get_value()}</abbr></th>
+        // <th>{LocaleKey::ProgramLabel.get_value()}</th>
+        <th><abbr title={LocaleKey::MessageToChange.get_value()}>{LocaleKey::Message.get_value()}</abbr></th>
+        <th><abbr title={LocaleKey::UploadByLabel.get_value()}>{LocaleKey::Uploaded.get_value()}</abbr></th>
+        <th><abbr title={LocaleKey::CreatedAt.get_value()}>{LocaleKey::Created.get_value()}</abbr></th>
+        // <th><abbr title={LocaleKey::UploadAtLabel.get_value()}>{LocaleKey::Loaded.get_value()}</abbr></th>
+        <th>{LocaleKey::Action.get_value()}</th>
       </tr>
     }
   }
@@ -274,27 +274,27 @@ impl FileShowcase {
         <table class="table is-fullwidth">
           <tbody>
             <tr>
-              <td>{get_value_field(&236)}</td> // Filename
+              <td>{LocaleKey::FilenameLabel.get_value()}</td>
               <td>{self.props.file_info.filename.clone()}</td>
             </tr>
             <tr>
-              <td>{get_value_field(&308)}</td> // Revision
+              <td>{LocaleKey::Revision.get_value()}</td>
               <td>{self.props.file_info.revision}</td>
             </tr>
             <tr>
-              <td>{get_value_field(&238)}</td> // Filesize
+              <td>{LocaleKey::FilesizeLabel.get_value()}</td>
               <td>{self.props.file_info.show_size()}</td>
             </tr>
             <tr>
-              <td>{get_value_field(&341)}</td> // Message
+              <td>{LocaleKey::Message.get_value()}</td>
               <td>{self.props.file_info.commit_msg.clone()}</td>
             </tr>
             <tr>
-              <td>{get_value_field(&240)}</td> // Upload by
+              <td>{LocaleKey::UploadByLabel.get_value()}</td>
               <td>{self.props.file_info.owner_user.to_display()}</td>
             </tr>
             <tr>
-              <td>{get_value_field(&242)}</td> // Created at
+              <td>{LocaleKey::CreatedAt.get_value()}</td>
               <td>{self.props.file_info.created_at.date_to_display()}</td>
             </tr>
           </tbody>
@@ -346,7 +346,7 @@ impl FileShowcase {
           <span class="icon">
             <i class="fa fa-trash" aria-hidden="true"></i>
           </span>
-          <span>{get_value_field(&220)}</span>
+          <span>{LocaleKey::YesDelete.get_value()}</span>
         </button>
       },
       false => html!{},

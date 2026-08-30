@@ -7,7 +7,7 @@ use crate::error::Error;
 use crate::fragments::buttons::ft_custom_btn;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::modal::ModalBlock;
-use crate::services::{get_value_field, resp_parsing};
+use crate::services::{LocaleKey, resp_parsing};
 use crate::types::{CompanyRole, PermissionLevel, UUID};
 use crate::gqls::make_query;
 use crate::gqls::rbac::{
@@ -227,7 +227,7 @@ impl Component for EditCompanyRoleModal {
             <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()} />
             {ft_custom_btn(
                 &format!("btn-edit-role-{}", self.props.company_role.role.role_member_id),
-                get_value_field(&127),
+                LocaleKey::Edit.get_value(),
                 classes!("button", "is-info", "is-light", "is-fullwidth", "is-small"),
                 "fas fa-pencil-alt",
                 callback_event_edit_role,
@@ -235,7 +235,7 @@ impl Component for EditCompanyRoleModal {
             )}
             <ModalBlock
                 modal_id="edit-role"
-                title={get_value_field(&473)}
+                title={LocaleKey::EditRole.get_value()}
                 is_active={self.is_active}
                 on_close={self.link.callback(|_| Msg::ShowEditAccessRoleModal)}
                 on_save={Some(self.link.callback(|_| Msg::Submit))}
@@ -251,7 +251,7 @@ impl EditCompanyRoleModal {
     fn modal_content(&self) -> Html {
         html!{<>
             <div class="field">
-                <label class="label">{get_value_field(&467)}</label>
+                <label class="label">{LocaleKey::RoleName.get_value()}</label>
                 <div class="control">
                     <input
                         class="input"
@@ -261,13 +261,13 @@ impl EditCompanyRoleModal {
                     />
                 </div>
                 <p class="help">
-                    <span class="mr-3">{get_value_field(&474)}</span>
+                    <span class="mr-3">{LocaleKey::RoleID.get_value()}</span>
                     <span>{self.props.company_role.role.role_member_id}</span>
                 </p>
             </div>
             <div class="field mt-5">
-                <label class="label">{get_value_field(&468)}</label>
-                <p class="help mb-3">{get_value_field(&475)}</p>
+                <label class="label">{LocaleKey::AccessPermissions.get_value()}</label>
+                <p class="help mb-3">{LocaleKey::SelectPermissions.get_value()}</p>
                 <div class="box has-background-light">
                     {for self.props.permissions.iter().map(|permission| {
                         self.show_access_level_item(permission)
@@ -280,7 +280,7 @@ impl EditCompanyRoleModal {
                         <span class="icon">
                             <i class="fas fa-exclamation-triangle"></i>
                         </span>
-                        {get_value_field(&476)}
+                        {LocaleKey::RoleNoPermissions.get_value()}
                     </div>
                 }
             } else {

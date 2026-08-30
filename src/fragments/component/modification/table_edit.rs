@@ -11,7 +11,7 @@ use crate::fragments::component::modification::ImportModificationsData;
 use crate::fragments::paginate::Paginate;
 use crate::fragments::buttons::ft_add_btn;
 use crate::fragments::list_errors::ListErrors;
-use crate::services::{get_value_field, resp_parsing, set_focus};
+use crate::services::{LocaleKey, resp_parsing, set_focus};
 use crate::types::{UUID, ComponentModificationInfo, ActualStatus, ModificationUpdatePreData, PaginateSet};
 use crate::gqls::make_query;
 use crate::gqls::component::{
@@ -280,7 +280,7 @@ impl Component for ModificationsTableEdit {
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
                 <header class="card-header">
                     <div class="card-header-title">
-                        <p>{get_value_field(&100)}</p> // Modifications
+                        <p>{LocaleKey::Modifications.get_value()}</p>
                         <div class="buttons right-side">
                             <ImportModificationsData
                                 component_uuid={self.props.current_component_uuid.clone()}
@@ -288,7 +288,7 @@ impl Component for ModificationsTableEdit {
                                 />
                             {ft_add_btn(
                                 "add-component-modification",
-                                get_value_field(&174),
+                                LocaleKey::AddNewModification.get_value(),
                                 onclick_add_new_modification,
                                 false,
                                 false

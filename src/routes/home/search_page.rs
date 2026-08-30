@@ -1,6 +1,6 @@
 use yew::{classes, html, Component, ComponentLink, Html, InputData, ShouldRender};
 use crate::fragments::search::{CatalogSpec, SearchArg, SearchBar};
-use crate::services::{get_history_search, get_value_field, set_history_search, wraps_text};
+use crate::services::{get_history_search, LocaleKey, set_history_search, wraps_text};
 
 #[derive(Clone)]
 pub enum Msg {
@@ -103,11 +103,11 @@ impl SearchPage {
         let oninput_for_standard = self.link.callback(|ev: InputData| Msg::ForStandard(ev.value));
         let oninput_for_user = self.link.callback(|ev: InputData| Msg::ForUser(ev.value));
         let onclick_toggle = self.link.callback(|_| Msg::ToggleForObjects);
-        
+
         html!{
             <div class={"card"}>
                 <div class={"column is-flex is-justify-content-space-between is-align-items-center pointer"} onclick={onclick_toggle}>
-                    <p class={"title is-5 select-title"} style="margin-bottom: 0px;">{get_value_field(&390)}</p>
+                    <p class={"title is-5 select-title"} style="margin-bottom: 0px;">{LocaleKey::SearchByID.get_value()}</p>
                     <span class="icon is-clickable">
                         <i class={classes!("fas", if self.for_objects_expanded { "fa-chevron-up" } else { "fa-chevron-down" })}></i>
                     </span>
@@ -116,16 +116,16 @@ impl SearchPage {
                     html!{
                         <>
                             <label class="column pt-0 mt-0 checkbox">
-                                {get_value_field(&391)}
-                                <input class="input is-small" type="text" placeholder={get_value_field(&394)} value={self.search_arg.company_uuid.clone().unwrap_or_default()} oninput={oninput_for_company}/>
+                                {LocaleKey::ByCompany.get_value()}
+                                <input class="input is-small" type="text" placeholder={LocaleKey::EnterUUID.get_value()} value={self.search_arg.company_uuid.clone().unwrap_or_default()} oninput={oninput_for_company}/>
                             </label>
                             <label class="column pt-0 mt-0 checkbox">
-                                {get_value_field(&392)}
-                                <input class="input is-small" type="text" placeholder={get_value_field(&394)} value={self.search_arg.standard_uuid.clone().unwrap_or_default()} oninput={oninput_for_standard}/>
+                                {LocaleKey::ByStandard.get_value()}
+                                <input class="input is-small" type="text" placeholder={LocaleKey::EnterUUID.get_value()} value={self.search_arg.standard_uuid.clone().unwrap_or_default()} oninput={oninput_for_standard}/>
                             </label>
                             <label class="column pt-0 mt-0 checkbox">
-                                {get_value_field(&393)}
-                                <input class="input is-small" type="text" placeholder={get_value_field(&394)} value={self.search_arg.user_uuid.clone().unwrap_or_default()} oninput={oninput_for_user}/>
+                                {LocaleKey::ByUser.get_value()}
+                                <input class="input is-small" type="text" placeholder={LocaleKey::EnterUUID.get_value()} value={self.search_arg.user_uuid.clone().unwrap_or_default()} oninput={oninput_for_user}/>
                             </label>
                         </>
                     }
@@ -142,11 +142,11 @@ impl SearchPage {
         let onclick_by_keywords = self.link.callback(|_| Msg::ByKeywords);
         let onclick_only_favorite = self.link.callback(|_| Msg::OnlyFavorite);
         let onclick_toggle = self.link.callback(|_| Msg::ToggleCheckboxs);
-        
+
         html!{
             <div class={"card"}>
                 <div class={"column is-flex is-justify-content-space-between is-align-items-center pointer"} onclick={onclick_toggle}>
-                    <p class={"title is-5 select-title"} style="margin-bottom: 0px;">{get_value_field(&389)}</p>
+                    <p class={"title is-5 select-title"} style="margin-bottom: 0px;">{LocaleKey::RefinementFilters.get_value()}</p>
                     <span class="icon is-clickable">
                         <i class={classes!("fas", if self.checkboxs_expanded { "fa-chevron-up" } else { "fa-chevron-down" })}></i>
                     </span>
@@ -156,19 +156,19 @@ impl SearchPage {
                         <>
                             <label class="column pt-0 mt-0 checkbox">
                                 <input type="checkbox" checked={self.search_arg.by_params} onclick={onclick_by_params}/>
-                                <span class="ml-3">{get_value_field(&385)}</span>
+                                <span class="ml-3">{LocaleKey::ByParameters.get_value()}</span>
                             </label>
                             <label class="column pt-0 mt-0 checkbox">
                                 <input type="checkbox" checked={self.search_arg.by_specs} onclick={onclick_by_specs}/>
-                                <span class="ml-3">{get_value_field(&386)}</span>
+                                <span class="ml-3">{LocaleKey::ByCatalogs.get_value()}</span>
                             </label>
                             <label class="column pt-0 mt-0 checkbox">
                                 <input type="checkbox" checked={self.search_arg.by_keywords} onclick={onclick_by_keywords}/>
-                                <span class="ml-3">{get_value_field(&387)}</span>
+                                <span class="ml-3">{LocaleKey::ByKeywords.get_value()}</span>
                             </label>
                             <label class="column pt-0 mt-0 checkbox">
                                 <input type="checkbox" checked={self.search_arg.favorite} onclick={onclick_only_favorite}/>
-                                <span class="ml-3">{get_value_field(&388)}</span>
+                                <span class="ml-3">{LocaleKey::OnlyFavorites.get_value()}</span>
                             </label>
                         </>
                     }

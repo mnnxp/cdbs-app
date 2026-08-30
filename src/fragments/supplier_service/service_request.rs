@@ -1,5 +1,5 @@
 use yew::{classes, html, Component, ComponentLink, Html, Properties, ShouldRender};
-use crate::{services::get_value_field, types::{PreServiceRequestData, UUID}};
+use crate::{services::LocaleKey, types::{PreServiceRequestData, UUID}};
 use crate::routes::supplier_service::CreateService;
 
 pub struct ServiceRequestBtn {
@@ -56,7 +56,7 @@ impl Component for ServiceRequestBtn {
             {self.service_req_window()}
             <button id={"service-req-btn"} class={"button"} onclick={onclick_share_btn}>
               <span class={"icon is-small"} style={"color: #00ff10;"}><i class={"fas fa-clipboard-list"} /></span>
-              <span>{get_value_field(&355)}</span>
+              <span>{LocaleKey::Request.get_value()}</span>
             </button>
         </>}
     }

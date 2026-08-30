@@ -11,7 +11,7 @@ use wasm_bindgen_futures::spawn_local;
 use log::debug;
 
 use crate::services::content_adapter::UsernameDisplay;
-use crate::services::{get_logged_user, get_value_field, logout, prepare_username, set_logged_user, set_token, title_changer, set_lang, get_lang};
+use crate::services::{get_logged_user, LocaleKey, logout, prepare_username, set_logged_user, set_token, title_changer, set_lang, get_lang};
 use crate::routes::AppRoute;
 use crate::types::SlimUser;
 use crate::fragments::search::SearchBar;
@@ -141,8 +141,8 @@ impl Component for Header {
             },
             Msg::SetTitle => {
                 match self.open_page {
-                    CurrentPage::Notifications => title_changer::set_title(get_value_field(&284)),
-                    CurrentPage::Search => title_changer::set_title(get_value_field(&349)),
+                    CurrentPage::Notifications => title_changer::set_title(LocaleKey::Notifications.get_value()),
+                    CurrentPage::Search => title_changer::set_title(LocaleKey::Search.get_value()),
                     _ => (),
                 }
             },
@@ -284,13 +284,13 @@ impl Header {
                 <span class={"icon"}>
                     <i class={"fas fa-sign-in-alt"} aria-hidden={"true"} style={self.style_color.clone()}></i>
                 </span>
-                <span class="is-hidden-mobile">{get_value_field(&13)}</span>
+                <span class="is-hidden-mobile">{LocaleKey::SignIn.get_value()}</span>
             </RouterAnchor<AppRoute>>
             <RouterAnchor<AppRoute> route={AppRoute::Register} classes={class_register_btn}>
                 <span class={"icon"}>
                     <i class={"fa fa-user-plus"} aria-hidden={"true"} style={self.style_color.clone()}></i>
                 </span>
-                <span class="is-hidden-mobile">{get_value_field(&14)}</span>
+                <span class="is-hidden-mobile">{LocaleKey::SignUp.get_value()}</span>
             </RouterAnchor<AppRoute>>
           </>
         }
@@ -312,7 +312,7 @@ impl Header {
 
     fn logout_btn(&self, logout: Callback<MouseEvent>) -> Html {
         html!{
-            <button id="header-logout" class="button is-light is-danger" onclick={logout} title={{get_value_field(&17)}} >
+            <button id="header-logout" class="button is-light is-danger" onclick={logout} title={{LocaleKey::Logout.get_value()}} >
                 <span class={"icon"}>
                     <i class={"fas fa-sign-out-alt"} aria-hidden={"true"} style={self.style_color.clone()}></i>
                 </span>

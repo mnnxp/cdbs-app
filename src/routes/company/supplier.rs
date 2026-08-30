@@ -17,7 +17,7 @@ use crate::fragments::{
     responsive::resizer,
 };
 use crate::services::content_adapter::ContentDisplay;
-use crate::services::{Counter, get_value_field, resp_parsing, title_changer};
+use crate::services::{Counter, LocaleKey, resp_parsing, title_changer};
 use crate::types::{UUID, CompanyInfo};
 use crate::gqls::make_query;
 use crate::gqls::company::{
@@ -32,11 +32,11 @@ impl MenuBuilder for ShowSupplierCompany {
     fn menu_config() -> &'static [MenuItemTemplate<CompanyTab>] {
         use CompanyTab::*;
         &[
-            MenuItemTemplate { title_key: 232, icon_classes: &[&["fas", "fa-info"]], tab: Info, custom_class: None },
-            MenuItemTemplate { title_key: 32, icon_classes: &[&["fas", "fa-certificate"]], tab: Certificates, custom_class: None },
-            MenuItemTemplate { title_key: 266, icon_classes: &[&["fas", "fa-industry"]], tab: Represent, custom_class: None },
-            MenuItemTemplate { title_key: 154, icon_classes: &[&["fas", "fa-cogs"]], tab: Components, custom_class: None },
-            MenuItemTemplate { title_key: 103, icon_classes: &[&["fas", "fa-book"]], tab: Standards, custom_class: None },
+            MenuItemTemplate { lk_title: LocaleKey::Information, icon_classes: &[&["fas", "fa-info"]], tab: Info, custom_class: None },
+            MenuItemTemplate { lk_title: LocaleKey::CertificatesLabel, icon_classes: &[&["fas", "fa-certificate"]], tab: Certificates, custom_class: None },
+            MenuItemTemplate { lk_title: LocaleKey::Representations, icon_classes: &[&["fas", "fa-industry"]], tab: Represent, custom_class: None },
+            MenuItemTemplate { lk_title: LocaleKey::ComponentsLabel, icon_classes: &[&["fas", "fa-cogs"]], tab: Components, custom_class: None },
+            MenuItemTemplate { lk_title: LocaleKey::Standards, icon_classes: &[&["fas", "fa-book"]], tab: Standards, custom_class: None },
         ]
     }
 
@@ -264,7 +264,7 @@ impl ShowSupplierCompany {
                   </figure>
                 </div>
                 <div id="company-region" class={classes!("column", "is-three-fifths")}>
-                <abbr title={get_value_field(&275)} style="position: absolute;margin-left: 10rem;">
+                <abbr title={LocaleKey::SupplierLabel2.get_value()} style="position: absolute;margin-left: 10rem;">
                     {diamond_svg(company_data.is_supplier, "175")}
                 </abbr>
                   {company_data.to_display()}

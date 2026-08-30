@@ -12,7 +12,7 @@ use crate::fragments::{
     component::CatalogComponents,
     responsive::resizer,
 };
-use crate::services::{resp_parsing, get_value_field};
+use crate::services::{resp_parsing, LocaleKey};
 use crate::types::{ShowComponentShort, ComponentsQueryArg};
 use crate::gqls::make_query;
 use crate::gqls::component::{SearchByComponents, search_by_components};
@@ -151,7 +151,7 @@ impl Component for SearchBar {
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::ClearError => self.error = None,
         }
-        
+
         true
     }
 
@@ -232,7 +232,7 @@ impl SearchBar {
                     onfocus={self.link.callback(|_| Msg::SetFocus(true))}
                     onblur={self.link.callback(|_| Msg::SetFocus(false))}
                     onkeypress={self.link.callback(|e: KeyboardEvent| Msg::KeyPress(e))}
-                    placeholder={get_value_field(&351)} // Enter search text
+                    placeholder={LocaleKey::EnterSearchText.get_value()}
                     value={self.search_arg.search.clone()}
                     />
                 <span class={"icon is-small is-left"}>
@@ -243,7 +243,7 @@ impl SearchBar {
                     true => html!{
                         <div class={"control"}>
                             <button class="button is-info search-button" onclick={self.link.callback(|_| Msg::Search)}>
-                                {get_value_field(&349)}
+                                {LocaleKey::Search.get_value()}
                             </button>
                         </div>
                     },
@@ -267,7 +267,7 @@ impl SearchBar {
                                     <span class={"icon"}>
                                         <i class={"fas fa-search-minus"}></i>
                                     </span>
-                                    <span>{get_value_field(&350)}</span> // No results
+                                    <span>{LocaleKey::NoResults.get_value()}</span>
                                 </span>
                             </div>
                         }
@@ -276,7 +276,7 @@ impl SearchBar {
                             {for self.found_components.iter().map(|x| {
                                 html!{
                                     <a href={format!("#/component/{}", x.uuid)} class={"dropdown-item"}>
-                                        {x.name.clone()} 
+                                        {x.name.clone()}
                                     </a>
                                 }
                             })}

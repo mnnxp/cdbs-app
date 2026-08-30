@@ -9,7 +9,7 @@ use create::CreateCompanyRoleModal;
 use yew::{classes, html, Callback, Component, ComponentLink, Html, Properties, ShouldRender};
 
 use crate::fragments::buttons::ft_custom_btn;
-use crate::services::get_value_field;
+use crate::services::LocaleKey;
 use crate::types::{CompanyRole, PermissionLevel, UUID};
 
 #[derive(Clone, Debug, Properties)]
@@ -72,7 +72,7 @@ impl Component for CompanyMemberRoleCard {
                 <header class="card-header">
                     <div class="card-header-title">
                         <p class="is-size-5 has-text-weight-semibold">
-                            {get_value_field(&462)}
+                            {LocaleKey::CompanyRolesPermissions.get_value()}
                         </p>
                         {if self.props.company_roles.is_empty() {
                             html!{}
@@ -81,7 +81,7 @@ impl Component for CompanyMemberRoleCard {
                                 <div class="buttons right-side">
                                     {ft_custom_btn(
                                         &format!("create-role-{}", self.props.company_uuid),
-                                        get_value_field(&463),
+                                        LocaleKey::NewRole.get_value(),
                                         classes!("is-success"),
                                         "fas fa-user-tag",
                                         onclick_show_create_role_modal,
@@ -103,7 +103,7 @@ impl Component for CompanyMemberRoleCard {
                             <span class="icon is-small">
                                 <i class="fas fa-info-circle"></i>
                             </span>
-                            {get_value_field(&498)}
+                            {LocaleKey::CustomizeRoles.get_value()}
                         </span>
                     </div>
                 </footer>
@@ -148,13 +148,13 @@ impl CompanyMemberRoleCard {
                         <i class="fas fa-user-tag fa-3x"></i>
                     </span>
                 </div>
-                <h4 class="title is-5 has-text-grey">{get_value_field(&464)}</h4>
+                <h4 class="title is-5 has-text-grey">{LocaleKey::NoRolesYet.get_value()}</h4>
                 <p class="subtitle is-6 has-text-grey-light">
-                    {get_value_field(&465)}
+                    {LocaleKey::RolesHelp.get_value()}
                 </p>
                 {ft_custom_btn(
                     &format!("create-first-role-{}", self.props.company_uuid),
-                    get_value_field(&466),
+                    LocaleKey::CreateFirstRole.get_value(),
                     classes!("is-success", "mt-3"),
                     "fas fa-user-tag",
                     onclick_show_create_role_modal,

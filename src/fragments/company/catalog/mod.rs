@@ -12,7 +12,7 @@ use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{list_errors::ListErrors, list_empty::ListEmpty};
 use crate::types::{ShowCompanyShort, CompaniesQueryArg};
-use crate::services::{get_value_field, resp_parsing};
+use crate::services::{LocaleKey, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::company::{GetCompaniesShortList, get_companies_short_list};
 use crate::fragments::ListState;
@@ -137,7 +137,7 @@ impl Component for CatalogCompanies {
                         {match &self.props.show_create_btn {
                             true => html!{
                                 <RouterAnchor<AppRoute> route={AppRoute::CreateCompany} classes="button is-info">
-                                    {get_value_field(&289)} // Create company
+                                    {LocaleKey::CreateCompany.get_value()}
                                 </RouterAnchor<AppRoute>>
                             },
                             false => html!{},

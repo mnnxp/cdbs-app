@@ -1,5 +1,5 @@
 use yew::{classes, html, Callback, Html, InputData, MouseEvent};
-use crate::{fragments::buttons::{ft_cancel_btn, ft_delete_class_btn}, services::get_value_field};
+use crate::{fragments::buttons::{ft_cancel_btn, ft_delete_class_btn}, services::LocaleKey};
 
 /// Generates a card with a delete confirmation modal.
 ///
@@ -46,7 +46,7 @@ pub fn ft_delete_card(
                             hide_delete_modal,
                             disable_delete_btn,
                         )}
-                        <p>{get_value_field(&408)}</p>
+                        <p>{LocaleKey::DeleteWarning.get_value()}</p>
                         <button
                             id={format!("delete-{}-open-btn", id_tag)}
                             class="button is-danger"
@@ -84,24 +84,24 @@ fn modal_delete(
                 <div id="delete-component-card" class="card p-4">
                     <header class="pb-3">
                         <h2 class="title is-4 has-text-centered">
-                            {get_value_field(&409)}
+                            {LocaleKey::AreYouSure.get_value()}
                         </h2>
                     </header>
                     <div id="confirm-danger-modal-content" class="content">
                         <div class="column has-background-danger-light">
-                            <span>{get_value_field(&408)}</span>
+                            <span>{LocaleKey::DeleteWarning.get_value()}</span>
                             <span class="ml-3">
-                                {get_value_field(&410)}
+                                {LocaleKey::AfterThisPoint.get_value()}
                                 <strong>{object_name}</strong>
-                                {get_value_field(&411)}
+                                {LocaleKey::DataCannotBeRecovered.get_value()}
                             </span>
                         </div>
                         <div class="py-2">
-                            <p>{get_value_field(&412)}</p>
+                            <p>{LocaleKey::ConfirmIntention.get_value()}</p>
                         </div>
                         <div class="field">
                             <label class="has-text-weight-bold" for="confirm-name-input">
-                                {get_value_field(&413)}
+                                {LocaleKey::EnterToConfirm.get_value()}
                             </label>
                             <div class="control mt-1">
                                 <code class="has-text-black">{confirm_key}</code>

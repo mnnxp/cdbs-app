@@ -6,7 +6,7 @@ use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::paginate::Paginate;
 use crate::services::content_adapter::{DateDisplay, Markdownable};
-use crate::services::{get_value_field, resp_parsing, set_focus};
+use crate::services::{LocaleKey, resp_parsing, set_focus};
 use crate::types::{UUID, ComponentModificationInfo, PaginateSet};
 use crate::routes::other_component::modification::ImportModificationsData;
 use crate::gqls::make_query;
@@ -181,7 +181,7 @@ impl Component for ModificationsTableCard {
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
                 <header class="card-header">
                     <div class="card-header-title">
-                        <p>{get_value_field(&100)}</p> // Modifications
+                        <p>{LocaleKey::Modifications.get_value()}</p>
                         {match self.props.user_owner {
                             true => html!{
                                 <div class="right-side">
@@ -236,28 +236,28 @@ impl ModificationsTableCard {
             Some(mod_data) => html!{
                 <div id="show-modification-card" class="card">
                     <header class="card-header has-background-info-light">
-                        <p class="card-header-title">{get_value_field(&353)}</p>
+                        <p class="card-header-title">{LocaleKey::SelectedModificationData.get_value()}</p>
                     </header>
                     <div class="card-content" style="padding-top: 0px;">
                         <div class="content">
-                            <div class="column" title={get_value_field(&176)}>
+                            <div class="column" title={LocaleKey::ModificationName.get_value()}>
                                 <p class="overflow-title has-text-weight-bold">
                                     {mod_data.modification_name.clone()}
                                 </p>
                             </div>
                             <div class="column">
                             <div class="columns">
-                                <div class="column" title={get_value_field(&96)}>
-                                    {get_value_field(&159)}{": "}
+                                <div class="column" title={LocaleKey::LifeCycleStage.get_value()}>
+                                    {LocaleKey::LCS.get_value()}{": "}
                                     {&mod_data.actual_status.name}
                                 </div>
                                 <div class="column is-4">
-                                    {get_value_field(&30)}
+                                    {LocaleKey::UpdatedAt.get_value()}
                                     {mod_data.updated_at.date_to_display()}
                                 </div>
                             </div>
                             </div>
-                            <div class="column" title={{get_value_field(&61)}}> // Description
+                            <div class="column" title={{LocaleKey::Description.get_value()}}>
                                 <p>{mod_data.description.to_markdown()}</p>
                             </div>
                         </div>

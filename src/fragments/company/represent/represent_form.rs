@@ -1,6 +1,6 @@
 use yew::{classes, html, Callback, ChangeData, Html, InputData};
 use crate::fragments::form_input::{render_form_input, InputConfig};
-use crate::services::get_value_field;
+use crate::services::LocaleKey;
 use crate::types::{CompanyRepresentUpdateInfo, Region, RegisterCompanyRepresentInfo, RepresentationType};
 
 pub(crate) trait RepresentFormValues {
@@ -44,7 +44,7 @@ pub(crate) fn render_represent_form<T: RepresentFormValues>(
             <div class="mb-4">
                 {render_form_input(InputConfig {
                     id: "name",
-                    label: get_value_field(&110),
+                    label: LocaleKey::Name.get_value(),
                     value: data.name(),
                     oninput: callbacks.oninput_name,
                     is_disabled: loading,
@@ -57,7 +57,7 @@ pub(crate) fn render_represent_form<T: RepresentFormValues>(
                 <div class="column">
                     {render_form_input(InputConfig {
                         id: "tel",
-                        label: get_value_field(&56),
+                        label: LocaleKey::Phone.get_value(),
                         value: data.phone(),
                         oninput: callbacks.oninput_phone,
                         is_disabled: loading,
@@ -68,7 +68,7 @@ pub(crate) fn render_represent_form<T: RepresentFormValues>(
                 </div>
                 <div class="column">
                     <div class="field">
-                        <label class="label">{get_value_field(&216)}</label>
+                        <label class="label">{LocaleKey::RepresentationType.get_value()}</label>
                         <div class="control">
                             <div class="select is-fullwidth">
                               <select onchange={callbacks.onchange_type} disabled={loading}>
@@ -91,7 +91,7 @@ pub(crate) fn render_represent_form<T: RepresentFormValues>(
             <div class="columns is-desktop mb-0">
                 <div class="column">
                     <div class="field">
-                        <label class="label">{get_value_field(&27)}</label>
+                        <label class="label">{LocaleKey::Region.get_value()}</label>
                         <div class="control">
                             <div class="select is-fullwidth">
                               <select onchange={callbacks.onchange_region} disabled={loading}>
@@ -113,7 +113,7 @@ pub(crate) fn render_represent_form<T: RepresentFormValues>(
                 <div class="column">
                     {render_form_input(InputConfig {
                         id: "address",
-                        label: get_value_field(&57),
+                        label: LocaleKey::Address.get_value(),
                         value: data.address(),
                         oninput: callbacks.oninput_address,
                         is_disabled: loading,

@@ -4,7 +4,7 @@ use row::MemberRow;
 
 use yew::{html, Component, ComponentLink, Html, Properties, ShouldRender, Callback};
 
-use crate::services::get_value_field;
+use crate::services::LocaleKey;
 use crate::types::{UUID, CompanyMember, CompanyRole};
 
 /// Table component for displaying company members
@@ -55,10 +55,10 @@ impl Component for MembersTable {
                     <thead>
                         <tr>
                             <th>{"\u{2116}"}</th>
-                            <th>{get_value_field(&19)}</th>
-                            <th>{get_value_field(&471)}</th>
-                            <th>{get_value_field(&483)}</th>
-                            <th>{get_value_field(&111)}</th>
+                            <th>{LocaleKey::Username.get_value()}</th>
+                            <th>{LocaleKey::Role.get_value()}</th>
+                            <th>{LocaleKey::JoinedAt.get_value()}</th>
+                            <th>{LocaleKey::Action.get_value()}</th>
                         </tr>
                     </thead>
                     <tbody>

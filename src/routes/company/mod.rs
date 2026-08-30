@@ -13,7 +13,7 @@ use yew::virtual_dom::VNode;
 use yew::{classes, html, Classes, Html};
 use crate::fragments::company::SpecsTags;
 use crate::services::content_adapter::{ContentDisplay, ContactDisplay, SpecDisplay};
-use crate::services::{get_lang, get_value_field};
+use crate::services::{get_lang, LocaleKey};
 use crate::types::{CompanyInfo, CompanyType, ShowCompanyShort};
 
 impl ContentDisplay for ShowCompanyShort {
@@ -86,22 +86,22 @@ impl ContactDisplay for CompanyInfo {
         html!{<>
             <div id="company-inn" hidden={self.inn.is_empty()}>
                 <span class="icon is-small"><i class="fas fa-building" /></span>
-                <span>{get_value_field(&280)}</span> // Reg.№
+                <span>{LocaleKey::RegNumberLabel.get_value()}</span>
                 <span class="has-text-weight-bold">{self.inn.clone()}</span>
             </div>
             <div id="company-email" hidden={self.email.is_empty()}>
                 <span class="icon is-small"><i class="fas fa-envelope" /></span>
-                <span>{get_value_field(&278)}</span> // Email
+                <span>{LocaleKey::EmailLabel.get_value()}</span>
                 <span class="has-text-weight-bold">{self.email.clone()}</span>
             </div>
             <div id="company-phone" hidden={self.phone.is_empty()}>
                 <span class="icon is-small"><i class="fas fa-phone" /></span>
-                <span>{get_value_field(&279)}</span> // Phone
+                <span>{LocaleKey::PhoneLabel.get_value()}</span>
                 <span class="has-text-weight-bold">{self.phone.clone()}</span>
             </div>
             <div id="company-region" hidden={self.region.region_id == 8 && self.address.is_empty()}>
                 <span class="icon is-small"><i class="fas fa-map-marker-alt" /></span>
-                <span>{get_value_field(&281)}</span> // Location
+                <span>{LocaleKey::Location.get_value()}</span>
                 <span class="has-text-weight-bold">
                     {match self.address.is_empty() {
                         true => {self.region.region.clone()},
@@ -111,7 +111,7 @@ impl ContactDisplay for CompanyInfo {
             </div>
             <div id="company-site_url" hidden={self.site_url.is_empty()}>
                 <span class="icon is-small"><i class="fas fa-globe" /></span>
-                <span>{get_value_field(&282)}</span> // Site
+                <span>{LocaleKey::SiteLabel.get_value()}</span>
                 <span class="has-text-weight-bold">{self.site_url.clone()}</span>
             </div>
         </>}
@@ -127,7 +127,7 @@ impl SpecDisplay for CompanyInfo {
                 <div id={"company-related-catalogs"} class={"column p-0"}>
                     <p class={"title is-6"}>
                         <span class={"icon is-small mr-3"}><i class={"fas fa-cubes"}></i></span>
-                        <span>{get_value_field(&283)}</span>
+                        <span>{LocaleKey::SphereOfActivity.get_value()}</span>
                     </p> // Sphere of activity
                     <SpecsTags
                         show_manage_btn={false}

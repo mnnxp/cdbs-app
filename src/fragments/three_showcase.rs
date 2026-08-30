@@ -5,7 +5,7 @@ use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use log::debug;
 use crate::fragments::list_errors::ListErrors;
-use crate::services::{get_value_field, is_gltf_resource, preview_model, resp_parsing, KeyboardGuard, ModelFormat, ResourceMapping};
+use crate::services::{LocaleKey, is_gltf_resource, preview_model, resp_parsing, KeyboardGuard, ModelFormat, ResourceMapping};
 use crate::error::Error;
 use crate::types::{DownloadFile, PaginateSet, UUID};
 use crate::gqls::make_query;
@@ -210,11 +210,11 @@ impl Component for ThreeShowcase {
                 container_style = "padding-left: 0.75rem;";
                 class_modal.push("is-active");
                 class_icon.push("fa-compress-alt");
-                get_value_field(&299)
+                LocaleKey::Collapse.get_value()
             },
             false => {
                 class_icon.push("fa-expand-alt");
-                get_value_field(&298)
+                LocaleKey::Expand.get_value()
             },
         };
 
@@ -224,7 +224,7 @@ impl Component for ThreeShowcase {
                 {match self.selected_file.is_none() {
                     true => html!{
                         <div class="text-center">
-                            <span>{get_value_field(&297)}</span>
+                            <span>{LocaleKey::NoFileToDisplay.get_value()}</span>
                         </div>
                     },
                     false => html!{
@@ -237,7 +237,7 @@ impl Component for ThreeShowcase {
                           <span class="icon is-small">
                             <i class={class_icon} style="color: #1872f0;"></i>
                           </span>
-                          <span class="help has-text-grey is-pulled-right is-hidden-mobile mr-2 mt-2">{get_value_field(&436)}</span> // F: fullscreen | 1-5: views
+                          <span class="help has-text-grey is-pulled-right is-hidden-mobile mr-2 mt-2">{LocaleKey::FullscreenHint.get_value()}</span>
                         </button>
                     },
                 }}

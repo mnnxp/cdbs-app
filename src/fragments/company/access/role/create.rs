@@ -6,7 +6,7 @@ use log::debug;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::modal::ModalBlock;
-use crate::services::{get_value_field, resp_parsing};
+use crate::services::{LocaleKey, resp_parsing};
 use crate::types::UUID;
 use crate::gqls::make_query;
 use crate::gqls::rbac::{
@@ -110,7 +110,7 @@ impl Component for CreateCompanyRoleModal {
         html! {
             <ModalBlock
                 modal_id="create-role"
-                title={get_value_field(&470)}
+                title={LocaleKey::CreateCompanyRole.get_value()}
                 is_active={self.props.is_active}
                 on_close={self.link.callback(|_| Msg::Close)}
                 on_save={Some(self.link.callback(|_| Msg::CreateRole))}
@@ -129,12 +129,12 @@ impl CreateCompanyRoleModal {
             <>
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
                 <div class="field">
-                    <label class="label">{get_value_field(&467)}</label>
+                    <label class="label">{LocaleKey::RoleName.get_value()}</label>
                     <div class="control">
                         <input
                             class="input"
                             type="text"
-                            placeholder={get_value_field(&472)}
+                            placeholder={LocaleKey::TypeNewRoleName.get_value()}
                             value={self.request_name.clone()}
                             oninput={self.link.callback(|ev: InputData| Msg::UpdateRoleName(ev.value))}
                         />

@@ -1,5 +1,5 @@
 mod commit_msg;
-pub use commit_msg::commit_msg_field;
+pub(crate) use commit_msg::commit_msg_field;
 
 use std::collections::HashMap;
 use yew::services::fetch::FetchTask;
@@ -10,7 +10,7 @@ use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 use web_sys::FileList;
 
-use crate::services::{get_value_field, image_detector, put_file, resp_parsing, Size, UploadData};
+use crate::services::{LocaleKey, image_detector, put_file, resp_parsing, Size, UploadData};
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 // use crate::fragments::switch_icon::res_file_btn;
@@ -21,14 +21,14 @@ use crate::gqls::relate::{ConfirmUploadCompleted, confirm_upload_completed};
 type FileName = String;
 
 #[derive(Clone, Debug, PartialEq)]
-pub enum UploadStatus {
+pub(crate) enum UploadStatus {
     Pending(f64),
     Uploading,
     Completed,
     Failed(String),
 }
 
-pub struct UploaderFiles {
+pub(crate) struct UploaderFiles {
     error: Option<Error>,
     response_upload_file: Callback<Result<Option<String>, Error>>,
     request_upload_confirm: Vec<UUID>,
@@ -52,19 +52,19 @@ pub struct UploaderFiles {
 }
 
 #[derive(Clone, Debug, Properties)]
-pub struct Props {
-    pub text_choose_files: usize,
-    pub callback_upload_filenames: Callback<Vec<FileName>>,
-    pub request_upload_files: Option<Vec<UploadFile>>,
-    pub callback_upload_confirm: Callback<usize>,
+pub(crate) struct Props {
+    pub(crate) label_choose_files: LocaleKey,
+    pub(crate) callback_upload_filenames: Callback<Vec<FileName>>,
+    pub(crate) request_upload_files: Option<Vec<UploadFile>>,
+    pub(crate) callback_upload_confirm: Callback<usize>,
     #[prop_or(true)]
-    pub multiple: bool,
+    pub(crate) multiple: bool,
     #[prop_or_default]
-    pub accept: String,
+    pub(crate) accept: String,
 }
 
 #[derive(Clone)]
-pub enum Msg {
+pub(crate) enum Msg {
     UploadFiles,
     ParsingUrls,
     PutFiles,
@@ -184,7 +184,7 @@ impl Component for UploaderFiles {
                     None => {
                         debug!("Not found pre-signed url for upload the file: {:?}", filename);
                         // Update file status to failed
-                        self.file_statuses.insert(filename, UploadStatus::Failed(get_value_field(&457).to_string()));
+                        self.file_statuses.insert(filename, UploadStatus::Failed(LocaleKey::UploadUrlNotFound.get_value().to_string()));
                         self.upload_failed_count += 1;
                     },
                 }
@@ -373,8 +373,8 @@ impl UploaderFiles {
                         <i class="fas fa-cloud-upload-alt fa-3x has-text-info"></i>
                     </div>
                     <div style="pointer-events: none;">
-                        <h3 class="title is-4 mb-5">{get_value_field(&449)}</h3> // Drag here or click to select
-                        <p class="subtitle is-6 has-text-grey">{get_value_field(&self.props.text_choose_files)}</p>
+                        <h3 class="title is-4 mb-5">{LocaleKey::DragOrClick.get_value()}</h3>
+                        <p class="subtitle is-6 has-text-grey">{self.props.label_choose_files.get_value()}</p>
                         {self.accept_image()}
                     </div>
                     <input id="file-input"
@@ -394,12 +394,12 @@ impl UploaderFiles {
             true => html!{
                 <div class="has-text-centered py-6">
                     <i class="fas fa-file-upload fa-3x has-text-grey-light mb-4"></i>
-                    <p class="has-text-grey">{get_value_field(&194)}</p>
+                    <p class="has-text-grey">{LocaleKey::NoFileUploaded.get_value()}</p>
                 </div>
             },
             false => html!{<>
                 <div class="is-flex is-justify-content-space-between is-align-items-center mb-4 pb-3" style="border-bottom: 1px solid #eee;">
-                    <span class="is-size-5">{get_value_field(&450)}</span> // Selected Files
+                    <span class="is-size-5">{LocaleKey::FilesToUpload.get_value()}</span>
                     <span class="has-text-weight-bold is-size-5">{self.files.len()}</span>
                 </div>
                 {self.show_upload_summary()}
@@ -423,25 +423,25 @@ impl UploaderFiles {
                 "has-border-warning has-background-warning-light",
                 "has-text-warning",
                 "fas fa-clock",
-                get_value_field(&451) // Pending
+                LocaleKey::Pending.get_value()
             ),
             UploadStatus::Uploading => (
                 "has-border-info has-background-info-light",
                 "has-text-info",
                 "fas fa-spinner fa-spin",
-                get_value_field(&452) // Uploading
+                LocaleKey::Uploading.get_value()
             ),
             UploadStatus::Completed => (
                 "has-border-success has-background-success-light",
                 "has-text-success",
                 "fas fa-check-circle",
-                get_value_field(&453) // Completed
+                LocaleKey::Completed.get_value()
             ),
             UploadStatus::Failed(_) => (
                 "has-border-danger has-background-danger-light",
                 "has-text-danger",
                 "fas fa-exclamation-circle",
-                get_value_field(&454) // Failed
+                LocaleKey::Failed.get_value()
             ),
         };
         let onclick_remove = self.link.callback(move |_| Msg::RemoveFile(filename_owned.clone()));
@@ -499,7 +499,7 @@ impl UploaderFiles {
                                 <i class="fas fa-check-circle has-text-success mr-2"></i>
                                 <div class="has-text-success">
                                     <span>{self.upload_success_count}</span>
-                                    <span>{get_value_field(&455)}</span> // files are in storage and awaiting confirmation
+                                    <span>{LocaleKey::FilesInStorage.get_value()}</span>
                                 </div>
                             </div>
                         }
@@ -512,7 +512,7 @@ impl UploaderFiles {
                                 <i class="fas fa-exclamation-circle has-text-danger mr-2"></i>
                                 <div class="has-text-danger">
                                     <span>{self.upload_failed_count}</span>
-                                    <span>{get_value_field(&456)}</span> // files failed to upload
+                                    <span>{LocaleKey::FilesFailed.get_value()}</span>
                                 </div>
                             </div>
                         }
@@ -530,7 +530,7 @@ impl UploaderFiles {
         match &self.props.accept == "image/*" {
             true => html!{
                 <div class="is-size-7" style="overflow-wrap: anywhere">
-                    {get_value_field(&183)}
+                    {LocaleKey::PossibleFormat.get_value()}
                     {": .apng, .avif, .gif, .jpg, .jpeg, .jpe, .jif, .jfif, .png, .svg, .webp"}
                 </div>
             },
@@ -554,7 +554,7 @@ impl UploaderFiles {
                     onclick={onclick_clear_boxed}
                     disabled={self.files.is_empty() || self.active_loading_files_btn} >
                         <span class="icon"><i class="fas fa-trash"></i></span>
-                        <span>{get_value_field(&88)}</span>
+                        <span>{LocaleKey::Clear.get_value()}</span>
                     </button>
                 </div>
                 <div class="column">
@@ -563,7 +563,7 @@ impl UploaderFiles {
                     disabled={self.files.is_empty()}
                     onclick={onclick_upload_files} >
                         <span class="icon"><i class="fas fa-upload"></i></span>
-                        <span>{get_value_field(&87)}</span>
+                        <span>{LocaleKey::Upload.get_value()}</span>
                     </button>
                 </div>
             </div>

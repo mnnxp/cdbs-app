@@ -6,7 +6,7 @@ use wasm_bindgen_futures::spawn_local;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::buttons::ft_save_btn;
-use crate::services::{get_value_field, resp_parsing};
+use crate::services::{LocaleKey, resp_parsing};
 use crate::services::content_adapter::Markdownable;
 use crate::gqls::make_query;
 use crate::gqls::relate::{RegisterParam, register_param};
@@ -124,22 +124,22 @@ impl RegisterParamnameBlock {
         let oninput_set_param_value = self.link.callback(|ev: InputData| Msg::UpdateParamValue(ev.value));
         html!{<>
             <div class="column">
-                <label class="label">{get_value_field(&178)}</label>
+                <label class="label">{LocaleKey::Parameter.get_value()}</label>
                 <p class="help">
-                    <span class="mr-1">{get_value_field(&336)}</span>
-                    <span>{get_value_field(&337)}</span>
+                    <span class="mr-1">{LocaleKey::MarkdownSupported.get_value()}</span>
+                    <span>{LocaleKey::MarkdownExample.get_value()}</span>
                 </p>
                 <input
                     id="paramname"
                     class="input is-fullwidth"
                     type="text"
-                    placeholder={get_value_field(&205)} // Set a paramname (letter case has matter)
+                    placeholder={LocaleKey::SetParamname.get_value()}
                     value={self.request_new_paramname.clone()}
                     oninput={oninput_set_paramname}
                     />
                     <div class={"columns"}>
                         <div class={"column is-narrow pr-0"}>
-                           <p class="help">{get_value_field(&335)}<span>{":"}</span></p>
+                           <p class="help">{LocaleKey::Preview.get_value()}<span>{":"}</span></p>
                         </div>
                         <div class={"column is-narrow"}>
                             <p class="help">{self.request_new_paramname.to_markdown()}</p>
@@ -147,12 +147,12 @@ impl RegisterParamnameBlock {
                     </div>
             </div>
             <div class="column">
-                <label class="label">{get_value_field(&179)}</label>
+                <label class="label">{LocaleKey::Value.get_value()}</label>
                 <input
                     id="param-value"
                     class="input is-fullwidth"
                     type="text"
-                    placeholder={get_value_field(&133)} // Set a value
+                    placeholder={LocaleKey::SetValue.get_value()}
                     value={self.set_param_value.clone()}
                     oninput={oninput_set_param_value}
                     />

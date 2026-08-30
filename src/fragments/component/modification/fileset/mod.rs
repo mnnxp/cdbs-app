@@ -18,7 +18,7 @@ use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::paginate::Paginate;
 use crate::fragments::file::{FileHeadersShow, FileInfoItemShow};
-use crate::services::{get_classes_table, get_value_field, resp_parsing};
+use crate::services::{get_classes_table, LocaleKey, resp_parsing};
 use crate::types::{ShowFileInfo, PaginateSet, FilesetProgramInfo};
 use crate::gqls::make_query;
 use crate::gqls::component::{ComModFilesOfFileset, com_mod_files_of_fileset};
@@ -143,7 +143,7 @@ impl Component for FilesOfFilesetCard {
                 <div id="files-of-fileset-card" class="card">
                     <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
                     <header class={"card-header has-background-info-light"}>
-                        <p class={"card-header-title"}>{get_value_field(&106)}</p> // Files of select fileset
+                        <p class={"card-header-title"}>{LocaleKey::FilesFromFileset.get_value()}</p>
                     </header>
                     <div class={"card-content"}>
                         <div class={"table-container"}>

@@ -1,5 +1,5 @@
 use yew::{html, Component, ComponentLink, Html, ShouldRender};
-use crate::{fragments::modal::ModalBlock, services::get_value_field};
+use crate::{fragments::modal::ModalBlock, services::LocaleKey};
 
 pub struct ConditionsBlock {
     link: ComponentLink<Self>,
@@ -37,8 +37,8 @@ impl Component for ConditionsBlock {
         html!{<>
             {self.modal_conditions()}
             <span>
-                {get_value_field(&28)}
-                {" ["}<a onclick={onclick_show_conditions}>{ get_value_field(&29)}</a>{"]"}
+                {LocaleKey::AcceptTerms.get_value()}
+                {" ["}<a onclick={onclick_show_conditions}>{ LocaleKey::TermsAndConditions.get_value()}</a>{"]"}
             </span>
         </>}
     }
@@ -51,20 +51,20 @@ impl ConditionsBlock {
         html! {
             <ModalBlock
                 modal_id="conditions"
-                title={get_value_field(&285)}
+                title={LocaleKey::CADBaseConditions.get_value()}
                 is_active={self.show_conditions}
                 on_close={callback_show_conditions}
                 on_save={None}
                 save_disabled={false}
             >
                 <div class="content">
-                    <span>{get_value_field(&251)}</span>
+                    <span>{LocaleKey::SoftwareLicense.get_value()}</span>
                     <br/>
-                    <span class="has-text-weight-bold">{get_value_field(&287)} </span>
+                    <span class="has-text-weight-bold">{LocaleKey::SupportContact.get_value()} </span>
                     <a href="mailto:support@cadbase.rs">{"support@cadbase.rs"}</a>
                     <br/><br/>
                     <button class="button is-fullwidth is-large is-info" onclick={onclick_show_conditions}>
-                        {get_value_field(&288)}
+                        {LocaleKey::Great.get_value()}
                     </button>
                 </div>
             </ModalBlock>

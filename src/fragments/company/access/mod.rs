@@ -11,7 +11,7 @@ use log::debug;
 
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
-use crate::services::{get_value_field, resp_parsing};
+use crate::services::{LocaleKey, resp_parsing};
 use crate::types::{CompanyMember, CompanyRole, PermissionLevel, UUID};
 use crate::gqls::make_query;
 use crate::gqls::rbac::{
@@ -173,7 +173,7 @@ impl Component for CompanyAccessBlock {
         let onclick_delete = self.link.callback(|value| Msg::MemberDeleted(value));
         let onclick_member_added = self.link.callback(|_| Msg::LoadMembersData);
         html! {<>
-            <h4 id={"settings-members"} class={"title is-4"}>{get_value_field(&286)}</h4>
+            <h4 id={"settings-members"} class={"title is-4"}>{LocaleKey::Members.get_value()}</h4>
             <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
             <div class="columns">
                 <div class="column">

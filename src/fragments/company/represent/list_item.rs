@@ -10,7 +10,7 @@ use crate::services::{resp_parsing, unique_id};
 use crate::fragments::buttons::ft_delete_pair_btn;
 use crate::fragments::notification::show_notification;
 use crate::types::{UUID, CompanyRepresentInfo, Region, RepresentationType};
-use crate::services::get_value_field;
+use crate::services::LocaleKey;
 use crate::gqls::make_query;
 use crate::gqls::company::{
     DeleteCompanyRepresent, delete_company_represent,
@@ -116,7 +116,7 @@ impl Component for ListItem {
         html!{<>
             <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()} />
             {show_notification(
-                get_value_field(&292),
+                LocaleKey::RepresentativeRemoved.get_value(),
                 "is-success",
                 self.is_deleted,
             )}
@@ -164,7 +164,7 @@ impl ListItem {
                         <div class="is-flex is-flex-wrap-wrap is-gap-3 has-text-grey is-size-7 pt-1">
                             <span class="is-inline-block">
                                 <span class="icon is-small mr-1"><i class="fas fa-globe-africa"></i></span>
-                                <span class="mr-2">{format!("{}: {}", get_value_field(&27), region.region)}</span>
+                                <span class="mr-2">{format!("{}: {}", LocaleKey::Region.get_value(), region.region)}</span>
                             </span>
                             {match phone.is_empty() {
                                 true => html!{},

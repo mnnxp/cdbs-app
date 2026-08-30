@@ -19,7 +19,7 @@ use crate::fragments::{
     user::CatalogUsers,
     user::UserCertificatesCard,
 };
-use crate::services::{Counter, get_logged_user, get_value_field, resp_parsing, title_changer};
+use crate::services::{Counter, get_logged_user, LocaleKey, resp_parsing, title_changer};
 use crate::types::{
     UserDataCard, CompaniesQueryArg, ComponentsQueryArg, ServicesQueryArg, SelfUserInfo, SlimUser,
     StandardsQueryArg, UserCertificate, UserInfo, UsersQueryArg, UUID, Region
@@ -39,14 +39,14 @@ impl MenuBuilder for Profile {
     fn menu_config() -> &'static [MenuItemTemplate<ProfileTab>] {
         use ProfileTab::*;
         &[
-            MenuItemTemplate { title_key: 32, icon_classes: &[&["fas", "fa-certificate"]], tab: Certificates, custom_class: None },
-            MenuItemTemplate { title_key: 33, icon_classes: &[&["fas", "fa-cogs"]], tab: Components, custom_class: None },
-            MenuItemTemplate { title_key: 34, icon_classes: &[&["fas", "fa-cogs"], &["fas", "fa-bookmark"]], tab: FavoriteComponents, custom_class: None },
-            MenuItemTemplate { title_key: 379, icon_classes: &[&["fas", "fa-ticket-alt"]], tab: Services, custom_class: None },
-            MenuItemTemplate { title_key: 35, icon_classes: &[&["fas", "fa-building"]], tab: Companies, custom_class: None },
-            MenuItemTemplate { title_key: 36, icon_classes: &[&["fas", "fa-building"], &["fas", "fa-bookmark"]], tab: FavoriteCompanies, custom_class: None },
-            MenuItemTemplate { title_key: 37, icon_classes: &[&["fas", "fa-book"], &["fas", "fa-bookmark"]], tab: FavoriteStandards, custom_class: None },
-            MenuItemTemplate { title_key: 38, icon_classes: &[&["fas", "fa-user"], &["fas", "fa-bookmark"]], tab: FavoriteUsers, custom_class: None },
+            MenuItemTemplate { lk_title: LocaleKey::CertificatesLabel, icon_classes: &[&["fas", "fa-certificate"]], tab: Certificates, custom_class: None },
+            MenuItemTemplate { lk_title: LocaleKey::AllComponents, icon_classes: &[&["fas", "fa-cogs"]], tab: Components, custom_class: None },
+            MenuItemTemplate { lk_title: LocaleKey::FavComponents, icon_classes: &[&["fas", "fa-cogs"], &["fas", "fa-bookmark"]], tab: FavoriteComponents, custom_class: None },
+            MenuItemTemplate { lk_title: LocaleKey::Services, icon_classes: &[&["fas", "fa-ticket-alt"]], tab: Services, custom_class: None },
+            MenuItemTemplate { lk_title: LocaleKey::AllCompanies, icon_classes: &[&["fas", "fa-building"]], tab: Companies, custom_class: None },
+            MenuItemTemplate { lk_title: LocaleKey::FavCompanies, icon_classes: &[&["fas", "fa-building"], &["fas", "fa-bookmark"]], tab: FavoriteCompanies, custom_class: None },
+            MenuItemTemplate { lk_title: LocaleKey::FavStandards, icon_classes: &[&["fas", "fa-book"], &["fas", "fa-bookmark"]], tab: FavoriteStandards, custom_class: None },
+            MenuItemTemplate { lk_title: LocaleKey::FavUsers, icon_classes: &[&["fas", "fa-user"], &["fas", "fa-bookmark"]], tab: FavoriteUsers, custom_class: None },
         ]
     }
 
@@ -449,17 +449,17 @@ impl Profile {
                     {match &self.profile {
                         Some(_) => html!{<>
                             <p class="subtitle is-6 has-text-right">
-                                <span class="mr-3">{get_value_field(&30)}</span>
+                                <span class="mr-3">{LocaleKey::UpdatedAt.get_value()}</span>
                                 {updated_at}
                             </p>
                             {self.show_favorite_btn()}
                         </>},
                         None => html!{
                             <div class="subtitle is-6 has-text-right">
-                                <span class="mr-3">{get_value_field(&30)}</span>
+                                <span class="mr-3">{LocaleKey::UpdatedAt.get_value()}</span>
                                 {updated_at}
                                 <p>
-                                    <span>{get_value_field(&31)}</span>
+                                    <span>{LocaleKey::Followers.get_value()}</span>
                                     <span>{self.abbr_number()}</span>
                                 </p>
                             </div>
@@ -516,28 +516,28 @@ impl Profile {
                     <div class="column">
                         <div id="position" hidden={position.is_empty()}>
                             <span class="icon is-small"><i class="fas fa-briefcase" /></span>
-                            <span>{get_value_field(&39)}</span>
+                            <span>{LocaleKey::PositionLabel.get_value()}</span>
                             <span class="overflow-title has-text-weight-bold">{position}</span>
                         </div>
                         <div id="region" hidden={region.region_id == 8}>
                             <span class="icon is-small"><i class="fas fa-map-marker-alt" /></span>
-                            <span>{get_value_field(&40)}</span>
+                            <span>{LocaleKey::RegionLabel.get_value()}</span>
                             <span class="overflow-title has-text-weight-bold">{&region.region}</span>
                         </div>
                         <div id="program" hidden={program == "Unknown"}>
                             <span class="icon is-small"><i class="fas fa-drafting-compass" /></span>
-                            <span>{get_value_field(&41)}</span>
+                            <span>{LocaleKey::WorkingSoftware.get_value()}</span>
                             <span class="overflow-title has-text-weight-bold">{program}</span>
                         </div>
                     </div>
                 </div>
                 <button class="button is-ghost" onclick={onclick_change_full_show}>
-                    <span>{get_value_field(&42)}</span>
+                    <span>{LocaleKey::HideInfo.get_value()}</span>
                 </button>
             </>},
             false => html!{
                 <button class="button is-ghost" onclick={onclick_change_full_show}>
-                    <span>{get_value_field(&43)}</span>
+                    <span>{LocaleKey::ShowInfo.get_value()}</span>
                 </button>
             },
         }

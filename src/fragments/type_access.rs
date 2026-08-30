@@ -1,6 +1,7 @@
 use yew::{html, Component, ComponentLink, Html, ShouldRender, Callback, Properties};
 
-use crate::{services::get_value_field, types::TypeAccessInfo};
+use crate::services::LocaleKey;
+use crate::types::TypeAccessInfo;
 
 
 pub struct TypeAccessBlock {
@@ -56,6 +57,12 @@ impl Component for TypeAccessBlock {
               <div class="control">
                 { for self.props.types.iter().map(|x| {
                     let type_access_id = x.type_access_id;
+                    let description_key = match type_access_id {
+                        1 => LocaleKey::PermissionBasedAccess,
+                        2 => LocaleKey::SomeDataAvailable,
+                        3 => LocaleKey::AvailableToAll,
+                        _ => LocaleKey::DataNotAvailable,
+                    };
                     html!{
                       <div class="column p-0 m-0">
                       <label class="radio">
@@ -70,7 +77,7 @@ impl Component for TypeAccessBlock {
                                 _ => x.type_access_id == self.props.selected,
                               }}
                           />
-                          <span class="ml-3">{x.get_with_icon()}{": "}<em>{get_value_field(&(397+x.type_access_id))}</em></span>
+                          <span class="ml-3">{x.get_with_icon()}{": "}<em>{description_key.get_value()}</em></span>
                       </label>
                       </div>
                     }

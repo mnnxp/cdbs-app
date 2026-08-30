@@ -3,7 +3,7 @@ use log::debug;
 
 use crate::fragments::company::access::role::delete::DeleteCompanyRoleModal;
 use crate::fragments::company::access::role::edit::EditCompanyRoleModal;
-use crate::services::get_value_field;
+use crate::services::LocaleKey;
 use crate::types::{CompanyRole, PermissionLevel, UUID};
 
 /// Role row component properties
@@ -65,7 +65,7 @@ impl Component for RoleRow {
                             <span>{self.props.company_role.role.name.clone()}</span>
                         </div>
                         <div class="is-size-7 has-text-grey mt-1">
-                            <span class="mr-3">{get_value_field(&246)}</span>
+                            <span class="mr-3">{LocaleKey::ID.get_value()}</span>
                             <span>{self.props.company_role.role.role_member_id}</span>
                         </div>
                     </td>
@@ -77,7 +77,7 @@ impl Component for RoleRow {
                                         <span class="icon is-small mr-1">
                                             <i class="fas fa-ban"></i>
                                         </span>
-                                        {get_value_field(&469)}
+                                        {LocaleKey::NoPermissions.get_value()}
                                     </span>
                                 }
                             } else {

@@ -22,7 +22,7 @@ use crate::fragments::{
     notification::show_notification,
     supplier_service::{ServiceFilesCard, SearchSpecsTags, AddKeywordsTags, ServiceParamsTags},
 };
-use crate::services::{get_from_value, get_logged_user, get_value_field, get_value_response, resp_parsing, resp_parsing_two_level, set_history_back};
+use crate::services::{get_from_value, get_logged_user, LocaleKey, get_value_response, resp_parsing, resp_parsing_two_level, set_history_back};
 use crate::types::{
     UUID, ServiceInfo, SlimUser, Region, UploadFile, ShowFileInfo,
     ShowCompanyShort, ServiceUpdatePreData, ServiceUpdateData,
@@ -316,7 +316,7 @@ impl Component for ServiceSettings {
                     <div class="row">
                         <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
                         {show_notification(
-                            get_value_field(&214),
+                            LocaleKey::DataUpdated.get_value(),
                             "is-success",
                             self.get_result_service_data > 0
                         )}
@@ -359,14 +359,14 @@ impl ServiceSettings {
         html!{
             <div class="card">
                 <header class="card-header">
-                    <p class="card-header-title">{get_value_field(&373)}</p>
+                    <p class="card-header-title">{LocaleKey::ManagingServiceMasterData.get_value()}</p>
                 </header>
                 <div class="card-content">
                     <div class="content">
                         <div class="column">
                             {InputConfig::profile_input(
                                 "update-service-name",
-                                &110,
+                                LocaleKey::Name,
                                 Some(self.request_service.name.clone()),
                                 oninput_name,
                                 None,
@@ -377,7 +377,7 @@ impl ServiceSettings {
                         <div class="column">
                         <MarkdownEditCard
                             id_tag={"update-service-description"}
-                            title={get_value_field(&61)}
+                            title={LocaleKey::Description.get_value()}
                             placeholder={String::new()}
                             raw_text={self.request_service.description.clone()}
                             oninput_text={oninput_description}
@@ -401,7 +401,7 @@ impl ServiceSettings {
         html!{
             <div class="card">
                 <header class="card-header">
-                    <p class="card-header-title">{get_value_field(&374)}</p> // Manage service characteristics
+                    <p class="card-header-title">{LocaleKey::ManageServiceCharacteristics.get_value()}</p>
                 </header>
                 <div class="card-content">
                     <div class="content">
@@ -429,12 +429,12 @@ impl ServiceSettings {
         html!{
             <div class="card">
                 <header class="card-header">
-                    <p class="card-header-title">{get_value_field(&375)}</p>
+                    <p class="card-header-title">{LocaleKey::ManagingServiceFiles.get_value()}</p>
                 </header>
                 <div class="card-content">
                     <div class="content">
                             <div class="column">
-                                <h3 class="has-text-weight-bold">{get_value_field(&376)}</h3> // Files stadndard
+                                <h3 class="has-text-weight-bold">{LocaleKey::ServiceFiles.get_value()}</h3>
                                 <ServiceFilesCard
                                     show_delete_btn={true}
                                     service_uuid={service_data.uuid.clone()}
@@ -442,9 +442,9 @@ impl ServiceSettings {
                                 />
                             </div>
                             <div class="column">
-                                <h3 class="has-text-weight-bold">{get_value_field(&377)}</h3>
+                                <h3 class="has-text-weight-bold">{LocaleKey::UploadServiceFiles.get_value()}</h3>
                                 <UploaderFiles
-                                    text_choose_files={222} // Choose service files…
+                                    label_choose_files={LocaleKey::ChooseFilesForStandard}
                                     callback_upload_filenames={callback_upload_filenames}
                                     request_upload_files={request_upload_files}
                                     callback_upload_confirm={callback_upload_confirm}
@@ -465,7 +465,7 @@ impl ServiceSettings {
                     {ft_back_btn(
                         "open-service",
                         onclick_open_service,
-                        get_value_field(&378), // Open service
+                        LocaleKey::OpenService.get_value(),
                     )}
                 </div>
                 <div class="media-content">

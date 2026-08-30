@@ -22,7 +22,7 @@ use crate::fragments::{
     responsive::resizer,
 };
 use crate::services::content_adapter::{ContentDisplay, DateDisplay};
-use crate::services::{get_logged_user, get_value_field, resp_parsing, set_history_back, title_changer, Counter};
+use crate::services::{get_logged_user, LocaleKey, resp_parsing, set_history_back, title_changer, Counter};
 use crate::types::{CompanyInfo, Pathname, SlimUser, UUID};
 use crate::gqls::make_query;
 use crate::gqls::company::{
@@ -37,14 +37,14 @@ impl MenuBuilder for ShowCompany {
     fn menu_config() -> &'static [MenuItemTemplate<CompanyTab>] {
         use CompanyTab::*;
         &[
-            MenuItemTemplate { title_key: 232, icon_classes: &[&["fas", "fa-info"]], tab: Info, custom_class: None },
-            MenuItemTemplate { title_key: 32, icon_classes: &[&["fas", "fa-certificate"]], tab: Certificates, custom_class: None },
-            MenuItemTemplate { title_key: 266, icon_classes: &[&["fas", "fa-industry"]], tab: Represent, custom_class: None },
-            MenuItemTemplate { title_key: 154, icon_classes: &[&["fas", "fa-cogs"]], tab: Components, custom_class: None },
-            MenuItemTemplate { title_key: 379, icon_classes: &[&["fas", "fa-ticket-alt"]], tab: Services, custom_class: None },
-            MenuItemTemplate { title_key: 103, icon_classes: &[&["fas", "fa-book"]], tab: Standards, custom_class: None },
-            MenuItemTemplate { title_key: 380, icon_classes: &[&["far", "fa-comments"]], tab: Discussion, custom_class: None },
-            // MenuItemTemplate { title_key: 286, icon_classes: &[&["fas", "fa-user"]], tab: Members, custom_class: None }, // закомментирован
+            MenuItemTemplate { lk_title: LocaleKey::Information, icon_classes: &[&["fas", "fa-info"]], tab: Info, custom_class: None },
+            MenuItemTemplate { lk_title: LocaleKey::CertificatesLabel, icon_classes: &[&["fas", "fa-certificate"]], tab: Certificates, custom_class: None },
+            MenuItemTemplate { lk_title: LocaleKey::Representations, icon_classes: &[&["fas", "fa-industry"]], tab: Represent, custom_class: None },
+            MenuItemTemplate { lk_title: LocaleKey::ComponentsLabel, icon_classes: &[&["fas", "fa-cogs"]], tab: Components, custom_class: None },
+            MenuItemTemplate { lk_title: LocaleKey::Services, icon_classes: &[&["fas", "fa-ticket-alt"]], tab: Services, custom_class: None },
+            MenuItemTemplate { lk_title: LocaleKey::Standards, icon_classes: &[&["fas", "fa-book"]], tab: Standards, custom_class: None },
+            MenuItemTemplate { lk_title: LocaleKey::Discussion, icon_classes: &[&["far", "fa-comments"]], tab: Discussion, custom_class: None },
+            // MenuItemTemplate { lk_title: LocaleKey::Members, icon_classes: &[&["fas", "fa-user"]], tab: Members, custom_class: None }, // закомментирован
         ]
     }
 
@@ -299,7 +299,7 @@ impl ShowCompany {
                 </div>
                 <div id="company-is-supplier" class={classes!("column", "is-three-fifths")}>
                     {company_data.to_display()}
-                    <abbr title={get_value_field(&275)} hidden={!company_data.is_supplier}>
+                    <abbr title={LocaleKey::SupplierLabel2.get_value()} hidden={!company_data.is_supplier}>
                         {diamond_svg(company_data.is_supplier, "25")}
                     </abbr>
                 </div>
@@ -322,7 +322,7 @@ impl ShowCompany {
                       }}
                     </div>
                     <div id="company-on-since">
-                      <span class="mr-3">{get_value_field(&231)}</span> // On the platform since
+                      <span class="mr-3">{LocaleKey::HereSince.get_value()}</span>
                       <span>{company_data.created_at.date_to_display()}</span>
                     </div>
                 </div>

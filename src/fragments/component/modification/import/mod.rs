@@ -13,7 +13,7 @@ use crate::fragments::buttons::ft_import_btn;
 use crate::fragments::modal::ModalBlock;
 use crate::fragments::notification::show_notification;
 use crate::types::{NewModificationsPreData, Param, ParamValue, UUID};
-use crate::services::{get_value_field, resp_parsing, unique_id};
+use crate::services::{LocaleKey, resp_parsing, unique_id};
 use crate::services::content_adapter::Markdownable;
 use crate::gqls::make_query;
 use crate::gqls::relate::{RegisterParamsBulk, register_params_bulk};
@@ -159,7 +159,7 @@ impl Component for ImportModificationsData {
                 match resp_parsing::<Vec<UUID>>(res, "registerComponentModificationsBulk") {
                     Ok(result) => {
                         self.new_modifications_raw.clear();
-                        self.stat_info = format!("{} {}", get_value_field(&213), result.len());
+                        self.stat_info = format!("{} {}", LocaleKey::DataUpdatedChangeRows.get_value(), result.len());
                         self.hide_import = true;
                         self.props.callback_finish_import.emit(());
                     },
@@ -189,7 +189,7 @@ impl Component for ImportModificationsData {
                         row_count += 1;
                     }
                 }
-                self.stat_info = format!("{}: {}, {}: {}", get_value_field(&345), header_count, get_value_field(&346), row_count);
+                self.stat_info = format!("{}: {}, {}: {}", LocaleKey::Headers.get_value(), header_count, LocaleKey::Rows.get_value(), row_count);
             },
             Msg::Parsing => {
                 debug!("Test data: {}", self.new_modifications_raw);
@@ -291,7 +291,7 @@ impl Component for ImportModificationsData {
             <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
             {show_notification(&self.stat_info, "is-success", self.hide_import && !self.stat_info.is_empty())}
             {match self.hide_import {
-                true => ft_import_btn("open-import-btn", onclick_show_import, get_value_field(&342), false, false),
+                true => ft_import_btn("open-import-btn", onclick_show_import, LocaleKey::ImportModifications.get_value(), false, false),
                 false => self.show_import_modal(),
             }}
         </>}
@@ -308,7 +308,7 @@ impl ImportModificationsData {
         html!{
             <ModalBlock
                 modal_id="import-modifications"
-                title={get_value_field(&342)}
+                title={LocaleKey::ImportModifications.get_value()}
                 is_active={!self.hide_import}
                 on_close={onclick_hide_modal}
                 on_save={None}
@@ -317,16 +317,16 @@ impl ImportModificationsData {
                 <>
                 <div class="column">
                     <div class="subtitle is-6">
-                        {get_value_field(&234)}<br/>
-                        {get_value_field(&343).to_markdown()}
+                        {LocaleKey::UploadDataInstructions.get_value()}<br/>
+                        {LocaleKey::ImportModificationsInstructions.get_value().to_markdown()}
                     </div>
                     <div class="field">
-                        <label for={textarea_id.clone()} class="label is-sr-only">{get_value_field(&342)}</label>
+                        <label for={textarea_id.clone()} class="label is-sr-only">{LocaleKey::ImportModifications.get_value()}</label>
                         <div class="control">
                             <textarea
                                 id={textarea_id}
                                 class="textarea"
-                                placeholder={format!("{}\n{}", get_value_field(&208), get_value_field(&344))}
+                                placeholder={format!("{}\n{}", LocaleKey::PasteTableData.get_value(), LocaleKey::ImportExample.get_value())}
                                 value={self.new_modifications_raw.clone()}
                                 oninput={oninput_data}
                             />
@@ -338,7 +338,7 @@ impl ImportModificationsData {
                     {ft_import_btn(
                         "import-modifications-btn",
                         onclick_subbmit,
-                        get_value_field(&342),
+                        LocaleKey::ImportModifications.get_value(),
                         true,
                         self.new_modifications_raw.is_empty()
                     )}

@@ -9,7 +9,7 @@ use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::modal::ModalBlock;
 use crate::fragments::permission::PermissionLevelBlock;
-use crate::services::{get_value_field, resp_parsing, truncate_uuid};
+use crate::services::{LocaleKey, resp_parsing, truncate_uuid};
 use crate::types::{CompanySearchResult, PermissionLevel, UUID};
 use crate::gqls::make_query;
 use crate::gqls::rbac::{
@@ -185,7 +185,7 @@ fn view(&self) -> Html {
     html! {
         <ModalBlock
             modal_id="add-company"
-            title={get_value_field(&488)}
+            title={LocaleKey::AddCompanyAccess.get_value()}
             is_active={self.props.is_active}
             on_close={self.link.callback(|_| Msg::Close)}
             on_save={Some(self.link.callback(|_| Msg::AddAccess))}
@@ -210,12 +210,12 @@ impl AddCompanyAccessModal {
             <div class="columns is-multiline">
                 <div class="column is-half">
                     <div class="field">
-                        <label class="label">{get_value_field(&489)}</label>
+                        <label class="label">{LocaleKey::SearchCompany.get_value()}</label>
                         <div class={class_input}>
                             <input
                                 class="input"
                                 type="text"
-                                placeholder={get_value_field(&482)}
+                                placeholder={LocaleKey::SearchCompanies.get_value()}
                                 value={self.search_text.clone()}
                                 oninput={self.link.callback(|ev: InputData| Msg::UpdateSearch(ev.value))}
                             />
@@ -224,7 +224,7 @@ impl AddCompanyAccessModal {
                 </div>
                 <div class="column is-half">
                     <div class="field">
-                        <label class="label">{get_value_field(&487)}</label>
+                        <label class="label">{LocaleKey::AccessLevel.get_value()}</label>
                         <PermissionLevelBlock
                             change_cb={self.link.callback(|id| Msg::UpdateLevel(id))}
                             permissions={self.props.permissions.clone()}
@@ -245,7 +245,7 @@ impl AddCompanyAccessModal {
                     }
                 } else if !self.search_text.is_empty() && !self.search_loading {
                     html! {
-                        <p class="help is-info">{get_value_field(&496)}</p>
+                        <p class="help is-info">{LocaleKey::NoCompaniesFound.get_value()}</p>
                     }
                 } else {
                     html! {}

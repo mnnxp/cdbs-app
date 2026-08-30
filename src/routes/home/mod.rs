@@ -7,7 +7,7 @@ pub use search_page::SearchPage;
 use yew::{classes, html, Bridge, Bridged, Component, ComponentLink, Html, InputData, ShouldRender};
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
 use crate::routes::AppRoute;
-use crate::services::{get_logged_user, get_value_field, set_history_search};
+use crate::services::{get_logged_user, LocaleKey, set_history_search};
 
 use banner::Banner;
 // use main_view::MainView;
@@ -92,13 +92,13 @@ impl Component for Home {
                         </h1>
                         <div class="media">
                             <div class="media-left">
-                                <h2 class="subtitle"> {get_value_field(&1)} </h2>
+                                <h2 class="subtitle"> {LocaleKey::Engineer.get_value()} </h2>
                             </div>
                             <div class="media-content">
-                                <h2 class="subtitle" style="text-align: center"> {get_value_field(&2)} </h2>
+                                <h2 class="subtitle" style="text-align: center"> {LocaleKey::Component.get_value()} </h2>
                             </div>
                             <div class="media-right">
-                                <h2 class="subtitle"> {get_value_field(&3)} </h2>
+                                <h2 class="subtitle"> {LocaleKey::Supplier.get_value()} </h2>
                             </div>
                         </div>
                     </div>
@@ -119,13 +119,13 @@ impl Home {
                 <div class="tile is-parent">
                     <form class="field is-relative has-addons column p-0 m-0">
                         <div style="width: 100%;" class="control has-icons-left has-icons-right">
-                            <input id={"input-search-block"} placeholder={get_value_field(&351)} style="width: 100%;" class="input" oninput={oninput_search_text} />
+                            <input id={"input-search-block"} placeholder={LocaleKey::EnterSearchText.get_value()} style="width: 100%;" class="input" oninput={oninput_search_text} />
                             <span class="icon is-small is-left">
                                 <i class="fas fa-search fa-xs"></i>
                             </span>
                         </div>
                         <div class="control">
-                            <button class="button is-info search-button" type="submit" onclick={onclick_open_search}>{get_value_field(&349)}</button>
+                            <button class="button is-info search-button" type="submit" onclick={onclick_open_search}>{LocaleKey::Search.get_value()}</button>
                         </div>
                     </form>
                 </div>

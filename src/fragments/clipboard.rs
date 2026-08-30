@@ -2,7 +2,7 @@ use yew::{html, Component, ComponentLink, Html, ShouldRender, Properties};
 use web_sys;
 use rand;
 
-use crate::{fragments::modal::ModalBlock, services::{get_value_field, set_clipboard}};
+use crate::{fragments::modal::ModalBlock, services::{LocaleKey, set_clipboard}};
 
 
 pub struct ShareLinkBtn {
@@ -76,7 +76,7 @@ impl Component for ShareLinkBtn {
         });
         html!{<>
             {self.share_window()}
-            <button id="share-btn" class="button" onclick={onclick_share_btn} title={get_value_field(&328)}>
+            <button id="share-btn" class="button" onclick={onclick_share_btn} title={LocaleKey::Share.get_value()}>
               <span class="icon is-small" style="color: #1872f0;"><i class="fas fa-share" /></span>
             </button>
         </>}
@@ -114,12 +114,12 @@ impl ShareLinkBtn {
                           { if self.copyed {
                               html! {
                                   <>
-                                      {get_value_field(&323)}
+                                      {LocaleKey::Copied.get_value()}
                                       <i class="copyIcon fas fa-check"></i>
                                   </>
                               }
                           } else {
-                              html! { {get_value_field(&322)} }
+                              html! { {LocaleKey::Copy.get_value()} }
                           }}
                       </button>
                   </div>

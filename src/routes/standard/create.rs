@@ -18,7 +18,7 @@ use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::buttons::ft_create_btn;
-use crate::services::{get_from_value, get_logged_user, get_value_field, get_value_response, resp_parsing, set_history_back};
+use crate::services::{get_from_value, get_logged_user, LocaleKey, get_value_response, resp_parsing, set_history_back};
 use crate::types::{
     UUID, StandardCreateData, SlimUser, TypeAccessInfo,
     ShowCompanyShort, StandardStatus,
@@ -237,7 +237,7 @@ impl Component for CreateStandard {
                     <div class="box p-5">
                         <h1 class="title is-3 mb-4">
                             // <span class="icon mr-3"><i class=""></i></span>
-                            {get_value_field(&291)}
+                            {LocaleKey::CreateStandard.get_value()}
                         </h1>
                         {self.show_main_card()}
                         <div class="field mt-5">
@@ -262,7 +262,7 @@ impl CreateStandard {
                 <div class="field mb-4">
                     {InputConfig::profile_input(
                         "create-standard-name",
-                        &110,
+                        LocaleKey::Name,
                         Some(self.request_standard.name.clone()),
                         oninput_name,
                         None,
@@ -272,7 +272,7 @@ impl CreateStandard {
                 </div>
                 <MarkdownEditCard
                     id_tag={"create-standard-description"}
-                    title={get_value_field(&61)}
+                    title={LocaleKey::Description.get_value()}
                     placeholder={String::new()}
                     raw_text={self.request_standard.description.clone()}
                     oninput_text={oninput_description}
@@ -307,7 +307,7 @@ impl CreateStandard {
                         <div class="column">
                             {InputConfig::profile_input(
                                 "date",
-                                &155,
+                                LocaleKey::PublicationAtLabel,
                                 Some(format!("{:.*}", 10, self.request_standard.publication_at.to_string())),
                                 oninput_publication_at,
                                 None,
@@ -317,7 +317,7 @@ impl CreateStandard {
                         </div>
                         <div class="column">
                             <div class="field">
-                            <label class="label" for="create-standard-status-id">{get_value_field(&96)}</label>
+                            <label class="label" for="create-standard-status-id">{LocaleKey::LifeCycleStage.get_value()}</label>
                             <div class="select is-fullwidth">
                                 <select
                                     id="create-standard-status-id"
@@ -338,7 +338,7 @@ impl CreateStandard {
                         </div>
                     </div>
                     <div class="field mb-0">
-                    <label class="label" for="create-set-owner-company">{get_value_field(&223)}</label> // Owner company
+                    <label class="label" for="create-set-owner-company">{LocaleKey::OwnerCompany.get_value()}</label>
                     <div class="select is-fullwidth">
                         <select
                             id="create-set-owner-company"
@@ -358,7 +358,7 @@ impl CreateStandard {
                     </div>
                     <div class="column">
                         <div class="field">
-                            <label class="label" for="type-access-block">{get_value_field(&58)}</label>
+                            <label class="label" for="type-access-block">{LocaleKey::TypeAccess.get_value()}</label>
                             <TypeAccessBlock
                                 change_cb={onchange_type_access}
                                 types={self.types_access.clone()}

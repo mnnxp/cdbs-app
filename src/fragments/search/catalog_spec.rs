@@ -5,7 +5,7 @@ use log::debug;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::types::{PaginateSet, SpecWithParent, SpecNode};
-use crate::services::{get_value_field, resp_parsing};
+use crate::services::{LocaleKey, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::relate::{GetSpecs, get_specs};
 
@@ -144,7 +144,7 @@ impl Component for CatalogSpec {
             <div class={"card"}>
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
                 <div class={"column is-flex is-justify-content-space-between is-align-items-center pointer"} onclick={onclick_toggle}>
-                    <p class={"title is-5 select-title"} style="margin-bottom: 0px;">{get_value_field(&104)}</p>
+                    <p class={"title is-5 select-title"} style="margin-bottom: 0px;">{LocaleKey::CatalogsLabel.get_value()}</p>
                     <span class="icon is-clickable">
                         <i class={classes!("fas", if self.expanded { "fa-chevron-up" } else { "fa-chevron-down" })}></i>
                     </span>
@@ -245,7 +245,7 @@ impl CatalogSpec {
                 class={"button is-white is-small catalog-title is-fullwidth"}
                 disabled={self.current_spec_id == 1}
                 onclick={self.link.callback(move |_| Msg::ChangeSpec(1))} >
-                {get_value_field(&395)}
+                {LocaleKey::ResetSelection.get_value()}
             </button>
         }
     }

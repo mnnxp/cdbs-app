@@ -6,7 +6,7 @@ use wasm_bindgen_futures::spawn_local;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::file::UploaderFiles;
-use crate::services::{get_value_field, resp_parsing};
+use crate::services::{LocaleKey, resp_parsing};
 use crate::types::UploadFile;
 use crate::gqls::make_query;
 use crate::gqls::user::{UploadUserCertificate, upload_user_certificate};
@@ -119,10 +119,10 @@ impl Component for AddUserCertificateCard {
                 true => html!{<div class="column">{self.show_success_upload()}</div>},
                 false => html!{
                     <div class="column">
-                        <label class="label">{get_value_field(&83)}</label> // "Upload new certificate"
+                        <label class="label">{LocaleKey::UploadCertificate.get_value()}</label>
                         {self.show_input_description()}
                         <UploaderFiles
-                            text_choose_files={86} // Drop certificate file here
+                            label_choose_files={LocaleKey::CertificateFile}
                             callback_upload_filenames={callback_upload_filenames}
                             request_upload_files={request_upload_files}
                             callback_upload_confirm={callback_upload_confirm}
@@ -142,12 +142,12 @@ impl AddUserCertificateCard {
         let oninput_cert_description = self.link.callback(|ev: InputData| Msg::UpdateDescription(ev.value));
 
         html!{<div class="block">
-            <label class="label">{get_value_field(&61)}</label> // "Description"
+            <label class="label">{LocaleKey::Description.get_value()}</label>
             <input
                 id={"new-cert-description"}
                 class="input"
                 type="text"
-                placeholder={get_value_field(&61)}
+                placeholder={LocaleKey::Description.get_value()}
                 value={self.description.to_string()}
                 oninput={oninput_cert_description} />
         </div>}
@@ -158,11 +158,11 @@ impl AddUserCertificateCard {
         html!{
             <article class="message is-success">
               <div class="message-header">
-                <p>{get_value_field(&89)}</p>
+                <p>{LocaleKey::Success.get_value()}</p>
                 <button class="delete" aria-label="close" onclick={onclick_hide_notification.clone()} />
               </div>
               <div class="message-body">
-                {get_value_field(&90)}
+                {LocaleKey::CertificateUploaded.get_value()}
               </div>
             </article>
         }

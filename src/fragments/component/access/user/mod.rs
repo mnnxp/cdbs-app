@@ -8,7 +8,7 @@ use yew::{html, Callback, classes, Component, ComponentLink, Html, Properties, S
 
 use crate::fragments::buttons::ft_custom_btn;
 use crate::fragments::paginate::Paginate;
-use crate::services::{get_classes_table, get_value_field};
+use crate::services::{get_classes_table, LocaleKey};
 use crate::types::{PaginateSet, PermissionLevel, UserAccess, UUID};
 
 /// Complete component access management component
@@ -101,12 +101,12 @@ impl Component for UserAccessComponentTable {
                     <header class="card-header">
                         <div class="card-header-title">
                             <p class="is-size-5 has-text-weight-semibold mb-0">
-                                {get_value_field(&459)}
+                                {LocaleKey::UsersAccess.get_value()}
                             </p>
                             <div class="buttons right-side">
                                 {ft_custom_btn(
                                     &format!("add-user-access-{}", self.props.component_uuid),
-                                    get_value_field(&484),
+                                    LocaleKey::AddUser.get_value(),
                                     classes!("is-success"),
                                     "fas fa-user-plus",
                                     onclick_show_add_user_modal,
@@ -121,7 +121,7 @@ impl Component for UserAccessComponentTable {
                         } else {
                             html! {
                                 <div class="notification is-info is-light">
-                                    {get_value_field(&495)}
+                                    {LocaleKey::NoUsersAccess.get_value()}
                                 </div>
                             }
                         }}
@@ -160,10 +160,10 @@ impl UserAccessComponentTable {
                         <thead>
                             <tr>
                                 <th>{"\u{2116}"}</th>
-                                <th>{get_value_field(&19)}</th>
-                                <th>{get_value_field(&468)}</th>
-                                <th>{get_value_field(&458)}</th>
-                                <th>{get_value_field(&111)}</th>
+                                <th>{LocaleKey::Username.get_value()}</th>
+                                <th>{LocaleKey::AccessPermissions.get_value()}</th>
+                                <th>{LocaleKey::GrantedAt.get_value()}</th>
+                                <th>{LocaleKey::Action.get_value()}</th>
                             </tr>
                         </thead>
                         <tbody>
