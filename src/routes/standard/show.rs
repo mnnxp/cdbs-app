@@ -8,7 +8,7 @@ use log::debug;
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
-use crate::fragments::clipboard::ShareLinkBtn;
+use crate::fragments::share_link::ShareLinkBtn;
 use crate::fragments::company::ListItemCompany;
 use crate::fragments::modal::ModalBlock;
 use crate::routes::AppRoute;

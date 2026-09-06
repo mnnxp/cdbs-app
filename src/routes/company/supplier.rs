@@ -8,7 +8,7 @@ use wasm_bindgen_futures::spawn_local;
 use crate::error::Error;
 use crate::fragments::{
     buttons::ft_follow_btn,
-    clipboard::ShareLinkBtn,
+    share_link::ShareLinkBtn,
     list_errors::ListErrors,
     side_menu::{MenuBuilder, MenuItemTemplate},
     company::diamond_svg,

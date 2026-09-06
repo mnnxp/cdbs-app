@@ -13,7 +13,7 @@ use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{
     buttons::{ft_follow_btn, res_settings_btn},
-    clipboard::ShareLinkBtn,
+    share_link::ShareLinkBtn,
     list_errors::ListErrors,
     side_menu::{MenuBuilder, MenuItemTemplate},
     company::diamond_svg,

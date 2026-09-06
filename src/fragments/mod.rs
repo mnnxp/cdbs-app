@@ -8,7 +8,7 @@ pub mod supplier_service;
 pub mod user;
 pub mod buttons;
 pub mod file;
-pub mod clipboard;
+pub mod share_link;
 pub mod conditions;
 pub mod footer;
 pub mod form_input;

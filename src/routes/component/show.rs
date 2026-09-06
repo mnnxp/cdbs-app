@@ -24,7 +24,7 @@ use crate::fragments::{
     },
     img_showcase::ImgShowcase,
     three_showcase::ThreeShowcase,
-    clipboard::ShareLinkBtn,
+    share_link::ShareLinkBtn,
 };
 use crate::services::content_adapter::{DateDisplay, Markdownable};
 use crate::services::{get_classes_table, get_logged_user, LocaleKey, resp_parsing, set_focus, set_history_back, title_changer, Counter};

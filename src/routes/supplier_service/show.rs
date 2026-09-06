@@ -17,7 +17,7 @@ use crate::fragments::{
     component::CatalogComponents,
     supplier_service::{ServiceFilesCard, SpecsTags, KeywordsTags},
     img_showcase::ImgShowcase,
-    clipboard::ShareLinkBtn,
+    share_link::ShareLinkBtn,
     discussion::DiscussionCommentsBlock,
     supplier_service::ServiceParamsTags,
 };
