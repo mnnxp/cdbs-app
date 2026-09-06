@@ -105,7 +105,7 @@ We welcome contributions to new integrations!
 
 | Other libraries |
 | ------------- |
-| [![router][router]][router-url] [![yewtil][yewtil]][yewtil-url] [![bindgen][bindgen]][bindgen-url] [![logger][logger]][logger-url] [![instant][instant]][instant-url] [![lipsum][lipsum]][lipsum-url] [![log][log]][log-url] [![getrandom][getrandom]][getrandom-url] [![rand][rand]][rand-url] [![chrono][chrono]][chrono-url] [![dotenv_codegen][dotenv_codegen]][dotenv_codegen-url] [![lazy_static][lazy_static]][lazy_static-url] [![parking_lot][parking_lot]][parking_lot-url] [![cmark][cmark]][cmark-url] [![serde][serde]][serde-url] [![regex][regex]][regex-url] [![serde_json][serde_json]][serde_json-url] [![thiserror][thiserror]][thiserror-url] [![graphql_client][graphql_client]][graphql_client-url] [![wee_alloc][wee_alloc]][wee_alloc-url] [![web-sys][web-sys]][web-sys-url] [![wasm-bindgen-test][wasm-bindgen-test]][wasm-bindgen-test-url] [![toml][toml]][toml-url] [![js-sys][js-sys]][js-sys-url] [![console_error_panic_hook][console_error_panic_hook]][console_error_panic_hook-url] [![anyhow][anyhow]][anyhow-url] |
+| [![router][router]][router-url] [![yewtil][yewtil]][yewtil-url] [![bindgen][bindgen]][bindgen-url] [![logger][logger]][logger-url] [![instant][instant]][instant-url] [![lipsum][lipsum]][lipsum-url] [![log][log]][log-url] [![getrandom][getrandom]][getrandom-url] [![rand][rand]][rand-url] [![chrono][chrono]][chrono-url] [![dotenv_codegen][dotenv_codegen]][dotenv_codegen-url] [![cmark][cmark]][cmark-url] [![serde][serde]][serde-url] [![regex][regex]][regex-url] [![serde_json][serde_json]][serde_json-url] [![thiserror][thiserror]][thiserror-url] [![graphql_client][graphql_client]][graphql_client-url] [![wee_alloc][wee_alloc]][wee_alloc-url] [![web-sys][web-sys]][web-sys-url] [![wasm-bindgen-test][wasm-bindgen-test]][wasm-bindgen-test-url] [![toml][toml]][toml-url] [![js-sys][js-sys]][js-sys-url] [![console_error_panic_hook][console_error_panic_hook]][console_error_panic_hook-url] [![anyhow][anyhow]][anyhow-url] |
 
 
 Many thanks to all of you who have contributed to the projects listed above and to the projects listed in the <a href="#acknowledgments">Acknowledgments</a> section! Your input has allowed us to make CADBase better and faster.
@@ -162,9 +162,11 @@ For API details: [docs.cadbase.rs](https://docs.cadbase.rs)
 
 ### Current State
 - File versioning system
-- 3D Viewer (STL, GCODE, GLTF/GLB, IFC via Three.js)
+- 3D Viewer (STL, GCODE, GLTF/GLB, STEP, IFC via Three.js)
 - Search functionality
 - Multi-language support (English, Russian, Chinese)
+- API key management for secure integration access
+- Role-Based Access Control (RBAC) for companies and components
 
 ### In Progress
 - User guides, API examples, and integration tutorials
@@ -261,10 +263,6 @@ Xia TianHao - [Sansx](https://github.com/sansx) (GitHub)
 [chrono-url]: https://docs.rs/chrono
 [dotenv_codegen]: https://img.shields.io/badge/dotenv_codegen-blue
 [dotenv_codegen-url]: https://github.com/dtolnay/dotenv_codegen
-[lazy_static]: https://img.shields.io/badge/lazy_static-blue
-[lazy_static-url]: https://github.com/dtolnay/lazy_static
-[parking_lot]: https://img.shields.io/badge/parking_lot-blue
-[parking_lot-url]: https://docs.rs/parking_lot
 [cmark]: https://img.shields.io/badge/cmark-blue
 [cmark-url]: https://docs.rs/pulldown-cmark
 [serde]: https://img.shields.io/badge/serde-blue
