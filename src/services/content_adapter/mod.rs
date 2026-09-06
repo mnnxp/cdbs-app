@@ -5,7 +5,7 @@ mod type_access;
 pub(crate) use date_wrapper::date_display;
 pub(crate) use parsing_md::inner_markdown;
 
-use chrono::NaiveDateTime;
+use chrono::{DateTime, NaiveDateTime, Utc, Local};
 use yew::Html;
 
 pub(crate) trait ContentDisplay {
@@ -80,6 +80,12 @@ impl DateDisplay for NaiveDateTime {
     /// adds date and time information in time tag.
     fn date_to_display(&self) -> Html {
         date_display(&self)
+    }
+}
+impl DateDisplay for DateTime<Utc> {
+    fn date_to_display(&self) -> Html {
+        let local = self.with_timezone(&Local);
+        date_display(&local.naive_local())
     }
 }
 

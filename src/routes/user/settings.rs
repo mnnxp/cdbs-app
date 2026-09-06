@@ -14,7 +14,7 @@ use crate::fragments::{
     list_errors::ListErrors,
     side_menu::{MenuBuilder, MenuItemTemplate},
     upload_favicon::UpdateFaviconBlock,
-    user::{AddUserCertificateCard, UserCertificatesCard},
+    user::{AddUserCertificateCard, UserCertificatesCard, ApiKeyManager},
 };
 use crate::routes::AppRoute;
 use crate::services::content_adapter::DateDisplay;
@@ -40,8 +40,9 @@ impl MenuBuilder for Settings {
             MenuItemTemplate { lk_title: LocaleKey::ProfileTitle, icon_classes: &[&["fas", "fa-address-card"]], tab: Profile, custom_class: None },
             MenuItemTemplate { lk_title: LocaleKey::ProfilePicture, icon_classes: &[&["fas", "fa-image"]], tab: UpdateFavicon, custom_class: None },
             MenuItemTemplate { lk_title: LocaleKey::CertificatesLabel, icon_classes: &[&["fas", "fa-certificate"]], tab: Certificates, custom_class: None },
-            MenuItemTemplate { lk_title: LocaleKey::AccessPolicy, icon_classes: &[&["fas", "fa-low-vision"]], tab: Access, custom_class: None },
-            MenuItemTemplate { lk_title: LocaleKey::Password, icon_classes: &[&["fas", "fa-key"]], tab: Password, custom_class: None },
+            MenuItemTemplate { lk_title: LocaleKey::Access, icon_classes: &[&["fas", "fa-low-vision"]], tab: Access, custom_class: None },
+            MenuItemTemplate { lk_title: LocaleKey::ApiKeys, icon_classes: &[&["fas", "fa-key"]], tab: ApiKeys, custom_class: None },
+            MenuItemTemplate { lk_title: LocaleKey::Password, icon_classes: &[&["fas", "fa-user-lock"]], tab: Password, custom_class: None },
             MenuItemTemplate { lk_title: LocaleKey::RemoveProfileTitle, icon_classes: &[&["fas", "fa-trash"]], tab: RemoveProfile, custom_class: Some("has-background-danger-light") },
         ]
     }
@@ -65,6 +66,7 @@ pub enum Menu {
     UpdateFavicon,
     Certificates,
     Access,
+    ApiKeys,
     Password,
     RemoveProfile,
 }
@@ -98,7 +100,7 @@ pub enum Msg {
     OpenProfile,
     RequestCurrentData,
     RequestUpdateProfile,
-    RequestChangeAccess,
+    RequestChangeAccess(usize),
     RequestUpdatePassword,
     RequestRemoveProfile,
     ResponseError(Error),
@@ -108,7 +110,6 @@ pub enum Msg {
     GetUpdateProfileResult(String),
     GetRemoveProfileResult(String),
     UpdateUserPassword(String),
-    UpdateTypeAccessId(usize),
     UpdateOldPassword(String),
     UpdateNewPassword(String),
     UpdateFirstname(String),
@@ -231,7 +232,8 @@ impl Component for Settings {
                     link.send_message(Msg::GetUpdateProfileResult(res));
                 })
             },
-            Msg::RequestChangeAccess => {
+            Msg::RequestChangeAccess(type_access_id) => {
+                self.request_access = type_access_id as i64;
                 self.loading = true;
                 let new_type_access = self.request_access.clone();
                 spawn_local(async move {
@@ -341,7 +343,6 @@ impl Component for Settings {
                     Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
-            Msg::UpdateTypeAccessId(type_access_id) => self.request_access = type_access_id as i64,
             Msg::UpdateOldPassword(old_password) => self.request_password.old_password = old_password,
             Msg::UpdateNewPassword(new_password) => self.request_password.new_password = new_password,
             Msg::UpdateEmail(email) => self.request_profile.email = Some(email),
@@ -380,14 +381,6 @@ impl Component for Settings {
             ev.prevent_default();
             Msg::RequestUpdateProfile
         });
-        let onsubmit_update_access = self.link.callback(|ev: FocusEvent| {
-            ev.prevent_default();
-            Msg::RequestChangeAccess
-        });
-        let onsubmit_update_password = self.link.callback(|ev: FocusEvent| {
-            ev.prevent_default();
-            Msg::RequestUpdatePassword
-        });
 
         html!{
             <div class="settings-page">
@@ -420,35 +413,29 @@ impl Component for Settings {
                                         </>},
                                         // Show interface for change access
                                         Menu::Access => html!{<>
-                                            <h4 id="change-access" class="title is-4">{LocaleKey::Access.get_value()}</h4>
                                             {show_notification(
-                                                &format!("{}: {}", LocaleKey::UpdatedAccess.get_value(), self.get_result_access),
+                                                &LocaleKey::UpdatedAccess.get_value(),
                                                 "is-success",
                                                 self.get_result_access,
                                             )}
-                                            <form onsubmit={onsubmit_update_access}>
-                                                {self.change_access_card()}
-                                                <div class="mt-5">{ft_submit_btn("update-access")}</div>
-                                            </form>
+                                            {self.change_access_card()}
+                                        </>},
                                             // todo!(tasks:)
                                             // show Tokens
                                             // update Token
                                             // get new Token
                                             // remove Token
                                             // removed all Tokens
-                                        </>},
+                                        // Show interface for api keys
+                                        Menu::ApiKeys => html!{<ApiKeyManager />},
                                         // Show interface for change password
                                         Menu::Password => html!{<>
-                                            <h4 id="change-password" class="title is-4">{LocaleKey::Password.get_value()}</h4>
                                             {show_notification(
-                                                LocaleKey::UpdatedPassword.get_value(),
+                                                LocaleKey::Password.get_value(),
                                                 "is-success",
                                                 self.get_result_pwd,
                                             )}
-                                            <form onsubmit={onsubmit_update_password}>
-                                                {self.update_password_card()}
-                                                <div class="mt-5">{ft_submit_btn("update-password")}</div>
-                                            </form>
+                                            {self.update_password_card()}
                                         </>},
                                         // Show interface for remove profile
                                         Menu::RemoveProfile => self.remove_profile_card(),
@@ -535,47 +522,80 @@ impl Settings {
     }
 
     fn change_access_card(&self) -> Html {
-        let onchange_type_access = self.link.callback(|value| Msg::UpdateTypeAccessId(value));
+        let onchange_type_access = self.link.callback(|value| Msg::RequestChangeAccess(value));
         html!{
-            <div class="column">
-                <label class="label">{LocaleKey::TypeAccess.get_value()}</label>
-                <TypeAccessBlock
-                    change_cb={onchange_type_access}
-                    types={self.types_access.clone()}
-                    selected={self.request_access as usize}
-                    preset={self.current_data.as_ref().map(|data| data.type_access.type_access_id)}
-                />
+            <div id="change-access" class="card mb-5">
+                <header class="card-header">
+                    <div class="card-header-title">
+                        <p class="is-size-5 has-text-weight-semibold">
+                            {LocaleKey::AccessPolicy.get_value()}
+                        </p>
+                    </div>
+                </header>
+                <div class="card-content">
+                    <div class="content">
+                        <div class="column">
+                            <label class="label">{LocaleKey::TypeAccess.get_value()}</label>
+                            <TypeAccessBlock
+                                change_cb={onchange_type_access}
+                                types={self.types_access.clone()}
+                                selected={self.request_access as usize}
+                                preset={self.current_data.as_ref().map(|data| data.type_access.type_access_id)}
+                            />
+                        </div>
+                    </div>
+                </div>
             </div>
         }
     }
 
     fn update_password_card(&self) -> Html {
+        let onsubmit_update_password = self.link.callback(|ev: FocusEvent| {
+            ev.prevent_default();
+            Msg::RequestUpdatePassword
+        });
         let oninput_old_password = self.link.callback(|ev: InputData| Msg::UpdateOldPassword(ev.value));
         let oninput_new_password = self.link.callback(|ev: InputData| Msg::UpdateNewPassword(ev.value));
 
         html!{
-            <div class="columns is-desktop">
-                <div class="column">
-                    {render_form_input(InputConfig {
-                        id: "password",
-                        label: LocaleKey::OldPassword.get_value(),
-                        value: self.request_password.old_password.to_string(),
-                        oninput: oninput_old_password,
-                        is_disabled: self.loading,
-                        icon: Some("fas fa-lock"),
-                        add_classes: classes!(""),
-                        is_danger: false,
-                    })}
-                    {render_form_input(InputConfig {
-                        id: "password",
-                        label: LocaleKey::NewPassword.get_value(),
-                        value: self.request_password.new_password.to_string(),
-                        oninput: oninput_new_password,
-                        is_disabled: self.loading,
-                        icon: Some("fas fa-key"),
-                        add_classes: classes!(""),
-                        is_danger: false,
-                    })}
+            <div id="change-password" class="card mb-5">
+                <header class="card-header">
+                    <div class="card-header-title">
+                        <p class="is-size-5 has-text-weight-semibold">
+                            {LocaleKey::Password.get_value()}
+                        </p>
+                    </div>
+                </header>
+                <div class="card-content">
+                    <div class="content">
+                        <form onsubmit={onsubmit_update_password}>
+                            <div class="columns is-desktop">
+                                <div class="column">
+                                    {render_form_input(InputConfig {
+                                        id: "password",
+                                        label: LocaleKey::OldPassword.get_value(),
+                                        value: self.request_password.old_password.to_string(),
+                                        oninput: oninput_old_password,
+                                        is_disabled: self.loading,
+                                        icon: Some("fas fa-lock"),
+                                        add_classes: classes!(""),
+                                        is_danger: false,
+                                    })}
+                                    {render_form_input(InputConfig {
+                                        id: "password",
+                                        label: LocaleKey::NewPassword.get_value(),
+                                        value: self.request_password.new_password.to_string(),
+                                        oninput: oninput_new_password,
+                                        is_disabled: self.loading,
+                                        icon: Some("fas fa-lock"),
+                                        add_classes: classes!(""),
+                                        is_danger: false,
+                                    })}
+                                </div>
+                            </div>
+                            {ft_submit_btn("update-password")}
+                        </form>
+                    </div>
                 </div>
             </div>
         }

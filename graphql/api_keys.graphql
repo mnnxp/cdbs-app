@@ -1,0 +1,26 @@
+# Get all user keys
+query GetApiKeys {
+  apiKeys {
+    id
+    name
+    lastUsedAt
+    expiresAt
+    isActive
+    createdAt
+  }
+}
+
+# Create a new key
+mutation CreateApiKey($name: String!, $expiresAt: DateTime) {
+  createApiKey(name: $name, expiresAt: $expiresAt)
+}
+
+# Delete a key
+mutation DeleteApiKey($keyId: Int!) {
+  deleteApiKey(keyId: $keyId)
+}
+
+# Reissue a key
+mutation RotateApiKey($keyId: Int!) {
+  rotateApiKey(keyId: $keyId)
+}

@@ -204,7 +204,7 @@ pub(crate) enum LocaleKey {
     SeeLess,
     /// `Modifications` (was: 100)
     Modifications,
-    /// `Сharacteristics` (was: 101)
+    /// `Characteristics` (was: 101)
     Characteristics,
     /// `Component Files` (was: 102)
     ComponentFiles,
@@ -306,7 +306,7 @@ pub(crate) enum LocaleKey {
     StandardStatus,
     /// `region` (was: 151)
     RegionLabel2,
-    /// `Сharacteristics of the standard` (was: 152)
+    /// `Characteristics of the standard` (was: 152)
     CharacteristicsOfStandard,
     /// `Files of the standard` (was: 153)
     FilesOfStandard,
@@ -1024,5 +1024,39 @@ pub(crate) enum LocaleKey {
     Intensities,
     /// `Positions` (was: 510)
     Positions,
+    /// API Keys management
+    ApiKeys,
+    /// Create New API Key
+    CreateNewApiKey,
+    /// Enter key name
+    EnterKeyName,
+    /// Choose a descriptive name to identify this key
+    KeyNameHelp,
+    /// Key deleted successfully
+    KeyDeleted,
+    /// No API keys found
+    NoApiKeys,
+    /// Status
+    Status,
+    /// Last used
+    LastUsed,
+    /// Expires at
+    ExpiresAt,
+    /// Active
+    Active,
+    /// Inactive
+    Inactive,
+    /// Expires soon
+    ExpiresSoon,
+    /// Never used
+    NeverUsed,
+    /// Rotate (regenerate key)
+    Rotate,
+    /// New API Key
+    NewApiKey,
+    /// Warning: copy this key now, it won't be shown again
+    CopyKeyWarning,
+    /// Got it (acknowledge)
+    GotIt,
     _Count,
 }

@@ -14,6 +14,8 @@ pub struct SearchArg {
     pub by_params: bool,
     pub by_specs: bool,
     pub by_keywords: bool,
+    pub by_modifications: bool,
+    pub by_modification_params: bool,
     pub company_uuid: Option<UUID>,
     pub user_uuid: Option<UUID>,
     pub standard_uuid: Option<UUID>,
@@ -47,6 +49,8 @@ impl SearchArg {
         if self.by_params != second.by_params { return false }
         if self.by_specs != second.by_specs { return false }
         if self.by_keywords != second.by_keywords { return false }
+        if self.by_modifications != second.by_modifications { return false }
+        if self.by_modification_params != second.by_modification_params { return false }
         if !compare_op_uuid(&self.company_uuid, &second.company_uuid) {
             return false
         }
@@ -69,6 +73,8 @@ impl IptSearchArg {
             byParams: arg.by_params,
             bySpecs: arg.by_specs,
             byKeywords: arg.by_keywords,
+            byModifications: arg.by_modifications,
+            byModificationParams: arg.by_modification_params,
             companyUuid: arg.company_uuid.clone(),
             userUuid: arg.user_uuid.clone(),
             standardUuid: arg.standard_uuid.clone(),

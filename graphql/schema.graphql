@@ -23,6 +23,16 @@ type ActualStatusTranslateList {
   name: String!
 }
 
+type ApiKeyData {
+  id: Int!
+  userUuid: UUID!
+  name: String!
+  lastUsedAt: DateTime
+  expiresAt: DateTime!
+  isActive: Boolean!
+  createdAt: DateTime!
+}
+
 input ChangeOwnerComponent {
   componentUuid: UUID!
   newOwnerUserUuid: UUID!
@@ -227,6 +237,11 @@ type ComponentTypeTranslateList {
   langId: Int!
   componentType: String!
 }
+
+# Implement the DateTime<Utc> scalar
+#
+# The input/output is a string in RFC3339 format.
+scalar DateTime
 
 type DegreeImportanceTranslateList {
   degreeImportanceId: Int!
@@ -675,9 +690,11 @@ input IptRoleMemberData {
 
 input IptSearchArg {
   search: String!
-  byParams: Boolean! = false
-  bySpecs: Boolean! = false
-  byKeywords: Boolean! = false
+  byParams: Boolean! = true
+  bySpecs: Boolean! = true
+  byKeywords: Boolean! = true
+  byModifications: Boolean! = true
+  byModificationParams: Boolean! = true
   companyUuid: UUID
   standardUuid: UUID
   serviceUuid: UUID
@@ -813,6 +830,12 @@ input IptSupplierComponentData {
   componentUuid: UUID!
   companyUuid: UUID!
   description: String!
+}
+
+input IptUpdateApiKeyData {
+  name: String
+  expiresAt: DateTime
+  isActive: Boolean
 }
 
 input IptUpdateCompanyCertificateData {
@@ -1006,6 +1029,10 @@ type MutationRoot {
   deleteToken(token: String!): Boolean!
   deleteAllTokens: Int!
   logout: String!
+  createApiKey(name: String!, expiresAt: DateTime): String!
+  updateApiKey(keyId: Int!, args: IptUpdateApiKeyData!): Int!
+  deleteApiKey(keyId: Int!): Boolean!
+  rotateApiKey(keyId: Int!): String!
   registerComponent(args: IptComponentData!): UUID!
   transferComponentOwnership(args: ChangeOwnerComponent!): Boolean!
   changeComponentAccess(args: ChangeTypeAccessComponent!): Boolean!
@@ -1165,6 +1192,8 @@ type QueryRoot {
     notificationIds: [Int!]
     paginate: IptPaginate
   ): [ShowNotification!]!
+  apiKeys: [ApiKeyData!]!
+  apiKey(keyId: Int!): ApiKeyData!
   myAccessToComponent(componentUuid: UUID!): AccessCheckResult!
   myAccessToStandard(standardUuid: UUID!): AccessCheckResult!
   myAccessToService(serviceUuid: UUID!): AccessCheckResult!
