@@ -54,6 +54,8 @@ features = [
   "Element",
   "Node",
   "Window",
+  "Navigator",
+  "Clipboard",
   "HtmlCollection",
   "HtmlCanvasElement",
   "DragEvent",

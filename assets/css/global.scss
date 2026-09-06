@@ -462,32 +462,6 @@ scene-hull {
   transform: translate(-50%, -50%);
 }
 
-// Clipboard
-.clipboardBox {
-  display: flex;
-  width: 100%;
-  border-radius: 99px;
-  justify-content: space-between;
-  align-items: center;
-
-  .inputBox {
-    flex: none;
-    width: 70%;
-  }
-
-  @media screen and (max-width: 420px) {
-    flex-direction: column;
-    .inputBox {
-      width: 100%;
-      margin-bottom: 12px;
-    }
-  }
-
-  .copyIcon {
-    margin-left: 6px;
-  }
-}
-
 // Search & Pagination
 .is-absolute {
   position: absolute;

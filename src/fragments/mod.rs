@@ -1,5 +1,6 @@
 pub mod company;
 pub mod component;
+pub mod copy_button;
 pub mod delete_card;
 pub mod discussion;
 pub mod standard;

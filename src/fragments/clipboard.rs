@@ -1,15 +1,15 @@
 use yew::{html, Component, ComponentLink, Html, ShouldRender, Properties};
 use web_sys;
-use rand;
 
-use crate::{fragments::modal::ModalBlock, services::{LocaleKey, set_clipboard}};
+use crate::fragments::copy_button::CopyButton;
+use crate::fragments::modal::ModalBlock;
+use crate::services::{unique_id, LocaleKey};
 
 
 pub struct ShareLinkBtn {
     open_window: bool,
     link: ComponentLink<Self>,
     share_link: String,
-    copyed: bool,
     input_id: String
 }
 
@@ -22,8 +22,6 @@ pub struct Props {
 #[derive(Clone)]
 pub enum Msg {
     ShowShare,
-    Copyed(bool),
-    Ignore,
 }
 
 impl Component for ShareLinkBtn {
@@ -43,23 +41,14 @@ impl Component for ShareLinkBtn {
         ShareLinkBtn {
             link,
             open_window: false,
-            input_id: rand::random::<char>().to_string(),
+            input_id: unique_id("share-link-btn"),
             share_link,
-            copyed: false,
         }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        // let link = self.link.clone();
         match msg {
-            Msg::ShowShare => {
-              self.open_window = !self.open_window;
-              if !self.open_window {
-                self.copyed = false
-              }
-            },
-            Msg::Copyed(value) => self.copyed = value,
-            Msg::Ignore => {}
+            Msg::ShowShare => self.open_window = !self.open_window,
         }
         true
     }
@@ -69,14 +58,10 @@ impl Component for ShareLinkBtn {
     }
 
     fn view(&self) -> Html {
-        let target = self.input_id.clone();
-        let onclick_share_btn = self.link.callback(move |_| {
-          set_clipboard(format!(".{}", target).as_str());
-          Msg::ShowShare
-        });
+        let onclick_share_btn = self.link.callback(move |_| Msg::ShowShare);
         html!{<>
             {self.share_window()}
-            <button id="share-btn" class="button" onclick={onclick_share_btn} title={LocaleKey::Share.get_value()}>
+            <button id={format!("open-{}", self.input_id)} class="button" onclick={onclick_share_btn} title={LocaleKey::Share.get_value()}>
               <span class="icon is-small" style="color: #1872f0;"><i class="fas fa-share" /></span>
             </button>
         </>}
@@ -86,7 +71,6 @@ impl Component for ShareLinkBtn {
 impl ShareLinkBtn {
   fn share_window(&self) -> Html {
       let onclick_share_btn = self.link.callback(|_| Msg::ShowShare);
-      let oncopyed = self.link.callback(|_| Msg::Copyed(true));
       html! {
           <ModalBlock
               modal_id="share-window"
@@ -96,33 +80,25 @@ impl ShareLinkBtn {
               on_save={None}
               save_disabled={false}
           >
-              <div class="box mb-0">
-                  <div class="clipboardBox">
-                      <input
-                          id={self.input_id.clone()}
-                          type="text"
-                          class="input is-link inputBox"
-                          readonly={true}
-                          value={self.share_link.clone()}
-                      />
-                      <button
-                          class={format!("btn button is-info {}", self.input_id.clone())}
-                          onclick={oncopyed}
-                          data-clipboard-target={format!("#{}", self.input_id)}
-                          style="margin-bottom: 0;"
-                      >
-                          { if self.copyed {
-                              html! {
-                                  <>
-                                      {LocaleKey::Copied.get_value()}
-                                      <i class="copyIcon fas fa-check"></i>
-                                  </>
-                              }
-                          } else {
-                              html! { {LocaleKey::Copy.get_value()} }
-                          }}
-                      </button>
-                  </div>
+              <div class="box">
+                    <div class="field has-addons">
+                        <div class="control is-expanded">
+                            <input
+                                id={self.input_id.clone()}
+                                type="text"
+                                class="input is-link"
+                                readonly={true}
+                                value={self.share_link.clone()}
+                            />
+                        </div>
+                        <div class="control">
+                            <CopyButton
+                                text={self.share_link.clone()}
+                                show_text=true
+                                reset_delay={3000}
+                            />
+                        </div>
+                    </div>
               </div>
           </ModalBlock>
       }
