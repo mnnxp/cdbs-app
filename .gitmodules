@@ -1,0 +1,4 @@
+[submodule "assets/js/three"]
+	path = assets/js/three
+	url = git@gitlab.com:cadbase/three-libs.git
+	branch = master

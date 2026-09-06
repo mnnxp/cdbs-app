@@ -1,4 +1,4 @@
-use yew::{Component, ComponentLink, Callback, Html, Properties, ShouldRender, html, InputData, ChangeData};
+use yew::{classes, html, Callback, ChangeData, Component, ComponentLink, Html, InputData, Properties, ShouldRender};
 use log::debug;
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
@@ -6,10 +6,10 @@ use wasm_bindgen_futures::spawn_local;
 use super::file::ManageModificationFilesCard;
 use super::fileset::ManageModificationFilesets;
 use crate::error::Error;
-use crate::fragments::buttons::{ft_delete_btn, ft_save_btn};
+use crate::fragments::buttons::{ft_delete_pair_btn, ft_save_btn};
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::markdown_edit::MarkdownEditCard;
-use crate::services::{get_value_field, resp_parsing};
+use crate::services::{LocaleKey, resp_parsing, unique_id};
 use crate::types::{UUID, ComponentModificationInfo, ActualStatus, ModificationUpdatePreData};
 use crate::gqls::make_query;
 use crate::gqls::component::{
@@ -42,7 +42,7 @@ pub struct ModificationEdit {
 
 pub enum Msg {
     RequestUpdateModificationData,
-    RequestDeleteModificationData,
+    RequestDeleteModificationData(bool),
     GetUpdateModificationResult(String),
     GetDeleteModificationResult(String),
     ResponseError(Error),
@@ -102,7 +102,11 @@ impl Component for ModificationEdit {
                     link.send_message(Msg::GetUpdateModificationResult(res));
                 })
             },
-            Msg::RequestDeleteModificationData => {
+            Msg::RequestDeleteModificationData(is_confirmed) => {
+                if !is_confirmed {
+                    self.get_confirm.clear();
+                    return true;
+                }
                 if self.get_confirm == self.props.modification.uuid {
                     let del_component_modification_data = delete_component_modification::DelComponentModificationData{
                         componentUuid: self.props.modification.component_uuid.clone(),
@@ -115,7 +119,8 @@ impl Component for ModificationEdit {
                             }
                         )).await.unwrap();
                         link.send_message(Msg::GetDeleteModificationResult(res));
-                    })
+                    });
+                    self.get_confirm.clear();
                 } else {
                     self.get_confirm = self.props.modification.uuid.clone();
                 }
@@ -200,9 +205,9 @@ impl ModificationEdit {
         html!{<>
             <div class="tabs is-centered is-medium">
                 <ul>
-                    <li class={at.0} onclick={onclick_tab_data}><a>{get_value_field(&177)}</a></li>
-                    <li class={at.1} onclick={onclick_tab_files}><a>{get_value_field(&172)}</a></li>
-                    <li class={at.2} onclick={onclick_tab_fileset}><a>{get_value_field(&173)}</a></li>
+                    <li class={at.0} onclick={onclick_tab_data}><a title={LocaleKey::ModificationDescription.get_value()}>{LocaleKey::ModificationData.get_value()}</a></li>
+                    <li class={at.1} onclick={onclick_tab_files}><a title={LocaleKey::SelectedModificationFiles.get_value()}>{LocaleKey::ModificationFiles.get_value()}</a></li>
+                    <li class={at.2} onclick={onclick_tab_fileset}><a title={LocaleKey::FilesetDescription.get_value()}>{LocaleKey::Filesets.get_value()}</a></li>
                 </ul>
             </div>
             <div class="card-content">
@@ -230,36 +235,40 @@ impl ModificationEdit {
     fn show_modification_card(&self) -> Html {
         let oninput_modification_name = self.link.callback(|ev: InputData| Msg::UpdateEditName(ev.value));
         let oninput_modification_description = self.link.callback(|ev: InputData| Msg::UpdateEditDescription(ev.value));
-        let onclick_delete_component_modification = self.link.callback(|_| Msg::RequestDeleteModificationData);
+        let onclick_delete_component_modification = self.link.callback(|is_confirmed| Msg::RequestDeleteModificationData(is_confirmed));
         let onclick_component_modification_update = self.link.callback(|_| Msg::RequestUpdateModificationData);
+        let name_id = unique_id("add-modification-name");
         html!{<>
-                <div class={"content"}>
+                <div class="content">
                     {self.actual_status_block()}
-                    <div class={"column"}>
-                        <label class={"title is-5"} for="add-modification-name">{get_value_field(&176)}</label>
+                    <div class="column">
+                        <label class="label" for={name_id.clone()}>{LocaleKey::ModificationName.get_value()}</label>
                         <input
-                            id={"add-modification-name"}
-                            class={"input is-fullwidth"}
-                            type={"text"}
+                            id={name_id}
+                            class="input is-fullwidth"
+                            type="text"
                             placeholder={self.props.modification.modification_name.clone()}
                             value={self.request_edit_modification.modification_name.clone()}
                             oninput={oninput_modification_name} />
                     </div>
+                    <div class="column">
                     <MarkdownEditCard
                         id_tag={"modification-description"}
-                        title={get_value_field(&61)}
+                        title={LocaleKey::Description.get_value()}
                         placeholder={self.props.modification.description.clone()}
                         raw_text={self.request_edit_modification.description.clone()}
                         oninput_text={oninput_modification_description}
                         />
+                    </div>
                 </div>
                 <div class="columns">
                     <div class="column">
-                        {ft_delete_btn(
+                        {ft_delete_pair_btn(
                             "delete-component-modification",
                             onclick_delete_component_modification,
                             self.get_confirm == self.props.modification.uuid,
-                            false
+                            false,
+                            classes!(""),
                         )}
                     </div>
                     <div class="column">
@@ -281,16 +290,16 @@ impl ModificationEdit {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
+        let status_id = unique_id("modification-actual-status");
         html!{
-            <div class={"column"}>
-            <div class={"columns"}>
-                <div class={"column is-narrow"}>
-                    <p class={"title is-5 select-title"}>{get_value_field(&96)}</p>
-                </div>
-                <div class={"column"}>
-                    <div class={"select"}>
+            <div class="column">
+            <div class="columns">
+                <div class="column">
+                    <div class="field">
+                    <label class="label" for={status_id.clone()}>{LocaleKey::LifeCycleStage.get_value()}</label>
+                    <div class="select">
                     <select
-                        id={"update-modification-actual-status"}
+                        id={status_id}
                         select={self.props.modification.actual_status.actual_status_id.to_string()}
                         onchange={onchange_modification_actual_status_id}
                         >
@@ -303,6 +312,7 @@ impl ModificationEdit {
                             }
                         )}
                     </select>
+                    </div>
                     </div>
                 </div>
             </div>

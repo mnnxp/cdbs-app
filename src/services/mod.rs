@@ -12,14 +12,15 @@ mod util;
 mod response_parsing;
 mod subscribers;
 mod clipboard;
+mod event_guard;
 
 pub(crate) mod content_adapter;
 pub(crate) mod title_changer;
 
 pub use auth::{Auth, get_current_user, logout};
-pub use localisation::get_value_field;
+pub(crate) use localisation::LocaleKey;
 pub use filesize::Size;
-pub use local_storage::{
+pub(crate) use local_storage::{
     get_logged_user, set_logged_user, get_token, is_authenticated, set_lang, get_lang,
     set_server_location, get_server_location, set_gql_server_location, get_gql_server_location,
     set_token, set_list_view, get_list_view, set_history_back, get_history_back, set_history_search, get_history_search,
@@ -30,9 +31,10 @@ pub use requests::Requests;
 pub(crate) use server_location::{set_server_locations, get_server_locations, get_server_location_id};
 pub use set_classes::get_classes_table;
 pub(crate) use upload_file::{put_file, UploadData};
-pub(crate) use util::{ext_str, image_detector, prepare_username, compare_op_uuid, wraps_text};
+pub(crate) use util::{ext_str, image_detector, prepare_username, compare_op_uuid, wraps_text, truncate_uuid, unique_id};
 pub(crate) use response_parsing::{
-    resp_parsing, resp_parsing_two_level, get_value_response, get_from_value
+    resp_parsing, resp_parsing_two_level, get_value_response, get_from_value, get_single_from_value
 };
 pub(crate) use subscribers::Counter;
 pub(crate) use clipboard::set_clipboard;
+pub(crate) use event_guard::KeyboardGuard;

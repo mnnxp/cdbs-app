@@ -6,7 +6,7 @@ use wasm_bindgen_futures::spawn_local;
 
 use super::ModificationFileItem;
 use crate::fragments::paginate::Paginate;
-use crate::services::{get_value_field, resp_parsing};
+use crate::services::{LocaleKey, resp_parsing};
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::file::{UploaderFiles, commit_msg_field};
@@ -198,20 +198,19 @@ impl Component for ManageModificationFilesCard {
         let onclick_paginate = self.link.callback(|page_set| Msg::ChangePaginate(page_set));
         html!{<>
             <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
-            <p class={"subtitle is-size-5"}>{get_value_field(&407)}</p>
                 <div class="column">
-                    <p class={"title is-5"}>{get_value_field(&202)}</p> // Upload modification files
+                    <p class="title is-5">{LocaleKey::UploadModificationFiles.get_value()}</p>
                     {commit_msg_field(self.props.modification_uuid.clone(), self.commit_msg.clone(), oninput_commit_msg.clone())}
                     <UploaderFiles
-                        text_choose_files={201} // Choose modification files…
+                        label_choose_files={LocaleKey::SelectFilesForModification}
                         callback_upload_filenames={callback_upload_filenames}
                         request_upload_files={request_upload_files}
                         callback_upload_confirm={callback_upload_confirm}
                         />
                 </div>
                 <div class="column">
-                    <p class={"title is-5"}>{get_value_field(&203)}</p> // Files for modification
-                    <div class={"buttons"}>
+                    <p class="title is-5">{LocaleKey::FilesForModification.get_value()}</p>
+                    <div class="buttons">
                         {for self.files_list.iter().map(|file| {
                             match self.files_deleted_list.get(&file.uuid) {
                                 Some(_) => html!{}, // removed file

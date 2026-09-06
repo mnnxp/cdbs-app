@@ -5,7 +5,7 @@ use log::debug;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::file::UploaderFiles;
 use crate::error::Error;
-use crate::services::{get_value_field, resp_parsing};
+use crate::services::{LocaleKey, resp_parsing};
 use crate::types::UploadFile;
 use crate::gqls::{
     make_query,
@@ -129,7 +129,7 @@ impl Component for UpdateFaviconBlock {
                   true => self.show_success_upload(),
                   false => html!{
                     <UploaderFiles
-                        text_choose_files={93} // Drop favicon file here
+                        label_choose_files={LocaleKey::ImageFile}
                         callback_upload_filenames={callback_upload_filenames}
                         request_upload_files={request_upload_files}
                         callback_upload_confirm={callback_upload_confirm}
@@ -148,10 +148,10 @@ impl UpdateFaviconBlock {
         html!{
             <article class="message is-success">
               <div class="message-header">
-                <p>{get_value_field(&89)}</p>
+                <p>{LocaleKey::Success.get_value()}</p>
               </div>
               <div class="message-body">
-                {get_value_field(&92)}
+                {LocaleKey::ImageUpdated.get_value()}
               </div>
             </article>
         }

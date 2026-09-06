@@ -3,10 +3,34 @@ schema {
   mutation: MutationRoot
 }
 
+type AccessCheckResult {
+  hasAccess: Boolean!
+  accessLevel: Int
+  source: AccessSource!
+}
+
+enum AccessSource {
+  OWNER
+  DIRECT_ACCESS
+  COMPANY_ROLE
+  PUBLIC
+  NONE
+}
+
 type ActualStatusTranslateList {
   actualStatusId: Int!
   langId: Int!
   name: String!
+}
+
+type ApiKeyData {
+  id: Int!
+  userUuid: UUID!
+  name: String!
+  lastUsedAt: DateTime
+  expiresAt: DateTime!
+  isActive: Boolean!
+  createdAt: DateTime!
 }
 
 input ChangeOwnerComponent {
@@ -44,12 +68,10 @@ input ChangeTypeAccessStandard {
   newTypeAccessId: Int!
 }
 
-scalar Char
-
 type Claims {
   iss: String!
   username: String!
-  sub: String!
+  sub: UUID!
   iat: String!
   exp: String!
   programId: Int!
@@ -57,8 +79,8 @@ type Claims {
 
 type CompanyAccessComponentAndRelatedData {
   componentUuid: UUID!
-  companyUuid: UUID!
-  typeAccess: TypeAccessTranslateList!
+  company: ShowCompanyShort!
+  permission: PermissionTranslateList!
   isEnabled: Boolean!
   createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!
@@ -66,8 +88,8 @@ type CompanyAccessComponentAndRelatedData {
 
 type CompanyAccessServiceAndRelatedData {
   serviceUuid: UUID!
-  companyUuid: UUID!
-  typeAccess: TypeAccessTranslateList!
+  company: ShowCompanyShort!
+  permission: PermissionTranslateList!
   isEnabled: Boolean!
   createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!
@@ -75,8 +97,8 @@ type CompanyAccessServiceAndRelatedData {
 
 type CompanyAccessStandardAndRelatedData {
   standardUuid: UUID!
-  companyUuid: UUID!
-  typeAccess: TypeAccessTranslateList!
+  company: ShowCompanyShort!
+  permission: PermissionTranslateList!
   isEnabled: Boolean!
   createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!
@@ -117,8 +139,8 @@ type CompanyCertificateAndFile {
 
 type CompanyMemberAndRelatedData {
   companyUuid: UUID!
-  userUuid: UUID!
-  role: RoleMemberAndRelatedData!
+  user: ShowUserShort!
+  companyRole: RoleMemberAndRelatedData!
   isEnabled: Boolean!
   createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!
@@ -215,6 +237,11 @@ type ComponentTypeTranslateList {
   langId: Int!
   componentType: String!
 }
+
+# Implement the DateTime<Utc> scalar
+#
+# The input/output is a string in RFC3339 format.
+scalar DateTime
 
 type DegreeImportanceTranslateList {
   degreeImportanceId: Int!
@@ -397,6 +424,8 @@ input IptCompaniesArg {
   userUuid: UUID
   favorite: Boolean
   supplier: Boolean
+  search: String
+  excludeUuids: [UUID!]
 }
 
 input IptCompanyAccessComponentData {
@@ -661,9 +690,11 @@ input IptRoleMemberData {
 
 input IptSearchArg {
   search: String!
-  byParams: Boolean! = false
-  bySpecs: Boolean! = false
-  byKeywords: Boolean! = false
+  byParams: Boolean! = true
+  bySpecs: Boolean! = true
+  byKeywords: Boolean! = true
+  byModifications: Boolean! = true
+  byModificationParams: Boolean! = true
   companyUuid: UUID
   standardUuid: UUID
   serviceUuid: UUID
@@ -801,6 +832,12 @@ input IptSupplierComponentData {
   description: String!
 }
 
+input IptUpdateApiKeyData {
+  name: String
+  expiresAt: DateTime
+  isActive: Boolean
+}
+
 input IptUpdateCompanyCertificateData {
   companyUuid: UUID!
   fileUuid: UUID!
@@ -933,6 +970,8 @@ input IptUsersArg {
   usersUuids: [UUID!]
   subscribers: Boolean
   favorite: Boolean
+  search: String
+  excludeUuids: [UUID!]
 }
 
 type Keyword {
@@ -985,7 +1024,15 @@ type MutationRoot {
   deleteUserFav(userUuid: UUID!): Boolean!
   readNotifications(notificationsIds: [Int!]!): Int!
   deleteNotifications(notificationsIds: [Int!]!): Int!
+  getToken: Token!
+  updateToken: Token!
+  deleteToken(token: String!): Boolean!
+  deleteAllTokens: Int!
   logout: String!
+  createApiKey(name: String!, expiresAt: DateTime): String!
+  updateApiKey(keyId: Int!, args: IptUpdateApiKeyData!): Int!
+  deleteApiKey(keyId: Int!): Boolean!
+  rotateApiKey(keyId: Int!): String!
   registerComponent(args: IptComponentData!): UUID!
   transferComponentOwnership(args: ChangeOwnerComponent!): Boolean!
   changeComponentAccess(args: ChangeTypeAccessComponent!): Boolean!
@@ -1075,7 +1122,7 @@ type MutationRoot {
   deleteCompanyCertificate(args: DelCompanyCertificateData!): Boolean!
   addCompanySpecs(args: IptCompanySpecsData!): Int!
   deleteCompanySpecs(args: IptCompanySpecsData!): Int!
-  registerCompanyRepresent(args: IptCompanyRepresentData!): Boolean!
+  registerCompanyRepresent(args: IptCompanyRepresentData!): UUID!
   updateCompanyRepresent(
     companyUuid: UUID!
     companyRepresentUuid: UUID!
@@ -1090,8 +1137,8 @@ type MutationRoot {
   deleteCompanyMember(args: DelCompanyMemberData!): Boolean!
   registerCompanyRole(args: IptRoleMemberData!): Int!
   changeNameRoleCompany(args: IptUpdateNameRoleData!): Boolean!
-  deleteCompanyRole(args: DelRoleMemberData!): Int!
-  addAccessRole(args: IptRoleAccessData!): Boolean!
+  deleteCompanyRole(args: DelRoleMemberData!): Boolean!
+  addAccessRole(args: IptRoleAccessData!): Int!
   deleteAccessRole(args: DelRoleAccessData!): Int!
   addComponentSupplier(args: IptSupplierComponentData!): Boolean!
   setCompanyOwnerSupplier(args: IptSupplierComponentData!): Boolean!
@@ -1121,6 +1168,12 @@ type ParamTranslateList {
   paramname: String!
 }
 
+type PermissionTranslateList {
+  typeAccessId: Int!
+  langId: Int!
+  name: String!
+}
+
 type Program {
   id: Int!
   name: String!
@@ -1132,15 +1185,19 @@ type QueryRoot {
   myself: SlimUser!
   selfData: UserAndRelatedData!
   showTokens: [UserToken!]!
-  getToken: Token!
-  updateToken: Token!
   decodeToken: Claims!
-  deleteToken(token: String!): Boolean!
-  deleteAllTokens: Int!
+  isTokenValid: Boolean!
+  tokenDaysUntilExpiry: Int!
   notifications(
     notificationIds: [Int!]
     paginate: IptPaginate
   ): [ShowNotification!]!
+  apiKeys: [ApiKeyData!]!
+  apiKey(keyId: Int!): ApiKeyData!
+  myAccessToComponent(componentUuid: UUID!): AccessCheckResult!
+  myAccessToStandard(standardUuid: UUID!): AccessCheckResult!
+  myAccessToService(serviceUuid: UUID!): AccessCheckResult!
+  myAccessToCompany(companyUuid: UUID!): AccessCheckResult!
   searchByComponents(
     args: IptSearchArg!
     sort: IptSort
@@ -1282,6 +1339,10 @@ type QueryRoot {
     typeAccessIds: [Int!]
     paginate: IptPaginate
   ): [TypeAccessTranslateList!]!
+  permissions(
+    permissionIds: [Int!]
+    paginate: IptPaginate
+  ): [PermissionTranslateList!]!
 }
 
 type RegionTranslateList {
@@ -1298,7 +1359,7 @@ type RepresentationTypeTranslateList {
 
 type RoleMemberAndRelatedData {
   role: RoleMemberTranslateList!
-  access: [TypeAccessTranslateList!]!
+  permissions: [PermissionTranslateList!]!
 }
 
 type RoleMemberTranslateList {
@@ -1348,6 +1409,7 @@ type ShowCompanyShort {
   imageFile: DownloadFile!
   region: RegionTranslateList!
   companyType: CompanyTypeTranslateList!
+  typeAccess: TypeAccessTranslateList!
   isSupplier: Boolean!
   isFollowed: Boolean!
   createdAt: NaiveDateTime!
@@ -1462,6 +1524,7 @@ type SpecPath {
   specId: Int!
   langId: Int!
   path: String!
+  depth: Int!
 }
 
 type SpecTranslateList {
@@ -1523,8 +1586,8 @@ type UploadFile {
 
 type UserAccessComponentAndRelatedData {
   componentUuid: UUID!
-  userUuid: UUID!
-  typeAccess: TypeAccessTranslateList!
+  user: ShowUserShort!
+  permission: PermissionTranslateList!
   isEnabled: Boolean!
   createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!
@@ -1532,8 +1595,8 @@ type UserAccessComponentAndRelatedData {
 
 type UserAccessServiceAndRelatedData {
   serviceUuid: UUID!
-  userUuid: UUID!
-  typeAccess: TypeAccessTranslateList!
+  user: ShowUserShort!
+  permission: PermissionTranslateList!
   isEnabled: Boolean!
   createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!
@@ -1541,8 +1604,8 @@ type UserAccessServiceAndRelatedData {
 
 type UserAccessStandardAndRelatedData {
   standardUuid: UUID!
-  userUuid: UUID!
-  typeAccess: TypeAccessTranslateList!
+  user: ShowUserShort!
+  permission: PermissionTranslateList!
   isEnabled: Boolean!
   createdAt: NaiveDateTime!
   updatedAt: NaiveDateTime!

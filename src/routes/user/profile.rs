@@ -1,16 +1,11 @@
-use yew::{agent::Bridged, classes, html, Bridge, Callback, Component, ComponentLink, Html, Properties, ShouldRender};
-use yew_router::{
-    service::RouteService,
-    agent::RouteRequest::ChangeRoute,
-    prelude::RouteAgent,
-};
+use yew::{classes, html, Callback, Component, ComponentLink, Html, Properties, ShouldRender};
+use yew_router::service::RouteService;
 use web_sys::MouseEvent;
 use graphql_client::GraphQLQuery;
 use log::debug;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::fragments::responsive::resizer;
-use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{
     buttons::ft_follow_btn,
@@ -18,13 +13,13 @@ use crate::fragments::{
     component::CatalogComponents,
     list_errors::ListErrors,
     list_empty::ListEmpty,
-    side_menu::{MenuItem, SideMenu},
+    side_menu::{MenuBuilder, MenuItemTemplate},
     supplier_service::CatalogServices,
     standard::CatalogStandards,
     user::CatalogUsers,
     user::UserCertificatesCard,
 };
-use crate::services::{Counter, get_logged_user, get_value_field, resp_parsing, title_changer};
+use crate::services::{Counter, get_logged_user, LocaleKey, resp_parsing, title_changer};
 use crate::types::{
     UserDataCard, CompaniesQueryArg, ComponentsQueryArg, ServicesQueryArg, SelfUserInfo, SlimUser,
     StandardsQueryArg, UserCertificate, UserInfo, UsersQueryArg, UUID, Region
@@ -38,6 +33,35 @@ use crate::gqls::user::{
 };
 use crate::services::prepare_username;
 
+impl MenuBuilder for Profile {
+    type TabType = ProfileTab;
+
+    fn menu_config() -> &'static [MenuItemTemplate<ProfileTab>] {
+        use ProfileTab::*;
+        &[
+            MenuItemTemplate { lk_title: LocaleKey::CertificatesLabel, icon_classes: &[&["fas", "fa-certificate"]], tab: Certificates, custom_class: None },
+            MenuItemTemplate { lk_title: LocaleKey::AllComponents, icon_classes: &[&["fas", "fa-cogs"]], tab: Components, custom_class: None },
+            MenuItemTemplate { lk_title: LocaleKey::FavComponents, icon_classes: &[&["fas", "fa-cogs"], &["fas", "fa-bookmark"]], tab: FavoriteComponents, custom_class: None },
+            MenuItemTemplate { lk_title: LocaleKey::Services, icon_classes: &[&["fas", "fa-ticket-alt"]], tab: Services, custom_class: None },
+            MenuItemTemplate { lk_title: LocaleKey::AllCompanies, icon_classes: &[&["fas", "fa-building"]], tab: Companies, custom_class: None },
+            MenuItemTemplate { lk_title: LocaleKey::FavCompanies, icon_classes: &[&["fas", "fa-building"], &["fas", "fa-bookmark"]], tab: FavoriteCompanies, custom_class: None },
+            MenuItemTemplate { lk_title: LocaleKey::FavStandards, icon_classes: &[&["fas", "fa-book"], &["fas", "fa-bookmark"]], tab: FavoriteStandards, custom_class: None },
+            MenuItemTemplate { lk_title: LocaleKey::FavUsers, icon_classes: &[&["fas", "fa-user"], &["fas", "fa-bookmark"]], tab: FavoriteUsers, custom_class: None },
+        ]
+    }
+
+    fn is_active(&self, tab: &ProfileTab) -> bool { self.profile_tab == *tab }
+    fn get_count(&self, tab: &ProfileTab) -> usize { self.get_number_of_items(tab) }
+    fn is_extend(&self, tab: &ProfileTab) -> bool { self.check_extend(tab) }
+    fn get_action(&self, tab: &ProfileTab) -> Callback<MouseEvent> { self.cb_generator(tab.clone()) }
+}
+
+impl Counter for Profile {
+    fn quantity(&self) -> usize {
+        self.subscribers
+    }
+}
+
 /// Profile user with relate data
 pub struct Profile {
     error: Option<Error>,
@@ -45,7 +69,6 @@ pub struct Profile {
     profile: Option<UserInfo>,
     current_user_uuid: UUID,
     current_username: String,
-    router_agent: Box<dyn Bridge<RouteAgent>>,
     props: Props,
     link: ComponentLink<Self>,
     subscribers: usize,
@@ -53,12 +76,6 @@ pub struct Profile {
     profile_tab: ProfileTab,
     extend_tab: Option<ProfileTab>,
     show_full_user_info: bool,
-}
-
-impl Counter for Profile {
-    fn quantity(&self) -> usize {
-        self.subscribers
-    }
 }
 
 #[derive(Properties, Clone)]
@@ -105,7 +122,6 @@ impl Component for Profile {
             profile: None,
             current_user_uuid: String::new(),
             current_username: String::new(),
-            router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             props,
             link,
             subscribers: 0,
@@ -119,11 +135,7 @@ impl Component for Profile {
     fn rendered(&mut self, first_render: bool) {
         let logged_username = match get_logged_user() {
             Some(cu) => cu.username,
-            None => {
-                // route to login page if not found token
-                self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
-                String::new()
-            },
+            None => String::new(),
         };
 
         // get username for request user data
@@ -301,7 +313,7 @@ impl Profile {
     ) -> Html {
         html! {
             <div class="profile-page">
-                <div class="container page">
+                <div class="container is-fluid page">
                     <div class="row">
                         <div class="card">
                             <div class="card-content">
@@ -327,11 +339,11 @@ impl Profile {
         &self,
         self_data: &SelfUserInfo,
     ) -> Html {
-        html!{<div id={"card-list"} class="card">
+        html!{<div id="card-list" class="card">
             <div class="columns is-mobile">
                 <div class="column is-flex">
-                    { self.show_profile_action() }
-                    <div id={"card-list-items"} class="card-relate-data" style={resizer("card-list", 5)}>
+                    {self.render_menu()}
+                    <div id="card-list-items" class="card-relate-data" style={resizer("card-list", 5)}>
                         {match self.profile_tab {
                             ProfileTab::Certificates => self.view_certificates(self_data.certificates.clone()),
                             ProfileTab::Components => self.view_components(&self_data.uuid),
@@ -354,7 +366,7 @@ impl Profile {
     ) -> Html {
         html! {
             <div class="profile-page">
-                <div class="container page">
+                <div class="container is-fluid page">
                     <div class="row">
                         <div class="card">
                             <div class="card-content">
@@ -380,11 +392,11 @@ impl Profile {
         &self,
         user_data: &UserInfo,
     ) -> Html {
-        html!{<div id={"other-card-list"} class="card">
+        html!{<div id="other-card-list" class="card">
             <div class="columns is-mobile">
                 <div class="column is-flex">
-                  { self.show_profile_action() }
-                  <div id={"other-card-list-items"} class="card-relate-data" style={resizer("other-card-list", 5)}>
+                  {self.render_menu()}
+                  <div id="other-card-list-items" class="card-relate-data" style={resizer("other-card-list", 5)}>
                       {match self.profile_tab {
                           ProfileTab::Certificates => self.view_certificates(user_data.certificates.clone()),
                           ProfileTab::Components => self.view_components(&user_data.uuid),
@@ -437,19 +449,17 @@ impl Profile {
                     {match &self.profile {
                         Some(_) => html!{<>
                             <p class="subtitle is-6 has-text-right">
-                                {get_value_field(&30)}
-                                {" "}
+                                <span class="mr-3">{LocaleKey::UpdatedAt.get_value()}</span>
                                 {updated_at}
                             </p>
                             {self.show_favorite_btn()}
                         </>},
                         None => html!{
                             <div class="subtitle is-6 has-text-right">
-                                {get_value_field(&30)}
-                                {" "}
+                                <span class="mr-3">{LocaleKey::UpdatedAt.get_value()}</span>
                                 {updated_at}
                                 <p>
-                                    <span>{get_value_field(&31)}</span>
+                                    <span>{LocaleKey::Followers.get_value()}</span>
                                     <span>{self.abbr_number()}</span>
                                 </p>
                             </div>
@@ -485,93 +495,6 @@ impl Profile {
         }
     }
 
-    fn show_profile_action(&self) -> Html {
-        let menu_arr: Vec<MenuItem> = vec![
-            MenuItem {
-                title: get_value_field(&32).to_string(),
-                action: self.cb_generator(ProfileTab::Certificates),
-                count: self.get_number_of_items(&ProfileTab::Certificates),
-                item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-certificate")],
-                is_active: self.profile_tab == ProfileTab::Certificates,
-                is_extend: self.check_extend(&ProfileTab::Certificates),
-            },
-            MenuItem {
-                title: get_value_field(&33).to_string(),
-                action: self.cb_generator(ProfileTab::Components),
-                count: self.get_number_of_items(&ProfileTab::Components),
-                item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-cogs")],
-                is_active: self.profile_tab == ProfileTab::Components,
-                is_extend: self.check_extend(&ProfileTab::Components),
-            },
-            MenuItem {
-                title: get_value_field(&34).to_string(),
-                action: self.cb_generator(ProfileTab::FavoriteComponents),
-                count: self.get_number_of_items(&ProfileTab::FavoriteComponents),
-                item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-cogs"), classes!("fas", "fa-bookmark")],
-                is_active: self.profile_tab == ProfileTab::FavoriteComponents,
-                is_extend: self.check_extend(&ProfileTab::FavoriteComponents),
-            },
-            MenuItem {
-                title: get_value_field(&379).to_string(),
-                action: self.cb_generator(ProfileTab::Services),
-                count: self.get_number_of_items(&ProfileTab::Services),
-                item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-ticket-alt")],
-                is_active: self.profile_tab == ProfileTab::Services,
-                is_extend: self.check_extend(&ProfileTab::Services),
-            },
-            // company MenuItem
-            MenuItem {
-                title: get_value_field(&35).to_string(),
-                action: self.cb_generator(ProfileTab::Companies),
-                count: self.get_number_of_items(&ProfileTab::Companies),
-                item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-building")],
-                is_active: self.profile_tab == ProfileTab::Companies,
-                is_extend: self.check_extend(&ProfileTab::Companies),
-            },
-            // company fav MenuItem
-            MenuItem {
-                title: get_value_field(&36).to_string(),
-                action: self.cb_generator(ProfileTab::FavoriteCompanies),
-                count: self.get_number_of_items(&ProfileTab::FavoriteCompanies),
-                item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-building"), classes!("fas", "fa-bookmark")],
-                is_active: self.profile_tab == ProfileTab::FavoriteCompanies,
-                is_extend: self.check_extend(&ProfileTab::FavoriteCompanies),
-            },
-            // standards MenuItem
-            MenuItem {
-                title: get_value_field(&37).to_string(),
-                action: self.cb_generator(ProfileTab::FavoriteStandards),
-                count: self.get_number_of_items(&ProfileTab::FavoriteStandards),
-                item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-book"), classes!("fas", "fa-bookmark")],
-                is_active: self.profile_tab == ProfileTab::FavoriteStandards,
-                is_extend: self.check_extend(&ProfileTab::FavoriteStandards),
-            },
-            // user fav MenuItem
-            MenuItem {
-                title: get_value_field(&38).to_string(),
-                action: self.cb_generator(ProfileTab::FavoriteUsers),
-                count: self.get_number_of_items(&ProfileTab::FavoriteUsers),
-                item_class: classes!("has-background-white"),
-                icon_classes: vec![classes!("fas", "fa-user"), classes!("fas", "fa-bookmark")],
-                is_active: self.profile_tab == ProfileTab::FavoriteUsers,
-                is_extend: self.check_extend(&ProfileTab::FavoriteUsers),
-            },
-        ];
-
-        html! {
-            <div style="margin-right: 18px;z-index: 1;" >
-                <SideMenu menu_arr={menu_arr} />
-            </div>
-        }
-    }
-
     fn view_user_info(
         &self,
         description: &str,
@@ -593,28 +516,28 @@ impl Profile {
                     <div class="column">
                         <div id="position" hidden={position.is_empty()}>
                             <span class="icon is-small"><i class="fas fa-briefcase" /></span>
-                            <span>{get_value_field(&39)}</span>
+                            <span>{LocaleKey::PositionLabel.get_value()}</span>
                             <span class="overflow-title has-text-weight-bold">{position}</span>
                         </div>
                         <div id="region" hidden={region.region_id == 8}>
                             <span class="icon is-small"><i class="fas fa-map-marker-alt" /></span>
-                            <span>{get_value_field(&40)}</span>
+                            <span>{LocaleKey::RegionLabel.get_value()}</span>
                             <span class="overflow-title has-text-weight-bold">{&region.region}</span>
                         </div>
                         <div id="program" hidden={program == "Unknown"}>
                             <span class="icon is-small"><i class="fas fa-drafting-compass" /></span>
-                            <span>{get_value_field(&41)}</span>
+                            <span>{LocaleKey::WorkingSoftware.get_value()}</span>
                             <span class="overflow-title has-text-weight-bold">{program}</span>
                         </div>
                     </div>
                 </div>
                 <button class="button is-ghost" onclick={onclick_change_full_show}>
-                    <span>{get_value_field(&42)}</span>
+                    <span>{LocaleKey::HideInfo.get_value()}</span>
                 </button>
             </>},
             false => html!{
                 <button class="button is-ghost" onclick={onclick_change_full_show}>
-                    <span>{get_value_field(&43)}</span>
+                    <span>{LocaleKey::ShowInfo.get_value()}</span>
                 </button>
             },
         }

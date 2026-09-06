@@ -1,5 +1,5 @@
 use crate::types::{ShowFileInfo, DownloadFile};
-use crate::services::get_value_field;
+use crate::services::LocaleKey;
 
 // 1 kibibyte	1 KiB	2^10 = 1024 bytes
 // 1 mebibyte	1 MiB	2^20 = 1048576 bytes
@@ -11,20 +11,20 @@ pub trait Size {
 
     /// Makes the file size in a user friendly format (like "333.03 MB")
     fn show_size(&self) -> String {
-        let (size, text_id) = match self.filesize() {
+        let (size, key) = match self.filesize() {
             // show bytes
             x @ 0..=999_usize =>
-                return format!("{} {}", x, get_value_field(&316)),
+                return format!("{} {}", x, LocaleKey::Bytes.get_value()),
             // to kilobyte
-            x @ 0..=999_999_usize => (x as f64 / 1e+3, 317),
+            x @ 0..=999_999_usize => (x as f64 / 1e+3, LocaleKey::KB),
             // to megabyte
-            x @ 0..=999_999_999_usize => (x as f64 / 1e+6, 318),
+            x @ 0..=999_999_999_usize => (x as f64 / 1e+6, LocaleKey::MB),
             // to gigabyte
-            x => (x as f64 / 1e+9, 319),
+            x => (x as f64 / 1e+9, LocaleKey::GB),
             // to terabyte
-            // x => (x as f64 / 1e+12, 320),
+            // x => (x as f64 / 1e+12, LocaleKey::TB),
         };
-        format!("{:.2} {}", size, get_value_field(&text_id))
+        format!("{:.2} {}", size, key.get_value())
     }
 }
 

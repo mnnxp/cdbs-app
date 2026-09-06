@@ -1,6 +1,7 @@
-import * as THREE from '../../../../three/three.module.min.js';
+import * as THREE from '../../../../three/three.webgpu.min.js';
 import * as OBC from '../../../../three/ifc/components.es.js';
 import Stats from '../../../../three/stats.module.js';
+import { fetchWithCache } from '../../../../three/model-cache.js';
 
 export class GreatViewerIFC {
     constructor(config) {
@@ -25,45 +26,49 @@ export class GreatViewerIFC {
         this.stats = null;
         this.viewModeController = this.labels.view_perspective;
         this.viewPresets = {
-            [this.labels.view_perspective]: { pos: [0, 0, 1], rot: true },
-            [this.labels.view_top]: { pos: [0, 1, 0], rot: false },
-            [this.labels.view_bottom]: { pos: [0, -1, 0], rot: false },
-            [this.labels.view_front]: { pos: [0, 0, 1], rot: false },
-            [this.labels.view_back]: { pos: [0, 0, -1], rot: false },
-            [this.labels.view_left]: { pos: [-1, 0, 0], rot: false },
-            [this.labels.view_right]: { pos: [1, 0, 0], rot: false },
-            [this.labels.view_isometric]: { pos: [1, 1, 1], rot: true }
+            [this.labels.view_perspective]: { pos: [0, 0, 1], rot: true, projection: 'perspective' },
+            [this.labels.view_top]: { pos: [0, 1, 0], rot: false, projection: 'orthographic' },
+            [this.labels.view_bottom]: { pos: [0, -1, 0], rot: false, projection: 'orthographic' },
+            [this.labels.view_front]: { pos: [0, 0, 1], rot: false, projection: 'orthographic' },
+            [this.labels.view_back]: { pos: [0, 0, -1], rot: false, projection: 'orthographic' },
+            [this.labels.view_left]: { pos: [-1, 0, 0], rot: false, projection: 'orthographic' },
+            [this.labels.view_right]: { pos: [1, 0, 0], rot: false, projection: 'orthographic' },
+            [this.labels.view_isometric]: { pos: [1, 1, 1], rot: true, projection: 'perspective' }
         };
+        this.animationFrameId = null;
+        this._updateCoreBound = null;
         // Hotkeys handler
         this.handleKeyDown = this.handleKeyDown.bind(this);
         document.addEventListener('keydown', this.handleKeyDown);
     }
 
     handleKeyDown(e) {
-        if (e.code === 'KeyF' && !this.sizeFlag) {
-            this.destroy();
-            document.querySelector('#three-size-button')?.click();
-            return;
-        }
-        if (e.code === 'Escape' && this.sizeFlag) {
-            this.destroy();
-            document.querySelector('#three-modal-close-btn')?.click();
-            return;
-        }
-        if (e.code === 'KeyR') {
-            this?.centerModel();
+        if (!this.isInitialized) return;
+        if (e.code === 'KeyH') {
+            this.centerModel();
             return;
         }
         const keyMap = {
-            'Digit1': this.labels.view_top, 'Numpad1': this.labels.view_top,
-            'Digit2': this.labels.view_front, 'Numpad2': this.labels.view_front,
-            'Digit3': this.labels.view_left, 'Numpad3': this.labels.view_left,
-            'Digit4': this.labels.view_perspective, 'Numpad4': this.labels.view_perspective,
-            'Digit5': this.labels.view_isometric, 'Numpad5': this.labels.view_isometric
+            // Flat views
+            'Digit0': 'isometric', 'Numpad0': 'isometric',
+            'Digit1': 'front',     'Numpad1': 'front',
+            'Digit3': 'left',      'Numpad3': 'left',
+            'Digit7': 'top',       'Numpad7': 'top',
+            'Digit9': 'opposite',  'Numpad9': 'opposite',
         };
-        if (keyMap[e.code]) {
-            this.updateViewPreset(keyMap[e.code]);
+        const action = keyMap[e.code];
+        if (!action) return; // Ignore unmapped keys
+        const viewPresets = ['front', 'left', 'top', 'isometric'];
+        if (viewPresets.includes(action)) {
+            const labelKey = `view_${action}`;
+            const translatedPreset = this.labels[labelKey];
+            if (translatedPreset) {
+                this.updateViewPreset(translatedPreset);
+            }
+        } else if (action === 'opposite') {
+            this.goToOppositeView();
         }
+        e.preventDefault();
     }
 
     async starter() {
@@ -71,6 +76,19 @@ export class GreatViewerIFC {
         this.startTime = performance.now();
         this.initPromise = this._starterInternal();
         return this.initPromise;
+    }
+
+    startRenderLoop() {
+        if (this.animationFrameId) return;
+        const loop = () => {
+            if (!this.isInitialized) return;
+            const fragments = this.components.get(OBC.FragmentsManager);
+            if (fragments && fragments.core) {
+                fragments.core.update(true);
+            }
+            this.animationFrameId = requestAnimationFrame(loop);
+        };
+        this.animationFrameId = requestAnimationFrame(loop);
     }
 
     async _starterInternal() {
@@ -112,44 +130,61 @@ export class GreatViewerIFC {
         setTimeout(() => this.printDiagnostics(), 600);
     }
 
+    resize() {
+        if (!this.container || !this.renderer || !this.world?.camera) return;
+        const width = this.container.clientWidth;
+        const height = this.container.clientHeight;
+        this.renderer.setSize(width, height, false);
+        const camera = this.world.camera;
+        if (camera.three) {
+            camera.three.aspect = width / height;
+            if (camera.three.isOrthographicCamera) {
+                const frustumSize = camera.frustumSize || 45;
+                const aspect = width / height;
+                camera.three.left = (-frustumSize * aspect) / 2;
+                camera.three.right = (frustumSize * aspect) / 2;
+                camera.three.top = frustumSize / 2;
+                camera.three.bottom = -frustumSize / 2;
+            }
+            camera.three.updateProjectionMatrix();
+        }
+        this.updateStats();
+    }
+
     async initializeWorld() {
         const worlds = this.components.get(OBC.Worlds);
         this.world = worlds.create();
         this.world.scene = new OBC.SimpleScene(this.components);
         this.world.scene.setup();
         if (!this.sizeFlag) this.world.scene.three.background = new THREE.Color(0xffffff);
-        this.world.renderer = new OBC.SimpleRenderer(this.components, this.container);
+        const customRenderer = new THREE.WebGPURenderer({ alpha: true, depth: true, antialias: true });
+        await customRenderer.init();
+        this.renderer = customRenderer;
+        this.world.renderer = new OBC.SimpleRenderer(this.components, this.container, this.renderer);
         this.world.camera = new OBC.OrthoPerspectiveCamera(this.components);
         this.components.init();
+        const ifcLoader = this.components.get(OBC.IfcLoader);
+        await ifcLoader.setup({
+            autoSetWasm: false,
+            wasm: {
+                path: this.ifcPath,
+                absolute: true,
+            },
+        });
         if (this.sizeFlag) {
             const grids = this.components.get(OBC.Grids);
             grids.create(this.world);
             await this.initializeAdvancedFeatures();
         }
+        this.resize();
     }
 
     async loadIFC() {
         if (this.infoMessage) this.infoMessage.innerHTML = this.svgLoading;
-        const response = await fetch(this.model.url);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const reader = response.body.getReader();
-        let loadedBytes = 0;
-        const chunks = [];
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            chunks.push(value);
-            loadedBytes += value.length;
-            const loadedProgress = (loadedBytes / this.model.content_length) * 100;
-            this.infoMessage.innerHTML = loadedProgress.toFixed(1) + '%';
-        }
-        const data = new Uint8Array(loadedBytes);
-        let position = 0;
-        for (const chunk of chunks) {
-            data.set(chunk, position);
-            position += chunk.length;
-        }
-        // console.log('Data length:', data.length);
+        const buffer = await fetchWithCache(this.model.url, (percent) => {
+            if (this.infoMessage) this.infoMessage.innerHTML = percent.toFixed(1) + '%';
+        });
+        const data = new Uint8Array(buffer);
         if (this.infoMessage) this.infoMessage.innerHTML = this.svgLoading;
         await this.loadModel(data);
     }
@@ -161,16 +196,10 @@ export class GreatViewerIFC {
             return;
         }
         try {
+            await this.initializeFragmentsManager();
+            this.startRenderLoop();
             const ifcLoader = this.components.get(OBC.IfcLoader);
-            await ifcLoader.setup({
-                autoSetWasm: false,
-                wasm: {
-                    path: this.ifcPath,
-                    absolute: true,
-                },
-            });
-            await this?.initializeFragmentsManager();
-            await ifcLoader.load(buffer, false, this.model.filename, {
+            const model = await ifcLoader.load(buffer, false, this.model.filename, {
                 processData: {includeProperties: false, fast: true}
             });
         } catch (error) {
@@ -183,19 +212,34 @@ export class GreatViewerIFC {
         const fragments = this.components.get(OBC.FragmentsManager);
         const workerUrl = this.ifcPath + 'worker.mjs';
         await fragments.init(workerUrl);
+        console.log('[FragmentsManager] Worker initialized');
         fragments.list.onItemSet.add(({ value: model }) => {
+            if (!this.world?.camera?.three) {
+                console.error('[FragmentsManager] Cannot add model - camera not ready');
+                return;
+            }
             model.useCamera(this.world.camera.three);
             this.world.scene.three.add(model.object);
-            fragments.core.update(true);
             this.modelGroup = model.object;
+            try {
+                fragments.core.update(true);
+            } catch (e) {
+                console.warn('[FragmentsManager] Initial render error:', e.message);
+            }
+            console.log('[FragmentsManager] Model added to scene');
         });
-        const updateCore = () => {
-            if (this.container.clientHeight === 0) return;
-            fragments.core.update(true);
-            this.requestRender();
+        this._updateCoreBound = () => {
+            if (!this.isInitialized || this.container?.clientHeight === 0) return;
+            try {
+                fragments.core.update(false);
+            } catch (e) {
+                console.warn('[FragmentsManager] Update error:', e.message);
+            }
         };
-        this.world.camera.controls.addEventListener("update", updateCore);
-        this.world.camera.controls.addEventListener("rest", updateCore);
+        if (this.world?.camera?.controls) {
+            this.world.camera.controls.addEventListener("update", this._updateCoreBound);
+            this.world.camera.controls.addEventListener("rest", this._updateCoreBound);
+        }
     }
 
     async initializeAdvancedFeatures() {
@@ -203,9 +247,8 @@ export class GreatViewerIFC {
         this.container.appendChild(this.stats.dom);
     }
 
-    requestRender() {
+    updateStats() {
         if (!this.container || this.container.clientHeight === 0) {
-            this.destroy();
             return;
         }
         if (!this.world || !this.world.renderer) return;
@@ -225,26 +268,68 @@ export class GreatViewerIFC {
         this.world.camera.controls.setLookAt(0, cameraDistance, cameraDistance, 0, 0, 0, true);
     }
 
-    updateViewPreset(viewName) {
+    async updateViewPreset(viewName) {
         if (!this.modelGroup || !this.world?.camera) return;
         console.log(`Control view: ${viewName}`);
         this.viewModeController = viewName;
+        const preset = this.viewPresets[viewName];
+        if (!preset || !preset.pos) return;
         const box = new THREE.Box3().setFromObject(this.modelGroup);
         const size = box.getSize(new THREE.Vector3());
         const center = box.getCenter(new THREE.Vector3());
         const maxSize = Math.max(size.x, size.y, size.z);
         const cameraDistance = maxSize * 2.2;
-        const [x, y, z] = this.viewPresets[viewName].pos;
-        if (this.world && this.world.camera && this.world.camera.controls) {
-            this.world.camera.controls.setLookAt(
+        const [x, y, z] = preset.pos;
+        if (this.world?.camera?.controls) {
+            if (preset.projection && this.world.camera.projection !== preset.projection) {
+                this.world.camera.projection = preset.projection;
+            }
+            this.world.camera.controls.isRotateable = !!preset.rot;
+            await this.world.camera.controls.setLookAt(
                 center.x + x * cameraDistance,
                 center.y + y * cameraDistance,
                 center.z + z * cameraDistance,
                 center.x, center.y, center.z,
                 true
             );
-            this.requestRender();
+            this.updateStats();
         }
+        if (this.gui) {
+            const viewCtrl = this.gui.controllers.find(c => c.property === 'viewModeController');
+            if (viewCtrl) viewCtrl.updateDisplay();
+        }
+    }
+
+    goToOppositeView() {
+        if (!this.world?.camera?.controls || !this.modelGroup) return;
+        const camera = this.world.camera.three;
+        const controls = this.world.camera.controls;
+
+        const box = new THREE.Box3().setFromObject(this.modelGroup);
+        const center = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z);
+
+        const position = camera.position.clone();
+
+        const offset = position.clone().sub(center);
+        offset.negate();
+
+        const minDistance = maxDim * 1.8;
+        const maxDistance = maxDim * 15;
+        const currentDistance = offset.length();
+        if (currentDistance < minDistance) {
+            offset.normalize().multiplyScalar(minDistance);
+        } else if (currentDistance > maxDistance) {
+            offset.normalize().multiplyScalar(maxDistance);
+        }
+        const newPosition = center.clone().add(offset);
+        controls.setLookAt(
+            newPosition.x, newPosition.y, newPosition.z,
+            center.x, center.y, center.z,
+            false
+        );
+        this.updateStats();
     }
 
     printDiagnostics() {
@@ -279,23 +364,102 @@ export class GreatViewerIFC {
     }
 
     destroy() {
-        console.log('Destroying GreatViewerIFC:', this.isInitialized);
-        if (!this.isInitialized) return;
+        if (this._isDestroying) return;
+        this._isDestroying = true;
+        console.log('Destroying GreatViewerIFC. Status was:', this.isInitialized);
         this.isInitialized = false;
+        if (this.animationFrameId) {
+            cancelAnimationFrame(this.animationFrameId);
+            this.animationFrameId = null;
+        }
+        if (this.components) {
+            try {
+                const fragments = this.components.get(OBC.FragmentsManager);
+                if (fragments && fragments.worker) {
+                    fragments.worker.terminate();
+                    fragments.worker = null;
+                    console.log('Worker terminated via FragmentsManager');
+                }
+            } catch (e) {
+                console.error('Failed to terminate via FragmentsManager:', e);
+            }
+        }
+        if (this.modelGroup) {
+            try {
+                this.modelGroup.traverse((obj) => {
+                    if (obj.isMesh) {
+                        if (obj.geometry) obj.geometry.dispose();
+                        if (obj.material) {
+                            if (Array.isArray(obj.material)) {
+                                obj.material.forEach(m => m.dispose());
+                            } else {
+                                obj.material.dispose();
+                            }
+                        }
+                    }
+                });
+                if (this.world?.scene?.three) {
+                    this.world.scene.three.remove(this.modelGroup);
+                }
+            } catch (e) {
+                console.warn('Model cleanup error:', e);
+            }
+            this.modelGroup = null;
+        }
+        if (this.renderer) {
+            try {
+                this.renderer.dispose();
+                if (this.renderer.domElement) {
+                    this.renderer.domElement.remove();
+                }
+            } catch (e) {
+                console.warn('Base renderer disposal error:', e);
+            }
+            this.renderer = null;
+        }
         if (this.world?.renderer) {
             try {
-                this.world.renderer.forceContextLoss();
+                if (typeof this.world.renderer.forceContextLoss === 'function') {
+                    this.world.renderer.forceContextLoss();
+                }
+                this.world.renderer.dispose();
             } catch (e) {
-                console.warn('Error during forceContextLoss:', e);
+                console.warn('World renderer disposal error:', e);
             }
-            this.world.renderer.dispose();
-            this.world.renderer.domElement = null;
             this.world.renderer = null;
         }
-        this.controls?.dispose();
-        this.world?.scene?.dispose();
-        this.world?.camera?.dispose();
-        this.container && (this.container.textContent = '');
+        try {
+            if (this.world) {
+                if (this.world.scene) this.world.scene.dispose();
+                if (this.world.camera) this.world.camera.dispose();
+                this.world = null;
+            }
+        } catch (e) {
+            console.warn('World disposal error:', e);
+        }
+        if (this.components) {
+            try {
+                const ifcLoader = this.components.get(OBC.IfcLoader);
+                if (ifcLoader && typeof ifcLoader.cleanUp === 'function') {
+                    ifcLoader.cleanUp();
+                }
+            } catch (e) {
+                console.warn('IfcLoader cleanup skipped:', e);
+            }
+            try {
+                this.components.dispose();
+                console.log('[OBC] Components core disposed');
+            } catch (e) {
+                console.error('Error disposing components:', e);
+            }
+            this.components = null;
+        }
+        if (this.container) {
+            this.container.textContent = '';
+            this.container = null;
+        }
         document.removeEventListener('keydown', this.handleKeyDown);
+        console.log('GreatViewerIFC destroyed completely without errors');
+        this._isDestroying = false;
     }
 }

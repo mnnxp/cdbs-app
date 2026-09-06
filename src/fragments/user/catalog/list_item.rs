@@ -2,7 +2,7 @@ use yew::{agent::Bridged, html, Bridge, Component, ComponentLink, Html, Properti
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::RouteAgent};
 use crate::routes::AppRoute;
 use crate::fragments::switch_icon::res_fullwidth_btn;
-use crate::services::get_value_field;
+use crate::services::LocaleKey;
 use crate::types::Pathname;
 use super::ShowUserShort;
 
@@ -101,7 +101,7 @@ impl ListItemUser {
                 </div>
               </div>
               <div class="media-right flexBox " >
-                {res_fullwidth_btn(onclick_open_profile, get_value_field(&261), Pathname::User(self.props.data.username.clone()))}
+                {res_fullwidth_btn(onclick_open_profile, LocaleKey::ShowProfileLabel.get_value(), Pathname::User(self.props.data.username.clone()))}
               </div>
             </article>
           </div>
@@ -132,7 +132,7 @@ impl ListItemUser {
               <span class="overflow-title">{format!("@{}", username)}</span>
             </div>
             <div class="btnBox">
-              {res_fullwidth_btn(onclick_open_profile, get_value_field(&261), Pathname::User(self.props.data.username.clone()))}
+              {res_fullwidth_btn(onclick_open_profile, LocaleKey::ShowProfileLabel.get_value(), Pathname::User(self.props.data.username.clone()))}
             </div>
           </div>
         }

@@ -2,12 +2,15 @@ import * as THREE from '../../../../three/three.webgpu.min.js';
 import { STLLoader } from '../../../../three/loaders/STLLoader.js';
 import { GLTFLoader } from '../../../../three/loaders/GLTFLoader.js';
 import { DRACOLoader } from '../../../../three/loaders/DRACOLoader.js';
+import { STEPLoader } from '../../../../three/loaders/STEPLoader.js';
 import { GCodeLoader } from '../../../../three/loaders/GCodeLoader.js';
-import { OrbitControls } from '../../../../three/OrbitControls.js';
+import { OrbitControls } from '../../../../three/controls/OrbitControls.js';
+import { TransformControls } from '../../../../three/controls/TransformControls.js';
 import Stats from '../../../../three/stats.module.js';
 import { GUI } from '../../../../three/lil-gui.esm.min.js';
+import { fetchWithCache } from '../../../../three/model-cache.js';
 
-// Environment texture constants moved outside the function
+// Environment texture constants
 const ENV_TEXTURES = {
     nxImg: `data:image/gif;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAIAAABMXPacAAAAyUlEQVR42u3RMREAMAgAsVKb3DHiXwIyYMhL+ERXPu31LQAAQAAACAAAAQAgAAAEAIAAABAAAAIAQAAACAAAAQAgAAAEAIAAABAAAAIAQAAACAAAAQAgAAAEAIAAABAAAAIAQAAACAAAAQAgAAAEAIAAABAAAAAEAIAAABAAAAIAQAAACAAAAQAgAAAEAIAAABAAAAIAQAAACAAAAQAgAAAEAIAAABAAAAIAQAAACAAAAQAgAAAEAIAAABAAAAIAQAAACAAAAbjQAOAVAh/Yww3UAAAAAElFTkSuQmCC`,
     nyImg: `data:image/gif;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAIAAABMXPacAAAAx0lEQVR42u3RMQEAMAjAsDGf8ODfAzLgSCU0UdlPe30LAAAQAAACAEAAAAgAAAEAIAAABACAAAAQAAACAEAAAAgAAAEAIAAABACAAAAQAAACAEAAAAgAAAEAIAAABACAAAAQAAACAEAAAAgAAAEAIAAABAAAAAEAIAAABACAAAAQAAACAEAAAAgAAAEAIAAABACAAAAQAAACAEAAAAgAAAEAIAAABACAAAAQAAACAEAAAAgAAAEAIAAABACAAAAQAAACAEAALjQfhwIey0nZ0AAAAABJRU5ErkJggg==`,
@@ -27,7 +30,15 @@ const COLORS = {
     magenta: 0xff00ff,      // #ff00ff
     white: 0xffffff,        // #ffffff
     dark: 0x000000,         // #000000
+    bg_dark: 0x212529,  // #212529
+    bg_light: 0xf0f2f5, // #f0f2f5
 };
+
+const QUALITY_MAP = [
+    { threshold: 8000000, level: 'low', ratio: 1 },
+    { threshold: 3500000, level: 'medium', ratio: 1.5 },
+    { threshold: 0, level: 'high', ratio: 2 }
+];
 
 export class GreatViewer {
     constructor(config) {
@@ -42,6 +53,7 @@ export class GreatViewer {
         this.startTime = null;
         this.isInitialized = false;
         this.initPromise = null;
+        this.svgLoading = '<img src="../../../../icons/mini_loading.svg" />';
         // Materials
         this.envTexture = new THREE.CubeTextureLoader().load([
             ENV_TEXTURES.pxImg, //right
@@ -62,44 +74,54 @@ export class GreatViewer {
             clearcoat: 0.2,
             clearcoatRoughness: 0.1
         });
-        this.lineMaterialActive = new THREE.LineBasicMaterial({
-            color: COLORS['cdbs_blue'],
-            linewidth: 1,
-            transparent: false
-        });
-        this.lineMaterial = new THREE.LineBasicMaterial({
-            color: COLORS['cyan'],
-            linewidth: 1,
-            transparent: false
-        });
+        this._gcodeMaterials = {
+            normal: new THREE.LineBasicMaterial({
+                color: COLORS.cyan,
+                linewidth: 1,
+                transparent: false
+            }),
+            active: new THREE.LineBasicMaterial({
+                color: COLORS.cdbs_blue,
+                linewidth: 1,
+                transparent: false
+            })
+        };
         this.wireMaterial = new THREE.MeshBasicMaterial({
             color: COLORS['cdbs_blue'],
             wireframe: true
         });
         this.lightParams = {
-            offset: new THREE.Vector3(5, 10, 5),
-            ambientIntensity: 0.4,
-            directionalIntensity: 0.6
+            ambientIntensity: 0.2,
+            hemisphereIntensity: 0.4,
+            keyIntensity: 1.2,
+            fillIntensity: 0.5,
+            rimIntensity: 0.4,
+            keyPosition: new THREE.Vector3(5, 10, 7),
+            fillPosition: new THREE.Vector3(-4, 2, 4),
+            rimPosition: new THREE.Vector3(-2, 3, -5)
         };
-        // Variable initialization
-        this.animationId = null;
         this.container = null;
         this.gui = null;
         this.scene = null;
         this.renderer = null;
         this.camera = null;
+        this.isOrthographic = false;
         this.controls = null;
+        this.transformControls = null;
         this.stats = null;
         this.mesh = null;
         this.resizeObserver = null;
         this.originalMaterials = new Map();
         this.hasTextures = false;
+        this.quality = 'high';
         // Animation
         this.mixer = null;
         this.animations = [];
         this.animationActions = new Map();
         this.isPlayingAnimation = false;
         this.animationSpeed = 1.0;
+        this._gcodeProgress = 0;
+        this._lastGCodeTime = 0;
         // State management
         this.viewModeController = this.labels.view_perspective;
         this.viewPresets = {
@@ -114,7 +136,7 @@ export class GreatViewer {
         };
         this.showAxesHelper = false;
         this.sceneRotation = false;
-        this.axesHelper = null;
+        this.axesHelper = new THREE.AxesHelper(5);
         this.infoMessage = null;
         this.useCustomMaterial = false;
         this.isWireframe = false;
@@ -122,57 +144,277 @@ export class GreatViewer {
         this.parsedLayers = [];
         this.gcodeLayers = [];
         this.currentGCodeLayer = 0;
-        this.updateLayerControls = null; // Function to update controls
         this.displayMode = this.labels.display_up_to_current;
+        // Rendering control
+        this._renderRequested = false;
+        this._animationLoopActive = false;
         // Hotkeys handler
         this.handleKeyDown = this.handleKeyDown.bind(this);
-        document.addEventListener('keydown', this.handleKeyDown);
+        this.handleDoubleClick = this.handleDoubleClick.bind(this);
+        this._isDestroying = false;
     }
 
     handleKeyDown(e) {
-        if (!this.isInitialized) return;
-        if (e.code === 'Space' || e.code === 'KeyF') {
+        if (!this.isInitialized || e.target.tagName !== 'CANVAS') {
+            return;
+        }
+        if (e.code === 'Space') {
             e.preventDefault();
-        }
-        if (e.code === 'KeyF' && !this.sizeFlag) {
-            document.querySelector('#three-size-button')?.click();
-            return;
-        }
-        if (e.code === 'Escape' && this.sizeFlag) {
-            document.querySelector('#three-modal-close-btn')?.click();
-            return;
         }
         if (e.code === 'Space' && this.mixer) {
             this.toggleAnimation(!this.isPlayingAnimation);
             return;
         }
         if (e.code === 'Space' && this.sizeFlag) {
-            if (this.currentGCodeLayer >= this.gcodeLayers.length -1) {
+            if (this.currentGCodeLayer >= this.gcodeLayers.length - 1) {
                 this.currentGCodeLayer = 0;
             }
             this.toggleSlicerAnimation(!this.isPlayingAnimation);
             return;
         }
-        if (e.code === 'KeyR') {
+        if (e.code === 'KeyH') {
+            e.preventDefault()
             this.controls?.reset();
+            this._requestRender();
             return;
         }
-        if (e.code === 'KeyW') {
+        if (e.code === 'KeyZ') {
+            e.preventDefault()
             this.isWireframe = !this.isWireframe;
             if (this.isWireframe) this.useCustomMaterial = true;
             this.updateMaterial();
             return;
         }
-        const keyMap = {
-            'Digit1': this.labels.view_top, 'Numpad1': this.labels.view_top,
-            'Digit2': this.labels.view_front, 'Numpad2': this.labels.view_front,
-            'Digit3': this.labels.view_left, 'Numpad3': this.labels.view_left,
-            'Digit4': this.labels.view_perspective, 'Numpad4': this.labels.view_perspective,
-            'Digit5': this.labels.view_isometric, 'Numpad5': this.labels.view_isometric
-        };
-        if (keyMap[e.code]) {
-            this.updateViewPreset(keyMap[e.code]);
+        if (e.code === 'KeyT') {
+            e.preventDefault();
+            if (this.transformControls?.object) {
+                this.detachTransformGizmo();
+            } else if (this.mesh) {
+                this.attachTransformGizmo(this.mesh);
+            }
+            return;
         }
+        if (this.sizeFlag && this.transformControls) {
+            const isTransformationKey = ['KeyW', 'KeyE', 'KeyR'].includes(e.code);
+            if (isTransformationKey && !this.transformControls.object && this.mesh) {
+                this.attachTransformGizmo(this.mesh);
+            }
+            switch (e.code) {
+                case 'KeyW':
+                    this.transformControls.setMode('translate');
+                    break;
+                case 'KeyE':
+                    this.transformControls.setMode('rotate');
+                    break;
+                case 'KeyR':
+                    this.transformControls.setMode('scale');
+                    break;
+            }
+            if (isTransformationKey) return;
+        }
+        const keyMap = {
+            // Flat views
+            'Digit0': 'isometric', 'Numpad0': 'isometric',
+            'Digit1': 'front',     'Numpad1': 'front',
+            'Digit3': 'left',      'Numpad3': 'left',
+            'Digit7': 'top',       'Numpad7': 'top',
+            'Digit9': 'opposite',  'Numpad9': 'opposite',
+            // Rotations
+            'Digit2': 'rotate_down',   'Numpad2': 'rotate_down',
+            'Digit4': 'rotate_left',   'Numpad4': 'rotate_left',
+            'Digit6': 'rotate_right',  'Numpad6': 'rotate_right',
+            'Digit8': 'rotate_up',     'Numpad8': 'rotate_up',
+            // Camera modes
+            'Digit5': 'toggle_camera', 'Numpad5': 'toggle_camera',
+        };
+        const action = keyMap[e.code];
+        if (!action) return; // Ignore unmapped keys
+        const viewPresets = ['front', 'left', 'top', 'isometric'];
+        const rotateActions = ['rotate_up', 'rotate_down', 'rotate_left', 'rotate_right'];
+        if (viewPresets.includes(action)) {
+            const labelKey = `view_${action}`;
+            const translatedPreset = this.labels[labelKey];
+            if (translatedPreset) {
+                this.updateViewPreset(translatedPreset);
+            }
+            // Auto-switch camera mode
+            const shouldBeOrtho = action !== 'isometric';
+            if (this.isOrthographic !== shouldBeOrtho) {
+                this.toggleCameraMode(shouldBeOrtho);
+            }
+        } else if (rotateActions.includes(action)) {
+            this.rotateCameraDiscrete(action);
+        } else if (action === 'toggle_camera') {
+            this.toggleCameraMode();
+        } else if (action === 'opposite') {
+            this.goToOppositeView();
+        }
+        e.preventDefault();
+    }
+
+    handleDoubleClick(e) {
+        if (!this.isInitialized) return;
+        this.initPivotSelection(e);
+        e.preventDefault();
+    }
+
+    centerAndFitCamera() {
+        if (!this.mesh) return;
+        this.mesh.updateMatrixWorld(true);
+        const box = new THREE.Box3().setFromObject(this.mesh);
+        if (box.isEmpty()) return;
+        const center = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const aspect = this.container.clientWidth / this.container.clientHeight;
+        if (this.isOrthographic) {
+            const viewSize = maxDim * 1.3;
+            if (!this.camera || this.camera.isPerspectiveCamera) {
+                this.camera = new THREE.OrthographicCamera(
+                    -viewSize * aspect / 2,
+                    viewSize * aspect / 2,
+                    viewSize / 2,
+                    -viewSize / 2,
+                    Math.max(0.1, maxDim / 100),
+                    maxDim * 10
+                );
+                if (this.controls) this.controls.object = this.camera;
+            } else {
+                this.camera.left = -viewSize * aspect / 2;
+                this.camera.right = viewSize * aspect / 2;
+                this.camera.top = viewSize / 2;
+                this.camera.bottom = -viewSize / 2;
+                this.camera.near = Math.max(0.1, maxDim / 100);
+                this.camera.far = maxDim * 10;
+            }
+            this.camera.zoom = 1;
+            const orthoDistance = maxDim * 2;
+            this.camera.position.set(
+                center.x + orthoDistance * 0.5,
+                center.y + orthoDistance * 0.5,
+                center.z + orthoDistance
+            );
+            this.camera.updateProjectionMatrix();
+        } else {
+            if (!this.camera || this.camera.isOrthographicCamera) {
+                this.camera = new THREE.PerspectiveCamera(
+                    45,
+                    aspect,
+                    Math.max(0.1, maxDim / 100),
+                    maxDim * 10
+                );
+                if (this.controls) this.controls.object = this.camera;
+            } else {
+                this.camera.aspect = aspect;
+                this.camera.near = Math.max(0.1, maxDim / 100);
+                this.camera.far = maxDim * 10;
+            }
+            const fovInRadians = (this.camera.fov * Math.PI) / 180;
+            let distance = maxDim / (2 * Math.tan(fovInRadians / 2));
+            distance *= 1.3;
+            this.camera.position.set(
+                center.x + distance * 0.5,
+                center.y + distance * 0.5,
+                center.z + distance
+            );
+            this.camera.updateProjectionMatrix();
+        }
+        if (this.controls) {
+            this.controls.target.copy(center);
+            this.camera.lookAt(center);
+            this.controls.update();
+        }
+        this._requestRender();
+    }
+
+    toggleCameraMode(isOrthographic = null) {
+        const targetMode = (isOrthographic === null) ? !this.isOrthographic : isOrthographic;
+        if (this.isOrthographic === targetMode) return;
+        const currentPosition = this.camera.position.clone();
+        const currentTarget = this.controls.target.clone();
+        const aspect = this.container.clientWidth / this.container.clientHeight;
+        let newCamera;
+        if (targetMode) {
+            // Orthographic: calculate frustum size based on current view
+            const distance = currentPosition.distanceTo(currentTarget);
+            const visibleHeight = Math.tan((45 * Math.PI) / 360) * distance * 2;
+            const visibleWidth = visibleHeight * aspect;
+            newCamera = new THREE.OrthographicCamera(
+                -visibleWidth / 2, visibleWidth / 2,
+                visibleHeight / 2, -visibleHeight / 2,
+                0.1, 5000
+            );
+            console.log("Switched to OrthographicCamera");
+        } else {
+            // Perspective
+            newCamera = new THREE.PerspectiveCamera(45, aspect, 0.1, 5000);
+            console.log("Switched to PerspectiveCamera");
+        }
+        newCamera.position.copy(currentPosition);
+        newCamera.quaternion.copy(this.camera.quaternion);
+        newCamera.up.copy(this.camera.up);
+        const oldCamera = this.camera;
+        this.camera = newCamera;
+        this.controls.object = this.camera;
+        this.controls.target.copy(currentTarget);
+        this.controls.update();
+        if (this.transformControls) {
+            this.transformControls.camera = this.camera;
+        }
+        if (oldCamera.dispose) oldCamera.dispose();
+        this.isOrthographic = targetMode;
+        this._requestRender();
+    }
+
+    goToOppositeView() {
+        if (!this.controls || !this.camera) return;
+        // Invert the vector from center to camera
+        const offset = this.camera.position.clone().sub(this.controls.target);
+        offset.negate();
+        this.camera.position.copy(this.controls.target).add(offset);
+        this.controls.update();
+        this._requestRender();
+    }
+
+    rotateCameraDiscrete(direction, angleDegrees = 15) {
+        if (!this.controls || !this.camera) return;
+        const angleRadians = (angleDegrees * Math.PI) / 180;
+        const offset = this.camera.position.clone().sub(this.controls.target);
+        switch (direction) {
+            case 'rotate_left':
+                offset.applyAxisAngle(new THREE.Vector3(0, 1, 0), -angleRadians);
+                break;
+            case 'rotate_right':
+                offset.applyAxisAngle(new THREE.Vector3(0, 1, 0), angleRadians);
+                break;
+            case 'rotate_up': {
+                const right = new THREE.Vector3(1, 0, 0).applyQuaternion(this.camera.quaternion);
+                offset.applyAxisAngle(right, -angleRadians);
+                break;
+            }
+            case 'rotate_down': {
+                const right = new THREE.Vector3(1, 0, 0).applyQuaternion(this.camera.quaternion);
+                offset.applyAxisAngle(right, angleRadians);
+                break;
+            }
+        }
+        this.camera.position.copy(this.controls.target).add(offset);
+        this.controls.update();
+        this._requestRender();
+    }
+
+    initTransformTools() {
+        if (!this.camera || !this.renderer) return;
+        this.transformControls = new TransformControls(this.camera, this.renderer.domElement);
+        this.scene.add(this.transformControls.getHelper());
+        this.transformControls.addEventListener('dragging-changed', (event) => {
+            if (this.controls) {
+                this.controls.enabled = !event.value;
+            }
+        });
+        this.transformControls.addEventListener('change', () => {
+            this._requestRender();
+        });
     }
 
     async starter() {
@@ -184,97 +426,136 @@ export class GreatViewer {
 
     async _starterInternal() {
         const sceneHull = document.querySelector('scene-hull');
-        if (sceneHull) {
-            ['a-container', 'b-container'].forEach(tag => {
-                const container = sceneHull.querySelector(tag);
-                if (container && container.children.length > 0) {
-                    container.textContent = '';
+        if (!sceneHull) {
+            console.error('Scene Hull element not found');
+            return;
+        }
+
+        ['a-container', 'b-container'].forEach(tag => {
+            const container = sceneHull.querySelector(tag);
+            if (container) {
+                while (container.firstChild) {
+                    container.removeChild(container.firstChild);
                 }
-            });
-        }
-        let container_tag = 'a-container';
-        let backgroundColor = '#fff';
+            }
+        });
+
+        let container_tag = this.sizeFlag ? 'b-container' : 'a-container';
+        let backgroundColor = this.sizeFlag ? COLORS.bg_dark : COLORS.bg_light;
         console.log(`Full screen mode: ${this.sizeFlag}`);
-        if (this.sizeFlag) {
-            container_tag = 'b-container';
-        }
-        // console.log(`container_tag: ${container_tag}`);
+
         this.container = sceneHull.querySelector(container_tag);
+        if (!this.container) {
+            console.error(`Container <${container_tag}> not found`);
+            return;
+        }
 
         let clientWidth = this.container.clientWidth;
         let clientHeight = this.container.clientHeight;
-
-        // Create a Scene
-        this.scene = new THREE.Scene();
-
-        this.ambientLight = new THREE.AmbientLight(COLORS['white'], this.lightParams.ambientIntensity);
-        this.scene.add(this.ambientLight);
-        this.directionalLight = new THREE.DirectionalLight(COLORS['white'], this.lightParams.directionalIntensity);
-        this.directionalLight.position.copy(this.lightParams.offset);
-        this.scene.add(this.directionalLight);
-
-        this.axesHelper = new THREE.AxesHelper(30);
-
-        // Set the background color
-        this.scene.background = new THREE.Color(backgroundColor);
-
-        // Set scaling to 1/2 by default
-        let customScale = 0.5;
-        this.scene.scale.set(customScale, customScale, customScale);
-
-        // Create a camera
-        const fov = 45; // AKA Field of View
-        const near = 0.1; // The near clipping plane
-        const far = 5000; // The far clipping plane
-
-        const aspect = clientWidth / clientHeight;
-        this.camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-        this.camera.position.set(0, 0, 70);
-
-        // Create the renderer
-        this.renderer = await this.createRenderer();
-        this.isInitialized = true;
-
-        // Next, set the renderer to the same size as our container element
-        this.renderer.setSize(clientWidth, clientHeight);
-
-        // Optimization for high resolutions
-        const pixelRatio = window.devicePixelRatio;
-        this.renderer.setPixelRatio(Math.min(pixelRatio, 2));
-
-        // Add the automatically created <canvas> element to the page
-        this.container.append(this.renderer.domElement);
-
-        this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-        this.controls.enableDamping = true;
 
         this.infoMessage = document.createElement('div');
         this.infoMessage.classList.add('text-center');
         this.container.appendChild(this.infoMessage);
 
-        // Start loading
-        this.loadModel();
+        this.scene = new THREE.Scene();
+        this.scene.background = new THREE.Color(backgroundColor);
+
+        // Light
+        this.ambientLight = new THREE.AmbientLight(0xffffff, this.lightParams.ambientIntensity);
+        this.scene.add(this.ambientLight);
+        this.hemisphereLight = new THREE.HemisphereLight(0x88aaff, 0x443322, this.lightParams.hemisphereIntensity);
+        this.scene.add(this.hemisphereLight);
+        this.keyLight = new THREE.DirectionalLight(0xffffff, this.lightParams.keyIntensity);
+        this.keyLight.position.copy(this.lightParams.keyPosition);
+        this.scene.add(this.keyLight);
+        this.fillLight = new THREE.DirectionalLight(0xaaccff, this.lightParams.fillIntensity);
+        this.fillLight.position.copy(this.lightParams.fillPosition);
+        this.scene.add(this.fillLight);
+        this.rimLight = new THREE.DirectionalLight(0xffaa88, this.lightParams.rimIntensity);
+        this.rimLight.position.copy(this.lightParams.rimPosition);
+        this.scene.add(this.rimLight);
+
+        // Camera
+        const fov = 45;
+        const near = 0.1;
+        const far = 5000;
+        const aspect = clientWidth / clientHeight;
+        this.camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+        this.camera.position.set(0, 0, 70);
+        this.isOrthographic = false;
+
+        // Renderer
+        this.renderer = await this.createRenderer();
+        this.isInitialized = true;
+
+        this.setQuality('high');
+
+        // Add the automatically created <canvas> element
+        this.container.append(this.renderer.domElement);
+        // Set the renderer size
+        this.renderer.setSize(clientWidth, clientHeight, false);
+
+        this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+        this.controls.enableDamping = false;
+        this.controls.addEventListener('change', () => {
+            this._requestRender();
+        });
+
+        if (this.sizeFlag) {
+            this.initTransformTools();
+        }
+
+        this.renderer.domElement.setAttribute('tabindex', '0');
+        this.renderer.domElement.style.outline = 'none';
+        this.renderer.domElement.addEventListener('keydown', this.handleKeyDown);
+        this.renderer.domElement.addEventListener('dblclick', this.handleDoubleClick);
+        setTimeout(() => {
+            if (this.renderer && this.renderer.domElement) {
+                this.renderer.domElement.focus();
+            }
+        }, 150);
 
         if (this.sizeFlag) {
             this.stats = new Stats();
-            // Show only in full screen mode
-            this.container.appendChild(this.stats.dom); // Show statistics
+            this.container.appendChild(this.stats.dom);
         }
-        // Use ResizeObserver to track size changes
-        this.setupResizeObserver(clientWidth, clientHeight)
-        this.startAnimation();
+
+        this.setupResizeObserver();
+
+        // Loading the model
+        await this.loadModel();
+
+        // First render
+        if (this.isInitialized && this.renderer && this.container) {
+            if (this.controls) {
+                this.controls.update();
+            }
+            this._requestRender();
+        }
     }
 
-    setupResizeObserver(clientWidth, clientHeight) {
+    setupResizeObserver() {
         this.resizeObserver = new ResizeObserver((entries) => {
+            if (!this.isInitialized || !this.renderer || !this.camera) return;
             for (let entry of entries) {
-                const { width, height } = entry.contentRect;
-                if (width !== clientWidth || height !== clientHeight) {
-                    clientWidth = width;
-                    clientHeight = height;
-                    this.renderer.setSize(clientWidth, clientHeight);
-                    this.camera.aspect = clientWidth / clientHeight;
+                const width = Math.round(entry.contentBoxSize ? entry.contentBoxSize[0].inlineSize : entry.contentRect.width);
+                const height = Math.round(entry.contentBoxSize ? entry.contentBoxSize[0].blockSize : entry.contentRect.height);
+                if (width === 0 || height === 0) continue;
+                const canvas = this.renderer.domElement;
+                if (canvas.clientWidth !== width || canvas.clientHeight !== height) {
+                    this.renderer.setSize(width, height, false);
+                    const aspect = width / height;
+                    if (this.camera.isOrthographicCamera) {
+                        const viewSize = (this.camera.top - this.camera.bottom) / this.camera.zoom;
+                        this.camera.left = -viewSize * aspect / 2;
+                        this.camera.right = viewSize * aspect / 2;
+                        this.camera.top = viewSize / 2;
+                        this.camera.bottom = -viewSize / 2;
+                    } else {
+                        this.camera.aspect = aspect;
+                    }
                     this.camera.updateProjectionMatrix();
+                    this._requestRender();
                 }
             }
         });
@@ -282,58 +563,119 @@ export class GreatViewer {
     }
 
     async createRenderer() {
-        if (!navigator.gpu) {
-            console.log('WebGPU not available, using WebGL');
-        }
         const renderer = new THREE.WebGPURenderer({
             alpha: true,
             depth: true,
             stencil: false,
-            antialias: true,
-            premultipliedAlpha: true,
-            preserveDrawingBuffer: false,
-            powerPreference: "default",
-            FailIfMajorPerformanceCaveat: false,
-            desynchronized: false
+            antialias: true
         });
         await renderer.init();
+        console.log(`CADBase Viewer: Renderer initialized on backend: "${renderer.backend.name}"`);
         return renderer;
     }
 
-    startAnimation() {
-        // Animation loop
-        const animate = () => {
-            if (!this.isInitialized) return;
-            this.animationId = requestAnimationFrame(animate);
-            if (!this.container || this.container.clientHeight === 0) {
-                this.destroy();
+    _requestRender() {
+        if (this._renderRequested) return;
+        this._renderRequested = true;
+        requestAnimationFrame(() => {
+            this._renderRequested = false;
+            if (!this.isInitialized || !this.renderer || !this.container) return;
+            this.renderer.render(this.scene, this.camera);
+        });
+    }
+
+    _startAnimationLoop() {
+        if (this._animationLoopActive) return;
+        this._animationLoopActive = true;
+        this.renderer.setAnimationLoop((time) => {
+            if (!this.isInitialized || !this._animationLoopActive) {
+                this._stopAnimationLoop();
                 return;
             }
-            // Update light points
-            this.updateLightToCamera()
-            // Update animation mixer
-            if (this.mixer) {
-                const delta = 0.016; // ~60FPS
-                this.mixer.update(delta * this.animationSpeed);
-            }
-            // Update statistics
-            if (this.stats) {
-                this.stats.update();
-            }
-            if (this.sceneRotation) {
-                this.scene.rotation.x += 0.005;
-                this.scene.rotation.y += 0.01;
-            }
-            this.renderer.render(this.scene, this.camera);
-        };
+            this._renderWithUpdates();
+        });
+    }
 
-        // Start animation
-        animate();
+    _stopAnimationLoop() {
+        this._animationLoopActive = false;
+        this.renderer.setAnimationLoop(null);
+        this._requestRender();
+    }
+
+    _renderWithUpdates() {
+        if (!this.isInitialized || !this.renderer || !this.scene || !this.camera) {
+            return;
+        }
+        if (this.container.clientHeight === 0) {
+            this.destroy();
+            return;
+        }
+        if (this.controls) {
+            this.controls.update();
+        }
+        this.updateLightToCamera();
+        if (this.mixer) {
+            const delta = 0.016;
+            this.mixer.update(delta * this.animationSpeed);
+        }
+        if (this.stats) {
+            this.stats.update();
+        }
+        if (this.sceneRotation) {
+            this.scene.rotation.x += 0.005;
+            this.scene.rotation.y += 0.01;
+        }
+        // For GCode
+        if (this.isPlayingAnimation && this.sizeFlag && this.gcodeLayers.length > 0) {
+            this._updateGCodeAnimation();
+        }
+
+        this.renderer.render(this.scene, this.camera);
+    }
+
+    _updateGCodeAnimation() {
+        if (!this._lastGCodeTime) {
+            this._lastGCodeTime = performance.now();
+            this._gcodeProgress = this.currentGCodeLayer;
+            return;
+        }
+        const now = performance.now();
+        const delta = (now - this._lastGCodeTime) / 1000;
+        this._lastGCodeTime = now;
+        this._gcodeProgress += delta * this.animationSpeed;
+        if (this._gcodeProgress >= this.gcodeLayers.length) {
+            this.isPlayingAnimation = false;
+            this._gcodeProgress = this.gcodeLayers.length - 1;
+            this._stopAnimationLoop();
+        }
+        const newLayer = Math.floor(this._gcodeProgress);
+        if (newLayer !== this.currentGCodeLayer) {
+            this.currentGCodeLayer = newLayer;
+            this.updateGCodeLayers();
+        }
+    }
+
+    _hasActiveAnimations() {
+        return this.isPlayingAnimation ||
+               this.sceneRotation ||
+               (this.mixer && this.mixer._actions && this.mixer._actions.length > 0);
+    }
+
+    attachTransformGizmo(object) {
+        if (!this.transformControls) return;
+        this.transformControls.attach(object);
+        this._requestRender();
+    }
+
+    detachTransformGizmo() {
+        if (!this.transformControls) return;
+        this.transformControls.detach();
+        this._requestRender();
     }
 
     onProgress(xhr) {
-        let loadedProgress = (xhr.loaded / xhr.total) * 100;
         if (this.infoMessage) {
+            let loadedProgress = (xhr.loaded / xhr.total) * 100;
             this.infoMessage.innerHTML = loadedProgress.toFixed(1) + '%';
         }
     }
@@ -346,12 +688,10 @@ export class GreatViewer {
     }
 
     onComplete() {
-        // Remove the loading message
         if (this.infoMessage && this.infoMessage.parentNode) {
             this.infoMessage.parentNode.removeChild(this.infoMessage);
             this.infoMessage = null;
         }
-        // Calculate execution time and display the result
         const loadTime = (performance.now() - this.startTime) / 1000;
         console.log(`Loaded file '${this.model.filename}' in ${loadTime.toFixed(3)} s`);
         if (performance.memory) {
@@ -376,84 +716,110 @@ export class GreatViewer {
             this.updateViewPreset(this.labels.view_top);
             this.updateGCodeLayers();
         }
+        this._requestRender();
     }
 
-    loadModel() {
+    async loadModel() {
         console.log('=== STARTING LOAD ===');
         console.log('Model format:', this.modelFormat);
         console.log('Resource mapping count:', this.resourceMapping?.length || 0);
         console.log('Model path:', this.model.url);
         switch (this.modelFormat) {
             case 'STL':
-                const stlLoader = new STLLoader();
-                stlLoader.load(
-                    this.model.url,
-                    (geometry) => {
+                fetchWithCache(this.model.url, (percent) => { this.infoMessage.innerHTML = percent.toFixed(1) + '%'; })
+                    .then(buffer => {
+                        const stlLoader = new STLLoader();
+                        const geometry = stlLoader.parse(buffer);
                         this.mesh = new THREE.Mesh(geometry, this.material);
                         this.scene.add(this.mesh);
-                        geometry.center();
+                        this.centerAndFitCamera();
+                        this.optimizeQualityModel();
                         this.onComplete();
-                    },
-                    (xhr) => this.onProgress(xhr),
-                    (error) => this.onError(error)
-                );
+                    })
+                    .catch(error => this.onError(error));
                 break;
             // GLTF and GLB use GLTFLoader
             case 'GLTF':
                 const gltfResources = this.createGLTFLoaderWithDraco();
-                // If no resources, load directly
                 if (this.resourceMapping.length === 0) {
-                    gltfResources.loader.load(
-                        this.model.url,
-                        (gltf) => {
-                            this.processGltfModel(gltf);
-                            gltfResources.dispose();
-                        },
-                        (xhr) => this.onProgress(xhr),
-                        (error) => {
+                    fetchWithCache(this.model.url, (percent) => { this.infoMessage.innerHTML = percent.toFixed(1) + '%'; })
+                        .then(buffer => {
+                            gltfResources.loader.parse(
+                                buffer,
+                                '',
+                                (gltf) => {
+                                    this.processGltfModel(gltf);
+                                    gltfResources.dispose();
+                                },
+                                (xhr) => this.onProgress(xhr),
+                                (error) => {
+                                    this.onError(error);
+                                    gltfResources.dispose();
+                                }
+                            );
+                        })
+                        .catch(error => {
                             this.onError(error);
                             gltfResources.dispose();
-                        }
-                    );
+                        });
                     return;
                 }
-                // Load and process GLTF with resources
                 this.loadGltf(gltfResources);
                 break;
             case 'GLB':
                 const glbResources = this.createGLTFLoaderWithDraco();
-                glbResources.loader.load(
-                    this.model.url,
-                    (glb) => {
-                        this.mesh = glb.scene;
-                        this.store_animations(glb);
-                        // Apply material to all meshes
-                        this.mesh.traverse((child) => {
-                            if (child.isMesh) {
-                                child.material = this.material;
+                fetchWithCache(this.model.url, (percent) => { this.infoMessage.innerHTML = percent.toFixed(1) + '%'; })
+                    .then(buffer => {
+                        glbResources.loader.parse(
+                            buffer,
+                            '',
+                            (glb) => {
+                                this.mesh = glb.scene;
+                                this.store_animations(glb);
+                                this.optimizeQualityModel();
+                                this.scene.add(this.mesh);
+                                this.centerAndFitCamera();
+                                this.onComplete();
+                                glbResources.dispose();
+                            },
+                            (xhr) => this.onProgress(xhr),
+                            (error) => {
+                                this.onError(error);
+                                glbResources.dispose();
                             }
-                        });
-                        this.scene.add(this.mesh);
-                        // Center the model
-                        const box = new THREE.Box3().setFromObject(this.mesh);
-                        const center = box.getCenter(new THREE.Vector3());
-                        this.mesh.position.sub(center);
-                        this.onComplete();
-                        // Clean up the Draco loader
-                        glbResources.dispose();
-                    },
-                    (xhr) => this.onProgress(xhr),
-                    (error) => {
+                        );
+                    })
+                    .catch(error => {
                         this.onError(error);
                         glbResources.dispose();
-                    }
-                );
+                    });
+                break;
+            case 'STEP':
+                const stepLoader = new STEPLoader();
+                try {
+                    const buffer = await fetchWithCache(this.model.url, (percent) => {
+                        this.infoMessage.innerHTML = percent.toFixed(1) + '%';
+                    });
+                    this.infoMessage.innerHTML = this.svgLoading;
+                    const group = await stepLoader.loadFromBuffer(buffer);
+                    this.mesh = group;
+                    this.scene.add(this.mesh);
+                    this.centerAndFitCamera();
+                    this.optimizeQualityModel();
+                    this.onComplete();
+                } catch (error) {
+                    console.error('[STEP] Error:', error);
+                    this.onError(error);
+                } finally {
+                    stepLoader.terminate();
+                }
                 break;
             case 'GCode':
                 if (this.sizeFlag) {
-                    fetch(this.model.url)
-                        .then(r => r.text())
-                        .then(text => {
+                    fetchWithCache(this.model.url, (percent) => { this.infoMessage.innerHTML = percent.toFixed(1) + '%'; })
+                        .then(buffer => {
+                            const decoder = new TextDecoder();
+                            const text = decoder.decode(buffer);
                             this.parsedLayers = this.parseGCodeLayers(text);
                             const layers = this.parsedLayers.map(l => l.text);
                             const loader = new GCodeLoader();
@@ -470,21 +836,32 @@ export class GreatViewer {
                         })
                         .catch(error => this.onError(error));
                 } else {
-                    const loader = new GCodeLoader();
-                    loader.load(this.model.url,
-                        (object) => this.processGCodeModel(object),
-                        (xhr) => this.onProgress(xhr),
-                        (error) => this.onError(error)
-                    );
+                    fetchWithCache(this.model.url, (percent) => { this.infoMessage.innerHTML = percent.toFixed(1) + '%'; })
+                        .then(buffer => {
+                            const decoder = new TextDecoder();
+                            const text = decoder.decode(buffer);
+                            const loader = new GCodeLoader();
+                            const object = loader.parse(text);
+                            this.processGCodeModel(object);
+                        })
+                        .catch(error => this.onError(error));
                 }
                 break;
             default:
                 console.error(`Unsupported format: ${this.modelFormat}`);
                 if (this.infoMessage) {
-                    this.infoMessage.innerHTML = this.labels.format_not_supported + ': ' + this.format;
+                    this.infoMessage.innerHTML = this.labels.format_not_supported + ': ' + this.modelFormat;
                 }
                 break;
         }
+    }
+
+    addVector3Controls(folder, obj, name, min = -50, max = 50, step = 1) {
+        const controls = folder.addFolder(name);
+        controls.close();
+        controls.add(obj, 'x', min, max, step).name('X');
+        controls.add(obj, 'y', min, max, step).name('Y');
+        controls.add(obj, 'z', min, max, step).name('Z');
     }
 
     setControlsGui() {
@@ -512,7 +889,10 @@ export class GreatViewer {
             materialMeshColor: this.material.color.getHex(),
             customScale: 0.5,
         };
-        this.gui.add(controlParams, 'showAxesHelper')
+        // Display controls folder
+        const displayFolder = this.gui.addFolder(this.labels.display);
+        displayFolder.open();
+        displayFolder.add(controlParams, 'showAxesHelper')
             .name(this.labels.axes)
             .onChange((value) => {
                 if (value) {
@@ -521,15 +901,24 @@ export class GreatViewer {
                     this.scene.remove(this.axesHelper);
                 }
                 this.showAxesHelper = value;
+                this._requestRender();
             });
-        this.gui.add(controlParams, 'sceneRotation')
+        displayFolder.add(controlParams, 'sceneRotation')
             .name(this.labels.rotation)
-            .onChange((value) => this.sceneRotation = value);
-        this.gui.add(controlParams, 'customScale', 0.01, 2)
+            .onChange((value) => {
+                this.sceneRotation = value;
+                if (value) {
+                    this._startAnimationLoop();
+                } else {
+                    this._stopAnimationLoop();
+                }
+            });
+        displayFolder.add(controlParams, 'customScale', 0.01, 2)
             .name(this.labels.model_scale)
-            .onChange((value) => this.scene.scale.set(value, value, value));
-
-        // GCode specific controls
+            .onChange((value) => {
+                this.scene.scale.set(value, value, value);
+                this._requestRender();
+            });
         if (isGCode && this.gcodeLayers && this.gcodeLayers.length > 0) {
             const gcodeFolder = this.gui.addFolder('GCode');
             gcodeFolder.open();
@@ -568,6 +957,7 @@ export class GreatViewer {
                             layer.object.children[1].visible = !value;
                         }
                     });
+                    this._requestRender();
                 });
             // Mode toggle
             gcodeFolder.add(params, 'displayMode', [
@@ -611,6 +1001,7 @@ export class GreatViewer {
                         if (action) {
                             action.play();
                             this.isPlayingAnimation = true;
+                            this._startAnimationLoop();
                         }
                     });
             }
@@ -642,29 +1033,65 @@ export class GreatViewer {
         // Background color
         materialFolder.addColor(controlParams, 'backgroundColor')
             .name(this.labels.background_color)
-            .onChange((value) => this.scene.background.set(value));
-        materialFolder.add(this.material, 'metalness', 0, 1, 0.05).name(this.labels.metalness);
-        materialFolder.add(this.material, 'roughness', 0, 1, 0.05).name(this.labels.roughness);
+            .onChange((value) => {
+                this.scene.background.set(value);
+                this._requestRender();
+            });
+        materialFolder.add(this.material, 'metalness', 0, 1, 0.05)
+            .name(this.labels.metalness)
+            .onChange(() => this._requestRender());
+        materialFolder.add(this.material, 'roughness', 0, 1, 0.05)
+            .name(this.labels.roughness)
+            .onChange(() => this._requestRender());
         if (this.material.envMap) {
-            materialFolder.add(this.material, 'envMapIntensity', 0, 2, 0.1).name(this.labels.env_intensity);
+            materialFolder.add(this.material, 'envMapIntensity', 0, 2, 0.1)
+                .name(this.labels.env_intensity)
+                .onChange(() => this._requestRender());
         }
         // MeshPhysicalMaterial
         if (this.material.clearcoat !== undefined) {
-            materialFolder.add(this.material, 'clearcoat', 0, 1, 0.05).name(this.labels.clearcoat);
-            materialFolder.add(this.material, 'clearcoatRoughness', 0, 1, 0.05).name(this.labels.clearcoat_rough);
+            materialFolder.add(this.material, 'clearcoat', 0, 1, 0.05)
+                .name(this.labels.clearcoat)
+                .onChange(() => this._requestRender());
+            materialFolder.add(this.material, 'clearcoatRoughness', 0, 1, 0.05)
+                .name(this.labels.clearcoat_rough)
+                .onChange(() => this._requestRender());
         }
-        // Light folder
         const lightFolder = this.gui.addFolder(this.labels.lighting_folder);
         lightFolder.close();
-        lightFolder.add(this.lightParams, 'ambientIntensity', 0, 2, 0.1)
-            .name(this.labels.ambient)
-            .onChange(v => this.ambientLight.intensity = v);
-        lightFolder.add(this.lightParams, 'directionalIntensity', 0, 3, 0.1)
-            .name(this.labels.directional)
-            .onChange(v => this.directionalLight.intensity = v);
-        lightFolder.add(this.lightParams.offset, 'x', -50, 50, 1).name(this.labels.light + ' X');
-        lightFolder.add(this.lightParams.offset, 'y', -50, 50, 1).name(this.labels.light + ' Y');
-        lightFolder.add(this.lightParams.offset, 'z', -50, 50, 1).name(this.labels.light + ' Z');
+        lightFolder.add(this.lightParams, 'ambientIntensity', 0, 1, 0.01)
+            .name(this.labels.ambient || 'Ambient')
+            .onChange(v => {
+                this.ambientLight.intensity = v;
+                this._requestRender();
+            });
+        lightFolder.add(this.lightParams, 'hemisphereIntensity', 0, 1, 0.01)
+            .name(this.labels.hemisphere || 'Hemisphere')
+            .onChange(v => {
+                this.hemisphereLight.intensity = v;
+                this._requestRender();
+            });
+        lightFolder.add(this.lightParams, 'keyIntensity', 0, 2, 0.01)
+            .name(this.labels.key_light || 'Key Light')
+            .onChange(v => {
+                this.keyLight.intensity = v;
+                this._requestRender();
+            });
+        lightFolder.add(this.lightParams, 'fillIntensity', 0, 1.5, 0.01)
+            .name(this.labels.fill_light || 'Fill Light')
+            .onChange(v => {
+                this.fillLight.intensity = v;
+                this._requestRender();
+            });
+        lightFolder.add(this.lightParams, 'rimIntensity', 0, 1, 0.01)
+            .name(this.labels.rim_light || 'Rim Light')
+            .onChange(v => {
+                this.rimLight.intensity = v;
+                this._requestRender();
+            });
+        this.addVector3Controls(lightFolder, this.lightParams.keyPosition, this.labels.key_light_position || 'Key Light Position');
+        this.addVector3Controls(lightFolder, this.lightParams.fillPosition, this.labels.fill_light_position || 'Fill Light Position');
+        this.addVector3Controls(lightFolder, this.lightParams.rimPosition, this.labels.rim_light_position || 'Rim Light Position');
         // Info folder
         const infoFolder = this.gui.addFolder(this.labels.model_info_folder);
         infoFolder.close();
@@ -672,13 +1099,13 @@ export class GreatViewer {
         infoFolder.add(this.model, 'size').name(this.labels.size).listen();
     }
 
+    // Remove old updateLightToCamera method or keep only for keyLight:
     updateLightToCamera() {
-        if (!this.camera || !this.directionalLight) return;
-        // Light position = camera position + offset
-        this.directionalLight.position.copy(this.camera.position).add(this.lightParams.offset);
-        // Light points in the same direction as the camera
-        this.directionalLight.target.position.copy(this.camera.position);
-        this.directionalLight.target.position.add(this.camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(10));
+        if (!this.camera || !this.keyLight) return;
+        // Only key light follows camera for consistent illumination
+        this.keyLight.position.copy(this.camera.position).add(this.lightParams.keyPosition);
+        this.keyLight.target.position.copy(this.camera.position);
+        this.keyLight.target.position.add(this.camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(10));
     }
 
     updateViewPreset(viewName) {
@@ -686,25 +1113,29 @@ export class GreatViewer {
         if (!this.mesh) return;
         this.viewModeController = viewName;
         const preset = this.viewPresets[viewName];
+        if (!preset || !preset.pos) return;
         const box = new THREE.Box3().setFromObject(this.mesh);
         const center = box.getCenter(new THREE.Vector3());
         const size = box.getSize(new THREE.Vector3());
         const maxSize = Math.max(size.x, size.y, size.z);
-        const distance = maxSize * 2;
+        const distance = maxSize * 1.5;
         const [x, y, z] = preset.pos;
-        this.camera.position.set(
-            center.x + x * distance,
-            center.y + y * distance,
-            center.z + z * distance
-        );
-        this.camera.lookAt(center);
-        this.controls.enableRotate = preset.rot;
-        this.controls.target.copy(center);
-        this.controls.update();
+        const newPosX = center.x + x * distance;
+        const newPosY = center.y + y * distance;
+        const newPosZ = center.z + z * distance;
+        this.camera.position.set(newPosX, newPosY, newPosZ);
+        if (this.controls) {
+            this.controls.target.copy(center);
+            this.controls.enableRotate = !!preset.rot;
+            this.controls.update();
+        } else {
+            this.camera.lookAt(center);
+        }
         if (this.gui) {
             const viewCtrl = this.gui.controllers.find(c => c.property === 'viewModeController');
             if (viewCtrl) viewCtrl.updateDisplay();
         }
+        this._requestRender();
     }
 
     store_animations(object) {
@@ -722,23 +1153,31 @@ export class GreatViewer {
 
     processGCodeModel(object) {
         if (!object) return;
-        this.scene.add(object);
         this.mesh = object;
-        // Centering
-        object.updateMatrix();
-        const box = new THREE.Box3().setFromObject(object);
-        const center = box.getCenter(new THREE.Vector3());
-        object.position.sub(center);
-        this.gcodeLayers = object.children.map((child, i) => {
-            const layerInfo = this.parsedLayers?.[i];
-            return {
-                index: i,
-                object: child,
-                visible: this.getLayerVisibility(i), // Reference to the actual object
-                number: layerInfo?.number || i, // Determine initial visibility
-                z: layerInfo?.z || i * 0.2 // Function to get the height Z
-            };
-        });
+        this.scene.add(this.mesh);
+        this.mesh.updateMatrixWorld(true);
+        if (this.mesh.children && this.mesh.children.length > 0) {
+            this.gcodeLayers = this.mesh.children.map((child, i) => {
+                const layerInfo = this.parsedLayers?.[i];
+                return {
+                    index: i,
+                    object: child,
+                    visible: this.getLayerVisibility(i),
+                    number: layerInfo?.number || i,
+                    z: layerInfo?.z || i * 0.2
+                };
+            });
+        } else {
+            this.gcodeLayers = [{
+                index: 0,
+                object: this.mesh,
+                visible: true,
+                number: 0,
+                z: 0
+            }];
+        }
+        this.centerAndFitCamera();
+        this.optimizeQualityModel();
         this.onComplete();
     }
 
@@ -749,33 +1188,23 @@ export class GreatViewer {
             layer.object.visible = this.getLayerVisibility(i);
             if (layer.object.visible && layer.object.children[0]?.isLineSegments) {
                 if (i === this.currentGCodeLayer) {
-                    layer.object.children[0].material = this.lineMaterialActive;
+                    layer.object.children[0].material = this._gcodeMaterials.active;
                 } else {
-                    layer.object.children[0].material = this.lineMaterial;
+                    layer.object.children[0].material = this._gcodeMaterials.normal;
                 }
             }
         });
+        this._requestRender();
     }
 
     toggleSlicerAnimation(play) {
         this.isPlayingAnimation = play;
         if (play) {
-            let lastTime = performance.now();
-            let progress = this.currentGCodeLayer;
-            const animate = (time) => {
-                if (!this.isPlayingAnimation) return;
-                const delta = (time - lastTime) / 1000;
-                progress += delta * this.animationSpeed;
-                lastTime = time;
-                if (progress >= this.gcodeLayers.length) {
-                    this.isPlayingAnimation = false;
-                    progress = this.gcodeLayers.length - 1;
-                }
-                this.currentGCodeLayer = Math.floor(progress);
-                this.updateGCodeLayers();
-                if (this.isPlayingAnimation) requestAnimationFrame(animate);
-            };
-            requestAnimationFrame(animate);
+            this._lastGCodeTime = performance.now();
+            this._gcodeProgress = this.currentGCodeLayer;
+            this._startAnimationLoop();
+        } else {
+            this._stopAnimationLoop();
         }
     }
 
@@ -787,10 +1216,13 @@ export class GreatViewer {
                 child.material = mat || this.originalMaterials.get(child.uuid) || child.material;
             }
         });
+        this._requestRender();
     }
 
     setMaterialColor(color) {
         if (this.modelFormat == 'GCode') {
+            this._gcodeMaterials.normal.color.set(color);
+            this._gcodeMaterials.active.color.set(color);
             this.gcodeLayers?.forEach(layer => {
                 layer.object?.children[0]?.material?.color.set(color);
             });
@@ -802,6 +1234,7 @@ export class GreatViewer {
                 });
             }
         }
+        this._requestRender();
     }
 
     getLayerVisibility(index) {
@@ -809,42 +1242,54 @@ export class GreatViewer {
         if (this.displayMode === this.labels.display_current_only) return index === this.currentGCodeLayer;
         return index <= this.currentGCodeLayer;
     }
-
     parseGCodeLayers(t) {
+        if (!t) return [];
+        console.time('[GCode Parser] Execution Time');
         const layers = [];
         let currentLayer = null;
-        let currentText = '';
-        const lines = t.split('\n');
-        for (const line of lines) {
+        let currentLayerLines = [];
+        let currentZ = null;
+        const lineRegex = /[^\r\n]+/g;
+        let match;
+        while ((match = lineRegex.exec(t)) !== null) {
+            const line = match[0];
             if (line.startsWith(';LAYER:')) {
-                // Save the previous layer
                 if (currentLayer !== null) {
                     layers.push({
-                        text: currentText,
+                        text: currentLayerLines.join('\n') + '\n',
                         number: currentLayer,
-                        z: this.extractZFromLayer(currentText) || currentLayer * 0.2
+                        z: currentZ !== null ? currentZ : currentLayer * 0.2
                     });
                 }
-                // Start a new layer
-                currentLayer = parseInt(line.slice(7));
-                currentText = line + '\n';
+                currentLayer = parseInt(line.slice(7), 10);
+                currentLayerLines = [line];
+                currentZ = null;
             } else if (currentLayer !== null) {
-                currentText += line + '\n';
+                currentLayerLines.push(line);
+                if (currentZ === null && (line.startsWith('G0') || line.startsWith('G1'))) {
+                    const zValue = this.extractZFromLayer(line);
+                    if (zValue !== null) {
+                        currentZ = zValue;
+                    }
+                }
             }
         }
-        // The last layer
+
         if (currentLayer !== null) {
             layers.push({
-                text: currentText,
+                text: currentLayerLines.join('\n') + '\n',
                 number: currentLayer,
-                z: this.extractZFromLayer(currentText) || currentLayer * 0.2
+                z: currentZ !== null ? currentZ : currentLayer * 0.2
             });
         }
+
+        console.timeEnd('[GCode Parser] Execution Time');
+        console.log(`[GCode Parser] Successfully parsed ${layers.length} layers.`);
         return layers;
     }
 
     extractZFromLayer(layerText) {
-        const zMatch = layerText.match(/Z(-?\d+\.?\d*)/);
+        const zMatch = layerText.match(/[Zz](-?\d+(\.\d+)?)/);
         return zMatch ? parseFloat(zMatch[1]) : null;
     }
 
@@ -852,72 +1297,89 @@ export class GreatViewer {
         const gltfLoader = new GLTFLoader();
         const dracoLoader = new DRACOLoader();
         dracoLoader.setDecoderPath('../../../../three/draco/');
-        dracoLoader.setDecoderConfig({ type: 'wasm' }); // 'js'/'wasm'
+        dracoLoader.setDecoderConfig({ type: 'wasm' });
         gltfLoader.setDRACOLoader(dracoLoader);
         return {
             loader: gltfLoader,
-            // Helper function for cleanup
             dispose: () => dracoLoader.dispose()
         };
     }
 
     loadGltf(gltfResources) {
-        // Load and process GLTF with resources
-        fetch(this.model.url)
-            .then(response => {
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                return response.json();
-            })
-            .then(gltfData => {
-                // Create resource map: filename -> full URL
-                const resourceMap = new Map();
-                this.resourceMapping.forEach(item => {
-                    resourceMap.set(item.filename, item.download_url);
-                });
-                this.updateGltfResourceUris(gltfData, resourceMap);
-                const blob = new Blob([JSON.stringify(gltfData)], { type: 'model/gltf+json' });
-                const blobUrl = URL.createObjectURL(blob);
-                gltfResources.loader.load(
-                    blobUrl,
-                    (gltf) => {
-                        this.processGltfModel(gltf);
-                        URL.revokeObjectURL(blobUrl);
-                        gltfResources.dispose();
-                    },
-                    (xhr) => this.onProgress(xhr),
-                    (error) => {
-                        this.onError(error);
-                        URL.revokeObjectURL(blobUrl);
-                        gltfResources.dispose();
-                    }
-                );
-            })
-            .catch(error => {
-                this.onError(error);
-                gltfResources.dispose();
+        fetch(this.model.url, { cache: 'default' })
+        .then(response => {
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return response.json();
+        })
+        .then(gltfData => {
+            const resourceMap = new Map();
+            this.resourceMapping.forEach(item => {
+                resourceMap.set(item.filename, item.download_url);
             });
+            this.updateGltfResourceUris(gltfData, resourceMap);
+            const modifiedJson = JSON.stringify(gltfData);
+            const blob = new Blob([modifiedJson], { type: 'model/gltf+json' });
+            const blobUrl = URL.createObjectURL(blob);
+            gltfResources.loader.load(
+                blobUrl,
+                (gltf) => {
+                    this.processGltfModel(gltf);
+                    URL.revokeObjectURL(blobUrl);
+                    gltfResources.dispose();
+                },
+                (xhr) => this.onProgress(xhr),
+                (error) => {
+                    this.onError(error);
+                    URL.revokeObjectURL(blobUrl);
+                    gltfResources.dispose();
+                }
+            );
+        })
+        .catch(error => {
+            this.onError(error);
+            gltfResources.dispose();
+        });
     }
 
-    // Helper functions
+    optimizeQualityModel() {
+        if (!this.mesh || !this.renderer) return;
+        let totalTriangles = 0;
+        this.mesh.traverse((child) => {
+            if (child.isMesh && child.geometry) {
+                const geom = child.geometry;
+                totalTriangles += geom.index ? geom.index.count / 3 : geom.attributes.position.count / 3;
+            }
+        });
+        console.log(`[Optimizer] Model has ${totalTriangles.toLocaleString()} triangles`);
+        const matched = QUALITY_MAP.find(q => totalTriangles > q.threshold) || QUALITY_MAP[QUALITY_MAP.length - 1];
+        this.setQuality(matched.level);
+        this._requestRender();
+    }
+
+    setQuality(level) {
+        if (!this.renderer) return;
+        this.quality = level;
+        const matched = QUALITY_MAP.find(q => q.level === level);
+        const targetRatio = matched ? matched.ratio : 2;
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, targetRatio));
+        this._requestRender();
+    }
+
     updateGltfResourceUris(gltfData, resourceMap) {
         // Update buffer URIs
         if (gltfData.buffers) {
-            gltfData.buffers.forEach((buffer, i) => {
+            gltfData.buffers.forEach(buffer => {
                 if (buffer.uri && resourceMap.has(buffer.uri)) {
-                    console.log(`Updating buffer ${i}: ${buffer.uri}`);
+                    console.log(`Updating buffer ${buffer.uri} -> ${resourceMap.get(buffer.uri)}`);
                     buffer.uri = resourceMap.get(buffer.uri);
                 }
             });
         }
         // Update image URIs
         if (gltfData.images) {
-            gltfData.images.forEach((image, i) => {
+            gltfData.images.forEach(image => {
                 if (image.uri && resourceMap.has(image.uri)) {
-                    // console.log(`Updating image ${i}: ${image.uri}`);
                     image.uri = resourceMap.get(image.uri);
-                // } else if (image.uri) {
-                    // console.log(`Image ${i} NOT FOUND in map: ${image.uri}`);
-                    // console.log('Available keys:', Array.from(resourceMap.keys()));
                 }
             });
         }
@@ -927,31 +1389,23 @@ export class GreatViewer {
         this.mesh = object.scene;
         this.originalMaterials.clear();
         this.store_animations(object);
-        this.mesh.traverse((child) => {
-            if (child.isMesh && child.material) {
-                this.hasTextures = true;
-                this.originalMaterials.set(child.uuid, child.material.clone());
-            }
-        });
+        this.optimizeQualityModel();
         this.scene.add(this.mesh);
-        // Center the model
-        const box = new THREE.Box3().setFromObject(this.mesh);
-        const center = box.getCenter(new THREE.Vector3());
-        this.mesh.position.sub(center);
+        this.centerAndFitCamera();
         this.onComplete();
     }
 
     toggleAnimation(play) {
         this.isPlayingAnimation = play;
         if (play) {
-            // Play all animations
             this.animationActions.forEach(action => {
                 action.reset();
                 action.play();
             });
+            this._startAnimationLoop();
         } else {
-            // Stop all animations
             this.stopAllAnimations();
+            this._stopAnimationLoop();
         }
     }
 
@@ -968,33 +1422,106 @@ export class GreatViewer {
             action.reset();
             action.play();
             this.isPlayingAnimation = true;
+            this._startAnimationLoop();
             return true;
         }
         return false;
     }
 
+    initPivotSelection(e) {
+        if (this.transformControls?.object) return;
+        const rect = this.renderer.domElement.getBoundingClientRect();
+        const mouse = new THREE.Vector2(
+            ((e.clientX - rect.left) / rect.width) * 2 - 1,
+            -((e.clientY - rect.top) / rect.height) * 2 + 1
+        );
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(mouse, this.camera);
+        // Find intersection with the model
+        const intersects = raycaster.intersectObject(this.mesh, true);
+        if (intersects.length > 0) {
+            const hitPoint = intersects[0].point;
+            // Smoothly update orbit control target
+            this.controls.target.copy(hitPoint);
+            this.controls.update();
+            this._requestRender();
+            console.log(`Pivot set to: ${hitPoint.x.toFixed(2)}, ${hitPoint.y.toFixed(2)}, ${hitPoint.z.toFixed(2)}`);
+        }
+    }
+
     destroy() {
-        // Stopping animation
-        if (this.animationId) cancelAnimationFrame(this.animationId);
-        // Removing GUI
+        if (this._isDestroying) return;
+        this._isDestroying = true;
+        console.log('Destroying GreatViewer. Status was:', this.isInitialized);
+
+        // Stopping the cycles
+        this._stopAnimationLoop();
+        this._renderRequested = false;
+
+        this.detachTransformGizmo();
+        if (this.transformControls) {
+            this.transformControls.dispose();
+            this.scene?.remove(this.transformControls);
+            this.transformControls = null;
+        }
         this.gui?.destroy();
-        // Clearing Three.js objects
+        if (this.mesh && this.scene) {
+            this.scene.remove(this.mesh);
+            this.mesh.traverse((child) => {
+                if (!child.isMesh) return;
+                if (child.geometry) {
+                    child.geometry.dispose();
+                }
+                if (child.material) {
+                    const materials = Array.isArray(child.material) ? child.material : [child.material];
+                    materials.forEach((mat) => {
+                        for (const key in mat) {
+                            if (mat[key] && typeof mat[key].dispose === 'function') {
+                                mat[key].dispose();
+                            }
+                        }
+                        mat.dispose();
+                    });
+                }
+            });
+            this.mesh = null;
+        }
         this.controls?.dispose();
         if (this.renderer) {
-            try {
+            this.renderer.setAnimationLoop(null);
+            if (this.renderer.domElement) {
+                const canvas = this.renderer.domElement;
+                canvas.removeEventListener('keydown', this.handleKeyDown);
+                canvas.removeEventListener('dblclick', this.handleDoubleClick);
+            }
+            if (typeof this.renderer.forceContextLoss === 'function') {
                 this.renderer.forceContextLoss();
-            } catch (e) {
-                console.warn('Error during forceContextLoss:', e);
+            } else if (this.renderer.backend && typeof this.renderer.backend.loseContext === 'function') {
+                this.renderer.backend.loseContext();
             }
             this.renderer.dispose();
-            this.renderer.domElement = null;
+            if (this.renderer.domElement && this.renderer.domElement.parentNode) {
+                this.renderer.domElement.parentNode.removeChild(this.renderer.domElement);
+            }
             this.renderer = null;
         }
         this.mixer?.stopAllAction();
-        // Clearing DOM
-        this.container && (this.container.textContent = '');
-        // Unsubscribing from events
-        document.removeEventListener('keydown', this.handleKeyDown);
-        this.resizeObserver?.disconnect();
+        this.mixer = null;
+        this.originalMaterials.forEach((mat) => {
+            if (typeof mat.dispose === 'function') mat.dispose();
+        });
+        this.originalMaterials.clear();
+        if (this.resizeObserver) {
+            this.resizeObserver.disconnect();
+        }
+        if (this.container) {
+            while (this.container.firstChild) {
+                this.container.removeChild(this.container.firstChild);
+            }
+            this.container = null;
+        }
+        this.scene = null;
+        this.camera = null;
+        this.isInitialized = false;
     }
 }

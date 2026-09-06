@@ -45,8 +45,9 @@ pub(crate) fn view_certificates(company_data: &CompanyInfo) -> Html {
 pub(crate) fn view_represents(company_data: &CompanyInfo) -> Html {
     html!{
         <CompanyRepresents
-            show_manage_btn={false}
+            company_uuid={company_data.uuid.clone()}
             list={company_data.company_represents.clone()}
+            show_manage_btn={false}
         />
     }
 }

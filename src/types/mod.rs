@@ -1,11 +1,13 @@
 //! Common types
 
+mod api_keys;
 mod auth;
 mod company;
 mod component;
 mod discussion;
 mod file;
 mod profiles;
+mod rbac;
 mod relate;
 mod standard;
 mod supplier_service;
@@ -15,11 +17,13 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 pub use chrono::NaiveDateTime;
 
+pub(crate) use api_keys::*;
 pub use auth::*;
 pub use company::*;
 pub use component::*;
 pub use discussion::*;
 pub use profiles::*;
+pub use rbac::*;
 pub use file::*;
 pub use relate::*;
 pub use standard::*;

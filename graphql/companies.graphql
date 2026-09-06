@@ -165,7 +165,7 @@ query GetCompanySettingDataOpt ($companyUuid: UUID!) {
     ...regionFields
   }
 
-  typesAccess {
+  typesAccess(typeAccessIds: [1,3]) {
     ...typeAccessFields
   }
 }
@@ -183,7 +183,7 @@ query GetCreateCompanyDataOpt {
     ...regionFields
   }
 
-  typesAccess {
+  typesAccess(typeAccessIds: [1,3]) {
     ...typeAccessFields
   }
 }

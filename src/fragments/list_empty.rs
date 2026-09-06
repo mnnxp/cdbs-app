@@ -1,5 +1,5 @@
 use yew::{html, Component, ComponentLink, Html, ShouldRender};
-use crate::services::get_value_field;
+use crate::services::LocaleKey;
 
 pub struct ListEmpty {}
 
@@ -23,7 +23,7 @@ impl Component for ListEmpty {
         html!{
           <div class="column">
             {self.no_result_image()}
-            <p class="is-size-3 has-text-centered">{get_value_field(&324)}</p>
+            <p class="is-size-3 has-text-centered">{LocaleKey::NoResult.get_value()}</p>
           </div>
         }
     }

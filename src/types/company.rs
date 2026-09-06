@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::profiles::ShowUserShort;
 use super::file::DownloadFile;
 use super::relate::{Region, Spec, TypeAccessInfo};
-use super::UUID;
+use super::{PermissionLevel, UUID};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -132,7 +132,7 @@ impl CompaniesQueryArg {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct CompanyRepresentInfo {
     pub uuid: UUID,
@@ -153,6 +153,27 @@ pub struct RegisterCompanyRepresentInfo {
     pub name: String,
     pub address: String,
     pub phone: String,
+}
+
+impl RegisterCompanyRepresentInfo {
+    /// Converts a registration structure into an object
+    pub(crate) fn to_info(
+        &self,
+        created_uuid: UUID,
+        company_uuid: UUID,
+        region: Region,
+        representation_type: RepresentationType,
+    ) -> CompanyRepresentInfo {
+        CompanyRepresentInfo {
+            uuid: created_uuid,
+            company_uuid,
+            region,
+            representation_type,
+            name: self.name.clone(),
+            address: self.address.clone(),
+            phone: self.phone.clone(),
+        }
+    }
 }
 
 impl Default for RegisterCompanyRepresentInfo {
@@ -178,7 +199,31 @@ pub struct CompanyRepresentUpdateInfo {
     pub phone: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl CompanyRepresentUpdateInfo {
+    /// Converts an updation structure into an object
+    pub(crate) fn to_info(
+        &self,
+        uuid: UUID,
+        company_uuid: UUID,
+        region: Region,
+        representation_type: RepresentationType,
+        old_name: String,
+        old_address: String,
+        old_phone: String,
+    ) -> CompanyRepresentInfo {
+        CompanyRepresentInfo {
+            uuid,
+            company_uuid,
+            region,
+            representation_type,
+            name: self.name.clone().unwrap_or(old_name),
+            address: self.address.clone().unwrap_or(old_address),
+            phone: self.phone.clone().unwrap_or(old_phone),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct RepresentationType {
     pub representation_type_id: usize,
@@ -200,4 +245,31 @@ pub struct CompanyUpdateInfo {
     pub time_zone: Option<String>,
     pub region_id: Option<i64>,
     pub company_type_id: Option<i64>,
+}
+
+/// Company member role information
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct RoleInfo {
+    pub role_member_id: i64,
+    pub name: String,
+}
+
+/// Company role with access levels
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct CompanyRole {
+    pub role: RoleInfo,
+    pub permissions: Vec<PermissionLevel>,
+}
+
+/// Company member entry
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct CompanyMember {
+    pub user: ShowUserShort,
+    pub company_role: CompanyRole,
+    pub is_enabled: bool,
+    pub created_at: NaiveDateTime,
+    pub updated_at: NaiveDateTime,
 }

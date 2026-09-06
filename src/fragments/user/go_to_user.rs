@@ -52,7 +52,7 @@ impl Component for GoToUser {
     fn view(&self) -> Html {
       let onclick_open_owner = self.link.callback(|_| Msg::ShowOwnerUserCard);
       html!{
-        <a class={"id-box has-text-grey-light has-text-weight-bold"}
+        <a class="id-box has-text-grey-light has-text-weight-bold"
             onclick={onclick_open_owner.clone()}
             href={Pathname::User(self.props.data.username.clone()).get_pathname()}
             >

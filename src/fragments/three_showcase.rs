@@ -1,9 +1,11 @@
-use yew::{html, Component, ComponentLink, Html, Properties, ShouldRender, classes};
+use yew::{classes, html, Callback, Component, ComponentLink, Html, Properties, ShouldRender};
+use wasm_bindgen::closure::Closure;
+use wasm_bindgen::{JsCast, JsValue};
 use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use log::debug;
 use crate::fragments::list_errors::ListErrors;
-use crate::services::{get_value_field, is_gltf_resource, preview_model, resp_parsing, ModelFormat, ResourceMapping};
+use crate::services::{LocaleKey, is_gltf_resource, preview_model, resp_parsing, KeyboardGuard, ModelFormat, ResourceMapping};
 use crate::error::Error;
 use crate::types::{DownloadFile, PaginateSet, UUID};
 use crate::gqls::make_query;
@@ -25,13 +27,14 @@ pub struct ThreeShowcase {
     selected_file: Option<(DownloadFile, ModelFormat)>,
     suitable_files: Vec<(DownloadFile, ModelFormat)>,
     resource_files: Vec<DownloadFile>,
+    viewer: Option<JsValue>,
+    _key_guard: Option<KeyboardGuard>,
 }
 
 #[derive(PartialEq, Clone, Debug, Properties)]
 pub struct Props {
     pub fileset_uuid: UUID,
-    // pub program_id: usize,
-    // pub callback_three_view: Callback<bool>,
+    pub on_exit_fullscreen: Callback<()>,
 }
 
 #[derive(Clone)]
@@ -39,8 +42,10 @@ pub enum Msg {
     RequestDownloadFilesetFiles,
     ResponseError(Error),
     GetDownloadFilesetFilesResult(String),
+    ViewerReady(JsValue),
     ChangeTypeShow,
     ShowThree,
+    Close,
     ClearError,
 }
 
@@ -59,12 +64,17 @@ impl Component for ThreeShowcase {
             selected_file: None,
             suitable_files: Vec::new(),
             resource_files: Vec::new(),
+            viewer: None,
+            _key_guard: None,
         }
     }
 
     fn rendered(&mut self, first_render: bool) {
         if first_render {
             self.link.send_message(Msg::RequestDownloadFilesetFiles);
+            // hotkey listener
+            let link = self.link.clone();
+            self.setup_global_hotkeys(link);
         }
     }
 
@@ -111,8 +121,8 @@ impl Component for ThreeShowcase {
                         if let Some((file, model_format)) = self.suitable_files.first() {
                             self.selected_file = Some((file.clone(), *model_format));
                             debug!("Found {} files for show, selected: {:?}", self.suitable_files.len(), self.selected_file);
-                            if model_format == &ModelFormat::GLTF {
-                                debug!("{:?} is ModelFormat::GLTF", model_format);
+                            if matches!(model_format, ModelFormat::GLTF | ModelFormat::GLB) {
+                                debug!("{:?} needs resources", model_format);
                                 self.reassemble_resources();
                             }
                             debug!("Resource files: {:?}", self.resource_files);
@@ -122,25 +132,38 @@ impl Component for ThreeShowcase {
                     Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
+            Msg::ViewerReady(viewer_instance) => self.viewer = Some(viewer_instance),
             Msg::ChangeTypeShow => {
+                self.destroy_viewer();
                 self.full_screen = !self.full_screen;
                 link.send_message(Msg::ShowThree);
             },
             Msg::ShowThree => {
                 if let Some((df, model_format)) = &self.selected_file {
-                    preview_model(
-                        df,
-                        *model_format,
-                        self.resource_files
-                            .iter()
-                            .map(|rf| ResourceMapping {
-                                filename: rf.filename.clone(),
-                                download_url: rf.download_url.clone(),
-                            })
-                            .collect(),
-                        self.full_screen
-                    );
+                    let df_clone = df.clone();
+                    let format_clone = *model_format;
+                    let size_clone = self.full_screen;
+                    let resources: Vec<ResourceMapping> = self.resource_files
+                        .iter()
+                        .map(|rf| ResourceMapping {
+                            filename: rf.filename.clone(),
+                            download_url: rf.download_url.clone(),
+                        })
+                        .collect();
+                    let link_clone = link.clone();
+                    spawn_local(async move {
+                        let viewer_instance_op = preview_model(&df_clone, format_clone, resources, size_clone).await;
+                        if let Some(viewer_instance) = viewer_instance_op {
+                            link_clone.send_message(Msg::ViewerReady(viewer_instance));
+                        }
+                    });
                 }
+            },
+            Msg::Close => {
+                self.destroy_viewer();
+                self.full_screen = false;
+                // hide 3D view to stop unnecessary rendering
+                self.props.on_exit_fullscreen.emit(());
             },
             Msg::ClearError => self.error = None,
         };
@@ -152,6 +175,7 @@ impl Component for ThreeShowcase {
             debug!("no change: {:?}", self.props.fileset_uuid);
             false
         } else {
+            self.destroy_viewer();
             self.props = props;
             self.file_arr.clear();
             self.full_screen = false;
@@ -164,31 +188,33 @@ impl Component for ThreeShowcase {
         }
     }
 
+    fn destroy(&mut self) {
+        debug!("Сleaning up viewer");
+        self.destroy_viewer();
+    }
+
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         let onclick_full_screen = self.link.callback(|_| Msg::ChangeTypeShow);
         let mut container_style = "display: block; width: 100%; height: 100%; min-height: 25vh; overflow: hidden;";
         let mut b_container_style = "";
-        // let mut scene_hull_class = classes!("column", "is-one-quarter");
         let scene_hull_class = classes!("column", "main");
         let mut class_icon = classes!("fas");
-        let mut class_modal = classes!("modal");
+        let mut class_modal = classes!("modal", "is-isolated-modal");
         if self.selected_file.is_none() {
             container_style = "padding-left: 0.75rem;";
         }
         let text_full_screen = match self.full_screen {
             true => {
-                // scene_hull_class.push("main");
                 b_container_style = container_style;
                 container_style = "padding-left: 0.75rem;";
                 class_modal.push("is-active");
                 class_icon.push("fa-compress-alt");
-                get_value_field(&299)
+                LocaleKey::Collapse.get_value()
             },
             false => {
-                // scene_hull_class.push("is-one-quarter");
                 class_icon.push("fa-expand-alt");
-                get_value_field(&298)
+                LocaleKey::Expand.get_value()
             },
         };
 
@@ -198,41 +224,37 @@ impl Component for ThreeShowcase {
                 {match self.selected_file.is_none() {
                     true => html!{
                         <div class="text-center">
-                            <span>{get_value_field(&297)}</span>
+                            <span>{LocaleKey::NoFileToDisplay.get_value()}</span>
                         </div>
                     },
                     false => html!{
                         <button
                             id="three-size-button"
-                            class={"button is-ghost"}
+                            class="button is-ghost"
                             onclick={onclick_full_screen.clone()}
-                            style={"position: absolute;"}
+                            style="position: absolute;"
                             aria-label={text_full_screen} >
                           <span class="icon is-small">
                             <i class={class_icon} style="color: #1872f0;"></i>
                           </span>
-                          <span class="help has-text-grey is-pulled-right mr-2 mt-2">{get_value_field(&436)}</span> // F: fullscreen | 1-5: views
+                          <span class="help has-text-grey is-pulled-right is-hidden-mobile mr-2 mt-2">{LocaleKey::FullscreenHint.get_value()}</span>
                         </button>
                     },
                 }}
-                // <PreviewModel/>
                 <a-container style={container_style}></a-container>
                 <div class={class_modal}>
                     <div class="modal-background" onclick={onclick_full_screen.clone()}></div>
                     <div class="modal-content" style="width: 80vw; height: 80vh; min-height: 50vh;">
                         <b-container style={b_container_style}></b-container>
                     </div>
-                    // <button class="modal-close is-large" aria-label="close"></button>
                     <button
-                        id={"three-modal-close-btn"}
-                        class={"button is-ghost modal-close"}
+                        id="three-modal-close-btn"
+                        class="button is-ghost modal-close"
                         onclick={onclick_full_screen}
-                        // style={"position: absolute;"}
                         aria-label={text_full_screen} >
                       <span class="icon is-small">
-                        <i class={"fas fa-compress-alt"} style="color: #1872f0;"></i>
+                        <i class="fas fa-compress-alt" style="color: #1872f0;"></i>
                       </span>
-                    //   <span>{text_full_screen}</span>
                     </button>
                 </div>
             </scene-hull>
@@ -242,16 +264,44 @@ impl Component for ThreeShowcase {
 
 impl ThreeShowcase {
     fn reassemble_resources(&mut self) {
-        if let Some((select_df, _select_mf)) = &self.selected_file {
+        if let Some((select_df, select_mf)) = &self.selected_file {
             let base_name = select_df.filename.split('.').next().unwrap_or("");
-            self.resource_files = self.file_arr
-                .iter()
-                .filter(|res|
-                    base_name != res.filename &&
-                    is_gltf_resource(&res.filename)
-                )
-                .cloned()
-                .collect();
+            let needs_resources = matches!(select_mf, ModelFormat::GLTF | ModelFormat::GLB);
+            if needs_resources {
+                self.resource_files = self.file_arr
+                    .iter()
+                    .filter(|res|
+                        base_name != res.filename &&
+                        is_gltf_resource(&res.filename)
+                    )
+                    .cloned()
+                    .collect();
+            }
+        }
+    }
+
+    fn setup_global_hotkeys(&mut self, link: ComponentLink<Self>) {
+        let link_clone = link.clone();
+        let closure = Closure::wrap(Box::new(move |e: web_sys::KeyboardEvent| {
+            if e.code() == "KeyF" {
+                e.prevent_default();
+                link_clone.send_message(Msg::ChangeTypeShow);
+            }
+            if e.code() == "Escape" {
+                link_clone.send_message(Msg::Close);
+            }
+        }) as Box<dyn FnMut(_)>);
+        self._key_guard = Some(KeyboardGuard::new(closure));
+    }
+
+    fn destroy_viewer(&mut self) {
+        if let Some(js_value) = self.viewer.take() {
+            if let Ok(func_value) = js_sys::Reflect::get(&js_value, &JsValue::from_str("destroy")) {
+                if let Ok(func) = func_value.dyn_into::<js_sys::Function>() {
+                    let _ = js_sys::Reflect::apply(&func, &js_value, &js_sys::Array::new());
+                    debug!("WebGL/IFC context released cleanly via duck typing");
+                }
+            }
         }
     }
 }

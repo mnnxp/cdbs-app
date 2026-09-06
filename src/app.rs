@@ -3,11 +3,12 @@
 use yew::services::fetch::FetchTask;
 use yew::{agent::Bridged, html, Bridge, Component, ComponentLink, Html, ShouldRender};
 use yew_router::prelude::*;
-
+use yew_router::agent::RouteRequest::ChangeRoute;
 use wasm_bindgen_futures::spawn_local;
 use log::debug;
 
 use crate::error::Error;
+use crate::fragments::token_manager::TokenManager;
 use crate::fragments::{
     footer::Footer,
     header::Header,
@@ -26,7 +27,7 @@ use crate::routes::{
     standard::{ShowStandard, StandardSettings, CreateStandard},
     AppRoute,
 };
-use crate::services::{is_authenticated, get_current_user, get_value_field, title_changer};
+use crate::services::{get_current_user, get_lang, get_server_location_id, LocaleKey, is_authenticated, set_lang, set_server_locations, title_changer};
 use crate::types::SlimUser;
 
 /// The root app component
@@ -44,6 +45,7 @@ pub enum Msg {
     CurrentUserResponse(Result<SlimUser, Error>),
     Route(Route),
     Authenticated(SlimUser),
+    RedirectToLogin,
     Logout,
 }
 
@@ -56,6 +58,7 @@ impl Component for App {
         let route_service: RouteService = RouteService::new();
         let mut route = route_service.get_route();
         fix_fragment_routes(&mut route);
+        configure_server_and_language();
         App {
             // auth: Auth::new(),
             current_route: AppRoute::switch(route),
@@ -99,6 +102,10 @@ impl Component for App {
             Msg::Authenticated(slim_user) => {
                 self.current_user = Some(slim_user);
             }
+            Msg::RedirectToLogin => {
+                self.current_user = None;
+                self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
+            },
             Msg::Logout => {
                 self.current_user = None;
             }
@@ -113,6 +120,7 @@ impl Component for App {
     fn view(&self) -> Html {
         let callback_login = self.link.callback(Msg::Authenticated);
         // let callback_register = self.link.callback(Msg::Authenticated);
+        let callback_to_login = self.link.callback(|_| Msg::RedirectToLogin);
         let callback_logout = self.link.callback(|_| Msg::Logout);
 
         // old title purge
@@ -172,11 +180,25 @@ impl Component for App {
                         }
                     } else {
                         // 404 when route matches no component
-                        html!{get_value_field(&294)}
+                        html!{LocaleKey::NoChildComponent.get_value()}
                     }
                 }
                 <Footer />
+                <TokenManager on_expired={callback_to_login} />
             </>
+        }
+    }
+}
+
+/// Configures server location and language settings based on the current location ID
+fn configure_server_and_language() {
+    debug!("Server location: {:?}", get_server_location_id());
+    if get_server_location_id() == 0 && get_lang().is_none() {
+        set_server_locations(None);
+        match get_server_location_id() {
+            // 3 => set_lang(Some(String::from("zh"))),
+            2 => set_lang(Some(String::from("ru"))),
+            _ => set_lang(Some(String::from("en"))),
         }
     }
 }

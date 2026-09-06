@@ -8,6 +8,7 @@ use log::debug;
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
+use crate::fragments::buttons::ft_discussion_btn;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{
@@ -16,12 +17,12 @@ use crate::fragments::{
     component::CatalogComponents,
     supplier_service::{ServiceFilesCard, SpecsTags, KeywordsTags},
     img_showcase::ImgShowcase,
-    clipboard::ShareLinkBtn,
+    share_link::ShareLinkBtn,
     discussion::DiscussionCommentsBlock,
     supplier_service::ServiceParamsTags,
 };
 use crate::services::content_adapter::Markdownable;
-use crate::services::{get_logged_user, get_value_field, resp_parsing, set_history_back, title_changer};
+use crate::services::{get_logged_user, LocaleKey, resp_parsing, set_history_back, title_changer};
 use crate::types::{ComponentsQueryArg, DownloadFile, ObjectType, Pathname, ServiceInfo, SlimUser, UUID, ToObject};
 use crate::gqls::make_query;
 use crate::gqls::supplier_service::{
@@ -205,7 +206,7 @@ impl Component for ShowService {
             Some(service_data) => html!{
                 <div class="service-page">
                     <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
-                    <div class="container page">
+                    <div class="container is-fluid page">
                         <div class="row">
                             <div class="card column">
                               {self.show_main_card(service_data)}
@@ -251,7 +252,7 @@ impl ShowService {
         class_tag.push(service_data.service_status.get_class_color());
 
         html!{
-            <div class={"columns"}>
+            <div class="columns">
                 <div class={class_tag} >{service_data.service_status.name.to_string()}</div>
               <ImgShowcase
                 object_uuid={self.current_service_uuid.clone()}
@@ -260,11 +261,11 @@ impl ShowService {
               <div class="column">
                 // <div class="media">
                 //     <div class="media-content">
-                //         {get_value_field(&94)}
+                //         {LocaleKey::UserUploaded.get_value()}
                 //         <GoToUser data = {service_data.owner_user.clone()} />
                 //     </div>
                 //     <div class="media-right" style="margin-right: 1rem">
-                //         {get_value_field(&145)} // type access
+                //         {LocaleKey::TypeAccessLabel.get_value()}
                 //         <span class="id-box has-text-weight-bold">
                 //             {service_data.type_access.name.clone()}
                 //         </span>
@@ -274,11 +275,10 @@ impl ShowService {
                 <div class="has-text-weight-bold is-size-4">
                     {service_data.name.clone()}
                 </div>
-                // <div class="column is-narrow" title={get_value_field(&141)}>
+                // <div class="column is-narrow" title={LocaleKey::Owner.get_value()}>
                 //     <span class="icon is-small">
-                //         <i class={classes!("fa", "fa-user")}></i>
+                //         <i class={classes!("fa", "fa-user", "mr-3")}></i>
                 //     </span>
-                //     {" "}
                 //     <GoToUser data = {service_data.owner_user.clone()} />
                 // </div>
                 <div class="buttons flexBox">
@@ -299,7 +299,7 @@ impl ShowService {
         html!{
             <div class="card">
                 <header class="card-header">
-                    <p class="card-header-title">{get_value_field(&101)}</p> // Сharacteristics of the service
+                    <p class="card-header-title">{LocaleKey::Characteristics.get_value()}</p>
                 </header>
                 <div class="card-content">
                     <div class="content">
@@ -318,7 +318,7 @@ impl ShowService {
         html!{
             <div class="card">
                 <header class="card-header">
-                    <p class="card-header-title">{get_value_field(&376)}</p> // Files
+                    <p class="card-header-title">{LocaleKey::ServiceFiles.get_value()}</p>
                 </header>
                 <div class="card-content">
                     <div class="content">
@@ -336,8 +336,8 @@ impl ShowService {
     fn show_related_components_btn(&self) -> Html {
         let onclick_related_components_btn = self.link.callback(|_| Msg::ShowComponentsList);
         let (text_btn, classes_btn) = match &self.show_related_components {
-            true => (get_value_field(&295), "button is-info is-light is-active"),
-            false => (get_value_field(&296), "button is-info"),
+            true => (LocaleKey::HideComponents.get_value(), "button is-info is-light is-active"),
+            false => (LocaleKey::SeeComponents.get_value(), "button is-info"),
         };
 
         html!{
@@ -354,7 +354,7 @@ impl ShowService {
             true => html!{<>
                 <div class="card">
                     <header class="card-header has-background-info-light">
-                        <p class="card-header-title">{get_value_field(&154)}</p> // Components
+                        <p class="card-header-title">{LocaleKey::ComponentsLabel.get_value()}</p>
                     </header>
                     <div class="card-content">
                         <div class="content">
@@ -383,20 +383,12 @@ impl ShowService {
     }
 
     fn show_discussion_btn(&self) -> Html {
-        let onclick_open_discussion_btn =
-            self.link.callback(|_| Msg::OpenDiscussionBlock);
-        let class_discussion_btn = match self.open_discussion_card {
-            true => "button is-light is-info is-active",
-            false => "button is-info",
-        };
-        html!{
-            <button
-            class={class_discussion_btn}
-            onclick={onclick_open_discussion_btn}>
-                <span class={"icon is-small"}><i class={"far fa-comments"}></i></span>
-                <span>{get_value_field(&380)}</span>
-            </button>
-        }
+        let onclick_discussion_btn = self.link.callback(|_| Msg::OpenDiscussionBlock);
+        ft_discussion_btn(
+            "service-discussion-btn",
+            onclick_discussion_btn,
+            self.open_discussion_card
+        )
     }
 
     fn show_service_discussion(&self) -> Html {
@@ -404,7 +396,7 @@ impl ShowService {
             true => html!{<>
                 <div class="card">
                     <header class="card-header has-background-info-light">
-                        <p class="card-header-title">{get_value_field(&380)}</p>
+                        <p class="card-header-title">{LocaleKey::Discussion.get_value()}</p>
                     </header>
                     <div class="card-content">
                         <DiscussionCommentsBlock

@@ -158,8 +158,8 @@ impl Component for ModificationsTable {
         let onclick_select_modification = self.link.callback(|value: UUID| Msg::SelectModification(value));
         let classes_table = get_classes_table(self.collect_items.len());
         html!{
-            <div class={"content"}>
-                <div class={"table-container"}>
+            <div class="content">
+                <div class="table-container">
                     <table class={classes_table}>
                         <ModificationTableHeads
                             show_new_column={self.props.callback_new_modification_param.is_some()}

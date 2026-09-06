@@ -7,11 +7,12 @@ use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use log::debug;
 
+use crate::fragments::buttons::ft_change_view_btn;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{list_errors::ListErrors, list_empty::ListEmpty};
 use crate::types::{ShowCompanyShort, CompaniesQueryArg};
-use crate::services::{get_value_field, resp_parsing};
+use crate::services::{LocaleKey, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::company::{GetCompaniesShortList, get_companies_short_list};
 use crate::fragments::ListState;
@@ -75,6 +76,8 @@ impl Component for CatalogCompanies {
                         userUuid: arg.user_uuid.to_owned(),
                         favorite: arg.favorite,
                         supplier: arg.supplier,
+                        search: None,
+                        excludeUuids: None,
                     }),
                     None => None,
                 };
@@ -122,13 +125,9 @@ impl Component for CatalogCompanies {
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         let onclick_change_view = self.link.callback(|_|Msg::SwitchShowType);
-        let (class_for_icon, class_for_list) = match self.show_type {
-            ListState::Box => ("fas fa-bars", "flex-box"),
-            ListState::List => ("fas fa-th-large", ""),
-        };
 
         html!{
-            <div id={"companies-box"} class="itemsBox" >
+            <div id="companies-box">
               <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
               <div class="level" >
                 <div class="level-left">
@@ -138,23 +137,19 @@ impl Component for CatalogCompanies {
                         {match &self.props.show_create_btn {
                             true => html!{
                                 <RouterAnchor<AppRoute> route={AppRoute::CreateCompany} classes="button is-info">
-                                    {get_value_field(&289)} // Create company
+                                    {LocaleKey::CreateCompany.get_value()}
                                 </RouterAnchor<AppRoute>>
                             },
                             false => html!{},
                         }}
-                        <button class="button" onclick={onclick_change_view} >
-                          <span class={"icon is-small"}>
-                            <i class={class_for_icon}></i>
-                          </span>
-                        </button>
+                        {ft_change_view_btn(onclick_change_view, &self.show_type)}
                     </div>
                 </div>
               </div>
               {if self.list.is_empty() {
                 html!{<ListEmpty />}
               } else { html!{
-                <div class={class_for_list}>
+                <div class={self.show_type.get_container_class()}>
                   {for self.list.iter().map(|x| self.show_card(&x))}
                 </div>
               }}}

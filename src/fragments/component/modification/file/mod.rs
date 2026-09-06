@@ -129,9 +129,9 @@ impl Component for ModificationFilesTableCard {
         let mut classes_table = get_classes_table(self.files_list.len());
         classes_table.push("is-striped");
         html!{
-            <div class={"content"}>
+            <div class="content">
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
-                <div class={"table-container"}>
+                <div class="table-container">
                     <table class={classes_table}>
                         <FileHeadersShow show_download_btn={self.props.show_download_btn} />
                         <tbody>

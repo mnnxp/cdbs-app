@@ -38,6 +38,24 @@ pub(crate) struct GetMySelf;
 )]
 pub(crate) struct Logout;
 
+/// Получение нового токена
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/user.graphql",
+    response_derives = "Debug"
+)]
+pub(crate) struct GetToken;
+
+/// Проверка валидности токена
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "./graphql/schema.graphql",
+    query_path = "./graphql/user.graphql",
+    response_derives = "Debug"
+)]
+pub(crate) struct CheckToken;
+
 /// Получение уведомлений авторизированного пользователя
 #[derive(GraphQLQuery)]
 #[graphql(

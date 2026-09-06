@@ -13,6 +13,7 @@ use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::fragments::delete_card::ft_delete_card;
+use crate::fragments::form_input::InputConfig;
 use crate::fragments::markdown_edit::MarkdownEditCard;
 use crate::fragments::type_access::TypeAccessBlock;
 use crate::routes::AppRoute;
@@ -27,7 +28,7 @@ use crate::fragments::{
         AddKeywordsTags, UpdateStandardFaviconCard
     },
 };
-use crate::services::{get_from_value, get_logged_user, get_value_field, get_value_response, resp_parsing, resp_parsing_two_level, set_history_back};
+use crate::services::{get_from_value, get_logged_user, LocaleKey, get_value_response, resp_parsing, resp_parsing_two_level, set_history_back};
 use crate::types::{
     UUID, StandardInfo, SlimUser, TypeAccessInfo, UploadFile, ShowFileInfo,
     ShowCompanyShort, StandardUpdatePreData, StandardUpdateData, StandardStatus,
@@ -67,6 +68,7 @@ pub struct StandardSettings {
     disable_save_changes_btn: bool,
     get_result_standard_data: usize,
     get_result_access: bool,
+    loading: bool,
 }
 
 #[derive(Properties, Clone)]
@@ -133,6 +135,7 @@ impl Component for StandardSettings {
             disable_save_changes_btn: true,
             get_result_standard_data: 0,
             get_result_access: false,
+            loading: false,
         }
     }
 
@@ -163,6 +166,7 @@ impl Component for StandardSettings {
             self.request_standard = StandardUpdatePreData::default();
         }
         if first_render || not_matches_standard_uuid {
+            self.loading = true;
             let link = self.link.clone();
             // update current_standard_uuid for checking change standard in route
             self.current_standard_uuid = target_standard_uuid.clone();
@@ -172,6 +176,8 @@ impl Component for StandardSettings {
                     userUuid: Some(logged_user_uuid),
                     favorite: None,
                     supplier: None,
+                    search: None,
+                    excludeUuids: None,
                 };
                 let res = make_query(GetUpdateStandardDataOpt::build_query(get_update_standard_data_opt::Variables {
                     standard_uuid: target_standard_uuid,
@@ -298,6 +304,7 @@ impl Component for StandardSettings {
                 debug!("uploadStandardFiles {:?}", self.request_upload_data.len());
             },
             Msg::GetStandardData(res) => {
+                self.loading = false;
                 match resp_parsing::<StandardInfo>(res, "standard") {
                     Ok(standard_data) => {
                         debug!("Standard data: {:?}", standard_data);
@@ -423,11 +430,11 @@ impl Component for StandardSettings {
 
         html!{
             <div class="standard-page">
-                <div class="container page">
+                <div class="container is-fluid page">
                     <div class="row">
                         <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
                         {show_notification(
-                            get_value_field(&214),
+                            LocaleKey::DataUpdated.get_value(),
                             "is-success",
                             self.get_result_standard_data > 0 || self.get_result_access
                         )}
@@ -475,23 +482,22 @@ impl StandardSettings {
         html!{
             <div class="card">
                 <header class="card-header">
-                    <p class="card-header-title">{get_value_field(&157)}</p>
+                    <p class="card-header-title">{LocaleKey::ManagingStandardMasterData.get_value()}</p>
                 </header>
                 <div class="card-content">
                     <div class="content">
-                        <div class="column">
-                            <label class="title is-5" for="update-standard-name">{get_value_field(&110)}</label>
-                            <input
-                                id="update-standard-name"
-                                class="input"
-                                type="text"
-                                placeholder={get_value_field(&110)}
-                                value={self.request_standard.name.clone()}
-                                oninput={oninput_name} />
-                        </div>
+                        {InputConfig::profile_input(
+                            "update-standard-name",
+                            LocaleKey::Name,
+                            Some(self.request_standard.name.clone()),
+                            oninput_name,
+                            None,
+                            self.loading,
+                            false,
+                        )}
                         <MarkdownEditCard
                             id_tag={"update-standard-description"}
-                            title={get_value_field(&61)}
+                            title={LocaleKey::Description.get_value()}
                             placeholder={String::new()}
                             raw_text={self.request_standard.description.clone()}
                             oninput_text={oninput_description}
@@ -519,7 +525,7 @@ impl StandardSettings {
         html!{
             <div class="card">
                 <header class="card-header">
-                    <p class="card-header-title">{get_value_field(&184)}</p> // Update image for preview
+                    <p class="card-header-title">{LocaleKey::UpdatePreview.get_value()}</p>
                 </header>
                 <div class="card-content">
                     <div class="content">
@@ -546,26 +552,26 @@ impl StandardSettings {
               _ => String::new(),
             }));
         let onchange_type_access = self.link.callback(|value| Msg::UpdateTypeAccessId(value));
+        let formatted_date = self.request_standard.publication_at
+            .as_ref()
+            .map(|x| format!("{:.*}", 10, x.to_string()));
         html!{
             <div class="columns">
                 <div class="column">
                     <div class="columns">
                         <div class="column">
-                            <label class="label" for="update-standard-publication-at">{get_value_field(&155)}</label>
-                            <input
-                                id="update-standard-publication-at"
-                                class="input"
-                                type="date"
-                                placeholder={get_value_field(&155)}
-                                value={self.request_standard.publication_at
-                                    .as_ref()
-                                    .map(|x| format!("{:.*}", 10, x.to_string()))
-                                    .unwrap_or_default()}
-                                oninput={oninput_publication_at}
-                            />
+                            {InputConfig::profile_input(
+                                "date",
+                                LocaleKey::PublicationAtLabel,
+                                formatted_date,
+                                oninput_publication_at,
+                                None,
+                                self.loading,
+                                false,
+                            )}
                         </div>
                         <div class="column">
-                            <label class="label" for="update-standard-status-id">{get_value_field(&96)}</label>
+                            <label class="label" for="update-standard-status-id">{LocaleKey::LifeCycleStage.get_value()}</label>
                             <div class="select">
                                 <select
                                     id="update-standard-status-id"
@@ -584,7 +590,7 @@ impl StandardSettings {
                             </div>
                         </div>
                     </div>
-                    <label class="label" for="update-set-owner-company">{get_value_field(&223)}</label> // Owner company
+                    <label class="label" for="update-set-owner-company">{LocaleKey::OwnerCompany.get_value()}</label>
                     <div class="select is-fullwidth">
                         <select
                             id="update-set-owner-company"
@@ -603,7 +609,7 @@ impl StandardSettings {
                     </div>
                 </div>
                 <div class="column">
-                    <label class="label" for="type-access-block">{get_value_field(&58)}</label>
+                    <label class="label" for="type-access-block">{LocaleKey::TypeAccess.get_value()}</label>
                     <TypeAccessBlock
                         change_cb={onchange_type_access}
                         types={self.types_access.clone()}
@@ -628,12 +634,12 @@ impl StandardSettings {
         html!{
             <div class="card">
                 <header class="card-header">
-                    <p class="card-header-title">{get_value_field(&330)}</p>
+                    <p class="card-header-title">{LocaleKey::ManagingStandardFiles.get_value()}</p>
                 </header>
                 <div class="card-content">
                     <div class="content">
                             <div class="column">
-                                <h3 class="has-text-weight-bold">{get_value_field(&225)}</h3> // Files stadndard
+                                <h3 class="has-text-weight-bold">{LocaleKey::FilesOfStandardLabel.get_value()}</h3>
                                 <StandardFilesCard
                                     show_delete_btn={true}
                                     standard_uuid={standard_data.uuid.clone()}
@@ -641,9 +647,9 @@ impl StandardSettings {
                                 />
                             </div>
                             <div class="column">
-                                <h3 class="has-text-weight-bold">{get_value_field(&331)}</h3>
+                                <h3 class="has-text-weight-bold">{LocaleKey::UploadFilesForStandard.get_value()}</h3>
                                 <UploaderFiles
-                                    text_choose_files={222} // Choose standard files…
+                                    label_choose_files={LocaleKey::ChooseFilesForStandard}
                                     callback_upload_filenames={callback_upload_filenames}
                                     request_upload_files={request_upload_files}
                                     callback_upload_confirm={callback_upload_confirm}
@@ -663,7 +669,7 @@ impl StandardSettings {
                     {ft_back_btn(
                         "open-standard",
                         onclick_open_standard,
-                        get_value_field(&226), // Open standard
+                        LocaleKey::OpenStandard.get_value(),
                     )}
                 </div>
                 <div class="column"></div>
@@ -675,7 +681,7 @@ impl StandardSettings {
         // Delete standard
         ft_delete_card(
             "standard",
-            get_value_field(&227),
+            LocaleKey::DeleteStandard.get_value(),
             self.request_standard.name.clone(),
             self.current_standard_uuid.clone(),
             self.confirm_delete_standard.clone(),

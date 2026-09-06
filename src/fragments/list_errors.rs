@@ -1,13 +1,16 @@
 use yew::{agent::Bridged, html, Bridge, Callback, Component, ComponentLink, Html, Properties, ShouldRender};
 use yew_router::{agent::RouteRequest::ChangeRoute, prelude::*};
 use crate::routes::AppRoute;
-use crate::services::get_value_field;
+use crate::services::LocaleKey;
 use crate::error::Error;
+
+use super::header::CurrentPage;
 
 pub struct ListErrors {
     router_agent: Box<dyn Bridge<RouteAgent>>,
     link: ComponentLink<Self>,
     props: Props,
+    current_page: CurrentPage,
 }
 
 #[derive(Properties, Clone)]
@@ -30,16 +33,14 @@ impl Component for ListErrors {
         ListErrors {
             router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             link,
-            props
+            props,
+            current_page: CurrentPage::from_route(None),
         }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
-            Msg::CloseError => {
-                self.props.error = None;
-                self.props.clear_error.emit(());
-            },
+            Msg::CloseError => self.props.clear_error.emit(()),
             Msg::RedirectToLogin => {
                 // Redirect to login page
                 self.router_agent.send(ChangeRoute(
@@ -69,7 +70,7 @@ impl Component for ListErrors {
                                 html!{<tr>
                                     { key }
                                     {for value.iter().map(|e| {
-                                        html!{<>{" "} {e}</>}
+                                        html!{<span class="ml-3">{e}</span>}
                                     })}
                                 </tr>}
                             })}
@@ -78,19 +79,29 @@ impl Component for ListErrors {
                 </div>
             },
             Some(Error::Unauthorized) => html!{
-                <div class={vec!("notification", "custom-notif", "is-warning")}>
-                    <button class="delete" onclick={onclick_close_error}/>
-                    <div class="columns">
-                        <div class="column">
-                            <p>{get_value_field(&332)}</p>
+                match self.current_page {
+                    CurrentPage::Login => html!{
+                        <div class={vec!("notification", "custom-notif", "is-warning")}>
+                            <button class="delete" onclick={onclick_close_error}/>
+                            {LocaleKey::Unauthorized.get_value()}
                         </div>
-                        <div class="column">
-                            <a class="is-ghost" onclick={onclick_route_to_login}>
-                                <span>{get_value_field(&333)}</span>
-                            </a>
+                    },
+                    _ => html!{
+                        <div class={vec!("notification", "custom-notif", "is-warning")}>
+                            <button class="delete" onclick={onclick_close_error}/>
+                            <div class="columns">
+                                <div class="column">
+                                    <p>{LocaleKey::Unauthorized.get_value()}</p>
+                                </div>
+                                <div class="column">
+                                    <a class="is-ghost" onclick={onclick_route_to_login}>
+                                        <span>{LocaleKey::GoToAuthorization.get_value()}</span>
+                                    </a>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
+                    },
+                }
             },
             Some(error) => html!{
                 <div class={vec!("notification", "custom-notif", "is-danger")}>

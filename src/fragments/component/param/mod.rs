@@ -15,9 +15,10 @@ use wasm_bindgen_futures::spawn_local;
 use crate::error::Error;
 use crate::fragments::buttons::ft_add_btn;
 use crate::fragments::list_errors::ListErrors;
+use crate::fragments::modal::ModalBlock;
 use crate::fragments::paginate::Paginate;
 use crate::types::{ComponentParam, PaginateSet, Param, ParamValue, UUID};
-use crate::services::{get_classes_table, get_value_field, resp_parsing, resp_parsing_two_level};
+use crate::services::{get_classes_table, LocaleKey, resp_parsing, resp_parsing_two_level};
 use crate::gqls::{
     make_query,
     relate::{GetParams, get_params},
@@ -247,10 +248,10 @@ impl Component for ComponentParamsTags {
             {self.modal_add_param()}
             {match self.props.show_manage_btn {
                 true => html!{
-                    <nav id={"card-manage-import-params"} class="level">
+                    <nav id="card-manage-import-params" class="level">
                         <div class="level-left">
                             <div class="level-item">
-                                <p class={"title is-5"}>{get_value_field(&185)}</p>
+                                <p class="title is-5">{LocaleKey::ManageComponentCharacteristics.get_value()}</p>
                             </div>
                         </div>
                         <div class="level-right buttons">
@@ -260,7 +261,7 @@ impl Component for ComponentParamsTags {
                             />
                             {ft_add_btn(
                                 "add-param-component",
-                                get_value_field(&180),
+                                LocaleKey::AddParameter.get_value(),
                                 self.link.callback(|_| Msg::ChangeHideAddParam),
                                 false,
                                 false
@@ -292,18 +293,18 @@ impl ComponentParamsTags {
         let numero_offset = self.page_set.numero_offset();
 
         html!{
-            <div class={"content"}>
-            <div class={"table-container"}>
+            <div class="content">
+            <div class="table-container">
                 <table class={classes_table}>
                     <thead>
                         <tr>
                             <th>{"\u{2116}"}</th> // Numero sign
-                            <th>{get_value_field(&178)}</th> // Param
-                            <th>{get_value_field(&179)}</th> // Value
+                            <th>{LocaleKey::Parameter.get_value()}</th>
+                            <th>{LocaleKey::Value.get_value()}</th>
                             {match self.props.show_manage_btn {
                                 true => html!{<>
-                                    <th>{get_value_field(&59)}</th> // Change
-                                    <th>{get_value_field(&135)}</th> // Delete
+                                    <th>{LocaleKey::Change.get_value()}</th>
+                                    <th>{LocaleKey::Delete.get_value()}</th>
                                 </>},
                                 false => html!{},
                             }}
@@ -334,26 +335,17 @@ impl ComponentParamsTags {
     fn modal_add_param(&self) -> Html {
         let onclick_add_param = self.link.callback(|pv| Msg::RequestAddParams(vec![pv]));
         let onclick_hide_modal = self.link.callback(|_| Msg::ChangeHideAddParam);
-        let class_modal = match &self.hide_add_param_modal {
-            true => "modal",
-            false => "modal is-active",
-        };
-
-        html!{
-            <div class={class_modal}>
-              <div class="modal-background" onclick={onclick_hide_modal.clone()} />
-                <div class="modal-content">
-                  <div class="card">
-                    <header class="modal-card-head">
-                      <p class="modal-card-title">{get_value_field(&181)}</p> // Add a parameter to component
-                      <button class="delete" aria-label="close" onclick={onclick_hide_modal.clone()} />
-                    </header>
-                    <section class="modal-card-body">
-                        <RegisterParamnameBlock callback_add_param={onclick_add_param.clone()} />
-                    </section>
-                  </div>
-                </div>
-              </div>
+        html! {
+            <ModalBlock
+                modal_id="add-param"
+                title={LocaleKey::AddingParameterToComponent.get_value()}
+                is_active={!self.hide_add_param_modal}
+                on_close={onclick_hide_modal}
+                on_save={None}
+                save_disabled={false}
+            >
+                <RegisterParamnameBlock callback_add_param={onclick_add_param} />
+            </ModalBlock>
         }
     }
 }

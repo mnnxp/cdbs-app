@@ -95,7 +95,7 @@ impl Component for ImgShowcase {
         match self.img_arr.is_empty() {
             true => html!{<div style="padding-left: 0.75rem;" />}, // <-- not found images for display
             false => html!{
-                <div class="column is-one-quarter show-img-box">
+                <div class="column is-one-quarter show-img-box m-0">
                     <div class="showImg">
                       <div class="outBox">
                         <div class="itemBox">

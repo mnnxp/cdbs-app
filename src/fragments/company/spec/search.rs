@@ -7,7 +7,7 @@ use wasm_bindgen_futures::spawn_local;
 
 use crate::fragments::company::{SpecsTags, SpecTagItem};
 use crate::types::{Spec, SpecPathInfo, UUID};
-use crate::services::{get_value_field, resp_parsing};
+use crate::services::{LocaleKey, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::relate::{SearchSpecs, search_specs};
 
@@ -207,7 +207,7 @@ impl Component for SearchSpecsTags {
         html!{
             <div class="card">
                 <header class="card-header">
-                    <p class="card-header-title">{get_value_field(&104)}</p>
+                    <p class="card-header-title">{LocaleKey::CatalogsLabel.get_value()}</p>
                 </header>
                 <div class="card-content">
                     <div class="content">
@@ -236,7 +236,7 @@ impl SearchSpecsTags {
                     oninput={onclick_set_ipt_timer}
                     class="input"
                     type="text"
-                    placeholder={get_value_field(&192)} // Enter data for specifications search
+                    placeholder={LocaleKey::EnterDataForCatalogsSearch.get_value()}
                   />
                 <span class="icon is-left">
                   <i class="fas fa-search" aria-hidden="true"></i>

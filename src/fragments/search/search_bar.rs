@@ -12,7 +12,7 @@ use crate::fragments::{
     component::CatalogComponents,
     responsive::resizer,
 };
-use crate::services::{resp_parsing, get_value_field};
+use crate::services::{resp_parsing, LocaleKey};
 use crate::types::{ShowComponentShort, ComponentsQueryArg};
 use crate::gqls::make_query;
 use crate::gqls::component::{SearchByComponents, search_by_components};
@@ -151,7 +151,7 @@ impl Component for SearchBar {
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::ClearError => self.error = None,
         }
-        
+
         true
     }
 
@@ -204,10 +204,10 @@ impl SearchBar {
             false => (None, Some(self.found_components.clone())),
         };
         html!{
-            <div class={"search-result-list"}>
-                <div class={"columns is-mobile"}>
-                    <div class={"column is-flex"}>
-                        <div id={"search-result-list-items"} class="card-relate-data" style={resizer("search-result-list", 1)}>
+            <div class="search-result-list">
+                <div class="columns is-mobile">
+                    <div class="column is-flex">
+                        <div id="search-result-list-items" class="card-relate-data" style={resizer("search-result-list", 1)}>
                             <CatalogComponents
                                 show_create_btn={false}
                                 arguments={arguments}
@@ -226,24 +226,24 @@ impl SearchBar {
         if self.has_props { bar_class.push(vec!["has-addons", "column", "p-0", "m-0", "is-three-quarters"]); }
         html! {
             <div class={bar_class}>
-                <div class={classes!("control", "has-icons-left", "has-icons-right", is_loading)} style={"width: 100%;"}>
-                <input id={"input-search-bar"} class={"input"} style={"width: 100%;"}
+                <div class={classes!("control", "has-icons-left", "has-icons-right", is_loading)} style="width: 100%;">
+                <input id="input-search-bar" class="input" style="width: 100%;"
                     oninput={self.link.callback(|ev: InputData| Msg::InputSearch(ev.value))}
                     onfocus={self.link.callback(|_| Msg::SetFocus(true))}
                     onblur={self.link.callback(|_| Msg::SetFocus(false))}
                     onkeypress={self.link.callback(|e: KeyboardEvent| Msg::KeyPress(e))}
-                    placeholder={get_value_field(&351)} // Enter search text
+                    placeholder={LocaleKey::EnterSearchText.get_value()}
                     value={self.search_arg.search.clone()}
                     />
-                <span class={"icon is-small is-left"}>
-                    <i class={"fas fa-search fa-xs"}></i>
+                <span class="icon is-small is-left">
+                    <i class="fas fa-search fa-xs"></i>
                 </span>
                 </div>
                 {match self.has_props {
                     true => html!{
-                        <div class={"control"}>
+                        <div class="control">
                             <button class="button is-info search-button" onclick={self.link.callback(|_| Msg::Search)}>
-                                {get_value_field(&349)}
+                                {LocaleKey::Search.get_value()}
                             </button>
                         </div>
                     },
@@ -257,17 +257,17 @@ impl SearchBar {
         let show_dropdown = if self.request_status == RequestStatus::Success && self.is_focused { "is-active" } else { "" };
         html! {
             <div class={classes!("dropdown", "is-absolute", show_dropdown)}>
-              <div class={"dropdown-menu"} id={"component-dropdown-menu"} role={"menu"}>
-                <div class={"dropdown-content"}>
+              <div class="dropdown-menu" id="component-dropdown-menu" role="menu">
+                <div class="dropdown-content">
                   {
                     if self.request_status == RequestStatus::Success && self.found_components.is_empty() {
                         html! {
-                            <div class={"dropdown-item has-text-grey"}>
-                                <span class={"icon-text"}>
-                                    <span class={"icon"}>
-                                        <i class={"fas fa-search-minus"}></i>
+                            <div class="dropdown-item has-text-grey">
+                                <span class="icon-text">
+                                    <span class="icon">
+                                        <i class="fas fa-search-minus"></i>
                                     </span>
-                                    <span>{get_value_field(&350)}</span> // No results
+                                    <span>{LocaleKey::NoResults.get_value()}</span>
                                 </span>
                             </div>
                         }
@@ -275,8 +275,8 @@ impl SearchBar {
                         html! {
                             {for self.found_components.iter().map(|x| {
                                 html!{
-                                    <a href={format!("#/component/{}", x.uuid)} class={"dropdown-item"}>
-                                        {x.name.clone()} 
+                                    <a href={format!("#/component/{}", x.uuid)} class="dropdown-item" target="_blank" rel="noopener noreferrer">
+                                        {x.name.clone()}
                                     </a>
                                 }
                             })}

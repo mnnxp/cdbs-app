@@ -197,7 +197,7 @@ query GetUpdateComponentDataOpt($componentUuid: UUID!, $iptCompaniesArg: IptComp
     ...actualStatusFields
   }
 
-  typesAccess {
+  typesAccess(typeAccessIds: [1,3]) {
     ...typeAccessFields
   }
 }
@@ -207,7 +207,7 @@ query GetComponentDataOpt {
     ...actualStatusFields
   }
 
-  typesAccess {
+  typesAccess(typeAccessIds: [1,3]) {
     ...typeAccessFields
   }
 }

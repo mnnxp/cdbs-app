@@ -1,7 +1,7 @@
 use yew::{html, Component, ComponentLink, Html, Properties, ShouldRender};
 use log::debug;
 use crate::types::{UUID, Param};
-use crate::services::get_value_field;
+use crate::services::LocaleKey;
 use crate::services::content_adapter::Markdownable;
 
 #[derive(Clone, Debug, Properties)]
@@ -44,14 +44,14 @@ impl Component for ModificationTableHeads {
 impl ModificationTableHeads {
     fn show_modification_head(&self) -> Html {
         html!{<>
-            <th>{get_value_field(&111)}</th>
+            <th>{LocaleKey::Action.get_value()}</th>
             <th>{"\u{2116}"}</th> // Numero sign №
-            <th>{get_value_field(&110)}</th> // Name
+            <th>{LocaleKey::Name.get_value()}</th>
             {for self.props.params.iter().map(|head| {
-                html!{<th title={get_value_field(&210)}>{head.paramname.to_markdown()}</th>}
+                html!{<th title={LocaleKey::NameOfParameter.get_value()}>{head.paramname.to_markdown()}</th>}
             })}
             {match self.props.show_new_column {
-                true => html!{<th title={get_value_field(&130)}>{get_value_field(&117)}</th>}, // add
+                true => html!{<th title={LocaleKey::AddingParameter.get_value()}>{LocaleKey::Add.get_value()}</th>},
                 false => html!{},
             }}
         </>}

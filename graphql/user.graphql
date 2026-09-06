@@ -1,5 +1,16 @@
 mutation Logout { logout }
 
+mutation GetToken {
+  getToken {
+    bearer
+  }
+}
+
+query CheckToken {
+  isTokenValid
+  tokenDaysUntilExpiry
+}
+
 query GetMySelf {
   myself {
     uuid
@@ -47,7 +58,7 @@ query GetSettingDataOpt {
     region
   }
 
-  typesAccess {
+  typesAccess(typeAccessIds: [1,3]) {
     typeAccessId
     langId
     name

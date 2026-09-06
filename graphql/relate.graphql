@@ -1,5 +1,5 @@
-query GetTypesAccess($typeAccessIds: [Int!]) {
-  typesAccess(typeAccessIds: $typeAccessIds) {
+query GetTypesAccess {
+  typesAccess(typeAccessIds: [1,3]) {
     ...typesAccessTransListFields
   }
 }

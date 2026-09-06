@@ -1,6 +1,6 @@
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
-use crate::{fragments::search::SearchArg, services::get_value_field};
+use crate::{fragments::search::SearchArg, services::LocaleKey};
 
 use super::{
     UUID, SlimCompany, TypeAccessInfo, ShowStandardShort, ShowUserShort,
@@ -207,7 +207,7 @@ pub struct ModificationUpdatePreData{
 impl ModificationUpdatePreData {
     pub(crate) fn new() -> Self {
         Self {
-            modification_name: String::from(get_value_field(&396)),
+            modification_name: String::from(LocaleKey::NewModification.get_value()),
             description: String::new(),
             actual_status_id: 1,
         }

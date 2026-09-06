@@ -1,5 +1,5 @@
 use yew::{html, Component, ComponentLink, Html, ShouldRender};
-use crate::services::get_value_field;
+use crate::services::LocaleKey;
 
 pub struct Banner {}
 
@@ -34,7 +34,7 @@ impl Component for Banner {
                         </svg>
 
                         <div class="content">
-                            {get_value_field(&4)}
+                            {LocaleKey::Info3D.get_value()}
                         </div>
                     </div>
                 </div>
@@ -50,7 +50,7 @@ impl Component for Banner {
                         </svg>
 
                         <div class="content">
-                            {get_value_field(&5)}
+                            {LocaleKey::Automation.get_value()}
                         </div>
                     </div>
                 </div>
@@ -66,7 +66,7 @@ impl Component for Banner {
                         </svg>
 
                         <div class="content">
-                            {get_value_field(&6)}
+                            {LocaleKey::Catalogs.get_value()}
                         </div>
                     </div>
                 </div>
@@ -82,7 +82,7 @@ impl Component for Banner {
                         </svg>
 
                         <div class="content">
-                            {get_value_field(&7)}
+                            {LocaleKey::ExchangeInfo.get_value()}
                         </div>
                     </div>
                 </div>

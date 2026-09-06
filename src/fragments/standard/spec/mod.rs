@@ -4,7 +4,7 @@ pub use item::SpecTagItem;
 pub use search::SearchSpecsTags;
 
 use yew::{Callback, Component, ComponentLink, Html, Properties, ShouldRender, html};
-use crate::services::get_value_field;
+use crate::services::LocaleKey;
 use crate::types::{UUID, Spec};
 
 #[derive(Clone, Debug, Properties)]
@@ -48,7 +48,7 @@ impl Component for SpecsTags {
             false => html!{
                 <div class="card">
                     <header class="card-header">
-                        <p class="card-header-title">{get_value_field(&104)}</p>
+                        <p class="card-header-title">{LocaleKey::CatalogsLabel.get_value()}</p>
                     </header>
                     <div class="card-content">
                         <div class="content">

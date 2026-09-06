@@ -12,6 +12,7 @@ use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::fragments::delete_card::ft_delete_card;
+use crate::fragments::form_input::InputConfig;
 use crate::fragments::markdown_edit::MarkdownEditCard;
 use crate::fragments::type_access::TypeAccessBlock;
 use crate::routes::AppRoute;
@@ -21,11 +22,11 @@ use crate::fragments::{
     list_errors::ListErrors,
     notification::show_notification,
     component::{
-        ComponentStandardsCard, ComponentSuppliersCard, ComponentParamsTags, UpdateComponentFaviconCard,
+        ComponentAccessBlock, ComponentStandardsCard, ComponentSuppliersCard, ComponentParamsTags, UpdateComponentFaviconCard,
         ModificationsTableEdit, ManageComponentFilesCard, SearchSpecsTags, AddKeywordsTags
     },
 };
-use crate::services::{get_from_value, get_logged_user, get_value_field, get_value_response, resp_parsing, set_history_back};
+use crate::services::{get_from_value, get_logged_user, LocaleKey, get_value_response, resp_parsing, set_history_back};
 use crate::types::{
     UUID, ComponentInfo, SlimUser, TypeAccessInfo, ActualStatus, ComponentUpdatePreData,
     ComponentUpdateData, ShowCompanyShort, ComponentModificationInfo,
@@ -42,7 +43,8 @@ pub enum ActiveTab {
     Data,
     ImagePreview,
     Characteristics,
-    ComponentFiles
+    ComponentFiles,
+    Access
 }
 
 pub struct ComponentSettings {
@@ -70,6 +72,7 @@ pub struct ComponentSettings {
     get_result_component_data: usize,
     get_result_access: bool,
     active_tab: ActiveTab,
+    loading: bool,
 }
 
 #[derive(Properties, Clone)]
@@ -133,6 +136,7 @@ impl Component for ComponentSettings {
             get_result_component_data: 0,
             get_result_access: false,
             active_tab: ActiveTab::Data,
+            loading: false,
         }
     }
 
@@ -169,6 +173,7 @@ impl Component for ComponentSettings {
         }
 
         if first_render || not_matches_component_uuid {
+            self.loading = true;
             let link = self.link.clone();
 
             // update current_component_uuid for checking change component in route
@@ -180,6 +185,8 @@ impl Component for ComponentSettings {
                     userUuid: Some(logged_user_uuid),
                     favorite: None,
                     supplier: None,
+                    search: None,
+                    excludeUuids: None,
                 };
                 let res = make_query(GetUpdateComponentDataOpt::build_query(get_update_component_data_opt::Variables {
                     component_uuid: target_component_uuid,
@@ -206,15 +213,11 @@ impl Component for ComponentSettings {
                 if self.update_component {
                     self.link.send_message(Msg::RequestUpdateComponentData)
                 }
-                if self.update_component_access {
-                    self.link.send_message(Msg::RequestChangeAccess)
-                }
                 self.update_component = false;
                 self.update_component_access = false;
                 self.update_component_supplier = false;
                 self.disable_save_changes_btn = true;
                 self.get_result_component_data = 0;
-                self.get_result_access = false;
             },
             Msg::RequestUpdateComponentData => {
                 let component_uuid = self.current_component_uuid.clone();
@@ -266,6 +269,7 @@ impl Component for ComponentSettings {
                 })
             },
             Msg::GetComponentData(res) => {
+                self.loading = false;
                 match resp_parsing::<ComponentInfo>(res, "component") {
                     Ok(component_data) => {
                         self.current_component_uuid = component_data.uuid.clone();
@@ -312,9 +316,10 @@ impl Component for ComponentSettings {
                 }
             },
             Msg::UpdateTypeAccessId(data) => {
+                self.get_result_access = false;
                 self.request_access = data as i64;
                 self.update_component_access = true;
-                self.disable_save_changes_btn = false;
+                self.link.send_message(Msg::RequestChangeAccess)
             },
             Msg::UpdateActualStatusId(data) => {
                 self.request_component.actual_status_id = data.parse::<usize>().unwrap_or_default();
@@ -366,11 +371,11 @@ impl Component for ComponentSettings {
 
         html!{
             <div class="component-page">
-                <div class="container page">
+                <div class="container is-fluid page">
                     <div class="row">
                         <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
                         {show_notification(
-                            get_value_field(&214),
+                            LocaleKey::DataUpdated.get_value(),
                             "is-success",
                             self.get_result_component_data > 0 || self.get_result_access
                         )}
@@ -432,33 +437,32 @@ impl ComponentSettings {
         let onclick_tab_image_preview = self.link.callback(|_| Msg::ChangeActiveTab(ActiveTab::ImagePreview));
         let onclick_tab_characteristics = self.link.callback(|_| Msg::ChangeActiveTab(ActiveTab::Characteristics));
         let onclick_tab_component_files = self.link.callback(|_| Msg::ChangeActiveTab(ActiveTab::ComponentFiles));
+        let onclick_tab_access = self.link.callback(|_| Msg::ChangeActiveTab(ActiveTab::Access));
         let at = match self.active_tab {
-            ActiveTab::Data => ("is-active","","",""),
-            ActiveTab::ImagePreview => ("","is-active","",""),
-            ActiveTab::Characteristics => ("","","is-active",""),
-            ActiveTab::ComponentFiles => ("","","","is-active"),
+            ActiveTab::Data => ("is-active","","","",""),
+            ActiveTab::ImagePreview => ("","is-active","","",""),
+            ActiveTab::Characteristics => ("","","is-active","",""),
+            ActiveTab::ComponentFiles => ("","","","is-active",""),
+            ActiveTab::Access => ("","","","","is-active"),
         };
         let callback_update_favicon = self.link.callback(|_| Msg::Ignore);
         html!{
             <div class="card">
             <header class="card-header">
-                <p class="card-header-title">{get_value_field(&352)}</p>
+                <p class="card-header-title">{LocaleKey::ComponentLabel.get_value()}</p>
             </header>
             <div class="card-content">
             <div class="tabs is-centered is-medium">
                 <ul>
-                    <li class={at.0} onclick={onclick_tab_data}><a>{get_value_field(&116)}</a></li>
-                    <li class={at.1} onclick={onclick_tab_image_preview}><a>{get_value_field(&184)}</a></li>
-                    <li class={at.2} onclick={onclick_tab_characteristics}><a>{get_value_field(&101)}</a></li>
-                    <li class={at.3} onclick={onclick_tab_component_files}><a>{get_value_field(&102)}</a></li>
+                    <li class={at.0} onclick={onclick_tab_data}><a>{LocaleKey::BasicInfo.get_value()}</a></li>
+                    <li class={at.1} onclick={onclick_tab_image_preview}><a>{LocaleKey::UpdatePreview.get_value()}</a></li>
+                    <li class={at.2} onclick={onclick_tab_characteristics}><a>{LocaleKey::Characteristics.get_value()}</a></li>
+                    <li class={at.3} onclick={onclick_tab_component_files}><a>{LocaleKey::ComponentFiles.get_value()}</a></li>
+                    <li class={at.4} onclick={onclick_tab_access}><a>{LocaleKey::Access.get_value()}</a></li>
                 </ul>
             </div>
                 {match self.active_tab {
-                    ActiveTab::Data => html!{
-                        <div class="content">
-                            {self.show_main_card()}
-                        </div>
-                    },
+                    ActiveTab::Data => self.show_main_card(),
                     ActiveTab::ImagePreview => html!{
                         <div class="content">
                             <UpdateComponentFaviconCard
@@ -485,6 +489,7 @@ impl ComponentSettings {
                                 />
                         </div>
                     },
+                    ActiveTab::Access => self.access_block(),
                 }}
                 </div>
             </div>
@@ -496,28 +501,30 @@ impl ComponentSettings {
         let oninput_description = self.link.callback(|ev: InputData| Msg::UpdateDescription(ev.value));
         let onclick_save_changes = self.link.callback(|_| Msg::RequestManager);
 
-        html!{<>
+        html!{
+        <div class="content">
             <div class="content">
                 <div class="column">
-                    <label class="title is-5" for="setting-component-update-name">{get_value_field(&110)}</label>
-                    <input
-                        id="setting-component-update-name"
-                        class="input"
-                        type="text"
-                        placeholder={get_value_field(&110)}
-                        value={self.request_component.name.clone()}
-                        oninput={oninput_name} />
+                    {InputConfig::profile_input(
+                        "setting-component-update-name",
+                        LocaleKey::Name,
+                        Some(self.request_component.name.clone()),
+                        oninput_name,
+                        None,
+                        self.loading,
+                        false,
+                    )}
                 </div>
+                <div class="column">
                 <MarkdownEditCard
                     id_tag={"setting-component-description"}
-                    title={get_value_field(&61)}
+                    title={LocaleKey::Description.get_value()}
                     placeholder={String::new()}
                     raw_text={self.request_component.description.clone()}
                     oninput_text={oninput_description}
                     />
-                <div class="column">
-                    {self.show_component_info()}
                 </div>
+                {self.show_component_info()}
             </div>
             <footer class="card-footer">
                 {ft_save_btn(
@@ -527,7 +534,8 @@ impl ComponentSettings {
                     self.disable_save_changes_btn
                 )}
             </footer>
-        </>}
+        </div>
+        }
     }
 
     fn show_component_info(&self) -> Html {
@@ -535,12 +543,10 @@ impl ComponentSettings {
               ChangeData::Select(el) => el.value(),
               _ => "1".to_string(),
           }));
-        let onchange_type_access = self.link.callback(|value| Msg::UpdateTypeAccessId(value));
 
         html!{
-            <div class="columns">
-                <div class="column">
-                    <label class="label" for="setting-component-actual-status">{get_value_field(&96)}</label>
+            <div class="column">
+                    <label class="label" for="setting-component-actual-status">{LocaleKey::LifeCycleStage.get_value()}</label>
                     <div class="select is-fullwidth">
                         <select
                             id="setting-component-actual-status"
@@ -557,16 +563,6 @@ impl ComponentSettings {
                           )}
                         </select>
                     </div>
-                </div>
-                <div class="column">
-                    <label class="label" for="type-access-block">{get_value_field(&58)}</label>
-                    <TypeAccessBlock
-                        change_cb={onchange_type_access}
-                        types={self.types_access.clone()}
-                        selected={self.request_access as usize}
-                        preset={self.current_component.as_ref().map(|data| data.type_access.type_access_id)}
-                    />
-                </div>
             </div>
         }
     }
@@ -579,7 +575,7 @@ impl ComponentSettings {
                     {ft_back_btn(
                         "open-standard",
                         onclick_open_component,
-                        get_value_field(&199), // Open component
+                        LocaleKey::OpenComponent.get_value(),
                     )}
                 </div>
                 <div class="column"></div>
@@ -591,7 +587,7 @@ impl ComponentSettings {
         // Delete component
         ft_delete_card(
             "component",
-            get_value_field(&217),
+            LocaleKey::DeleteComponent.get_value(),
             self.request_component.name.clone(),
             self.current_component_uuid.clone(),
             self.confirm_delete_component.clone(),
@@ -601,5 +597,29 @@ impl ComponentSettings {
             self.hide_delete_modal,
             self.disable_delete_component_btn,
         )
+    }
+
+    fn access_block(&self) -> Html {
+        let onchange_type_access = self.link.callback(|value| Msg::UpdateTypeAccessId(value));
+        html!{
+            <div class="content">
+                <h4 id="component-access-global" class="title is-4">{LocaleKey::TypeAccess.get_value()}</h4>
+                <div class="column">
+                    <TypeAccessBlock
+                        change_cb={onchange_type_access}
+                        types={self.types_access.clone()}
+                        selected={self.request_access as usize}
+                        preset={self.current_component.as_ref().map(|data| data.type_access.type_access_id)}
+                    />
+                </div>
+                <h4 id="component-access-direct" class="title is-4">{LocaleKey::Access.get_value()}</h4>
+                <div class="column">
+                    <ComponentAccessBlock
+                        component_uuid={self.current_component_uuid.clone()}
+                        owner_info={self.current_component.as_ref().map(|data| data.owner_user.clone()).unwrap_or_default()}
+                    />
+                </div>
+            </div>
+        }
     }
 }

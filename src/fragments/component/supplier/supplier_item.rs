@@ -3,13 +3,14 @@ use wasm_bindgen_futures::spawn_local;
 use graphql_client::GraphQLQuery;
 use log::debug;
 use crate::error::Error;
+use crate::fragments::modal::ModalBlock;
 use crate::fragments::notification::show_notification;
 use crate::fragments::{
     buttons::ft_delete_small_btn,
     list_errors::ListErrors,
     company::ListItemCompany,
 };
-use crate::services::{get_value_field, resp_parsing};
+use crate::services::{LocaleKey, resp_parsing};
 use crate::types::{UUID, Supplier, ShowCompanyShort};
 use crate::gqls::{
     make_query,
@@ -79,6 +80,8 @@ impl Component for ComponentSupplierItem {
                     userUuid: None,
                     favorite: None,
                     supplier: None,
+                    search: None,
+                    excludeUuids: None,
                 });
                 let ipt_paginate = Some(get_companies_short_list::IptPaginate {
                     currentPage: 1,
@@ -156,7 +159,7 @@ impl Component for ComponentSupplierItem {
         html!{<>
             <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
             {show_notification(
-                get_value_field(&397),
+                LocaleKey::DataNotAvailable.get_value(),
                 "is-warning",
                 self.company_data.is_none() && self.open_company_info
             )}
@@ -187,25 +190,23 @@ impl Component for ComponentSupplierItem {
 impl ComponentSupplierItem {
     fn show_modal_company_info(&self) -> Html {
         let onclick_company_data_info = self.link.callback(|_| Msg::ShowCompanyCard);
-        let class_modal = match &self.open_company_info {
-            true => "modal is-active",
-            false => "modal",
-        };
-
         match &self.company_data {
-            Some(data) => html!{<div class={class_modal}>
-              <div class="modal-background" onclick={onclick_company_data_info.clone()} />
-              // <div class="modal-content">
-                  <div class="card">
+            Some(data) => html! {
+                <ModalBlock
+                    modal_id="company-detail"
+                    title=""
+                    is_active={self.open_company_info}
+                    on_close={onclick_company_data_info}
+                    on_save={None}
+                    save_disabled={false}
+                >
                     <ListItemCompany
                         data={data.clone()}
                         show_list={true}
-                      />
-                  </div>
-              // </div>
-              <button class="modal-close is-large" aria-label="close" onclick={onclick_company_data_info} />
-            </div>},
-            None => html!{},
+                    />
+                </ModalBlock>
+            },
+            None => html! {},
         }
     }
 }

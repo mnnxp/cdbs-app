@@ -1,24 +1,27 @@
 mod local_en;
 mod local_ru;
 mod local_zh;
+mod locale_key;
+
 use local_en::LOCAL_EN;
 use local_ru::LOCAL_RU;
 use local_zh::LOCAL_ZH;
-
-// use log::debug;
-
+pub(crate) use locale_key::LocaleKey;
 use crate::services::get_lang;
 
-/// Returns the field value for set language
-pub fn get_value_field(row_key: &usize) -> &'static str {
-    // debug!("Get translate: {}", row_key);
-    if let Some(lang) = get_lang() {
-        match lang.as_str() {
-            "zh" => *LOCAL_ZH.get(&row_key).unwrap(), // Chinese
-            "ru" => *LOCAL_RU.get(&row_key).unwrap(), // Russian
-            _ => *LOCAL_EN.get(&row_key).unwrap() // English
+const MAX_KEY: usize = LocaleKey::_Count as usize;
+
+impl LocaleKey {
+    /// Returns the field value for set language
+    pub(crate) fn get_value(self) -> &'static str {
+        let idx = self as usize;
+        if idx == 0 || idx >= MAX_KEY {
+            return "{{MISSING}}";
         }
-    } else {
-        *LOCAL_EN.get(&row_key).unwrap() // Eng
+        match get_lang().as_deref() {
+            Some("zh") => LOCAL_ZH[idx], // Chinese
+            Some("ru") => LOCAL_RU[idx], // Russian
+            _ => LOCAL_EN[idx], // English
+        }
     }
 }

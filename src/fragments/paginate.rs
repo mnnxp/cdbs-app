@@ -104,8 +104,8 @@ impl Component for Paginate {
     fn view(&self) -> Html {
         let color = "#1872f0";
         html!{
-            <nav class={"pagination-smart"} role={"navigation"} aria-label={"pagination-smart"}>
-                <div class={"buttons"}>
+            <nav class="pagination-smart" role="navigation" aria-label="pagination-smart">
+                <div class="buttons">
                     {self.ft_per_page()}
                     {self.ft_prev_btn(color)}
                     {match self.is_manual_page {
@@ -127,7 +127,7 @@ impl Paginate {
             false => String::from("/?"),
         };
         html!{
-            <div class={"button pagination-smart"}
+            <div class="button pagination-smart"
                     aria-label={self.page_set.current_page.to_string()}
                     aria-current={self.page_set.current_page.to_string()}
                     onclick={onclick_set_page}
@@ -143,17 +143,17 @@ impl Paginate {
         let oninput_change_page = self.link.callback(|ev: InputData| Msg::To(ev.value));
         html!{<>
             <input
-                id={"current_page"}
-                class={"input pagination-smart"}
-                type={"number"}
-                min={"1"}
+                id="current_page"
+                class="input pagination-smart"
+                type="number"
+                min="1"
                 max={self.total_page.to_string()}
                 placeholder={self.page_set.current_page.to_string()}
                 value={self.new_page.to_string()}
                 oninput={oninput_change_page} />
             <button
-                id={"to"}
-                class={"button is-link pagination-smart"}
+                id="to"
+                class="button is-link pagination-smart"
                 onclick={onclick_set_page}>
                 <span class="icon">
                     <i class="fas fa-space-shuttle" aria-hidden="true"></i>
@@ -169,8 +169,8 @@ impl Paginate {
         let color = color.to_string();
         html!{<>
             <button
-                id={"to_first"}
-                class={"button pagination-smart ps-first"}
+                id="to_first"
+                class="button pagination-smart ps-first"
                 onclick={onclick_first}
                 disabled={disabled}>
                 <span class="icon">
@@ -181,8 +181,8 @@ impl Paginate {
                 </span>
             </button>
             <button
-                id={"to_prev"}
-                class={"button pagination-smart ps-prev"}
+                id="to_prev"
+                class="button pagination-smart ps-prev"
                 onclick={onclick_prev}
                 disabled={disabled}>
                 <span class="icon">
@@ -204,8 +204,8 @@ impl Paginate {
         let color = color.to_string();
         html!{<>
             <button
-                id={"to_next"}
-                class={"button pagination-smart ps-next"}
+                id="to_next"
+                class="button pagination-smart ps-next"
                 onclick={onclick_next}
                 disabled={disabled}>
                 <span class="icon">
@@ -215,8 +215,8 @@ impl Paginate {
                 </span>
             </button>
             <button
-                id={"to_last"}
-                class={"button pagination-smart"}
+                id="to_last"
+                class="button pagination-smart"
                 onclick={onclick_last}
                 disabled={disabled || self.total_page == 0}>
                 <span class="icon">
@@ -236,9 +236,9 @@ impl Paginate {
         }));
 
         html!{
-            <div class={"select pagination-smart"}>
+            <div class="select pagination-smart">
                 <select
-                    id={"per_page"}
+                    id="per_page"
                     select={self.page_set.per_page.to_string()}
                     onchange={onchange_change_per_page} >
                     {for self.show_options.iter().map(|so|

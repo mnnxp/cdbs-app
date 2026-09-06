@@ -9,9 +9,10 @@ use log::debug;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::buttons::ft_import_btn;
+use crate::fragments::modal::ModalBlock;
 use crate::fragments::notification::show_notification;
 use crate::types::{Param, ParamValue, UUID};
-use crate::services::{get_value_field, resp_parsing};
+use crate::services::{LocaleKey, resp_parsing, unique_id};
 use crate::services::content_adapter::Markdownable;
 use crate::gqls::make_query;
 use crate::gqls::relate::{RegisterParamsBulk, register_params_bulk};
@@ -103,7 +104,7 @@ impl Component for ImportParamsData {
             },
             Msg::PreparingImport => {
                 self.new_params_raw.clear();
-                // self.stat_info = format!("{} {}", get_value_field(&213), result);
+                // self.stat_info = format!("{} {}", LocaleKey::DataUpdatedChangeRows.get_value(), result);
                 self.hide_import = true;
                 self.props.callback_add_params.emit(self.new_params.clone());
                 self.new_params.clear();
@@ -125,7 +126,7 @@ impl Component for ImportParamsData {
                         row_count += 1;
                     }
                 }
-                self.stat_info = format!("{}: {}", get_value_field(&346), row_count);
+                self.stat_info = format!("{}: {}", LocaleKey::Rows.get_value(), row_count);
             },
             Msg::ClearError => self.error = None,
         }
@@ -148,7 +149,7 @@ impl Component for ImportParamsData {
             <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
             {show_notification(&self.stat_info, "is-success", self.hide_import && !self.stat_info.is_empty())}
             {match self.hide_import {
-                true => ft_import_btn("open-import-btn", onclick_show_import, get_value_field(&209), false, false),
+                true => ft_import_btn("open-import-btn", onclick_show_import, LocaleKey::ImportingComponentParams.get_value(), false, false),
                 false => self.show_import_modal(),
             }}
         </>}
@@ -160,50 +161,48 @@ impl ImportParamsData {
         let onclick_hide_modal = self.link.callback(|_| Msg::ShowImport);
         let oninput_data = self.link.callback(|ev: InputData| Msg::UpdateData(ev.value));
         let onclick_subbmit = self.link.callback(|_| Msg::RequestRegisterParams);
-        let class_modal = match &self.hide_import {
-            true => "modal",
-            false => "modal is-active",
-        };
+        let textarea_id = unique_id("import-component-params");
+
         html!{
-            <div class={class_modal}>
-              <div class={"modal-background"} onclick={onclick_hide_modal.clone()} />
-                <div class={"modal-content"}>
-                  <div class={"card"}>
-                    <header class={"modal-card-head"}>
-                      <div class={"modal-card-title"}>
-                        <p>{get_value_field(&209)}</p>
-                      </div>
-                      <button class={"delete"} aria-label="close" onclick={onclick_hide_modal.clone()} />
-                    </header>
-                    <section class={"modal-card-body"}>
-                        <div class={"column"}>
-                            <div class={"subtitle is-6"}>
-                                {get_value_field(&234)}<br/>
-                                {get_value_field(&235).to_markdown()}
-                            </div>
+            <ModalBlock
+                modal_id="import-component-params"
+                title={LocaleKey::ImportingComponentParams.get_value()}
+                is_active={!self.hide_import}
+                on_close={onclick_hide_modal}
+                on_save={None}
+                save_disabled={false}
+            >
+                <>
+                <div class="column">
+                    <div class="subtitle is-6">
+                        {LocaleKey::UploadDataInstructions.get_value()}<br/>
+                        {LocaleKey::ImportParamsInstructions.get_value().to_markdown()}
+                    </div>
+                    <div class="field">
+                        <label for={textarea_id.clone()} class="label is-sr-only">{LocaleKey::ImportingComponentParams.get_value()}</label>
+                        <div class="control">
                             <textarea
-                                id={"update-description"}
-                                class={"textarea"}
-                                type={"text"}
-                                placeholder={get_value_field(&208)}
+                                id={textarea_id}
+                                class="textarea"
+                                placeholder={LocaleKey::PasteTableData.get_value()}
                                 value={self.new_params_raw.clone()}
                                 oninput={oninput_data}
-                                />
-                            <p class={"help"}>{self.stat_info.clone()}</p>
+                            />
                         </div>
-                        <div class={"column"}>
-                            {ft_import_btn(
-                                "import-params-btn",
-                                onclick_subbmit,
-                                get_value_field(&209),
-                                true,
-                                self.new_params_raw.is_empty()
-                            )}
-                        </div>
-                      </section>
-                  </div>
+                    </div>
+                    <p class="help">{self.stat_info.clone()}</p>
                 </div>
-              </div>
+                <div class="column">
+                    {ft_import_btn(
+                        "import-params-btn",
+                        onclick_subbmit,
+                        LocaleKey::ImportingComponentParams.get_value(),
+                        true,
+                        self.new_params_raw.is_empty()
+                    )}
+                </div>
+                </>
+            </ModalBlock>
         }
     }
 }

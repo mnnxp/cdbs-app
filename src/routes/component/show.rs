@@ -9,6 +9,7 @@ use log::debug;
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
+use crate::fragments::buttons::ft_discussion_btn;
 use crate::fragments::discussion::DiscussionCommentsBlock;
 use crate::routes::AppRoute;
 use crate::error::Error;
@@ -23,10 +24,10 @@ use crate::fragments::{
     },
     img_showcase::ImgShowcase,
     three_showcase::ThreeShowcase,
-    clipboard::ShareLinkBtn,
+    share_link::ShareLinkBtn,
 };
 use crate::services::content_adapter::{DateDisplay, Markdownable};
-use crate::services::{get_classes_table, get_logged_user, get_value_field, resp_parsing, set_focus, set_history_back, title_changer, Counter};
+use crate::services::{get_classes_table, get_logged_user, LocaleKey, resp_parsing, set_focus, set_history_back, title_changer, Counter};
 use crate::types::{ComponentInfo, FilesetProgramInfo, DownloadFile, ObjectType, Pathname, SlimUser, ToObject, UUID};
 use crate::gqls::make_query;
 use crate::gqls::component::{
@@ -326,7 +327,7 @@ impl Component for ShowComponent {
             Some(component_data) => html!{
                 <div class="component-page">
                     <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
-                    <div class="container page">
+                    <div class="container is-fluid page">
                         <div class="row">
                             <div class="card column">
                               {self.show_main_card(component_data)}
@@ -379,6 +380,7 @@ impl ShowComponent {
         let show_description_btn = self.link.callback(|_| Msg::ShowDescription);
         let callback_select_fileset = self.link.callback(|value: FilesetProgramInfo| Msg::SelectFileset(value));
         let callback_open_fileset = self.link.callback(|value: bool| Msg::ShowFilesetFilesBlock(value));
+        let callback_exit_fullscreen = self.link.callback(|_| Msg::Show3D);
 
         html!{<>
             <div class="columns">
@@ -386,6 +388,7 @@ impl ShowComponent {
                     true => html!{
                         <ThreeShowcase
                             fileset_uuid={self.select_fileset.as_ref().map(|f| f.uuid.clone()).unwrap_or_default()}
+                            on_exit_fullscreen={callback_exit_fullscreen}
                         />
                     },
                     false => html!{
@@ -466,28 +469,28 @@ impl ShowComponent {
     }
 
     fn show_component_info(&self, component_data: &ComponentInfo) -> Html {
+        let class_item = "is-flex is-align-items-center mr-3";
+        let class_icon = "icon is-small mr-1";
         html!{
-            <div class="columns is-mobile is-multiline">
-                <div class="column">
-                    {get_value_field(&159)}{": "}
+            <div class="is-flex is-flex-wrap-wrap is-align-items-center is-gap-3 mb-2">
+                <div class={class_item}>
+                    {LocaleKey::LCS.get_value()}{": "}
                     {component_data.actual_status.name.clone()}
                 </div>
-                <div class="column">{component_data.type_access.get_with_icon()}</div>
-                <div class="column is-narrow" title={get_value_field(&141)}>
-                    <span class="icon is-small">
+                <div class={class_item}>
+                    {component_data.type_access.get_with_icon()}
+                </div>
+                <div title={LocaleKey::Owner.get_value()} class={class_item}>
+                    <span class={class_icon}>
                         <i class={classes!("fa", "fa-user")}></i>
                     </span>
-                    {" "}
                     <GoToUser data = {component_data.owner_user.clone()} />
                 </div>
-                <div class="column is-narrow" title={get_value_field(&95)}>
-                    <span class="icon is-small">
+                <div title={LocaleKey::UpdatedAtLabel.get_value()} class={class_item}>
+                    <span class={class_icon}>
                         <i class={classes!("fa", "fa-edit")}></i>
                     </span>
-                    {" "}
-                    <span class="id-box">
-                        {component_data.updated_at.date_to_display()}
-                    </span>
+                    {component_data.updated_at.date_to_display()}
                 </div>
             </div>
         }
@@ -506,9 +509,9 @@ impl ShowComponent {
         html!{<>
             <div class="tabs mb-1">
                 <ul>
-                    <li class={at.0} onclick={onclick_tab_description}><a>{get_value_field(&61)}</a></li>
-                    <li class={at.1} onclick={onclick_tab_characteristics}><a>{get_value_field(&101)}</a></li>
-                    <li class={at.2} onclick={onclick_tab_component_files}><a>{get_value_field(&102)}</a></li>
+                    <li class={at.0} onclick={onclick_tab_description}><a>{LocaleKey::Description.get_value()}</a></li>
+                    <li class={at.1} onclick={onclick_tab_characteristics}><a>{LocaleKey::Characteristics.get_value()}</a></li>
+                    <li class={at.2} onclick={onclick_tab_component_files}><a>{LocaleKey::ComponentFiles.get_value()}</a></li>
                 </ul>
             </div>
             <div class="card-content p-0">
@@ -520,7 +523,7 @@ impl ShowComponent {
                                     250.. => match self.show_full_description {
                                         true => html!{},
                                         false => html!{<>
-                                            {format!("{:.*}", 200, component_data.description).to_markdown()}
+                                            {component_data.description.to_markdown_short()}
                                             {ft_see_btn(show_description_btn.clone(), self.show_full_description)}
                                         </>},
                                     },
@@ -551,23 +554,24 @@ impl ShowComponent {
 
     fn show_component_suppliers(&self, component_data: &ComponentInfo) -> Html {
         let table_label = match component_data.is_base {
-            true => get_value_field(&107).to_string(),
-            false => get_value_field(&108).to_string(),
+            true => LocaleKey::Suppliers.get_value().to_string(),
+            false => LocaleKey::MainSupplier.get_value().to_string(),
         };
         let classes_table = get_classes_table(component_data.component_suppliers.len());
         html!{
-            <div class={"card"}>
-                <header class={"card-header"}>
-                    <p class={"card-header-title"}>{table_label}</p>
+            <div class="card">
+                <header class="card-header">
+                    <p class="card-header-title">{table_label}</p>
                 </header>
-                <div class={"card-content"}>
-                    <div class={"content"}>
+                <div class="card-content">
+                <div class="table-container">
+                    <div class="content">
                         <table class={classes_table}>
                             <thead>
                             <tr>
-                                <th>{get_value_field(&109)}</th> // Company
-                                <th>{get_value_field(&61)}</th> // Description
-                                <th>{get_value_field(&111)}</th> // Action
+                                <th>{LocaleKey::Company.get_value()}</th>
+                                <th>{LocaleKey::Description.get_value()}</th>
+                                <th>{LocaleKey::Action.get_value()}</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -597,6 +601,7 @@ impl ShowComponent {
                             </tbody>
                         </table>
                     </div>
+                    </div>
                 </div>
             </div>
         }
@@ -605,17 +610,18 @@ impl ShowComponent {
     fn show_component_standards(&self, component_data: &ComponentInfo) -> Html {
         let classes_table = get_classes_table(component_data.component_standards.len());
         html!{
-            <div class={"card"}>
-                <header class={"card-header"}>
-                    <p class={"card-header-title"}>{get_value_field(&103)}</p> // Standards
+            <div class="card">
+                <header class="card-header">
+                    <p class="card-header-title">{LocaleKey::Standards.get_value()}</p>
                 </header>
-                <div class={"card-content"}>
-                    <div class={"content"}>
+                <div class="card-content">
+                <div class="table-container">
+                    <div class="content">
                         <table class={classes_table}>
                             <thead>
                             <tr>
-                                <th>{get_value_field(&110)}</th> // Name
-                                <th>{get_value_field(&111)}</th> // Action
+                                <th>{LocaleKey::Name.get_value()}</th>
+                                <th>{LocaleKey::Action.get_value()}</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -630,6 +636,7 @@ impl ShowComponent {
                             </tbody>
                         </table>
                     </div>
+                </div>
                 </div>
             </div>
         }
@@ -665,9 +672,9 @@ impl ShowComponent {
         let show_btn = match self.show_three_view {
             true => {
                 class_btn.push("is-active");
-                get_value_field(&301)
+                LocaleKey::Close.get_value()
             },
-            false => get_value_field(&300),
+            false => LocaleKey::View.get_value(),
         };
 
         html!{<>
@@ -675,30 +682,22 @@ impl ShowComponent {
             id="three-button"
             class={class_btn}
             onclick={onclick_three_viewer}
-            title={get_value_field(&325)}>
+            title={LocaleKey::Open3DView.get_value()}>
               <span class="icon is-small">
                 <i class={classes!("fa", "fa-cube")} style="color: #1872f0;"></i>
               </span>
-              <span>{show_btn}</span>
+              <span class="is-hidden-mobile">{show_btn}</span>
             </button>
         </>}
     }
 
     fn show_discussion_btn(&self) -> Html {
-        let onclick_open_discussion_btn =
-            self.link.callback(|_| Msg::OpenDiscussionBlock);
-        let class_discussion_btn = match self.open_discussion_card {
-            true => "button is-light is-info is-active",
-            false => "button is-info",
-        };
-        html!{
-            <button
-            class={class_discussion_btn}
-            onclick={onclick_open_discussion_btn}>
-                <span class={"icon is-small"}><i class={"far fa-comments"}></i></span>
-                <span>{get_value_field(&380)}</span>
-            </button>
-        }
+        let onclick_discussion_btn = self.link.callback(|_| Msg::OpenDiscussionBlock);
+        ft_discussion_btn(
+            "component-discussion-btn",
+            onclick_discussion_btn,
+            self.open_discussion_card
+        )
     }
 
     fn show_component_discussion(&self) -> Html {
@@ -706,7 +705,7 @@ impl ShowComponent {
             true => html!{<>
                 <div id="show-component-discussion" class="card">
                     <header class="card-header has-background-info-light">
-                        <p class="card-header-title">{get_value_field(&380)}</p>
+                        <p class="card-header-title">{LocaleKey::Discussion.get_value()}</p>
                     </header>
                     <div class="card-content">
                         <DiscussionCommentsBlock

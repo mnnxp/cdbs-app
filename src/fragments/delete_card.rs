@@ -1,5 +1,5 @@
-use yew::{html, Html, Callback, InputData, MouseEvent};
-use crate::services::get_value_field;
+use yew::{classes, html, Callback, Html, InputData, MouseEvent};
+use crate::{fragments::buttons::{ft_cancel_btn, ft_delete_class_btn}, services::LocaleKey};
 
 /// Generates a card with a delete confirmation modal.
 ///
@@ -46,7 +46,7 @@ pub fn ft_delete_card(
                             hide_delete_modal,
                             disable_delete_btn,
                         )}
-                        <p>{get_value_field(&408)}</p>
+                        <p>{LocaleKey::DeleteWarning.get_value()}</p>
                         <button
                             id={format!("delete-{}-open-btn", id_tag)}
                             class="button is-danger"
@@ -71,68 +71,60 @@ fn modal_delete(
     hide_delete_modal: bool,
     disable_delete_btn: bool,
 ) -> Html {
-    let class_modal = match hide_delete_modal {
-        true => "modal",
-        false => "modal is-active",
-    };
+    let modal_classes = classes!(
+        "modal",
+        "is-isolated-modal",
+        if hide_delete_modal { None } else { Some("is-active") }
+    );
 
-    html!{
-        <div class={class_modal}>
+    html! {
+        <div class={modal_classes}>
             <div class="modal-background" onclick={onclick_hide_modal.clone()} />
             <div class="modal-content">
-                <div id="delete-component-card" class="card">
-                    <header class="card-header">
-                        <h2 class="card-header-title">
-                            {get_value_field(&409)}
+                <div id="delete-component-card" class="card p-4">
+                    <header class="pb-3">
+                        <h2 class="title is-4 has-text-centered">
+                            {LocaleKey::AreYouSure.get_value()}
                         </h2>
                     </header>
-                    <span tabindex="0"></span>
-                    <div class="card-content">
-                        <div class="content">
-                            <div id="confirm-danger-modal-content">
-                                <div class="column has-background-danger-light">
-                                    <span>{get_value_field(&408)}</span>
-                                    <span>
-                                        {" "}
-                                        {get_value_field(&410)}
-                                        <strong>{object_name}</strong>
-                                        {get_value_field(&411)}
-                                    </span>
-                                </div>
-                                <div class="pb-1 mb-1 pt-1 mt-1">
-                                    <p>{get_value_field(&412)}</p>
-                                </div>
-                                <div class="pb-1 mb-1">
-                                    <label class="has-text-weight-bold" for="confirm-name-input">{get_value_field(&413)}</label>
-                                    <br/>
-                                    <code class="has-text-black">{confirm_key}</code>
-                                </div>
-                                <fieldset id="confirm-fieldset" class="field" aria-invalid="true">
-                                    <legend tabindex="-1"> </legend>
-                                    <input
-                                        id="confirm-name-input"
-                                        class="input"
-                                        type="text"
-                                        value={confirm_text.clone()}
-                                        oninput={oninput_delete}
-                                        />
-                                </fieldset>
-                                <div class="column">
-                                    <div class="buttons">
-                                        <button id="cancel-btn" class="button is-warning is-half" onclick={onclick_hide_modal}>
-                                            {get_value_field(&221)} // Cancel
-                                        </button>
-                                        <button
-                                        id="confirm-btn"
-                                        class="button is-danger is-half"
-                                        disabled={disable_delete_btn}
-                                        onclick={onclick_delete} >
-                                            {get_value_field(&220)} // Yes, delete
-                                        </button>
-                                    </div>
-                                </div>
+                    <div id="confirm-danger-modal-content" class="content">
+                        <div class="column has-background-danger-light">
+                            <span>{LocaleKey::DeleteWarning.get_value()}</span>
+                            <span class="ml-3">
+                                {LocaleKey::AfterThisPoint.get_value()}
+                                <strong>{object_name}</strong>
+                                {LocaleKey::DataCannotBeRecovered.get_value()}
+                            </span>
+                        </div>
+                        <div class="py-2">
+                            <p>{LocaleKey::ConfirmIntention.get_value()}</p>
+                        </div>
+                        <div class="field">
+                            <label class="has-text-weight-bold" for="confirm-name-input">
+                                {LocaleKey::EnterToConfirm.get_value()}
+                            </label>
+                            <div class="control mt-1">
+                                <code class="has-text-black">{confirm_key}</code>
                             </div>
-                            <span tabindex="0"></span>
+                        </div>
+                        <div class="field">
+                            <div class="control">
+                                <input
+                                    id="confirm-name-input"
+                                    class="input"
+                                    type="text"
+                                    value={confirm_text}
+                                    oninput={oninput_delete}
+                                />
+                            </div>
+                        </div>
+                        <div class="columns mt-4">
+                            <div class="column">
+                                {ft_cancel_btn("delete-cancel", onclick_hide_modal, classes!("is-fullwidth"))}
+                            </div>
+                            <div class="column">
+                                {ft_delete_class_btn("delete-confirm", onclick_delete, true, disable_delete_btn, classes!("is-fullwidth"))}
+                            </div>
                         </div>
                     </div>
                 </div>

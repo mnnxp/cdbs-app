@@ -1,0 +1,128 @@
+use yew::{classes, html, Callback, ChangeData, Html, InputData};
+use crate::fragments::form_input::{render_form_input, InputConfig};
+use crate::services::LocaleKey;
+use crate::types::{CompanyRepresentUpdateInfo, Region, RegisterCompanyRepresentInfo, RepresentationType};
+
+pub(crate) trait RepresentFormValues {
+    fn name(&self) -> String;
+    fn phone(&self) -> String;
+    fn address(&self) -> String;
+}
+
+impl RepresentFormValues for RegisterCompanyRepresentInfo {
+    fn name(&self) -> String { self.name.clone() }
+    fn phone(&self) -> String { self.phone.clone() }
+    fn address(&self) -> String { self.address.clone() }
+}
+
+impl RepresentFormValues for CompanyRepresentUpdateInfo {
+    fn name(&self) -> String { self.name.clone().unwrap_or_default() }
+    fn phone(&self) -> String { self.phone.clone().unwrap_or_default() }
+    fn address(&self) -> String { self.address.clone().unwrap_or_default() }
+}
+
+pub(crate) struct FormCallbacks {
+    pub(crate) oninput_name: Callback<InputData>,
+    pub(crate) oninput_phone: Callback<InputData>,
+    pub(crate) oninput_address: Callback<InputData>,
+    pub(crate) onchange_region: Callback<ChangeData>,
+    pub(crate) onchange_type: Callback<ChangeData>,
+}
+
+/// Universal form for creating/updating representation
+pub(crate) fn render_represent_form<T: RepresentFormValues>(
+    data: &T,
+    callbacks: FormCallbacks,
+    regions: &[Region],
+    selected_region_id: usize,
+    represent_types: &[RepresentationType],
+    selected_type_id: usize,
+    loading: bool,
+) -> Html {
+    html!{
+        <>
+            <div class="mb-4">
+                {render_form_input(InputConfig {
+                    id: "name",
+                    label: LocaleKey::Name.get_value(),
+                    value: data.name(),
+                    oninput: callbacks.oninput_name,
+                    is_disabled: loading,
+                    icon: Some("fas fa-building"),
+                    add_classes: classes!(""),
+                    is_danger: false,
+                })}
+            </div>
+            <div class="columns is-desktop mb-0">
+                <div class="column">
+                    {render_form_input(InputConfig {
+                        id: "tel",
+                        label: LocaleKey::Phone.get_value(),
+                        value: data.phone(),
+                        oninput: callbacks.oninput_phone,
+                        is_disabled: loading,
+                        icon: Some("fas fa-phone"),
+                        add_classes: classes!(""),
+                        is_danger: false,
+                    })}
+                </div>
+                <div class="column">
+                    <div class="field">
+                        <label class="label">{LocaleKey::RepresentationType.get_value()}</label>
+                        <div class="control">
+                            <div class="select is-fullwidth">
+                              <select onchange={callbacks.onchange_type} disabled={loading}>
+                                { for represent_types.iter().map(|x|
+                                    html!{
+                                        <option
+                                            value={x.representation_type_id.to_string()}
+                                            selected={x.representation_type_id == selected_type_id}
+                                        >
+                                            {&x.representation_type}
+                                        </option>
+                                    }
+                                )}
+                              </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="columns is-desktop mb-0">
+                <div class="column">
+                    <div class="field">
+                        <label class="label">{LocaleKey::Region.get_value()}</label>
+                        <div class="control">
+                            <div class="select is-fullwidth">
+                              <select onchange={callbacks.onchange_region} disabled={loading}>
+                                { for regions.iter().map(|x|
+                                    html!{
+                                        <option
+                                            value={x.region_id.to_string()}
+                                            selected={x.region_id == selected_region_id}
+                                        >
+                                            {&x.region}
+                                        </option>
+                                    }
+                                )}
+                              </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="column">
+                    {render_form_input(InputConfig {
+                        id: "address",
+                        label: LocaleKey::Address.get_value(),
+                        value: data.address(),
+                        oninput: callbacks.oninput_address,
+                        is_disabled: loading,
+                        icon: Some("fas fa-map-marker-alt"),
+                        add_classes: classes!(""),
+                        is_danger: false,
+                    })}
+                </div>
+            </div>
+        </>
+    }
+}

@@ -10,13 +10,11 @@ use log::debug;
 use wasm_bindgen_futures::spawn_local;
 use web_sys;
 
+use crate::fragments::form_input::InputConfig;
 use crate::fragments::list_errors::ListErrors;
 use crate::error::Error;
 use crate::routes::AppRoute;
-use crate::services::{
-    set_token, Auth, set_logged_user, get_logged_user, get_value_field,
-    set_history_back, get_history_back
-};
+use crate::services::{set_token, Auth, set_logged_user, get_logged_user, LocaleKey, set_history_back, get_history_back};
 use crate::types::{LoginInfo, LoginInfoWrapper, SlimUser, UserToken};
 use crate::gqls::make_query;
 use crate::gqls::user::{GetMySelf, get_my_self};
@@ -36,6 +34,7 @@ pub struct Login {
     props: Props,
     router_agent: Arc<Mutex<Box<dyn Bridge<RouteAgent>>>>,
     link: ComponentLink<Self>,
+    loading: bool,
 }
 
 pub enum Msg {
@@ -61,6 +60,7 @@ impl Component for Login {
             router_agent: Arc::new(Mutex::new(RouteAgent::bridge(link.callback(|_| Msg::Ignore)))) ,
             task: None,
             link,
+            loading: false,
         }
     }
 
@@ -79,6 +79,7 @@ impl Component for Login {
         let router_agent = self.router_agent.clone();
         match msg {
             Msg::Request => {
+                self.loading = true;
                 self.task = Some(self.auth.login(
                     LoginInfoWrapper { user: self.request.clone() },
                     link.callback(Msg::Response)
@@ -93,10 +94,12 @@ impl Component for Login {
                 // debug!("get_token().unwrap(): {:?}", get_token().unwrap());
             },
             Msg::Response(Err(err)) => {
+                self.loading = false;
                 self.error = Some(err);
                 self.task = None;
             },
             Msg::GetResponseMySelf(res) => {
+                self.loading = false;
                 debug!("res: {}", res);
                 let data: serde_json::Value = serde_json::from_str(res.as_str()).unwrap();
                 let res = data.as_object().unwrap().get("data").unwrap();
@@ -136,68 +139,58 @@ impl Component for Login {
             ev.prevent_default(); /* Prevent event propagation */
             Msg::Request
         });
-        let oninput_username =
-            self.link.callback(|ev: InputData| Msg::UpdateUsername(ev.value));
-        let oninput_password =
-            self.link.callback(|ev: InputData| Msg::UpdatePassword(ev.value));
+        let oninput_username = self.link.callback(|ev: InputData| Msg::UpdateUsername(ev.value));
+        let oninput_password = self.link.callback(|ev: InputData| Msg::UpdatePassword(ev.value));
 
-        html!{<div class="container page">
-            <div class="auth-page">
-                <h1 class="title">{get_value_field(&13)}</h1>
-                <h2 class="subtitle">
-                    <RouterAnchor<AppRoute> route={AppRoute::Register}>
-                        {get_value_field(&18)}
-                    </RouterAnchor<AppRoute>>
-                </h2>
+        html! {
+            <div class="container is-fluid page">
                 <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
-                <form onsubmit={onsubmit}>
-                    <fieldset class="box">
-                        <fieldset class="field">
-                            <label class="label">{get_value_field(&19)}</label>
-                            <div class="control has-icons-left has-icons-right">
-                                <input
-                                    id="username"
-                                    class="input"
-                                    type="text"
-                                    placeholder={get_value_field(&19)}
-                                    value={self.request.username.clone()}
-                                    oninput={oninput_username}
-                                    autocomplete={"on"}
-                                    />
-                                <span class="icon is-small is-left">
-                                  <i class="fas fa-user"></i>
-                                </span>
+                <div class="auth-page">
+                    <h1 class="title is-spaced mb-3">{LocaleKey::SignIn.get_value()}</h1>
+                    <h2 class="subtitle mt-0 mb-4">
+                        <RouterAnchor<AppRoute> route={AppRoute::Register}>
+                            {LocaleKey::NeedAccount.get_value()}
+                        </RouterAnchor<AppRoute>>
+                    </h2>
+                    <form onsubmit={onsubmit}>
+                        <div class="box p-5">
+                            <div class="field mb-4">
+                                {InputConfig::profile_input(
+                                    "username",
+                                    LocaleKey::Username,
+                                    Some(self.request.username.clone()),
+                                    oninput_username,
+                                    Some("fas fa-user"),
+                                    false,
+                                    false,
+                                )}
+                                <p class="help has-text-grey mt-1">{LocaleKey::LoginNote.get_value()}</p>
                             </div>
-                            <p class="help">{get_value_field(&81)}</p>
-                        </fieldset>
-                        <fieldset class="field">
-                            <label class="label">{get_value_field(&20)}</label>
-                            <div class="control has-icons-left">
-                                <input
-                                    id="password"
-                                    class="input"
-                                    type="password"
-                                    placeholder={get_value_field(&20)}
-                                    value={self.request.password.clone()}
-                                    oninput={oninput_password}
-                                    autocomplete={"on"}
-                                    />
-                                <span class="icon is-small is-left">
-                                  <i class="fas fa-lock"></i>
-                                </span>
+                            <div class="field mb-5">
+                                {InputConfig::profile_input(
+                                    "password",
+                                    LocaleKey::Password,
+                                    Some(self.request.password.clone()),
+                                    oninput_password,
+                                    Some("fas fa-lock"),
+                                    false,
+                                    false,
+                                )}
+                                <p class="help has-text-grey mt-1">{LocaleKey::InputWarning.get_value()}</p>
                             </div>
-                            <p class="help">{get_value_field(&321)}</p>
-                        </fieldset>
-                        <button
-                            id="submit-button"
-                            class={classes!("button", "is-info", "is-fullwidth", "is-large")}
-                            type="submit"
-                            disabled={false}>
-                            {get_value_field(&44)}
-                        </button>
-                    </fieldset>
-                </form>
+                            <button
+                                id="submit-button"
+                                class={classes!("button", "is-info", "is-fullwidth", "is-large")}
+                                type="submit"
+                                disabled={self.loading}
+                            >
+                                {LocaleKey::Login.get_value()}
+                            </button>
+
+                        </div>
+                    </form>
+                </div>
             </div>
-        </div>}
+        }
     }
 }

@@ -8,8 +8,9 @@ use log::debug;
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
-use crate::fragments::clipboard::ShareLinkBtn;
+use crate::fragments::share_link::ShareLinkBtn;
 use crate::fragments::company::ListItemCompany;
+use crate::fragments::modal::ModalBlock;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{
@@ -20,7 +21,7 @@ use crate::fragments::{
     img_showcase::ImgShowcase,
 };
 use crate::services::content_adapter::{DateDisplay, Markdownable};
-use crate::services::{get_logged_user, get_value_field, resp_parsing, set_history_back, title_changer, Counter};
+use crate::services::{get_logged_user, LocaleKey, resp_parsing, set_history_back, title_changer, Counter};
 use crate::types::{ComponentsQueryArg, DownloadFile, Pathname, SlimUser, StandardInfo, UUID};
 use crate::gqls::make_query;
 use crate::gqls::standard::{
@@ -268,7 +269,7 @@ impl Component for ShowStandard {
             Some(standard_data) => html!{
                 <div class="standard-page">
                     <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
-                    <div class="container page">
+                    <div class="container is-fluid page">
                         <div class="row">
                             <div class="card column">
                               {self.show_main_card(standard_data)}
@@ -319,17 +320,16 @@ impl ShowStandard {
               <div class="column">
                 <div class="columns pb-0 mb-0">
                     <div class="column">
-                        {get_value_field(&159)}{": "}
+                        {LocaleKey::LCS.get_value()}{": "}
                         {standard_data.standard_status.name.clone()}
                     </div>
                     <div class="column">
                         {standard_data.type_access.get_with_icon()}
                     </div>
-                    <div class="column is-narrow" title={get_value_field(&159)}>
-                        <span class="icon is-small">
-                            <i class={classes!("fa", "fa-edit")}></i>
+                    <div class="column is-narrow">
+                        <span class="icon is-small mr-3">
+                            <i class={classes!("fas", "fa-calendar-day")}></i>
                         </span>
-                        {" "}
                         <span class="id-box">
                             {standard_data.publication_at.date_to_display()}
                         </span>
@@ -345,12 +345,12 @@ impl ShowStandard {
                     {self.show_followers_btn()}
                     <ShareLinkBtn />
                 </div>
-                <div id={"standard-description"} class="pl-5 pr-5">
+                <div id="standard-description" class="pl-5 pr-5">
                     {match standard_data.description.len() {
                         250.. => html!{<>
                             {match self.show_full_description {
                                 true => standard_data.description.to_markdown(),
-                                false => format!("{:.*}", 200, standard_data.description).to_markdown(),
+                                false => standard_data.description.to_markdown_short(),
                             }}
                             {ft_see_btn(show_description_btn, self.show_full_description)}
                         </>},
@@ -366,7 +366,7 @@ impl ShowStandard {
         html!{
             <div class="card">
                 <header class="card-header">
-                    <p class="card-header-title">{get_value_field(&153)}</p> // Files
+                    <p class="card-header-title">{LocaleKey::FilesOfStandard.get_value()}</p>
                 </header>
                 <div class="card-content">
                     <div class="content">
@@ -397,8 +397,8 @@ impl ShowStandard {
     fn show_related_components_btn(&self) -> Html {
         let onclick_related_components_btn = self.link.callback(|_| Msg::ShowComponentsList);
         let (text_btn, classes_btn) = match &self.show_related_components {
-            true => (get_value_field(&295), "button is-info is-light is-active"),
-            false => (get_value_field(&296), "button is-info"),
+            true => (LocaleKey::HideComponents.get_value(), "button is-info is-light is-active"),
+            false => (LocaleKey::SeeComponents.get_value(), "button is-info"),
         };
 
         html!{
@@ -414,7 +414,7 @@ impl ShowStandard {
         html!{
             <div class="card">
                 <header class="card-header">
-                    <p class="card-header-title">{get_value_field(&154)}</p> // Components
+                    <p class="card-header-title">{LocaleKey::ComponentsLabel.get_value()}</p>
                 </header>
                 <div class="card-content">
                     <div class="content">
@@ -441,26 +441,25 @@ impl ShowStandard {
 
     fn show_modal_company_info(&self, standard_data: &StandardInfo) -> Html {
         let onclick_company_data_info = self.link.callback(|_| Msg::ShowCompanyCard);
-        let class_modal = match &self.show_owner_company {
-            true => "modal is-active",
-            false => "modal",
-        };
-
-        html!{<>
-            {get_value_field(&109)}{" "}
-            <a class={"has-text-grey-light has-text-weight-bold"} onclick={onclick_company_data_info.clone()} >
+        let callback_company_data_info = self.link.callback(|_| Msg::ShowCompanyCard);
+        html! {<>
+            <span class="mr-3">{LocaleKey::Company.get_value()}</span>
+            <a class="has-text-grey-light has-text-weight-bold" onclick={onclick_company_data_info}>
                 {standard_data.owner_company.shortname.clone()}
             </a>
-            <div class={class_modal}>
-              <div class="modal-background" onclick={onclick_company_data_info.clone()} />
-                <div class="card">
-                    <ListItemCompany
-                        data={standard_data.owner_company.clone()}
-                        show_list={true}
-                    />
-                </div>
-              <button class="modal-close is-large" aria-label="close" onclick={onclick_company_data_info} />
-            </div>
+            <ModalBlock
+                modal_id="company-info"
+                title=""
+                is_active={self.show_owner_company}
+                on_close={callback_company_data_info}
+                on_save={None}
+                save_disabled={false}
+            >
+                <ListItemCompany
+                    data={standard_data.owner_company.clone()}
+                    show_list={true}
+                />
+            </ModalBlock>
         </>}
     }
 }

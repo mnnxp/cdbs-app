@@ -51,6 +51,19 @@ where
     Ok(res.unwrap())
 }
 
+/// Get single value from JSON value by key
+pub(crate) fn get_single_from_value<T>(
+    value: &Value,
+    key_word: &str,
+) -> Result<T, Error>
+where
+    for<'de> T: Deserialize<'de> + 'static + std::fmt::Debug,
+{
+    debug!("Key word: {:?}", key_word);
+    let res = from_value(value.get(key_word).unwrap().clone());
+    Ok(res.unwrap())
+}
+
 /// Retrieves an object with the key "data" from the response data and returns a JSON value.
 pub(crate) fn get_value_response(response: String) -> Result<Value, Error> {
     let data: Value = from_str(response.as_str()).unwrap();

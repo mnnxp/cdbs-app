@@ -16,7 +16,7 @@ use crate::fragments::{
 };
 use crate::types::{Pathname, ShowStandardShort};
 use crate::services::content_adapter::{DateDisplay, Markdownable};
-use crate::services::{get_value_field, resp_parsing};
+use crate::services::{LocaleKey, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::standard::{
     AddStandardFav, add_standard_fav,
@@ -171,11 +171,11 @@ impl ListItemStandard {
                   <div class="media-content" onclick={show_standard_btn.clone()}>
                     <div class="columns is-gapless mb-0">
                         <div class="column">
-                            {get_value_field(&141)} // owner
+                            {LocaleKey::Owner.get_value()}
                             <span class="has-text-weight-bold">{owner_company.shortname.clone()}</span>
                         </div>
                         <div class="column">
-                            {format!("{}: ", get_value_field(&155))}
+                            {format!("{}: ", LocaleKey::PublicationAtLabel.get_value())}
                             <span class="id-box has-text-weight-bold">{publication_at.date_to_display()}</span>
                         </div>
                     </div>
@@ -189,7 +189,7 @@ impl ListItemStandard {
                             classes!("far", "fa-folder"),
                             show_standard_btn,
                             String::new(),
-                            get_value_field(&315),
+                            LocaleKey::Show.get_value(),
                             Pathname::Standard(self.props.data.uuid.clone())
                         )}
                         {ft_follow_btn(
@@ -229,7 +229,7 @@ impl ListItemStandard {
               </div>
               <div class="has-text-weight-bold is-size-4">{name}</div>
               <div class="overflow-title">
-                {get_value_field(&141)} // owner
+                {LocaleKey::Owner.get_value()}
                   <span class="has-text-weight-bold">
                     {format!("{} {}",
                       &owner_company.shortname,
@@ -238,7 +238,7 @@ impl ListItemStandard {
                   </span>
                 </div>
               <div class="btnBox">
-                {res_fullwidth_btn(show_standard_btn, get_value_field(&143), Pathname::Standard(self.props.data.uuid.clone()))}
+                {res_fullwidth_btn(show_standard_btn, LocaleKey::ShowStandard.get_value(), Pathname::Standard(self.props.data.uuid.clone()))}
                 <div style="margin-left: 8px;">
                 {ft_follow_btn(
                     trigger_fav_btn,

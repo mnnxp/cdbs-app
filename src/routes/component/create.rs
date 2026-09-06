@@ -7,13 +7,14 @@ use log::debug;
 use graphql_client::GraphQLQuery;
 use wasm_bindgen_futures::spawn_local;
 
+use crate::fragments::form_input::InputConfig;
 use crate::fragments::markdown_edit::MarkdownEditCard;
 use crate::fragments::type_access::TypeAccessBlock;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::list_errors::ListErrors;
 use crate::fragments::buttons::ft_create_btn;
-use crate::services::{get_from_value, get_logged_user, get_value_field, get_value_response, resp_parsing, set_focus, set_history_back};
+use crate::services::{get_from_value, get_logged_user, LocaleKey, get_value_response, resp_parsing, set_focus, set_history_back};
 use crate::types::{UUID, ComponentCreateData, TypeAccessInfo, ActualStatus};
 use crate::gqls::make_query;
 use crate::gqls::component::{
@@ -166,6 +167,7 @@ impl Component for CreateComponent {
                             link.send_message(Msg::RequestChangeOwnerSupplier(component_uuid, company_uuid.clone()));
                             return true
                         }
+                        self.disable_create_btn = false;
                         // Redirect to setting component page
                         self.router_agent.send(
                             ChangeRoute(AppRoute::ComponentSettings(component_uuid).into())
@@ -211,18 +213,24 @@ impl Component for CreateComponent {
 
         html!{
             <div class="component-page">
-                <div class="container page">
-                    <div class="row">
-                        <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
-                        <h1 class="title">{get_value_field(&290)}</h1>
+                <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
+                <div class="container is-fluid page">
+                    <div class="box p-5">
+                        <h1 class="title is-3 mb-4">
+                            // <span class="icon mr-3"><i class="fas fa-building"></i></span>
+                            {LocaleKey::CreateComponent.get_value()}
+                        </h1>
                         {self.show_main_card()}
-                        <br/>
-                        {ft_create_btn(
-                            "create-component",
-                            "is-medium".into(),
-                            onclick_create_component,
-                            self.disable_create_btn,
-                        )}
+                        <div class="field mt-5">
+                            <div class="control">
+                                {ft_create_btn(
+                                    "create-component",
+                                    "is-medium".into(),
+                                    onclick_create_component,
+                                    self.disable_create_btn,
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -243,35 +251,33 @@ impl CreateComponent {
             self.link.callback(|ev: InputData| Msg::UpdateName(ev.value));
         let oninput_description =
             self.link.callback(|ev: InputData| Msg::UpdateDescription(ev.value));
-        let class_name = match self.name_empty {
-            true => "input is-danger",
-            false => "input",
-        };
-
+        let current_status_id = self.request_component.actual_status_id;
         html!{
-            <div class="card">
-                <div class="column">
-                  <label class="title is-5" for="create-component-name">{get_value_field(&110)}</label>
-                  <input
-                      id="create-component-name"
-                      class={class_name}
-                      type="text"
-                      placeholder={get_value_field(&110)}
-                      value={self.request_component.name.clone()}
-                      oninput={oninput_name} />
+            <>
+                <div class="field mb-4">
+                    {InputConfig::profile_input(
+                        "create-component-name",
+                        LocaleKey::Name,
+                        Some(self.request_component.name.clone()),
+                        oninput_name,
+                        None,
+                        self.disable_create_btn,
+                        self.name_empty,
+                    )}
                 </div>
                 <MarkdownEditCard
                     id_tag={"create-component-description"}
-                    title={get_value_field(&61)}
+                    title={LocaleKey::Description.get_value()}
                     placeholder={String::new()}
                     raw_text={self.request_component.description.clone()}
                     oninput_text={oninput_description}
                     />
+                <div class="columns is-desktop mb-0 mt-5">
                 <div class="column">
-                    <div class="columns">
-                        <div class="column">
-                            <label class="label" for="create-component-actual-status">{get_value_field(&96)}</label>
-                            <div class="select">
+                    <div class="field">
+                        <label class="label" for="create-component-actual-status">{LocaleKey::LifeCycleStage.get_value()}</label>
+                        <div class="control">
+                            <div class="select is-fullwidth">
                               <select
                                   id="create-component-actual-status"
                                   select={self.request_component.actual_status_id.to_string()}
@@ -280,7 +286,7 @@ impl CreateComponent {
                                 { for self.actual_statuses.iter().map(|x|
                                     html!{
                                         <option value={x.actual_status_id.to_string()}
-                                              selected={x.actual_status_id == self.request_component.actual_status_id} >
+                                              selected={x.actual_status_id == current_status_id} >
                                             {&x.name}
                                         </option>
                                     }
@@ -288,17 +294,20 @@ impl CreateComponent {
                               </select>
                             </div>
                         </div>
-                        <div class="column">
-                          <label class="label" for="type-access-block">{get_value_field(&58)}</label>
-                            <TypeAccessBlock
-                                change_cb={onchange_type_access}
-                                types={self.types_access.clone()}
-                                selected={self.request_component.type_access_id}
-                            />
-                        </div>
                     </div>
                 </div>
-            </div>
+                <div class="column">
+                    <div class="field">
+                        <label class="label" for="type-access-block">{LocaleKey::TypeAccess.get_value()}</label>
+                        <TypeAccessBlock
+                            change_cb={onchange_type_access}
+                            types={self.types_access.clone()}
+                            selected={self.request_component.type_access_id}
+                        />
+                    </div>
+                </div>
+                </div>
+            </>
         }
     }
 }

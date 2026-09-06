@@ -9,7 +9,7 @@ use crate::fragments::{
     standard::{KeywordsTags, KeywordTagItem},
 };
 use crate::types::{UUID, Keyword};
-use crate::services::{get_value_field, resp_parsing};
+use crate::services::{LocaleKey, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::standard::{
     GetStandardKeywords, get_standard_keywords,
@@ -218,7 +218,7 @@ impl Component for AddKeywordsTags {
             <div class="card">
             <ListErrors error={self.error.clone()} clear_error={onclick_clear_error.clone()}/>
                 <header class="card-header">
-                    <p class="card-header-title">{get_value_field(&105)}</p> // Keywords
+                    <p class="card-header-title">{LocaleKey::Keywords.get_value()}</p>
                 </header>
                 <div class="card-content">
                     <div class="content">
@@ -255,10 +255,10 @@ impl AddKeywordsTags {
                         class="input"
                         type="text"
                         value={self.ipt_keyword.clone()}
-                        placeholder={get_value_field(&193)} // Emter keywords separated by spaces or commas
+                        placeholder={LocaleKey::EnterKeywords.get_value()}
                     />
                     {match self.bad_keyword {
-                        true => html!{<p class="help is-danger">{get_value_field(&243)}</p>}, // Keywords must be less...
+                        true => html!{<p class="help is-danger">{LocaleKey::KeywordsLimit.get_value()}</p>},
                         false => html!{}
                     }}
                 </div>

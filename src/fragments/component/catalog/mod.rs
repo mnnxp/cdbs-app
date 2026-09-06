@@ -8,11 +8,13 @@ use log::debug;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::error::Error;
+use crate::fragments::buttons::ft_change_view_btn;
+use crate::fragments::modal::ModalBlock;
 use crate::fragments::{list_errors::ListErrors, list_empty::ListEmpty};
 use crate::routes::component::CreateComponent;
 use crate::routes::AppRoute;
 use crate::types::{ComponentsQueryArg, ShowComponentShort, UUID};
-use crate::services::{get_value_field, resp_parsing};
+use crate::services::{LocaleKey, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::component::{
     GetComponentsShortList, get_components_short_list,
@@ -114,7 +116,7 @@ impl Component for CatalogComponents {
                     ))
                     .await
                     .unwrap();
-                    debug!("GetList res: {:?}", res);
+                    // debug!("GetList res: {:?}", res);
                     link.send_message(Msg::UpdateList(res));
                 });
             },
@@ -182,12 +184,9 @@ impl Component for CatalogComponents {
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         let onclick_change_view = self.link.callback(|_| Msg::SwitchShowType);
-        let class_for_icon = match self.show_type {
-            ListState::Box => "fas fa-bars",
-            ListState::List => "fas fa-th-large",
-        };
+
         html! {
-            <div id={"components-box"} class="itemsBox" >
+            <div id="components-box">
               <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
               <div class="level" >
                 <div class="level-left ">
@@ -198,11 +197,7 @@ impl Component for CatalogComponents {
                           true => self.create_component_block(),
                           false => html!{},
                         }}
-                        <button class="button" onclick={onclick_change_view} >
-                            <span class={"icon is-small"}>
-                                <i class={class_for_icon}></i>
-                            </span>
-                        </button>
+                        {ft_change_view_btn(onclick_change_view, &self.show_type)}
                     </div>
                 </div>
               </div>
@@ -217,15 +212,11 @@ impl Component for CatalogComponents {
 
 impl CatalogComponents {
     fn show_list(&self, list: &[ShowComponentShort]) -> Html {
-        let class_for_list = match self.show_type {
-            ListState::Box => "flex-box",
-            ListState::List => "",
-        };
         if list.is_empty() {
             html!{<ListEmpty />}
         } else {
             html!{
-                <div class={class_for_list}>
+                <div class={self.show_type.get_container_class()}>
                     {for list.iter().map(|x| self.show_card(&x))}
                 </div>
             }
@@ -238,13 +229,13 @@ impl CatalogComponents {
             {match self.company_uuid.is_none() {
                 true => html!{
                     <RouterAnchor<AppRoute> route={AppRoute::CreateComponent} classes={"button is-info"}>
-                        {get_value_field(&290)} // Create component
+                        {LocaleKey::CreateComponent.get_value()}
                     </RouterAnchor<AppRoute>>
                 },
                 false => html!{<>
                     {self.modal_add_component()}
-                    <button class={"button is-info"} onclick={onclick_show_add_component}>
-                        <span>{get_value_field(&290)}</span>
+                    <button class="button is-info" onclick={onclick_show_add_component}>
+                        <span>{LocaleKey::CreateComponent.get_value()}</span>
                     </button>
                 </>},
             }}
@@ -253,21 +244,19 @@ impl CatalogComponents {
 
     fn modal_add_component(&self) -> Html {
         let onclick_show_add_component = self.link.callback(|_| Msg::ShowAddComponentCard);
-        let class_modal = match &self.show_add_component {
-            true => "modal is-active",
-            false => "modal",
-        };
-
-        html!{
-            <div class={class_modal}>
-                <div class="modal-background" onclick={onclick_show_add_component.clone()} />
-                <div class="modal-card">
-                <div class="box">
+        html! {
+            <ModalBlock
+                modal_id="add-component"
+                title={LocaleKey::StandardStatus.get_value()}
+                is_active={self.show_add_component}
+                on_close={onclick_show_add_component}
+                on_save={None}
+                save_disabled={false}
+            >
+                <div class="box mb-0">
                     <CreateComponent company_uuid={self.company_uuid.clone()} />
                 </div>
-                </div>
-                <button class="modal-close is-large" aria-label="close" onclick={onclick_show_add_component} />
-            </div>
+            </ModalBlock>
         }
     }
 

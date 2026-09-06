@@ -1,5 +1,5 @@
 use regex::Regex;
-
+use js_sys::Date;
 use crate::types::UUID;
 
 /// Returns extension derived from filename
@@ -76,6 +76,20 @@ pub(crate) fn wraps_text(text: String) -> Option<String> {
         true => None,
         false => Some(text),
     }
+}
+
+/// Helper function for truncating UUID
+pub(crate) fn truncate_uuid(uuid: &str) -> String {
+    if uuid.len() > 12 {
+        format!("{}...{}", &uuid[0..8], &uuid[uuid.len()-4..])
+    } else {
+        uuid.to_string()
+    }
+}
+
+/// Generates a unique ID with the given prefix using current timestamp
+pub(crate) fn unique_id(prefix: &str) -> String {
+    format!("{}-{}", prefix, Date::now())
 }
 
 #[cfg(test)]
