@@ -26,6 +26,8 @@ COPY ./Cargo.lock ./Cargo.lock
 COPY ./Cargo.toml ./Cargo.toml
 COPY ./index.html ./index.html
 COPY ./trunk.toml ./trunk.toml
+# Environment config (no secrets)
+COPY ./.env ./.env
 
 # Build for release with Clipboard API flag
 RUN RUSTFLAGS="--cfg=web_sys_unstable_apis" trunk --config /cdbs-app/trunk.toml build
