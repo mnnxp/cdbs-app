@@ -1,14 +1,13 @@
-use regex::Regex;
+use std::path::Path;
 use js_sys::Date;
 use crate::types::UUID;
 
-/// Returns extension derived from filename
-/// Extension with dot in ascii and lower case
+/// Returns extension from filename in ascii lowercase
 pub(crate) fn ext_str(filename: &str) -> String {
-    Regex::new(r"\.\w+$")
-        .unwrap()
-        .find(filename)
-        .map(|m| m.as_str().to_ascii_lowercase())
+    Path::new(filename)
+        .extension()
+        .and_then(|ext| ext.to_str())
+        .map(|ext| ext.to_ascii_lowercase())
         .unwrap_or_default()
 }
 
@@ -16,10 +15,9 @@ pub(crate) fn ext_str(filename: &str) -> String {
 pub(crate) fn image_detector(filename: &str) -> bool {
     matches!(
         ext_str(filename).as_str(),
-        ".apng" | ".avif" | ".gif" |
-        ".jpg" | ".jpeg" | ".jpe" |
-        ".jif" | ".jfif" | ".png" |
-        ".svg" | ".webp"
+        "apng" | "avif" | "gif" | "jpg"
+        | "jpeg" | "jpe" | "jif" | "jfif"
+        | "png" | "svg" | "webp"
     )
 }
 

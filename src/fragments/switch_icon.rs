@@ -32,45 +32,45 @@ pub fn res_fullwidth_btn(
 pub fn res_file_btn(onclick: Callback<MouseEvent>, filename: String) -> Html {
   let mut style_color = "color: #767676;";
   let classes_icon = match ext_str(&filename).as_str() {
-    ".txt" => classes!("far", "fa-file-alt"),
-    ".pdf" => {
+    "txt" => classes!("far", "fa-file-alt"),
+    "pdf" => {
       style_color = "color: #e50707";
       classes!("far", "fa-file-pdf")
     },
     // OpenDocument Format is standardised by OASIS and adopted by ISO/IEC JTC1 SC34 (but are no icons)
-    ".odt" | ".ods" | ".odp" => {
+    "odt" | "ods" | "odp" => {
       style_color = "color: #43C330";
       classes!("far", "fa-file-alt")
     },
-    ".docx" | ".doc" | ".rtf" => {
+    "docx" | "doc" | "rtf" => {
       style_color = "color: #0058a5";
       classes!("far", "fa-file-word")
     },
-    ".xls" | ".xlsx" => {
+    "xls" | "xlsx" => {
       style_color = "color: #4aa500";
       classes!("far", "fa-file-excel")
     },
-    ".ppt" | ".pptx" => {
+    "ppt" | "pptx" => {
       style_color = "color: #f78b67";
       classes!("far", "fa-file-powerpoint")
     },
-    ".zip" | ".tar" | ".gz" | ".7z" | ".rar" => {
+    "zip" | "tar" | "gz" | "7z" | "rar" => {
       style_color = "color: #1b1b1b";
       classes!("far", "fa-file-archive")
     },
-    ".mp4" | ".mov" | ".flv" | ".avi" => {
+    "mp4" | "mov" | "flv" | "avi" => {
       style_color = "color: #1872f0";
       classes!("far", "fa-file-video")
     },
-    ".mp3" | ".ogg" | ".aac" | ".wav" => {
+    "mp3" | "ogg" | "aac" | "wav" => {
       style_color = "color: #1872f0";
       classes!("far", "fa-file-audio")
     },
-    ".fcstd" | ".blend" | ".stl" | ".step" | ".stp" => {
+    "fcstd" | "blend" | "stl" | "step" | "stp" => {
       style_color = "color: #1872f0";
       classes!("far", "fa-file")
     },
-    ".py" | ".sh" => classes!("far", "fa-file-code"),
+    "py" | "sh" => classes!("far", "fa-file-code"),
     _ => {
       if image_detector(&filename) {
         style_color = "color: #1872f0";

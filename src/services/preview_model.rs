@@ -9,7 +9,7 @@ use crate::services::{Size, LocaleKey, ext_str};
 use crate::types::DownloadFile;
 
 /// Array of file extensions used as resources
-const GLTF_RESOURCE_EXTS: &[&str] = &[".bin", ".png", ".jpg", ".jpeg", ".webp", ".hdr", ".exr", ".ktx", ".ktx2", ".basis"];
+const GLTF_RESOURCE_EXTS: &[&str] = &["bin", "png", "jpg", "jpeg", "webp", "hdr", "exr", "ktx", "ktx2", "basis"];
 
 thread_local! {
     static MODEL_CACHE: RefCell<HashMap<String, JsValue>> = RefCell::new(HashMap::new());
@@ -17,8 +17,7 @@ thread_local! {
 
 /// Checks if the filename has a resource extension for GLTF
 pub(crate) fn is_gltf_resource(filename: &str) -> bool {
-    let ext = ext_str(filename).to_lowercase();
-    GLTF_RESOURCE_EXTS.contains(&ext.as_str())
+    GLTF_RESOURCE_EXTS.contains(&ext_str(filename).as_str())
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
@@ -34,13 +33,13 @@ pub(crate) enum ModelFormat {
 
 impl ModelFormat {
     pub(crate) fn from_filename(filename: &str) -> Self {
-        match ext_str(filename).to_lowercase().as_str() {
-            ".stl" => Self::STL,
-            ".gltf" => Self::GLTF,
-            ".glb" => Self::GLB,
-            ".step" | ".stp" => Self::STEP,
-            ".gcode" => Self::GCode,
-            ".ifc" => Self::IFC,
+        match ext_str(filename).as_str() {
+            "stl" => Self::STL,
+            "gltf" => Self::GLTF,
+            "glb" => Self::GLB,
+            "step" | "stp" => Self::STEP,
+            "gcode" => Self::GCode,
+            "ifc" => Self::IFC,
             _ => Self::Unknown,
         }
     }
