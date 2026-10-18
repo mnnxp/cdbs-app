@@ -116,9 +116,27 @@ Many thanks to all of you who have contributed to the projects listed above and 
 <!-- GETTING STARTED -->
 ## Getting Started
 
+### In one-command
+
+You can deploy the entire CADBase platform (including the database, backend API, background processor, and frontend) automatically using the one-command installation script.
+
+```bash
+curl --proto '=https' --tlsv1.2 -sSLf https://gitlab.com/cadbase/cdbs-installer/-/raw/master/cdbs_start.sh | bash
+```
+
+**What the script does:**
+1. **Environment Check:** Verifies if `git`, `docker`, `openssl`, and `curl` are installed.
+2. **Configuration:** Creates a `cdbs` directory and a `setup.config` file with default values. 
+3. **Pauses for customization:** You can press **Enter** to accept the default settings (uses local S3 stubs and generates self-signed SSL certificates) for a quick local test.
+4. **Build & Launch:** Syncs the repositories, builds the containers, and initializes the database.
+
+For more details on production configurations (such as connecting external PostgreSQL or corporate S3 buckets), refer to the [CADBase Self-Hosting Guide](https://cadbase.rs/rs/overviews/self-hosting/) [RU](https://cadbase.ru/ru/overviews/self-hosting/) [ZH](https://cadbase.org/org/overviews/self-hosting/).
+
+### Manual
+
 To start the frontend, you must perform the a few steps.
 
-### Prerequisites
+#### Prerequisites
 
 * [Rust](https://www.rust-lang.org/learn/get-started)
 
@@ -137,15 +155,26 @@ To start the frontend, you must perform the a few steps.
   cargo install --locked trunk
   ```
 
-### Installation
+#### Installation
 
-Note: Before performing step 2, check the correct settings of the environment in the file '.env'.
+Note: Before performing step 3, check the correct settings of the environment in the file '.env'.
 
 1. Clone the repo
    ```sh
    git clone https://gitlab.com/cadbase/cdbs-app.git
    ```
-2. Build, watch & serve the Rust WASM app and all of its assets
+2. Rolling back the versions to maintain compatibility with Yew
+   ```sh
+   cd cdbs-app
+   rustup default 1.84.1
+   cargo install --version 0.21.14 trunk --locked
+   cargo install --version 0.2.92 wasm-bindgen-cli --locked
+   cargo update -p wasm-bindgen-test --precise 0.3.42
+   cargo update -p wasm-bindgen-futures --precise 0.4.42
+   cargo update -p web-sys --precise 0.3.63
+   cargo update -p js-sys --precise 0.3.69
+   cargo update -p wasm-bindgen --precise 0.2.92
+3. Build, watch & serve the Rust WASM app and all of its assets
    ```sh
    trunk serve
    ```
