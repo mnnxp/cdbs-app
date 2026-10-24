@@ -428,7 +428,7 @@ impl CreateService {
                     </div>
                     <div class="column">
                         {InputConfig::profile_input(
-                            "password",
+                            "new-password",
                             LocaleKey::Password,
                             Some(self.request_user.password.clone()),
                             oninput_password,

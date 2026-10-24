@@ -572,7 +572,7 @@ impl Settings {
                             <div class="columns is-desktop">
                                 <div class="column">
                                     {render_form_input(InputConfig {
-                                        id: "password",
+                                        id: "current-password",
                                         label: LocaleKey::OldPassword.get_value(),
                                         value: self.request_password.old_password.to_string(),
                                         oninput: oninput_old_password,
@@ -582,7 +582,7 @@ impl Settings {
                                         is_danger: false,
                                     })}
                                     {render_form_input(InputConfig {
-                                        id: "password",
+                                        id: "new-password",
                                         label: LocaleKey::NewPassword.get_value(),
                                         value: self.request_password.new_password.to_string(),
                                         oninput: oninput_new_password,
@@ -744,7 +744,7 @@ impl Settings {
                 <p><strong>{LocaleKey::Warning.get_value()}</strong> {LocaleKey::ProfileDeleteWarning.get_value()}</p>
             </div>
             {InputConfig::profile_input(
-                "password",
+                "current-password",
                 LocaleKey::ConfirmDeleteProfile,
                 Some(self.request_user_password.clone()),
                 oninput_user_password,

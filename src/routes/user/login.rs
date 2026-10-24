@@ -168,7 +168,7 @@ impl Component for Login {
                             </div>
                             <div class="field mb-5">
                                 {InputConfig::profile_input(
-                                    "password",
+                                    "current-password",
                                     LocaleKey::Password,
                                     Some(self.request.password.clone()),
                                     oninput_password,

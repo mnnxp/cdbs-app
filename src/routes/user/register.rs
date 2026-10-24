@@ -223,7 +223,7 @@ impl Register {
                 </div>
                 <div class="field mb-4">
                     {InputConfig::profile_input(
-                        "password",
+                        "new-password",
                         LocaleKey::Password,
                         Some(self.request.password.clone()),
                         oninput_password,
