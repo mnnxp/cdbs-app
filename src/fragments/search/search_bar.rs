@@ -51,6 +51,7 @@ pub enum Msg {
     KeyPress(KeyboardEvent),
     SetFocusAfterDelay(bool),
     AutoSearch,
+    ClearSearch,
     ResponseError(Error),
     ClearError,
 }
@@ -147,7 +148,13 @@ impl Component for SearchBar {
                 if event.key() == "Enter" {
                     link.send_message(Msg::Search);
                 }
-            }
+            },
+            Msg::ClearSearch => {
+                self.search_arg.search.clear();
+                self.found_components.clear();
+                self.request_status = RequestStatus::None;
+                self.debounce_timeout = None;
+            },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::ClearError => self.error = None,
         }
@@ -221,12 +228,14 @@ impl SearchBar {
     }
 
     fn show_input_block(&self) -> Html {
-        let is_loading = if self.request_status == RequestStatus::Loading { "is-loading" } else { "" };
+        let onclick_clear = self.link.callback(|_| Msg::ClearSearch);
+        let is_loading = self.request_status == RequestStatus::Loading;
+        let loading_class = if is_loading { "is-loading" } else { "" };
         let mut bar_class = classes!("field", "is-relative");
         if self.has_props { bar_class.push(vec!["has-addons", "column", "p-0", "m-0", "is-three-quarters"]); }
         html! {
             <div class={bar_class}>
-                <div class={classes!("control", "has-icons-left", "has-icons-right", is_loading)} style="width: 100%;">
+                <div class={classes!("control", "has-icons-left", "has-icons-right", loading_class)} style="width: 100%;">
                 <input id="input-search-bar" class="input" style="width: 100%;"
                     oninput={self.link.callback(|ev: InputData| Msg::InputSearch(ev.value))}
                     onfocus={self.link.callback(|_| Msg::SetFocus(true))}
@@ -238,6 +247,18 @@ impl SearchBar {
                 <span class="icon is-small is-left">
                     <i class="fas fa-search fa-xs"></i>
                 </span>
+                {match self.search_arg.search.is_empty() || is_loading {
+                    true => html!{},
+                    false => html!{
+                        <span
+                            class="icon is-small is-right is-clickable"
+                            onclick={onclick_clear}
+                            title={LocaleKey::Clear.get_value()}
+                        >
+                            <i class="fas fa-times"></i>
+                        </span>
+                    }
+                }}
                 </div>
                 {match self.has_props {
                     true => html!{
