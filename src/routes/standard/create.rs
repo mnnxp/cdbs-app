@@ -358,7 +358,7 @@ impl CreateStandard {
                     </div>
                     <div class="column">
                         <div class="field">
-                            <label class="label" for="type-access-block">{LocaleKey::TypeAccess.get_value()}</label>
+                            <label class="label">{LocaleKey::TypeAccess.get_value()}</label>
                             <TypeAccessBlock
                                 change_cb={onchange_type_access}
                                 types={self.types_access.clone()}
