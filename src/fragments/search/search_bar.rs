@@ -64,7 +64,7 @@ impl Component for SearchBar {
             error: None,
             link,
             has_props: props.search_arg.is_some(),
-            search_arg: props.search_arg.unwrap_or_default(),
+            search_arg: props.search_arg.unwrap_or(SearchArg::by_spec_id(1)),
             found_components: vec![],
             request_status: RequestStatus::None,
             is_focused: false,
