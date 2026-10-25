@@ -576,6 +576,7 @@ impl Profile {
             <CatalogComponents
                 show_create_btn={self.self_profile.is_some()}
                 arguments={ComponentsQueryArg::set_favorite(user_uuid)}
+                total_items={self.get_total_items_opt(&ProfileTab::FavoriteComponents)}
             />
         }
     }
@@ -585,6 +586,7 @@ impl Profile {
             <CatalogComponents
                 show_create_btn={self.self_profile.is_some()}
                 arguments={ComponentsQueryArg::set_user_uuid(user_uuid)}
+                total_items={self.get_total_items_opt(&ProfileTab::Components)}
             />
         }
     }
@@ -616,7 +618,7 @@ impl Profile {
         }
     }
 
-    fn get_number_of_items(&self, tab: &ProfileTab ) -> usize {
+    fn get_number_of_items(&self, tab: &ProfileTab) -> usize {
         match &self.self_profile {
             Some( ref res) =>  match tab {
               ProfileTab::Certificates => res.certificates.len(),
@@ -629,6 +631,13 @@ impl Profile {
               ProfileTab::FavoriteUsers => res.fav_users_count,
             } ,
             None => 0,
+        }
+    }
+
+    fn get_total_items_opt(&self, tab: &ProfileTab) -> Option<i64> {
+        match self.get_number_of_items(tab) as i64 {
+            0 => None,
+            x => Some(x),
         }
     }
 }
