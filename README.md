@@ -166,13 +166,9 @@ Note: Before performing step 3, check the correct settings of the environment in
 2. Rolling back the versions to maintain compatibility with Yew
    ```sh
    cd cdbs-app
-   rustup default 1.84.1
-   cargo install --version 0.21.14 trunk --locked
-   cargo install --version 0.2.92 wasm-bindgen-cli --locked
-   cargo update -p wasm-bindgen-test --precise 0.3.42
-   cargo update -p wasm-bindgen-futures --precise 0.4.42
-   cargo update -p web-sys --precise 0.3.63
-   cargo update -p js-sys --precise 0.3.69
+   rustup default 1.86.0
+   rustup target add wasm32-unknown-unknown
+   cargo install --version 0.22.0 trunk --locked
    cargo update -p wasm-bindgen --precise 0.2.92
 3. Build, watch & serve the Rust WASM app and all of its assets
    ```sh
