@@ -327,7 +327,13 @@ impl Header {
         };
         let onclick_notification_btn = self.link.callback(|_| Msg::ChangePointTo(CurrentPage::Notifications));
         html!{
-            <button id="header-notifications" class={class_btn} disabled={is_disabled} onclick={onclick_notification_btn} >
+            <button
+                id="header-notifications"
+                class={class_btn}
+                disabled={is_disabled}
+                onclick={onclick_notification_btn}
+                title={LocaleKey::Notifications.get_value()}
+            >
                 <span class="icon"><i class="far fa-bell" style={self.style_color.clone()}></i></span>
             </button>
         }
@@ -341,7 +347,7 @@ impl Header {
         };
         match to_profile {
             true => html!{
-                <button id="header-profile" class="button" onclick={onclick_btn} >
+                <button id="header-profile" class="button" onclick={onclick_btn} title={LocaleKey::Profile.get_value()}>
                     <span class="icon"><i class="fas fa-user" style={self.style_color.clone()}></i></span>
                     {if show_username {
                         html!{<span class="is-hidden-mobile">{username}</span>}
@@ -351,7 +357,7 @@ impl Header {
                 </button>
             },
             false => html!{
-                <button id="header-settings" class="button" onclick={onclick_btn} >
+                <button id="header-settings" class="button" onclick={onclick_btn} title={LocaleKey::Settings.get_value()}>
                     <span class="icon"><i class="fas fa-user-cog" style={self.style_color.clone()}></i></span>
                 </button>
             },
