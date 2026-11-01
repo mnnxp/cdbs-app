@@ -486,9 +486,15 @@ impl ShowComponent {
                     </span>
                     <GoToUser data = {component_data.owner_user.clone()} />
                 </div>
-                <div title={LocaleKey::UpdatedAtLabel.get_value()} class={class_item}>
+                <div title={LocaleKey::CreatedAtLabel.get_value()} class={class_item}>
                     <span class={class_icon}>
-                        <i class={classes!("fa", "fa-edit")}></i>
+                        <i class={classes!("far", "fa-calendar-plus")}></i>
+                    </span>
+                    {component_data.created_at.date_to_display()}
+                </div>
+                <div title={LocaleKey::UpdatedAtLabel2.get_value()} class={class_item}>
+                    <span class={class_icon}>
+                        <i class="fas fa-edit"></i>
                     </span>
                     {component_data.updated_at.date_to_display()}
                 </div>

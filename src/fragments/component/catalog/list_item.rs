@@ -89,6 +89,7 @@ impl ListItem {
             name,
             description,
             type_access,
+            created_at,
             updated_at,
             ..
         } = &self.props.data;
@@ -111,6 +112,12 @@ impl ListItem {
                       <span class="id-box" title={LocaleKey::LifeCycleStage.get_value()}>
                         {self.props.data.actual_status.name.clone()}
                       </span>
+                    </div>
+                    <div class="column">
+                      <span class="icon" title={LocaleKey::CreatedAtLabel.get_value()}>
+                        <i class="far fa-calendar-plus"></i>
+                      </span>
+                      {created_at.date_to_display()}
                     </div>
                     <div class="column">
                       <span class="icon" title={LocaleKey::UpdatedAtLabel2.get_value()}>
