@@ -8,7 +8,7 @@ use wasm_bindgen_futures::spawn_local;
 use crate::fragments::responsive::resizer;
 use crate::error::Error;
 use crate::fragments::{
-    buttons::ft_follow_btn,
+    buttons::{ft_follow_btn, ft_see_btn},
     company::CatalogCompanies,
     component::CatalogComponents,
     list_errors::ListErrors,
@@ -20,9 +20,10 @@ use crate::fragments::{
     user::UserCertificatesCard,
 };
 use crate::services::{Counter, get_logged_user, LocaleKey, resp_parsing, title_changer};
+use crate::services::content_adapter::{SHORT_TEXT_LEN, DateDisplay};
 use crate::types::{
     UserDataCard, CompaniesQueryArg, ComponentsQueryArg, ServicesQueryArg, SelfUserInfo, SlimUser,
-    StandardsQueryArg, UserCertificate, UserInfo, UsersQueryArg, UUID, Region
+    StandardsQueryArg, UserCertificate, UserInfo, UsersQueryArg, UUID
 };
 use crate::gqls::make_query;
 use crate::gqls::user::{
@@ -297,44 +298,25 @@ impl Component for Profile {
 
         html!{<>
             <ListErrors error={self.error.clone()} clear_error={onclick_clear_error} />
-            {match (&self.self_profile, &self.profile) {
-                (Some(self_data), _) => self.self_user_card(self_data),
-                (_, Some(user_data)) => self.other_user_card(user_data),
-                _ => html!{},
-            }}
+            <div class="profile-page">
+                <div class="container is-fluid page">
+                    <div class="row">
+                        <div class="card">
+                            {self.view_card()}
+                            {match (&self.self_profile, &self.profile) {
+                                (Some(self_data), _) => {self.self_user_relate_object(self_data)},
+                                (_, Some(user_data)) => {self.other_user_relate_object(user_data)},
+                                _ => html!{},
+                            }}
+                        </div>
+                    </div>
+                </div>
+            </div>
         </>}
     }
 }
 
 impl Profile {
-    fn self_user_card(
-        &self,
-        self_data: &SelfUserInfo,
-    ) -> Html {
-        html! {
-            <div class="profile-page">
-                <div class="container is-fluid page">
-                    <div class="row">
-                        <div class="card">
-                            <div class="card-content">
-                                {self.view_card()}
-                                <div class="content">
-                                    { self.view_user_info(
-                                        self_data.description.as_str(),
-                                        self_data.position.as_str(),
-                                        &self_data.region,
-                                        self_data.program.name.as_str(),
-                                    ) }
-                                </div>
-                            </div>
-                            {self.self_user_relate_object(self_data)}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        }
-    }
-
     fn self_user_relate_object(
         &self,
         self_data: &SelfUserInfo,
@@ -358,34 +340,6 @@ impl Profile {
                 </div>
             </div>
         </div>}
-    }
-
-    fn other_user_card(
-        &self,
-        user_data: &UserInfo,
-    ) -> Html {
-        html! {
-            <div class="profile-page">
-                <div class="container is-fluid page">
-                    <div class="row">
-                        <div class="card">
-                            <div class="card-content">
-                                {self.view_card()}
-                                <div class="content">
-                                    { self.view_user_info(
-                                        user_data.description.as_str(),
-                                        user_data.position.as_str(),
-                                        &user_data.region,
-                                        user_data.program.name.as_str(),
-                                    ) }
-                                </div>
-                            </div>
-                            {self.other_user_relate_object(user_data)}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        }
     }
 
     fn other_user_relate_object(
@@ -418,7 +372,7 @@ impl Profile {
             firstname,
             lastname,
             username,
-            updated_at,
+            description,
             ..
         } = match (&self.self_profile, &self.profile) {
             (_, Some(ref other_data)) => other_data.into(),
@@ -427,45 +381,27 @@ impl Profile {
         };
 
         html!{
-            <div class="columns">
-                <div class="box">
-                    <figure class={classes!("container", "image", "is-48x48")}>
-                        <img
-                            src={image_file.clone()} alt="Favicon profile"
-                            loading="lazy"
-                        />
-                    </figure>
+            <div class="card-content">
+                <div class="columns">
+                    <div class="box">
+                        <figure class={classes!("container", "image", "is-48x48")}>
+                            <img
+                                src={image_file.clone()} alt="Favicon profile"
+                                loading="lazy"
+                            />
+                        </figure>
+                    </div>
+                    <div class="is-flex-grow-1 ml-4">
+                        <p class="title is-4">
+                            {format!("{} {}", firstname, lastname)}
+                        </p>
+                        <p class="subtitle is-6">
+                            {format!("@{}", username)}
+                        </p>
+                    </div>
+                    {self.view_user_info()}
                 </div>
-                <div id="profile-region" class={classes!("column", "is-three-fifths")}>
-                <p id="title-fl" class="title is-4">
-                    {format!("{} {}", firstname, lastname)}
-                </p>
-                <p id="subtitle-username" class="subtitle is-6">
-                    {format!("@{}", username)}
-                </p>
-                </div>
-                <div class="column">
-                    // for self user data not show button "following"
-                    {match &self.profile {
-                        Some(_) => html!{<>
-                            <p class="subtitle is-6 has-text-right">
-                                <span class="mr-3">{LocaleKey::UpdatedAt.get_value()}</span>
-                                {updated_at}
-                            </p>
-                            {self.show_favorite_btn()}
-                        </>},
-                        None => html!{
-                            <div class="subtitle is-6 has-text-right">
-                                <span class="mr-3">{LocaleKey::UpdatedAt.get_value()}</span>
-                                {updated_at}
-                                <p>
-                                    <span>{LocaleKey::Followers.get_value()}</span>
-                                    <span>{self.abbr_number()}</span>
-                                </p>
-                            </div>
-                        },
-                    }}
-                </div>
+                {self.view_user_description(&description)}
             </div>
         }
     }
@@ -495,51 +431,80 @@ impl Profile {
         }
     }
 
-    fn view_user_info(
-        &self,
-        description: &str,
-        position: &str,
-        region: &Region,
-        program: &str,
-    ) -> Html {
-        let onclick_change_full_show =
-            self.link.callback(|_| Msg::ShowFullUserInfo);
-
-        match self.show_full_user_info {
-            true => html! {<>
-                <div class="columns">
-                    <div class="column is-two-thirds">
-                        <div id="description" class="content">
-                          {description}
-                        </div>
-                    </div>
-                    <div class="column">
-                        <div id="position" hidden={position.is_empty()}>
-                            <span class="icon is-small"><i class="fas fa-briefcase" /></span>
-                            <span>{LocaleKey::PositionLabel.get_value()}</span>
-                            <span class="overflow-title has-text-weight-bold">{position}</span>
-                        </div>
-                        <div id="region" hidden={region.region_id == 8}>
-                            <span class="icon is-small"><i class="fas fa-map-marker-alt" /></span>
-                            <span>{LocaleKey::RegionLabel.get_value()}</span>
-                            <span class="overflow-title has-text-weight-bold">{&region.region}</span>
-                        </div>
-                        <div id="program" hidden={program == "Unknown"}>
-                            <span class="icon is-small"><i class="fas fa-drafting-compass" /></span>
-                            <span>{LocaleKey::WorkingSoftware.get_value()}</span>
-                            <span class="overflow-title has-text-weight-bold">{program}</span>
-                        </div>
-                    </div>
+    fn view_user_info(&self) -> Html {
+        let (
+            created_at,
+            program,
+            region,
+        ) = match (&self.self_profile, &self.profile) {
+            (_, Some(ref p)) => (p.created_at, &p.program, &p.region),
+            (Some(ref sp), _) => (sp.created_at, &sp.program, &sp.region),
+            (None, None) => return html!{},
+        };
+        let class_item = "is-size-6 is-align-items-center has-text-grey ml-3";
+        let class_icon = "icon is-small mr-1";
+        let class_value = "has-text-dark";
+        html!{
+            <div class="is-flex is-flex-direction-column is-align-items-flex-end">
+                <div class={class_item} title={LocaleKey::CreatedAtLabel.get_value()}>
+                    <span class={class_icon}><i class="far fa-calendar-plus"></i></span>
+                    <span class={class_value}>{created_at.date_to_display()}</span>
                 </div>
-                <button class="button is-ghost" onclick={onclick_change_full_show}>
-                    <span>{LocaleKey::HideInfo.get_value()}</span>
-                </button>
-            </>},
-            false => html!{
-                <button class="button is-ghost" onclick={onclick_change_full_show}>
-                    <span>{LocaleKey::ShowInfo.get_value()}</span>
-                </button>
-            },
+                {if let Some(sp) = &self.self_profile {
+                    html!{
+                        <div class={class_item} title={LocaleKey::TypeAccess.get_value()}>
+                            {sp.type_access.get_with_icon()}
+                        </div>
+                    }
+                } else {
+                    html!{}
+                }}
+                <div id="program" class={class_item} hidden={program.id == 1} title={LocaleKey::WorkingSoftware.get_value()}>
+                    <span class={class_icon}><i class="fas fa-drafting-compass" /></span>
+                    <span class={class_value}>{&program.name}</span>
+                </div>
+                <div id="region" class={class_item} hidden={region.region_id == 8} title={LocaleKey::RegionLabel.get_value()}>
+                    <span class={class_icon}><i class="fas fa-map-marker-alt" /></span>
+                    <span class={class_value}>{&region.region}</span>
+                </div>
+                {match &self.profile {
+                    Some(_) => html!{
+                        <div class="mt-1">{self.show_favorite_btn()}</div>
+                    },
+                    None => html!{
+                        <div class="is-flex is-align-items-center mt-1"
+                            title={LocaleKey::Followers.get_value()}>
+                            <span class="icon is-small mr-2" style="color: #1872f0;">
+                                <i class="fa fa-bookmark"></i>
+                            </span>
+                            <span class="has-text-dark">{self.abbr_number()}</span>
+                        </div>
+                    },
+                }}
+            </div>
+        }
+    }
+
+    fn view_user_description(&self, description: &str) -> Html {
+        if description.is_empty() {
+            return html!{};
+        }
+        let onclick_toggle = self.link.callback(|_| Msg::ShowFullUserInfo);
+        if description.chars().count() <= SHORT_TEXT_LEN {
+            html!{
+                <p class="is-size-6">{description}</p>
+            }
+        } else if self.show_full_user_info {
+            html!{<>
+                <p class="is-size-6">{description}</p>
+                {ft_see_btn(onclick_toggle, true)}
+            </>}
+        } else {
+            let truncated: String = description.chars().take(SHORT_TEXT_LEN).collect();
+            html!{<>
+                <p class="is-size-6">{format!("{}…", truncated)}</p>
+                {ft_see_btn(onclick_toggle, false)}
+            </>}
         }
     }
 

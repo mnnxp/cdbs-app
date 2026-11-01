@@ -80,11 +80,11 @@ pub(crate) enum LocaleKey {
     FavStandards,
     /// `fav USERS` (was: 38)
     FavUsers,
-    /// ` Position: ` (was: 39)
+    /// `Position` (was: 39)
     PositionLabel,
-    /// ` Region: ` (was: 40)
+    /// `Region` (was: 40)
     RegionLabel,
-    /// ` Working software: ` (was: 41)
+    /// `Software` (was: 41)
     WorkingSoftware,
     /// `Hide info` (was: 42)
     HideInfo,
