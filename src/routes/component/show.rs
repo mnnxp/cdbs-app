@@ -26,7 +26,7 @@ use crate::fragments::{
     three_showcase::ThreeShowcase,
     share_link::ShareLinkBtn,
 };
-use crate::services::content_adapter::{DateDisplay, Markdownable};
+use crate::services::content_adapter::{SHORT_TEXT_LEN, DateDisplay, Markdownable};
 use crate::services::{get_classes_table, get_logged_user, LocaleKey, resp_parsing, set_focus, set_history_back, title_changer, Counter};
 use crate::types::{ComponentInfo, FilesetProgramInfo, DownloadFile, ObjectType, Pathname, SlimUser, ToObject, UUID};
 use crate::gqls::make_query;
@@ -254,7 +254,7 @@ impl Component for ShowComponent {
                             debug!("Component data: {:?}", component_data);
                         }
                         // length check for show btn more/less
-                        self.show_full_description = component_data.description.len() < 250;
+                        self.show_full_description = component_data.description.chars().count() < SHORT_TEXT_LEN;
                         // add main image
                         self.file_arr.push(component_data.image_file.clone());
                         self.component = Some(component_data);
@@ -421,7 +421,7 @@ impl ShowComponent {
                 {self.show_component_tabs(component_data)}
               </div>
             </div>
-            {match self.show_full_description && component_data.description.len() > 249 {
+            {match self.show_full_description && component_data.description.chars().count() >= SHORT_TEXT_LEN {
                 true => html!{
                     <div class="content component-description">
                         {component_data.description.to_markdown()}
@@ -525,15 +525,16 @@ impl ShowComponent {
                     {match self.active_tab {
                         ActiveTab::Description => html!{
                             <div class="component-description">
-                                {match component_data.description.len() {
-                                    250.. => match self.show_full_description {
+                                {if component_data.description.chars().count() >= SHORT_TEXT_LEN {
+                                    match self.show_full_description {
                                         true => html!{},
                                         false => html!{<>
                                             {component_data.description.to_markdown_short()}
                                             {ft_see_btn(show_description_btn.clone(), self.show_full_description)}
                                         </>},
-                                    },
-                                    _ => component_data.description.to_markdown(),
+                                    }
+                                } else {
+                                    component_data.description.to_markdown()
                                 }}
                             </div>
                         },

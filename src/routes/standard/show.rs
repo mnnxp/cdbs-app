@@ -20,7 +20,7 @@ use crate::fragments::{
     standard::{StandardFilesCard, SpecsTags, KeywordsTags},
     img_showcase::ImgShowcase,
 };
-use crate::services::content_adapter::{DateDisplay, Markdownable};
+use crate::services::content_adapter::{SHORT_TEXT_LEN, DateDisplay, Markdownable};
 use crate::services::{get_logged_user, LocaleKey, resp_parsing, set_history_back, title_changer, Counter};
 use crate::types::{ComponentsQueryArg, DownloadFile, Pathname, SlimUser, StandardInfo, UUID};
 use crate::gqls::make_query;
@@ -227,7 +227,7 @@ impl Component for ShowStandard {
                             self.current_user_owner = standard_data.owner_user.uuid == user.uuid;
                         }
                         // description length check for show
-                        self.show_full_description = standard_data.description.len() < 250;
+                        self.show_full_description = standard_data.description.chars().count() < SHORT_TEXT_LEN;
                         // add main image
                         self.file_arr.push(standard_data.image_file.clone());
                         self.standard = Some(standard_data);
@@ -346,15 +346,16 @@ impl ShowStandard {
                     <ShareLinkBtn />
                 </div>
                 <div id="standard-description" class="pl-5 pr-5">
-                    {match standard_data.description.len() {
-                        250.. => html!{<>
+                    {if standard_data.description.chars().count() >= SHORT_TEXT_LEN {
+                        html!{<>
                             {match self.show_full_description {
                                 true => standard_data.description.to_markdown(),
                                 false => standard_data.description.to_markdown_short(),
                             }}
                             {ft_see_btn(show_description_btn, self.show_full_description)}
-                        </>},
-                        _ => standard_data.description.to_markdown(),
+                        </>}
+                    } else {
+                        standard_data.description.to_markdown()
                     }}
                 </div>
               </div>

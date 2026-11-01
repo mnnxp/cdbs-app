@@ -39,7 +39,6 @@ pub struct ShowService {
     router_agent: Box<dyn Bridge<RouteAgent>>,
     props: Props,
     link: ComponentLink<Self>,
-    show_full_description: bool,
     show_related_components: bool,
     open_discussion_card: bool,
     file_arr: Vec<DownloadFile>,
@@ -56,7 +55,6 @@ pub enum Msg {
     RequestDownloadFiles,
     GetDownloadFilesResult(String),
     GetServiceData(String),
-    // ShowDescription,
     ShowComponentsList,
     OpenDiscussionBlock,
     OpenServiceSetting,
@@ -79,7 +77,6 @@ impl Component for ShowService {
             router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             props,
             link,
-            show_full_description: false,
             show_related_components: false,
             open_discussion_card: false,
             file_arr: Vec::new(),
@@ -165,14 +162,11 @@ impl Component for ShowService {
                         if let Some(user) = get_logged_user() {
                             self.current_user_owner = service_data.owner_user.uuid == user.uuid;
                         }
-                        // description length check for show
-                        self.show_full_description = service_data.description.len() < 250;
                         self.service = Some(service_data);
                     },
                     Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
-            // Msg::ShowDescription => self.show_full_description = !self.show_full_description,
             Msg::ShowComponentsList => self.show_related_components = !self.show_related_components,
             Msg::OpenDiscussionBlock => self.open_discussion_card = !self.open_discussion_card,
             Msg::OpenServiceSetting => {

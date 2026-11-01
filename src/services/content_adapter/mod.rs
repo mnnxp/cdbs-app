@@ -8,6 +8,10 @@ pub(crate) use parsing_md::inner_markdown;
 use chrono::{DateTime, NaiveDateTime, Utc, Local};
 use yew::Html;
 
+/// Maximum length (in chars) of a "short" text preview before truncation.
+/// Used by `Markdownable::to_markdown_short` and by UI previews that truncate long descriptions.
+pub(crate) const SHORT_TEXT_LEN: usize = 250;
+
 pub(crate) trait ContentDisplay {
     /// Returns a name in converted form to display
     fn to_display(&self) -> Html;
