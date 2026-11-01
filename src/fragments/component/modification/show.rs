@@ -243,7 +243,7 @@ impl ModificationsTableCard {
                     <div class="card-content" style="padding-top: 0px;">
                         <div class="content">
                             <div class="column" title={LocaleKey::ModificationName.get_value()}>
-                                <p class="overflow-title has-text-weight-bold">
+                                <p class="overflow-title has-text-weight-bold is-size-5">
                                     {mod_data.modification_name.clone()}
                                 </p>
                             </div>
