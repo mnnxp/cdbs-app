@@ -174,23 +174,12 @@ impl Component for CatalogComponents {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        let mut flag_change = match (&self.props.arguments, &props.arguments) {
-            (Some(self_arg), Some(arg)) => self_arg == arg,
-            (None, None) => true,
-            _ => false,
-        };
-        if flag_change {
-            flag_change = match (&self.props.component_list, &props.component_list) {
-                (Some(self_list), Some(list)) =>
-                    self_list.len() == list.len() && self_list.first().map(|c| &c.uuid) == list.first().map(|c| &c.uuid),
-                (None, None) => true,
-                _ => false,
-            };
-        }
+        let arguments_changed = self.props.arguments != props.arguments;
+        let list_changed = self.props.component_list != props.component_list;
         let paginate_changed = self.props.show_paginate != props.show_paginate || self.props.total_items != props.total_items;
         let show_btn_changed = self.props.show_create_btn != props.show_create_btn;
-        debug!("self_arg == arg: {}", flag_change);
-        if flag_change && !paginate_changed && !show_btn_changed {
+        debug!("arguments_changed: {}", arguments_changed);
+        if !arguments_changed && !list_changed && !paginate_changed && !show_btn_changed {
             false
         } else {
             self.props = props;

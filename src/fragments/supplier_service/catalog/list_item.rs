@@ -65,12 +65,11 @@ impl Component for ListItemService {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.show_list != props.show_list || self.props.data.uuid != props.data.uuid {
-            self.props.show_list = props.show_list;
-            self.props.data = props.data;
-            true
-        } else {
+        if self.props.show_list == props.show_list && self.props.data == props.data {
             false
+        } else {
+            self.props = props;
+            true
         }
     }
 

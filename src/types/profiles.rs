@@ -58,7 +58,7 @@ pub struct UserInfo {
     pub is_followed: bool,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+#[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct ShowUserShort {
     pub uuid: UUID,

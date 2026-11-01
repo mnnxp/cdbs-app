@@ -49,13 +49,12 @@ impl Component for ListItemUser {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.show_list != props.show_list || self.props.data.uuid != props.data.uuid {
-            self.props.show_list = props.show_list;
-            self.username = props.data.username.to_string();
-            self.props.data = props.data;
-            true
+        if self.props.show_list == props.show_list && self.props.data == props.data {
+          false
         } else {
-            false
+            self.props = props;
+            self.username = self.props.data.username.to_string();
+            true
         }
     }
 

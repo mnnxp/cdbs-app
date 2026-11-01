@@ -48,7 +48,7 @@ impl ServiceCreateData {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct ShowServiceShort {
     pub uuid: UUID,
@@ -61,7 +61,7 @@ pub struct ShowServiceShort {
     pub updated_at: NaiveDateTime,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct ServiceStatus{
   pub service_status_id: usize,

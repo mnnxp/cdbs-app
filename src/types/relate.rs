@@ -153,7 +153,7 @@ pub struct TypeAccessInfo {
 /// RBAC permission level (Manage/Read)
 pub type PermissionLevel = TypeAccessInfo;
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct LicenseInfo {
     pub id: usize,
