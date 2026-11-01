@@ -203,7 +203,7 @@ impl ModificationEdit {
             ActiveTab::Fileset => ("","","is-active"),
         };
         html!{<>
-            <div class="tabs is-centered is-medium">
+            <div class="tabs is-centered is-medium is-boxed">
                 <ul>
                     <li class={at.0} onclick={onclick_tab_data}><a title={LocaleKey::ModificationDescription.get_value()}>{LocaleKey::ModificationData.get_value()}</a></li>
                     <li class={at.1} onclick={onclick_tab_files}><a title={LocaleKey::SelectedModificationFiles.get_value()}>{LocaleKey::ModificationFiles.get_value()}</a></li>

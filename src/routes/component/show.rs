@@ -507,7 +507,7 @@ impl ShowComponent {
         };
         let show_description_btn = self.link.callback(|_| Msg::ShowDescription);
         html!{<>
-            <div class="tabs mb-1">
+            <div class="tabs mb-1 is-boxed">
                 <ul>
                     <li class={at.0} onclick={onclick_tab_description}><a>{LocaleKey::Description.get_value()}</a></li>
                     <li class={at.1} onclick={onclick_tab_characteristics}><a>{LocaleKey::Characteristics.get_value()}</a></li>

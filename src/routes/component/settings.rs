@@ -452,7 +452,7 @@ impl ComponentSettings {
                 <p class="card-header-title">{LocaleKey::ComponentLabel.get_value()}</p>
             </header>
             <div class="card-content">
-            <div class="tabs is-centered is-medium">
+            <div class="tabs is-centered is-medium is-boxed">
                 <ul>
                     <li class={at.0} onclick={onclick_tab_data}><a>{LocaleKey::BasicInfo.get_value()}</a></li>
                     <li class={at.1} onclick={onclick_tab_image_preview}><a>{LocaleKey::UpdatePreview.get_value()}</a></li>
