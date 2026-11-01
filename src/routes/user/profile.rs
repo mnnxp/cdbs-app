@@ -576,6 +576,7 @@ impl Profile {
             <CatalogComponents
                 show_create_btn={self.self_profile.is_some()}
                 arguments={ComponentsQueryArg::set_favorite(user_uuid)}
+                show_paginate={true}
                 total_items={self.get_total_items_opt(&ProfileTab::FavoriteComponents)}
             />
         }
@@ -586,6 +587,7 @@ impl Profile {
             <CatalogComponents
                 show_create_btn={self.self_profile.is_some()}
                 arguments={ComponentsQueryArg::set_user_uuid(user_uuid)}
+                show_paginate={true}
                 total_items={self.get_total_items_opt(&ProfileTab::Components)}
             />
         }

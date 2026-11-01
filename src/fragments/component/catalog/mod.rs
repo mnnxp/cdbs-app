@@ -53,6 +53,8 @@ pub struct Props {
     pub show_create_btn: bool,
     pub arguments: Option<ComponentsQueryArg>,
     pub component_list: Option<Vec<ShowComponentShort>>,
+    #[prop_or(false)]
+    pub show_paginate: bool,
     pub total_items: Option<i64>,
 }
 
@@ -185,10 +187,10 @@ impl Component for CatalogComponents {
                 _ => false,
             };
         }
-        let total_items_changed = self.props.total_items != props.total_items;
+        let paginate_changed = self.props.show_paginate != props.show_paginate || self.props.total_items != props.total_items;
         let show_btn_changed = self.props.show_create_btn != props.show_create_btn;
         debug!("self_arg == arg: {}", flag_change);
-        if flag_change && !total_items_changed && !show_btn_changed {
+        if flag_change && !paginate_changed && !show_btn_changed {
             false
         } else {
             self.props = props;
@@ -222,7 +224,7 @@ impl Component for CatalogComponents {
               </div>
               {match self.props.component_list {
                 Some(ref list) => self.show_list(list),
-                None if self.props.total_items.is_some() => html!{<>
+                None if self.props.show_paginate => html!{<>
                     {self.show_list(&self.list)}
                     <hr/>
                     <Paginate
