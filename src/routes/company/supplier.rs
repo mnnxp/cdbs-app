@@ -265,7 +265,7 @@ impl ShowSupplierCompany {
                 </div>
                 <div class={classes!("column", "is-three-fifths")}>
                 <span style="position: absolute;margin-left: 10rem;">
-                    {diamond_svg(company_data.is_supplier, "175")}
+                    {diamond_svg(company_data.is_supplier, "175", false)}
                 </span>
                   {company_data.to_display()}
                 </div>

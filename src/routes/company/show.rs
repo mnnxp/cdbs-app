@@ -299,7 +299,7 @@ impl ShowCompany {
                 </div>
                 <div id="company-is-supplier" class={classes!("column", "is-three-fifths")}>
                     {company_data.to_display()}
-                    {diamond_svg(company_data.is_supplier, "25")}
+                    {diamond_svg(company_data.is_supplier, "25", true)}
                 </div>
                 <div class="column m-0 p-0">
                     <div class="buttons flexBox mb-0" >
