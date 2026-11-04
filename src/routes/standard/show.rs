@@ -319,20 +319,18 @@ impl ShowStandard {
               />
               <div class="column">
                 <div class="columns pb-0 mb-0">
-                    <div class="column">
-                        {LocaleKey::LCS.get_value()}{": "}
-                        {standard_data.standard_status.name.clone()}
+                    <div class="column" title={LocaleKey::LifeCycleStage.get_value()}>
+                        <span class="has-text-grey mr-1">{LocaleKey::LCS.get_value()}{": "}</span>
+                        <span class="has-text-dark">{standard_data.standard_status.name.clone()}</span>
                     </div>
-                    <div class="column">
+                    <div class="column" title={LocaleKey::TypeAccess.get_value()}>
                         {standard_data.type_access.get_with_icon()}
                     </div>
-                    <div class="column is-narrow">
-                        <span class="icon is-small mr-3">
+                    <div class="column is-narrow" title={LocaleKey::PublicationAtLabel.get_value()}>
+                        <span class="icon is-small has-text-grey mr-1">
                             <i class={classes!("fas", "fa-calendar-day")}></i>
                         </span>
-                        <span class="id-box">
-                            {standard_data.publication_at.date_to_display()}
-                        </span>
+                        <span class="has-text-dark">{standard_data.publication_at.date_to_display()}</span>
                     </div>
                 </div>
                 {self.show_modal_company_info(standard_data)}

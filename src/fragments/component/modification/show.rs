@@ -232,8 +232,9 @@ impl ModificationsTableCard {
 
     fn show_modification_card(&self) -> Html {
         let modification_data = self.modifications.iter().find(|x| x.uuid == self.select_modification_uuid);
-        let class_item = "is-flex is-align-items-center ml-3";
-        let class_icon = "icon is-small mr-1";
+        let class_icon = "icon is-small has-text-grey pl-1 mr-1";
+        let class_value = "has-text-dark";
+        let class_item = "is-size-6 is-flex is-align-items-center ml-3";
         match modification_data {
             Some(mod_data) => html!{
                 <div id="show-modification-card" class="card">
@@ -250,14 +251,14 @@ impl ModificationsTableCard {
                             <div class="column">
                             <div class="columns">
                                 <div class="column m-0" title={LocaleKey::LifeCycleStage.get_value()}>
-                                    {LocaleKey::LCS.get_value()}{": "}
-                                    {&mod_data.actual_status.name}
+                                    <span class="has-text-grey mr-1">{LocaleKey::LCS.get_value()}{": "}</span>
+                                    <span class={class_value}>{&mod_data.actual_status.name}</span>
                                 </div>
                                 <div title={LocaleKey::UpdatedAtLabel2.get_value()} class={class_item}>
                                     <span class={class_icon}>
                                         <i class="fas fa-edit"></i>
                                     </span>
-                                    {mod_data.updated_at.date_to_display()}
+                                    <span class={class_value}>{mod_data.updated_at.date_to_display()}</span>
                                 </div>
                             </div>
                             </div>

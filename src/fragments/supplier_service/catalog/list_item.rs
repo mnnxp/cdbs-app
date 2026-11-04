@@ -100,6 +100,7 @@ impl ListItemService {
         let mut class_box = classes!("box", "itemBox");
         class_box.push(service_status.get_class_color());
         let onclick_open_service = self.link.callback(|_| Msg::OpenService);
+        let class_icon = "icon is-small has-text-grey mr-1";
 
         html!{
           <div class={class_box}>
@@ -112,23 +113,29 @@ impl ListItemService {
                   </div>
                   <div class="media-content" onclick={onclick_open_service.clone()}>
                     <div class="columns is-gapless mb-0">
-                        <div class="column">
-                            {LocaleKey::CreatedByUser.get_value()}
-                            <span class="id-box has-text-weight-bold">
-                                {format!(" @{}", &owner_user.username)}
+                        <div class="column" title={LocaleKey::CreatedByUser.get_value()}>
+                            <span class={class_icon}>
+                                <i class="fas fa-user"></i>
+                            </span>
+                            <span class="has-text-dark has-text-weight-bold">
+                                {format!("@{}", &owner_user.username)}
                             </span>
                         </div>
-                        <div class="column">
-                            {LocaleKey::SupplierLabel.get_value()}
-                            <span class="has-text-weight-bold">
-                                {format!(" {}", &owner_company.shortname)}
+                        <div class="column" title={LocaleKey::SupplierLabel.get_value()}>
+                            <span class={class_icon}>
+                                <i class="fas fa-building"></i>
+                            </span>
+                            <span class="has-text-dark has-text-weight-bold">
+                                {owner_company.shortname.clone()}
                             </span>
                         </div>
-                        <div class="column">
-                          <span class="icon" title={LocaleKey::UpdatedAtLabel2.get_value()}>
-                            <i class="fas fa-edit"></i>
-                          </span>
-                          {updated_at.date_to_display()}
+                        <div class="column" title={LocaleKey::UpdatedAtLabel2.get_value()}>
+                            <span class={classes!(class_icon, "pl-1")}>
+                                <i class="fas fa-edit"></i>
+                            </span>
+                            <span class="has-text-dark">
+                                {updated_at.date_to_display()}
+                            </span>
                         </div>
                     </div>
                     <div class="column fix-width mb-0 p-0">

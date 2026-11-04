@@ -469,20 +469,22 @@ impl ShowComponent {
     }
 
     fn show_component_info(&self, component_data: &ComponentInfo) -> Html {
-        let class_item = "is-flex is-align-items-center mr-3";
-        let class_icon = "icon is-small mr-1";
+        let class_item = "is-size-6 is-flex is-align-items-center mr-3";
+        let class_icon = "icon is-small has-text-grey mr-1";
+        let class_value = "has-text-dark";
+        let class_label = "has-text-grey mr-1";
         html!{
             <div class="is-flex is-flex-wrap-wrap is-align-items-center is-gap-3 mb-2">
-                <div class={class_item}>
-                    {LocaleKey::LCS.get_value()}{": "}
-                    {component_data.actual_status.name.clone()}
+                <div class={class_item} title={LocaleKey::LifeCycleStage.get_value()}>
+                    <span class={class_label}>{LocaleKey::LCS.get_value()}{": "}</span>
+                    <span class={class_value}>{component_data.actual_status.name.clone()}</span>
                 </div>
-                <div class={class_item}>
+                <div class={class_item} title={LocaleKey::TypeAccess.get_value()}>
                     {component_data.type_access.get_with_icon()}
                 </div>
                 <div title={LocaleKey::Owner.get_value()} class={class_item}>
                     <span class={class_icon}>
-                        <i class={classes!("fa", "fa-user")}></i>
+                        <i class={classes!("fas", "fa-user")}></i>
                     </span>
                     <GoToUser data = {component_data.owner_user.clone()} />
                 </div>
@@ -490,13 +492,13 @@ impl ShowComponent {
                     <span class={class_icon}>
                         <i class={classes!("far", "fa-calendar-plus")}></i>
                     </span>
-                    {component_data.created_at.date_to_display()}
+                    <span class={class_value}>{component_data.created_at.date_to_display()}</span>
                 </div>
                 <div title={LocaleKey::UpdatedAtLabel2.get_value()} class={class_item}>
-                    <span class={class_icon}>
+                    <span class={classes!(class_icon, "pl-1")}>
                         <i class="fas fa-edit"></i>
                     </span>
-                    {component_data.updated_at.date_to_display()}
+                    <span class={class_value}>{component_data.updated_at.date_to_display()}</span>
                 </div>
             </div>
         }

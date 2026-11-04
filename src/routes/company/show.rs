@@ -299,9 +299,7 @@ impl ShowCompany {
                 </div>
                 <div id="company-is-supplier" class={classes!("column", "is-three-fifths")}>
                     {company_data.to_display()}
-                    <abbr title={LocaleKey::SupplierLabel2.get_value()} hidden={!company_data.is_supplier}>
-                        {diamond_svg(company_data.is_supplier, "25")}
-                    </abbr>
+                    {diamond_svg(company_data.is_supplier, "25")}
                 </div>
                 <div class="column m-0 p-0">
                     <div class="buttons flexBox mb-0" >
@@ -321,9 +319,9 @@ impl ShowCompany {
                         false => html!{},
                       }}
                     </div>
-                    <div id="company-on-since">
-                      <span class="mr-3">{LocaleKey::HereSince.get_value()}</span>
-                      <span>{company_data.created_at.date_to_display()}</span>
+                    <div id="company-on-since" class="is-size-6">
+                        <span class="has-text-grey mr-1">{LocaleKey::HereSince.get_value()}</span>
+                        <span class="has-text-dark">{company_data.created_at.date_to_display()}</span>
                     </div>
                 </div>
             </div>},

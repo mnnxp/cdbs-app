@@ -154,6 +154,7 @@ impl ListItemStandard {
 
         let show_standard_btn = self.link.callback(|_| Msg::OpenStandard);
         let trigger_fav_btn = self.link.callback(|_| Msg::TriggerFav);
+        let class_icon = "icon is-small has-text-grey mr-1";
 
         html!{
           <div class="box itemBox">
@@ -169,13 +170,14 @@ impl ListItemStandard {
                   </div>
                   <div class="media-content" onclick={show_standard_btn.clone()}>
                     <div class="columns is-gapless mb-0">
-                        <div class="column">
-                            {LocaleKey::Owner.get_value()}
-                            <span class="has-text-weight-bold">{owner_company.shortname.clone()}</span>
+                        <div class="column" title={LocaleKey::Owner.get_value()}>
+                            <span class={class_icon}><i class="fas fa-building"></i></span>
+                            <span class="has-text-dark has-text-weight-bold">{owner_company.shortname.clone()}</span>
                         </div>
-                        <div class="column">
-                            {format!("{}: ", LocaleKey::PublicationAtLabel.get_value())}
-                            <span class="id-box has-text-weight-bold">{publication_at.date_to_display()}</span>
+                        <div class="column" title={LocaleKey::PublicationAtLabel.get_value()}>
+                            <span class={class_icon}><i class="fas fa-calendar-day"></i></span>
+                            <span class="has-text-grey mr-1">{LocaleKey::PublicationAtLabel.get_value()}{": "}</span>
+                            <span class="has-text-dark">{publication_at.date_to_display()}</span>
                         </div>
                     </div>
                     <div class="column fix-width mb-0 p-0">

@@ -263,10 +263,10 @@ impl ShowSupplierCompany {
                     />
                   </figure>
                 </div>
-                <div id="company-region" class={classes!("column", "is-three-fifths")}>
-                <abbr title={LocaleKey::SupplierLabel2.get_value()} style="position: absolute;margin-left: 10rem;">
+                <div class={classes!("column", "is-three-fifths")}>
+                <span style="position: absolute;margin-left: 10rem;">
                     {diamond_svg(company_data.is_supplier, "175")}
-                </abbr>
+                </span>
                   {company_data.to_display()}
                 </div>
                 <div class="column m-0 p-0">

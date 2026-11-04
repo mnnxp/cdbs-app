@@ -5,13 +5,13 @@ impl TypeAccessInfo {
     /// Returns html code with access name and corresponding icon (icon+name)
     pub(crate) fn get_with_icon(&self) -> Html {
         let class_icon = match self.type_access_id {
-            3 => "fa fa-globe",
+            3 => "fas fa-globe",
             1 => "fas fa-lock",
             _ => "fas fa-shield-alt",
         };
         html!{<>
-            <span class="icon is-small mr-1"><i class={class_icon}></i></span>
-            {self.name.clone()}
+            <span class="icon is-small has-text-grey mr-1"><i class={class_icon}></i></span>
+            <span class="has-text-dark">{self.name.clone()}</span>
         </>}
     }
 }
@@ -20,8 +20,8 @@ impl PermissionLevel  {
     /// Renders a single access level in span with appropriate icon (icon+name)
     pub(crate) fn render_access_level_icon(&self) -> Html {
         html!{<>
-            <span class="icon is-small mr-1"><i class={self.get_icon_for_level()}></i></span>
-            {self.name.clone()}
+            <span class="icon is-small has-text-grey mr-1"><i class={self.get_icon_for_level()}></i></span>
+            <span class="has-text-dark">{self.name.clone()}</span>
         </>}
     }
 

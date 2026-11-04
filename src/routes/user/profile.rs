@@ -441,8 +441,8 @@ impl Profile {
             (Some(ref sp), _) => (sp.created_at, &sp.program, &sp.region),
             (None, None) => return html!{},
         };
-        let class_item = "is-size-6 is-align-items-center has-text-grey ml-3";
-        let class_icon = "icon is-small mr-1";
+        let class_item = "is-size-6 is-align-items-center ml-3";
+        let class_icon = "icon is-small has-text-grey mr-1";
         let class_value = "has-text-dark";
         html!{
             <div class="is-flex is-flex-direction-column is-align-items-flex-end">
