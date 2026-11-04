@@ -62,9 +62,9 @@ pub(crate) enum LocaleKey {
     AcceptTerms,
     /// `terms and conditions` (was: 29)
     TermsAndConditions,
-    /// `Updated at: ` (was: 30)
+    /// `Updated at` (was: 30)
     UpdatedAt,
-    /// `Followers: ` (was: 31)
+    /// `Followers` (was: 31)
     Followers,
     /// `CERTIFICATES` (was: 32)
     Certificates,

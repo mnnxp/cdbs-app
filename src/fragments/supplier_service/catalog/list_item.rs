@@ -129,7 +129,7 @@ impl ListItemService {
                                 {owner_company.shortname.clone()}
                             </span>
                         </div>
-                        <div class="column" title={LocaleKey::UpdatedAtLabel2.get_value()}>
+                        <div class="column" title={LocaleKey::UpdatedAt.get_value()}>
                             <span class={classes!(class_icon, "pl-1")}>
                                 <i class="fas fa-edit"></i>
                             </span>

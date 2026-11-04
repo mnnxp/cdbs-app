@@ -494,7 +494,7 @@ impl ShowComponent {
                     </span>
                     <span class={class_value}>{component_data.created_at.date_to_display()}</span>
                 </div>
-                <div title={LocaleKey::UpdatedAtLabel2.get_value()} class={class_item}>
+                <div title={LocaleKey::UpdatedAt.get_value()} class={class_item}>
                     <span class={classes!(class_icon, "pl-1")}>
                         <i class="fas fa-edit"></i>
                     </span>

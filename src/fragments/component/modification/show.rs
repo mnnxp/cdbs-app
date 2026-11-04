@@ -254,7 +254,7 @@ impl ModificationsTableCard {
                                     <span class="has-text-grey mr-1">{LocaleKey::LCS.get_value()}{": "}</span>
                                     <span class={class_value}>{&mod_data.actual_status.name}</span>
                                 </div>
-                                <div title={LocaleKey::UpdatedAtLabel2.get_value()} class={class_item}>
+                                <div title={LocaleKey::UpdatedAt.get_value()} class={class_item}>
                                     <span class={class_icon}>
                                         <i class="fas fa-edit"></i>
                                     </span>
