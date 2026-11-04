@@ -30,7 +30,6 @@ pub struct Props {
     pub show_delete_btn: bool,
     pub component_uuid: UUID,
     pub component_suppliers: Vec<Supplier>,
-    pub supplier_list: Vec<ShowCompanyShort>,
     pub is_base: bool,
 }
 
@@ -175,17 +174,19 @@ impl Component for ComponentSuppliersCard {
                 }
             },
             Msg::SearchCompanies => {
-                if self.search_text.is_empty() {
-                    return true
-                }
                 self.search_loading = true;
-                let search = self.search_text.clone();
+                // if the string is not specified, it's when opening the modal
+                let search = if self.search_text.is_empty() {
+                    None
+                } else {
+                    Some(self.search_text.clone())
+                };
                 let ipt_companies_arg = Some(get_companies_short_list::IptCompaniesArg {
                     companiesUuids: None,
                     userUuid: None,
                     favorite: None,
                     supplier: None,
-                    search: Some(search),
+                    search,
                     excludeUuids: None,
                 });
                 let ipt_paginate = Some(get_companies_short_list::IptPaginate {
@@ -221,6 +222,7 @@ impl Component for ComponentSuppliersCard {
                     ));
                 } else {
                     self.search_results.clear();
+                    self.link.send_message(Msg::SearchCompanies);
                 }
             },
             Msg::SelectSupplier(uuid) => self.request_set_supplier_uuid = Some(uuid),
@@ -232,8 +234,8 @@ impl Component for ComponentSuppliersCard {
                     self.search_text.clear();
                     self.search_results.clear();
                     self.request_set_supplier_uuid = None;
-                    self.search_loading = false;
                     self.debounce_timeout = None;
+                    self.link.send_message(Msg::SearchCompanies);
                 }
             },
             Msg::ResponseError(err) => self.error = Some(err),
@@ -244,8 +246,7 @@ impl Component for ComponentSuppliersCard {
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
         if self.props.component_uuid == props.component_uuid &&
-             self.props.component_suppliers.len() == props.component_suppliers.len() &&
-               self.props.supplier_list.len() == props.supplier_list.len() {
+             self.props.component_suppliers.len() == props.component_suppliers.len() {
             false
         } else {
             self.company_uuids = BTreeSet::new();
@@ -377,38 +378,21 @@ impl ComponentSuppliersCard {
                 </div>
                 <div class="field">
                     <div class="column">
-                        {if !self.search_text.is_empty() {
-                            // Show search results
-                            if !self.search_results.is_empty() {
-                                html! {
-                                    <div class="">
-                                        {for self.search_results.iter().map(|company| {
-                                            self.show_item(company.clone())
-                                        })}
-                                    </div>
-                                }
-                            } else if !self.search_loading {
-                                html! {
-                                    <p class="help is-info">{LocaleKey::NoCompaniesFound.get_value()}</p>
-                                }
-                            } else {
-                                html! {}
+                        // Show search results
+                        {if !self.search_results.is_empty() {
+                            html! {
+                                <div class="">
+                                    {for self.search_results.iter().map(|company| {
+                                        self.show_item(company.clone())
+                                    })}
+                                </div>
+                            }
+                        } else if !self.search_loading {
+                            html! {
+                                <p class="help is-info">{LocaleKey::NoCompaniesFound.get_value()}</p>
                             }
                         } else {
-                            // Show owned companies
-                            if !self.props.supplier_list.is_empty() {
-                                html! {
-                                    <div class="">
-                                        {for self.props.supplier_list.iter().map(|company| {
-                                            self.show_item(company.clone())
-                                        })}
-                                    </div>
-                                }
-                            } else {
-                                html! {
-                                    <p class="help is-info">{LocaleKey::NoCompaniesFound.get_value()}</p>
-                                }
-                            }
+                            html! {}
                         }}
                     </div>
                 </div>

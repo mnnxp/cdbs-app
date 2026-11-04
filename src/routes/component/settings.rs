@@ -29,7 +29,7 @@ use crate::fragments::{
 use crate::services::{get_from_value, get_logged_user, LocaleKey, get_value_response, resp_parsing, set_history_back};
 use crate::types::{
     UUID, ComponentInfo, SlimUser, TypeAccessInfo, ActualStatus, ComponentUpdatePreData,
-    ComponentUpdateData, ShowCompanyShort, ComponentModificationInfo,
+    ComponentUpdateData, ComponentModificationInfo,
 };
 use crate::gqls::make_query;
 use crate::gqls::component::{
@@ -58,7 +58,6 @@ pub struct ComponentSettings {
     router_agent: Box<dyn Bridge<RouteAgent>>,
     props: Props,
     link: ComponentLink<Self>,
-    supplier_list: Vec<ShowCompanyShort>,
     actual_statuses: Vec<ActualStatus>,
     types_access: Vec<TypeAccessInfo>,
     update_component: bool,
@@ -122,7 +121,6 @@ impl Component for ComponentSettings {
             router_agent: RouteAgent::bridge(link.callback(|_| Msg::Ignore)),
             props,
             link,
-            supplier_list: Vec::new(),
             actual_statuses: Vec::new(),
             types_access: Vec::new(),
             update_component: false,
@@ -141,14 +139,10 @@ impl Component for ComponentSettings {
     }
 
     fn rendered(&mut self, first_render: bool) {
-        let logged_user_uuid = match get_logged_user() {
-            Some(cu) => cu.uuid,
-            None => {
-                set_history_back(Some(String::new()));
-                // route to login page if not found token
-                self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
-                String::new()
-            },
+        if let None = get_logged_user() {
+            set_history_back(Some(String::new()));
+            // route to login page if not found token
+            self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
         };
 
         // get component uuid for request component data
@@ -180,17 +174,8 @@ impl Component for ComponentSettings {
             self.current_component_uuid = target_component_uuid.clone();
 
             spawn_local(async move {
-                let ipt_companies_arg = get_update_component_data_opt::IptCompaniesArg{
-                    companiesUuids: None,
-                    userUuid: Some(logged_user_uuid),
-                    favorite: None,
-                    supplier: None,
-                    search: None,
-                    excludeUuids: None,
-                };
                 let res = make_query(GetUpdateComponentDataOpt::build_query(get_update_component_data_opt::Variables {
-                    component_uuid: target_component_uuid,
-                    ipt_companies_arg,
+                    component_uuid: target_component_uuid
                 })).await.unwrap();
 
                 link.send_message(Msg::GetComponentData(res.clone()));
@@ -284,7 +269,6 @@ impl Component for ComponentSettings {
             Msg::GetListOpt(res) => {
                 match get_value_response(res) {
                     Ok(value) => {
-                        self.supplier_list = get_from_value(&value, "companies").unwrap_or_default();
                         self.actual_statuses = get_from_value(&value, "componentActualStatuses").unwrap_or_default();
                         self.types_access = get_from_value(&value, "typesAccess").unwrap_or_default();
                     },
@@ -404,7 +388,6 @@ impl Component for ComponentSettings {
                                             show_delete_btn={true}
                                             component_uuid={component_data.uuid.clone()}
                                             component_suppliers={component_data.component_suppliers.clone()}
-                                            supplier_list={self.supplier_list.clone()}
                                             is_base={self.current_component_is_base}
                                         />
                                     </div>

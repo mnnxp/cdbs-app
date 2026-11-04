@@ -184,13 +184,9 @@ query ComModFilesetFiles($iptFileOfFilesetArg: IptFileOfFilesetArg!, $IptPaginat
   }
 }
 
-query GetUpdateComponentDataOpt($componentUuid: UUID!, $iptCompaniesArg: IptCompaniesArg!) {
+query GetUpdateComponentDataOpt($componentUuid: UUID!) {
   component(componentUuid: $componentUuid) {
     ...componentFields
-  }
-
-  companies(args: $iptCompaniesArg) {
-    ...companyShortFields
   }
 
   componentActualStatuses {
