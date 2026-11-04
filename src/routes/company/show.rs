@@ -319,6 +319,9 @@ impl ShowCompany {
                         false => html!{},
                       }}
                     </div>
+                    <div class={"is-size-6 is-flex is-align-items-center"} title={LocaleKey::TypeAccess.get_value()}>
+                        {company_data.type_access.get_with_icon()}
+                    </div>
                     <div id="company-on-since" class="is-size-6">
                         <span class="has-text-grey mr-1">{LocaleKey::HereSince.get_value()}</span>
                         <span class="has-text-dark">{company_data.created_at.date_to_display()}</span>
