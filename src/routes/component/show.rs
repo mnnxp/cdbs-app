@@ -261,7 +261,7 @@ impl Component for ShowComponent {
                     },
                     Err(err) => {
                         link.send_message(Msg::ResponseError(err));
-                        if let None = get_logged_user() {
+                        if get_logged_user().is_none() {
                             set_history_back(Some(String::new()));
                             // route to login page if not found token
                             self.router_agent.send(ChangeRoute(AppRoute::Login.into()));

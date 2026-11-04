@@ -161,7 +161,7 @@ impl Component for Settings {
 
     fn rendered(&mut self, first_render: bool) {
         if first_render {
-            if let None = get_logged_user() {
+            if get_logged_user().is_none() {
                 set_history_back(Some(String::new()));
                 // route to login page if not found token
                 self.router_agent.send(ChangeRoute(AppRoute::Login.into()));

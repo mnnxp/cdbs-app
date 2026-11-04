@@ -187,7 +187,7 @@ impl Component for CompanySettings {
     }
 
     fn rendered(&mut self, first_render: bool) {
-        if let None = get_logged_user() {
+        if get_logged_user().is_none() {
             // route to login page if not found token
             self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
         };
