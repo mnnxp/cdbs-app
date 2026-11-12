@@ -233,7 +233,7 @@ impl FileShowcase {
         <td>{file_info.show_size()}</td>
         <td>{file_info.commit_msg.clone()}</td>
         <td>{file_info.owner_user.to_display()}</td>
-        <td>{file_info.updated_at.date_to_display()}</td>
+        <td>{file_info.created_at.date_to_display()}</td>
         <td>{match select_str.is_empty() {
           true => html!{
             <div class="buttons">
