@@ -296,7 +296,7 @@ impl SearchBar {
                         html! {
                             {for self.found_components.iter().map(|x| {
                                 html!{
-                                    <a href={format!("#/component/{}", x.uuid)} class="dropdown-item" target="_blank" rel="noopener noreferrer">
+                                    <a href={format!("#/component/{}", x.uuid)} class="dropdown-item">
                                         {x.name.clone()}
                                     </a>
                                 }
