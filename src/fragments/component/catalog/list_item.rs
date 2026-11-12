@@ -99,7 +99,7 @@ impl ListItem {
         let class_icon = "icon is-small has-text-grey mr-1";
 
         html!{
-          <div class="box itemBox componentListItem">
+          <div class="box itemBox componentListItem mb-4">
             <article class="media center-media">
               <div class="media-left" onclick={onclick_open_component.clone()}>
                 <figure class="image is-96x96">

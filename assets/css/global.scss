@@ -275,13 +275,16 @@ img {
 }
 
 // Components
-.componentListItem figure {
-  display: inline-flex;
-  img {
-    display: block;
-    height: auto;
-    width: 100%;
-    object-fit: contain;
+.componentListItem {
+  padding: 0.5rem;
+  figure {
+    display: inline-flex;
+    img {
+      display: block;
+      height: auto;
+      width: 100%;
+      object-fit: contain;
+    }
   }
 }
 
