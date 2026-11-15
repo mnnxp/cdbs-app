@@ -9,6 +9,7 @@ import { TransformControls } from '../../../../three/controls/TransformControls.
 import Stats from '../../../../three/stats.module.js';
 import { GUI } from '../../../../three/lil-gui.esm.min.js';
 import { fetchWithCache } from '../../../../three/model-cache.js';
+import { ThreeMFLoader } from '../../../../three/loaders/3MFLoader.js';
 
 // Environment texture constants
 const ENV_TEXTURES = {
@@ -847,6 +848,25 @@ export class GreatViewer {
                         .catch(error => this.onError(error));
                 }
                 break;
+            case '3MF': {
+                try {
+                    const declaredSize = Number(this.model.content_length) || 0;
+                    if (declaredSize > 128 * 1024 * 1024) {
+                        throw new Error('3MF file is too large');
+                    }
+                    const buffer = await fetchWithCache(this.model.url, (percent) => {
+                        this.infoMessage.innerHTML = percent.toFixed(1) + '%';
+                    });
+                    this.infoMessage.innerHTML = this.svgLoading;
+                    await new Promise(resolve => requestAnimationFrame(resolve));
+                    const group = new ThreeMFLoader().parse(buffer);
+                    this.processThreeMFModel(group);
+                } catch (error) {
+                    console.error('[3MF] Error:', error);
+                    this.onError(error);
+                }
+                break;
+            }
             default:
                 console.error(`Unsupported format: ${this.modelFormat}`);
                 if (this.infoMessage) {
@@ -870,9 +890,10 @@ export class GreatViewer {
             this.gui.destroy();
         }
         const isGLTF = this.modelFormat == 'GLTF' || this.modelFormat == 'GLB';
+        const is3MF = this.modelFormat == '3MF';
         const isSTL = this.modelFormat == 'STL';
         const isGCode = this.modelFormat == 'GCode';
-        console.log(`Controls: isGLTF - ${isGLTF}, isSTL - ${isSTL}, isGCode - ${isGCode}`);
+        console.log(`Controls: isGLTF - ${isGLTF}, is3MF - ${is3MF}, isSTL - ${isSTL}, isGCode - ${isGCode}`);
         this.gui = new GUI({
             autoPlace: false,
             title: this.labels.controls,
@@ -1009,8 +1030,8 @@ export class GreatViewer {
         // Material control folder
         const materialFolder = this.gui.addFolder(this.labels.material_folder);
         materialFolder.close();
-        // Texture/material switching (only for GLTF/GLB with textures)
-        if (isGLTF && this.hasTextures) {
+        // Texture/material switching (only for GLTF/GLB and 3MF with textures)
+        if ((isGLTF || is3MF) && this.hasTextures) {
             materialFolder.add(this, 'useCustomMaterial')
                 .name(this.labels.hide_textures)
                 .onChange(() => {
@@ -1392,6 +1413,37 @@ export class GreatViewer {
         this.optimizeQualityModel();
         this.scene.add(this.mesh);
         this.centerAndFitCamera();
+        this.onComplete();
+    }
+
+    processThreeMFModel(group) {
+        console.log('3MF parse result:', group, 'children:', group?.children?.length);
+        if (!group) {
+            throw new Error('3MF: empty or malformed model');
+        }
+        group.rotation.x = -Math.PI / 2;
+        group.updateMatrixWorld(true);
+        this.mesh = group;
+        this.originalMaterials.clear();
+        this.hasTextures = false;
+        let meshCount = 0;
+        group.traverse((child) => {
+            if (!child.isMesh) return;
+            meshCount++;
+            this.originalMaterials.set(child.uuid, child.material);
+            if (child.material && child.material.map) {
+                this.hasTextures = true;
+            }
+            if (child.geometry && !child.geometry.attributes.normal) {
+                child.geometry.computeVertexNormals();
+            }
+        });
+        if (meshCount === 0) {
+            throw new Error('3MF: no renderable meshes');
+        }
+        this.scene.add(this.mesh);
+        this.centerAndFitCamera();
+        this.optimizeQualityModel();
         this.onComplete();
     }
 

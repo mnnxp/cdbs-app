@@ -28,6 +28,8 @@ pub(crate) enum ModelFormat {
     STEP,
     GCode,
     IFC,
+    #[serde(rename = "3MF")]
+    ThreeMF,
     Unknown,
 }
 
@@ -40,6 +42,7 @@ impl ModelFormat {
             "step" | "stp" => Self::STEP,
             "gcode" => Self::GCode,
             "ifc" => Self::IFC,
+            "3mf" => Self::ThreeMF,
             _ => Self::Unknown,
         }
     }
