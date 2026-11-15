@@ -334,6 +334,12 @@ export class GreatViewer {
         const currentPosition = this.camera.position.clone();
         const currentTarget = this.controls.target.clone();
         const aspect = this.container.clientWidth / this.container.clientHeight;
+        this.mesh?.updateMatrixWorld(true);
+        const box = this.mesh ? new THREE.Box3().setFromObject(this.mesh) : null;
+        const diag = (box && !box.isEmpty()) ? box.getSize(new THREE.Vector3()).length() : 100;
+        const dist = currentPosition.distanceTo(currentTarget);
+        const near = Math.max(diag / 1000, 0.001);
+        const far = (dist + diag) * 4;
         let newCamera;
         if (targetMode) {
             // Orthographic: calculate frustum size based on current view
@@ -343,12 +349,12 @@ export class GreatViewer {
             newCamera = new THREE.OrthographicCamera(
                 -visibleWidth / 2, visibleWidth / 2,
                 visibleHeight / 2, -visibleHeight / 2,
-                0.1, 5000
+                near, far
             );
             console.log("Switched to OrthographicCamera");
         } else {
             // Perspective
-            newCamera = new THREE.PerspectiveCamera(45, aspect, 0.1, 5000);
+            newCamera = new THREE.PerspectiveCamera(45, aspect, near, far);
             console.log("Switched to PerspectiveCamera");
         }
         newCamera.position.copy(currentPosition);
@@ -582,6 +588,17 @@ export class GreatViewer {
             this._renderRequested = false;
             if (!this.isInitialized || !this.renderer || !this.container) return;
             this.renderer.render(this.scene, this.camera);
+            if (this._capture) {
+                this._capture = false;
+                this.renderer.domElement.toBlob(b => {
+                    const url = URL.createObjectURL(b);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${this.model.filename}.png`;
+                    a.click();
+                    setTimeout(() => URL.revokeObjectURL(url), 0);
+                });
+            }
         });
     }
 
@@ -913,6 +930,7 @@ export class GreatViewer {
         // Display controls folder
         const displayFolder = this.gui.addFolder(this.labels.display);
         displayFolder.open();
+        displayFolder.add({ shot: () => { this._capture = true; this._requestRender(); } }, 'shot').name(this.labels.screenshot || 'Screenshot');
         displayFolder.add(controlParams, 'showAxesHelper')
             .name(this.labels.axes)
             .onChange((value) => {
@@ -1118,6 +1136,25 @@ export class GreatViewer {
         infoFolder.close();
         infoFolder.add(this.model, 'filename').name(this.labels.file).listen();
         infoFolder.add(this.model, 'size').name(this.labels.size).listen();
+        const s = this.modelStats || {};
+        const size = this.mesh
+            ? new THREE.Box3().setFromObject(this.mesh).getSize(new THREE.Vector3())
+            : new THREE.Vector3();
+        const metadata = (this.mesh && this.mesh.userData && this.mesh.userData.metadata) || {};
+        this.info = {
+            format: this.modelFormat,
+            triangles: Number.isFinite(s.triangles) ? s.triangles.toLocaleString() : '—',
+            meshes:    Number.isFinite(s.meshes)    ? s.meshes                    : '—',
+            vertices:  Number.isFinite(s.vertices)  ? s.vertices.toLocaleString() : '—',
+            bbox:      this.mesh
+                ? `${size.x.toFixed(1)} × ${size.y.toFixed(1)} × ${size.z.toFixed(1)}`
+                : '—',
+            loadTime:  (typeof this.startTime === 'number')
+                ? ((performance.now() - this.startTime) / 1000).toFixed(2) + ' s'
+                : '—',
+            ...metadata
+        };
+        Object.entries(this.info).forEach(([k, v]) => infoFolder.add(this.info, k).name(k).listen());
     }
 
     // Remove old updateLightToCamera method or keep only for keyLight:
@@ -1364,15 +1401,18 @@ export class GreatViewer {
 
     optimizeQualityModel() {
         if (!this.mesh || !this.renderer) return;
-        let totalTriangles = 0;
-        this.mesh.traverse((child) => {
-            if (child.isMesh && child.geometry) {
-                const geom = child.geometry;
-                totalTriangles += geom.index ? geom.index.count / 3 : geom.attributes.position.count / 3;
+        this.modelStats = { triangles: 0, meshes: 0, vertices: 0 };
+        this.mesh.traverse(c => {
+            if (c.isMesh && c.geometry) {
+                this.modelStats.meshes++;
+                this.modelStats.vertices += c.geometry.attributes.position.count;
+                this.modelStats.triangles += c.geometry.index
+                    ? c.geometry.index.count / 3
+                    : c.geometry.attributes.position.count / 3;
             }
         });
-        console.log(`[Optimizer] Model has ${totalTriangles.toLocaleString()} triangles`);
-        const matched = QUALITY_MAP.find(q => totalTriangles > q.threshold) || QUALITY_MAP[QUALITY_MAP.length - 1];
+        console.log(`[Optimizer] Model has ${this.modelStats.triangles.toLocaleString()} triangles`);
+        const matched = QUALITY_MAP.find(q => this.modelStats.triangles > q.threshold) || QUALITY_MAP[QUALITY_MAP.length - 1];
         this.setQuality(matched.level);
         this._requestRender();
     }
@@ -1431,8 +1471,9 @@ export class GreatViewer {
             if (!child.isMesh) return;
             meshCount++;
             this.originalMaterials.set(child.uuid, child.material);
-            if (child.material && child.material.map) {
-                this.hasTextures = true;
+            const mats = Array.isArray(child.material) ? child.material : [child.material];
+            for (const m of mats) {
+                if (m && m.map) { this.hasTextures = true; break; }
             }
             if (child.geometry && !child.geometry.attributes.normal) {
                 child.geometry.computeVertexNormals();

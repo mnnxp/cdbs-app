@@ -128,6 +128,7 @@ struct ViewerLabels {
     view_left: String,
     view_right: String,
     view_isometric: String,
+    screenshot: String,
 }
 
 #[wasm_bindgen(module = "/assets/js/greatviewer.js")]
@@ -276,6 +277,7 @@ fn get_js_value(
             view_left: LocaleKey::LeftYZ.get_value().to_string(),
             view_right: LocaleKey::Right.get_value().to_string(),
             view_isometric: LocaleKey::Isometric.get_value().to_string(),
+            screenshot: LocaleKey::Screenshot.get_value().to_string(),
         },
     };
     to_value(&config).map(|v| Some(v)).unwrap_or_default()

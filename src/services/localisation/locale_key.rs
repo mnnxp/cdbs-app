@@ -1058,5 +1058,7 @@ pub(crate) enum LocaleKey {
     CopyKeyWarning,
     /// Got it (acknowledge)
     GotIt,
+    /// Screenshot
+    Screenshot,
     _Count,
 }

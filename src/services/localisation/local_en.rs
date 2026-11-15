@@ -530,4 +530,5 @@ pub(crate) const LOCAL_EN: [&str; MAX_KEY] = [
     "New API Key",
     "This key will only be shown once. Copy and store it securely. It cannot be recovered if lost.",
     "Got it",
+    "Screenshot",
 ];
