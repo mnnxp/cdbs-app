@@ -105,7 +105,7 @@ We welcome contributions to new integrations!
 
 | Other libraries |
 | ------------- |
-| [![router][router]][router-url] [![yewtil][yewtil]][yewtil-url] [![bindgen][bindgen]][bindgen-url] [![logger][logger]][logger-url] [![instant][instant]][instant-url] [![lipsum][lipsum]][lipsum-url] [![log][log]][log-url] [![getrandom][getrandom]][getrandom-url] [![rand][rand]][rand-url] [![chrono][chrono]][chrono-url] [![dotenv_codegen][dotenv_codegen]][dotenv_codegen-url] [![cmark][cmark]][cmark-url] [![serde][serde]][serde-url] [![regex][regex]][regex-url] [![serde_json][serde_json]][serde_json-url] [![thiserror][thiserror]][thiserror-url] [![graphql_client][graphql_client]][graphql_client-url] [![wee_alloc][wee_alloc]][wee_alloc-url] [![web-sys][web-sys]][web-sys-url] [![wasm-bindgen-test][wasm-bindgen-test]][wasm-bindgen-test-url] [![toml][toml]][toml-url] [![js-sys][js-sys]][js-sys-url] [![console_error_panic_hook][console_error_panic_hook]][console_error_panic_hook-url] [![anyhow][anyhow]][anyhow-url] |
+| [![router][router]][router-url] [![yewtil][yewtil]][yewtil-url] [![bindgen][bindgen]][bindgen-url] [![logger][logger]][logger-url] [![instant][instant]][instant-url] [![lipsum][lipsum]][lipsum-url] [![log][log]][log-url] [![getrandom][getrandom]][getrandom-url] [![rand][rand]][rand-url] [![chrono][chrono]][chrono-url] [![dotenv_codegen][dotenv_codegen]][dotenv_codegen-url] [![cmark][cmark]][cmark-url] [![serde][serde]][serde-url] [![serde_json][serde_json]][serde_json-url] [![thiserror][thiserror]][thiserror-url] [![graphql_client][graphql_client]][graphql_client-url] [![wee_alloc][wee_alloc]][wee_alloc-url] [![web-sys][web-sys]][web-sys-url] [![wasm-bindgen-test][wasm-bindgen-test]][wasm-bindgen-test-url] [![toml][toml]][toml-url] [![js-sys][js-sys]][js-sys-url] [![console_error_panic_hook][console_error_panic_hook]][console_error_panic_hook-url] [![anyhow][anyhow]][anyhow-url] |
 
 
 Many thanks to all of you who have contributed to the projects listed above and to the projects listed in the <a href="#acknowledgments">Acknowledgments</a> section! Your input has allowed us to make CADBase better and faster.
@@ -134,7 +134,7 @@ For more details on production configurations (such as connecting external Postg
 
 ### Manual
 
-To start the frontend, you must perform the a few steps.
+To start the frontend, you must perform a few steps.
 
 #### Prerequisites
 
@@ -187,7 +187,7 @@ For API details: [docs.cadbase.rs](https://docs.cadbase.rs)
 
 ### Current State
 - File versioning system
-- 3D Viewer (STL, GCODE, GLTF/GLB, STEP, IFC via Three.js)
+- 3D Viewer (STEP, 3MF, STL, GLTF/GLB, IFC, GCODE via Three.js and OCCT)
 - Search functionality
 - Multi-language support (English, Russian, Chinese)
 - API key management for secure integration access
@@ -195,7 +195,7 @@ For API details: [docs.cadbase.rs](https://docs.cadbase.rs)
 
 ### In Progress
 - User guides, API examples, and integration tutorials
-- Performance optimizations and additional formats
+- 2D Viewer for CAD drawings (DXF/DWG via acadrust)
 - Cleaner interface, improved navigation, and consistent design system
 
 **For software developers** — Integrate your products with CADBase and offer your customers seamless on-premise engineering data management. *Let's discuss this:* in@cadbase.rs
@@ -292,8 +292,6 @@ Xia TianHao - [Sansx](https://github.com/sansx) (GitHub)
 [cmark-url]: https://docs.rs/pulldown-cmark
 [serde]: https://img.shields.io/badge/serde-blue
 [serde-url]: https://docs.rs/serde
-[regex]: https://img.shields.io/badge/regex-blue
-[regex-url]: https://docs.rs/regex
 [serde_json]: https://img.shields.io/badge/serde_json-blue
 [serde_json-url]: https://docs.rs/serde_json
 [thiserror]: https://img.shields.io/badge/thiserror-blue
