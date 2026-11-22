@@ -91,6 +91,7 @@ Solutions for integration with CADBase platform with our support:
 
  - [CADBase Library (GitHub)](https://github.com/mnnxp/cadbaselibrary-freecad/) workbench for **FreeCAD** parametric 3D modeler
  - [CADBase Library (Blender Extensions)](https://extensions.blender.org/add-ons/cadbase-library/) add-on for **Blender** 3D computer graphics program
+ - [CADBase Library (GitVerse)](https://gitverse.ru/kompas3d_sdk/cadbaselibrary-kompas/) add-in for **KOMPAS-3D** CAD system (by KOMPAS-3D SDK community)
 
 We welcome contributions to new integrations!
 
