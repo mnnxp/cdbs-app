@@ -5,7 +5,6 @@ use crate::services::{get_history_search, LocaleKey, set_history_search, wraps_t
 #[derive(Clone)]
 pub enum Msg {
     ChangeSpec(usize),
-    ByParams,
     BySpecs,
     ByKeywords,
     OnlyFavorite,
@@ -48,7 +47,6 @@ impl Component for SearchPage {
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
             Msg::ChangeSpec(spec_id) => self.search_arg.set_spec_id(spec_id),
-            Msg::ByParams => self.search_arg.by_params = !self.search_arg.by_params,
             Msg::BySpecs => self.search_arg.by_specs = !self.search_arg.by_specs,
             Msg::ByKeywords => self.search_arg.by_keywords = !self.search_arg.by_keywords,
             Msg::OnlyFavorite => self.search_arg.favorite = !self.search_arg.favorite,
@@ -137,7 +135,6 @@ impl SearchPage {
     }
 
     fn checkboxs(&self) -> Html {
-        let onclick_by_params = self.link.callback(|_| Msg::ByParams);
         let onclick_by_specs = self.link.callback(|_| Msg::BySpecs);
         let onclick_by_keywords = self.link.callback(|_| Msg::ByKeywords);
         let onclick_only_favorite = self.link.callback(|_| Msg::OnlyFavorite);
@@ -154,10 +151,6 @@ impl SearchPage {
                 {if self.checkboxs_expanded {
                     html!{
                         <>
-                            <label class="column pt-0 mt-0 checkbox">
-                                <input type="checkbox" checked={self.search_arg.by_params} onclick={onclick_by_params}/>
-                                <span class="ml-3">{LocaleKey::ByParameters.get_value()}</span>
-                            </label>
                             <label class="column pt-0 mt-0 checkbox">
                                 <input type="checkbox" checked={self.search_arg.by_specs} onclick={onclick_by_specs}/>
                                 <span class="ml-3">{LocaleKey::ByCatalogs.get_value()}</span>

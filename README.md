@@ -91,6 +91,7 @@ Solutions for integration with CADBase platform with our support:
 
  - [CADBase Library (GitHub)](https://github.com/mnnxp/cadbaselibrary-freecad/) workbench for **FreeCAD** parametric 3D modeler
  - [CADBase Library (Blender Extensions)](https://extensions.blender.org/add-ons/cadbase-library/) add-on for **Blender** 3D computer graphics program
+ - [CADBase Library (GitVerse)](https://gitverse.ru/kompas3d_sdk/cadbaselibrary-kompas/) add-in for **KOMPAS-3D** CAD system (by KOMPAS-3D SDK community)
 
 We welcome contributions to new integrations!
 
@@ -105,7 +106,7 @@ We welcome contributions to new integrations!
 
 | Other libraries |
 | ------------- |
-| [![router][router]][router-url] [![yewtil][yewtil]][yewtil-url] [![bindgen][bindgen]][bindgen-url] [![logger][logger]][logger-url] [![instant][instant]][instant-url] [![lipsum][lipsum]][lipsum-url] [![log][log]][log-url] [![getrandom][getrandom]][getrandom-url] [![rand][rand]][rand-url] [![chrono][chrono]][chrono-url] [![dotenv_codegen][dotenv_codegen]][dotenv_codegen-url] [![cmark][cmark]][cmark-url] [![serde][serde]][serde-url] [![regex][regex]][regex-url] [![serde_json][serde_json]][serde_json-url] [![thiserror][thiserror]][thiserror-url] [![graphql_client][graphql_client]][graphql_client-url] [![wee_alloc][wee_alloc]][wee_alloc-url] [![web-sys][web-sys]][web-sys-url] [![wasm-bindgen-test][wasm-bindgen-test]][wasm-bindgen-test-url] [![toml][toml]][toml-url] [![js-sys][js-sys]][js-sys-url] [![console_error_panic_hook][console_error_panic_hook]][console_error_panic_hook-url] [![anyhow][anyhow]][anyhow-url] |
+| [![router][router]][router-url] [![yewtil][yewtil]][yewtil-url] [![bindgen][bindgen]][bindgen-url] [![logger][logger]][logger-url] [![instant][instant]][instant-url] [![lipsum][lipsum]][lipsum-url] [![log][log]][log-url] [![getrandom][getrandom]][getrandom-url] [![rand][rand]][rand-url] [![chrono][chrono]][chrono-url] [![dotenv_codegen][dotenv_codegen]][dotenv_codegen-url] [![cmark][cmark]][cmark-url] [![serde][serde]][serde-url] [![serde_json][serde_json]][serde_json-url] [![thiserror][thiserror]][thiserror-url] [![graphql_client][graphql_client]][graphql_client-url] [![wee_alloc][wee_alloc]][wee_alloc-url] [![web-sys][web-sys]][web-sys-url] [![wasm-bindgen-test][wasm-bindgen-test]][wasm-bindgen-test-url] [![toml][toml]][toml-url] [![js-sys][js-sys]][js-sys-url] [![console_error_panic_hook][console_error_panic_hook]][console_error_panic_hook-url] [![anyhow][anyhow]][anyhow-url] |
 
 
 Many thanks to all of you who have contributed to the projects listed above and to the projects listed in the <a href="#acknowledgments">Acknowledgments</a> section! Your input has allowed us to make CADBase better and faster.
@@ -116,9 +117,27 @@ Many thanks to all of you who have contributed to the projects listed above and 
 <!-- GETTING STARTED -->
 ## Getting Started
 
-To start the frontend, you must perform the a few steps.
+### In one-command
 
-### Prerequisites
+You can deploy the entire CADBase platform (including the database, backend API, background processor, and frontend) automatically using the one-command installation script.
+
+```bash
+curl --proto '=https' --tlsv1.2 -sSLf https://gitlab.com/cadbase/cdbs-installer/-/raw/master/cdbs_start.sh | bash
+```
+
+**What the script does:**
+1. **Environment Check:** Verifies if `git`, `docker`, `openssl`, and `curl` are installed.
+2. **Configuration:** Creates a `cdbs` directory and a `setup.config` file with default values. 
+3. **Pauses for customization:** You can press **Enter** to accept the default settings (uses local S3 stubs and generates self-signed SSL certificates) for a quick local test.
+4. **Build & Launch:** Syncs the repositories, builds the containers, and initializes the database.
+
+For more details on production configurations (such as connecting external PostgreSQL or corporate S3 buckets), refer to the [CADBase Self-Hosting Guide](https://cadbase.rs/rs/overviews/self-hosting/) [RU](https://cadbase.ru/ru/overviews/self-hosting/) [ZH](https://cadbase.org/org/overviews/self-hosting/).
+
+### Manual
+
+To start the frontend, you must perform a few steps.
+
+#### Prerequisites
 
 * [Rust](https://www.rust-lang.org/learn/get-started)
 
@@ -137,15 +156,22 @@ To start the frontend, you must perform the a few steps.
   cargo install --locked trunk
   ```
 
-### Installation
+#### Installation
 
-Note: Before performing step 2, check the correct settings of the environment in the file '.env'.
+Note: Before performing step 3, check the correct settings of the environment in the file '.env'.
 
 1. Clone the repo
    ```sh
    git clone https://gitlab.com/cadbase/cdbs-app.git
    ```
-2. Build, watch & serve the Rust WASM app and all of its assets
+2. Rolling back the versions to maintain compatibility with Yew
+   ```sh
+   cd cdbs-app
+   rustup default 1.86.0
+   rustup target add wasm32-unknown-unknown
+   cargo install --version 0.22.0 trunk --locked
+   cargo update -p wasm-bindgen --precise 0.2.92
+3. Build, watch & serve the Rust WASM app and all of its assets
    ```sh
    trunk serve
    ```
@@ -162,7 +188,7 @@ For API details: [docs.cadbase.rs](https://docs.cadbase.rs)
 
 ### Current State
 - File versioning system
-- 3D Viewer (STL, GCODE, GLTF/GLB, STEP, IFC via Three.js)
+- 3D Viewer (STEP, 3MF, STL, GLTF/GLB, IFC, GCODE via Three.js and OCCT)
 - Search functionality
 - Multi-language support (English, Russian, Chinese)
 - API key management for secure integration access
@@ -170,7 +196,7 @@ For API details: [docs.cadbase.rs](https://docs.cadbase.rs)
 
 ### In Progress
 - User guides, API examples, and integration tutorials
-- Performance optimizations and additional formats
+- 2D Viewer for CAD drawings (DXF/DWG via acadrust)
 - Cleaner interface, improved navigation, and consistent design system
 
 **For software developers** — Integrate your products with CADBase and offer your customers seamless on-premise engineering data management. *Let's discuss this:* in@cadbase.rs
@@ -267,8 +293,6 @@ Xia TianHao - [Sansx](https://github.com/sansx) (GitHub)
 [cmark-url]: https://docs.rs/pulldown-cmark
 [serde]: https://img.shields.io/badge/serde-blue
 [serde-url]: https://docs.rs/serde
-[regex]: https://img.shields.io/badge/regex-blue
-[regex-url]: https://docs.rs/regex
 [serde_json]: https://img.shields.io/badge/serde_json-blue
 [serde_json-url]: https://docs.rs/serde_json
 [thiserror]: https://img.shields.io/badge/thiserror-blue

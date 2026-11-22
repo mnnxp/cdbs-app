@@ -128,7 +128,7 @@ impl Component for ShowCompany {
     }
 
     fn rendered(&mut self, first_render: bool) {
-        if let None = get_logged_user() {
+        if get_logged_user().is_none() {
             set_history_back(Some(String::new()));
             // route to login page if not found token
             self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
@@ -299,9 +299,7 @@ impl ShowCompany {
                 </div>
                 <div id="company-is-supplier" class={classes!("column", "is-three-fifths")}>
                     {company_data.to_display()}
-                    <abbr title={LocaleKey::SupplierLabel2.get_value()} hidden={!company_data.is_supplier}>
-                        {diamond_svg(company_data.is_supplier, "25")}
-                    </abbr>
+                    {diamond_svg(company_data.is_supplier, "25", true)}
                 </div>
                 <div class="column m-0 p-0">
                     <div class="buttons flexBox mb-0" >
@@ -321,9 +319,12 @@ impl ShowCompany {
                         false => html!{},
                       }}
                     </div>
-                    <div id="company-on-since">
-                      <span class="mr-3">{LocaleKey::HereSince.get_value()}</span>
-                      <span>{company_data.created_at.date_to_display()}</span>
+                    <div class={"is-size-6 is-flex is-align-items-center"} title={LocaleKey::TypeAccess.get_value()}>
+                        {company_data.type_access.get_with_icon()}
+                    </div>
+                    <div id="company-on-since" class="is-size-6">
+                        <span class="has-text-grey mr-1">{LocaleKey::HereSince.get_value()}</span>
+                        <span class="has-text-dark">{company_data.created_at.date_to_display()}</span>
                     </div>
                 </div>
             </div>},

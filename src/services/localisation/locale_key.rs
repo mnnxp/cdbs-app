@@ -62,9 +62,9 @@ pub(crate) enum LocaleKey {
     AcceptTerms,
     /// `terms and conditions` (was: 29)
     TermsAndConditions,
-    /// `Updated at: ` (was: 30)
+    /// `Updated at` (was: 30)
     UpdatedAt,
-    /// `Followers: ` (was: 31)
+    /// `Followers` (was: 31)
     Followers,
     /// `CERTIFICATES` (was: 32)
     Certificates,
@@ -80,11 +80,11 @@ pub(crate) enum LocaleKey {
     FavStandards,
     /// `fav USERS` (was: 38)
     FavUsers,
-    /// ` Position: ` (was: 39)
+    /// `Position` (was: 39)
     PositionLabel,
-    /// ` Region: ` (was: 40)
+    /// `Region` (was: 40)
     RegionLabel,
-    /// ` Working software: ` (was: 41)
+    /// `Software` (was: 41)
     WorkingSoftware,
     /// `Hide info` (was: 42)
     HideInfo,
@@ -1058,5 +1058,7 @@ pub(crate) enum LocaleKey {
     CopyKeyWarning,
     /// Got it (acknowledge)
     GotIt,
+    /// Screenshot
+    Screenshot,
     _Count,
 }

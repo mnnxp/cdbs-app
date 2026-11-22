@@ -78,7 +78,7 @@ impl Component for CreateComponent {
     }
 
     fn rendered(&mut self, first_render: bool) {
-        if let None = get_logged_user() {
+        if get_logged_user().is_none() {
             set_history_back(Some(String::new()));
             // route to login page if not found token
             self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
@@ -298,7 +298,7 @@ impl CreateComponent {
                 </div>
                 <div class="column">
                     <div class="field">
-                        <label class="label" for="type-access-block">{LocaleKey::TypeAccess.get_value()}</label>
+                        <label class="label">{LocaleKey::TypeAccess.get_value()}</label>
                         <TypeAccessBlock
                             change_cb={onchange_type_access}
                             types={self.types_access.clone()}

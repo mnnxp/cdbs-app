@@ -1,8 +1,8 @@
 [package]
 authors = ["mnnxp <mananaxep@gmail.com>"]
-edition = "2018"
+edition = "2021"
 name = "cdbs-app"
-version = "0.3.2"
+version = "0.3.3"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -14,7 +14,7 @@ version = "0.3.2"
 [dependencies]
 yew = "0.18.0"
 yew-router = "0.15.0"
-yewtil = "0.3.2"
+yewtil = "0.4.0"
 
 console_error_panic_hook = "0.1.7"
 wasm-bindgen = "0.2.92"
@@ -37,7 +37,7 @@ thiserror = "1"
 
 anyhow = "1.0.41"
 graphql_client = "0.10.0"
-serde = {version = "1.0.126", features = ["derive"]}
+serde = {version = "1.0.128", features = ["derive"]}
 serde_json = "1.0.64"
 
 dotenv_codegen = "0.15.0"
@@ -64,11 +64,11 @@ features = [
   "FileList",
   "TextMetrics",
 ]
-version = "0.3.60"
+version = "0.3.69"
 
 [dev-dependencies]
-wasm-bindgen-futures = "0.4.10"
-wasm-bindgen-test = "0.3.10"
+wasm-bindgen-futures = "0.4.42"
+wasm-bindgen-test = "0.3.42"
 
 [profile.release]
 lto = true

@@ -64,10 +64,6 @@ impl Component for RoleRow {
                         <div class="is-flex is-align-items-center is-flex-wrap-wrap">
                             <span>{self.props.company_role.role.name.clone()}</span>
                         </div>
-                        <div class="is-size-7 has-text-grey mt-1">
-                            <span class="mr-3">{LocaleKey::ID.get_value()}</span>
-                            <span>{self.props.company_role.role.role_member_id}</span>
-                        </div>
                     </td>
                     <td>
                         <div class="tags are-small">

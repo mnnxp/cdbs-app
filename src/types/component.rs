@@ -62,7 +62,7 @@ impl ComponentCreateData {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct ShowComponentShort {
     pub uuid: UUID,
@@ -125,7 +125,7 @@ impl From<&ComponentUpdatePreData> for ComponentUpdateData {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Supplier{
   pub supplier:SlimCompany,
@@ -133,7 +133,7 @@ pub struct Supplier{
   pub description: String
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct ActualStatus{
   pub actual_status_id: usize,

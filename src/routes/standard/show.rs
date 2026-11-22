@@ -20,7 +20,7 @@ use crate::fragments::{
     standard::{StandardFilesCard, SpecsTags, KeywordsTags},
     img_showcase::ImgShowcase,
 };
-use crate::services::content_adapter::{DateDisplay, Markdownable};
+use crate::services::content_adapter::{SHORT_TEXT_LEN, DateDisplay, Markdownable};
 use crate::services::{get_logged_user, LocaleKey, resp_parsing, set_history_back, title_changer, Counter};
 use crate::types::{ComponentsQueryArg, DownloadFile, Pathname, SlimUser, StandardInfo, UUID};
 use crate::gqls::make_query;
@@ -102,7 +102,7 @@ impl Component for ShowStandard {
     }
 
     fn rendered(&mut self, first_render: bool) {
-        if let None = get_logged_user() {
+        if get_logged_user().is_none() {
             set_history_back(Some(String::new()));
             // route to login page if not found token
             self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
@@ -227,7 +227,7 @@ impl Component for ShowStandard {
                             self.current_user_owner = standard_data.owner_user.uuid == user.uuid;
                         }
                         // description length check for show
-                        self.show_full_description = standard_data.description.len() < 250;
+                        self.show_full_description = standard_data.description.chars().count() < SHORT_TEXT_LEN;
                         // add main image
                         self.file_arr.push(standard_data.image_file.clone());
                         self.standard = Some(standard_data);
@@ -319,20 +319,18 @@ impl ShowStandard {
               />
               <div class="column">
                 <div class="columns pb-0 mb-0">
-                    <div class="column">
-                        {LocaleKey::LCS.get_value()}{": "}
-                        {standard_data.standard_status.name.clone()}
+                    <div class="column" title={LocaleKey::LifeCycleStage.get_value()}>
+                        <span class="has-text-grey mr-1">{LocaleKey::LCS.get_value()}{": "}</span>
+                        <span class="has-text-dark">{standard_data.standard_status.name.clone()}</span>
                     </div>
-                    <div class="column">
+                    <div class="column" title={LocaleKey::TypeAccess.get_value()}>
                         {standard_data.type_access.get_with_icon()}
                     </div>
-                    <div class="column is-narrow">
-                        <span class="icon is-small mr-3">
+                    <div class="column is-narrow" title={LocaleKey::PublicationAtLabel.get_value()}>
+                        <span class="icon is-small has-text-grey mr-1">
                             <i class={classes!("fas", "fa-calendar-day")}></i>
                         </span>
-                        <span class="id-box">
-                            {standard_data.publication_at.date_to_display()}
-                        </span>
+                        <span class="has-text-dark">{standard_data.publication_at.date_to_display()}</span>
                     </div>
                 </div>
                 {self.show_modal_company_info(standard_data)}
@@ -346,15 +344,16 @@ impl ShowStandard {
                     <ShareLinkBtn />
                 </div>
                 <div id="standard-description" class="pl-5 pr-5">
-                    {match standard_data.description.len() {
-                        250.. => html!{<>
+                    {if standard_data.description.chars().count() >= SHORT_TEXT_LEN {
+                        html!{<>
                             {match self.show_full_description {
                                 true => standard_data.description.to_markdown(),
                                 false => standard_data.description.to_markdown_short(),
                             }}
                             {ft_see_btn(show_description_btn, self.show_full_description)}
-                        </>},
-                        _ => standard_data.description.to_markdown(),
+                        </>}
+                    } else {
+                        standard_data.description.to_markdown()
                     }}
                 </div>
               </div>

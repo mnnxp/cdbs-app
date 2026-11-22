@@ -9,6 +9,7 @@ import { TransformControls } from '../../../../three/controls/TransformControls.
 import Stats from '../../../../three/stats.module.js';
 import { GUI } from '../../../../three/lil-gui.esm.min.js';
 import { fetchWithCache } from '../../../../three/model-cache.js';
+import { ThreeMFLoader } from '../../../../three/loaders/3MFLoader.js';
 
 // Environment texture constants
 const ENV_TEXTURES = {
@@ -333,6 +334,12 @@ export class GreatViewer {
         const currentPosition = this.camera.position.clone();
         const currentTarget = this.controls.target.clone();
         const aspect = this.container.clientWidth / this.container.clientHeight;
+        this.mesh?.updateMatrixWorld(true);
+        const box = this.mesh ? new THREE.Box3().setFromObject(this.mesh) : null;
+        const diag = (box && !box.isEmpty()) ? box.getSize(new THREE.Vector3()).length() : 100;
+        const dist = currentPosition.distanceTo(currentTarget);
+        const near = Math.max(diag / 1000, 0.001);
+        const far = (dist + diag) * 4;
         let newCamera;
         if (targetMode) {
             // Orthographic: calculate frustum size based on current view
@@ -342,12 +349,12 @@ export class GreatViewer {
             newCamera = new THREE.OrthographicCamera(
                 -visibleWidth / 2, visibleWidth / 2,
                 visibleHeight / 2, -visibleHeight / 2,
-                0.1, 5000
+                near, far
             );
             console.log("Switched to OrthographicCamera");
         } else {
             // Perspective
-            newCamera = new THREE.PerspectiveCamera(45, aspect, 0.1, 5000);
+            newCamera = new THREE.PerspectiveCamera(45, aspect, near, far);
             console.log("Switched to PerspectiveCamera");
         }
         newCamera.position.copy(currentPosition);
@@ -581,6 +588,17 @@ export class GreatViewer {
             this._renderRequested = false;
             if (!this.isInitialized || !this.renderer || !this.container) return;
             this.renderer.render(this.scene, this.camera);
+            if (this._capture) {
+                this._capture = false;
+                this.renderer.domElement.toBlob(b => {
+                    const url = URL.createObjectURL(b);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${this.model.filename}.png`;
+                    a.click();
+                    setTimeout(() => URL.revokeObjectURL(url), 0);
+                });
+            }
         });
     }
 
@@ -847,6 +865,25 @@ export class GreatViewer {
                         .catch(error => this.onError(error));
                 }
                 break;
+            case '3MF': {
+                try {
+                    const declaredSize = Number(this.model.content_length) || 0;
+                    if (declaredSize > 128 * 1024 * 1024) {
+                        throw new Error('3MF file is too large');
+                    }
+                    const buffer = await fetchWithCache(this.model.url, (percent) => {
+                        this.infoMessage.innerHTML = percent.toFixed(1) + '%';
+                    });
+                    this.infoMessage.innerHTML = this.svgLoading;
+                    await new Promise(resolve => requestAnimationFrame(resolve));
+                    const group = new ThreeMFLoader().parse(buffer);
+                    this.processThreeMFModel(group);
+                } catch (error) {
+                    console.error('[3MF] Error:', error);
+                    this.onError(error);
+                }
+                break;
+            }
             default:
                 console.error(`Unsupported format: ${this.modelFormat}`);
                 if (this.infoMessage) {
@@ -870,9 +907,10 @@ export class GreatViewer {
             this.gui.destroy();
         }
         const isGLTF = this.modelFormat == 'GLTF' || this.modelFormat == 'GLB';
+        const is3MF = this.modelFormat == '3MF';
         const isSTL = this.modelFormat == 'STL';
         const isGCode = this.modelFormat == 'GCode';
-        console.log(`Controls: isGLTF - ${isGLTF}, isSTL - ${isSTL}, isGCode - ${isGCode}`);
+        console.log(`Controls: isGLTF - ${isGLTF}, is3MF - ${is3MF}, isSTL - ${isSTL}, isGCode - ${isGCode}`);
         this.gui = new GUI({
             autoPlace: false,
             title: this.labels.controls,
@@ -892,6 +930,7 @@ export class GreatViewer {
         // Display controls folder
         const displayFolder = this.gui.addFolder(this.labels.display);
         displayFolder.open();
+        displayFolder.add({ shot: () => { this._capture = true; this._requestRender(); } }, 'shot').name(this.labels.screenshot || 'Screenshot');
         displayFolder.add(controlParams, 'showAxesHelper')
             .name(this.labels.axes)
             .onChange((value) => {
@@ -1009,8 +1048,8 @@ export class GreatViewer {
         // Material control folder
         const materialFolder = this.gui.addFolder(this.labels.material_folder);
         materialFolder.close();
-        // Texture/material switching (only for GLTF/GLB with textures)
-        if (isGLTF && this.hasTextures) {
+        // Texture/material switching (only for GLTF/GLB and 3MF with textures)
+        if ((isGLTF || is3MF) && this.hasTextures) {
             materialFolder.add(this, 'useCustomMaterial')
                 .name(this.labels.hide_textures)
                 .onChange(() => {
@@ -1097,6 +1136,25 @@ export class GreatViewer {
         infoFolder.close();
         infoFolder.add(this.model, 'filename').name(this.labels.file).listen();
         infoFolder.add(this.model, 'size').name(this.labels.size).listen();
+        const s = this.modelStats || {};
+        const size = this.mesh
+            ? new THREE.Box3().setFromObject(this.mesh).getSize(new THREE.Vector3())
+            : new THREE.Vector3();
+        const metadata = (this.mesh && this.mesh.userData && this.mesh.userData.metadata) || {};
+        this.info = {
+            format: this.modelFormat,
+            triangles: Number.isFinite(s.triangles) ? s.triangles.toLocaleString() : '—',
+            meshes:    Number.isFinite(s.meshes)    ? s.meshes                    : '—',
+            vertices:  Number.isFinite(s.vertices)  ? s.vertices.toLocaleString() : '—',
+            bbox:      this.mesh
+                ? `${size.x.toFixed(1)} × ${size.y.toFixed(1)} × ${size.z.toFixed(1)}`
+                : '—',
+            loadTime:  (typeof this.startTime === 'number')
+                ? ((performance.now() - this.startTime) / 1000).toFixed(2) + ' s'
+                : '—',
+            ...metadata
+        };
+        Object.entries(this.info).forEach(([k, v]) => infoFolder.add(this.info, k).name(k).listen());
     }
 
     // Remove old updateLightToCamera method or keep only for keyLight:
@@ -1343,15 +1401,18 @@ export class GreatViewer {
 
     optimizeQualityModel() {
         if (!this.mesh || !this.renderer) return;
-        let totalTriangles = 0;
-        this.mesh.traverse((child) => {
-            if (child.isMesh && child.geometry) {
-                const geom = child.geometry;
-                totalTriangles += geom.index ? geom.index.count / 3 : geom.attributes.position.count / 3;
+        this.modelStats = { triangles: 0, meshes: 0, vertices: 0 };
+        this.mesh.traverse(c => {
+            if (c.isMesh && c.geometry) {
+                this.modelStats.meshes++;
+                this.modelStats.vertices += c.geometry.attributes.position.count;
+                this.modelStats.triangles += c.geometry.index
+                    ? c.geometry.index.count / 3
+                    : c.geometry.attributes.position.count / 3;
             }
         });
-        console.log(`[Optimizer] Model has ${totalTriangles.toLocaleString()} triangles`);
-        const matched = QUALITY_MAP.find(q => totalTriangles > q.threshold) || QUALITY_MAP[QUALITY_MAP.length - 1];
+        console.log(`[Optimizer] Model has ${this.modelStats.triangles.toLocaleString()} triangles`);
+        const matched = QUALITY_MAP.find(q => this.modelStats.triangles > q.threshold) || QUALITY_MAP[QUALITY_MAP.length - 1];
         this.setQuality(matched.level);
         this._requestRender();
     }
@@ -1392,6 +1453,38 @@ export class GreatViewer {
         this.optimizeQualityModel();
         this.scene.add(this.mesh);
         this.centerAndFitCamera();
+        this.onComplete();
+    }
+
+    processThreeMFModel(group) {
+        console.log('3MF parse result:', group, 'children:', group?.children?.length);
+        if (!group) {
+            throw new Error('3MF: empty or malformed model');
+        }
+        group.rotation.x = -Math.PI / 2;
+        group.updateMatrixWorld(true);
+        this.mesh = group;
+        this.originalMaterials.clear();
+        this.hasTextures = false;
+        let meshCount = 0;
+        group.traverse((child) => {
+            if (!child.isMesh) return;
+            meshCount++;
+            this.originalMaterials.set(child.uuid, child.material);
+            const mats = Array.isArray(child.material) ? child.material : [child.material];
+            for (const m of mats) {
+                if (m && m.map) { this.hasTextures = true; break; }
+            }
+            if (child.geometry && !child.geometry.attributes.normal) {
+                child.geometry.computeVertexNormals();
+            }
+        });
+        if (meshCount === 0) {
+            throw new Error('3MF: no renderable meshes');
+        }
+        this.scene.add(this.mesh);
+        this.centerAndFitCamera();
+        this.optimizeQualityModel();
         this.onComplete();
     }
 

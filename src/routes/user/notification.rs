@@ -77,7 +77,7 @@ impl Component for Notifications {
     fn rendered(&mut self, first_render: bool) {
         let link = self.link.clone();
 
-        if let None = get_logged_user() {
+        if get_logged_user().is_none() {
             set_history_back(Some(String::new()));
             // route to login page if not found token
             self.router_agent.send(ChangeRoute(AppRoute::Login.into()));

@@ -139,6 +139,7 @@ impl Component for ThreeShowcase {
                 link.send_message(Msg::ShowThree);
             },
             Msg::ShowThree => {
+                self.destroy_viewer();
                 if let Some((df, model_format)) = &self.selected_file {
                     let df_clone = df.clone();
                     let format_clone = *model_format;
@@ -227,7 +228,7 @@ impl Component for ThreeShowcase {
                             <span>{LocaleKey::NoFileToDisplay.get_value()}</span>
                         </div>
                     },
-                    false => html!{
+                    false => html!{<>
                         <button
                             id="three-size-button"
                             class="button is-ghost"
@@ -239,24 +240,24 @@ impl Component for ThreeShowcase {
                           </span>
                           <span class="help has-text-grey is-pulled-right is-hidden-mobile mr-2 mt-2">{LocaleKey::FullscreenHint.get_value()}</span>
                         </button>
-                    },
+                        <a-container style={container_style}></a-container>
+                        <div class={class_modal}>
+                            <div class="modal-background" onclick={onclick_full_screen.clone()}></div>
+                            <div class="modal-content" style="width: 80vw; height: 80vh; min-height: 50vh;">
+                                <b-container style={b_container_style}></b-container>
+                            </div>
+                            <button
+                                id="three-modal-close-btn"
+                                class="button is-ghost modal-close"
+                                onclick={onclick_full_screen}
+                                aria-label={text_full_screen} >
+                            <span class="icon is-small">
+                                <i class="fas fa-compress-alt" style="color: #1872f0;"></i>
+                            </span>
+                            </button>
+                        </div>
+                    </>},
                 }}
-                <a-container style={container_style}></a-container>
-                <div class={class_modal}>
-                    <div class="modal-background" onclick={onclick_full_screen.clone()}></div>
-                    <div class="modal-content" style="width: 80vw; height: 80vh; min-height: 50vh;">
-                        <b-container style={b_container_style}></b-container>
-                    </div>
-                    <button
-                        id="three-modal-close-btn"
-                        class="button is-ghost modal-close"
-                        onclick={onclick_full_screen}
-                        aria-label={text_full_screen} >
-                      <span class="icon is-small">
-                        <i class="fas fa-compress-alt" style="color: #1872f0;"></i>
-                      </span>
-                    </button>
-                </div>
             </scene-hull>
         </>}
     }
@@ -298,7 +299,9 @@ impl ThreeShowcase {
         if let Some(js_value) = self.viewer.take() {
             if let Ok(func_value) = js_sys::Reflect::get(&js_value, &JsValue::from_str("destroy")) {
                 if let Ok(func) = func_value.dyn_into::<js_sys::Function>() {
-                    let _ = js_sys::Reflect::apply(&func, &js_value, &js_sys::Array::new());
+                    if let Err(e) = js_sys::Reflect::apply(&func, &js_value, &js_sys::Array::new()) {
+                        log::warn!("Failed to destroy viewer: {:?}", e);
+                    }
                     debug!("WebGL/IFC context released cleanly via duck typing");
                 }
             }

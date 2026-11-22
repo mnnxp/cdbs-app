@@ -26,7 +26,7 @@ use crate::fragments::{
     three_showcase::ThreeShowcase,
     share_link::ShareLinkBtn,
 };
-use crate::services::content_adapter::{DateDisplay, Markdownable};
+use crate::services::content_adapter::{SHORT_TEXT_LEN, DateDisplay, Markdownable};
 use crate::services::{get_classes_table, get_logged_user, LocaleKey, resp_parsing, set_focus, set_history_back, title_changer, Counter};
 use crate::types::{ComponentInfo, FilesetProgramInfo, DownloadFile, ObjectType, Pathname, SlimUser, ToObject, UUID};
 use crate::gqls::make_query;
@@ -254,14 +254,14 @@ impl Component for ShowComponent {
                             debug!("Component data: {:?}", component_data);
                         }
                         // length check for show btn more/less
-                        self.show_full_description = component_data.description.len() < 250;
+                        self.show_full_description = component_data.description.chars().count() < SHORT_TEXT_LEN;
                         // add main image
                         self.file_arr.push(component_data.image_file.clone());
                         self.component = Some(component_data);
                     },
                     Err(err) => {
                         link.send_message(Msg::ResponseError(err));
-                        if let None = get_logged_user() {
+                        if get_logged_user().is_none() {
                             set_history_back(Some(String::new()));
                             // route to login page if not found token
                             self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
@@ -421,7 +421,7 @@ impl ShowComponent {
                 {self.show_component_tabs(component_data)}
               </div>
             </div>
-            {match self.show_full_description && component_data.description.len() > 249 {
+            {match self.show_full_description && component_data.description.chars().count() >= SHORT_TEXT_LEN {
                 true => html!{
                     <div class="content component-description">
                         {component_data.description.to_markdown()}
@@ -469,28 +469,36 @@ impl ShowComponent {
     }
 
     fn show_component_info(&self, component_data: &ComponentInfo) -> Html {
-        let class_item = "is-flex is-align-items-center mr-3";
-        let class_icon = "icon is-small mr-1";
+        let class_item = "is-size-6 is-flex is-align-items-center mr-3";
+        let class_icon = "icon is-small has-text-grey mr-1";
+        let class_value = "has-text-dark";
+        let class_label = "has-text-grey mr-1";
         html!{
             <div class="is-flex is-flex-wrap-wrap is-align-items-center is-gap-3 mb-2">
-                <div class={class_item}>
-                    {LocaleKey::LCS.get_value()}{": "}
-                    {component_data.actual_status.name.clone()}
+                <div class={class_item} title={LocaleKey::LifeCycleStage.get_value()}>
+                    <span class={class_label}>{LocaleKey::LCS.get_value()}{": "}</span>
+                    <span class={class_value}>{component_data.actual_status.name.clone()}</span>
                 </div>
-                <div class={class_item}>
+                <div class={class_item} title={LocaleKey::TypeAccess.get_value()}>
                     {component_data.type_access.get_with_icon()}
                 </div>
                 <div title={LocaleKey::Owner.get_value()} class={class_item}>
                     <span class={class_icon}>
-                        <i class={classes!("fa", "fa-user")}></i>
+                        <i class={classes!("fas", "fa-user")}></i>
                     </span>
                     <GoToUser data = {component_data.owner_user.clone()} />
                 </div>
-                <div title={LocaleKey::UpdatedAtLabel.get_value()} class={class_item}>
+                <div title={LocaleKey::CreatedAtLabel.get_value()} class={class_item}>
                     <span class={class_icon}>
-                        <i class={classes!("fa", "fa-edit")}></i>
+                        <i class={classes!("far", "fa-calendar-plus")}></i>
                     </span>
-                    {component_data.updated_at.date_to_display()}
+                    <span class={class_value}>{component_data.created_at.date_to_display()}</span>
+                </div>
+                <div title={LocaleKey::UpdatedAt.get_value()} class={class_item}>
+                    <span class={classes!(class_icon, "pl-1")}>
+                        <i class="fas fa-edit"></i>
+                    </span>
+                    <span class={class_value}>{component_data.updated_at.date_to_display()}</span>
                 </div>
             </div>
         }
@@ -507,7 +515,7 @@ impl ShowComponent {
         };
         let show_description_btn = self.link.callback(|_| Msg::ShowDescription);
         html!{<>
-            <div class="tabs mb-1">
+            <div class="tabs mb-1 is-boxed">
                 <ul>
                     <li class={at.0} onclick={onclick_tab_description}><a>{LocaleKey::Description.get_value()}</a></li>
                     <li class={at.1} onclick={onclick_tab_characteristics}><a>{LocaleKey::Characteristics.get_value()}</a></li>
@@ -519,15 +527,16 @@ impl ShowComponent {
                     {match self.active_tab {
                         ActiveTab::Description => html!{
                             <div class="component-description">
-                                {match component_data.description.len() {
-                                    250.. => match self.show_full_description {
+                                {if component_data.description.chars().count() >= SHORT_TEXT_LEN {
+                                    match self.show_full_description {
                                         true => html!{},
                                         false => html!{<>
                                             {component_data.description.to_markdown_short()}
                                             {ft_see_btn(show_description_btn.clone(), self.show_full_description)}
                                         </>},
-                                    },
-                                    _ => component_data.description.to_markdown(),
+                                    }
+                                } else {
+                                    component_data.description.to_markdown()
                                 }}
                             </div>
                         },

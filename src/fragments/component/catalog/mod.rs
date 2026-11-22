@@ -10,10 +10,11 @@ use wasm_bindgen_futures::spawn_local;
 use crate::error::Error;
 use crate::fragments::buttons::ft_change_view_btn;
 use crate::fragments::modal::ModalBlock;
+use crate::fragments::paginate::Paginate;
 use crate::fragments::{list_errors::ListErrors, list_empty::ListEmpty};
 use crate::routes::component::CreateComponent;
 use crate::routes::AppRoute;
-use crate::types::{ComponentsQueryArg, ShowComponentShort, UUID};
+use crate::types::{ComponentsQueryArg, ShowComponentShort, UUID, PaginateSet};
 use crate::services::{LocaleKey, resp_parsing};
 use crate::gqls::make_query;
 use crate::gqls::component::{
@@ -30,6 +31,7 @@ pub enum Msg {
     DelFav(UUID),
     GetList,
     ShowAddComponentCard,
+    ChangePaginate(PaginateSet),
     ResponseError(Error),
     ClearError,
 }
@@ -42,6 +44,8 @@ pub struct CatalogComponents {
     list: Vec<ShowComponentShort>,
     company_uuid: Option<UUID>,
     show_add_component: bool,
+    page_set: PaginateSet,
+    current_items: i64,
 }
 
 #[derive(Properties, Clone)]
@@ -49,6 +53,9 @@ pub struct Props {
     pub show_create_btn: bool,
     pub arguments: Option<ComponentsQueryArg>,
     pub component_list: Option<Vec<ShowComponentShort>>,
+    #[prop_or(false)]
+    pub show_paginate: bool,
+    pub total_items: Option<i64>,
 }
 
 impl Component for CatalogComponents {
@@ -65,6 +72,8 @@ impl Component for CatalogComponents {
             list: Vec::new(),
             company_uuid,
             show_add_component: false,
+            page_set: PaginateSet::set(Some(1), Some(20)),
+            current_items: 0,
         }
     }
 
@@ -101,10 +110,9 @@ impl Component for CatalogComponents {
                     byField: "createdAt".to_string(),
                     asDesc: true,
                 });
-                // todo!(make paginate)
                 let ipt_paginate = Some(get_components_short_list::IptPaginate {
-                    currentPage: 1,
-                    perPage: 25,
+                    currentPage: self.page_set.current_page,
+                    perPage: self.page_set.per_page,
                 });
                 spawn_local(async move {
                     let res = make_query(GetComponentsShortList::build_query(
@@ -122,7 +130,10 @@ impl Component for CatalogComponents {
             },
             Msg::UpdateList(res) => {
                 match resp_parsing(res, "components") {
-                    Ok(result) => self.list = result,
+                    Ok(result) => {
+                        self.list = result;
+                        self.current_items = self.list.len() as i64;
+                    },
                     Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
@@ -149,6 +160,13 @@ impl Component for CatalogComponents {
                 });
             },
             Msg::ShowAddComponentCard => self.show_add_component = !self.show_add_component,
+            Msg::ChangePaginate(page_set) => {
+                if self.page_set.compare(&page_set) {
+                    return true;
+                }
+                self.page_set = page_set;
+                self.link.send_message(Msg::GetList);
+            },
             Msg::ResponseError(err) => self.error = Some(err),
             Msg::ClearError => self.error = None,
         }
@@ -156,21 +174,12 @@ impl Component for CatalogComponents {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        let mut flag_change = match (&self.props.arguments, &props.arguments) {
-            (Some(self_arg), Some(arg)) => self_arg == arg,
-            (None, None) => true,
-            _ => false,
-        };
-        if flag_change {
-            flag_change = match (&self.props.component_list, &props.component_list) {
-                (Some(self_list), Some(list)) =>
-                    self_list.len() == list.len() && self_list.first().map(|c| &c.uuid) == list.first().map(|c| &c.uuid),
-                (None, None) => true,
-                _ => false,
-            };
-        }
-        debug!("self_arg == arg: {}", flag_change);
-        if self.props.show_create_btn == props.show_create_btn && flag_change {
+        let arguments_changed = self.props.arguments != props.arguments;
+        let list_changed = self.props.component_list != props.component_list;
+        let paginate_changed = self.props.show_paginate != props.show_paginate || self.props.total_items != props.total_items;
+        let show_btn_changed = self.props.show_create_btn != props.show_create_btn;
+        debug!("arguments_changed: {}", arguments_changed);
+        if !arguments_changed && !list_changed && !paginate_changed && !show_btn_changed {
             false
         } else {
             self.props = props;
@@ -184,6 +193,7 @@ impl Component for CatalogComponents {
     fn view(&self) -> Html {
         let onclick_clear_error = self.link.callback(|_| Msg::ClearError);
         let onclick_change_view = self.link.callback(|_| Msg::SwitchShowType);
+        let onclick_paginate = self.link.callback(|page_set| Msg::ChangePaginate(page_set));
 
         html! {
             <div id="components-box">
@@ -203,6 +213,17 @@ impl Component for CatalogComponents {
               </div>
               {match self.props.component_list {
                 Some(ref list) => self.show_list(list),
+                None if self.props.show_paginate => html!{<>
+                    {self.show_list(&self.list)}
+                    <hr/>
+                    <Paginate
+                        callback_change={onclick_paginate}
+                        current_items={self.current_items}
+                        current_page={Some(self.page_set.current_page)}
+                        per_page={Some(self.page_set.per_page)}
+                        total_items={self.props.total_items}
+                    />
+                </>},
                 None => self.show_list(&self.list),
               }}
             </div>

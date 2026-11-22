@@ -232,6 +232,9 @@ impl ModificationsTableCard {
 
     fn show_modification_card(&self) -> Html {
         let modification_data = self.modifications.iter().find(|x| x.uuid == self.select_modification_uuid);
+        let class_icon = "icon is-small has-text-grey pl-1 mr-1";
+        let class_value = "has-text-dark";
+        let class_item = "is-size-6 is-flex is-align-items-center ml-3";
         match modification_data {
             Some(mod_data) => html!{
                 <div id="show-modification-card" class="card">
@@ -241,19 +244,21 @@ impl ModificationsTableCard {
                     <div class="card-content" style="padding-top: 0px;">
                         <div class="content">
                             <div class="column" title={LocaleKey::ModificationName.get_value()}>
-                                <p class="overflow-title has-text-weight-bold">
+                                <p class="overflow-title has-text-weight-bold is-size-5">
                                     {mod_data.modification_name.clone()}
                                 </p>
                             </div>
                             <div class="column">
                             <div class="columns">
-                                <div class="column" title={LocaleKey::LifeCycleStage.get_value()}>
-                                    {LocaleKey::LCS.get_value()}{": "}
-                                    {&mod_data.actual_status.name}
+                                <div class="column m-0" title={LocaleKey::LifeCycleStage.get_value()}>
+                                    <span class="has-text-grey mr-1">{LocaleKey::LCS.get_value()}{": "}</span>
+                                    <span class={class_value}>{&mod_data.actual_status.name}</span>
                                 </div>
-                                <div class="column is-4">
-                                    {LocaleKey::UpdatedAt.get_value()}
-                                    {mod_data.updated_at.date_to_display()}
+                                <div title={LocaleKey::UpdatedAt.get_value()} class={class_item}>
+                                    <span class={class_icon}>
+                                        <i class="fas fa-edit"></i>
+                                    </span>
+                                    <span class={class_value}>{mod_data.updated_at.date_to_display()}</span>
                                 </div>
                             </div>
                             </div>

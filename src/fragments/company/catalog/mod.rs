@@ -104,20 +104,13 @@ impl Component for CatalogCompanies {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        let flag_change = match (&self.props.arguments, &props.arguments) {
-            (Some(self_arg), Some(arg)) => self_arg == arg,
-            (None, None) => true,
-            _ => false,
-        };
-        // debug!("self_arg == arg: {}", flag_change);
-        if self.props.show_create_btn == props.show_create_btn && flag_change {
-            // debug!("if change");
+        let arguments_changed = self.props.arguments != props.arguments;
+        let show_btn_changed = self.props.show_create_btn != props.show_create_btn;
+        if !arguments_changed && !show_btn_changed {
             false
         } else {
-            self.props.show_create_btn = props.show_create_btn;
-            self.props.arguments = props.arguments;
+            self.props = props;
             self.link.send_message(Msg::GetList);
-            // debug!("else change");
             true
         }
     }

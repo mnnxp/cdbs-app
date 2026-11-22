@@ -83,36 +83,40 @@ impl CompanyType {
 impl ContactDisplay for CompanyInfo {
     /// Returns company contact information with description and icons, blank fields are skipped
     fn contact_block(&self) -> Html {
+        let class_div = "is-size-6 mb-1";
+        let class_icon  = "icon is-small has-text-grey mr-1";
+        let class_label = "has-text-grey mr-1";
+        let class_value = "has-text-dark has-text-weight-bold";
         html!{<>
-            <div id="company-inn" hidden={self.inn.is_empty()}>
-                <span class="icon is-small"><i class="fas fa-building" /></span>
-                <span>{LocaleKey::RegNumberLabel.get_value()}</span>
-                <span class="has-text-weight-bold">{self.inn.clone()}</span>
+            <div id="company-inn" hidden={self.inn.is_empty()} class={class_div}>
+                <span class={class_icon}><i class="fas fa-building" /></span>
+                <span class={class_label}>{LocaleKey::RegNumberLabel.get_value()}</span>
+                <span class={class_value}>{self.inn.clone()}</span>
             </div>
-            <div id="company-email" hidden={self.email.is_empty()}>
-                <span class="icon is-small"><i class="fas fa-envelope" /></span>
-                <span>{LocaleKey::EmailLabel.get_value()}</span>
-                <span class="has-text-weight-bold">{self.email.clone()}</span>
+            <div id="company-email" hidden={self.email.is_empty()} class={class_div}>
+                <span class={class_icon}><i class="fas fa-envelope" /></span>
+                <span class={class_label}>{LocaleKey::EmailLabel.get_value()}</span>
+                <span class={class_value}>{self.email.clone()}</span>
             </div>
-            <div id="company-phone" hidden={self.phone.is_empty()}>
-                <span class="icon is-small"><i class="fas fa-phone" /></span>
-                <span>{LocaleKey::PhoneLabel.get_value()}</span>
-                <span class="has-text-weight-bold">{self.phone.clone()}</span>
+            <div id="company-phone" hidden={self.phone.is_empty()} class={class_div}>
+                <span class={class_icon}><i class="fas fa-phone" /></span>
+                <span class={class_label}>{LocaleKey::PhoneLabel.get_value()}</span>
+                <span class={class_value}>{self.phone.clone()}</span>
             </div>
-            <div id="company-region" hidden={self.region.region_id == 8 && self.address.is_empty()}>
-                <span class="icon is-small"><i class="fas fa-map-marker-alt" /></span>
-                <span>{LocaleKey::Location.get_value()}</span>
-                <span class="has-text-weight-bold">
+            <div id="company-region" hidden={self.region.region_id == 8 && self.address.is_empty()} class={class_div}>
+                <span class={class_icon}><i class="fas fa-map-marker-alt" /></span>
+                <span class={class_label}>{LocaleKey::Location.get_value()}</span>
+                <span class={class_value}>
                     {match self.address.is_empty() {
                         true => {self.region.region.clone()},
                         false => {self.address.clone()},
                     }}
                 </span>
             </div>
-            <div id="company-site_url" hidden={self.site_url.is_empty()}>
-                <span class="icon is-small"><i class="fas fa-globe" /></span>
-                <span>{LocaleKey::SiteLabel.get_value()}</span>
-                <span class="has-text-weight-bold">{self.site_url.clone()}</span>
+            <div id="company-site_url" hidden={self.site_url.is_empty()} class={class_div}>
+                <span class={class_icon}><i class="fas fa-globe" /></span>
+                <span class={class_label}>{LocaleKey::SiteLabel.get_value()}</span>
+                <span class={class_value}>{self.site_url.clone()}</span>
             </div>
         </>}
     }

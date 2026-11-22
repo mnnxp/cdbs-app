@@ -128,15 +128,12 @@ impl Component for ListItemCompany {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.show_list != props.show_list ||
-            // self.is_followed != props.data.is_followed ||
-                self.props.data.uuid != props.data.uuid {
-            self.props.show_list = props.show_list;
-            self.is_followed = props.data.is_followed;
-            self.props.data = props.data;
-            true
-        } else {
+        if self.props.show_list == props.show_list && self.props.data == props.data {
             false
+        } else {
+            self.props = props;
+            self.is_followed = self.props.data.is_followed;
+            true
         }
     }
 

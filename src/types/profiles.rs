@@ -1,7 +1,6 @@
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
-use yew::virtual_dom::VNode;
-use crate::services::content_adapter::{DateDisplay, UsernameDisplay};
+use crate::services::content_adapter::UsernameDisplay;
 use super::file::DownloadFile;
 use super::relate::{Region, Program, TypeAccessInfo};
 use super::UUID;
@@ -58,7 +57,7 @@ pub struct UserInfo {
     pub is_followed: bool,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+#[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct ShowUserShort {
     pub uuid: UUID,
@@ -82,7 +81,7 @@ pub struct UserDataCard{
     pub firstname: String,
     pub lastname: String,
     pub username: String,
-    pub updated_at: VNode,
+    pub description: String,
 }
 
 impl UsernameDisplay for SelfUserInfo {
@@ -112,7 +111,7 @@ impl From<&SelfUserInfo> for UserDataCard {
             firstname: data.firstname.clone(),
             lastname: data.lastname.clone(),
             username: data.username.clone(),
-            updated_at: data.updated_at.date_to_display(),
+            description: data.description.clone(),
         }
     }
 }
@@ -124,7 +123,7 @@ impl From<&UserInfo> for UserDataCard {
             firstname: data.firstname.clone(),
             lastname: data.lastname.clone(),
             username: data.username.clone(),
-            updated_at: data.updated_at.date_to_display(),
+            description: data.description.clone(),
         }
     }
 }

@@ -18,7 +18,7 @@ use crate::gqls::make_query;
 use crate::routes::AppRoute;
 use crate::error::Error;
 use crate::fragments::{
-    buttons::{ft_save_btn, ft_submit_btn, ft_delete_class_btn},
+    buttons::{ft_submit_btn, ft_delete_class_btn},
     notification::show_notification,
     company::{
         CompanyCertificatesCard, AddCompanyCertificateCard,
@@ -187,7 +187,7 @@ impl Component for CompanySettings {
     }
 
     fn rendered(&mut self, first_render: bool) {
-        if let None = get_logged_user() {
+        if get_logged_user().is_none() {
             // route to login page if not found token
             self.router_agent.send(ChangeRoute(AppRoute::Login.into()));
         };
@@ -349,7 +349,11 @@ impl Component for CompanySettings {
                     Err(err) => link.send_message(Msg::ResponseError(err)),
                 }
             },
-            Msg::UpdateTypeAccessId(type_access_id) => self.request_access = type_access_id as i64,
+            Msg::UpdateTypeAccessId(type_access_id) => {
+                self.get_result_access = false;
+                self.request_access = type_access_id as i64;
+                self.link.send_message(Msg::RequestChangeAccess)
+            },
             Msg::UpdateOrgname(orgname) => self.request_company.orgname = Some(orgname),
             Msg::UpdateShortname(shortname) => self.request_company.shortname = Some(shortname),
             Msg::UpdateInn(inn) => self.request_company.inn = Some(inn),
@@ -678,8 +682,6 @@ impl CompanySettings {
 
     fn manage_access_block(&self) -> Html {
         let onchange_type_access = self.link.callback(|value| Msg::UpdateTypeAccessId(value));
-        let onsubmit_update_access = self.link.callback(|_| Msg::RequestChangeAccess);
-
         html!{<>
             {show_notification(
                 LocaleKey::UpdatedAccess.get_value(),
@@ -696,12 +698,6 @@ impl CompanySettings {
                     preset={self.current_data.as_ref().map(|data| data.type_access.type_access_id)}
                 />
             </div>
-            {ft_save_btn(
-                "update-access-btn",
-                onsubmit_update_access,
-                true,
-                false,
-            )}
         </>}
     }
 

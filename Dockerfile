@@ -1,15 +1,15 @@
 # select build image
-FROM rust:1.84.1 AS build
+FROM rust:1.86.0 AS build
 
 # Install wasm target
 RUN rustup target add wasm32-unknown-unknown
 
-# prepare trunk v0.21.14 and wasm-bindgen-0.2.92 (reserve way)
-# RUN cargo install --version 0.21.14 trunk --locked && \
+# prepare trunk v0.22.0 and wasm-bindgen-0.2.92 (reserve way)
+# RUN cargo install --version 0.22.0 trunk --locked && \
 #     cargo install --version 0.2.92 wasm-bindgen-cli --locked
 
 # Install Trunk (binary)
-RUN curl -fsSL https://github.com/trunk-rs/trunk/releases/download/v0.21.14/trunk-x86_64-unknown-linux-gnu.tar.gz \
+RUN curl -fsSL https://github.com/trunk-rs/trunk/releases/download/v0.22.0/trunk-x86_64-unknown-linux-gnu.tar.gz \
     | tar -xz -C /usr/local/bin/
 
 # Install wasm-bindgen-cli (binary)

@@ -8,7 +8,7 @@ use crate::services::compare_op_uuid;
 use crate::types::UUID;
 use crate::gqls::component::search_by_components::IptSearchArg;
 
-#[derive(PartialEq, Clone, Default, Debug)]
+#[derive(PartialEq, Clone, Debug)]
 pub struct SearchArg {
     pub search: String,
     pub by_params: bool,
@@ -22,6 +22,25 @@ pub struct SearchArg {
     pub service_uuid: Option<UUID>,
     pub favorite: bool,
     pub spec_id: Option<i64>,
+}
+
+impl Default for SearchArg {
+    fn default() -> Self {
+        Self {
+            search: String::new(),
+            by_params: true,
+            by_specs: false,
+            by_keywords: false,
+            by_modifications: true,
+            by_modification_params: true,
+            company_uuid: None,
+            user_uuid: None,
+            standard_uuid: None,
+            service_uuid: None,
+            favorite: false,
+            spec_id: None,
+        }
+    }
 }
 
 impl SearchArg {
@@ -46,11 +65,8 @@ impl SearchArg {
 
     /// Compares arguments without the search argument
     pub(crate) fn partial_comparison(&self, second: &SearchArg) -> bool {
-        if self.by_params != second.by_params { return false }
         if self.by_specs != second.by_specs { return false }
         if self.by_keywords != second.by_keywords { return false }
-        if self.by_modifications != second.by_modifications { return false }
-        if self.by_modification_params != second.by_modification_params { return false }
         if !compare_op_uuid(&self.company_uuid, &second.company_uuid) {
             return false
         }
@@ -58,6 +74,9 @@ impl SearchArg {
             return false
         }
         if !compare_op_uuid(&self.standard_uuid, &second.standard_uuid) {
+            return false
+        }
+        if !compare_op_uuid(&self.service_uuid, &second.service_uuid) {
             return false
         }
         if self.favorite != second.favorite { return false }

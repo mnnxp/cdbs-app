@@ -67,12 +67,11 @@ impl Component for ListItem {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        if self.props.show_list != props.show_list || self.props.data.is_followed != props.data.is_followed || self.props.data.uuid != props.data.uuid {
-            self.props.show_list = props.show_list;
-            self.props.data = props.data;
-            true
-        } else {
+        if self.props.show_list == props.show_list && self.props.data == props.data {
             false
+        } else {
+            self.props = props;
+            true
         }
     }
 
@@ -90,15 +89,17 @@ impl ListItem {
             name,
             description,
             type_access,
+            created_at,
             updated_at,
             ..
         } = &self.props.data;
 
         let onclick_open_component = self.link.callback(|_| Msg::OpenComponent);
         let trigger_fav_btn = self.link.callback(|_| Msg::TriggerFav);
+        let class_icon = "icon is-small has-text-grey mr-1";
 
         html!{
-          <div class="box itemBox componentListItem">
+          <div class="box itemBox componentListItem mb-4">
             <article class="media center-media">
               <div class="media-left" onclick={onclick_open_component.clone()}>
                 <figure class="image is-96x96">
@@ -108,18 +109,24 @@ impl ListItem {
               <div class="media-content" onclick={onclick_open_component.clone()}>
                   <div class="columns is-gapless mb-0">
                     <div class="column">{self.show_owner()}</div>
-                    <div class="column">
-                      <span class="id-box" title={LocaleKey::LifeCycleStage.get_value()}>
-                        {self.props.data.actual_status.name.clone()}
-                      </span>
+                    <div class="column" title={LocaleKey::LifeCycleStage.get_value()}>
+                        <span class="has-text-dark">{self.props.data.actual_status.name.clone()}</span>
                     </div>
-                    <div class="column">
-                      <span class="icon" title={LocaleKey::UpdatedAtLabel2.get_value()}>
+                    <div class="column" title={LocaleKey::CreatedAtLabel.get_value()}>
+                        <span class={class_icon}>
+                            <i class="far fa-calendar-plus"></i>
+                        </span>
+                        <span class="has-text-dark">{created_at.date_to_display()}</span>
+                    </div>
+                    <div class="column" title={LocaleKey::UpdatedAt.get_value()}>
+                      <span class={classes!(class_icon, "pl-1")}>
                         <i class="fas fa-edit"></i>
                       </span>
-                      {updated_at.date_to_display()}
+                      <span class="has-text-dark">{updated_at.date_to_display()}</span>
                     </div>
-                    <div class="column">{type_access.get_with_icon()}</div>
+                    <div class="column" title={LocaleKey::TypeAccess.get_value()}>
+                      {type_access.get_with_icon()}
+                    </div>
                   </div>
                   <div class="column fix-width mb-0 p-0">
                     <div class="overflow-title has-text-weight-bold is-size-4">{name}</div>
@@ -177,19 +184,26 @@ impl ListItem {
     }
 
     fn show_owner(&self) -> Html {
+        let class_icon = "icon is-small has-text-grey mr-1";
+        let class_value = "has-text-dark has-text-weight-bold";
         match &self.props.data.component_suppliers.first() {
-            Some(x) => html!{<>
+            Some(x) => html!{
+              <span title={LocaleKey::SupplierLabel.get_value()}>
                 // supplier / manufactured by
-                <span class="id-box has-text-weight-bold" title={LocaleKey::SupplierLabel.get_value()}>
-                  {x.supplier.shortname.clone()}
+                <span class={class_icon}><i class="fas fa-building"></i></span>
+                <span class={class_value}>
+                    {x.supplier.shortname.clone()}
                 </span>
-            </>},
-            None => html!{<>
+              </span>
+            },
+            None => html!{
+              <span title={LocaleKey::CreatedByUser.get_value()}>
                 // user uploaded
-                <span class="id-box has-text-weight-bold" title={LocaleKey::CreatedByUser.get_value()}>
-                  {format!("@{}",&self.props.data.owner_user.username)}
+                <span class={class_value}>
+                    {format!("@{}", &self.props.data.owner_user.username)}
                 </span>
-            </>},
+              </span>
+            },
         }
     }
 }

@@ -55,7 +55,7 @@ impl StandardCreateData {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct ShowStandardShort {
     pub uuid: UUID,
@@ -70,7 +70,7 @@ pub struct ShowStandardShort {
     pub is_followed: bool,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct StandardStatus{
   pub standard_status_id: usize,

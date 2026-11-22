@@ -109,13 +109,15 @@ impl InputConfig {
 /// Global generator of input fields and text areas
 pub(crate) fn render_form_input(config: InputConfig) -> Html {
     let field_id = unique_id(&config.id);
-    let (input_tag, input_type, base_class) = match config.id {
-        "email" => ("input", "email", "input"),
-        "description" => ("textarea", "text", "textarea"),
-        "password" => ("input", "password", "input"),
-        "date" => ("input", "date", "input"),
-        "tel" => ("input", "tel", "input"),
-        _ => ("input", "text", "input"),
+    let (input_tag, input_type, base_class, autocomplete) = match config.id {
+        "email" => ("input", Some("email"), "input", "email"),
+        "description" => ("textarea", None, "textarea", "off"),
+        "username" => ("input", Some("text"), "input", "username"),
+        "current-password" => ("input", Some("password"), "input", "current-password"),
+        "new-password" => ("input", Some("password"), "input", "new-password"),
+        "date" => ("input", Some("date"), "input", "off"),
+        "tel" => ("input", Some("tel"), "input", "tel"),
+        _ => ("input", Some("text"), "input", "off"),
     };
     let input_classes = classes!(
         base_class,
@@ -141,6 +143,7 @@ pub(crate) fn render_form_input(config: InputConfig) -> Html {
                     value={config.value}
                     oninput={config.oninput}
                     disabled={config.is_disabled}
+                    autocomplete={autocomplete}
                 />
                 {match config.icon {
                     Some(icon_class) if input_tag != "textarea" => {
